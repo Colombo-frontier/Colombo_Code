@@ -1,0 +1,311 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Distributed first-order optimization: relaxed smoothness with the DNS communication protocol\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}FO\_\allowbreak{}O03\_\allowbreak{}relaxed\_\allowbreak{}DNS\_\allowbreak{}pair}
+
+Single-objective optimization
+
+Find a point satisfying the stationarity criterion specified under the accuracy measure.
+
+\textbf{Status.} Bounds missing; Joint budget unresolved
+
+\textbf{TASK tags.} formulation: First order stationarity; task family: Single objective
+
+\textbf{MODEL tags.} convexity: Convexity not assumed; geometry: Full space; smoothness: Gradient dependent smoothness; stochastic model: Bounded gradient heterogeneity; stochastic model: Bounded variance; structure: Distributed; structure: Fixed network
+
+\textbf{ORACLE tags.} access order: First-order interface; feedback quality: Stochastic; interface family: Mixed; interface family: Stochastic local gradient gossip; operation: Stochastic local gradient gossip; public information: Computable access; public information: Hidden objects explicitly declared; public information: Known upper bound; public information: Known exact value; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Explicit restriction; randomization: Private randomness allowed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; feasibility: Required; object: Node points; postprocessing: Unqueried output explicitly allowed
+
+\textbf{METRIC tags.} criterion: First order stationarity; criterion: Stationarity measure
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; mode: Expectation; randomness: Algorithm private seed; randomness: Oracle samples
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget; precision: Bit precision not counted
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Find a point satisfying the stationarity criterion specified under the accuracy measure.
+
+
+\AtlasMath{\min_{x\in \mathbb{R}^d}F(x)}
+
+
+Node \AtlasInlineMath{i\in\{1,\ldots,m\}} holds a local function \AtlasInlineMath{f_i}, and the aggregate objective is \AtlasInlineMath{F(x)=m^{-1}\sum_{i=1}^m f_i(x)}. Nodes exchange information only through the declared communication protocol.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+There are \AtlasInlineMath{m} differentiable local functions \AtlasInlineMath{f_i}, with \AtlasInlineMath{F=m^{-1}\sum_{i=1}^m f_i} and \AtlasInlineMath{F(x_0)-\inf F\le\Delta}. Whenever \AtlasInlineMath{\|x-y\|\le1/\beta_{\mathrm{rel}}}, \AtlasInlineMath{\|\nabla f_i(x)-\nabla f_i(y)\|\le(\beta_0+\beta_{\mathrm{rel}}\|\nabla f_i(x)\|)\|x-y\|}. Also, \AtlasInlineMath{\|\nabla f_i(x)-\nabla F(x)\|\le\zeta}. The radius is infinite when \AtlasInlineMath{\beta_{\mathrm{rel}}=0}.
+
+Unless another geometry is specified, vectors use the Euclidean norm \AtlasInlineMath{\|\cdot\|_2}, and matrices and higher derivatives use the corresponding operator norm. The assumptions hold uniformly throughout the declared domain.
+
+Admissible parameter domain:
+
+
+\AtlasMath{\begin{gathered}\varepsilon > 0,\quad m \ge 2,\quad \gamma_W > 0,\quad \gamma_W \le 1\\r_W \ge 0,\quad r_W \le (m-1),\quad d \ge 1,\quad \beta_0 > 0\\\beta_{\rm rel} \ge 0,\quad \zeta \ge 0,\quad \Delta > 0,\quad \sigma \ge 0\end{gathered}}
+
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Public numerical inputs: \AtlasInlineMath{d,\ m,\ \varepsilon,\ x_0}.
+
+Public upper bounds: \AtlasInlineMath{\beta_0,\beta_{\rm rel},\zeta,\Delta,\sigma}. Public lower bound on the spectral gap: \AtlasInlineMath{\gamma_W}.
+
+The unknown objects are the local functions \AtlasInlineMath{f_1,\ldots,f_m} held at the nodes.
+
+Node \AtlasInlineMath{i} may query only the following information about its local function at an admissible point \AtlasInlineMath{x_i}. The ambient space is \AtlasInlineMath{\mathbb R^d}.
+
+
+\AtlasMath{g_i(x,\xi),\quad\mathbb{E}_tg_i=\nabla f_i(x),\quad\mathbb{E}_t\|g_i-\nabla f_i(x)\|^2\le\sigma^2}
+
+
+Samples within a same-point batch and noise at different nodes are conditionally independent. Common-sample reuse is not granted.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return \AtlasInlineMath{\widehat{\boldsymbol x}=(\widehat x_1,\ldots,\widehat x_m)\in(\mathbb R^d)^m}, one ambient point per node.
+
+The output may be unqueried or constructed from the query history, provided it is feasible. No additional function value or accuracy certificate is required.
+
+The output must also satisfy the support, atomic-hull, or historical-span restriction of its algorithm view. An unqueried output remains subject to these restrictions.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+\AtlasMath{\ell_i(I,\widehat{\boldsymbol x})=\|\nabla F(\widehat{x}_i)\|_2}
+
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Joint budget \AtlasInlineMath{(N_{\mathrm{samp,total}},N_{\mathrm{comm}})} achieved by one algorithm. Every local sample in a batch is charged separately.
+
+Cost is bounded uniformly on every execution path. All calls used for initialization, repetition, batching, or candidate verification are counted.
+
+Permitted local linear operations on historical vectors are free. Communication is counted in the specified rounds and ambient vectors; no additional encoding, aggregate-gradient, or unlimited-bandwidth interface is granted.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Private randomization is allowed. Queries, stopping decisions, and postprocessing may adapt to observed feedback.
+
+The public communication matrix \AtlasInlineMath{W} is fixed, symmetric, positive semidefinite, and doubly stochastic, with spectral gap \AtlasInlineMath{\gamma_W=1-\lambda_2(W)}. The protocol permits multiplication by \AtlasInlineMath{W} and local linear combinations of historical vectors, including the accelerated gossip and local memory used by DNSGD. The interface does not directly return the aggregate gradient.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+
+\AtlasMath{\forall I\,\forall\mathcal{O}:\quad\max_i\mathbb{E}\|\nabla F(\widehat{x}_i)\|_2\le\varepsilon}
+
+
+The probability space includes observation noise and the algorithm's private randomness. The instance and its admissible oracle law are fixed before randomness is averaged.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{x,x_i}: Global decision variable and node-local variables \textbf{Domain:} \AtlasInlineMath{x,x_i\in \mathbb{R}^d}.
+
+\AtlasInlineMath{\widehat{\boldsymbol x}}: Product vector formed from the outputs of all nodes \textbf{Domain:} \AtlasInlineMath{\widehat{\boldsymbol x}\in (\mathbb{R}^d)^m}.
+
+
+\AtlasMath{\widehat{\boldsymbol x}=(\widehat{x}_1,\ldots,\widehat{x}_m)}
+
+
+\AtlasInlineMath{f_i,F}: Local objectives and their average \textbf{Domain:} \AtlasInlineMath{i\in\{1,\ldots,m\}}.
+
+
+\AtlasMath{F(x)=\frac1m\sum_{i=1}^m f_i(x)}
+
+
+\AtlasInlineMath{\nabla F}: Full gradient of the differentiable complete objective with respect to the decision variable
+
+\AtlasInlineMath{\nabla f_i}: Full gradient of differentiable component \AtlasInlineMath{i}
+
+\AtlasInlineMath{x_0}: Public initial point satisfying the stated initial-distance or initial-suboptimality condition
+
+\AtlasInlineMath{F^\star}: Optimal value of the complete task; the oracle need not return it
+
+
+\AtlasMath{F^\star=\inf_{x\in \mathbb{R}^d}F(x)}
+
+
+\AtlasInlineMath{\mathbb{R}^d}: Real vector space with \AtlasInlineMath{d} coordinates
+
+\AtlasInlineMath{\|\cdot\|_2,\langle\cdot,\cdot\rangle}: Euclidean norm and inner product
+
+\AtlasInlineMath{\mathbb{E}_t}: Conditional expectation given the previous history and current query; the query is selected before the fresh observation is drawn
+
+\AtlasInlineMath{\xi}: Random observation sample; the oracle's interaction protocol determines sample-reuse permissions
+
+\AtlasInlineMath{g(x,z)}: Stochastic gradient map generated by sample \AtlasInlineMath{z} at query point \AtlasInlineMath{x}
+
+\AtlasInlineMath{W,W_t}: Fixed or time-varying communication matrix; spectral normalization and allowed multiplications are specified by the model and algorithm view
+
+\AtlasInlineMath{\mathbf1}: All-ones vector of length \AtlasInlineMath{m}
+
+\AtlasInlineMath{\lambda_2(W)}: Second-largest eigenvalue of the doubly stochastic communication matrix, with eigenvalues ordered nonincreasingly
+
+\AtlasInlineMath{d}: Ambient dimension; a positive integer tracked explicitly. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb{N}_{\ge1}}.
+
+\AtlasInlineMath{m}: Number of network nodes; a positive integer. \textbf{Domain:} \AtlasInlineMath{m\ge2}.
+
+\AtlasInlineMath{\Delta}: Public upper bound on initial suboptimality. \textbf{Domain:} \AtlasInlineMath{\Delta>0}.
+
+\AtlasInlineMath{\sigma}: Public upper bound on the scale of the conditional centered noise moment. \textbf{Domain:} \AtlasInlineMath{\sigma\ge0}.
+
+\AtlasInlineMath{\beta_0}: Baseline gradient scale in the relaxed-smoothness condition. \textbf{Domain:} \AtlasInlineMath{\beta_0>0}.
+
+\AtlasInlineMath{\beta_{\rm rel}}: Coefficient multiplying the gradient norm in relaxed smoothness; its units are inverse length. \textbf{Domain:} \AtlasInlineMath{\beta_{\rm rel}\ge0}.
+
+\AtlasInlineMath{\zeta}: Uniform bound on the difference between local and aggregate gradients. \textbf{Domain:} \AtlasInlineMath{\zeta\ge0}.
+
+\AtlasInlineMath{\gamma_W}: Spectral gap \AtlasInlineMath{1-\lambda_2(W)} of the known symmetric doubly stochastic matrix; distinct from the moment exponent. \textbf{Domain:} \AtlasInlineMath{0<\gamma_W\le1}.
+
+\AtlasInlineMath{r_W}: Number of distinct eigenvalues of \AtlasInlineMath{W} other than \AtlasInlineMath{1}. \textbf{Domain:} \AtlasInlineMath{0\le r_W\le m-1}.
+
+\AtlasInlineMath{\varepsilon}: Target tolerance for the underlying error defined by the accuracy measure \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{c}: Sufficiently small universal positive constant, potentially different between theorems; it is not a numerical threshold. \textbf{Domain:} \AtlasInlineMath{0<c<1}.
+
+\AtlasInlineMath{C}: Sufficiently large universal constant, independent of the tracked parameters; no numerical value is specified. \textbf{Domain:} \AtlasInlineMath{C>1}.
+
+\AtlasInlineMath{\beta_F}: Baseline relaxed-smoothness scale \AtlasInlineMath{\beta_0+\beta_{\mathrm{rel}}\zeta} of the average objective.
+
+
+\AtlasMath{\beta_F=\beta_0+\beta_{\rm rel}\,\zeta}
+
+
+\AtlasInlineMath{K_\varepsilon}: Optimization-iteration scale \AtlasInlineMath{1+\beta_F\Delta/\epsilon^2+\beta_{\mathrm{rel}}\Delta/\epsilon}; this is not the communication count.
+
+
+\AtlasMath{K_\varepsilon=1+\frac{\beta_F\,\Delta}{{\varepsilon}^{2}}+\frac{\beta_{\rm rel}\,\Delta}{\varepsilon}}
+
+
+\AtlasInlineMath{N_{\mathrm{samp}},N_{\mathrm{comm}}}: Total samples across all nodes and communication rounds \textbf{Domain:} All are nonnegative integers.
+
+\AtlasInlineMath{\ell}: The underlying loss or error defined by the accuracy measure; its expected, probabilistic, or worst-case aggregation is specified by the success contract
+
+\AtlasInlineMath{I,\mathcal{O},A}: Admissible instance, a response rule consistent with that instance, and an algorithm; the algorithm is selected before the unknown instance
+
+\AtlasInlineMath{\mathbb{E}}: Expectation over the declared randomness after fixing the instance and admissible response law
+
+\AtlasInlineMath{O,\Omega,\Theta,\widetilde{O},\widetilde\Omega}: Notation for asymptotic upper and lower bounds, constant-factor matching rates, and explicitly permitted logarithmic factors. Hidden-constant dependence is specified in each regime.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - achievable resource region}
+\AtlasMath{\mathcal B_v(\varepsilon;\theta)=\{b\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_j(\mathcal A,I)\le b_j\ \forall j,I,\quad G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} Joint resource vector
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsection{R1 - Stochastic nonconvex optimization under relaxed smoothness}
+\textbf{Region.} \AtlasInlineMath{\beta_0>0,\ \beta_{\rm rel},\zeta,\sigma\ge0,\ 0<\gamma_W\le1,\ 0\le r_W\le m-1}
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Joint resource vector
+
+\textbf{Status.} Joint budget unresolved
+
+\textbf{Achievable budgets.} B1
+
+\textbf{Necessary constraints.} No admitted claim in this comparison
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Conditions.} 
+\AtlasMath{\beta_0>0,\ \beta_{\rm rel},\zeta,\sigma\ge0,\ 0<\gamma_W\le1,\ 0\le r_W\le m-1}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\beta_0>0,\ \beta_{\rm rel},\zeta,\sigma\ge0,\ 0<\gamma_W\le1,\ 0\le r_W\le m-1}
+
+\textbf{Oracle mapping.} Applicable interfaces: local stochastic gradients and communication. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee mapping.} After fixing the instance and admissible response law, take expectation over the randomness declared by the target contract and control the underlying error.
+
+\textbf{Output mapping.} The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+\textbf{Resource mapping.} Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+\needspace{4\baselineskip}\subsection{B1 - Two-resource budget achieved by DNSGD}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} achievable
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{(CK_\varepsilon[m+\sigma^2/\varepsilon^2+\beta_{\rm rel}^2\sigma^2/\beta_F^2],\ \widetilde{O}(\gamma_W^{-1/2}K_\varepsilon))}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2509.08726}{[1]}
+
+\textbf{Local argument.} A1
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2509.08726}{[1]} theorem: Assumptions1-5, Proposition1; Thm1/Cor1, PDF pp.2-3; AppendixD; arXivv3
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Normalization and finite-step spectral consensus}
+\textbf{Scope.} Fresh local stochastic gradients and the explicitly declared matrix-multiplication protocol.
+
+\textbf{Algorithm scope.} Randomized normalized-SGD output; same-algorithm joint attainable resource vectors.
+
+Relaxed smoothness and the heterogeneity bound make the average objective \AtlasInlineMath{(\beta_F,\beta_{\rm rel})}-smooth, where \AtlasInlineMath{\beta_F=\beta_0+\beta_{\rm rel}\zeta}. For the cited DNSGD theorem, divide the objective by \AtlasInlineMath{\beta_F}, substituting \AtlasInlineMath{\Delta/\beta_F,\epsilon/\beta_F,\sigma/\beta_F}. Let
+\AtlasInlineMath{K_\epsilon=1+\beta_F\Delta/\epsilon^2+\beta_{\rm rel}\Delta/\epsilon}.
+The integer batch
+
+\AtlasMath{b=C\left\lceil1+{\sigma^2\over m\epsilon^2}
++{\beta_{\rm rel}^2\sigma^2\over m\beta_F^2}\right\rceil}
+
+and the theorem's initialization give the recorded total-sample budget by multiplying \AtlasInlineMath{mb} by its iteration count. Its gossip count retains \AtlasInlineMath{\gamma_W^{-1/2}} and the stated logarithms. The minimum batch preserves the noiseless baseline. Random iteration selection is private randomization.
+
+In the stronger protocol with known full spectrum, exact arithmetic, and signed historical linear combinations, let \AtlasInlineMath{r_W} count the distinct eigenvalues of \AtlasInlineMath{W} other than one. Then
+
+\AtlasMath{P_W(t)=\prod_{\lambda\ne1}(t-\lambda)/(1-\lambda),\qquad
+P_W(W)=\mathbf1\mathbf1^\top/m.}
+
+Spectral decomposition proves the identity. Degree \AtlasInlineMath{r_W\le m-1} means \AtlasInlineMath{r_W} matrix multiplications compute exact averaging.
+
+At a common point, each node takes
+\AtlasInlineMath{b=\lceil C(1+\sigma^2/(m\epsilon^2))\rceil} fresh samples. Their exact average \AtlasInlineMath{\widehat g} has expected error \AtlasInlineMath{O(\epsilon)}. Every node makes the normalized step with
+\AtlasInlineMath{\eta=c\min\{\epsilon/\beta_F,1/\beta_{\rm rel}\}}, taking zero step if the estimate vanishes. Relaxed descent and
+\AtlasInlineMath{\langle\nabla F,\widehat g/\|\widehat g\|\rangle
+\ge\|\nabla F\|-2\|\widehat g-\nabla F\|}
+give expected decrease at least \AtlasInlineMath{c\eta\|\nabla F\|-C\eta\epsilon}.
+Sum for \AtlasInlineMath{CK_\epsilon} steps and return a uniform random iterate. All nodes attain the stated expected norm guarantee, with joint budget
+
+\AtlasMath{(CK_\epsilon[m+\sigma^2/\epsilon^2],\;Cr_WK_\epsilon).}
+
+Both coordinates belong to one algorithm. Known spectrum and signed coefficients are substantive permissions; for fixed \AtlasInlineMath{m}, this construction precludes an unconditional communication lower bound diverging as \AtlasInlineMath{\gamma_W^{-1/2}} in that protocol.
+
+\textbf{Limits of the argument.} Finite-step consensus additionally requires known exact spectrum, signed coefficients, and exact arithmetic. It is not available under every communication protocol.
+
+\textbf{Sources.} \href{https://arxiv.org/pdf/2509.08726}{[1]}
+
+\needspace{7\baselineskip}\section{References}
+[1] Luo Luo, Xue Cui, Tingkai Jia and Cheng Chen. Decentralized Stochastic Nonconvex Optimization under the (L0,L1)-Smoothness. 2026; KDD 2026; arXiv:2509.08726v3, 1 June 2026, 15 pp.; Assumptions 1-5 and Proposition 1 p.2; Theorem 1 and Corollary 1 p.3; Appendix D; DOI 10.1145/3770855.3817843..
+
+\url{https://arxiv.org/pdf/2509.08726}
+
+\end{document}

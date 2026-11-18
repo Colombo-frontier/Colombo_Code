@@ -1,0 +1,922 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ON_OCO_S",
+  "title": "Convex online optimization on a Euclidean ball: action-point gradients and static regret",
+  "summary": "The learner acts in a public Euclidean ball and receives the full gradient at its action only after incurring the loss. Every loss is convex with bounded gradient. The comparator is the best single fixed point in the ball over the horizon.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "external_regret"
+    },
+    {
+      "facet": "structure",
+      "value": "convex"
+    },
+    {
+      "facet": "feedback",
+      "value": "action_gradient"
+    },
+    {
+      "facet": "guarantee",
+      "value": "pathwise_upper_randomized_lower"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation_code": "online_convex_external_regret",
+      "formulation": "sum_t f_t(x_t) − min_{u in B2(R)} sum_t f_t(u)",
+      "solution_goal": "minimize_expected_cumulative_regret",
+      "protocol_ref": "ON_OCO_S_pro_d7ccb24866",
+      "code": "online_convex_external_regret",
+      "formulation_latex": "x_t\\in B_2^d(R),\\quad f_t\\ \\mathrm{convex},\\quad \\|\\nabla f_t(x)\\|_2\\le L,\\qquad R_T=\\sum_t f_t(x_t)-\\min_{u\\in B_2^d(R)}\\sum_t f_t(u)",
+      "goal_latex": "\\inf_{\\mathcal A}\\sup_{f_{1:T}}\\mathbb E_{\\mathcal A}[R_T]",
+      "description_paragraphs": [
+        "The learner acts in a public Euclidean ball and receives the full gradient at its action only after incurring the loss. Every loss is convex with bounded gradient. The comparator is the best single fixed point in the ball over the horizon."
+      ]
+    },
+    "model": {
+      "instance": "The action domain is $B_2^d(R)$. Before interaction, the environment fixes convex functions $f_t$ differentiable in a neighborhood of the ball, with $\\|\\nabla f_t(x)\\|_2\\le L$ throughout the ball. Feedback is the exact gradient at the action point only.",
+      "assumptions": [
+        {
+          "subject_id": "ON_OCO_S_obj_951e4f1706",
+          "property_code": "convex_in_action",
+          "variable_blocks": [
+            "ON_OCO_S_var_cff5bc1bb9"
+          ],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_OCO_S_p_136cb4ee93",
+            "ON_OCO_S_p_76dd32a562",
+            "ON_OCO_S_p_60b62fcb78",
+            "ON_OCO_S_p_df367632a3"
+          ],
+          "scope": "Every t and every x in a neighborhood of the ball",
+          "description": "For every t, f_t is convex and differentiable on a neighborhood of the ball, with convexity in its argument x."
+        },
+        {
+          "subject_id": "ON_OCO_S_obj_951e4f1706",
+          "property_code": "bounded_gradient",
+          "variable_blocks": [
+            "ON_OCO_S_var_cff5bc1bb9"
+          ],
+          "norm_ref": "ON_OCO_S_nor_326b4c7f62",
+          "parameter_refs": [
+            "ON_OCO_S_p_136cb4ee93",
+            "ON_OCO_S_p_76dd32a562",
+            "ON_OCO_S_p_60b62fcb78",
+            "ON_OCO_S_p_df367632a3"
+          ],
+          "scope": "Every t and every point x in the ball",
+          "description": "For every t and x ∈ B₂ᵈ(R), require ‖∇f_t(x)‖₂ ≤ L. A Lipschitz gradient is not assumed."
+        }
+      ],
+      "parameter_domain_description": "L: $L>0$ (public); R: $R>0$ (public); T: $T\\in\\mathbb N,\\ T\\ge1$ (public); d: $d\\in\\mathbb N,\\ d\\ge1$ (public)",
+      "code": "model_declared",
+      "interaction_timing": [
+        "The environment fixes the loss-function sequence.",
+        "Choose x_t ∈ B₂ᵈ(R).",
+        "Incur f_t(x_t), then receive grad f_t(x_t).",
+        "Update the next action using previous gradients."
+      ],
+      "adversary_information": "The environment fixes the complete loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner's private seed. This is an oblivious environment; nonanticipation describes the learner's causal information and does not extend the specification to a history-adaptive adversary.",
+      "unresolved_applicability": [
+        "The exp-concave contract is recorded as ONX_OCO_EXP. The strongly convex and general-norm/proximal specifications ONX_OCO_STRONG and ONX_OCO_NON_EUCLIDEAN do not inherit rates from neighboring models without applicability checks. Gradient-Lipschitz and LMO-only variants require separate specifications."
+      ],
+      "description_paragraphs": [
+        "The current hidden convex loss is $f_t$. Convexity and the gradient bound apply to its x argument. Differentiability does not imply a Lipschitz gradient; smoothness and strong convexity are not added.",
+        "The feasible action and gradient query point is $x_t$. The same point incurs loss and returns a gradient.",
+        "The hindsight fixed comparator $u$ is one point in the ball used throughout the horizon.",
+        "Require $d,T\\ge1$ and $L,R>0$.",
+        "Both the action and gradient-query domains are B₂ᵈ(R)."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "ON_OCO_S_ora_ae4183bbfc",
+          "operation_code": "query_gradient_at_action",
+          "target_object": "ON_OCO_S_obj_951e4f1706",
+          "variable_blocks": [
+            "ON_OCO_S_var_cff5bc1bb9"
+          ],
+          "query_signature": "Inputs: $t,\\ x_t\\in B_2^d(R)$. Timing and visible information follow the specified protocol.",
+          "response_signature": "Response: $g_t=\\nabla f_t(x_t)$.",
+          "derivative_reference_object": "ON_OCO_S_obj_951e4f1706",
+          "derivative_order": 1,
+          "order_convention": "order is relative to the current member f_t(x), f(x), or sample F(x;ξ_t) of the named indexed function family and only with respect to x; finite feedback interfaces have no derivative order",
+          "feedback_quality": {
+            "code": "exact_gradient",
+            "description": "Return only the exact $d$-dimensional gradient at the current action. No noise or arbitrary-precision parameter is present."
+          },
+          "domain_ref": "ON_OCO_S_dom_a0c0fbf18a",
+          "coupling": "The current f_t is fixed but hidden. Submit x_t and receive its d-dimensional gradient. No other same-round gradients, Hessian, or complete function are revealed. The value f_t(x_t) is not separately promised; incurring loss and observing its value are distinct.",
+          "index_control": "The learner selects feasible actions and any probes permitted by the specification. The environment determines current losses, outcomes, or fresh samples. The learner cannot select future rounds.",
+          "access_schedule": "Interaction follows the sequence in registry.protocols. Current loss feedback is available only after the action is submitted. Any pre-action disclosure of context or advice is specified separately.",
+          "accuracy_argument": null,
+          "cost_rule_ref": "ON_OCO_S_res_a22f338e91",
+          "query_latex": "t,\\ x_t\\in B_2^d(R)",
+          "response_latex": "g_t=\\nabla f_t(x_t)"
+        }
+      ],
+      "public_inputs": [
+        "d",
+        "T",
+        "L",
+        "R",
+        "The public Euclidean-ball domain."
+      ],
+      "hidden_objects": [
+        "ON_OCO_S_obj_951e4f1706"
+      ],
+      "auxiliary_interfaces": [
+        "No additional access to hidden losses, means, or gradients is available. Projection, sampling, and internal optimization over public domains may have separately recorded computation costs; they are not free loss oracles."
+      ],
+      "protocol_ref": "ON_OCO_S_pro_d7ccb24866",
+      "query_domain_description": "B2^d(R)",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "Exact gradient at the action point:",
+        "$$\nt,\\ x_t\\in B_2^d(R)\\ \\longmapsto\\ g_t=\\nabla f_t(x_t)\n$$",
+        "The current function $f_t$ is fixed before interaction but remains hidden. The learner first submits $x_t$, then receives one complete $d$-dimensional gradient.",
+        "The interface supplies no same-round gradients at other points, Hessians, or complete function $f_t$.",
+        "The value $f_t(x_t)$ is not additionally promised as feedback. Inclusion of a loss in the objective does not mean the learner observes it.",
+        "Public inputs: d, T, L, R, and the Euclidean ball domain."
+      ]
+    },
+    "output": {
+      "object_type": "action_trajectory",
+      "domain_ref": "ON_OCO_S_dom_a0c0fbf18a",
+      "feasibility": "Every loss-bearing action must belong to the action domain. The final output retains the complete action trajectory.",
+      "allowed_postprocessing": "Any measurable computation on received feedback is allowed. No native observation may be added after the budget is exhausted or the algorithm stops.",
+      "certificate_requirement": "Only the stated statistical guarantee is required, not a certificate verifiable through the feedback interface.",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "sum_t f_t(x_t) − min_{u in B2(R)} sum_t f_t(u)",
+      "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+      "reference_object": "ON_OCO_S_obj_951e4f1706",
+      "nonnegativity": false,
+      "finiteness_conditions": "Two values within the ball differ by at most 2LR, so the absolute cumulative comparison is at most 2LRT. Observation noise is excluded from objective-loss differences.",
+      "comparator_ref": "ON_OCO_S_com_66c1f506a4",
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "$$\nx_t\\in B_2^d(R),\\quad f_t\\ \\mathrm{convex},\\quad \\|\\nabla f_t(x)\\|_2\\le L,\\qquad R_T=\\sum_t f_t(x_t)-\\min_{u\\in B_2^d(R)}\\sum_t f_t(u)\n$$"
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "Sequential online rounds; only information permitted by the protocol is visible in each round."
+        },
+        {
+          "code": "native_feedback",
+          "unit": "gradient",
+          "description": "One $d$-dimensional gradient per round, for a total of $T$ gradient responses."
+        },
+        {
+          "code": "projections",
+          "unit": "projection",
+          "description": "Projected OGD uses one Euclidean projection per round. Projection onto the public ball is explicit."
+        }
+      ],
+      "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+      "cost_rules": [
+        {
+          "id": "ON_OCO_S_res_a22f338e91",
+          "operation_refs": [
+            "ON_OCO_S_ora_ae4183bbfc"
+          ],
+          "cost": {
+            "rounds": 1,
+            "native_feedback": 1
+          }
+        }
+      ],
+      "scalarization": "Retain the native objective and complete resource vector. At fixed $T$, compare cumulative regret. Best-arm-identification stopping times and error probabilities use their own task-specific criteria.",
+      "setup_cost": "Only declared public inputs may be read. Hidden losses, means, or samples cannot be accessed in advance or outside the $T$ rounds or $\\tau$ samples.",
+      "online_cost": "Arbitrary causal policies are permitted. The projected-OGD upper bound uses only the current gradient and performs one Euclidean-ball projection and $O(d)$ vector operations per round. Projection uses the public domain and is an internal computation, not another loss query.",
+      "amortization_scope": "The algorithm runs on one environment. Charged feedback cannot be reused across independent instances.",
+      "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "One $d$-dimensional gradient per round, for a total of $T$ gradient responses.",
+        "Any causal strategy is allowed; the projected-OGD upper bound uses only the current gradient.",
+        "Each OGD iteration uses one Euclidean-ball projection and O(d) vector operations. Projection onto the public domain is internal computation, not an additional loss query.",
+        "Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "Private randomization is allowed. The seed is hidden from the environment and independent of the fixed instance and sample randomness.",
+        "adaptivity": "The action and every probe in a round may depend only on previous-round feedback, public inputs, any context or advice already revealed that round, and private randomness. They may not use unrevealed current losses or samples.",
+        "restrictions": [
+          "All measurable causal policies satisfying the declared information timing and feasible domain are allowed, without extra span, iteration-form, or polynomial-time restrictions."
+        ],
+        "internal_computation": "Arbitrary measurable exact-real computation is permitted; feedback complexity does not imply arithmetic or bit complexity. Any causal policy is admissible. The projected OGD upper bound uses only the current gradient and performs one Euclidean-ball projection and $O(d)$ vector operations per round. Projection uses public geometry and is not a new loss query.",
+        "parallelism": "Interaction proceeds in sequential time rounds. A two-point evaluation is one pair of same-round responses only where explicitly permitted; it is not equivalent to two independent rounds.",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "The native objective is $\\inf_{\\mathcal A}\\sup_{f_{1:T}}\\mathbb E_{\\mathcal A}[R_T]$.",
+          "aggregation_order": [
+            "First take the infimum over complete nonanticipating learning policies using only public inputs.",
+            "Then take the supremum over instances fixed before interaction that satisfy the stated model.",
+            "Expectation includes learner randomness and, when present, observation noise or random samples.",
+            "The objective fixes the comparator. Per-round optimal actions, a fixed action, and a sample-path optimum are not interchangeable."
+          ],
+          "quantifier_order": "One learning algorithm must apply to every instance in the declared class. It may use public inputs only, not hidden instance parameters.",
+          "randomness_sources": [
+            "Learner's private randomness"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "The horizon T is fixed and public. The guarantee holds for that T; it does not automatically give an anytime result or a simultaneous high-probability statement for all T.",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "$$\n\\inf_{\\mathcal{A}}\\sup_{f_{1:T}}\\mathbb{E}_{\\mathcal{A}}[R_T]\n$$",
+            "Choose one algorithm using public inputs before taking the worst case over all admissible instances. Expectation covers the algorithm's private randomness and the observation randomness specified by the model. Comparator choice and the order of summation, minimization, and expectation follow the displayed formula."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+        "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+        "scalarization": "Retain the native objective and complete resource vector. At fixed $T$, compare cumulative regret. Best-arm-identification stopping times and error probabilities use their own task-specific criteria."
+      },
+      "alias_ids": [
+        "ON_OCO_S"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ON_OCO_S_obj_951e4f1706",
+        "type": "indexed_loss_function",
+        "definition": "The action domain is $B_2^d(R)$. Before interaction, the environment fixes convex functions $f_t$ differentiable in a neighborhood of the ball, with $\\|\\nabla f_t(x)\\|_2\\le L$ throughout the ball. Feedback is the exact gradient at the action point only.",
+        "depends_on": [],
+        "role_code": "loss_function_family"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ON_OCO_S_var_cff5bc1bb9",
+        "dimension": "d",
+        "space": "B2^d(R)"
+      }
+    ],
+    "domains": [
+      {
+        "id": "ON_OCO_S_dom_a0c0fbf18a",
+        "definition": "B2^d(R)",
+        "roles": [
+          "action_domain",
+          "query_domain"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "ON_OCO_S_nor_326b4c7f62",
+        "definition": "Euclidean two-norm on the explicitly specified d-dimensional function argument, gradient, or model vector."
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ON_OCO_S_pro_d7ccb24866",
+        "steps": [
+          "The environment fixes the loss-function sequence.",
+          "Choose x_t ∈ B₂ᵈ(R).",
+          "Incur f_t(x_t), then receive grad f_t(x_t).",
+          "Update the next action using previous gradients."
+        ],
+        "adversary_information": "The environment fixes the complete loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner's private seed. This is an oblivious environment; nonanticipation describes the learner's causal information and does not extend the specification to a history-adaptive adversary.",
+        "loss_bearing_points": "Only $x_t$ incurs $f_t(x_t)$.",
+        "queries_per_round": "One $d$-dimensional gradient per round, for a total of $T$ gradient responses.",
+        "past_requery": "No new information may be requested from past rounds or previously used samples. Received feedback may be stored and processed. In a stochastic model, an action may be repeated in a new round, with a fresh charged sample."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ON_OCO_S_com_66c1f506a4",
+        "definition": "One best fixed point u in the ball, selected in hindsight."
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ON_OCO_S_p_60b62fcb78",
+      "symbol": "L",
+      "meaning": "A Euclidean Lipschitz or gradient-norm bound on losses.",
+      "kind": "independent",
+      "domain": "$L>0$",
+      "public": true,
+      "definition": "The condition $\\|\\nabla f_t(x)\\|_2\\le L$ holds throughout the action domain.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_OCO_S_p_df367632a3",
+      "symbol": "R",
+      "meaning": "Euclidean-ball radius of the center-action set",
+      "kind": "independent",
+      "domain": "$R>0$",
+      "public": true,
+      "definition": "$B_2^d(R)=\\{x\\in\\mathbb R^d:\\|x\\|_2\\le R\\}$.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_OCO_S_p_76dd32a562",
+      "symbol": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_OCO_S_p_136cb4ee93",
+      "symbol": "d",
+      "meaning": "The ambient dimension of actions or feature vectors.",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "public": true,
+      "definition": "Vectors belong to $\\mathbb R^d$; dimension is still denoted d when a non-Euclidean norm is used.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "L",
+      "meaning": "A Euclidean Lipschitz or gradient-norm bound on losses.",
+      "domain": "$L>0$",
+      "definition": "The condition $\\|\\nabla f_t(x)\\|_2\\le L$ holds throughout the action domain.",
+      "parameter_ref": "ON_OCO_S_p_60b62fcb78"
+    },
+    {
+      "symbol_latex": "R",
+      "meaning": "Euclidean-ball radius of the center-action set",
+      "domain": "$R>0$",
+      "definition": "$B_2^d(R)=\\{x\\in\\mathbb R^d:\\|x\\|_2\\le R\\}$.",
+      "parameter_ref": "ON_OCO_S_p_df367632a3"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "parameter_ref": "ON_OCO_S_p_76dd32a562"
+    },
+    {
+      "symbol_latex": "d",
+      "meaning": "The ambient dimension of actions or feature vectors.",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "definition": "Vectors belong to $\\mathbb R^d$; dimension is still denoted d when a non-Euclidean norm is used.",
+      "parameter_ref": "ON_OCO_S_p_136cb4ee93"
+    },
+    {
+      "symbol_latex": "f_t",
+      "meaning": "Obliviously fixed differentiable convex loss in round $t$",
+      "domain": "Real-valued function defined on a neighborhood of the action ball",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_t",
+      "meaning": "Actual action and sole gradient-query point",
+      "domain": "$x_t\\in B_2^d(R)$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "u",
+      "meaning": "Best fixed comparator point in hindsight",
+      "domain": "$u\\in B_2^d(R)$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "g_t",
+      "meaning": "The complete exact gradient at the action.",
+      "domain": "$g_t\\in\\mathbb R^d$",
+      "definition": "$g_t=\\nabla f_t(x_t)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\eta",
+      "meaning": "Step size of projected online gradient descent",
+      "domain": "Positive real number",
+      "definition": "$\\eta=2R/(L\\sqrt T)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\varepsilon_t",
+      "meaning": "Independent uniform signs in the lower-bound construction",
+      "domain": "$\\Pr(\\varepsilon_t=1)=\\Pr(\\varepsilon_t=-1)=1/2$",
+      "definition": "Drawn before interaction and used only in the hard-instance proof.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_T",
+      "meaning": "Cumulative loss difference relative to the comparator specified in this profile",
+      "domain": "Real-valued random variable",
+      "definition": "$R_T=\\sum_tf_t(x_t)-\\min_{u\\in B_2^d(R)}\\sum_tf_t(u)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal R_T^*",
+      "meaning": "Minimax expected regret under the current information protocol and parameter region.",
+      "domain": "A nonnegative real.",
+      "definition": "$$\n\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{f_{1:T}\\in\\mathcal I}\\mathbb E_{\\mathcal A}[R_T],\\\\ R_T&=\\sum_{t=1}^T f_t(x_t)-\\min_{u\\in B_2^d(R)}\\sum_{t=1}^T f_t(u).\\end{aligned}\n$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation includes the learner's private randomness and, when allowed, the environment strategy's randomness. A fixed loss sequence introduces no additional observation noise.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "B_2^d(r)",
+      "meaning": "Closed Euclidean ball of radius r",
+      "domain": "$r\\ge0$",
+      "definition": "$B_2^d(r)=\\{x\\in\\mathbb R^d:\\|x\\|_2\\le r\\}$. The symbol r is a placeholder radius, instantiated as R or 1 in the relevant specification.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Cumulative observations counted according to the declared feedback type.",
+      "domain": "Nonnegative integer or integer-valued stopping time",
+      "definition": "The quantity $N=T$ counts full-gradient or subgradient responses. Projection, proximal, and matrix operations are counted separately.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal I",
+      "meaning": "The complete environment class in the current minimax objective.",
+      "domain": "Collection of function classes or reward-distribution classes",
+      "definition": "A sequence of $T$ convex functions fixed before interaction. Each is differentiable near $B_2^d(R)$ and satisfies $\\|\\nabla f_t(x)\\|_2\\le L$ on the ball.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ON_OCO_S__main__q1",
+      "kind": "cumulative_regret",
+      "expression": "R*_T = inf_{A in admissible nonanticipating randomized learners} sup_{I in declared model} E_A,I[sum_t f_t(x_t) − min_{u in B2(R)} sum_t f_t(u)].",
+      "optimization_direction": "minimize",
+      "units": "loss",
+      "budget_variables": [
+        "ON_OCO_S_p_76dd32a562"
+      ],
+      "tolerance_variables": [],
+      "analysis_scope": "Compare only this specification and the listed parameter regions.",
+      "tracked_parameters": [
+        "ON_OCO_S_p_60b62fcb78",
+        "ON_OCO_S_p_df367632a3",
+        "ON_OCO_S_p_76dd32a562",
+        "ON_OCO_S_p_136cb4ee93"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "source_kind_label": "minimax_cumulative_regret",
+      "expression_latex": "\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{f_{1:T}\\in\\mathcal I}\\mathbb E_{\\mathcal A}[R_T],\\\\ R_T&=\\sum_{t=1}^T f_t(x_t)-\\min_{u\\in B_2^d(R)}\\sum_{t=1}^T f_t(u).\\end{aligned}",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound.",
+      "expression": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_351fb610de"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ON_OCO_S__main__r1",
+      "specification_ref": "ON_OCO_S",
+      "name": "ALL",
+      "predicate_text": "d,T≥1; L,R>0",
+      "predicate": {
+        "all": []
+      },
+      "parameter_refs": [
+        "ON_OCO_S_p_136cb4ee93",
+        "ON_OCO_S_p_76dd32a562",
+        "ON_OCO_S_p_60b62fcb78",
+        "ON_OCO_S_p_df367632a3"
+      ],
+      "kind": "mathematical",
+      "endpoint_notes": "Proof constants are independent of all declared tracked parameters. Thresholds without numerical values remain symbolic."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ON_OCO_S__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\le2LR\\sqrt T",
+      "quantity_ref": "ON_OCO_S__main__q1",
+      "region_refs": [
+        "ON_OCO_S__main__r1"
+      ],
+      "method": "Projected online gradient descent",
+      "algorithm_or_hard_family": "Projected online gradient descent",
+      "algorithm_class_scope": "A deterministic decision strategy suffices. Rewards or observations may still be random, with error quantifiers specified separately under GUARANTEE.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T gradients",
+        "projections": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_DYN"
+      ],
+      "evidence_refs": [
+        "ON_OCO_S__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_OCO_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Require integers $d,T\\ge1$ and $L,R>0$. The feasible domain is a Euclidean ball of radius $R$, and losses are convex and $L$-Lipschitz."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": "Fix any comparator $u$. Convexity and nonexpansiveness of projection bound regret by $\\|x_1-u\\|_2^2/(2\\eta)+\\eta L^2T/2$. The ball has diameter $2R$, giving $2R^2/\\eta+\\eta L^2T/2$. Choose step size $\\eta=2R/(L\\sqrt T)$. The inequality holds for every realized loss sequence and every $u$ simultaneously, including the hindsight optimizer.",
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_OCO_S__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\ge cLR\\sqrt T",
+      "quantity_ref": "ON_OCO_S__main__q1",
+      "region_refs": [
+        "ON_OCO_S__main__r1"
+      ],
+      "method": "Independent Rademacher linear losses on first coordinate",
+      "algorithm_or_hard_family": "Independent Rademacher linear losses on first coordinate",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_DYN"
+      ],
+      "evidence_refs": [
+        "ON_OCO_S__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_OCO_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Require integers $d,T\\ge1$ and $L,R>0$. The feasible domain is a Euclidean ball of radius $R$, and losses are convex and $L$-Lipschitz."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": "Use linear losses $f_t(x)=L\\varepsilon_t x_1$ with independent uniform signs $\\varepsilon_t$ sampled before interaction. Every causal learner has zero expected cumulative loss, whereas the best fixed action has cumulative loss $-LR|\\sum_t\\varepsilon_t|$. Khintchine's inequality gives $\\mathbb E|\\sum_t\\varepsilon_t|\\ge\\sqrt{T/2}$. Averaging over the sampled sequence yields a deterministic oblivious sequence attaining the corresponding expected regret for the randomized learner.",
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "ALL",
+      "predicate": {
+        "all": []
+      },
+      "predicate_text": "$d,T\\ge 1; L,R>0$",
+      "parameter_refs": [
+        "ON_OCO_S_p_136cb4ee93",
+        "ON_OCO_S_p_76dd32a562",
+        "ON_OCO_S_p_60b62fcb78",
+        "ON_OCO_S_p_df367632a3"
+      ],
+      "source_region_ref": "ON_OCO_S__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_OCO_S__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_OCO_S__main__q1",
+      "resource_projection_id": "resource_351fb610de",
+      "regime_id": "ON_OCO_S__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "ON_OCO_S__main__b1"
+        ],
+        "lower_refs": [
+          "ON_OCO_S__main__b2"
+        ],
+        "comparison_ref": "ON_OCO_S__main__c1",
+        "quantity_ref": "ON_OCO_S__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+        "ratio_or_gap": "≤2sqrt2",
+        "envelopes": {
+          "upper": {
+            "expression": "2LRsqrtT",
+            "claim_refs": [
+              "ON_OCO_S__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "2LRsqrtT"
+          },
+          "lower": {
+            "expression": "(LR/sqrt2)sqrtT",
+            "claim_refs": [
+              "ON_OCO_S__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "(LR/sqrt2)sqrtT"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_OCO_S__main__b1",
+            "when_region_refs": [
+              "ON_OCO_S__main__r1"
+            ],
+            "meaning": "Invoke each algorithm only in its applicability region; the scalar upper envelope minimizes over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "ON_OCO_S__main__b1": [
+            {
+              "region_ref": "ON_OCO_S__main__r1",
+              "predicate_text": "$d,T\\ge 1; L,R>0$"
+            }
+          ],
+          "ON_OCO_S__main__b2": [
+            {
+              "region_ref": "ON_OCO_S__main__r1",
+              "predicate_text": "$d,T\\ge 1; L,R>0$"
+            }
+          ]
+        },
+        "envelope_certificate": "Admit only individually checked claims compatible with this contract.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound."
+      },
+      "comparison_key": {
+        "setting_id": "ON_OCO_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_OCO_S__main__q1",
+        "resource_projection_id": "resource_351fb610de",
+        "regime_id": "ON_OCO_S__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ON_OCO_S__main__e1",
+      "source_ref": "ON_SRC_DYN",
+      "locator": {
+        "theorem": "Theorem 2",
+        "section": "",
+        "pdf_pages": [
+          5
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Supports the stated results and explicit reductions: $\\mathcal{R}_T^*\\ge cLR\\sqrt T$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "The source lower bound is $\\Omega(L\\sqrt{T(D^2+DP)})$, with path budget in $[0,TD]$. An independent one-dimensional block construction on the Euclidean ball also checks the correspondence between geometry and path length."
+      ]
+    },
+    {
+      "id": "ON_OCO_S__main__e2",
+      "source_ref": "ON_SRC_DYN",
+      "locator": {
+        "theorem": "Theorem 1",
+        "section": "",
+        "pdf_pages": [
+          4
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Source support for the listed results and necessary explicit transfers: $\\mathcal{R}_T^*\\le2LR\\sqrt T$. Applicability is restricted separately by each atomic bound's model, feedback, regime, and quantifiers.",
+      "notes": [
+        "Projected online gradient descent has dynamic regret at most $7D^2/(4\\eta)+DP/\\eta+\\eta TL^2/2$, with its step size tuned using the public path budget."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "ON_SRC_DYN",
+      "authors": [
+        "Lijun Zhang",
+        "Shiyin Lu",
+        "Zhi-Hua Zhou"
+      ],
+      "title": "Adaptive Online Learning in Dynamic Environments",
+      "year": 2018,
+      "version": "NeurIPS 2018 main paper",
+      "url": "https://www.lamda.nju.edu.cn/lusy/pdf/zhang2018adaptive.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [
+    {
+      "id": "ON_REL_OCO_PZERO",
+      "source_ref": "ON_OCO_S",
+      "target_ref": "ON_DYN_S",
+      "relation_kind": "exact_specialization",
+      "conditions": [
+        "Set P=0, preserving L, R, d, T, and the gradient interface."
+      ],
+      "instance_map": "same loss sequence",
+      "output_map": "same trajectory",
+      "error_map": "dynamic comparator must be constant; regret exactly equals static",
+      "oracle_simulation": "identity",
+      "cost_map": {
+        "expression": "T gradients and projections unchanged",
+        "components": {}
+      },
+      "evidence_refs": [
+        "ON_OCO_S__main__e2"
+      ]
+    },
+    {
+      "id": "ON_REL_GRAD_REGRET_TO_SADDLE",
+      "source_ref": "ON_OCO_S",
+      "target_ref": "external:convex_concave_saddle_point_no_regret_averaging",
+      "relation_kind": "conditional_reduction",
+      "conditions": [
+        "The payoff $\\Phi$ is convex-concave. The two online learners have compatible interfaces and receive the corresponding partial gradients. Their feasible domains are preserved."
+      ],
+      "instance_map": "x-loss Φ(·,y_t), y-loss −Φ(x_t,·)",
+      "output_map": "average iterates (xbar,ybar)",
+      "error_map": "weak primal-dual gap≤(R_x+R_y)/T by convexity/concavity",
+      "oracle_simulation": "Need both partial-gradient interfaces per round. Does not follow from arbitrary one-sided bandit oracle.",
+      "cost_map": {
+        "expression": "T x-gradients +T y-gradients, plus both update/projection costs",
+        "components": {}
+      },
+      "evidence_refs": []
+    }
+  ],
+  "aliases": [
+    {
+      "legacy_id": "ON_OCO_S",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "optimal": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ON_OCO_S__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "4d22a0dde27958879152124187cfabeab1f1be9c7e1d3c52a41b1e57acdcc52e",
+    "source_order": 59,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

@@ -1,0 +1,882 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "SO_ZO_C03_rand_expected",
+  "title": "Sample-smooth nonconvex optimization: reusable samples and uniform gradient-deviation bounds",
+  "summary": "Find an approximate first-order stationary point of the population objective $f$: an output point with sufficiently small gradient norm. The mathematical object is $\\nabla f$, and information is acquired through the zeroth-order interface specified below.",
+  "primary_domain": "single_objective",
+  "oracle_order_collection": "zo",
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "single_objective"
+    },
+    {
+      "facet": "oracle_order",
+      "value": "zero"
+    },
+    {
+      "facet": "goal",
+      "value": "first_order_stationarity"
+    },
+    {
+      "facet": "feedback",
+      "value": "reusable_sample_value"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expected_loss"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_worst_case"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "solution_goal": "first_order_stationarity",
+      "code": "single_objective_optimization",
+      "description_paragraphs": [
+        "Find an approximate first-order stationary point of the population objective $f$: an output point with sufficiently small gradient norm. The mathematical object is $\\nabla f$, and information is acquired through the zeroth-order interface specified below."
+      ],
+      "navigation_domains": [
+        "single_objective"
+      ],
+      "formulation_code": "SO.first_order_stationarity"
+    },
+    "model": {
+      "properties": {
+        "convexity": "not_assumed",
+        "regularity": [
+          "samplewise_gradient_lipschitz",
+          "almost_sure_gradient_deviation_bound"
+        ],
+        "structure": [],
+        "growth": [
+          "global_initial_gap"
+        ]
+      },
+      "domain_roles": {
+        "function": "All of R^d; regularity constraints are as stated in the model.",
+        "optimization": "All of R^d; stationarity tasks define Delta using the full-space infimum.",
+        "query": "$\\mathbb{R}^d$",
+        "output": "$\\mathbb{R}^d$",
+        "localization": "Known initial point x0 and global initial-gap bound Delta; no bounded localization of a minimizer is promised."
+      },
+      "code": "admissible_model_class",
+      "description_paragraphs": [
+        "$f:\\mathbb{R}^d\\to\\mathbb{R}$ is differentiable and satisfies $\\|\\nabla f(x)-\\nabla f(y)\\|_2\\le\\beta\\|x-y\\|_2$ for every $x,y\\in\\mathbb{R}^d$.",
+        "$f=\\mathbb{E}F(\\cdot;Z)$, with integrable sample values at a reference point. Every sample function is globally $\\beta$-smooth. For each $x$, $\\|\\nabla F(x;Z)-\\nabla f(x)\\|_2\\le\\sigma_g$ holds almost surely, giving a uniform bound on sample-gradient deviations.",
+        "$f_*:=\\inf_{x\\in\\mathbb{R}^d}f(x)>-\\infty$, and the given initial point $x_0$ satisfies $f(x_0)-f_*\\le\\Delta$."
+      ],
+      "geometry_refs": [
+        "SO_ZO_C03_rand_expected_dom_ee4105a4ce",
+        "SO_ZO_C03_rand_expected_dom_84b722f474",
+        "SO_ZO_C03_rand_expected_dom_9a1be5c15c",
+        "SO_ZO_C03_rand_expected_dom_39707c6baa",
+        "SO_ZO_C03_rand_expected_dom_74eeb0bbae"
+      ]
+    },
+    "oracle": {
+      "public_inputs": [
+        "SO_ZO_C03_rand_expected_p_bb728db2b9",
+        "\\beta",
+        "\\Delta",
+        "\\varepsilon",
+        "\\sigma_g",
+        "SO_ZO_C03_rand_expected_obj_a4c2f12f78"
+      ],
+      "domain": "$\\mathbb{R}^d$",
+      "variant": null,
+      "code": "reusable_sample_value",
+      "description_paragraphs": [
+        "A new sample handle corresponds to an independent draw of the hidden sample $Z$. Given its handle and $x\\in \\mathbb{R}^d$, the interface returns the exact sample value $F(x;Z)$. The algorithm observes only handles and numerical values, not the underlying sample data or the complete sample function.",
+        "Sample handles may be retained for arbitrarily many paid evaluations. Responses using the same handle come from the same function, and distinct handles are independent.",
+        "The public inputs are $d$, $\\beta$, $\\Delta$, $\\varepsilon$, $\\sigma_g$, $x_0$, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface."
+      ]
+    },
+    "output": {
+      "domain": "$\\mathbb{R}^d$",
+      "code": "output_space",
+      "description_paragraphs": [
+        "Return $\\widehat{x}\\in \\mathbb{R}^d$. The output may be an unqueried point, a random choice among previous points, or an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output."
+      ]
+    },
+    "metric": {
+      "native_metric_wording": "The base loss is $\\ell(I,x)=\\|\\nabla f(x)\\|_2$ with tolerance $\\varepsilon>0$. Any theorem for squared gradient norms must first be converted to this norm scale.",
+      "formula_latex": "\\|\\nabla f(\\widehat{x})\\|_2",
+      "threshold_latex": "\\varepsilon",
+      "code": "first_order_stationarity",
+      "description_paragraphs": [
+        "The base loss is $\\ell(I,x)=\\|\\nabla f(x)\\|_2$ with tolerance $\\varepsilon>0$. Any theorem for squared gradient norms must first be converted to this norm scale."
+      ],
+      "base_expression": "\\|\\nabla f(\\widehat{x})\\|_2"
+    },
+    "resource": {
+      "unit": "One scalar sample-function value; two points using the same handle cost two calls",
+      "budget_mode": "fixed_worst_case",
+      "accounting": {
+        "atomic_unit": "One scalar sample-function value; two points using the same handle cost two calls",
+        "budget_mode": "fixed_worst_case",
+        "arithmetic_precision": "exact_real_unpriced_unless_specified",
+        "free_operations": "Only the public operations explicitly stated in this specification are free. Operations accessing the unknown instance provide no free information."
+      },
+      "code": "oracle_resource",
+      "description_paragraphs": [
+        "One scalar sample-function value costs $1$ call; two points with the same sample handle or Markov state cost $2$ calls. Batches, initialization and repeated visits are charged per value. An empty handle supplies no free instance information.",
+        "Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "randomized_allowed",
+        "adaptivity": "sequential_adaptive",
+        "restrictions": [],
+        "code": "randomized_allowed",
+        "description_paragraphs": [
+          "Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.",
+          "Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "quantifiers": "one_algorithm_for_all_admissible_instances",
+          "probability_space": "The algorithm's private seed and all randomness in the stated oracle or environment, after the instance and feedback law are fixed.",
+          "formula_latex": "\\exists\\mathcal{A}\\ \\forall I\\in\\mathcal{I}:\\ \\mathbb{E}[\\|\\nabla f(\\widehat{x})\\|_2]\\le \\varepsilon",
+          "code": "expected_loss",
+          "description_paragraphs": [
+            "After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. Require $\\mathbb{E}[\\ell(I,\\widehat{x})]\\le \\varepsilon$, fixing the instance before averaging over algorithmic and feedback randomness.",
+            "Oracle cost uses a deterministic worst-case budget: $N\\le T$ on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "SO_ZO_C03_rand_expected"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "SO_ZO_C03_rand_expected_obj_a4c2f12f78",
+        "information": "public",
+        "description": "x_0",
+        "knowledge": "declared_public_input"
+      }
+    ],
+    "variable_blocks": [],
+    "domains": [
+      {
+        "id": "SO_ZO_C03_rand_expected_dom_ee4105a4ce",
+        "roles": [
+          "function"
+        ],
+        "description": "All of R^d; regularity constraints are as stated in the model."
+      },
+      {
+        "id": "SO_ZO_C03_rand_expected_dom_84b722f474",
+        "roles": [
+          "optimization"
+        ],
+        "description": "All of R^d; stationarity tasks define Delta using the full-space infimum."
+      },
+      {
+        "id": "SO_ZO_C03_rand_expected_dom_9a1be5c15c",
+        "roles": [
+          "query"
+        ],
+        "description": "$\\mathbb{R}^d$"
+      },
+      {
+        "id": "SO_ZO_C03_rand_expected_dom_39707c6baa",
+        "roles": [
+          "output"
+        ],
+        "description": "$\\mathbb{R}^d$"
+      },
+      {
+        "id": "SO_ZO_C03_rand_expected_dom_74eeb0bbae",
+        "roles": [
+          "localization"
+        ],
+        "description": "Known initial point x0 and global initial-gap bound Delta; no bounded localization of a minimizer is promised."
+      }
+    ],
+    "norms": [],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "SO_ZO_C03_rand_expected_p_bb728db2b9",
+      "symbol": "d",
+      "meaning": "Dimension of the variable space",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "d"
+    },
+    {
+      "id": "SO_ZO_C03_rand_expected_p_1c5476f952",
+      "symbol": "\\beta",
+      "meaning": "Public upper bound on the gradient Lipschitz constant",
+      "kind": "independent",
+      "domain": "$\\beta>0$",
+      "public": false,
+      "definition": "The object, norm and domain are fixed by the specific inequalities in this profile's model.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "beta"
+    },
+    {
+      "id": "SO_ZO_C03_rand_expected_p_108e7b71c7",
+      "symbol": "\\Delta",
+      "meaning": "Known upper bound on the initial objective gap",
+      "kind": "independent",
+      "domain": "$\\Delta\\ge0$",
+      "public": false,
+      "definition": "$f(x_0)-\\inf_{x\\in\\mathbb{R}^d}f(x)\\le\\Delta$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "Delta"
+    },
+    {
+      "id": "SO_ZO_C03_rand_expected_p_5c322c6737",
+      "symbol": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "epsilon"
+    },
+    {
+      "id": "SO_ZO_C03_rand_expected_p_beac113d99",
+      "symbol": "\\sigma_g",
+      "meaning": "Uniform norm bound on sample-gradient deviations from the population gradient",
+      "kind": "independent",
+      "domain": "$\\sigma_g\\ge0$",
+      "public": false,
+      "definition": "$\\|\\nabla F(x;Z)-\\nabla f(x)\\|_2\\le\\sigma_g$, with the probability and scope specified by the model.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "sigma_g"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "Dimension of the variable space",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_C03_rand_expected_p_bb728db2b9"
+    },
+    {
+      "symbol_latex": "\\beta",
+      "meaning": "Public upper bound on the gradient Lipschitz constant",
+      "domain": "$\\beta>0$",
+      "definition": "The object, norm and domain are fixed by the specific inequalities in this profile's model.",
+      "parameter_ref": "SO_ZO_C03_rand_expected_p_1c5476f952"
+    },
+    {
+      "symbol_latex": "\\Delta",
+      "meaning": "Known upper bound on the initial objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "definition": "$f(x_0)-\\inf_{x\\in\\mathbb{R}^d}f(x)\\le\\Delta$",
+      "parameter_ref": "SO_ZO_C03_rand_expected_p_108e7b71c7"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "domain": "$\\varepsilon>0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_C03_rand_expected_p_5c322c6737"
+    },
+    {
+      "symbol_latex": "\\sigma_g",
+      "meaning": "Uniform norm bound on sample-gradient deviations from the population gradient",
+      "domain": "$\\sigma_g\\ge0$",
+      "definition": "$\\|\\nabla F(x;Z)-\\nabla f(x)\\|_2\\le\\sigma_g$, with the probability and scope specified by the model.",
+      "parameter_ref": "SO_ZO_C03_rand_expected_p_beac113d99"
+    },
+    {
+      "symbol_latex": "x,y,u",
+      "meaning": "Function arguments and dummy variables in the formulas",
+      "domain": "$x,y,u\\in\\mathbb{R}^d$; spherical domains are embedded in $\\mathbb{R}^{d+1}$",
+      "definition": "Admissible ranges are specified separately by the task, model and oracle in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat{x}",
+      "meaning": "Final algorithm output",
+      "domain": "$\\mathbb{R}^d$",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "I",
+      "meaning": "Complete problem instance",
+      "domain": "$I\\in\\mathcal{I}$",
+      "definition": "Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{I}",
+      "meaning": "Admissible instance class determined by the eight specification fields in this profile",
+      "domain": "Instances satisfying the public parameter bounds",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{A}",
+      "meaning": "Algorithm or strategy",
+      "domain": "Measurable adaptive strategies allowed in this profile",
+      "definition": "The algorithm is selected before the hidden instance.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\ell",
+      "meaning": "Base loss or residual",
+      "domain": "$\\ell:\\mathcal{I}\\times\\mathcal{X}_{\\mathrm{out}}\\to[0,+\\infty]$",
+      "definition": "The exact formula appears in this profile's performance-criterion section.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb{E},\\Pr",
+      "meaning": "Expectation and probability",
+      "domain": "Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee",
+      "definition": "Fix the instance first; aggregate cost and error separately.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\inf,\\sup",
+      "meaning": "Infimum and supremum",
+      "domain": "Evaluated only over the variable sets explicitly specified in the formula",
+      "definition": "In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_2,\\langle\\cdot,\\cdot\\rangle",
+      "meaning": "Euclidean norm and inner product",
+      "domain": "$\\|x\\|_2=\\sqrt{\\langle x,x\\rangle}$",
+      "definition": "$\\langle x,y\\rangle=x^\\top y$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "B_p(c,R)",
+      "meaning": "Closed norm ball",
+      "domain": "$p\\in[1,\\infty],\\ R\\ge0$",
+      "definition": "$B_p(c,R)=\\{x:\\|x-c\\|_p\\le R\\}$; $B_2$ denotes the Euclidean ball.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,T",
+      "meaning": "Actual call count and declared budget",
+      "domain": "$N,T\\in\\mathbb{N}_0$",
+      "definition": "A fixed budget bounds every execution path; the Markov specification uses an expected budget.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta,\\widetilde{O}",
+      "meaning": "Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms",
+      "domain": "Within the joint parameter window specified for each complexity regime",
+      "definition": "Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C,c_\\alpha,C_\\alpha",
+      "meaning": "Positive constant in a proof or asymptotic bound",
+      "domain": "$0<c,C,c_\\alpha,C_\\alpha<\\infty$",
+      "definition": "Unsubscripted constants have the dependencies stated in the bound; constants subscripted by $\\alpha$ may depend only on the fixed smoothness order.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_+,e",
+      "meaning": "Natural logarithm, truncated logarithm, and Euler's number",
+      "domain": "$z>0$",
+      "definition": "$\\log_+(z)=\\max\\{0,\\log z\\}$; $e=\\exp(1)$, and $\\log_2$ denotes the base-two logarithm.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,f_*",
+      "meaning": "Population objective and its optimal value",
+      "domain": "$f:\\mathcal{X}_{\\mathrm{fun}}\\to\\mathbb{R}$",
+      "definition": "$f_*=\\inf_{x\\in \\mathbb{R}^d}f(x)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "Z,F(\\cdot;Z)",
+      "meaning": "Hidden sample and its associated sample function",
+      "domain": "Samples lie in an admissible probability space; each sample function is real-valued on the declared domain",
+      "definition": "The population objective is the expectation under the sample distribution or stationary distribution.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "G(Z)",
+      "meaning": "Random sample Lipschitz coefficient",
+      "domain": "$G(Z)\\ge0$",
+      "definition": "The model's difference inequality holds for each sample, with the moment budget fixed as specified here.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla f,\\nabla^2f,D^jf",
+      "meaning": "Gradient, Hessian, and higher Fréchet derivatives",
+      "domain": "$\\nabla f\\in\\mathbb{R}^d,\\ \\nabla^2f\\in\\mathbb{R}^{d\\times d}$; $D^jf$ is a $j$-linear form",
+      "definition": "Used only at derivative orders and on regions where the model guarantees its existence.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_{\\mathrm{op}}",
+      "meaning": "Euclidean induced matrix or tensor operator norm",
+      "domain": "Take the supremum over Euclidean unit input vectors of the corresponding order.",
+      "definition": "$\\|T\\|_{\\mathrm{op}}=\\sup_{\\|u_1\\|_2,\\ldots,\\|u_j\\|_2\\le1}|T[u_1,\\ldots,u_j]|$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{X}_{\\mathrm{fun}},\\mathcal{X}_{\\mathrm{out}},\\mathcal{X}",
+      "meaning": "Function domain, admissible output domain and optimization domain",
+      "domain": "Each is the Euclidean space or subset explicitly specified in this profile",
+      "definition": "$\\mathcal{X}_{\\mathrm{out}}=\\mathbb{R}^d$ and $\\mathcal{X}=\\mathbb{R}^d$; the function domain is the region on which the model imposes regularity.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^*",
+      "meaning": "Optimal worst-case oracle complexity satisfying the complete guarantee",
+      "domain": "$N^*\\in[0,+\\infty]$",
+      "definition": "Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_0",
+      "meaning": "Public initial point",
+      "domain": "$x_0\\in\\mathbb{R}^d$",
+      "definition": "Belongs to the feasible domain required by the model.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "key": "calls",
+      "kind": "target_accuracy_cost",
+      "projection": "declared_atomic_resource",
+      "label": "One scalar sample-function value; two points using the same handle cost two calls",
+      "units": "One scalar sample-function value; two points using the same handle cost two calls",
+      "id": "SO_ZO_C03_rand_expected__main__q1",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [
+        "SO_ZO_C03_rand_expected_p_bb728db2b9",
+        "SO_ZO_C03_rand_expected_p_5c322c6737"
+      ],
+      "fixed_parameters": [
+        "SO_ZO_C03_rand_expected_p_1c5476f952",
+        "SO_ZO_C03_rand_expected_p_108e7b71c7",
+        "SO_ZO_C03_rand_expected_p_beac113d99"
+      ],
+      "analysis_scope": "declared_joint_parameter_window",
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": "minimax_oracle_calls",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "expression_latex": "C^\\star_{v,\\pi}(\\varepsilon;\\theta)=\\inf\\{B\\ge0:\\exists\\mathcal A\\in\\mathfrak A_v,\\ C_\\pi(\\mathcal A,I)\\le B\\ \\text{and}\\ G_v(\\mathcal A,I;\\varepsilon)\\ \\forall I\\}",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "One scalar sample-function value; two points using the same handle cost two calls",
+      "expression": "declared_atomic_resource",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_e2f71ff354"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "SO_ZO_C03_rand_expected__main__r1",
+      "specification_ref": "SO_ZO_C03_rand_expected",
+      "name": "Parameter regime C03.R1",
+      "universe_ref": null,
+      "predicate": {
+        "op": "source_condition",
+        "text": "Fix $\\beta,\\Delta,\\sigma_g>0$ in advance. Each sample is $\\beta$-smooth and its gradient deviation is almost surely at most $\\sigma_g$. Define $\\varepsilon\\to0$ and require $\\varepsilon^2\\le c\\beta\\Delta$ and $d\\ge C(\\beta\\Delta/\\varepsilon^2)\\log(2+\\beta\\Delta/\\varepsilon^2)$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "Fix $\\beta,\\Delta,\\sigma_g>0$ in advance. Each sample is $\\beta$-smooth and its gradient deviation is almost surely at most $\\sigma_g$. Define $\\varepsilon\\to0$ and require $\\varepsilon^2\\le c\\beta\\Delta$ and $d\\ge C(\\beta\\Delta/\\varepsilon^2)\\log(2+\\beta\\Delta/\\varepsilon^2)$.",
+      "kind": "parameter_region"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "SO_ZO_C03_rand_expected__main__b1",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "O(d\\varepsilon^{-3})",
+      "quantity_ref": "SO_ZO_C03_rand_expected__main__q1",
+      "quantity_refs": [
+        "SO_ZO_C03_rand_expected__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Zeroth-order SPIDER variance reduction",
+      "source_refs": [
+        "SO_SRC_cb9c1f3e878c04d9"
+      ],
+      "evidence_refs": [
+        "SO_ZO_C03_rand_expected__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_C03_rand_expected__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Sample-gradient smoothness, gradient-noise and initial-gap bounds are fixed. Retain the leading $d,\\varepsilon$ term as accuracy tends to zero. This expression does not claim jointly optimal noise-amplitude or initialization dependence."
+        ],
+        "oracle_mapping": "Preserve sample handles and their reuse limits. Each queried point returns one sample value; sample data and sample gradients are not available for free.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_ZO_C03_rand_expected__main__b2",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "\\Omega(d\\beta \\Delta/\\varepsilon^2)",
+      "quantity_ref": "SO_ZO_C03_rand_expected__main__q1",
+      "quantity_refs": [
+        "SO_ZO_C03_rand_expected__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Statistical hard family with smooth nonconvex samples",
+      "source_refs": [
+        "SO_SRC_12e2b72bb6c9ca16",
+        "SO_SRC_d9fca0007b8c6fb6",
+        "SO_SRC_8a782b9d2423e793",
+        "SO_SRC_0f3cbdcc1e5906a7"
+      ],
+      "evidence_refs": [
+        "SO_ZO_C03_rand_expected__main__e2",
+        "SO_ZO_C03_rand_expected__main__e3",
+        "SO_ZO_C03_rand_expected__main__e4"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_C03_rand_expected__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Take a noiseless smooth hard subclass, retaining its joint dimension-accuracy window. Samplewise smoothness and bounded sample-gradient deviations remain satisfied."
+        ],
+        "oracle_mapping": "Preserve sample handles and their reuse limits. Each queried point returns one sample value; sample data and sample gradients are not available for free.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_NONCONVEX_LOWER_TRANSFER"
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Parameter regime C03.R1",
+      "predicate": {
+        "op": "source_condition",
+        "text": "Fix $\\beta,\\Delta,\\sigma_g>0$ in advance. Each sample is $\\beta$-smooth and its gradient deviation is almost surely at most $\\sigma_g$. Define $\\varepsilon\\to0$ and require $\\varepsilon^2\\le c\\beta\\Delta$ and $d\\ge C(\\beta\\Delta/\\varepsilon^2)\\log(2+\\beta\\Delta/\\varepsilon^2)$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "Fix $\\beta,\\Delta,\\sigma_g>0$ in advance. Each sample is $\\beta$-smooth and its gradient deviation is almost surely at most $\\sigma_g$. Define $\\varepsilon\\to0$ and require $\\varepsilon^2\\le c\\beta\\Delta$ and $d\\ge C(\\beta\\Delta/\\varepsilon^2)\\log(2+\\beta\\Delta/\\varepsilon^2)$.",
+      "parameter_refs": [
+        "SO_ZO_C03_rand_expected_p_bb728db2b9",
+        "SO_ZO_C03_rand_expected_p_1c5476f952",
+        "SO_ZO_C03_rand_expected_p_108e7b71c7",
+        "SO_ZO_C03_rand_expected_p_5c322c6737",
+        "SO_ZO_C03_rand_expected_p_beac113d99"
+      ],
+      "source_region_ref": "SO_ZO_C03_rand_expected__main__r1",
+      "status": {
+        "code": "polynomial_gap",
+        "label": "Polynomial gap",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_C03_rand_expected__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_C03_rand_expected__main__q1",
+      "resource_projection_id": "resource_e2f71ff354",
+      "regime_id": "SO_ZO_C03_rand_expected__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_C03_rand_expected__main__b1"
+        ],
+        "lower_refs": [
+          "SO_ZO_C03_rand_expected__main__b2"
+        ],
+        "comparison_ref": "SO_ZO_C03_rand_expected__main__c1",
+        "quantity_ref": "SO_ZO_C03_rand_expected__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$O(\\varepsilon^{-1})$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "O(d\\varepsilon^{-3})",
+            "claim_refs": [
+              "SO_ZO_C03_rand_expected__main__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega(d\\varepsilon^{-2})",
+            "claim_refs": [
+              "SO_ZO_C03_rand_expected__main__b2"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_ZO_C03_rand_expected__main__b1": [
+            {
+              "region_ref": null,
+              "predicate_text": "Sample-gradient smoothness, gradient-noise and initial-gap bounds are fixed. Retain the leading $d,\\varepsilon$ term as accuracy tends to zero. This expression does not claim jointly optimal noise-amplitude or initialization dependence."
+            }
+          ],
+          "SO_ZO_C03_rand_expected__main__b2": [
+            {
+              "region_ref": null,
+              "predicate_text": "Take a noiseless smooth hard subclass, retaining its joint dimension-accuracy window. Samplewise smoothness and bounded sample-gradient deviations remain satisfied."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "One scalar sample-function value; two points using the same handle cost two calls",
+        "tracked_parameters": [
+          "SO_ZO_C03_rand_expected_p_bb728db2b9",
+          "SO_ZO_C03_rand_expected_p_5c322c6737"
+        ],
+        "fixed_parameters": [
+          "SO_ZO_C03_rand_expected_p_1c5476f952",
+          "SO_ZO_C03_rand_expected_p_108e7b71c7",
+          "SO_ZO_C03_rand_expected_p_beac113d99"
+        ]
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_C03_rand_expected",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_C03_rand_expected__main__q1",
+        "resource_projection_id": "resource_e2f71ff354",
+        "regime_id": "SO_ZO_C03_rand_expected__main__r1"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "proof_id": "ZO_PROOF_NONCONVEX_LOWER_TRANSFER",
+      "title": "Oracle and subclass transfers for nonconvex lower bounds",
+      "body": "The registered lower bounds follow by exact simulation or class containment, with no added dimension factor.\n\nFor identical stochastic samples or identical finite-sum components, use the same exact-value hard function for every label. The oracle response is then exactly one source value, so the source's computational lower bound transfers one-for-one. When the target observes fresh additive Gaussian values, an exact-value algorithm can generate the independent Gaussian perturbations itself; an algorithm for that noisier interface would therefore contradict the stronger exact-value lower. The exact-value source cap $B=\\min\\{\\beta\\Delta,L^2\\}$ and its high-dimensional window remain in force. A smooth-only class may choose the proof-only budget $L=\\sqrt{\\beta\\Delta}$ inside the hard subclass; this does not add a public Lipschitz parameter.\n\nThe second-moment sample class is contained in each $r$-moment class for $1<r\\le2$, by $(\\mathbb EG^r)^{1/r}\\le(\\mathbb EG^2)^{1/2}$. Thus the source Goldstein statistical lower transfers to the larger heavy-tail class, but it does not establish a matching heavy-tail exponent. A composite class that includes $\\psi=0$ contains the corresponding noncomposite hard family. With $X=\\mathbb R^d$, the normal-cone residual is the unconstrained Goldstein residual. These embeddings support the registered composite and constrained-normal-cone lower bounds only where those model members are allowed; they do not automatically support a compact-set Frank--Wolfe-gap lower bound.\n\nA value-and-gradient incremental oracle can simulate a selected-component value by discarding the gradient. Dense26 Theorem 3.1 consequently transfers its $\\Omega(n+\\sqrt n\\,\\beta\\Delta/\\varepsilon^2)$ lower, with $n\\ge1024$ and the registered dimension window. The same stronger-oracle ordering transfers the Hessian-Lipschitz and higher-order-smooth first-order lower theorems to exact values. A second-order stationary output necessarily satisfies its first-order gradient requirement, so the first-order lower also limits that stronger task. If the theorem states that some sufficiently large finite dimension is hard, retain $\\sup_{d\\ge1}N^*(d,\\varepsilon)$ or its explicit hard-dimension bound; do not present it as a result for every fixed $d$.",
+      "scope": "Each bound keeps the source's fixed cap, output convention, accuracy window, and lower-bound algorithm class. Dimension-free supremum statements remain distinct from fixed-dimension statements.",
+      "limitations": [
+        "Local argument and specification transfer; cited external theorems remain primary dependencies."
+      ],
+      "source_refs": [
+        "SO_SRC_12e2b72bb6c9ca16",
+        "SO_SRC_d9fca0007b8c6fb6",
+        "SO_SRC_8a782b9d2423e793",
+        "SO_SRC_0f3cbdcc1e5906a7"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "SO_ZO_C03_rand_expected__main__e1",
+      "source_ref": "SO_SRC_cb9c1f3e878c04d9",
+      "locator": {
+        "theorem": "Theorem 8, Section 4; Assumption 2(ii\\textquotesingle),(iii\\textquotesingle)",
+        "pdf_pages": [
+          20
+        ],
+        "printed_pages": [
+          20
+        ]
+      },
+      "supports": [
+        "SO_ZO_C03_rand_expected__main__b1"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_C03_rand_expected__main__e2",
+      "source_ref": "SO_SRC_12e2b72bb6c9ca16",
+      "locator": {
+        "theorem": "Theorem 10.5, restricted to identical samples and exact feedback",
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_C03_rand_expected__main__b2"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_C03_rand_expected__main__e3",
+      "source_ref": "SO_SRC_12e2b72bb6c9ca16",
+      "locator": {
+        "theorem": "Theorem 10.5, restricted to identical samples and exact feedback",
+        "pdf_pages": [
+          24
+        ],
+        "printed_pages": [
+          24
+        ]
+      },
+      "supports": [
+        "SO_ZO_C03_rand_expected__main__b2"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_C03_rand_expected__main__e4",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_NONCONVEX_LOWER_TRANSFER"
+      ],
+      "location": "Local arguments in this profile"
+    }
+  ],
+  "references": [
+    {
+      "id": "SO_SRC_cb9c1f3e878c04d9",
+      "authors": "Fang, Li, Lin and Zhang",
+      "title": "SPIDER: Near-Optimal Non-Convex Optimization via Stochastic Path-Integrated Differential Estimator",
+      "version": "NeurIPS 2018; arXiv:1807.01695v2",
+      "url": "https://arxiv.org/pdf/1807.01695",
+      "publication_status": "published"
+    },
+    {
+      "id": "SO_SRC_12e2b72bb6c9ca16",
+      "authors": "Xia and Yuan",
+      "title": "On Global Joint Lower Bounds in Zeroth-Order Nonconvex Optimization",
+      "version": "arXiv:2610.19652v1, 2026-10-14",
+      "url": "https://arxiv.org/html/2610.19652v1",
+      "publication_status": "preprint"
+    },
+    {
+      "id": "SO_SRC_d9fca0007b8c6fb6",
+      "title": "Dense Weak Hiding: Closing Complexity Gaps in Nonconvex and PL Finite-Sum Optimization under Individual Smoothness",
+      "authors": "Peng, Tang and Jia",
+      "version": "arXiv:2609.00045v3, 2026-10-10",
+      "url": "https://arxiv.org/html/2609.00045v3",
+      "publication_status": "preprint",
+      "verification_basis": "source_archive_with_targeted_revision",
+      "source_native_id": "Dense26",
+      "source_collection": "zo",
+      "verified_full_text_url": "https://arxiv.org/pdf/2609.00045v3"
+    },
+    {
+      "id": "SO_SRC_8a782b9d2423e793",
+      "title": "Matching Lower Bounds for Randomized First-Order Methods in Hessian-Lipschitz Nonconvex Optimization",
+      "authors": "Zhang et al.",
+      "version": "arXiv:2610.00245v2, 2026-10-19",
+      "url": "https://arxiv.org/pdf/2610.00245v2",
+      "publication_status": "preprint",
+      "verification_basis": "source_archive_with_targeted_revision",
+      "source_native_id": "HL26",
+      "source_collection": "zo",
+      "verified_full_text_url": "https://arxiv.org/pdf/2610.00245v2"
+    },
+    {
+      "id": "SO_SRC_0f3cbdcc1e5906a7",
+      "title": "Matching Randomized First-Order Bounds for Higher-Order Smooth Nonconvex Optimization",
+      "authors": "Zhang et al.",
+      "version": "arXiv:2610.17074v1, 2026",
+      "url": "https://arxiv.org/html/2610.17074v1",
+      "publication_status": "preprint",
+      "verification_basis": "source_archive_with_targeted_revision",
+      "source_native_id": "HO26",
+      "source_collection": "zo",
+      "verified_full_text_url": "https://arxiv.org/pdf/2610.17074v1"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "SO_ZO_C03_rand_expected",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "polynomial_gap",
+        "label": "Polynomial gap present"
+      }
+    ],
+    "gap_classes": [
+      "polynomial_gap"
+    ],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "polynomial_gap": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "SO_ZO_C03_rand_expected__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "e036057f33261f1ad75babb0d9e1dcb6f0258f07c100d554c0080c5e18021cb9",
+    "source_order": 200,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

@@ -1,0 +1,793 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "MX_S_rank_threshold",
+  "title": "Exact rank-threshold decision",
+  "summary": "Decide $D(A)=\\mathbf1\\{\\operatorname{rank}(A)\\ge r+1\\}$.",
+  "primary_domain": "matrix_computation",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "matrix_computation"
+    },
+    {
+      "facet": "goal",
+      "value": "exact_rank_decision"
+    },
+    {
+      "facet": "structure",
+      "value": "arbitrary_real_matrix"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_right_matvec"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_adaptive"
+    },
+    {
+      "facet": "guarantee",
+      "value": "fixed_probability"
+    },
+    {
+      "facet": "resource",
+      "value": "matvec_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "matrix_computation"
+      ],
+      "formulation_code": "matrix_property_testing",
+      "formulation": "\\operatorname{rank}(A)\\le r\\quad\\text{vs}\\quad\\operatorname{rank}(A)\\ge r+1",
+      "solution_goal": "rank_threshold_decision",
+      "protocol_ref": null,
+      "code": "matrix_property_testing",
+      "formulation_latex": "D(A)=\\mathbf1\\{\\operatorname{rank}(A)\\ge r+1\\}",
+      "description_zh": "Decide $D(A)=\\mathbf1\\{\\operatorname{rank}(A)\\ge r+1\\}$.",
+      "description_paragraphs": [
+        "Decide $D(A)=\\mathbf1\\{\\operatorname{rank}(A)\\ge r+1\\}$."
+      ]
+    },
+    "model": {
+      "instance": "The unknown matrix is arbitrary real $A\\in\\mathbb R^{d\\times d}$. A public integer $0\\le r<d$ defines the adjacent algebraic-rank thresholds to distinguish exactly.",
+      "assumptions": [
+        {
+          "subject_id": "MX_S_rank_threshold_obj_e5c01b0421",
+          "property_code": "arbitrary_real_matrix",
+          "variable_blocks": [],
+          "norm_ref": "MX_S_rank_threshold_nor_429e6d47f0",
+          "parameter_refs": [
+            "MX_S_rank_threshold_p_1d1d52d4bc",
+            "MX_S_rank_threshold_p_b4a56f7380"
+          ],
+          "scope": "Entire fixed input instance",
+          "description": "No spectral gap or positive separation from the low-rank set is assumed."
+        }
+      ],
+      "parameter_domain_description": "Assume $d\\ge1$ and integer $0\\le r<d$. No error tolerance band or singular-value lower bound is imposed.",
+      "code": "model_declared",
+      "description_zh": "The quantity $A\\in\\mathbb R^{d\\times d}$ is arbitrary, with $d\\ge1$ and integer threshold $0\\le r<d$.",
+      "description_paragraphs": [
+        "The quantity $A\\in\\mathbb{R}^{d\\times d}$ is arbitrary; assume $d\\ge1$ and integer threshold $0\\le r<d$."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "MX_S_rank_threshold_ora_b845af3fff",
+          "operation_code": "matrix_right_matvec",
+          "target_object": "MX_S_rank_threshold_obj_e5c01b0421",
+          "variable_blocks": [
+            "MX_S_rank_threshold_var_83c97e94ab"
+          ],
+          "query_signature": "Input an arbitrary vector $v\\in\\mathbb R^d$.",
+          "response_signature": "Return exact Av ∈ R^d.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "Native linear action of the specified matrix; no derivative order of an unregistered scalar function is implied.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact real vector responses, with no observation noise or rounding."
+          },
+          "domain_ref": "MX_S_rank_threshold_dom_9c9c3c21a7",
+          "coupling": "Every query accesses the same fixed matrix; repeated queries are allowed.",
+          "index_control": "The algorithm selects vectors and an available channel; block width is charged by column.",
+          "access_schedule": "offline adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "MX_S_rank_threshold_res_18ba30ab5f"
+        }
+      ],
+      "public_inputs": [
+        "d,r"
+      ],
+      "hidden_objects": [
+        "MX_S_rank_threshold_obj_e5c01b0421"
+      ],
+      "auxiliary_interfaces": [],
+      "protocol_ref": null,
+      "query_domain_description": "Right products map R^d to R^d, with only the listed right-product channel available. A q-column block costs q calls. Entries, inverse actions, shifted solves, and matrix-function actions are not free additional feedback.",
+      "code": "oracle_declared",
+      "description_zh": "The quantity $d,r$ is public and $A$ hidden. Any $v\\in\\mathbb R^d$ returns exact $Av$; no transpose channel is available.",
+      "description_paragraphs": [
+        "The quantity $d,r$ is public and $A$ hidden. Any $v\\in\\mathbb{R}^d$ returns exact $Av$; no transpose channel is available."
+      ]
+    },
+    "output": {
+      "object_type": "binary_decision",
+      "domain_ref": "MX_S_rank_threshold_dom_2be9e0b355",
+      "feasibility": "The binary labels are low_rank for rank(A) ≤ r and high_rank for rank(A) ≥ r + 1.",
+      "allowed_postprocessing": "Arbitrary admissible postprocessing; the output need not have appeared as a query vector.",
+      "certificate_requirement": "Only the true-loss guarantee is required; no computable certificate is requested.",
+      "code": "output_declared",
+      "description_zh": "Return one decision bit $\\widehat D\\in\\{0,1\\}$. No rank value, witness vector, or certificate is required.",
+      "description_paragraphs": [
+        "Return the one-bit decision $\\widehat{D}\\in\\{0,1\\}$; no rank value, witness vector, or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "\\mathbf1\\{\\widehat D\\ne D(A)\\}",
+      "normalization": "Exact binary decision, without a distance tolerance or accuracy parameter $\\varepsilon$.",
+      "reference_object": "MX_S_rank_threshold_obj_e5c01b0421",
+      "nonnegativity": true,
+      "finiteness_conditions": "The specified dimension is finite, and the model and spectral assumptions hold.",
+      "comparator_ref": null,
+      "code": "metric_declared",
+      "goal_latex": "\\Pr[\\widehat D=D(A)]\\ge\\tfrac23",
+      "description_zh": "The base loss is $\\mathbf1\\{\\widehat D\\ne D(A)\\}$, with correctness probability at least $2/3$.",
+      "base_expression_latex": "\\mathbf1\\{\\widehat D\\ne D(A)\\}",
+      "description_paragraphs": [
+        "The base loss is $\\mathbf1\\{\\widehat{D}\\ne D(A)\\}$, and classification must be correct with probability at least $2/3$."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "N_right",
+          "unit": "vector product",
+          "description": "One right product Av with a single vector"
+        }
+      ],
+      "budget_semantics": "A fixed worst-case budget respected for every input and private seed.",
+      "cost_rules": [
+        {
+          "id": "MX_S_rank_threshold_res_18ba30ab5f",
+          "operation_refs": [
+            "MX_S_rank_threshold_ora_b845af3fff"
+          ],
+          "cost": {
+            "N_right": 1
+          }
+        }
+      ],
+      "scalarization": "The resource is $Q=N_{\\mathrm{right}}$. No separate left-product channel is present. Each block-query column is charged.",
+      "setup_cost": "Reading public parameters and explicitly public $b,x_0,h$, mask, or tree incurs no matrix-vector call. Information about hidden $A$ comes only from native responses.",
+      "online_cost": "not_applicable",
+      "amortization_scope": "One output for one instance",
+      "precision_model": "Inputs, queries, and responses are exact reals. Query vectors have no bit-length restriction. Internal arithmetic, storage, and precision are outside the query budget, so this is not a finite-word implementation guarantee.",
+      "code": "resource_declared",
+      "description_zh": "Count right single-vector products $N=N_{\\mathrm{r}}$; a block of width $q$ costs $q$ calls.\n\nThe cap holds for every fixed input and private seed. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. The unit is one single-vector oracle call.",
+      "description_paragraphs": [
+        "Count right products with single vectors only: $N=N_{\\mathrm r}$. A block of width $q$ costs $q$ calls.",
+        "The budget bounds calls for every fixed input and every private seed. Reading public inputs, exact real arithmetic, storage, and postprocessing are free. One call applies the interface to one vector."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "An independent private random seed is allowed",
+        "adaptivity": "Arbitrary measurable adaptivity",
+        "restrictions": [],
+        "internal_computation": "Arbitrary measurable internal computation on public data and the transcript is free in matrix–vector query units. No Krylov or linear-span restriction applies.",
+        "parallelism": "A q-column block still costs q vector products. Round count differs from call count.",
+        "code": "algorithms_declared",
+        "description_zh": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+        "description_paragraphs": [
+          "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "For every fixed real matrix, the rank-threshold decision is correct with probability at least $2/3$.",
+          "aggregation_order": [
+            "probability over private seed",
+            "for every fixed instance"
+          ],
+          "quantifier_order": "exists algorithm; for every fixed input; Pr_seed(success)>=2/3",
+          "randomness_sources": [
+            "algorithm_private_seed"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "fixed output time",
+          "code": "guarantee_declared",
+          "description_zh": "The algorithm is selected using only public inputs. For every admissible input fixed before its private seed is generated, the success event has probability at least $2/3$ over that private randomness.",
+          "description_paragraphs": [
+            "The algorithm is selected using only public inputs. For every admissible input fixed before its private seed is generated, the success event has probability at least $2/3$ over that private randomness."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "A fixed worst-case budget respected for every input and private seed.",
+        "precision_model": "Inputs, queries, and responses are exact reals. Query vectors have no bit-length restriction. Internal arithmetic, storage, and precision are outside the query budget, so this is not a finite-word implementation guarantee.",
+        "scalarization": "The resource is $Q=N_{\\mathrm{right}}$. No separate left-product channel is present. Each block-query column is charged."
+      },
+      "alias_ids": [
+        "MX_S_rank_threshold"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "MX_S_rank_threshold_obj_e5c01b0421",
+        "type": "matrix",
+        "definition": "An arbitrary real d-by-d matrix, without an eigengap, symmetry, positive-semidefinite, or numerical-rank tolerance promise.",
+        "depends_on": [],
+        "role_code": "matrix"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "MX_S_rank_threshold_var_83c97e94ab",
+        "dimension": "d",
+        "space": "R^d, the right-product query space"
+      }
+    ],
+    "domains": [
+      {
+        "id": "MX_S_rank_threshold_dom_9c9c3c21a7",
+        "definition": "$\\mathbb R^d$, the complete right-query space without a norm restriction",
+        "roles": [
+          "query"
+        ]
+      },
+      {
+        "id": "MX_S_rank_threshold_dom_2be9e0b355",
+        "definition": "The binary labels are low_rank for rank(A) ≤ r and high_rank for rank(A) ≥ r + 1.",
+        "roles": [
+          "output"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "MX_S_rank_threshold_nor_429e6d47f0",
+        "definition": "Use the Euclidean vector norm $\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}$ and the matrix operator norm $\\|M\\|_{\\rm op}=\\max_{\\|z\\|_2=1}\\|Mz\\|_2$."
+      }
+    ],
+    "protocols": [],
+    "comparators": [],
+    "local_symbols": [
+      {
+        "symbol": "d",
+        "meaning": "The order of the square input matrix and the dimension of each query vector.",
+        "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+        "definition": "A\\in\\mathbb R^{d\\times d}"
+      },
+      {
+        "symbol": "r",
+        "meaning": "The rank threshold: decide whether the actual rank is at least r + 1.",
+        "domain": "$r\\in\\mathbb Z,\\ 0\\le r<d$",
+        "definition": "D(A)=\\mathbf1\\{\\operatorname{rank}(A)\\ge r+1\\}"
+      },
+      {
+        "symbol": "A",
+        "meaning": "Arbitrary hidden real square matrix",
+        "domain": "$\\mathbb R^{d\\times d}$",
+        "definition": null
+      },
+      {
+        "symbol": "D(A),\\widehat D",
+        "meaning": "The true rank-threshold decision and algorithm output.",
+        "domain": "$\\{0,1\\}$",
+        "definition": "D(A)=\\mathbf1\\{\\operatorname{rank}(A)\\ge r+1\\}"
+      },
+      {
+        "symbol": "G",
+        "meaning": "Random query block used in the Gaussian-projection upper bound",
+        "domain": "$\\mathbb R^{d\\times(r+1)}$",
+        "definition": "G_{ij}\\stackrel{\\mathrm{iid}}{\\sim}\\mathcal N(0,1)"
+      },
+      {
+        "symbol": "\\mathbf1\\{E\\}",
+        "meaning": "The indicator function of event E.",
+        "domain": "$\\{0,1\\}$",
+        "definition": "\\mathbf1\\{E\\}=1\\iff E\\text{ holds}"
+      },
+      {
+        "symbol": "N,N_{\\mathrm r}",
+        "meaning": "Single-vector query budget for exact right products Av. A block is charged by its column count.",
+        "domain": "$\\mathbb N_0$",
+        "definition": "N=N_{\\mathrm r}"
+      },
+      {
+        "symbol": "N^\\star",
+        "meaning": "Minimum worst-case query budget attaining this profile's success guarantee",
+        "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+        "definition": "\\inf_{\\mathcal A\\ \\mathrm{satisfying\\ the\\ guarantee}}\\sup_{I,\\omega}N_{\\mathcal A}(I,\\omega)"
+      },
+      {
+        "symbol": "\\mathcal A,I,\\omega",
+        "meaning": "The algorithm, fixed admissible input, and private algorithmic seed.",
+        "domain": "Quantifiers for worst-case input and execution cost. Success probability is taken over ω.",
+        "definition": null
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "MX_S_rank_threshold_p_1d1d52d4bc",
+      "symbol": "d",
+      "meaning": "The order of the square input matrix and the dimension of each query vector.",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "public": true,
+      "definition": "$A\\in\\mathbb R^{d\\times d}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_d"
+    },
+    {
+      "id": "MX_S_rank_threshold_p_b4a56f7380",
+      "symbol": "r",
+      "meaning": "The rank threshold: decide whether the actual rank is at least r + 1.",
+      "kind": "independent",
+      "domain": "$r\\in\\mathbb Z,\\ 0\\le r<d$",
+      "public": true,
+      "definition": "$D(A)=\\mathbf1\\{\\operatorname{rank}(A)\\ge r+1\\}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "The order of the square input matrix and the dimension of each query vector.",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "definition": "$A\\in\\mathbb R^{d\\times d}$",
+      "parameter_ref": "MX_S_rank_threshold_p_1d1d52d4bc"
+    },
+    {
+      "symbol_latex": "r",
+      "meaning": "The rank threshold: decide whether the actual rank is at least r + 1.",
+      "domain": "$r\\in\\mathbb Z,\\ 0\\le r<d$",
+      "definition": "$D(A)=\\mathbf1\\{\\operatorname{rank}(A)\\ge r+1\\}$",
+      "parameter_ref": "MX_S_rank_threshold_p_b4a56f7380"
+    },
+    {
+      "symbol_latex": "A",
+      "meaning": "Arbitrary hidden real square matrix",
+      "domain": "$\\mathbb R^{d\\times d}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "D(A),\\widehat D",
+      "meaning": "The true rank-threshold decision and algorithm output.",
+      "domain": "$\\{0,1\\}$",
+      "definition": "$D(A)=\\mathbf1\\{\\operatorname{rank}(A)\\ge r+1\\}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "G",
+      "meaning": "Random query block used in the Gaussian-projection upper bound",
+      "domain": "$\\mathbb R^{d\\times(r+1)}$",
+      "definition": "$G_{ij}\\stackrel{\\mathrm{iid}}{\\sim}\\mathcal N(0,1)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbf1\\{E\\}",
+      "meaning": "The indicator function of event E.",
+      "domain": "$\\{0,1\\}$",
+      "definition": "The value is $\\mathbf1\\{E\\}=1$ on event $E$ and $0$ otherwise.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,N_{\\mathrm r}",
+      "meaning": "Single-vector query budget for exact right products Av. A block is charged by its column count.",
+      "domain": "$\\mathbb N_0$",
+      "definition": "$N=N_{\\mathrm r}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^\\star",
+      "meaning": "Minimum worst-case query budget attaining this profile's success guarantee",
+      "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+      "definition": "The quantity is $N^\\star=\\inf_{\\mathcal A}\\sup_{I,\\omega}N_{\\mathcal A}(I,\\omega)$, where the infimum ranges over admissible algorithms satisfying this profile's success guarantee.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A,I,\\omega",
+      "meaning": "The algorithm, fixed admissible input, and private algorithmic seed.",
+      "domain": "Quantifiers for worst-case input and execution cost. Success probability is taken over ω.",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "MX_S_rank_threshold__main__q1",
+      "kind": "target_accuracy_cost",
+      "expression": "N^*(d,r)",
+      "optimization_direction": "minimize",
+      "units": "matvec calls",
+      "budget_variables": [
+        "N"
+      ],
+      "tolerance_variables": [],
+      "analysis_scope": "Within the cited complete specification, select an algorithm before taking the worst case over all fixed inputs. Information permissions remain unchanged.",
+      "tracked_parameters": [
+        "MX_S_rank_threshold_p_1d1d52d4bc",
+        "MX_S_rank_threshold_p_b4a56f7380"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "N^\\star(d,r)",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Number of right matrix-vector product queries",
+      "expression": "N_right",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_c2ecc59741"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "MX_S_rank_threshold__main__r1",
+      "specification_ref": "MX_S_rank_threshold",
+      "name": "All admissible rank thresholds",
+      "predicate_text": "Assume $d\\ge1$ and integer $r$ with $0\\le r<d$.",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "MX_S_rank_threshold_p_b4a56f7380"
+              },
+              "op": "ge",
+              "right": 0
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "MX_S_rank_threshold_p_b4a56f7380"
+              },
+              "op": "lt",
+              "right": {
+                "parameter": "MX_S_rank_threshold_p_1d1d52d4bc"
+              }
+            }
+          }
+        ]
+      },
+      "parameter_refs": [
+        "MX_S_rank_threshold_p_1d1d52d4bc",
+        "MX_S_rank_threshold_p_b4a56f7380"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Universal constants and dimension thresholds without numerical values remain symbolic; the three-valued decision is unknown."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "MX_S_rank_threshold__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\le r+1",
+      "quantity_ref": "MX_S_rank_threshold__main__q1",
+      "region_refs": [
+        "MX_S_rank_threshold__main__r1"
+      ],
+      "method": "Independent Gaussian block queries determine the queried column-space rank almost surely.",
+      "algorithm_or_hard_family": "Independent Gaussian block queries determine the queried column-space rank almost surely.",
+      "algorithm_class_scope": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+      "resource_costs": {
+        "N": "N≤r+1"
+      },
+      "parameter_choice": "Determined by public parameters and the source algorithm; one algorithm jointly attains the listed costs",
+      "joint_budget_constraints": [],
+      "source_refs": [],
+      "evidence_refs": [
+        "MX_S_rank_threshold__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_rank_threshold__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "",
+        "guarantee_mapping": "Correctness probability is at least 2/3 for every fixed real matrix. Gaussian tests achieve probability one per fixed input; the lower bound is still evaluated over the full randomized algorithm class allowed by the specification.",
+        "oracle_mapping": "Only exact Av for arbitrary real d-vectors is available, with randomized adaptive queries allowed. Each vector costs one N_right call; if G has q columns, AG costs q calls.",
+        "output_mapping": "Return low_rank when rank(A) ≤ r and high_rank when rank(A) ≥ r + 1. There is no numerical-rank tolerance band.",
+        "resource_mapping": "Count only right multiplication by a single vector, $N=N_{\\mathrm r}$. A block product of width $q$ costs $q$ calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.",
+        "output_metric_mapping": "Output a one-bit decision $\\widehat D\\in\\{0,1\\}$; no rank value, witness vector, or certificate is required. The loss is $\\mathbf1\\{\\widehat D\\ne D(A)\\}$ and the probability of a correct decision must be at least $2/3$."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": null,
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "SIX_PROOF_8b71bd26f703"
+      ]
+    },
+    {
+      "id": "MX_S_rank_threshold__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\ge r+1",
+      "quantity_ref": "MX_S_rank_threshold__main__q1",
+      "region_refs": [
+        "MX_S_rank_threshold__main__r1"
+      ],
+      "method": "Exact rank-decision lower bound for arbitrary randomized adaptive algorithms",
+      "algorithm_or_hard_family": "Exact rank-decision lower bound for arbitrary randomized adaptive algorithms",
+      "algorithm_class_scope": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+      "resource_costs": {
+        "N": "N≥r+1"
+      },
+      "parameter_choice": "Use the cited hard-input construction with the dimension, accuracy, and success-probability conditions attached to this bound.",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_SW"
+      ],
+      "evidence_refs": [
+        "MX_S_rank_threshold__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_rank_threshold__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "",
+        "guarantee_mapping": "Correctness probability is at least 2/3 for every fixed real matrix. Gaussian tests achieve probability one per fixed input; the lower bound is still evaluated over the full randomized algorithm class allowed by the specification.",
+        "oracle_mapping": "Only exact Av for arbitrary real d-vectors is available, with randomized adaptive queries allowed. Each vector costs one N_right call; if G has q columns, AG costs q calls.",
+        "output_mapping": "Return low_rank when rank(A) ≤ r and high_rank when rank(A) ≥ r + 1. There is no numerical-rank tolerance band.",
+        "resource_mapping": "Count only right multiplication by a single vector, $N=N_{\\mathrm r}$. A block product of width $q$ costs $q$ calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.",
+        "output_metric_mapping": "Output a one-bit decision $\\widehat D\\in\\{0,1\\}$; no rank value, witness vector, or certificate is required. The loss is $\\mathbf1\\{\\widehat D\\ne D(A)\\}$ and the probability of a correct decision must be at least $2/3$."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "All admissible rank thresholds",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "MX_S_rank_threshold_p_b4a56f7380"
+              },
+              "op": "ge",
+              "right": 0
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "MX_S_rank_threshold_p_b4a56f7380"
+              },
+              "op": "lt",
+              "right": {
+                "parameter": "MX_S_rank_threshold_p_1d1d52d4bc"
+              }
+            }
+          }
+        ]
+      },
+      "predicate_text": "Assume $d\\ge1$ and integer $r$ with $0\\le r<d$.",
+      "parameter_refs": [
+        "MX_S_rank_threshold_p_1d1d52d4bc",
+        "MX_S_rank_threshold_p_b4a56f7380"
+      ],
+      "source_region_ref": "MX_S_rank_threshold__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "MX_S_rank_threshold__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_rank_threshold__main__q1",
+      "resource_projection_id": "resource_c2ecc59741",
+      "regime_id": "MX_S_rank_threshold__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "MX_S_rank_threshold__main__b1"
+        ],
+        "lower_refs": [
+          "MX_S_rank_threshold__main__b2"
+        ],
+        "comparison_ref": "MX_S_rank_threshold__main__c1",
+        "quantity_ref": "MX_S_rank_threshold__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_right",
+        "ratio_or_gap": "$1$",
+        "envelopes": {
+          "upper": {
+            "expression": "r+1",
+            "claim_refs": [
+              "MX_S_rank_threshold__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "r+1"
+          },
+          "lower": {
+            "expression": "r+1",
+            "claim_refs": [
+              "MX_S_rank_threshold__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "r+1"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "MX_S_rank_threshold__main__b1",
+            "when_region_refs": [
+              "MX_S_rank_threshold__main__r1"
+            ],
+            "meaning": "Use this algorithm only on its own applicability region; scalar envelopes take minimum over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "MX_S_rank_threshold__main__b1": [
+            {
+              "region_ref": "MX_S_rank_threshold__main__r1",
+              "predicate_text": "Assume $d\\ge1$ and integer $r$ with $0\\le r<d$."
+            }
+          ],
+          "MX_S_rank_threshold__main__b2": [
+            {
+              "region_ref": "MX_S_rank_threshold__main__r1",
+              "predicate_text": "Assume $d\\ge1$ and integer $r$ with $0\\le r<d$."
+            }
+          ]
+        },
+        "envelope_certificate": "This specification has the exact complexity N*=r+1. The constant_factor status explicitly retains ratio=1 and the exact value.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Number of right matrix-vector product queries"
+      },
+      "comparison_key": {
+        "setting_id": "MX_S_rank_threshold",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_rank_threshold__main__q1",
+        "resource_projection_id": "resource_c2ecc59741",
+        "regime_id": "MX_S_rank_threshold__main__r1"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "proof_id": "SIX_PROOF_8b71bd26f703",
+      "title": "Independent Gaussian block queries determine the queried column-space rank almost surely.",
+      "body": "Draw a d by (r+1) matrix G with independent standard Gaussian entries and query its columns. For each fixed A, rank(AG)=min{rank(A),r+1} almost surely: after an SVD of A, the relevant Gaussian block has maximal possible rank almost surely. Thus rank(AG)<=r exactly when rank(A)<=r. The test uses r+1 queries and is almost surely correct for every fixed input.",
+      "scope": "All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "MX_S_rank_threshold__main__e1",
+      "source_ref": "MX_SRC_SW",
+      "locator": {
+        "theorem": "Theorem 8",
+        "section": "§3.1",
+        "pdf_pages": [
+          11
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Randomized adaptive algorithms with any constant advantage require at least $r+1$ calls. The Gaussian-projection upper bound follows from source Section 3.1 and elementary rank properties.",
+      "notes": [
+        "Randomized adaptive algorithms with any constant advantage require at least $r+1$ calls. The Gaussian-projection upper bound follows from source Section 3.1 and elementary rank properties."
+      ]
+    },
+    {
+      "id": "MX_S_rank_threshold__main__e2",
+      "kind": "local_argument",
+      "proof_refs": [
+        "SIX_PROOF_8b71bd26f703"
+      ],
+      "location": "Independent Gaussian block queries determine the queried column-space rank almost surely."
+    }
+  ],
+  "references": [
+    {
+      "id": "MX_SRC_SW",
+      "authors": [
+        "Xiaoming Sun",
+        "David P. Woodruff",
+        "Guang Yang",
+        "Jialin Zhang"
+      ],
+      "title": "Querying a Matrix Through Matrix-Vector Products",
+      "year": 2019,
+      "version": "ICALP 2019, Article 94, pp.94:1–94:16",
+      "url": "https://drops.dagstuhl.de/opus/volltexte/2019/10670/pdf/LIPIcs-ICALP-2019-94.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "MX_S_rank_threshold",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "optimal": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "MX_S_rank_threshold__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "ffb980e281479322272c384b351a928112bb408cacfa13c7306797cc7b0be5ea",
+    "source_order": 50,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

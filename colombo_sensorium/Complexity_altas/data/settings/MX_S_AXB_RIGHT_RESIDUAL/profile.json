@@ -1,0 +1,852 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "MX_S_AXB_RIGHT_RESIDUAL",
+  "title": "General nonsingular linear systems from right-only products: relative residual",
+  "summary": "A hidden general nonsingular square matrix is accessible only through right products. Even a perfectly conditioned orthogonal system can require a linear number of queries.",
+  "primary_domain": "matrix_computation",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "matrix_computation"
+    },
+    {
+      "facet": "goal",
+      "value": "relative_linear_system_residual"
+    },
+    {
+      "facet": "structure",
+      "value": "nonsingular_square_matrix"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_right_matvec"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_adaptive"
+    },
+    {
+      "facet": "guarantee",
+      "value": "fixed_probability"
+    },
+    {
+      "facet": "resource",
+      "value": "matvec_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "matrix_computation"
+      ],
+      "formulation_code": "linear_system",
+      "formulation": "Ax=b",
+      "solution_goal": "relative_residual",
+      "code": "linear_system",
+      "protocol_ref": null,
+      "description_paragraphs": [
+        "Return a vector $\\widehat x$ satisfying the stated relative residual for the general nonsingular system $Ax=b$."
+      ]
+    },
+    "model": {
+      "instance": "Nonsingular real square matrix and nonzero public right hand side.",
+      "assumptions": [],
+      "code": "model_declared",
+      "parameter_domain_description": "$n\\in\\mathbb N_{\\ge1}$, $\\kappa\\ge1$, $0<\\varepsilon\\le1/2$.",
+      "description_paragraphs": [
+        "$A\\in\\mathbb R^{n\\times n}$ is nonsingular and $\\sigma_{\\max}(A)/\\sigma_{\\min}(A)\\le\\kappa$. No symmetry, positive definiteness, or absolute spectral scale is assumed.",
+        "$b\\in\\mathbb R^n$ is public and nonzero."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "MX_S_AXB_RIGHT_RESIDUAL_right",
+          "operation_code": "matrix_right_matvec",
+          "target_object": "MX_S_AXB_RIGHT_RESIDUAL_obj_A",
+          "variable_blocks": [
+            "MX_S_AXB_RIGHT_RESIDUAL_var_v"
+          ],
+          "domain_ref": "MX_S_AXB_RIGHT_RESIDUAL_dom_Rn",
+          "query_signature": "$v\\in\\mathbb R^n$",
+          "response_signature": "$Av\\in\\mathbb R^n$",
+          "feedback_quality": {
+            "code": "exact"
+          },
+          "derivative_order": "not_applicable",
+          "index_control": "Algorithm chooses v.",
+          "coupling": "A single fixed matrix supplies every response.",
+          "access_schedule": "Offline adaptive.",
+          "cost_rule_ref": "MX_S_AXB_RIGHT_RESIDUAL_cost_right"
+        }
+      ],
+      "public_inputs": [
+        "n",
+        "b",
+        "kappa",
+        "epsilon"
+      ],
+      "hidden_objects": [
+        "MX_S_AXB_RIGHT_RESIDUAL_obj_A"
+      ],
+      "auxiliary_interfaces": [],
+      "protocol_ref": null,
+      "query_domain_description": "All of $\\mathbb R^n$.",
+      "description_paragraphs": [
+        "The only native access to $A$ is an exact right product $Av$ for any $v\\in\\mathbb R^n$. The oracle gives neither transpose products nor direct entry access."
+      ],
+      "code": "oracle_declared"
+    },
+    "output": {
+      "object_type": "vector",
+      "domain_ref": "MX_S_AXB_RIGHT_RESIDUAL_dom_Rn",
+      "feasibility": "$\\widehat x\\in\\mathbb R^n$.",
+      "allowed_postprocessing": "Any measurable transcript-based vector.",
+      "certificate_requirement": "None.",
+      "description_paragraphs": [
+        "Return one vector $\\widehat x$, without a separate certificate."
+      ],
+      "code": "output_declared"
+    },
+    "metric": {
+      "base_expression": "\\|A\\widehat x-b\\|_2/\\|b\\|_2",
+      "normalization": "Divide the Euclidean residual by the nonzero norm of b.",
+      "reference_object": "MX_S_AXB_RIGHT_RESIDUAL_obj_A",
+      "nonnegativity": true,
+      "finiteness_conditions": "The right hand side is nonzero.",
+      "comparator_ref": null,
+      "description_paragraphs": [
+        "The success event is $\\|A\\widehat x-b\\|_2\\le\\varepsilon\\|b\\|_2$."
+      ],
+      "code": "metric_declared"
+    },
+    "resource": {
+      "code": "resource_declared",
+      "components": [
+        {
+          "code": "N_right",
+          "unit": "query",
+          "description": "One right matrix-vector response."
+        }
+      ],
+      "cost_rules": [
+        {
+          "id": "MX_S_AXB_RIGHT_RESIDUAL_cost_right",
+          "operation_refs": [
+            "MX_S_AXB_RIGHT_RESIDUAL_right"
+          ],
+          "cost": {
+            "N_right": 1
+          }
+        }
+      ],
+      "budget_semantics": "Fixed worst-case cap.",
+      "scalarization": "N_right",
+      "setup_cost": "Public input and internal computation are uncharged.",
+      "online_cost": "Not applicable.",
+      "amortization_scope": "One hidden matrix.",
+      "precision_model": "Exact real response.",
+      "description_paragraphs": [
+        "Charge each individual right product. Exact arithmetic, including solving a fully recovered system, is free."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Randomized adaptive, success probability 2/3",
+      "algorithms": {
+        "randomization": "Private randomization is allowed.",
+        "adaptivity": "Arbitrary adaptive query vectors.",
+        "restrictions": [],
+        "internal_computation": "Arbitrary measurable internal work and exact arithmetic are uncharged.",
+        "parallelism": "Each vector is counted separately.",
+        "description_paragraphs": [
+          "No Krylov, span, or zero-respecting restriction applies."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "\\Pr_\\omega[\\|A\\widehat x-b\\|_2\\le\\varepsilon\\|b\\|_2]\\ge 2/3",
+          "randomness_sources": [
+            "Algorithm private seed."
+          ],
+          "description_paragraphs": [
+            "For every fixed admissible matrix and nonzero right hand side, require $\\Pr_\\omega[\\|A\\widehat x-b\\|_2\\le\\varepsilon\\|b\\|_2]\\ge 2/3$."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "description": "A fixed query cap on all instances and private seeds."
+      },
+      "alias_ids": [],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "MX_S_AXB_RIGHT_RESIDUAL_obj_A",
+        "type": "matrix",
+        "definition": "Hidden nonsingular $A\\in\\mathbb R^{n\\times n}$.",
+        "depends_on": []
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "MX_S_AXB_RIGHT_RESIDUAL_var_v",
+        "dimension": "n",
+        "space": "$\\mathbb R^n$"
+      }
+    ],
+    "domains": [
+      {
+        "id": "MX_S_AXB_RIGHT_RESIDUAL_dom_Rn",
+        "definition": "$\\mathbb R^n$",
+        "roles": [
+          "query",
+          "output"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "MX_S_AXB_RIGHT_RESIDUAL_norm",
+        "definition": "Euclidean vector norm and its induced matrix norm."
+      }
+    ],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL_p_n",
+      "symbol": "n",
+      "meaning": "Positive integer",
+      "kind": "independent",
+      "domain": "Positive integer",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL_p_kappa",
+      "symbol": "\\kappa",
+      "meaning": "Condition-number upper bound at least one",
+      "kind": "independent",
+      "domain": "Condition-number upper bound at least one",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon",
+      "symbol": "\\varepsilon",
+      "meaning": "Positive relative residual tolerance",
+      "kind": "independent",
+      "domain": "Positive relative residual tolerance",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "n",
+      "meaning": "Positive integer",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "MX_S_AXB_RIGHT_RESIDUAL_p_n"
+    },
+    {
+      "symbol_latex": "\\kappa",
+      "meaning": "Condition-number upper bound at least one",
+      "domain": "Condition-number upper bound at least one",
+      "definition": null,
+      "parameter_ref": "MX_S_AXB_RIGHT_RESIDUAL_p_kappa"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Positive relative residual tolerance",
+      "domain": "Positive relative residual tolerance",
+      "definition": null,
+      "parameter_ref": "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon"
+    },
+    {
+      "symbol_latex": "A",
+      "meaning": "Hidden nonsingular matrix",
+      "domain": null,
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "b",
+      "meaning": "Public nonzero right hand side",
+      "domain": null,
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "n_0",
+      "meaning": "Sufficient dimension constant in Theorem 1.2",
+      "domain": null,
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL__main__q1",
+      "kind": "target_accuracy_cost",
+      "expression": "Q^\\star(n,\\kappa,\\varepsilon)",
+      "optimization_direction": "minimize",
+      "units": "right matvecs",
+      "budget_variables": [],
+      "tolerance_variables": [
+        "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon"
+      ],
+      "analysis_scope": "Worst case over matrices and right hand sides at the public dimension.",
+      "tracked_parameters": [
+        "MX_S_AXB_RIGHT_RESIDUAL_p_n",
+        "MX_S_AXB_RIGHT_RESIDUAL_p_kappa",
+        "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "Q^\\star(n,\\kappa,\\varepsilon)",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Number of exact right products.",
+      "expression": "N_right",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "MX_S_AXB_RIGHT_RESIDUAL_proj"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL_r1",
+      "specification_ref": "MX_S_AXB_RIGHT_RESIDUAL",
+      "name": "Half-relative-residual window",
+      "predicate": {
+        "predicate": {
+          "name": "one_sided_linear_system_theorem_1",
+          "args": [
+            "MX_S_AXB_RIGHT_RESIDUAL_p_n",
+            "MX_S_AXB_RIGHT_RESIDUAL_p_kappa",
+            "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon"
+          ],
+          "description": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 1/2$."
+        }
+      },
+      "predicate_text": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 1/2$.",
+      "parameter_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_p_n",
+        "MX_S_AXB_RIGHT_RESIDUAL_p_kappa",
+        "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "The paper's sufficient dimension n0 is symbolic."
+    },
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL_r2",
+      "specification_ref": "MX_S_AXB_RIGHT_RESIDUAL",
+      "name": "Higher-accuracy exact query-count window",
+      "predicate": {
+        "predicate": {
+          "name": "one_sided_linear_system_theorem_2",
+          "args": [
+            "MX_S_AXB_RIGHT_RESIDUAL_p_n",
+            "MX_S_AXB_RIGHT_RESIDUAL_p_kappa",
+            "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon"
+          ],
+          "description": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 0.2/\\sqrt n$."
+        }
+      },
+      "predicate_text": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 0.2/\\sqrt n$.",
+      "parameter_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_p_n",
+        "MX_S_AXB_RIGHT_RESIDUAL_p_kappa",
+        "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "The paper's sufficient dimension n0 is symbolic."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL_c1_upper",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "n",
+      "quantity_ref": "MX_S_AXB_RIGHT_RESIDUAL__main__q1",
+      "region_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_r1"
+      ],
+      "method": "Query every basis vector and solve exactly",
+      "algorithm_or_hard_family": "Query every basis vector and solve exactly",
+      "algorithm_class_scope": "Arbitrary adaptive exact right-only queries.",
+      "resource_costs": {
+        "N_right": "n"
+      },
+      "parameter_choice": "Use the accuracy and dimension guard.",
+      "joint_budget_constraints": [],
+      "source_refs": [],
+      "evidence_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_e_upper"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_AXB_RIGHT_RESIDUAL_c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 1/2$."
+        ],
+        "oracle_mapping": "The only native access to $A$ is an exact right product $Av$ for any $v\\in\\mathbb R^n$. The oracle gives neither transpose products nor direct entry access.",
+        "guarantee_mapping": "\\Pr_\\omega[\\|A\\widehat x-b\\|_2\\le\\varepsilon\\|b\\|_2]\\ge 2/3"
+      },
+      "hidden_constants": "No hidden query-count factor.",
+      "hidden_logs": [],
+      "derivation": null,
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL_c1_lower",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\left\\lceil n/2\\right\\rceil",
+      "quantity_ref": "MX_S_AXB_RIGHT_RESIDUAL__main__q1",
+      "region_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_r1"
+      ],
+      "method": "Theorem 1.2, hidden Haar orthogonal matrix",
+      "algorithm_or_hard_family": "Theorem 1.2, hidden Haar orthogonal matrix",
+      "algorithm_class_scope": "Arbitrary adaptive exact right-only queries.",
+      "resource_costs": {
+        "N_right": "\\left\\lceil n/2\\right\\rceil"
+      },
+      "parameter_choice": "Use the accuracy and dimension guard.",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_AXB_2026"
+      ],
+      "evidence_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_e_lower"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_AXB_RIGHT_RESIDUAL_c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 1/2$."
+        ],
+        "oracle_mapping": "The only native access to $A$ is an exact right product $Av$ for any $v\\in\\mathbb R^n$. The oracle gives neither transpose products nor direct entry access.",
+        "guarantee_mapping": "\\Pr_\\omega[\\|A\\widehat x-b\\|_2\\le\\varepsilon\\|b\\|_2]\\ge 2/3"
+      },
+      "hidden_constants": "No hidden query-count factor.",
+      "hidden_logs": [],
+      "derivation": null,
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "lower_algorithm_scope": "All randomized adaptive right-only algorithms.",
+      "lower_scope_type": "all_admissible_algorithms"
+    },
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL_c2_upper",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "n",
+      "quantity_ref": "MX_S_AXB_RIGHT_RESIDUAL__main__q1",
+      "region_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_r2"
+      ],
+      "method": "Query every basis vector and solve exactly",
+      "algorithm_or_hard_family": "Query every basis vector and solve exactly",
+      "algorithm_class_scope": "Arbitrary adaptive exact right-only queries.",
+      "resource_costs": {
+        "N_right": "n"
+      },
+      "parameter_choice": "Use the accuracy and dimension guard.",
+      "joint_budget_constraints": [],
+      "source_refs": [],
+      "evidence_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_e_upper"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_AXB_RIGHT_RESIDUAL_c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 0.2/\\sqrt n$."
+        ],
+        "oracle_mapping": "The only native access to $A$ is an exact right product $Av$ for any $v\\in\\mathbb R^n$. The oracle gives neither transpose products nor direct entry access.",
+        "guarantee_mapping": "\\Pr_\\omega[\\|A\\widehat x-b\\|_2\\le\\varepsilon\\|b\\|_2]\\ge 2/3"
+      },
+      "hidden_constants": "No hidden query-count factor.",
+      "hidden_logs": [],
+      "derivation": null,
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL_c2_lower",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "n",
+      "quantity_ref": "MX_S_AXB_RIGHT_RESIDUAL__main__q1",
+      "region_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_r2"
+      ],
+      "method": "Theorem 1.2, hidden Haar orthogonal matrix",
+      "algorithm_or_hard_family": "Theorem 1.2, hidden Haar orthogonal matrix",
+      "algorithm_class_scope": "Arbitrary adaptive exact right-only queries.",
+      "resource_costs": {
+        "N_right": "n"
+      },
+      "parameter_choice": "Use the accuracy and dimension guard.",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_AXB_2026"
+      ],
+      "evidence_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_e_lower"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_AXB_RIGHT_RESIDUAL_c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 0.2/\\sqrt n$."
+        ],
+        "oracle_mapping": "The only native access to $A$ is an exact right product $Av$ for any $v\\in\\mathbb R^n$. The oracle gives neither transpose products nor direct entry access.",
+        "guarantee_mapping": "\\Pr_\\omega[\\|A\\widehat x-b\\|_2\\le\\varepsilon\\|b\\|_2]\\ge 2/3"
+      },
+      "hidden_constants": "No hidden query-count factor.",
+      "hidden_logs": [],
+      "derivation": null,
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "lower_algorithm_scope": "All randomized adaptive right-only algorithms.",
+      "lower_scope_type": "all_admissible_algorithms"
+    }
+  ],
+  "comparisons": [
+    {
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_AXB_RIGHT_RESIDUAL__main__q1",
+      "resource_projection_id": "MX_S_AXB_RIGHT_RESIDUAL_proj",
+      "regime_id": "MX_S_AXB_RIGHT_RESIDUAL_r1",
+      "comparison_id": "MX_S_AXB_RIGHT_RESIDUAL_c1",
+      "comparison_key": {
+        "setting_id": "MX_S_AXB_RIGHT_RESIDUAL",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_AXB_RIGHT_RESIDUAL__main__q1",
+        "resource_projection_id": "MX_S_AXB_RIGHT_RESIDUAL_proj",
+        "regime_id": "MX_S_AXB_RIGHT_RESIDUAL_r1"
+      },
+      "label": "Half-relative-residual window",
+      "predicate": {
+        "predicate": {
+          "name": "one_sided_linear_system_theorem_1",
+          "args": [
+            "MX_S_AXB_RIGHT_RESIDUAL_p_n",
+            "MX_S_AXB_RIGHT_RESIDUAL_p_kappa",
+            "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon"
+          ],
+          "description": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 1/2$."
+        }
+      },
+      "predicate_text": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 1/2$.",
+      "parameter_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_p_n",
+        "MX_S_AXB_RIGHT_RESIDUAL_p_kappa",
+        "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon"
+      ],
+      "source_region_ref": "MX_S_AXB_RIGHT_RESIDUAL_r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "upper_refs": [
+          "MX_S_AXB_RIGHT_RESIDUAL_c1_upper"
+        ],
+        "lower_refs": [
+          "MX_S_AXB_RIGHT_RESIDUAL_c1_lower"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "comparison_ref": "MX_S_AXB_RIGHT_RESIDUAL_c1",
+        "quantity_ref": "MX_S_AXB_RIGHT_RESIDUAL__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_right",
+        "resource_projection_description": "Number of exact right products.",
+        "ratio_or_gap": "$\\le2$",
+        "envelopes": {
+          "upper": {
+            "expression": "n",
+            "expression_latex": "n",
+            "claim_refs": [
+              "MX_S_AXB_RIGHT_RESIDUAL_c1_upper"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "\\left\\lceil n/2\\right\\rceil",
+            "expression_latex": "\\left\\lceil n/2\\right\\rceil",
+            "claim_refs": [
+              "MX_S_AXB_RIGHT_RESIDUAL_c1_lower"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "MX_S_AXB_RIGHT_RESIDUAL_c1_upper",
+            "when_region_refs": [
+              "MX_S_AXB_RIGHT_RESIDUAL_r1"
+            ],
+            "meaning": "Recover all n columns."
+          }
+        ],
+        "claim_guards": {
+          "MX_S_AXB_RIGHT_RESIDUAL_c1_upper": [
+            {
+              "region_ref": "MX_S_AXB_RIGHT_RESIDUAL_r1",
+              "predicate_text": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 1/2$."
+            }
+          ],
+          "MX_S_AXB_RIGHT_RESIDUAL_c1_lower": [
+            {
+              "region_ref": "MX_S_AXB_RIGHT_RESIDUAL_r1",
+              "predicate_text": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 1/2$."
+            }
+          ]
+        },
+        "envelope_certificate": "The upper and lower budgets are within factor two."
+      }
+    },
+    {
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_AXB_RIGHT_RESIDUAL__main__q1",
+      "resource_projection_id": "MX_S_AXB_RIGHT_RESIDUAL_proj",
+      "regime_id": "MX_S_AXB_RIGHT_RESIDUAL_r2",
+      "comparison_id": "MX_S_AXB_RIGHT_RESIDUAL_c2",
+      "comparison_key": {
+        "setting_id": "MX_S_AXB_RIGHT_RESIDUAL",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_AXB_RIGHT_RESIDUAL__main__q1",
+        "resource_projection_id": "MX_S_AXB_RIGHT_RESIDUAL_proj",
+        "regime_id": "MX_S_AXB_RIGHT_RESIDUAL_r2"
+      },
+      "label": "Higher-accuracy exact query-count window",
+      "predicate": {
+        "predicate": {
+          "name": "one_sided_linear_system_theorem_2",
+          "args": [
+            "MX_S_AXB_RIGHT_RESIDUAL_p_n",
+            "MX_S_AXB_RIGHT_RESIDUAL_p_kappa",
+            "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon"
+          ],
+          "description": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 0.2/\\sqrt n$."
+        }
+      },
+      "predicate_text": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 0.2/\\sqrt n$.",
+      "parameter_refs": [
+        "MX_S_AXB_RIGHT_RESIDUAL_p_n",
+        "MX_S_AXB_RIGHT_RESIDUAL_p_kappa",
+        "MX_S_AXB_RIGHT_RESIDUAL_p_epsilon"
+      ],
+      "source_region_ref": "MX_S_AXB_RIGHT_RESIDUAL_r2",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "upper_refs": [
+          "MX_S_AXB_RIGHT_RESIDUAL_c2_upper"
+        ],
+        "lower_refs": [
+          "MX_S_AXB_RIGHT_RESIDUAL_c2_lower"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "comparison_ref": "MX_S_AXB_RIGHT_RESIDUAL_c2",
+        "quantity_ref": "MX_S_AXB_RIGHT_RESIDUAL__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_right",
+        "resource_projection_description": "Number of exact right products.",
+        "ratio_or_gap": "$1$",
+        "envelopes": {
+          "upper": {
+            "expression": "n",
+            "expression_latex": "n",
+            "claim_refs": [
+              "MX_S_AXB_RIGHT_RESIDUAL_c2_upper"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "n",
+            "expression_latex": "n",
+            "claim_refs": [
+              "MX_S_AXB_RIGHT_RESIDUAL_c2_lower"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "MX_S_AXB_RIGHT_RESIDUAL_c2_upper",
+            "when_region_refs": [
+              "MX_S_AXB_RIGHT_RESIDUAL_r2"
+            ],
+            "meaning": "Recover all n columns."
+          }
+        ],
+        "claim_guards": {
+          "MX_S_AXB_RIGHT_RESIDUAL_c2_upper": [
+            {
+              "region_ref": "MX_S_AXB_RIGHT_RESIDUAL_r2",
+              "predicate_text": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 0.2/\\sqrt n$."
+            }
+          ],
+          "MX_S_AXB_RIGHT_RESIDUAL_c2_lower": [
+            {
+              "region_ref": "MX_S_AXB_RIGHT_RESIDUAL_r2",
+              "predicate_text": "$n\\ge n_0$, $\\kappa\\ge1$, $0<\\varepsilon\\le 0.2/\\sqrt n$."
+            }
+          ]
+        },
+        "envelope_certificate": "The two envelopes agree exactly."
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL_e_upper",
+      "kind": "local_argument",
+      "supports": "Query the n standard basis vectors to reconstruct A and solve it exactly."
+    },
+    {
+      "id": "MX_S_AXB_RIGHT_RESIDUAL_e_lower",
+      "source_ref": "MX_SRC_AXB_2026",
+      "locator": {
+        "theorem": "Theorem 1.2 and Section 3"
+      },
+      "supports": "The lower bound applies to unrestricted randomized adaptive queries. The hard matrices are orthogonal and have condition number one."
+    }
+  ],
+  "references": [
+    {
+      "id": "MX_SRC_AXB_2026",
+      "title": "The matrix-vector complexity of Ax=b",
+      "authors": [
+        "Michał Dereziński",
+        "Ethan N. Epperly",
+        "Raphael A. Meyer"
+      ],
+      "year": 2026,
+      "url": "https://arxiv.org/abs/2602.04842",
+      "publication_status": "preprint"
+    }
+  ],
+  "relations": [
+    {
+      "target_setting_id": "MX_S_spd",
+      "relation": "different_model_and_error",
+      "notes": "The SPD energy-error setting restricts the matrix and uses a different criterion."
+    },
+    {
+      "target_setting_id": "MX_S_least_squares",
+      "relation": "different_task_and_access",
+      "notes": "The least-squares setting includes inconsistent rectangular systems, has transpose access, and uses normalized squared prediction error."
+    }
+  ],
+  "aliases": [],
+  "review": {
+    "scientific_evidence": "The lower bound is restricted to Theorem 1.2 and its sufficient dimension condition. Its high-accuracy branch matches exact reconstruction."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 2,
+    "status_counts": {
+      "optimal": 2
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "MX_S_AXB_RIGHT_RESIDUAL_c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "MX_S_AXB_RIGHT_RESIDUAL_c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.1.0",
+    "source_snapshot": "scout-census-2024-2026",
+    "source_json_sha256": "21598be55c76312d108eba5fc4697a91988b195696518ba1f881ce41b06c58d9",
+    "source_order": 421,
+    "transformations": [
+      "read_source",
+      "record_exact_reconstruction_upper"
+    ]
+  }
+}

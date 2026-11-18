@@ -1,0 +1,869 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "BL_SPEC_two_point_coupled",
+  "title": "Stochastic bilevel gradients with two-point coupling within one fresh sample",
+  "summary": "Solve the bilevel problem $\\min_x\\Phi(x)$, where $\\Phi(x)=f(x,y^*(x))$ and $y^*(x)=\\operatorname*{argmin}_y g(x,y)$ is the unique global lower-level solution. The upper- and lower-level variables are $x\\in\\mathbb{R}^{d_x}$ and $y\\in\\mathbb{R}^{d_y}$. Seek approximate stationarity of the reduced objective under the declared criterion and guarantee; assumptions on $f$, $g$, and $\\Phi$ are specified separately.",
+  "primary_domain": "bilevel",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "bilevel"
+    },
+    {
+      "facet": "goal",
+      "value": "reduced_stationarity"
+    },
+    {
+      "facet": "structure",
+      "value": "lower_strong_convexity"
+    },
+    {
+      "facet": "feedback",
+      "value": "two_point_fresh"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "bilevel"
+      ],
+      "detail": "min_x Phi(x)=f(x,y*(x)); unique unconstrained global lower minimizer.",
+      "description_paragraphs": [
+        "Solve the bilevel problem $\\min_x\\Phi(x)$, where $\\Phi(x)=f(x,y^*(x))$ and $y^*(x)=\\operatorname*{argmin}_y g(x,y)$ is the unique global lower-level solution. The upper- and lower-level variables are $x\\in\\mathbb{R}^{d_x}$ and $y\\in\\mathbb{R}^{d_y}$. Seek approximate stationarity of the reduced objective under the declared criterion and guarantee; assumptions on $f$, $g$, and $\\Phi$ are specified separately."
+      ]
+    },
+    "model": {
+      "regularity": "g(x,.) is mu_y-strongly convex; f,g have jointly L_f,L_g-Lipschitz gradients; ||grad_y f||<=C_f; g_{xy},g_{yy} are jointly rho-Lipschitz.",
+      "initialization": "Phi(x0)-inf Phi<=Delta; ||y0-y*(x0)||<=R_y; initialize the two tracked lower iterates at the same y0.",
+      "stochastic_model": "Conditional unbiasedness and bounded variances sigma_f^2,sigma_g^2 globally. Same-sample lower gradient obeys E||G_g(x,y1;xi)-G_g(x,y2;xi)||^2<=L_ms^2||y1-y2||^2 if L_ms<infinity; L_ms=infinity imposes no such smoothness.",
+      "scope": "The MSS condition is in y at fixed x and on the full lower gradient; it does not assert full (x,y) MSS or sample-wise SC.",
+      "description_paragraphs": [
+        "The function $g(x,\\cdot)$ is $\\mu_y$-strongly convex. The functions $\\nabla f,\\nabla g$ are jointly $L_f,L_g$-Lipschitz; $\\|\\nabla_yf\\|\\le C_f$, and $g_{xy},g_{yy}$ is jointly $\\rho$-Lipschitz. Also $\\Phi(x_0)-\\inf\\Phi\\le\\Delta$ and $\\|y_0-y^*(x_0)\\|\\le R_y$.",
+        "Population gradients are unbiased, with variances bounded by $\\sigma_f^2,\\sigma_g^2$. If $L_{\\mathrm{ms}}<\\infty$, additionally require the common-sample condition $\\mathbb{E}\\|G_g(x,y_1;\\xi)-G_g(x,y_2;\\xi)\\|^2\\le L_{\\mathrm{ms}}^2\\|y_1-y_2\\|^2$; $L_{\\mathrm{ms}}=\\infty$ means this condition is absent. It applies only in the lower-variable direction at fixed $x$."
+      ],
+      "outer_geometry": "The reduced objective may be nonconvex. Its differentiability or local Lipschitz regularity is specified by the model and accuracy measure."
+    },
+    "oracle": {
+      "operations": [
+        "Before a fresh draw choose at most two points z1,z2. Draw independent upper/lower sample seeds zeta,xi; return (G_f(z_j;zeta),G_g(z_j;xi)) for each requested point."
+      ],
+      "query_domain": "All Euclidean points; both points are chosen before the draw.",
+      "coupling": "Samples may be shared within this simultaneous batch only; they are not a reusable persistent sample handle. No informative y*-estimate is supplied (the r=infinity source specialization).",
+      "description_paragraphs": [
+        "The algorithm specifies at most two points $z_1,z_2$ before sampling. Independent upper- and lower-level seeds $\\zeta$ and $\\xi$ are then drawn, and the oracle returns $(G_f(z_j;\\zeta),G_g(z_j;\\xi))$ at each requested point. The two points share the current batch seeds; different batches use fresh seeds. No persistent sample handle is provided.",
+        "Queries may use the full Euclidean space. Budgets, dimensions, and initial points are public. No additional localization information about $y^*(x)$ is supplied."
+      ]
+    },
+    "output": {
+      "description_paragraphs": [
+        "Return any measurable $\\widehat{x}\\in\\mathbb{R}^{d_x}$, possibly an unqueried point."
+      ]
+    },
+    "metric": {
+      "description_paragraphs": [
+        "$\\|\\nabla\\Phi(\\widehat{x})\\|^2$."
+      ]
+    },
+    "resource": {
+      "vector": [
+        "N_pair_f",
+        "N_pair_g"
+      ],
+      "projection": "Q counts each actual point/sample gradient separately; two points and two functions cost four. Fixed batch size two makes this a constant-factor mapping of the source N-simultaneous interface.",
+      "budget": "Fixed outer/inner horizons and batches; all initialization and inner calls included.",
+      "description_paragraphs": [
+        "Each function-point-sample gradient evaluation costs one unit. Querying both levels at two points costs four units. The fixed worst-case budget includes all inner, outer, and initialization calls."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "description_paragraphs": [
+          "Arbitrary randomized adaptive algorithms are allowed, but both points in a batch must be fixed before its seed is drawn. Queries, stopping, and postprocessing may be arbitrary measurable functions; outputs may be unqueried, randomly selected historical points, or admissible averages. No span or zero-respecting restriction is imposed. Queries are sequential, and each response in a batch is charged. Internal arithmetic, linear algebra, and storage are free; internal work, memory, and communication are not budgeted."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "description_paragraphs": [
+            "For every instance, $\\mathbb E\\|\\nabla\\Phi(\\widehat x)\\|^2\\le\\varepsilon^2$, with expectation over all randomness."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "BL_SPEC_two_point_coupled"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {},
+  "parameters": [
+    {
+      "id": "BL_SPEC_two_point_coupled_p_0d1c5067b5",
+      "symbol": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_a136776370",
+      "symbol": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_dc5f6d3bad",
+      "symbol": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_256ee43d4f",
+      "symbol": "L_f",
+      "meaning": "Joint-variable Lipschitz upper bound for the complete population upper-level gradient",
+      "domain": "$L_f\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_695a6efe82",
+      "symbol": "L_g",
+      "meaning": "A joint-variable Lipschitz bound on the population lower-level full gradient.",
+      "domain": "$L_g\\ge\\mu_y>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_eb3546e82c",
+      "symbol": "C_f",
+      "meaning": "A uniform norm bound on the population upper function’s lower-variable gradient block.",
+      "domain": "$C_f\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\|\\nabla_yf(x,y)\\|\\le C_f$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_183e94cd86",
+      "symbol": "\\mu_y",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "domain": "$\\mu_y>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_850094ef78",
+      "symbol": "\\rho",
+      "meaning": "Common joint Lipschitz upper bound for the lower function's cross-Hessian block and lower-variable Hessian block",
+      "domain": "$\\rho\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_25c351f23c",
+      "symbol": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_b6cd508fbf",
+      "symbol": "R_y",
+      "meaning": "Public initial lower-level distance bound",
+      "domain": "$R_y\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\|y_0-y^*(x_0)\\|\\le R_y$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_7150d787ed",
+      "symbol": "L_{\\rm ms}",
+      "meaning": "A mean-square Lipschitz bound on gradient differences at two lower-level points using the same lower-level sample.",
+      "domain": "The parameter satisfies $0\\le L_{\\mathrm{ms}}\\le\\infty$; infinity means that this condition is not imposed.",
+      "definition": null,
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_a17bdd1bfb",
+      "symbol": "\\sigma_f",
+      "meaning": "Conditional standard-deviation bound for the full stochastic upper-level gradient",
+      "domain": "$\\sigma_f\\ge0$",
+      "definition": null,
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled_p_9d0f22c488",
+      "symbol": "\\sigma_g",
+      "meaning": "Conditional standard-deviation bound for the full stochastic lower-level gradient",
+      "domain": "$\\sigma_g\\ge0$",
+      "definition": null,
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "x,y",
+      "meaning": "The upper- and lower-level variables.",
+      "domain": "$x\\in\\mathbb R^{d_x},y\\in\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,g",
+      "meaning": "The original upper- and lower-level real-valued functions.",
+      "domain": "$f,g:\\mathbb R^{d_x}\\times\\mathbb R^{d_y}\\to\\mathbb R$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat x,x_0,y_0",
+      "meaning": "Output outer point, public outer initial point, and public lower-level initial point",
+      "domain": "Each lies in its corresponding variable space.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Phi",
+      "meaning": "The reduced objective.",
+      "domain": "Defined in the task specification",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "y^*",
+      "meaning": "Mapping to the unique lower-level global minimizer",
+      "domain": "Constraints specified under TASK",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla,\\|\\cdot\\|",
+      "meaning": "Euclidean gradient and vector norm; matrix and higher-derivative norms are the induced Euclidean operator norms",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E,\\Pr,\\inf,\\sup",
+      "meaning": "Expectation, probability, infimum, and supremum, with aggregation order and randomness specified by the guarantee.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal O,\\Omega,\\Theta,\\widetilde{\\mathcal O}",
+      "meaning": "Asymptotic upper, lower, matching-order, and declared-logarithm upper bounds; fixed parameters are specified in each evidence record",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive absolute constants or functions of fixed budgets, with dependencies specified by the corresponding result",
+      "domain": "$0<c,C<\\infty$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_0d1c5067b5"
+    },
+    {
+      "symbol_latex": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_a136776370"
+    },
+    {
+      "symbol_latex": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_dc5f6d3bad"
+    },
+    {
+      "symbol_latex": "L_f",
+      "meaning": "Joint-variable Lipschitz upper bound for the complete population upper-level gradient",
+      "domain": "$L_f\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_256ee43d4f"
+    },
+    {
+      "symbol_latex": "L_g",
+      "meaning": "A joint-variable Lipschitz bound on the population lower-level full gradient.",
+      "domain": "$L_g\\ge\\mu_y>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_695a6efe82"
+    },
+    {
+      "symbol_latex": "C_f",
+      "meaning": "A uniform norm bound on the population upper function’s lower-variable gradient block.",
+      "domain": "$C_f\\ge0$",
+      "definition": "$\\|\\nabla_yf(x,y)\\|\\le C_f$",
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_eb3546e82c"
+    },
+    {
+      "symbol_latex": "\\mu_y",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "domain": "$\\mu_y>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_183e94cd86"
+    },
+    {
+      "symbol_latex": "\\rho",
+      "meaning": "Common joint Lipschitz upper bound for the lower function's cross-Hessian block and lower-variable Hessian block",
+      "domain": "$\\rho\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_850094ef78"
+    },
+    {
+      "symbol_latex": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_25c351f23c"
+    },
+    {
+      "symbol_latex": "R_y",
+      "meaning": "Public initial lower-level distance bound",
+      "domain": "$R_y\\ge0$",
+      "definition": "$\\|y_0-y^*(x_0)\\|\\le R_y$",
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_b6cd508fbf"
+    },
+    {
+      "symbol_latex": "L_{\\rm ms}",
+      "meaning": "A mean-square Lipschitz bound on gradient differences at two lower-level points using the same lower-level sample.",
+      "domain": "The parameter satisfies $0\\le L_{\\mathrm{ms}}\\le\\infty$; infinity means that this condition is not imposed.",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_7150d787ed"
+    },
+    {
+      "symbol_latex": "\\sigma_f",
+      "meaning": "Conditional standard-deviation bound for the full stochastic upper-level gradient",
+      "domain": "$\\sigma_f\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_a17bdd1bfb"
+    },
+    {
+      "symbol_latex": "\\sigma_g",
+      "meaning": "Conditional standard-deviation bound for the full stochastic lower-level gradient",
+      "domain": "$\\sigma_g\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_two_point_coupled_p_9d0f22c488"
+    },
+    {
+      "symbol_latex": "g_{xy},g_{yy}",
+      "meaning": "Mixed lower-level Hessian block and lower-variable Hessian block",
+      "domain": "$g_{xy}\\in\\mathbb R^{d_x\\times d_y},g_{yy}\\in\\mathbb R^{d_y\\times d_y}$",
+      "definition": "$g_{xy}=\\mathrm D_y\\nabla_xg,\\quad g_{yy}=\\mathrm D_y\\nabla_yg$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "G_f,G_g,\\mathcal H",
+      "meaning": "Upper- and lower-level stochastic full-gradient responses and the pre-draw history.",
+      "domain": "$G_f,G_g\\in\\mathbb R^{d_x+d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "G_{f,x},G_{f,y},G_{g,x},G_{g,y}",
+      "meaning": "Outer and lower blocks of the corresponding full stochastic gradient",
+      "domain": "Outer-block dimension d_x and lower-block dimension d_y.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "z_1,z_2",
+      "meaning": "At most two joint query points specified simultaneously before one sample draw.",
+      "domain": "$z_j=(x_j,y_j)$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\xi,\\zeta",
+      "meaning": "Lower- and upper-level seeds, in the source order used here. They are independent.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "n,T,M",
+      "meaning": "The source algorithm’s predetermined batch and inner/outer iteration budgets.",
+      "domain": "Role fixed by the evidence's call-accounting convention",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,Q",
+      "meaning": "This is the total call budget under the stated resource projection. If only one symbol is used, the two names are aliases for that same budget.",
+      "domain": "RESOURCE specifies which operations are summed; no additional unit cost is introduced.",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "BL_SPEC_two_point_coupled__main__q1",
+      "kind": "source_scoped_metric_resource_statement",
+      "specification_ref": "BL_SPEC_two_point_coupled",
+      "metric_contract": "E||grad Phi(x_hat)||^2<=epsilon^2.",
+      "resource_contract": {
+        "vector": [
+          "N_pair_f",
+          "N_pair_g"
+        ],
+        "projection": "Q counts each actual point/sample gradient separately; two points and two functions cost four. Fixed batch size two makes this a constant-factor mapping of the source N-simultaneous interface.",
+        "budget": "Fixed outer/inner horizons and batches; all initialization and inner calls included."
+      },
+      "claim_scope": "Penalty method with coupled lower iterates",
+      "no_automatic_minimax_interpretation": true,
+      "tracked_parameters": [],
+      "fixed_parameters": [],
+      "bound_claim_refs": [
+        "BL_SPEC_two_point_coupled__main__b2"
+      ],
+      "interpretation": "This is the native source metric/resource guarantee. Joint precision, block size, runtime and oracle components stay separate; do not infer a scalar optimal query complexity.",
+      "nonnegativity": true,
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled__main__q2",
+      "kind": "source_scoped_metric_resource_statement",
+      "specification_ref": "BL_SPEC_two_point_coupled",
+      "metric_contract": "E||grad Phi(x_hat)||^2<=epsilon^2.",
+      "resource_contract": {
+        "vector": [
+          "N_pair_f",
+          "N_pair_g"
+        ],
+        "projection": "Q counts each actual point/sample gradient separately; two points and two functions cost four. Fixed batch size two makes this a constant-factor mapping of the source N-simultaneous interface.",
+        "budget": "Fixed outer/inner horizons and batches; all initialization and inner calls included."
+      },
+      "claim_scope": "Penalty method with coupled lower iterates",
+      "no_automatic_minimax_interpretation": true,
+      "tracked_parameters": [],
+      "fixed_parameters": [],
+      "bound_claim_refs": [
+        "BL_SPEC_two_point_coupled__main__b1"
+      ],
+      "interpretation": "This is the native source metric/resource guarantee. Joint precision, block size, runtime and oracle components stay separate; do not infer a scalar optimal query complexity.",
+      "nonnegativity": true,
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": null,
+      "expression": null,
+      "mode": "unassessed",
+      "resource_projection_id": "resource_cc7c360256"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "BL_SPEC_two_point_coupled__main__r1",
+      "specification_ref": "BL_SPEC_two_point_coupled",
+      "name": "BM_BOUND_coupled_variance_upper source window",
+      "kind": "theorem_window",
+      "predicate_text": "No finite mean-square smoothness budget is required; $L_{\\mathrm{ms}}=\\infty$ is allowed. Regularity, variance, initial-gap, and inner-distance budgets are fixed, and $\\varepsilon$ is sufficiently small.",
+      "predicate_semantics": "Conjunction of the displayed guards; not a different setting.",
+      "parameter_refs": [],
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "No finite MSS budget required; L_ms=infinity is allowed; all displayed smoothness, variance, gap and initialization budgets fixed; epsilon sufficiently small."
+        }
+      },
+      "endpoint_notes": "Retain the source conditions symbolically. A condition without an executable numerical predicate evaluates to unknown and cannot be ignored."
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled__main__r2",
+      "specification_ref": "BL_SPEC_two_point_coupled",
+      "name": "BM_BOUND_coupled_mss_upper source window",
+      "kind": "theorem_window",
+      "predicate_text": "$L_{\\mathrm{ms}}<\\infty$. Fix regularity, variance, initial-gap, and inner-distance budgets, with $\\varepsilon$ sufficiently small.",
+      "predicate_semantics": "Conjunction of the displayed guards; not a different setting.",
+      "parameter_refs": [],
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "L_ms<infinity; all displayed smoothness, variance, gap and initialization budgets fixed; epsilon sufficiently small."
+        }
+      },
+      "endpoint_notes": "Retain the source conditions symbolically. A condition without an executable numerical predicate evaluates to unknown and cannot be ignored."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "BL_SPEC_two_point_coupled__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{O}(\\varepsilon^{-6})",
+      "quantity_ref": "BL_SPEC_two_point_coupled__main__q2",
+      "region_refs": [
+        "BL_SPEC_two_point_coupled__main__r1"
+      ],
+      "method": "Penalty method with coupled lower iterates",
+      "algorithm_or_hard_family": "Penalty method with coupled lower iterates",
+      "source_refs": [
+        "BL_SRC_Kwon2024"
+      ],
+      "evidence_refs": [
+        "BL_SPEC_two_point_coupled__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "BL_SPEC_two_point_coupled__main__c1"
+      ],
+      "applicability": {
+        "goal_mapping": "Choose an outer point uniformly using the average squared-gradient bound and rescale target $\\varepsilon^2$ by a constant factor.",
+        "oracle_mapping": "In the source branch $r=\\infty$, each fresh coupled draw is evaluated at no more than two points.",
+        "resource_mapping": "Each native joint batch is implemented by a constant number of separately charged point-and-function gradient responses.",
+        "budget_mapping": "Batch sizes and iteration count $n,T,M$ are chosen in advance, giving a fixed call cap on every execution path."
+      },
+      "hidden_constants": "Hold the stated regularity and initialization budgets fixed. Joint optimality is not claimed for parameters whose dependence is untracked.",
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "BL_SPEC_two_point_coupled__main__b2",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{O}(\\varepsilon^{-4})",
+      "quantity_ref": "BL_SPEC_two_point_coupled__main__q1",
+      "region_refs": [
+        "BL_SPEC_two_point_coupled__main__r2"
+      ],
+      "method": "Penalty method with coupled lower iterates",
+      "algorithm_or_hard_family": "Penalty method with coupled lower iterates",
+      "source_refs": [
+        "BL_SRC_Kwon2024"
+      ],
+      "evidence_refs": [
+        "BL_SPEC_two_point_coupled__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "BL_SPEC_two_point_coupled__main__c2"
+      ],
+      "applicability": {
+        "goal_mapping": "Choose an outer point uniformly using the average squared-gradient bound and rescale target $\\varepsilon^2$ by a constant factor.",
+        "oracle_mapping": "In the source branch $r=\\infty$, each fresh coupled draw is evaluated at no more than two points.",
+        "resource_mapping": "Each native joint batch is implemented by a constant number of separately charged point-and-function gradient responses.",
+        "budget_mapping": "Batch sizes and iteration count $n,T,M$ are chosen in advance, giving a fixed call cap on every execution path."
+      },
+      "hidden_constants": "Hold the stated regularity and initialization budgets fixed. Joint optimality is not claimed for parameters whose dependence is untracked.",
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "BM_BOUND_coupled_variance_upper source window",
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "No finite MSS budget required; L_ms=infinity is allowed; all displayed smoothness, variance, gap and initialization budgets fixed; epsilon sufficiently small."
+        }
+      },
+      "predicate_text": "No finite mean-square smoothness budget is required; $L_{\\mathrm{ms}}=\\infty$ is allowed. Regularity, variance, initial-gap, and inner-distance budgets are fixed, and $\\varepsilon$ is sufficiently small.",
+      "parameter_refs": [],
+      "source_region_ref": "BL_SPEC_two_point_coupled__main__r1",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "BL_SPEC_two_point_coupled__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "BL_SPEC_two_point_coupled__main__q2",
+      "resource_projection_id": "resource_cc7c360256",
+      "regime_id": "BL_SPEC_two_point_coupled__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "BL_SPEC_two_point_coupled__main__b1"
+        ],
+        "lower_refs": [],
+        "comparison_ref": null,
+        "quantity_ref": "BL_SPEC_two_point_coupled__main__q2",
+        "comparison_mode": "unassessed",
+        "resource_projection": null,
+        "ratio_or_gap": null,
+        "envelopes": {},
+        "dispatch": [],
+        "claim_guards": {
+          "BL_SPEC_two_point_coupled__main__b1": [
+            {
+              "region_ref": "BL_SPEC_two_point_coupled__main__r1",
+              "predicate_text": "No finite mean-square smoothness budget is required; $L_{\\mathrm{ms}}=\\infty$ is allowed. Regularity, variance, initial-gap, and inner-distance budgets are fixed, and $\\varepsilon$ is sufficiently small."
+            }
+          ]
+        },
+        "envelope_certificate": null,
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": null
+      },
+      "comparison_key": {
+        "setting_id": "BL_SPEC_two_point_coupled",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "BL_SPEC_two_point_coupled__main__q2",
+        "resource_projection_id": "resource_cc7c360256",
+        "regime_id": "BL_SPEC_two_point_coupled__main__r1"
+      }
+    },
+    {
+      "label": "BM_BOUND_coupled_mss_upper source window",
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "L_ms<infinity; all displayed smoothness, variance, gap and initialization budgets fixed; epsilon sufficiently small."
+        }
+      },
+      "predicate_text": "$L_{\\mathrm{ms}}<\\infty$. Fix regularity, variance, initial-gap, and inner-distance budgets, with $\\varepsilon$ sufficiently small.",
+      "parameter_refs": [],
+      "source_region_ref": "BL_SPEC_two_point_coupled__main__r2",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "BL_SPEC_two_point_coupled__main__c2",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "BL_SPEC_two_point_coupled__main__q1",
+      "resource_projection_id": "resource_cc7c360256",
+      "regime_id": "BL_SPEC_two_point_coupled__main__r2",
+      "bracket": {
+        "upper_refs": [
+          "BL_SPEC_two_point_coupled__main__b2"
+        ],
+        "lower_refs": [],
+        "comparison_ref": null,
+        "quantity_ref": "BL_SPEC_two_point_coupled__main__q1",
+        "comparison_mode": "unassessed",
+        "resource_projection": null,
+        "ratio_or_gap": null,
+        "envelopes": {},
+        "dispatch": [],
+        "claim_guards": {
+          "BL_SPEC_two_point_coupled__main__b2": [
+            {
+              "region_ref": "BL_SPEC_two_point_coupled__main__r2",
+              "predicate_text": "$L_{\\mathrm{ms}}<\\infty$. Fix regularity, variance, initial-gap, and inner-distance budgets, with $\\varepsilon$ sufficiently small."
+            }
+          ]
+        },
+        "envelope_certificate": null,
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": null
+      },
+      "comparison_key": {
+        "setting_id": "BL_SPEC_two_point_coupled",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "BL_SPEC_two_point_coupled__main__q1",
+        "resource_projection_id": "resource_cc7c360256",
+        "regime_id": "BL_SPEC_two_point_coupled__main__r2"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "BL_SPEC_two_point_coupled__main__e1",
+      "source_ref": "BL_SRC_Kwon2024",
+      "locator": {
+        "pdf_pages": [
+          1,
+          2,
+          5,
+          6,
+          15,
+          16,
+          21,
+          22
+        ],
+        "theorem_or_section": "Equations (2)–(4); Definition 1.1; Oracle Classes; Theorems 3.1–3.2; Eq.(86)",
+        "theorem": "Equations (2)–(4); Definition 1.1; Oracle Classes; Theorems 3.1–3.2; Eq.(86)",
+        "section": "",
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Applies to Each fresh draw is evaluated at simultaneous points; r=infinity removes informative y*-aware side information and makes unbiasedness global., Only lower-variable MSS of the lower gradient is needed for the epsilon^-4 upper; no cross-iteration reusable sample handle is assumed., Eq.(86) gives an averaged squared-gradient guarantee; uniform random output and fixed schedules yield the recorded RMS target and hard-budget upper., The stochastic smoothness symbol is printed with inconsistent squaring between Eq.(4) and subsequent bounds; the contract explicitly defines L_ms through L_ms^2.",
+      "notes": []
+    }
+  ],
+  "references": [
+    {
+      "id": "BL_SRC_Kwon2024",
+      "authors": [
+        "Jeongyeol Kwon",
+        "Dohyun Kwon",
+        "Hanbaek Lyu"
+      ],
+      "title": "On The Complexity of First-Order Methods in Stochastic Bilevel Optimization",
+      "year": 2024,
+      "version": "PMLR235 ICML2024 publisher PDF",
+      "url": "https://raw.githubusercontent.com/mlresearch/v235/main/assets/kwon24b/kwon24b.pdf",
+      "publication_status": "see_primary_source"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "BL_SPEC_two_point_coupled",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "lower"
+    ],
+    "special_statuses": [],
+    "comparison_count": 2,
+    "status_counts": {
+      "missing_lower": 2
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "BL_SPEC_two_point_coupled__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "BL_SPEC_two_point_coupled__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "537c3f1d3411faf384e056e0d212a8384ae367f8d609c128119bb9b116d4637e",
+    "source_order": 108,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

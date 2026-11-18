@@ -1,0 +1,286 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Smooth quasar-convex minimization on a ball: fresh stochastic gradients\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}FO\_\allowbreak{}QC\_\allowbreak{}BALL\_\allowbreak{}FRESH}
+
+Single-objective optimization
+
+Minimize expected objective gap over a public Euclidean ball with a fixed budget of unbiased, bounded-variance gradient calls.
+
+\textbf{Status.} Logarithmic gap present; Other quantified gap present; Bounds missing
+
+\textbf{Gap classes present.} Logarithmic gap; Other quantified gap
+
+\textbf{TASK tags.} task family: Single objective; formulation: Global minimization
+
+\textbf{MODEL tags.} geometry: Euclidean ball; smoothness: Population gradient lipschitz
+
+\textbf{ORACLE tags.} operation: Stochastic gradient; feedback quality: Stochastic
+
+\textbf{ALGORITHMS tags.} randomization: Private randomness allowed
+
+\textbf{OUTPUT tags.} object: Primal point
+
+\textbf{METRIC tags.} criterion: Objective gap
+
+\textbf{GUARANTEE tags.} mode: Expectation
+
+\textbf{RESOURCE tags.} measure: N grad; budget: Fixed worst-case budget
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Solve \AtlasInlineMath{\min_{x\in Q} f(x)} using stochastic gradient responses queried inside \AtlasInlineMath{Q}. At a fixed query budget, minimize the worst-case expected objective gap of the returned feasible point.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The public feasible set is the Euclidean ball \AtlasInlineMath{Q=B_2(0,D)=\{x\in\mathbb R^d:\|x\|_2\le D\}}. The unknown differentiable \AtlasInlineMath{f:\mathbb R^d\to\mathbb R} has an \AtlasInlineMath{L}-Lipschitz gradient on the full space. At least one global minimizer is in \AtlasInlineMath{Q}, and the set \AtlasInlineMath{S=\arg\min_{x\in Q} f(x)} is convex.
+
+For all \AtlasInlineMath{x\in Q}, let \AtlasInlineMath{p_S(x)} be the Euclidean projection onto the minimizer set. The model requires
+
+
+\AtlasMath{\tau(f(x)-f_*)\le \langle\nabla f(x),x-p_S(x)\rangle.}
+
+
+The projection onto the hidden minimizer set defines quasar-convexity and is used in analysis. Only the projection onto the public ball is an available operation.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Each call at \AtlasInlineMath{x\in Q} returns a single full stochastic gradient \AtlasInlineMath{g(x;\xi)\in\mathbb R^d}. Conditional on the query and past, \AtlasInlineMath{\mathbb E[g(x;\xi)]=\nabla f(x)} and \AtlasInlineMath{\mathbb E\|g(x;\xi)-\nabla f(x)\|_2^2\le\sigma^2}.
+
+The oracle law is fixed before interaction. Each call uses fresh independent randomness. There is no value feedback or sample handle. The learner can project onto \AtlasInlineMath{Q} using its public center and radius.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return a feasible point \AtlasInlineMath{\widehat x\in Q}. Any measurable feasible postprocessing is allowed, including an unqueried point, random iterate or convex combination. No function value or certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+Evaluate the unnormalized loss \AtlasInlineMath{f(\widehat x)-f_*\,,\qquad f_*=\min_{x\in Q} f(x)}. It is finite and nonnegative. The minimizer promise means \AtlasInlineMath{f_*} also equals the full-space minimum.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Every full response costs one call, including all responses to batch queries. The cap is \AtlasInlineMath{N\le T} on every run. Internal computation, storage and projection onto \AtlasInlineMath{Q} are free.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Private randomization and arbitrary measurable adaptive queries and postprocessing are allowed. The private seed is independent of the fixed instance and oracle samples.
+
+Charge each stochastic gradient response. Public ball projection, internal arithmetic, and storage are free.
+
+Choose one algorithm for the public parameters. For each fixed admissible objective and oracle law, take the expectation of the objective gap over the algorithm's private random seed and oracle noise. Then take the worst case over those instances.
+
+The call cap \AtlasInlineMath{N\le T} applies on every path, independent of the average error guarantee.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{d}: Dimension of the variable space. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb N}, \AtlasInlineMath{d\ge1}.
+
+\AtlasInlineMath{L}: Population-gradient Lipschitz constant in the Euclidean norm. \textbf{Domain:} \AtlasInlineMath{L>0}.
+
+\AtlasInlineMath{D}: Radius of the public ball centered at the origin. \textbf{Domain:} \AtlasInlineMath{D>0}.
+
+\AtlasInlineMath{\tau}: Quasar-convexity parameter on the feasible ball. \textbf{Domain:} \AtlasInlineMath{0<\tau\le1}.
+
+\AtlasInlineMath{\sigma}: Upper bound on the standard deviation of a full stochastic gradient. \textbf{Domain:} \AtlasInlineMath{\sigma\ge0}.
+
+\AtlasInlineMath{T}: Deterministic worst-case cap on the number of gradient responses. \textbf{Domain:} \AtlasInlineMath{T\in\mathbb N}, \AtlasInlineMath{T\ge1}.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - minimax fixed budget error}
+\AtlasMath{R_T^*=\inf_{A:N_A\le T\ \mathrm{on\ every\ path}}\ \sup_I\ \mathbb E_{A,\xi}[f(\widehat x)-f_*]}
+\textbf{Definition.} Expected objective gap at budget T
+
+\textbf{Optimization direction.} minimize
+
+Take the expectation for each fixed instance, then the worst case over all admissible objectives and oracle laws.
+
+\needspace{4\baselineskip}\subsection{R1 - Noise-dominated high-dimensional window}
+\textbf{Region.} \AtlasInlineMath{\sigma>0}, \AtlasInlineMath{d\ge 3\log_{16/15}(2/\tau)}, and \AtlasInlineMath{T\ge 16\sigma^2/(\tau^2L^2D^2)} and \AtlasInlineMath{\tau\sigma\sqrt{T}\ge LD}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Expected gap under a deterministic cap on fresh gradient responses.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{\Omega\!\left(\frac{D\sigma}{\tau\sqrt{T\ln(2/\tau)}}\right)}
+\textbf{Upper bound.} B1
+
+\AtlasMath{O(D\sigma/(\tau\sqrt{T}))}
+\textbf{Gap or comparison.} The ratio is at most \AtlasInlineMath{O(\sqrt{\ln(2/\tau)})}.
+
+\needspace{4\baselineskip}\subsection{R2 - Transient and noise in the high-dimensional window}
+\textbf{Region.} \AtlasInlineMath{\sigma>0}, \AtlasInlineMath{d\ge 3\log_{16/15}(2/\tau)}, and \AtlasInlineMath{T\ge 16\sigma^2/(\tau^2L^2D^2)} and \AtlasInlineMath{\tau\sigma\sqrt{T}<LD}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Expected gap under a deterministic cap on fresh gradient responses.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B4
+
+\AtlasMath{\Omega\!\left(\frac{D\sigma}{\tau\sqrt{T\ln(2/\tau)}}\right)}
+\textbf{Upper bound.} B3
+
+\AtlasMath{O\!\left(\frac{LD^2}{\tau^2T}+\frac{D\sigma}{\tau\sqrt T}\right)}
+\textbf{Gap or comparison.} The ratio is at most \AtlasInlineMath{O((1+LD/(\tau\sigma\sqrt{T}))\sqrt{\ln(2/\tau)})}.
+
+\needspace{4\baselineskip}\subsection{R3 - Outside the certified lower-bound window}
+\textbf{Region.} \AtlasInlineMath{\sigma=0}, \AtlasInlineMath{d<3\log_{16/15}(2/\tau)}, or \AtlasInlineMath{T<16\sigma^2/(\tau^2 L^2D^2)}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Expected gap under a deterministic cap on fresh gradient responses.
+
+\textbf{Status.} Lower bound missing
+
+\textbf{Lower bound.} No admitted bound for this comparison
+
+\textbf{Upper bound.} B5
+
+\AtlasMath{O\!\left(\frac{LD^2}{\tau^2T}+\frac{D\sigma}{\tau\sqrt T}\right)}
+\textbf{Gap or comparison.} The same projected SGD bound remains valid.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} Full fresh gradient response with bounded variance.
+
+\textbf{Guarantee mapping.} Expected function gap over both randomness sources.
+
+\textbf{Output mapping.} One feasible point in the public ball.
+
+\textbf{Resource mapping.} Deterministic cap of T gradient responses.
+
+\needspace{4\baselineskip}\subsection{B1 - Projected stochastic gradient and a uniform iterate}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{O(D\sigma/(\tau\sqrt{T}))}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v291/saad25a.html}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{\sigma>0}, \AtlasInlineMath{d\ge 3\log_{16/15}(2/\tau)}, and \AtlasInlineMath{T\ge 16\sigma^2/(\tau^2L^2D^2)} and \AtlasInlineMath{\tau\sigma\sqrt{T}\ge LD}.
+
+\textbf{Derivation.} Let \AtlasInlineMath{x_0=0} and \AtlasInlineMath{x_{t+1}=P_Q(x_t-\eta g_t)} with \AtlasInlineMath{\eta=\min\{\tau/(2L),D/(\sigma\sqrt{T})\}}, using \AtlasInlineMath{+\infty} for the second term at \AtlasInlineMath{\sigma=0}. For \AtlasInlineMath{p_t=P_S(x_t)}, projection nonexpansiveness and quasar-convexity give 
+\AtlasMath{\mathbb E_t\operatorname{dist}(x_{t+1},S)^2\le\operatorname{dist}(x_t,S)^2-2\eta\tau(f(x_t)-f_*)+\eta^2\mathbb E_t\|g_t\|^2}
+. Global smoothness and the global minimum promise give \AtlasInlineMath{\|\nabla f(x_t)\|^2\le2L(f(x_t)-f_*)}, so the coefficient of the gap after absorbing the second moment is at most \AtlasInlineMath{-\eta\tau}. Sum over \AtlasInlineMath{t=0,\dots,T-1}, use \AtlasInlineMath{\operatorname{dist}(0,S)\le D}, and return a uniform sampled iterate. The gap is at most \AtlasInlineMath{D^2/(\eta\tau T)+\eta\sigma^2/\tau}.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v291/saad25a.html}{[1]} theorem: Section 1 and Table 1, with the projected SGD derivation in this profile; pdf pages: 2; 6
+
+Let \AtlasInlineMath{x_0=0} and \AtlasInlineMath{x_{t+1}=P_Q(x_t-\eta g_t)} with \AtlasInlineMath{\eta=\min\{\tau/(2L),D/(\sigma\sqrt{T})\}}, using \AtlasInlineMath{+\infty} for the second term at \AtlasInlineMath{\sigma=0}. For \AtlasInlineMath{p_t=P_S(x_t)}, projection nonexpansiveness and quasar-convexity give 
+\AtlasMath{\mathbb E_t\operatorname{dist}(x_{t+1},S)^2\le\operatorname{dist}(x_t,S)^2-2\eta\tau(f(x_t)-f_*)+\eta^2\mathbb E_t\|g_t\|^2}
+. Global smoothness and the global minimum promise give \AtlasInlineMath{\|\nabla f(x_t)\|^2\le2L(f(x_t)-f_*)}, so the coefficient of the gap after absorbing the second moment is at most \AtlasInlineMath{-\eta\tau}. Sum over \AtlasInlineMath{t=0,\dots,T-1}, use \AtlasInlineMath{\operatorname{dist}(0,S)\le D}, and return a uniform sampled iterate. The gap is at most \AtlasInlineMath{D^2/(\eta\tau T)+\eta\sigma^2/\tau}.
+
+\needspace{4\baselineskip}\subsection{B2 - Packed radial objectives and KL divergence decomposition}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} arbitrary\_randomized
+
+\AtlasMath{\Omega\!\left(\frac{D\sigma}{\tau\sqrt{T\ln(2/\tau)}}\right)}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v291/saad25a.html}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{\sigma>0}, \AtlasInlineMath{d\ge 3\log_{16/15}(2/\tau)}, and \AtlasInlineMath{T\ge 16\sigma^2/(\tau^2L^2D^2)} and \AtlasInlineMath{\tau\sigma\sqrt{T}\ge LD}.
+
+\textbf{Derivation.} Use Appendix D's packing with \AtlasInlineMath{d_0=\lceil2\log_{16/15}(2/\tau)\rceil}, \AtlasInlineMath{m\ge2/\tau^2}, and the radial objectives with centers of norm at most \AtlasInlineMath{2D/3}. Their gradients are globally \AtlasInlineMath{L}-Lipschitz: the radial derivative has slope of magnitude at most \AtlasInlineMath{L} and its tangential Lipschitz factor is at most \AtlasInlineMath{L}. The affine ambient minimizer set intersects \AtlasInlineMath{Q} in a convex set. The QC inner product only uses the first \AtlasInlineMath{d_0} coordinates and is unchanged by projecting onto this intersection. Set the construction's width to \AtlasInlineMath{\Delta=\sigma/(4L\tau\sqrt{d_0 T})}. The displayed budget guard ensures \AtlasInlineMath{\Delta<D/16}. Equation (19) bounds the mean KL divergence by \AtlasInlineMath{3/64}. Pinsker's inequality and the disjoint packing therefore give a universal positive average misidentification probability. Equation (17) then yields \AtlasInlineMath{\Omega(LD\Delta)}, the displayed lower bound. The guard is deliberately narrower than the theorem statement to make the width condition explicit.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v291/saad25a.html}{[1]} theorem: Theorem 9 and Appendix D, Equations (17)-(19); pdf pages: 7; 33; 34; 35; 36; 37; 38
+
+Use Appendix D's packing with \AtlasInlineMath{d_0=\lceil2\log_{16/15}(2/\tau)\rceil}, \AtlasInlineMath{m\ge2/\tau^2}, and the radial objectives with centers of norm at most \AtlasInlineMath{2D/3}. Their gradients are globally \AtlasInlineMath{L}-Lipschitz: the radial derivative has slope of magnitude at most \AtlasInlineMath{L} and its tangential Lipschitz factor is at most \AtlasInlineMath{L}. The affine ambient minimizer set intersects \AtlasInlineMath{Q} in a convex set. The QC inner product only uses the first \AtlasInlineMath{d_0} coordinates and is unchanged by projecting onto this intersection. Set the construction's width to \AtlasInlineMath{\Delta=\sigma/(4L\tau\sqrt{d_0 T})}. The displayed budget guard ensures \AtlasInlineMath{\Delta<D/16}. Equation (19) bounds the mean KL divergence by \AtlasInlineMath{3/64}. Pinsker's inequality and the disjoint packing therefore give a universal positive average misidentification probability. Equation (17) then yields \AtlasInlineMath{\Omega(LD\Delta)}, the displayed lower bound. The guard is deliberately narrower than the theorem statement to make the width condition explicit.
+
+\needspace{4\baselineskip}\subsection{B3 - Projected stochastic gradient and a uniform iterate}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{O\!\left(\frac{LD^2}{\tau^2T}+\frac{D\sigma}{\tau\sqrt T}\right)}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v291/saad25a.html}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{\sigma>0}, \AtlasInlineMath{d\ge 3\log_{16/15}(2/\tau)}, and \AtlasInlineMath{T\ge 16\sigma^2/(\tau^2L^2D^2)} and \AtlasInlineMath{\tau\sigma\sqrt{T}<LD}.
+
+\textbf{Derivation.} Let \AtlasInlineMath{x_0=0} and \AtlasInlineMath{x_{t+1}=P_Q(x_t-\eta g_t)} with \AtlasInlineMath{\eta=\min\{\tau/(2L),D/(\sigma\sqrt{T})\}}, using \AtlasInlineMath{+\infty} for the second term at \AtlasInlineMath{\sigma=0}. For \AtlasInlineMath{p_t=P_S(x_t)}, projection nonexpansiveness and quasar-convexity give 
+\AtlasMath{\mathbb E_t\operatorname{dist}(x_{t+1},S)^2\le\operatorname{dist}(x_t,S)^2-2\eta\tau(f(x_t)-f_*)+\eta^2\mathbb E_t\|g_t\|^2}
+. Global smoothness and the global minimum promise give \AtlasInlineMath{\|\nabla f(x_t)\|^2\le2L(f(x_t)-f_*)}, so the coefficient of the gap after absorbing the second moment is at most \AtlasInlineMath{-\eta\tau}. Sum over \AtlasInlineMath{t=0,\dots,T-1}, use \AtlasInlineMath{\operatorname{dist}(0,S)\le D}, and return a uniform sampled iterate. The gap is at most \AtlasInlineMath{D^2/(\eta\tau T)+\eta\sigma^2/\tau}.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v291/saad25a.html}{[1]} theorem: Section 1 and Table 1, with the projected SGD derivation in this profile; pdf pages: 2; 6
+
+Let \AtlasInlineMath{x_0=0} and \AtlasInlineMath{x_{t+1}=P_Q(x_t-\eta g_t)} with \AtlasInlineMath{\eta=\min\{\tau/(2L),D/(\sigma\sqrt{T})\}}, using \AtlasInlineMath{+\infty} for the second term at \AtlasInlineMath{\sigma=0}. For \AtlasInlineMath{p_t=P_S(x_t)}, projection nonexpansiveness and quasar-convexity give 
+\AtlasMath{\mathbb E_t\operatorname{dist}(x_{t+1},S)^2\le\operatorname{dist}(x_t,S)^2-2\eta\tau(f(x_t)-f_*)+\eta^2\mathbb E_t\|g_t\|^2}
+. Global smoothness and the global minimum promise give \AtlasInlineMath{\|\nabla f(x_t)\|^2\le2L(f(x_t)-f_*)}, so the coefficient of the gap after absorbing the second moment is at most \AtlasInlineMath{-\eta\tau}. Sum over \AtlasInlineMath{t=0,\dots,T-1}, use \AtlasInlineMath{\operatorname{dist}(0,S)\le D}, and return a uniform sampled iterate. The gap is at most \AtlasInlineMath{D^2/(\eta\tau T)+\eta\sigma^2/\tau}.
+
+\needspace{4\baselineskip}\subsection{B4 - Packed radial objectives and KL divergence decomposition}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} arbitrary\_randomized
+
+\AtlasMath{\Omega\!\left(\frac{D\sigma}{\tau\sqrt{T\ln(2/\tau)}}\right)}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v291/saad25a.html}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{\sigma>0}, \AtlasInlineMath{d\ge 3\log_{16/15}(2/\tau)}, and \AtlasInlineMath{T\ge 16\sigma^2/(\tau^2L^2D^2)} and \AtlasInlineMath{\tau\sigma\sqrt{T}<LD}.
+
+\textbf{Derivation.} Use Appendix D's packing with \AtlasInlineMath{d_0=\lceil2\log_{16/15}(2/\tau)\rceil}, \AtlasInlineMath{m\ge2/\tau^2}, and the radial objectives with centers of norm at most \AtlasInlineMath{2D/3}. Their gradients are globally \AtlasInlineMath{L}-Lipschitz: the radial derivative has slope of magnitude at most \AtlasInlineMath{L} and its tangential Lipschitz factor is at most \AtlasInlineMath{L}. The affine ambient minimizer set intersects \AtlasInlineMath{Q} in a convex set. The QC inner product only uses the first \AtlasInlineMath{d_0} coordinates and is unchanged by projecting onto this intersection. Set the construction's width to \AtlasInlineMath{\Delta=\sigma/(4L\tau\sqrt{d_0 T})}. The displayed budget guard ensures \AtlasInlineMath{\Delta<D/16}. Equation (19) bounds the mean KL divergence by \AtlasInlineMath{3/64}. Pinsker's inequality and the disjoint packing therefore give a universal positive average misidentification probability. Equation (17) then yields \AtlasInlineMath{\Omega(LD\Delta)}, the displayed lower bound. The guard is deliberately narrower than the theorem statement to make the width condition explicit.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v291/saad25a.html}{[1]} theorem: Theorem 9 and Appendix D, Equations (17)-(19); pdf pages: 7; 33; 34; 35; 36; 37; 38
+
+Use Appendix D's packing with \AtlasInlineMath{d_0=\lceil2\log_{16/15}(2/\tau)\rceil}, \AtlasInlineMath{m\ge2/\tau^2}, and the radial objectives with centers of norm at most \AtlasInlineMath{2D/3}. Their gradients are globally \AtlasInlineMath{L}-Lipschitz: the radial derivative has slope of magnitude at most \AtlasInlineMath{L} and its tangential Lipschitz factor is at most \AtlasInlineMath{L}. The affine ambient minimizer set intersects \AtlasInlineMath{Q} in a convex set. The QC inner product only uses the first \AtlasInlineMath{d_0} coordinates and is unchanged by projecting onto this intersection. Set the construction's width to \AtlasInlineMath{\Delta=\sigma/(4L\tau\sqrt{d_0 T})}. The displayed budget guard ensures \AtlasInlineMath{\Delta<D/16}. Equation (19) bounds the mean KL divergence by \AtlasInlineMath{3/64}. Pinsker's inequality and the disjoint packing therefore give a universal positive average misidentification probability. Equation (17) then yields \AtlasInlineMath{\Omega(LD\Delta)}, the displayed lower bound. The guard is deliberately narrower than the theorem statement to make the width condition explicit.
+
+\needspace{4\baselineskip}\subsection{B5 - Projected stochastic gradient and a uniform iterate}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{O\!\left(\frac{LD^2}{\tau^2T}+\frac{D\sigma}{\tau\sqrt T}\right)}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v291/saad25a.html}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{\sigma=0}, \AtlasInlineMath{d<3\log_{16/15}(2/\tau)}, or \AtlasInlineMath{T<16\sigma^2/(\tau^2 L^2D^2)}.
+
+\textbf{Derivation.} Let \AtlasInlineMath{x_0=0} and \AtlasInlineMath{x_{t+1}=P_Q(x_t-\eta g_t)} with \AtlasInlineMath{\eta=\min\{\tau/(2L),D/(\sigma\sqrt{T})\}}, using \AtlasInlineMath{+\infty} for the second term at \AtlasInlineMath{\sigma=0}. For \AtlasInlineMath{p_t=P_S(x_t)}, projection nonexpansiveness and quasar-convexity give 
+\AtlasMath{\mathbb E_t\operatorname{dist}(x_{t+1},S)^2\le\operatorname{dist}(x_t,S)^2-2\eta\tau(f(x_t)-f_*)+\eta^2\mathbb E_t\|g_t\|^2}
+. Global smoothness and the global minimum promise give \AtlasInlineMath{\|\nabla f(x_t)\|^2\le2L(f(x_t)-f_*)}, so the coefficient of the gap after absorbing the second moment is at most \AtlasInlineMath{-\eta\tau}. Sum over \AtlasInlineMath{t=0,\dots,T-1}, use \AtlasInlineMath{\operatorname{dist}(0,S)\le D}, and return a uniform sampled iterate. The gap is at most \AtlasInlineMath{D^2/(\eta\tau T)+\eta\sigma^2/\tau}.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v291/saad25a.html}{[1]} theorem: Section 1 and Table 1, with the projected SGD derivation in this profile; pdf pages: 2; 6
+
+Let \AtlasInlineMath{x_0=0} and \AtlasInlineMath{x_{t+1}=P_Q(x_t-\eta g_t)} with \AtlasInlineMath{\eta=\min\{\tau/(2L),D/(\sigma\sqrt{T})\}}, using \AtlasInlineMath{+\infty} for the second term at \AtlasInlineMath{\sigma=0}. For \AtlasInlineMath{p_t=P_S(x_t)}, projection nonexpansiveness and quasar-convexity give 
+\AtlasMath{\mathbb E_t\operatorname{dist}(x_{t+1},S)^2\le\operatorname{dist}(x_t,S)^2-2\eta\tau(f(x_t)-f_*)+\eta^2\mathbb E_t\|g_t\|^2}
+. Global smoothness and the global minimum promise give \AtlasInlineMath{\|\nabla f(x_t)\|^2\le2L(f(x_t)-f_*)}, so the coefficient of the gap after absorbing the second moment is at most \AtlasInlineMath{-\eta\tau}. Sum over \AtlasInlineMath{t=0,\dots,T-1}, use \AtlasInlineMath{\operatorname{dist}(0,S)\le D}, and return a uniform sampled iterate. The gap is at most \AtlasInlineMath{D^2/(\eta\tau T)+\eta\sigma^2/\tau}.
+
+\needspace{7\baselineskip}\section{References}
+[1] El Mehdi Saad, Wei-Cheng Lee and Francesco Orabona. New Lower Bounds for Stochastic Non-Convex Optimization through Divergence Decomposition. 2025. COLT 2025, PMLR 291, arXiv:2502.14060v2.
+
+\url{https://proceedings.mlr.press/v291/saad25a.html}
+
+\end{document}

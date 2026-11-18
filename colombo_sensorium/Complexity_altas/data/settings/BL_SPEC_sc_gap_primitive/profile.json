@@ -1,0 +1,669 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "BL_SPEC_sc_gap_primitive",
+  "title": "Strongly convex reduced objectives: primitive gradients and objective gaps.",
+  "summary": "Solve the bilevel problem $\\min_x\\Phi(x)$, where $\\Phi(x)=f(x,y^*(x))$ and $y^*(x)=\\operatorname*{argmin}_y g(x,y)$ is the unique global lower-level solution. The upper- and lower-level variables are $x\\in\\mathbb{R}^{d_x}$ and $y\\in\\mathbb{R}^{d_y}$. Seek approximate stationarity of the reduced objective under the declared criterion and guarantee; assumptions on $f$, $g$, and $\\Phi$ are specified separately.",
+  "primary_domain": "bilevel",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "bilevel"
+    },
+    {
+      "facet": "goal",
+      "value": "function_gap"
+    },
+    {
+      "facet": "structure",
+      "value": "lower_strong_convexity"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_gradient"
+    },
+    {
+      "facet": "algorithm",
+      "value": "deterministic"
+    },
+    {
+      "facet": "guarantee",
+      "value": "deterministic"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "bilevel"
+      ],
+      "detail": "$\\min_x\\Phi(x)$, with a unique global lower-level minimizer",
+      "description_paragraphs": [
+        "Solve the bilevel problem $\\min_x\\Phi(x)$, where $\\Phi(x)=f(x,y^*(x))$ and $y^*(x)=\\operatorname*{argmin}_y g(x,y)$ is the unique global lower-level solution. The upper- and lower-level variables are $x\\in\\mathbb{R}^{d_x}$ and $y\\in\\mathbb{R}^{d_y}$. Seek approximate stationarity of the reduced objective under the declared criterion and guarantee; assumptions on $f$, $g$, and $\\Phi$ are specified separately."
+      ]
+    },
+    "model": {
+      "objects": [
+        "f:R^{d_x}×R^{d_y}→R",
+        "g:R^{d_x}×R^{d_y}→R",
+        "y*(x)=argmin_y g(x,y)",
+        "Φ(x)=f(x,y*(x))"
+      ],
+      "lower_geometry": "$g(x,\\cdot)$ is $\\mu_y$-strongly convex uniformly in $x$.",
+      "regularity": [
+        "The full population gradients of f and g are jointly L_f- and L_g-Lipschitz, respectively.",
+        "The blocks g_xy and g_yy are jointly rho_xy- and rho_yy-Lipschitz, respectively.",
+        "The bound $\\|\\nabla_yf(x,y)\\|\\le B_f$ holds for every $(x,y)$."
+      ],
+      "initialization": "The points x0 and y0 are public, with ||y0-y*(x0)||<=R_y. Some x* minimizing Phi satisfies ||x0-x*||<=R_x.",
+      "other_geometry": "The original $f$ need not be jointly convex; the convexity promise applies directly to $\\Phi$.",
+      "reduced_geometry": "Phi is mu_x-strongly convex",
+      "description_paragraphs": [
+        "The function $g(x,\\cdot)$ is $\\mu_y$-strongly convex on all of $\\mathbb{R}^{d_y}$, uniformly for $x$. The quantities $\\nabla f,\\nabla g$ are jointly $L_f,L_g$-Lipschitz, and $g_{xy},g_{yy}$ are respectively $\\rho_{xy},\\rho_{yy}$-Lipschitz, in Euclidean induced operator norms.",
+        "The condition $\\|\\nabla_y f(x,y)\\|\\le B_f$ holds everywhere. The public initial point satisfies $\\|y_0-y^*(x_0)\\|\\le R_y$, and there exists $x^*\\in\\arg\\min\\Phi$ satisfying $\\|x_0-x^*\\|\\le R_x$. Joint convexity of the primitive $f$ is not assumed.",
+        "The reduced objective $\\Phi$ is $\\mu_x$-strongly convex, with $\\mu_x>0$."
+      ],
+      "outer_geometry": "The reduced objective is strongly convex."
+    },
+    "oracle": {
+      "operations": [
+        "The interface maps (h,x,y) to exact ∇h(x,y), choosing one h ∈ {f,g} per call."
+      ],
+      "query_domain": "Full space; arbitrary v",
+      "auxiliary": "Public-parameter arithmetic is free. Inner solutions, inverse Hessians, and hypergradients are not free.",
+      "description_paragraphs": [
+        "All dimensions, model budgets, and initial points are public. At any $(x,y)\\in\\mathbb{R}^{d_x+d_y}$, the algorithm selects $h\\in\\{f,g\\}$ and receives exact full gradient $\\nabla h(x,y)$. One call returns only the selected function's gradient. The functions and lower-level optimum remain hidden.",
+        "No direct reduced-gradient, lower-level optimum, or inverse-Hessian interface is supplied. Arithmetic based on public data is free."
+      ]
+    },
+    "output": {
+      "description_paragraphs": [
+        "Return $\\widehat{x}\\in\\mathbb{R}^{d_x}$, which may be an unqueried point or any admissible postprocessing of the transcript. An inner optimizer or certificate is not required."
+      ]
+    },
+    "metric": {
+      "description_paragraphs": [
+        "The base error is $\\Phi(\\widehat{x})-\\Phi^*$, where $\\Phi^*=\\min_x\\Phi(x)$."
+      ]
+    },
+    "resource": {
+      "detail": "Primitive cost: Q=N_f+N_g. Derivative resources (N_JVP,N_HVP) remain separate and are summed only under an explicit projection.",
+      "description_paragraphs": [
+        "Each primitive gradient call costs one unit; $N=N_{\\nabla f}+N_{\\nabla g}$. The fixed worst-case budget includes every actual call used in initialization and inner computations."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "description_paragraphs": [
+          "Algorithms are deterministic and adaptive. Queries, stopping, and postprocessing may be arbitrary measurable functions of the transcript. The output may be unqueried, a deterministic selection of a past point, or an admissible average. No linear-span or zero-respecting restriction is imposed. Queries are sequential; each actual response in a parallel batch is charged separately. Arithmetic, linear algebra, and storage using received data are uncharged. Internal operations, memory, and communication are not tracked by this quantity."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "description_paragraphs": [
+            "There exists an algorithm determined by the public inputs such that $\\Phi(\\widehat{x})-\\Phi^*\\le\\varepsilon$ holds on every admissible instance. The guarantee is deterministic and instancewise."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "BL_SPEC_sc_gap_primitive"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {},
+  "parameters": [
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_0d1c5067b5",
+      "symbol": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_a136776370",
+      "symbol": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_dc5f6d3bad",
+      "symbol": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_256ee43d4f",
+      "symbol": "L_f",
+      "meaning": "Joint-variable Lipschitz upper bound for the complete population upper-level gradient",
+      "domain": "$L_f\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_695a6efe82",
+      "symbol": "L_g",
+      "meaning": "A joint-variable Lipschitz bound on the population lower-level full gradient.",
+      "domain": "$L_g\\ge\\mu_y>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_7e3c5f5710",
+      "symbol": "B_f",
+      "meaning": "A uniform norm bound on the population upper function’s lower-variable gradient block.",
+      "domain": "$B_f\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\|\\nabla_yf(x,y)\\|\\le B_f$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_183e94cd86",
+      "symbol": "\\mu_y",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "domain": "$\\mu_y>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_c61a977375",
+      "symbol": "\\mu_x",
+      "meaning": "The reduced objective’s strong-convexity modulus.",
+      "domain": "$\\mu_x>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_c57ed27748",
+      "symbol": "\\rho_{xy}",
+      "meaning": "Joint-variable Lipschitz upper bound for the lower cross-Hessian block.",
+      "domain": "$\\rho_{xy}\\ge0$",
+      "definition": null,
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_29ccd3cb2f",
+      "symbol": "\\rho_{yy}",
+      "meaning": "Joint-variable Lipschitz upper bound for the lower-level lower-Hessian block",
+      "domain": "$\\rho_{yy}\\ge0$",
+      "definition": null,
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_b6c56211a1",
+      "symbol": "R_x",
+      "meaning": "Public distance bound from the outer initial point to some global minimizer",
+      "domain": "$R_x\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\|x_0-x^*\\|\\le R_x$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_sc_gap_primitive_p_b6cd508fbf",
+      "symbol": "R_y",
+      "meaning": "Public initial lower-level distance bound",
+      "domain": "$R_y\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\|y_0-y^*(x_0)\\|\\le R_y$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "x,y",
+      "meaning": "The upper- and lower-level variables.",
+      "domain": "$x\\in\\mathbb R^{d_x},y\\in\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,g",
+      "meaning": "The original upper- and lower-level real-valued functions.",
+      "domain": "$f,g:\\mathbb R^{d_x}\\times\\mathbb R^{d_y}\\to\\mathbb R$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat x,x_0,y_0",
+      "meaning": "Output outer point, public outer initial point, and public lower-level initial point",
+      "domain": "Each lies in its corresponding variable space.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Phi",
+      "meaning": "The reduced objective.",
+      "domain": "Defined in the task specification",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "y^*",
+      "meaning": "Mapping to the unique lower-level global minimizer",
+      "domain": "Constraints specified under TASK",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla,\\|\\cdot\\|",
+      "meaning": "Euclidean gradient and vector norm; matrix and higher-derivative norms are the induced Euclidean operator norms",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E,\\Pr,\\inf,\\sup",
+      "meaning": "Expectation, probability, infimum, and supremum, with aggregation order and randomness specified by the guarantee.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal O,\\Omega,\\Theta,\\widetilde{\\mathcal O}",
+      "meaning": "Asymptotic upper, lower, matching-order, and declared-logarithm upper bounds; fixed parameters are specified in each evidence record",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive absolute constants or functions of fixed budgets, with dependencies specified by the corresponding result",
+      "domain": "$0<c,C<\\infty$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_0d1c5067b5"
+    },
+    {
+      "symbol_latex": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_a136776370"
+    },
+    {
+      "symbol_latex": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_dc5f6d3bad"
+    },
+    {
+      "symbol_latex": "L_f",
+      "meaning": "Joint-variable Lipschitz upper bound for the complete population upper-level gradient",
+      "domain": "$L_f\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_256ee43d4f"
+    },
+    {
+      "symbol_latex": "L_g",
+      "meaning": "A joint-variable Lipschitz bound on the population lower-level full gradient.",
+      "domain": "$L_g\\ge\\mu_y>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_695a6efe82"
+    },
+    {
+      "symbol_latex": "B_f",
+      "meaning": "A uniform norm bound on the population upper function’s lower-variable gradient block.",
+      "domain": "$B_f\\ge0$",
+      "definition": "$\\|\\nabla_yf(x,y)\\|\\le B_f$",
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_7e3c5f5710"
+    },
+    {
+      "symbol_latex": "\\mu_y",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "domain": "$\\mu_y>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_183e94cd86"
+    },
+    {
+      "symbol_latex": "\\mu_x",
+      "meaning": "The reduced objective’s strong-convexity modulus.",
+      "domain": "$\\mu_x>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_c61a977375"
+    },
+    {
+      "symbol_latex": "\\rho_{xy}",
+      "meaning": "Joint-variable Lipschitz upper bound for the lower cross-Hessian block.",
+      "domain": "$\\rho_{xy}\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_c57ed27748"
+    },
+    {
+      "symbol_latex": "\\rho_{yy}",
+      "meaning": "Joint-variable Lipschitz upper bound for the lower-level lower-Hessian block",
+      "domain": "$\\rho_{yy}\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_29ccd3cb2f"
+    },
+    {
+      "symbol_latex": "R_x",
+      "meaning": "Public distance bound from the outer initial point to some global minimizer",
+      "domain": "$R_x\\ge0$",
+      "definition": "$\\|x_0-x^*\\|\\le R_x$",
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_b6c56211a1"
+    },
+    {
+      "symbol_latex": "R_y",
+      "meaning": "Public initial lower-level distance bound",
+      "domain": "$R_y\\ge0$",
+      "definition": "$\\|y_0-y^*(x_0)\\|\\le R_y$",
+      "parameter_ref": "BL_SPEC_sc_gap_primitive_p_b6cd508fbf"
+    },
+    {
+      "symbol_latex": "g_{xy},g_{yy}",
+      "meaning": "Mixed lower-level Hessian block and lower-variable Hessian block",
+      "domain": "$g_{xy}\\in\\mathbb R^{d_x\\times d_y},g_{yy}\\in\\mathbb R^{d_y\\times d_y}$",
+      "definition": "$g_{xy}=\\mathrm D_y\\nabla_xg,\\quad g_{yy}=\\mathrm D_y\\nabla_yg$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Phi^*,x^*",
+      "meaning": "Global minimum of the reduced objective and an optimizer satisfying the initial-distance budget.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "L_\\Phi",
+      "meaning": "Effective reduced-gradient Lipschitz upper bound derived from the declared budgets.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "h,v,z,K,N,M,\\rho",
+      "meaning": "Parameters include the finite-difference step, direction, perturbed outer point, three source-algorithm loop lengths, and a public bound on Hessian-block variation.",
+      "domain": "Used only in the associated derivation",
+      "definition": "$v\\in\\mathbb R^{d_y},\\ \\rho=\\max\\{\\rho_{xy},\\rho_{yy}\\}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,Q",
+      "meaning": "This is the total call budget under the stated resource projection. If only one symbol is used, the two names are aliases for that same budget.",
+      "domain": "RESOURCE specifies which operations are summed; no additional unit cost is introduced.",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "BL_SPEC_sc_gap_primitive__main__q1",
+      "kind": "target_accuracy_cost",
+      "expression": "Q^*(\\varepsilon)=\\inf_A\\sup_{I,\\mathcal O}N(A,I,\\mathcal O)",
+      "comparison_scale": "multiplicative_rate",
+      "units": "declared oracle responses",
+      "nonnegativity": true,
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": null,
+      "expression": null,
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_ac610b1356"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "BL_SPEC_sc_gap_primitive__main__r1",
+      "specification_ref": "BL_SPEC_sc_gap_primitive",
+      "name": "The objective-gap region at fixed structural budgets.",
+      "predicate_text": "All positive regularity, initial-distance, and dimension budgets are fixed, with $\\varepsilon\\downarrow0$ and fixed $\\mu_x>0$. The comparison concerns accuracy dependence only; joint dependence on condition numbers is not certified as optimal.",
+      "predicate": {
+        "kind": "symbolic_conjunction",
+        "text": "All positive regularity, initial-distance, and dimension budgets are fixed, with $\\varepsilon\\downarrow0$ and fixed $\\mu_x>0$. The comparison concerns accuracy dependence only; joint dependence on condition numbers is not certified as optimal."
+      },
+      "parameter_refs": [],
+      "kind": "theorem_window",
+      "endpoint_notes": "Compare only within the explicit window. Fixed dimension and other parameter boundaries are not included automatically."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "BL_SPEC_sc_gap_primitive__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\widetilde{\\mathcal{O}}_{\\rm fixed}(1)",
+      "quantity_ref": "BL_SPEC_sc_gap_primitive__main__q1",
+      "region_refs": [
+        "BL_SPEC_sc_gap_primitive__main__r1"
+      ],
+      "method": "AccBiO-BG, simulating derivative–vector products by finite differences of exact gradients.",
+      "algorithm_or_hard_family": "AccBiO-BG, simulating derivative–vector products by finite differences of exact gradients.",
+      "algorithm_class_scope": "deterministic adaptive algorithm",
+      "source_refs": [
+        "BL_SRC_JiLiang2023"
+      ],
+      "evidence_refs": [
+        "BL_SPEC_sc_gap_primitive__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "BL_SPEC_sc_gap_primitive__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Tilde notation permits logarithmic factors in $1/\\varepsilon$, with all structural budgets fixed. Every original gradient needed by a finite difference is charged separately."
+        ],
+        "dimension_conditions": "The upper bound holds for every finite-dimensional instance in the declared model. Any dimension or fixed-budget dependence not displayed explicitly follows the accompanying evidence qualification."
+      },
+      "hidden_constants": "Unshown regularity, initialization, and noise budgets are fixed. Their joint parameter dependence is not certified as closed.",
+      "hidden_logs": [],
+      "derivation": "Run the source algorithm at tolerance $\\varepsilon/4$ for a fixed finite $K,N,M$ determined by public budgets. Bound finite-step error propagation recursively using public smoothness, distance, and gradient bounds, and allocate derivative-action errors so that the terminal-point perturbation is at most $\\sqrt{\\varepsilon/(8L_\\Phi)}$. Convexity and $L_\\Phi$-smoothness give $\\|\\nabla\\Phi(z)\\|\\le\\sqrt{2L_\\Phi(\\Phi(z)-\\Phi^*)}$, so the perturbed objective gap remains at most $\\varepsilon$. Use the corresponding block of $[\\nabla g(x,y+hv)-\\nabla g(x,y)]/h$ for each action, with bias at most $\\rho|h|\\|v\\|^2/2$, choosing sufficiently small nonzero $h$ according to the current $\\|v\\|$. In the exact-real model without bit costs, smaller steps do not increase the number of primitive queries.",
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "The objective-gap region at fixed structural budgets.",
+      "predicate": {
+        "kind": "symbolic_conjunction",
+        "text": "All positive regularity, initial-distance, and dimension budgets are fixed, with $\\varepsilon\\downarrow0$ and fixed $\\mu_x>0$. The comparison concerns accuracy dependence only; joint dependence on condition numbers is not certified as optimal."
+      },
+      "predicate_text": "All positive regularity, initial-distance, and dimension budgets are fixed, with $\\varepsilon\\downarrow0$ and fixed $\\mu_x>0$. The comparison concerns accuracy dependence only; joint dependence on condition numbers is not certified as optimal.",
+      "parameter_refs": [],
+      "source_region_ref": "BL_SPEC_sc_gap_primitive__main__r1",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "BL_SPEC_sc_gap_primitive__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "BL_SPEC_sc_gap_primitive__main__q1",
+      "resource_projection_id": "resource_ac610b1356",
+      "regime_id": "BL_SPEC_sc_gap_primitive__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "BL_SPEC_sc_gap_primitive__main__b1"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "BL_SPEC_sc_gap_primitive__main__c1",
+        "quantity_ref": "BL_SPEC_sc_gap_primitive__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": null,
+        "ratio_or_gap": "An upper bound is available at fixed structural budgets. No lower bound for arbitrary deterministic algorithms under this same specification is currently registered. The Ji–Liang lower bound applies only to the algorithm class in their Definition 2 and therefore does not certify unrestricted optimality.",
+        "envelopes": {},
+        "dispatch": [],
+        "claim_guards": {
+          "BL_SPEC_sc_gap_primitive__main__b1": [
+            {
+              "region_ref": "BL_SPEC_sc_gap_primitive__main__r1",
+              "predicate_text": "All positive regularity, initial-distance, and dimension budgets are fixed, with $\\varepsilon\\downarrow0$ and fixed $\\mu_x>0$. The comparison concerns accuracy dependence only; joint dependence on condition numbers is not certified as optimal."
+            }
+          ]
+        },
+        "envelope_certificate": "",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": null
+      },
+      "comparison_key": {
+        "setting_id": "BL_SPEC_sc_gap_primitive",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "BL_SPEC_sc_gap_primitive__main__q1",
+        "resource_projection_id": "resource_ac610b1356",
+        "regime_id": "BL_SPEC_sc_gap_primitive__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "BL_SPEC_sc_gap_primitive__main__e1",
+      "source_ref": "BL_SRC_JiLiang2023",
+      "locator": {
+        "theorem": "Theorem 13",
+        "section": "5; Assumption 3"
+      },
+      "supports": "Accelerated bilevel objective-gap upper bounds for convex or strongly convex reduced objectives.",
+      "notes": [
+        "The source permits blockwise smoothness constants. The joint constant $L_f,L_g$ bounds the relevant block constants, and $\\|\\nabla_yf\\|\\le B_f$ holds here. The displayed accuracy order fixes the other budgets; its leading parameter term is not asserted to remain uniform at zero endpoints.",
+        "Approximate each $g_{xy}v$ and $g_{yy}v$ by a deterministic finite difference of two exact gradients of the same function. The Hessian-block Lipschitz bound gives error at most $\\rho |h|\\|v\\|^2/2$. Internal tolerances may be arbitrarily small at unchanged query cost. Allocate sufficiently small errors over the finite run to retain the target accuracy and asymptotic call count. Derivative-vector products are thereby simulated, not granted freely."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "BL_SRC_JiLiang2023",
+      "authors": [
+        "Kaiyi Ji",
+        "Yingbin Liang"
+      ],
+      "title": "Lower Bounds and Accelerated Algorithms for Bilevel Optimization",
+      "year": 2023,
+      "version": "JMLR 24 (2023), 21-0949",
+      "url": "https://www.jmlr.org/papers/volume24/21-0949/21-0949.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "BL_SPEC_sc_gap_primitive",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "lower"
+    ],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "missing_lower": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "BL_SPEC_sc_gap_primitive__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "fb761d74c10494c50a8101c5825bec0856dbb25a654c5c241962697a5b2e6d3d",
+    "source_order": 99,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

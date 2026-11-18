@@ -1,0 +1,306 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Stochastic convex objective accuracy: unbiased gradients and biased complete Hessians\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}HO\_\allowbreak{}HOS01\_\allowbreak{}S\_\allowbreak{}full}
+
+Single-objective optimization
+
+Solve \AtlasInlineMath{\min_{x\in X}f(x)} to obtain an objective-value approximation relative to the global infimum.
+
+\textbf{Status.} Other quantified gap present; Bounds missing
+
+\textbf{TASK tags.} formulation: Global minimization; task family: Single objective
+
+\textbf{MODEL tags.} convexity: Convex; geometry: Convex body; geometry: Full space; smoothness: Lipschitz Hessian
+
+\textbf{ORACLE tags.} access order: Higher-order interface; feedback quality: Stochastic; interface family: Fresh gradient full hessian; operation: Fresh gradient full hessian; public information: Computable access; public information: Hidden objects explicitly declared; public information: Known upper bound; public information: Known exact value; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; feasibility: Required; object: Point; postprocessing: Unqueried output explicitly allowed
+
+\textbf{METRIC tags.} criterion: Objective gap
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; mode: Expectation; randomness: Algorithm private seed; randomness: Oracle samples
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget; measure: Oracle calls; precision: Bit precision not counted
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Solve \AtlasInlineMath{\min_{x\in X}f(x)} to obtain an objective-value approximation relative to the global infimum.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The objective \AtlasInlineMath{f} is convex and \AtlasInlineMath{C^2} on an open convex neighborhood of the compact convex domain \AtlasInlineMath{X}, with \AtlasInlineMath{X\subset\mathbb{R}^d} and \AtlasInlineMath{\operatorname{diam}_2(X)\le D}.
+
+
+\AtlasMath{\|D^{2}f(x)-D^{2}f(y)\|_{\mathrm{op},2}\le M_2\|x-y\|_{2}.}
+
+
+All regularity assumptions hold on this neighborhood. The noise class is specified by the conditional moment bounds under ORACLE.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+After selecting \AtlasInlineMath{x\in X}, a fresh independent sample returns a vector \AtlasInlineMath{g(x)} and a complete symmetric matrix \AtlasInlineMath{H(x)}. Conditional on the history and selected query point,
+
+
+\AtlasMath{\mathbb{E}[g(x)\mid\mathcal{H}]=\nabla f(x),\quad\mathbb{E}[\|g(x)-\nabla f(x)\|_2^2\mid\mathcal{H}]\le\sigma_1^2,}
+
+
+
+\AtlasMath{\mathbb{E}[\|H(x)-\nabla^2f(x)\|_{\mathrm{op}}^2\mid\mathcal{H}]\le\sigma_2^2.}
+
+
+The Hessian estimate may be biased. The two components returned by one call may be correlated. Different calls use independent fresh samples, and sample reuse is unavailable. No function-value channel is provided.
+
+A description of the feasible set, feasibility tests and global minimization of known models formed from existing replies are supplied as public auxiliary operations.
+
+The public inputs are \AtlasInlineMath{x_0}, the target accuracy, and \AtlasInlineMath{d}, \AtlasInlineMath{D}, \AtlasInlineMath{M_2}, \AtlasInlineMath{\sigma_1}, \AtlasInlineMath{\sigma_2}, \AtlasInlineMath{\varepsilon_f}. Numerical constants are admissible bounds and need not equal the sharp constants of the instance. The objective, unqueried derivatives, minimizer and minimum value are hidden.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return \AtlasInlineMath{\widehat{x}\in X}.
+
+The output may be an unqueried point, a feasible average of past iterates, or another feasible postprocessing result. No function value or additional computable certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The base error is
+
+
+\AtlasMath{\mathcal{E}(\widehat{x})=f(\widehat{x})-f^*.}
+
+
+Here \AtlasInlineMath{f^*=\inf_{x\in X}f(x)}. The lower-boundedness or attainment assumption makes this error finite and nonnegative.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Each complete stochastic response specified under ORACLE costs one unit; each fresh-sample response within a batch is charged separately.
+
+The resource budget is a fixed worst-case cap on every execution path. Initialization, stopping checks, and all actual responses in a batch are included.
+
+Arithmetic, linear algebra, tensor operations, storage, and global solution of known models are free. Bit complexity, communication, and wall-clock time are not counted.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Arbitrary measurable adaptive algorithms with private randomness are allowed.
+
+No linear-span, Krylov or zero-respecting restriction is imposed. Memory and internal computation are unrestricted.
+
+Information is acquired adaptively in query order. Parallel submission does not reduce the number of actual responses counted. There is no communication-round or memory budget. Exact real arithmetic and arbitrarily small positive query separations are allowed.
+
+Choose one algorithm from the public inputs, then require its guarantee separately for every admissible instance and oracle law.
+
+
+\AtlasMath{\mathbb{E}\!\left[f(\widehat{x})-f^*\right]\le \varepsilon_f.}
+
+
+Expectation or probability is evaluated after fixing the instance; randomness comes from the algorithm's private seed and oracle sampling.
+
+The running-cost guarantee is specified separately under RESOURCE.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{x,\widehat{x},x_0}: Query or decision point, algorithm output, and public initial point. \textbf{Domain:} \AtlasInlineMath{\mathbb{R}^d}.
+
+\AtlasInlineMath{\mathbb{R}^d}: Real coordinate space; vectors use the Euclidean norm unless otherwise stated. \textbf{Domain:} \AtlasInlineMath{d} is a positive integer.
+
+\AtlasInlineMath{\langle u,v\rangle,\ \|u\|_2}: Euclidean inner product and norm.
+
+
+\AtlasMath{\langle u,v\rangle=u^\top v,\qquad\|u\|_2=\sqrt{\langle u,u\rangle}.}
+
+
+\AtlasInlineMath{D^jf(x),\ \nabla f(x),\ \nabla^2f(x)}: Fréchet derivative of order \AtlasInlineMath{j}, gradient and Hessian. \textbf{Domain:} \AtlasInlineMath{j\in\{0,\ldots,2\}} and \AtlasInlineMath{D^0f=f}.
+
+\AtlasInlineMath{\|T\|_{\mathrm{op}},\ \|T\|_{\mathrm{op},2}}: Induced operator norm of a Euclidean multilinear tensor; the spectral norm for matrices.
+
+
+\AtlasMath{\|T\|_{\mathrm{op}}=\|T\|_{\mathrm{op},2}=\sup_{\|u_1\|_2,\ldots,\|u_j\|_2\le1}|T[u_1,\ldots,u_j]|.}
+
+
+\AtlasInlineMath{\mathcal{E}}: Base error defined in the metric specification; expectation or probability aggregation is imposed by the guarantee.
+
+\AtlasInlineMath{N}: Total number of original oracle calls; the unit cost is specified in the resource convention. \textbf{Domain:} \AtlasInlineMath{N\in\mathbb{Z}_{\ge0}}.
+
+\AtlasInlineMath{T^*}: Minimum worst-case budget for one algorithm to meet the requirement on the full instance class, within the specified regime, guarantee and resource projection. Expected-resource specifications instead minimize the per-instance expected budget.
+
+\AtlasInlineMath{O,\Omega,\Theta,\widetilde{O}}: Asymptotic upper bounds, lower bounds, matching bounds up to constants, and upper bounds omitting the declared logarithmic factors. \textbf{Domain:} Hidden constants, fixed parameters, and omitted logarithmic variables are specified for each bound.
+
+\AtlasInlineMath{\inf,\sup,\min,\max}: Infimum, supremum, attained minimum and attained maximum.
+
+\AtlasInlineMath{c,C}: Positive universal constants without assigned numerical values; a subscript permits dependence only on the indicated fixed parameters. \textbf{Domain:} \AtlasInlineMath{0<c,C<\infty}.
+
+\AtlasInlineMath{f,f^*}: Unknown objective and its global infimum over the specified feasible domain.
+
+
+\AtlasMath{f^*=\inf_{x\in X}f(x).}
+
+
+\AtlasInlineMath{X}: The feasible set specified by the model, also used as the query and output domain. Convexity or ball geometry is assumed only when stated in the model.
+
+\AtlasInlineMath{\mathbb{E},\Pr}: Expectation and probability after fixing the instance; their randomness sources are specified by the guarantee.
+
+\AtlasInlineMath{\mathcal{H}}: The complete history before the current query. Conditional unbiasedness and moment bounds are evaluated after the query is selected and before the fresh sample is drawn.
+
+\AtlasInlineMath{g(x),H(x)}: Gradient vector and full symmetric Hessian estimate returned from one fresh sample.
+
+\AtlasInlineMath{d}: Ambient dimension; dimension requirements are stated separately for each bound. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb{N}_{\ge 1}}.
+
+\AtlasInlineMath{D}: Known upper bound on the diameter of the convex domain \textbf{Domain:} \AtlasInlineMath{D>0}.
+
+\AtlasInlineMath{M_2}: Lipschitz upper bound for the population Hessian \textbf{Domain:} \AtlasInlineMath{M_2>0}.
+
+\AtlasInlineMath{\sigma_1}: Root-mean-square gradient error \textbf{Domain:} \AtlasInlineMath{\sigma_1\ge0}.
+
+\AtlasInlineMath{\sigma_2}: Root mean-square operator-norm error of the Hessian estimate; bias is permitted \textbf{Domain:} \AtlasInlineMath{\sigma_2\ge0}.
+
+\AtlasInlineMath{\varepsilon_f}: Expected objective-gap accuracy \textbf{Domain:} \AtlasInlineMath{\varepsilon_f>0}.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} Fixed worst-case call budget. A full (g,H) reply costs one call, as does a gradient-only reply. AG26 uses two independent draws per iteration, or three calls under separate derivative accounting, a constant-factor difference. Internal model minimization is free.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsection{R1 - Gradient statistical error dominates}
+\textbf{Region.} \AtlasInlineMath{(\sigma_1D/\varepsilon_f)^2\ge\max\{1,(\sigma_2D^2/\varepsilon_f)^{1/2},(M_2D^3/\varepsilon_f)^{2/7}\}}
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Fixed worst-case call budget. A full (g,H) reply costs one call, as does a gradient-only reply. AG26 uses two independent draws per iteration, or three calls under separate derivative accounting, a constant-factor difference. Internal model minimization is free.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{c(\sigma_1D/\varepsilon_f)^2}
+\textbf{Upper bound.} B1
+
+\AtlasMath{C[1+(\sigma_1D/\varepsilon_f)^2+(\sigma_2D^2/\varepsilon_f)^{1/2}+(M_2D^3/\varepsilon_f)^{2/7}]}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\needspace{4\baselineskip}\subsection{R2 - Remaining positive gradient-noise regime}
+\textbf{Region.} \AtlasInlineMath{\Theta_{rest}\cap\{\sigma_1>0\}}
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Fixed worst-case call budget. A full (g,H) reply costs one call, as does a gradient-only reply. AG26 uses two independent draws per iteration, or three calls under separate derivative accounting, a constant-factor difference. Internal model minimization is free.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{c(\sigma_1D/\varepsilon_f)^2}
+\textbf{Upper bound.} B1
+
+\AtlasMath{C[1+(\sigma_1D/\varepsilon_f)^2+(\sigma_2D^2/\varepsilon_f)^{1/2}+(M_2D^3/\varepsilon_f)^{2/7}]}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1+(\varepsilon_f/\sigma_1D)^2[1+(\sigma_2D^2/\varepsilon_f)^{1/2}+(M_2D^3/\varepsilon_f)^{2/7}])}
+
+\needspace{4\baselineskip}\subsection{R3 - Zero gradient noise}
+\textbf{Region.} \AtlasInlineMath{\Theta_{all}\cap\{\sigma_1=0\}}
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Fixed worst-case call budget. A full (g,H) reply costs one call, as does a gradient-only reply. AG26 uses two independent draws per iteration, or three calls under separate derivative accounting, a constant-factor difference. Internal model minimization is free.
+
+\textbf{Status.} Lower bound missing
+
+\textbf{Lower bound.} No admitted bound for this comparison
+
+\textbf{Upper bound.} B1
+
+\AtlasMath{C[1+(\sigma_1D/\varepsilon_f)^2+(\sigma_2D^2/\varepsilon_f)^{1/2}+(M_2D^3/\varepsilon_f)^{2/7}]}
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} After selecting \AtlasInlineMath{x\in X}, a fresh independent sample returns a vector \AtlasInlineMath{g(x)} and a complete symmetric matrix \AtlasInlineMath{H(x)}. Conditional on the history and selected query point,
+
+\textbf{Guarantee mapping.} Expected-error guarantee for every instance
+
+\textbf{Output mapping.} Return \AtlasInlineMath{\widehat{x}\in X}.
+
+\textbf{Resource mapping.} Each complete stochastic response specified under ORACLE costs one unit; each fresh-sample response within a batch is charged separately.
+
+\needspace{4\baselineskip}\subsection{B1 - Accelerated stochastic contracting cubic Newton method}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{C[1+(\sigma_1D/\varepsilon_f)^2+(\sigma_2D^2/\varepsilon_f)^{1/2}+(M_2D^3/\varepsilon_f)^{2/7}]}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2610.11693v2}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{d\ge1,\ D,M_2,\varepsilon_f>0,\ \sigma_1,\sigma_2\ge0}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d\ge1,\ D,M_2,\varepsilon_f>0,\ \sigma_1,\sigma_2\ge0}
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2610.11693v2}{[1]} theorem: Algorithm 2; Theorem 5.1; explicit Theorem C.7; pdf pages: 9
+
+\needspace{4\baselineskip}\subsection{B2 - One-dimensional affine objective with Gaussian gradient observations; every Hessian reply is zero}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c(\sigma_1D/\varepsilon_f)^2}
+\textbf{Conditions.} \AtlasInlineMath{\Theta_{all}\cap\{\sigma_1>0\}}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\Theta_{all}\cap\{\sigma_1>0\}}
+
+\textbf{Local argument.} A1
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Gaussian testing lower bound on a compact convex domain}
+\textbf{Scope.} Expected objective gap, fixed maximum query budget, and no exact function-value response. The one-dimensional hard domain must be allowed by the target domain family.
+
+\textbf{Algorithm scope.} Expected objective gap, fixed maximum query budget, and no exact function-value response. The one-dimensional hard domain must be allowed by the target domain family.
+
+Without exact function values, complete stochastic Hessian information does not remove the gradient-noise lower bound \AtlasInlineMath{\Omega(\sigma_1^2D^2/\varepsilon_f^2)}.
+
+On \AtlasInlineMath{X=[-D/2,D/2]}, take \AtlasInlineMath{f_+(x)=ax} and \AtlasInlineMath{f_-(x)=-ax} with \AtlasInlineMath{a=4\varepsilon_f/D}. Both Hessians are zero, so every nonnegative Hessian-regularity and Hessian-noise budget is satisfied. A call returns \AtlasInlineMath{g_t=\pm a+\xi_t}, with independent \AtlasInlineMath{\xi_t\sim\mathcal N(0,\sigma_1^2)}, and \AtlasInlineMath{H_t=0}. Query locations convey no extra information.
+
+Pad an early-stopped transcript to T observations. The two transcript laws have KL divergence at most \AtlasInlineMath{2Ta^2/\sigma_1^2}. Pinsker gives \AtlasInlineMath{\operatorname{TV}\le a\sqrt T/\sigma_1}. Under an equal prior, the minimum Bayes objective-gap risk over outputs in X is
+
+\AtlasMath{\frac{aD}{2}(1-\operatorname{TV}),}
+
+because conditional linear-loss minimization selects the endpoint favored by the posterior. If \AtlasInlineMath{T\le\sigma_1^2D^2/(256\varepsilon_f^2)}, then \AtlasInlineMath{\operatorname{TV}\le1/4} and this risk is at least \AtlasInlineMath{3\varepsilon_f/2}. Both instances cannot have expected gap at most \AtlasInlineMath{\varepsilon_f}. This proves the lower bound for every adaptive randomized algorithm, with embedding along one coordinate in higher dimensions.
+
+The bound is informative for \AtlasInlineMath{\sigma_1>0}. At zero gradient noise its right side is only the trivial zero inequality. It does not apply to an additional exact-value channel. When comparing with the complete stochastic-Hessian upper bound, constant-factor closure is valid only where this statistical term dominates all other displayed terms.
+
+\textbf{Limits of the argument.} The mapped bound retains its complete model, oracle, algorithm view, guarantee, quantity, resource projection, and parameter-region conditions. This argument does not enlarge that scope.
+
+\needspace{7\baselineskip}\section{References}
+[1] Artem Agafonov; Aslan Ashabokov; Dmitry Kamzolov; Alexander D'yakonov; Alexander Gasnikov; Martin Takáč. Matching the Lower Bounds: Stochastic Contracting Cubic Newton and Its Optimal Acceleration. arXiv:2610.11693v2, 2026-10-13; latest history checked 2026-10-29.
+
+\url{https://arxiv.org/pdf/2610.11693v2}
+
+\end{document}

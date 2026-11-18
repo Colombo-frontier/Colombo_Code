@@ -1,0 +1,22 @@
+---
+name: specify-expansion
+description: "Construct a complete eight-axis setting candidate from one approved Atlas-neighborhood opportunity, with explicit provenance, scoped changes, well-posedness checks, and shared label facts."
+---
+
+# Specify One Expansion
+
+1. Read `standards/expansion.md`, `standards/eight_axes.md`, `standards/labels.md`, the current schemas, and the fixed opportunity. Read the referenced seeds at their pinned versions. Identify the primary change, necessary dependent changes, and conditions explicitly held fixed.
+2. Formulate TASK and MODEL before searching for a convenient rate. Name every unknown object, variable block, domain, norm, parameter, regularity budget, and existence promise. Give the exact solution concept. For constructed contracts, define assumptions openly; do not write “as in the literature” where a complete definition is needed.
+3. Expand the native ORACLE operations. Give each operation a declared ID, target, legal query, full return, selection rights, precision/noise, reuse/history conditions, and cost rule. Keep public and hidden information in this register. Do not treat a simulator or a stronger interface as the native interface.
+4. Complete ALGORITHMS, OUTPUT, METRIC, GUARANTEE, and RESOURCE. State unrestricted permissions where intended. Define the loss and its normalization, finiteness, aggregation order, error quantifiers, and cost quantifiers. Preserve joint resources before any scalar projection. Keep deterministic/randomized comparisons in views when the common contract is unchanged.
+5. Check layered and noisy interfaces explicitly. For bilevel tasks, define the lower solution or set-selection rule, outer target, each layer's primitive observations, legal cross-level queries, sample coupling, and charged lower solves. A reduced gradient is a separate oracle unless a verified simulation supplies it at stated cost. In stochastic tasks, specify the conditional information set and whether a sample can be reused at multiple points; exact sample feedback is not an exact population oracle.
+6. Give a short nonempty-instance check consistent with all domains and regularity bounds. Check that the target is well-defined and the allowed observations form a coherent oracle protocol. Idealized exact real-valued information is legitimate when explicitly modeled; physical implementation speed is a different resource question. Check whether public data already reveal a solution. A zero-query endpoint may belong in an existing regime instead of requiring a new node.
+7. Generate every tag from a precise specification location. Use `vocabulary_lookup`; record all eight axes, including explicit unknown/not-applicable entries when appropriate. Bind operations, objects, levels, and views consistently. Use registered parent classes for navigation without changing the native contract. Do not invent an unstated parent or join properties belonging to different layers.
+8. Explain the before/after delta and selection value. Classify possible supporting results as leads, with the conversion still to prove. Keep unverified rate conjectures out of the current bracket. If a candidate seems equivalent to another setting or likely to be a new view, record the concern for the matcher instead of changing its identity by assertion.
+9. Validate and freeze the candidate through the actual tool path, then freeze the expansion record referencing it. Large objects use incremental drafts. Return a compact handoff and leave independent approval to `expansion_reviewer`.
+
+## Parameter scope and later closure obligations
+
+Preserve the full authorized parameter domain and explain joint variables, fixed structural parameters, uniform constants and any diagnostic slice in the existing candidate model/view fields. Do not replace the full request by a convenient accuracy-versus-dimension slice or hide a new oracle solve/cost. Endpoint or zero-query cases are guarded regimes, not new primary status codes. A designed complete contract can pass specification review with missing bounds; it is not an optimality or complete-literature certificate.
+
+Later research must create joint-analysis v2, assess compatible/replacement/resource-projection routes, and publish proved closed regions natively or keep publication pending. Seed/neighbor labels and historical proofs grant no current approval. Use standards/joint_parameter_standard.md for a concrete scope question, without adding profile-only analysis fields to the candidate or doing the final profile review in this stage.

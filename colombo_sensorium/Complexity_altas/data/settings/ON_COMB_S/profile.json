@@ -1,0 +1,995 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ON_COMB_S",
+  "title": "Combinatorial semi-bandits: summed coordinate loss and selected-coordinate feedback.",
+  "summary": "Each round, the learner selects an allowed combination, incurs the sum of its coordinate losses, and observes each selected coordinate separately. The upper bound holds for every admissible action set. The lower bound requires a specified hard action set and does not apply to singleton action sets.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "external_regret"
+    },
+    {
+      "facet": "structure",
+      "value": "combinatorial_actions"
+    },
+    {
+      "facet": "feedback",
+      "value": "semi_bandit"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation_code": "online_combinatorial_semibandit",
+      "formulation": "sum_t<a_t,z_t>−min_{a∈A}sum_t<a,z_t>",
+      "solution_goal": "minimize_expected_cumulative_regret",
+      "protocol_ref": "ON_COMB_S_pro_b17934eb98",
+      "code": "online_combinatorial_semibandit",
+      "formulation_latex": "\\mathcal X\\subset\\{a\\in\\{0,1\\}^d:\\|a\\|_1=m\\},\\quad R_T=\\sum_t\\langle a_t,z_t\\rangle-\\min_{a\\in\\mathcal X}\\sum_t\\langle a,z_t\\rangle",
+      "goal_latex": "\\inf_{\\mathcal A(\\mathcal X)}\\sup_{\\varnothing\\ne\\mathcal X}\\sup_{z_{1:T}\\in([0,1]^d)^T}\\mathbb E_{\\mathcal A}[R_T]",
+      "description_paragraphs": [
+        "Each round, the learner selects an allowed combination, incurs the sum of its coordinate losses, and observes each selected coordinate separately. The upper bound holds for every admissible action set. The lower bound requires a specified hard action set and does not apply to singleton action sets."
+      ]
+    },
+    "model": {
+      "instance": "The public nonempty action set X is contained in {0,1}^d, and each action has exactly m active coordinates. The environment fixes z_t in [0,1]^d in advance. After choosing a_t in X, the learner incurs the sum loss <a_t,z_t> and observes the losses of all active coordinates.",
+      "assumptions": [
+        {
+          "subject_id": "ON_COMB_S_obj_059b837e2b",
+          "property_code": "constant_cardinality",
+          "variable_blocks": [
+            "ON_COMB_S_var_25eb636601"
+          ],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_COMB_S_p_687a6be9dd",
+            "ON_COMB_S_p_76dd32a562",
+            "ON_COMB_S_p_7cdc187445"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "Every feasible action activates exactly m coordinates, not merely at most m."
+        },
+        {
+          "subject_id": "ON_COMB_S_obj_6d9735f327",
+          "property_code": "coordinate_loss_range",
+          "variable_blocks": [],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_COMB_S_p_687a6be9dd",
+            "ON_COMB_S_p_76dd32a562",
+            "ON_COMB_S_p_7cdc187445"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "For every $t,j$, $z_{t,j}\\in[0,1]$. Total loss $\\langle a_t,z_t\\rangle$ lies in $[0,m]$ and is not normalized by $1/m$."
+        }
+      ],
+      "parameter_domain_description": "T: $T\\in\\mathbb N,\\ T\\ge1$ (public); d: $d\\in\\mathbb N,\\ d\\ge1$ (public); m: $m\\in\\mathbb N,\\ 1\\le m\\le d/2$ (public)",
+      "code": "model_declared",
+      "interaction_timing": [
+        "The action space $\\mathcal X$ is public; the environment fixes $z_{1:T}$.",
+        "The learner selects an admissible combination a_t.",
+        "Incur total loss ⟨a_t,z_t⟩.",
+        "All m active coordinates are observed together. A new combination can be chosen only next round."
+      ],
+      "adversary_information": "The environment fixes the entire loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner’s private seed. This is an oblivious-adversary specification and does not automatically extend to history-dependent adaptive adversaries.",
+      "unresolved_applicability": [
+        "Specific action geometries, stronger full-information access, and aggregate-only bandit access require distinct specifications."
+      ],
+      "description_paragraphs": [
+        "The public combinatorial action set $\\mathcal{X}$ is nonempty, and every action activates m coordinates. The minimax quantity takes the worst case over public action sets; it does not assert equal hardness for every fixed combinatorial geometry.",
+        "The hidden coordinate-loss vector is $z_t$, with each coordinate in [0,1], so total action loss lies in [0,m].",
+        "The selected combinatorial action $a_t$ must belong to $\\mathcal{X}$. The m selected coordinates are observed.",
+        "Require $d\\ge1$, $1\\le m\\le d/2$, and $T\\ge1$. Dimension and horizon windows with matching bounds are specified in their respective regions.",
+        "The per-round loss is a sum over coordinates, without division by $m$."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "ON_COMB_S_ora_73cacb32b1",
+          "operation_code": "observe_selected_coordinates",
+          "target_object": "ON_COMB_S_obj_6d9735f327",
+          "variable_blocks": [
+            "ON_COMB_S_var_25eb636601"
+          ],
+          "query_signature": "Inputs: $t,\\ a_t\\in\\mathcal X$. Timing and visible information follow the specified protocol.",
+          "response_signature": "Return $(z_{t,j})_{j:\\,a_{t,j}=1}$.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "order is relative to the current member f_t(x), f(x), or sample F(x;ξ_t) of the named indexed function family and only with respect to x; finite feedback interfaces have no derivative order",
+          "feedback_quality": {
+            "code": "exact_feedback",
+            "description": "Return exactly $m$ selected coordinate values, from which total loss is computable; unselected coordinates remain hidden. All coordinates in a round belong to the same $z_t$, rather than to $m$ independent online horizons. The action set $\\mathcal X$ is public, but no additional unit-cost linear optimization oracle is presumed."
+          },
+          "domain_ref": "ON_COMB_S_dom_8e7541e655",
+          "coupling": "Return exactly $m$ selected coordinate values, from which total loss is computable; unselected coordinates remain hidden. All coordinates in a round belong to the same $z_t$, rather than to $m$ independent online horizons. The action set $\\mathcal X$ is public, but no additional unit-cost linear optimization oracle is presumed.",
+          "index_control": "The learner selects feasible actions and explicitly permitted probes. The environment controls the current loss, outcome, or fresh sample; the learner cannot select future rounds.",
+          "access_schedule": "Follow the interaction order in registry.protocols exactly. Current loss feedback follows the action; any pre-action context or advice phase is specified separately.",
+          "accuracy_argument": null,
+          "cost_rule_ref": "ON_COMB_S_res_662c545696",
+          "query_latex": "t,\\ a_t\\in\\mathcal X",
+          "response_latex": "(z_{t,j})_{j:\\ a_{t,j}=1}"
+        }
+      ],
+      "public_inputs": [
+        "d",
+        "T",
+        "m",
+        "Public nonempty action set $\\mathcal X$; each action activates exactly $m$ coordinates."
+      ],
+      "hidden_objects": [
+        "ON_COMB_S_obj_6d9735f327"
+      ],
+      "auxiliary_interfaces": [
+        "No additional access to hidden losses, means, or gradients is available. Projection, sampling, and internal optimization over public domains may have separately recorded computation costs; they are not free loss oracles."
+      ],
+      "protocol_ref": "ON_COMB_S_pro_b17934eb98",
+      "query_domain_description": "The public action set $\\mathcal X\\subseteq\\{0,1\\}^d$ is nonempty, and every action satisfies $\\|a\\|_1=m$.",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "Semi-bandit feedback on the selected coordinates:",
+        "$$\nt,\\ a_t\\in\\mathcal{X}\\ \\longmapsto\\ (z_{t,j})_{j:\\ a_{t,j}=1}\n$$",
+        "Exactly m coordinate values are returned, allowing total loss to be computed. Unselected coordinates remain hidden.",
+        "Every coordinate revealed in a round comes from the same loss vector $z_t$ and is feedback for one online action.",
+        "The action set $\\mathcal X$ is public, but no additional unit-cost linear optimization oracle is assumed.",
+        "Public inputs are $d,T,m$ and nonempty action set $\\mathcal X$. Every action activates exactly $m$ coordinates."
+      ]
+    },
+    "output": {
+      "object_type": "action_trajectory",
+      "domain_ref": "ON_COMB_S_dom_8e7541e655",
+      "feasibility": "Every loss-bearing action must belong to the action domain. The final output retains the complete action trajectory.",
+      "allowed_postprocessing": "Any measurable computation on received feedback is allowed. No native observation may be added after the budget is exhausted or the algorithm stops.",
+      "certificate_requirement": "Only the stated statistical guarantee is required, not a certificate verifiable through the feedback interface.",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "sum_t<a_t,z_t>−min_{a∈A}sum_t<a,z_t>",
+      "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+      "reference_object": "ON_COMB_S_obj_6d9735f327",
+      "nonnegativity": false,
+      "finiteness_conditions": "Single-round action losses lie in $[0,m]$, so cumulative external regret lies in $[-mT,mT]$.",
+      "comparator_ref": "ON_COMB_S_com_1f181098eb",
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "$$\n\\mathcal{X}\\subset\\{a\\in\\{0,1\\}^d:\\|a\\|_1=m\\},\\quad R_T=\\sum_t\\langle a_t,z_t\\rangle-\\min_{a\\in\\mathcal{X}}\\sum_t\\langle a,z_t\\rangle\n$$"
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "Sequential online rounds; only information permitted by the protocol is visible in each round."
+        },
+        {
+          "code": "native_feedback",
+          "unit": "feedback_event",
+          "description": "One semi-bandit event per round supplies $m$ scalars: $T$ rounds and $mT$ observed coordinates in total."
+        },
+        {
+          "code": "observed_coordinates",
+          "unit": "scalar",
+          "description": "Exactly m active coordinates are observed each round, for mT in total."
+        },
+        {
+          "code": "convex_projections",
+          "unit": "optimization_problem",
+          "description": "OSMD updates once per round over the convex hull of the action set. Arbitrary internal computation is permitted."
+        }
+      ],
+      "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+      "cost_rules": [
+        {
+          "id": "ON_COMB_S_res_662c545696",
+          "operation_refs": [
+            "ON_COMB_S_ora_73cacb32b1"
+          ],
+          "cost": {
+            "rounds": 1,
+            "native_feedback": 1,
+            "observed_coordinates": "m"
+          }
+        }
+      ],
+      "scalarization": "At fixed T, compare the native cumulative quantity in the objective. Retain the full resource vector; internal optimization, projection, and sampling are not implicitly one loss query.",
+      "setup_cost": "Only declared public inputs may be read. Hidden losses, means, or samples cannot be accessed in advance or outside the $T$ rounds or $\\tau$ samples.",
+      "online_cost": "Algorithms may depend on the public action set $\\mathcal X$ and need not run in polynomial time. OSMD updates in $\\operatorname{conv}(\\mathcal X)$ and randomizes over actions. The feedback bound does not certify efficient implementation for arbitrary $\\mathcal X$.",
+      "amortization_scope": "The algorithm runs on one environment. Charged feedback cannot be reused across independent instances.",
+      "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "One semi-bandit event per round supplies $m$ scalars: $T$ rounds and $mT$ observed coordinates in total.",
+        "The algorithm family may depend on public $\\mathcal{X}$. Internal computation need not be polynomial time.",
+        "OSMD requires updates over conv($\\mathcal{X}$) and randomized action selection. The feedback bound does not establish that these operations are computationally efficient for arbitrary $\\mathcal{X}$.",
+        "Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "Private randomization is allowed. The seed is hidden from the environment and independent of the fixed instance and sample randomness.",
+        "adaptivity": "The action and every probe in a round may depend only on previous-round feedback, public inputs, any context or advice already revealed that round, and private randomness. They may not use unrevealed current losses or samples.",
+        "restrictions": [
+          "All measurable causal policies satisfying the declared information timing and feasible domain are allowed, without extra span, iteration-form, or polynomial-time restrictions."
+        ],
+        "internal_computation": "Arbitrary measurable exact-real internal computation is allowed, with algorithm families depending on the public action set and no polynomial-time restriction. OSMD updates over the convex hull and implements randomized actions. Efficiency of these operations for an arbitrary action set is not guaranteed by the feedback bound.",
+        "parallelism": "Online rounds proceed sequentially. A two-point evaluation is a same-round feedback pair, not two independent rounds.",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "The native target is $\\inf_{\\mathcal A(\\mathcal X)}\\sup_{\\varnothing\\ne\\mathcal X}\\sup_{z_{1:T}\\in([0,1]^d)^T}\\mathbb E_{\\mathcal A}[R_T]$.",
+          "aggregation_order": [
+            "The learner is an algorithm family taking the public action set 𝒳 as input.",
+            "Take the infimum over these algorithm families, then the supremum over nonempty public action sets X satisfying the cardinality constraint.",
+            "With $\\mathcal X$ fixed, take the supremum over oblivious coordinate-loss sequences. Expectation includes only learner randomness.",
+            "The comparator is the best fixed action in X in hindsight, not an arbitrary combination changing each round."
+          ],
+          "quantifier_order": "One learning algorithm must apply to every instance in the declared class. It may use public inputs only, not hidden instance parameters.",
+          "randomness_sources": [
+            "Learner's private randomness"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "The T-round horizon is fixed and public. No anytime or simultaneous-all-T high-probability guarantee is implied.",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "$$\n\\begin{aligned}[c]\\mathcal{R}_T^*&=\\inf_{\\mathcal{A}(\\cdot)}\\sup_{\\mathcal{X}\\in\\mathfrak X_{d,m}}\\sup_{z_{1:T}\\in([0,1]^d)^T}\\mathbb{E}_{\\mathcal{A}(\\mathcal{X})}[R_T(\\mathcal{X})],\\\\ R_T(\\mathcal{X})&=\\sum_{t=1}^T\\langle a_t,z_t\\rangle-\\min_{a\\in\\mathcal{X}}\\sum_{t=1}^T\\langle a,z_t\\rangle,\\\\ \\mathfrak X_{d,m}&=\\{\\varnothing\\ne\\mathcal{X}\\subset\\{0,1\\}^d:\\ \\|a\\|_1=m\\ \\forall a\\in\\mathcal{X}\\}.\\end{aligned}\n$$",
+            "Choose one algorithm using public inputs before taking the worst case over all admissible instances. Expectation covers the algorithm's private randomness and the observation randomness specified by the model. Comparator choice and the order of summation, minimization, and expectation follow the displayed formula."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+        "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+        "scalarization": "At fixed T, compare the native cumulative quantity in the objective. Retain the full resource vector; internal optimization, projection, and sampling are not implicitly one loss query."
+      },
+      "alias_ids": [
+        "ON_COMB_S"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ON_COMB_S_obj_6d9735f327",
+        "type": "loss_environment",
+        "definition": "The public nonempty action set X is contained in {0,1}^d, and each action has exactly m active coordinates. The environment fixes z_t in [0,1]^d in advance. After choosing a_t in X, the learner incurs the sum loss <a_t,z_t> and observes the losses of all active coordinates.",
+        "depends_on": [],
+        "role_code": "loss_vector_sequence"
+      },
+      {
+        "id": "ON_COMB_S_obj_059b837e2b",
+        "type": "public_action_set",
+        "definition": "A public nonempty $\\mathcal X\\subseteq\\{0,1\\}^d$, with $\\|a\\|_1=m$ for every $a\\in\\mathcal X$.",
+        "depends_on": [],
+        "role_code": "combinatorial_action_set"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ON_COMB_S_var_25eb636601",
+        "dimension": "d",
+        "space": "The public action set $\\mathcal X\\subseteq\\{0,1\\}^d$ is nonempty, and every action satisfies $\\|a\\|_1=m$."
+      }
+    ],
+    "domains": [
+      {
+        "id": "ON_COMB_S_dom_8e7541e655",
+        "definition": "The public action set $\\mathcal X\\subseteq\\{0,1\\}^d$ is nonempty, and every action satisfies $\\|a\\|_1=m$.",
+        "roles": [
+          "action_domain",
+          "query_domain"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "ON_COMB_S_nor_60596e4d87",
+        "definition": "The model specifies coordinate ranges of finite vectors. Discrete action labels have no derivative order. A placeholder norm imposes no additional geometric assumption."
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ON_COMB_S_pro_b17934eb98",
+        "steps": [
+          "The action space $\\mathcal X$ is public; the environment fixes $z_{1:T}$.",
+          "The learner selects an admissible combination a_t.",
+          "Incur total loss ⟨a_t,z_t⟩.",
+          "All m active coordinates are observed together. A new combination can be chosen only next round."
+        ],
+        "adversary_information": "The environment fixes the entire loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner’s private seed. This is an oblivious-adversary specification and does not automatically extend to history-dependent adaptive adversaries.",
+        "loss_bearing_points": "The action a_t incurs its total summed loss. Observing m coordinates does not incur that total loss m additional times.",
+        "queries_per_round": "One semi-bandit event per round supplies $m$ scalars: $T$ rounds and $mT$ observed coordinates in total.",
+        "past_requery": "The learner may not request new information from past rounds or previously used samples. Previously received feedback may be stored and processed. In stochastic models, an action may be repeated in a new round, using a fresh charged sample."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ON_COMB_S_com_1f181098eb",
+        "definition": "Best fixed combinatorial action a in X, selected in hindsight."
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ON_COMB_S_p_76dd32a562",
+      "symbol": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_COMB_S_p_687a6be9dd",
+      "symbol": "d",
+      "meaning": "Total number of coordinates in a combinatorial action",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "public": true,
+      "definition": "Actions lie in $\\{0,1\\}^d$ and select exactly $m$ coordinates.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_COMB_S_p_7cdc187445",
+      "symbol": "m",
+      "meaning": "Number of active coordinates in each combinatorial action",
+      "kind": "independent",
+      "domain": "$m\\in\\mathbb N,\\ 1\\le m\\le d/2$",
+      "public": true,
+      "definition": "Every action $a\\in\\mathcal X$ satisfies $\\|a\\|_1=m$. A round's loss sums $m$ coordinate losses.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "parameter_ref": "ON_COMB_S_p_76dd32a562"
+    },
+    {
+      "symbol_latex": "d",
+      "meaning": "Total number of coordinates in a combinatorial action",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "definition": "Actions lie in $\\{0,1\\}^d$ and select exactly $m$ coordinates.",
+      "parameter_ref": "ON_COMB_S_p_687a6be9dd"
+    },
+    {
+      "symbol_latex": "m",
+      "meaning": "Number of active coordinates in each combinatorial action",
+      "domain": "$m\\in\\mathbb N,\\ 1\\le m\\le d/2$",
+      "definition": "Every action $a\\in\\mathcal X$ satisfies $\\|a\\|_1=m$. A round's loss sums $m$ coordinate losses.",
+      "parameter_ref": "ON_COMB_S_p_7cdc187445"
+    },
+    {
+      "symbol_latex": "\\mathcal X",
+      "meaning": "The public nonempty combinatorial action set.",
+      "domain": "$\\mathcal X\\subseteq\\{a\\in\\{0,1\\}^d:\\|a\\|_1=m\\}$",
+      "definition": "The learner knows X; the minimax worst case also ranges over admissible public action sets.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "a_t,a",
+      "meaning": "The current combinatorial action and fixed comparator action.",
+      "domain": "$a_t,a\\in\\mathcal X$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "z_t",
+      "meaning": "Hidden coordinate-loss vector",
+      "domain": "$z_t\\in[0,1]^d$",
+      "definition": "The total round loss is $\\langle a_t,z_t\\rangle\\in[0,m]$. Only activated coordinates are revealed.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "j",
+      "meaning": "Coordinate index",
+      "domain": "$j\\in[d]$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "q",
+      "meaning": "Regularization exponent in the source OSMD theorem",
+      "domain": "Used only to tune this algorithm.",
+      "definition": "The combined upper bound specializes to $q=2$. Here $q$ is neither a conjugate exponent nor a recommendation distribution.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_T",
+      "meaning": "Cumulative loss difference relative to the comparator specified in this profile",
+      "domain": "Real-valued random variable",
+      "definition": "$R_T=\\sum_t\\langle a_t,z_t\\rangle-\\min_{a\\in\\mathcal X}\\sum_t\\langle a,z_t\\rangle$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal R_T^*",
+      "meaning": "Minimax expected regret under the current information protocol and parameter region.",
+      "domain": "A nonnegative real.",
+      "definition": "$$\n\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A(\\cdot)}\\sup_{\\mathcal X\\in\\mathfrak X_{d,m}}\\sup_{z_{1:T}\\in([0,1]^d)^T}\\mathbb E_{\\mathcal A(\\mathcal X)}[R_T(\\mathcal X)],\\\\ R_T(\\mathcal X)&=\\sum_{t=1}^T\\langle a_t,z_t\\rangle-\\min_{a\\in\\mathcal X}\\sum_{t=1}^T\\langle a,z_t\\rangle,\\\\ \\mathfrak X_{d,m}&=\\{\\varnothing\\ne\\mathcal X\\subset\\{0,1\\}^d:\\ \\|a\\|_1=m\\ \\forall a\\in\\mathcal X\\}.\\end{aligned}\n$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation includes the learner's private randomness and, when allowed, the environment strategy's randomness. A fixed loss sequence introduces no additional observation noise.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Cumulative observations counted according to the declared feedback type.",
+      "domain": "Nonnegative integer or integer-valued stopping time",
+      "definition": "There are T feedback events revealing mT active-coordinate losses. If N counts scalar coordinates, then $N=mT$.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ON_COMB_S__main__q1",
+      "kind": "cumulative_regret",
+      "expression": "inf_{Alearner with public A} sup_{public nonempty action sets A} sup_{z_1:T} E[Σ<a_t,z_t>−min_{a∈A}Σ<a,z_t>].",
+      "optimization_direction": "minimize",
+      "units": "loss",
+      "budget_variables": [
+        "ON_COMB_S_p_76dd32a562"
+      ],
+      "tolerance_variables": [],
+      "analysis_scope": "Compare only this specification and the listed parameter regions.",
+      "tracked_parameters": [
+        "ON_COMB_S_p_76dd32a562",
+        "ON_COMB_S_p_687a6be9dd",
+        "ON_COMB_S_p_7cdc187445"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "source_kind_label": "minimax_cumulative_regret",
+      "expression_latex": "\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A(\\cdot)}\\sup_{\\mathcal X\\in\\mathfrak X_{d,m}}\\sup_{z_{1:T}\\in([0,1]^d)^T}\\mathbb E_{\\mathcal A(\\mathcal X)}[R_T(\\mathcal X)],\\\\ R_T(\\mathcal X)&=\\sum_{t=1}^T\\langle a_t,z_t\\rangle-\\min_{a\\in\\mathcal X}\\sum_{t=1}^T\\langle a,z_t\\rangle,\\\\ \\mathfrak X_{d,m}&=\\{\\varnothing\\ne\\mathcal X\\subset\\{0,1\\}^d:\\ \\|a\\|_1=m\\ \\forall a\\in\\mathcal X\\}.\\end{aligned}",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound.",
+      "expression": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_351fb610de"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ON_COMB_S__main__r1",
+      "specification_ref": "ON_COMB_S",
+      "name": "MAIN",
+      "predicate_text": "$d$ is a multiple of $m$, $d\\ge2m$, and $T\\ge d/m$.",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_COMB_S_p_687a6be9dd"
+              },
+              "op": "ge",
+              "right": {
+                "op": "mul",
+                "args": [
+                  2,
+                  {
+                    "parameter": "ON_COMB_S_p_7cdc187445"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_COMB_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "op": "div",
+                "args": [
+                  {
+                    "parameter": "ON_COMB_S_p_687a6be9dd"
+                  },
+                  {
+                    "parameter": "ON_COMB_S_p_7cdc187445"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "predicate": {
+              "name": "declared_model_condition",
+              "args": [],
+              "description": "m divides d"
+            }
+          }
+        ]
+      },
+      "parameter_refs": [
+        "ON_COMB_S_p_687a6be9dd",
+        "ON_COMB_S_p_76dd32a562",
+        "ON_COMB_S_p_7cdc187445"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Proof constants are independent of all declared tracked parameters. Thresholds without numerical values remain symbolic."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ON_COMB_S__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\le2\\sqrt{2mdT}",
+      "quantity_ref": "ON_COMB_S__main__q1",
+      "region_refs": [
+        "ON_COMB_S__main__r1"
+      ],
+      "method": "OSMD with q=2 regularizer",
+      "algorithm_or_hard_family": "OSMD with q=2 regularizer",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T semi-bandit vectors",
+        "observed_coordinates": "mT",
+        "convex_projections": "T"
+      },
+      "parameter_choice": "q=2 and theorem-prescribed η; public m,d,T.",
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_COMB"
+      ],
+      "evidence_refs": [
+        "ON_COMB_S__main__e3"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_COMB_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The integer $d$ is a multiple of $m$; require $d\\ge2m$ and $T\\ge d/m$. Each round selects $m$ coordinates and returns their losses individually."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_COMB_S__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\ge c\\sqrt{mdT}",
+      "quantity_ref": "ON_COMB_S__main__q1",
+      "region_refs": [
+        "ON_COMB_S__main__r1"
+      ],
+      "method": "Public A formed by choosing one arm in each of m groups of size d/m",
+      "algorithm_or_hard_family": "Public A formed by choosing one arm in each of m groups of size d/m",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "resource_costs": {
+        "rounds": "T",
+        "observed_coordinates": "mT"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_COMB",
+        "ON_SRC_MOSS"
+      ],
+      "evidence_refs": [
+        "ON_COMB_S__main__e2",
+        "ON_COMB_S__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_COMB_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The integer $d$ is a multiple of $m$; require $d\\ge2m$ and $T\\ge d/m$. Each round selects $m$ coordinates and returns their losses individually."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": "Choose the public action set as a Cartesian product of $m$ groups, each containing $d/m$ coordinates. In each round choose one coordinate per group and observe all $m$ selected coordinate losses. Independent Bernoulli hard instances across groups give the direct-sum lower bound $mc\\sqrt{(d/m)T}=c\\sqrt{mdT}$. This is a worst-case public action set; a singleton action set has zero regret.",
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "MAIN",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_COMB_S_p_687a6be9dd"
+              },
+              "op": "ge",
+              "right": {
+                "op": "mul",
+                "args": [
+                  2,
+                  {
+                    "parameter": "ON_COMB_S_p_7cdc187445"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_COMB_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "op": "div",
+                "args": [
+                  {
+                    "parameter": "ON_COMB_S_p_687a6be9dd"
+                  },
+                  {
+                    "parameter": "ON_COMB_S_p_7cdc187445"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "predicate": {
+              "name": "declared_model_condition",
+              "args": [],
+              "description": "m divides d"
+            }
+          }
+        ]
+      },
+      "predicate_text": "$d$ is a multiple of $m$, $d\\ge2m$, and $T\\ge d/m$.",
+      "parameter_refs": [
+        "ON_COMB_S_p_687a6be9dd",
+        "ON_COMB_S_p_76dd32a562",
+        "ON_COMB_S_p_7cdc187445"
+      ],
+      "source_region_ref": "ON_COMB_S__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_COMB_S__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_COMB_S__main__q1",
+      "resource_projection_id": "resource_351fb610de",
+      "regime_id": "ON_COMB_S__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "ON_COMB_S__main__b1"
+        ],
+        "lower_refs": [
+          "ON_COMB_S__main__b2"
+        ],
+        "comparison_ref": "ON_COMB_S__main__c1",
+        "quantity_ref": "ON_COMB_S__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+        "ratio_or_gap": "Universal constants.",
+        "envelopes": {
+          "upper": {
+            "expression": "2sqrt(2mdT)",
+            "claim_refs": [
+              "ON_COMB_S__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "2\\sqrt{2mdT}"
+          },
+          "lower": {
+            "expression": "c sqrt(mdT)",
+            "claim_refs": [
+              "ON_COMB_S__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "c \\sqrt{mdT}"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_COMB_S__main__b1",
+            "when_region_refs": [
+              "ON_COMB_S__main__r1"
+            ],
+            "meaning": "Invoke each algorithm only in its applicability region; the scalar upper envelope minimizes over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "ON_COMB_S__main__b1": [
+            {
+              "region_ref": "ON_COMB_S__main__r1",
+              "predicate_text": "$d$ is a multiple of $m$, $d\\ge2m$, and $T\\ge d/m$."
+            }
+          ],
+          "ON_COMB_S__main__b2": [
+            {
+              "region_ref": "ON_COMB_S__main__r1",
+              "predicate_text": "$d$ is a multiple of $m$, $d\\ge2m$, and $T\\ge d/m$."
+            }
+          ]
+        },
+        "envelope_certificate": "Only individually audited compatible claims enter. Worst-case over public A, not per-action-set exact complexity.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound."
+      },
+      "comparison_key": {
+        "setting_id": "ON_COMB_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_COMB_S__main__q1",
+        "resource_projection_id": "resource_351fb610de",
+        "regime_id": "ON_COMB_S__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ON_COMB_S__main__e1",
+      "source_ref": "ON_SRC_MOSS",
+      "locator": {
+        "theorem": "Theorem 30 and proof",
+        "section": "Appendix B",
+        "pdf_pages": [
+          28,
+          29,
+          30
+        ],
+        "printed_pages": [
+          2812,
+          2813,
+          2814
+        ],
+        "equations": []
+      },
+      "supports": "Supports the stated results and explicit reductions: $\\mathcal{R}_T^*\\ge c\\sqrt{mdT}$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "Use only the K-armed bandit branch with source sampling budget $m_{\\mathrm{src}}=T$. In context-block reductions each block uses its own length. Bernoulli hard instances and Yao's principle give the randomized-learner lower bound."
+      ]
+    },
+    {
+      "id": "ON_COMB_S__main__e2",
+      "source_ref": "ON_SRC_COMB",
+      "locator": {
+        "theorem": "Section 3, lower-bound discussion",
+        "section": "",
+        "pdf_pages": [
+          11
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Supports the stated results and explicit reductions: $\\mathcal{R}_T^*\\ge c\\sqrt{mdT}$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "On the public product action set, a direct sum of $m$ independent $d/m$-arm hard instances gives $\\Omega(\\sqrt{mdT})$. One observation per group corresponds exactly to the $m$ component responses in one round."
+      ]
+    },
+    {
+      "id": "ON_COMB_S__main__e3",
+      "source_ref": "ON_SRC_COMB",
+      "locator": {
+        "theorem": "Theorem 4",
+        "section": "",
+        "pdf_pages": [
+          12
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Source support for the listed results and necessary explicit transfers: $\\mathcal{R}_T^*\\le2\\sqrt{2mdT}$. Applicability is restricted separately by each atomic bound's model, feedback, regime, and quantifiers.",
+      "notes": [
+        "Each round selects $m$ of the $d$ coordinates, whose individual losses lie in $[0,1]$, and reveals semi-bandit feedback. OSMD gives $2\\sqrt{2mdT}$ when $q=2$. The total loss per round ranges over $[0,m]$."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "ON_SRC_COMB",
+      "authors": [
+        "Jean-Yves Audibert",
+        "Sébastien Bubeck",
+        "Gábor Lugosi"
+      ],
+      "title": "Regret in Online Combinatorial Optimization",
+      "year": 2014,
+      "version": "1204.4710v2",
+      "url": "https://arxiv.org/pdf/1204.4710v2",
+      "publication_status": "preprint_version_inspected"
+    },
+    {
+      "id": "ON_SRC_MOSS",
+      "authors": [
+        "Jean-Yves Audibert",
+        "Sébastien Bubeck"
+      ],
+      "title": "Regret Bounds and Minimax Policies under Partial Monitoring",
+      "year": 2010,
+      "version": "JMLR 11:2785–2836",
+      "url": "https://jmlr.org/papers/volume11/audibert10a/audibert10a.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [
+    {
+      "id": "ON_REL_COMB_DIRECTSUM",
+      "source_ref": "ON_ADV_S",
+      "target_ref": "ON_COMB_S",
+      "relation_kind": "direct_sum_lower_bound",
+      "conditions": [
+        "$m$ divides $d$, the action space is the public product set, and $T\\ge d/m$."
+      ],
+      "instance_map": "m independent d/m-arm bandits",
+      "output_map": "combine m arm indices into m-hot action",
+      "error_map": "sum regrets; m sqrt((d/m)T)=sqrt(mdT)",
+      "oracle_simulation": "one selected sample per group in same round",
+      "cost_map": {
+        "expression": "T rounds; mT coordinate observations",
+        "components": {}
+      },
+      "evidence_refs": [
+        "ON_COMB_S__main__e2"
+      ]
+    }
+  ],
+  "aliases": [
+    {
+      "legacy_id": "ON_COMB_S",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "optimal": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ON_COMB_S__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "37b83fb4736ea101a378d4f6f07dc54976242df659c61fcae1715c29dc8bbd0b",
+    "source_order": 69,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

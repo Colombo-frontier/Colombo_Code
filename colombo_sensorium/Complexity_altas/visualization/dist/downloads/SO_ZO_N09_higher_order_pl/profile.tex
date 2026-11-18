@@ -1,0 +1,382 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Higher-order smooth PL objectives with independent finite-variance value noise\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}ZO\_\allowbreak{}N09\_\allowbreak{}higher\_\allowbreak{}order\_\allowbreak{}pl}
+
+Single-objective optimization
+
+Minimize \AtlasInlineMath{f} globally over \AtlasInlineMath{\mathbb{R}^d} and return a point with small objective gap.
+
+\textbf{Status.} Fully optimal
+
+\textbf{TASK tags.} formulation: Global minimization; solution concept: Global minimization; task family: Single objective
+
+\textbf{MODEL tags.} convexity: Convexity not assumed; growth: Polyak lojasiewicz; smoothness: Higher order holder operator; smoothness: Lipschitz gradient; structure: No additional structure
+
+\textbf{ORACLE tags.} access order: Zeroth-order interface; interface family: Independent noisy value; public information: Public inputs explicitly declared; query domain: Full space
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required
+
+\textbf{METRIC tags.} criterion: Objective gap
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; mode: Expectation
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Minimize \AtlasInlineMath{f} globally over \AtlasInlineMath{\mathbb{R}^d} and return a point with small objective gap.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+\AtlasInlineMath{f:\mathbb{R}^d\to\mathbb{R}} is differentiable and satisfies \AtlasInlineMath{\|\nabla f(x)-\nabla f(y)\|_2\le\beta\|x-y\|_2} for every \AtlasInlineMath{x,y\in\mathbb{R}^d}.
+
+\AtlasInlineMath{f_*:=\inf_{x\in\mathbb{R}^d}f(x)>-\infty}, and the given initial point \AtlasInlineMath{x_0} satisfies \AtlasInlineMath{f(x_0)-f_*\le\Delta}.
+
+The population objective satisfies the Polyak-Łojasiewicz condition \AtlasInlineMath{\|\nabla f(x)\|_2^2\ge2\mu(f(x)-f_*)} for every \AtlasInlineMath{x\in\mathbb{R}^d}; convexity is not required.
+
+\AtlasInlineMath{\alpha>2}. Set \AtlasInlineMath{m=\lceil\alpha\rceil-1} and \AtlasInlineMath{\gamma_\alpha=\alpha-m\in(0,1]}. The \AtlasInlineMath{m}th derivative of \AtlasInlineMath{f} satisfies \AtlasInlineMath{\|D^mf(x)-D^mf(y)\|_{\mathrm{op}}\le H_\alpha\|x-y\|_2^{\gamma_\alpha}} for every \AtlasInlineMath{x,y} in the ambient space.
+
+Derivative tensors use the Euclidean induced operator norm, the supremum of their absolute value over tuples of Euclidean unit vectors.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+A query at \AtlasInlineMath{x_t\in \mathbb{R}^d} returns one scalar \AtlasInlineMath{Y_t=f(x_t)+\xi_t}.
+
+\AtlasInlineMath{\xi_t} is i.i.d. centered noise with \AtlasInlineMath{\mathbb{E}\xi_t^2\le\sigma_v^2}, independent of the algorithmic seed and preceding observations. Its distribution is unknown; the algorithm must cover every noise law satisfying the stated bound.
+
+Every observation is charged independently. No same-sample coupling, sample handle, or noiseless function value is supplied.
+
+The public inputs are \AtlasInlineMath{d}, \AtlasInlineMath{\beta}, \AtlasInlineMath{\mu}, \AtlasInlineMath{\Delta}, \AtlasInlineMath{\sigma_v}, \AtlasInlineMath{\alpha}, \AtlasInlineMath{H_\alpha}, \AtlasInlineMath{\varepsilon}, \AtlasInlineMath{x_0}, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return \AtlasInlineMath{\widehat{x}\in \mathbb{R}^d}. The output may be an unqueried point, a random choice among previous points, or an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The base loss is \AtlasInlineMath{\ell(I,x)=f(x)-f_*}, where \AtlasInlineMath{f_*=\inf_{u\in \mathbb{R}^d}f(u)}. This nonnegative loss is evaluated at the output, with tolerance \AtlasInlineMath{\varepsilon}.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Each scalar function value or noisy observation costs \AtlasInlineMath{1} call. Every location in a multipoint finite difference, every initialization query, and every reference observation is charged.
+
+Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.
+
+Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately.
+
+After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. Require \AtlasInlineMath{\mathbb{E}[\ell(I,\widehat{x})]\le \varepsilon}, fixing the instance before averaging over algorithmic and feedback randomness.
+
+Oracle cost uses a deterministic worst-case budget: \AtlasInlineMath{N\le T} on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{d}: Dimension of the variable space \textbf{Domain:} \AtlasInlineMath{d\in\mathbb{N},\ d\ge1}.
+
+\AtlasInlineMath{\beta}: Public upper bound on the gradient Lipschitz constant \textbf{Domain:} \AtlasInlineMath{\beta>0}.
+
+The object, norm and domain are fixed by the specific inequalities in this profile's model.
+
+\AtlasInlineMath{\mu}: PL constant \textbf{Domain:} \AtlasInlineMath{\mu>0}.
+
+\AtlasInlineMath{\|\nabla f(x)\|_2^2\ge2\mu(f(x)-f_*)}
+
+\AtlasInlineMath{\Delta}: Known upper bound on the initial objective gap \textbf{Domain:} \AtlasInlineMath{\Delta\ge0}.
+
+\AtlasInlineMath{f(x_0)-\inf_{x\in\mathbb{R}^d}f(x)\le\Delta}
+
+\AtlasInlineMath{\sigma_v}: Upper bound on scalar observation-noise scale \textbf{Domain:} \AtlasInlineMath{\sigma_v\ge0}.
+
+\AtlasInlineMath{\mathbb{E}\xi^2\le\sigma_v^2}; conditional-variance assumptions are interpreted with respect to the specified interaction history.
+
+\AtlasInlineMath{\alpha}: Higher-order smoothness order \textbf{Domain:} \AtlasInlineMath{\alpha>2}.
+
+Use \AtlasInlineMath{m=\lceil\alpha\rceil-1} and \AtlasInlineMath{\gamma_\alpha=\alpha-m} for the integer derivative order and its Hölder exponent.
+
+\AtlasInlineMath{H_\alpha}: Hölder modulus of the highest derivative in the specified tensor norm \textbf{Domain:} \AtlasInlineMath{H_\alpha>0}.
+
+\AtlasInlineMath{\varepsilon}: Error target; norm and squared-norm criteria use different thresholds \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{\kappa}: Ratio of the known smoothness and strong-convexity bounds \textbf{Domain:} \AtlasInlineMath{\kappa\ge1}.
+
+\AtlasInlineMath{\kappa=\beta/\mu}
+
+\AtlasInlineMath{x,y,u}: Function arguments and dummy variables in the formulas \textbf{Domain:} \AtlasInlineMath{x,y,u\in\mathbb{R}^d}; spherical domains are embedded in \AtlasInlineMath{\mathbb{R}^{d+1}}.
+
+Admissible ranges are specified separately by the task, model and oracle in this profile.
+
+\AtlasInlineMath{\widehat{x}}: Final algorithm output \textbf{Domain:} \AtlasInlineMath{\mathbb{R}^d}.
+
+\AtlasInlineMath{I}: Complete problem instance \textbf{Domain:} \AtlasInlineMath{I\in\mathcal{I}}.
+
+Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.
+
+\AtlasInlineMath{\mathcal{I}}: Admissible instance class determined by the eight specification fields in this profile \textbf{Domain:} Instances satisfying the public parameter bounds.
+
+\AtlasInlineMath{\mathcal{A}}: Algorithm or strategy \textbf{Domain:} Measurable adaptive strategies allowed in this profile.
+
+The algorithm is selected before the hidden instance.
+
+\AtlasInlineMath{\ell}: Base loss or residual \textbf{Domain:} \AtlasInlineMath{\ell:\mathcal{I}\times\mathcal{X}_{\mathrm{out}}\to[0,+\infty]}.
+
+The exact formula appears in this profile's performance-criterion section.
+
+\AtlasInlineMath{\mathbb{E},\Pr}: Expectation and probability \textbf{Domain:} Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee.
+
+Fix the instance first; aggregate cost and error separately.
+
+\AtlasInlineMath{\inf,\sup}: Infimum and supremum \textbf{Domain:} Evaluated only over the variable sets explicitly specified in the formula.
+
+In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.
+
+\AtlasInlineMath{\|\cdot\|_2,\langle\cdot,\cdot\rangle}: Euclidean norm and inner product \textbf{Domain:} \AtlasInlineMath{\|x\|_2=\sqrt{\langle x,x\rangle}}.
+
+\AtlasInlineMath{\langle x,y\rangle=x^\top y}
+
+\AtlasInlineMath{B_p(c,R)}: Closed norm ball \textbf{Domain:} \AtlasInlineMath{p\in[1,\infty],\ R\ge0}.
+
+\AtlasInlineMath{B_p(c,R)=\{x:\|x-c\|_p\le R\}}; \AtlasInlineMath{B_2} denotes the Euclidean ball.
+
+\AtlasInlineMath{N,T}: Actual call count and declared budget \textbf{Domain:} \AtlasInlineMath{N,T\in\mathbb{N}_0}.
+
+A fixed budget bounds every execution path; the Markov specification uses an expected budget.
+
+\AtlasInlineMath{O,\Omega,\Theta,\widetilde{O}}: Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms \textbf{Domain:} Within the joint parameter window specified for each complexity regime.
+
+Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.
+
+\AtlasInlineMath{c,C,c_\alpha,C_\alpha}: Positive constant in a proof or asymptotic bound \textbf{Domain:} \AtlasInlineMath{0<c,C,c_\alpha,C_\alpha<\infty}.
+
+Unsubscripted constants have the dependencies stated in the bound; constants subscripted by \AtlasInlineMath{\alpha} may depend only on the fixed smoothness order.
+
+\AtlasInlineMath{\log,\log_+,e}: Natural logarithm, truncated logarithm, and Euler's number \textbf{Domain:} \AtlasInlineMath{z>0}.
+
+\AtlasInlineMath{\log_+(z)=\max\{0,\log z\}}; \AtlasInlineMath{e=\exp(1)}, and \AtlasInlineMath{\log_2} denotes the base-two logarithm.
+
+\AtlasInlineMath{f,f_*}: Population objective and its optimal value \textbf{Domain:} \AtlasInlineMath{f:\mathcal{X}_{\mathrm{fun}}\to\mathbb{R}}.
+
+\AtlasInlineMath{f_*=\inf_{x\in \mathbb{R}^d}f(x)}.
+
+\AtlasInlineMath{Y_t,\xi_t,t}: Scalar-observation number, noise, and call index \textbf{Domain:} \AtlasInlineMath{Y_t,\xi_t\in\mathbb{R},\ t\in\mathbb{N}}.
+
+Noise independence, distribution class and scale are fixed by this profile's oracle.
+
+\AtlasInlineMath{\mathcal{F}_{t-1}}: The history before the current query \textbf{Domain:} The \AtlasInlineMath{\sigma}-algebra generated by the algorithm's seed and previous feedback.
+
+The current query may depend on this history.
+
+\AtlasInlineMath{\nabla f,\nabla^2f,D^jf}: Gradient, Hessian, and higher Fréchet derivatives \textbf{Domain:} \AtlasInlineMath{\nabla f\in\mathbb{R}^d,\ \nabla^2f\in\mathbb{R}^{d\times d}}; \AtlasInlineMath{D^jf} is a \AtlasInlineMath{j}-linear form.
+
+Used only at derivative orders and on regions where the model guarantees its existence.
+
+\AtlasInlineMath{\|\cdot\|_{\mathrm{op}}}: Euclidean induced matrix or tensor operator norm \textbf{Domain:} Take the supremum over Euclidean unit input vectors of the corresponding order.
+
+\AtlasInlineMath{\|T\|_{\mathrm{op}}=\sup_{\|u_1\|_2,\ldots,\|u_j\|_2\le1}|T[u_1,\ldots,u_j]|}
+
+\AtlasInlineMath{m,\gamma_\alpha}: Integer derivative order and Hölder exponent of the high-order regularity condition \textbf{Domain:} \AtlasInlineMath{m\ge2,\ 0<\gamma_\alpha\le1}.
+
+\AtlasInlineMath{m=\lceil\alpha\rceil-1}, \AtlasInlineMath{\gamma_\alpha=\alpha-m}
+
+\AtlasInlineMath{\mathcal{X}_{\mathrm{fun}},\mathcal{X}_{\mathrm{out}},\mathcal{X}}: Function domain, admissible output domain and optimization domain \textbf{Domain:} Each is the Euclidean space or subset explicitly specified in this profile.
+
+\AtlasInlineMath{\mathcal{X}_{\mathrm{out}}=\mathbb{R}^d} and \AtlasInlineMath{\mathcal{X}=\mathbb{R}^d}; the function domain is the region on which the model imposes regularity.
+
+\AtlasInlineMath{N^*}: Optimal worst-case oracle complexity satisfying the complete guarantee \textbf{Domain:} \AtlasInlineMath{N^*\in[0,+\infty]}.
+
+Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.
+
+\AtlasInlineMath{R_{\mathrm{hard}}}: Localization radius chosen by the lower-bound proof \textbf{Domain:} \AtlasInlineMath{R_{\mathrm{hard}}>0}.
+
+It ensures that the hard subclass meets the known initial-gap bound without providing additional algorithmic information. Its choice is stated separately for each bound.
+
+\AtlasInlineMath{x_0}: Public initial point \textbf{Domain:} \AtlasInlineMath{x_0\in\mathbb{R}^d}.
+
+Belongs to the feasible domain required by the model.
+
+\AtlasInlineMath{\nu}: Curvature slack in the statistical hard construction \textbf{Domain:} \AtlasInlineMath{\nu>0}.
+
+\AtlasInlineMath{\nu=\min\{\mu,(\beta-\mu)/2\}}
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one paid scalar function value
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q2 - target accuracy cost}
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one paid scalar function value
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsection{R1 - Parameter regime N09.R1}
+\textbf{Region.} Fix \AtlasInlineMath{\beta,\mu,\sigma_v,\Delta>0} and require \AtlasInlineMath{0<\mu<\beta}. Also fix \AtlasInlineMath{\alpha>2} and \AtlasInlineMath{H_\alpha>0}, with \AtlasInlineMath{d\ge2}. Set \AtlasInlineMath{\nu=\min\{\mu,(\beta-\mu)/2\}} and require \AtlasInlineMath{0<\varepsilon\le c_\alpha\min\{2\mu\Delta/\beta,\nu^{2(\alpha-1)/(\alpha-2)}\mu^{-1}H_\alpha^{-2/(\alpha-2)}\}}; \AtlasInlineMath{c_\alpha>0} depends only on the fixed order.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} one paid scalar function value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{\Omega_{\alpha,\beta,\mu,\Delta,\sigma_v,H_\alpha}(d^2\varepsilon^{-\alpha/(\alpha-1)})}
+\textbf{Upper bound.} B1
+
+\AtlasMath{O_{\alpha,\beta,\mu,\Delta,\sigma_v,H_\alpha}(d^2\varepsilon^{-\alpha/(\alpha-1)})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O_{\alpha,\beta,\mu,\sigma_v,\Delta,H_\alpha}(1)}
+
+\needspace{4\baselineskip}\subsection{R2 - Parameter regime N09.R\_zero}
+\textbf{Region.} \AtlasInlineMath{\varepsilon\ge\Delta}.
+
+\textbf{Quantity.} Q2
+
+\textbf{Resource.} one paid scalar function value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B4
+
+\AtlasMath{0}
+\textbf{Upper bound.} B3
+
+\AtlasMath{0}
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} Scalar observations follow the independent-noise, conditional-noise, or mixed-error law specified here; every repeated observation is charged separately.
+
+\textbf{Guarantee mapping.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Output mapping.} The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+\textbf{Resource mapping.} Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
+
+\needspace{4\baselineskip}\subsection{B1 - High-order kernel finite differences and PL descent}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{O_{\alpha,\beta,\mu,\Delta,H_\alpha,\sigma_v}(d^2\varepsilon^{-\alpha/(\alpha-1)})}
+\textbf{Sources.} \href{https://jmlr.org/papers/volume25/23-0733/23-0733.pdf}{[1]}
+
+\textbf{Conditions.} Fix \AtlasInlineMath{\beta,\mu,\sigma_v,\Delta>0} and require \AtlasInlineMath{0<\mu<\beta}. Also fix \AtlasInlineMath{\alpha>2} and \AtlasInlineMath{H_\alpha>0}, with \AtlasInlineMath{d\ge2}. Set \AtlasInlineMath{\nu=\min\{\mu,(\beta-\mu)/2\}} and require \AtlasInlineMath{0<\varepsilon\le c_\alpha\min\{2\mu\Delta/\beta,\nu^{2(\alpha-1)/(\alpha-2)}\mu^{-1}H_\alpha^{-2/(\alpha-2)}\}}; \AtlasInlineMath{c_\alpha>0} depends only on the fixed order.
+
+\textbf{Source location.} \href{https://jmlr.org/papers/volume25/23-0733/23-0733.pdf}{[1]} theorem: Corollary 16, p. 18; pdf pages: 6
+
+\textbf{Source location.} \href{https://jmlr.org/papers/volume25/23-0733/23-0733.pdf}{[1]} theorem: Corollary 16, p. 18; pdf pages: 18
+
+\needspace{4\baselineskip}\subsection{B2 - Inclusion reduction from strongly convex hard instances to the PL class}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega_{\alpha,\beta,\mu,\Delta,H_\alpha,\sigma_v}(d^2\varepsilon^{-\alpha/(\alpha-1)})}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v30/Shamir13.html}{[4]} \href{https://arxiv.org/pdf/2610.05517v2}{[3]} \href{https://arxiv.org/html/2610.00276v2}{[2]}
+
+\textbf{Conditions.} Fix \AtlasInlineMath{\beta,\mu,\sigma_v,\Delta>0} and require \AtlasInlineMath{0<\mu<\beta}. Also fix \AtlasInlineMath{\alpha>2} and \AtlasInlineMath{H_\alpha>0}, with \AtlasInlineMath{d\ge2}. Set \AtlasInlineMath{\nu=\min\{\mu,(\beta-\mu)/2\}} and require \AtlasInlineMath{0<\varepsilon\le c_\alpha\min\{2\mu\Delta/\beta,\nu^{2(\alpha-1)/(\alpha-2)}\mu^{-1}H_\alpha^{-2/(\alpha-2)}\}}; \AtlasInlineMath{c_\alpha>0} depends only on the fixed order. The hard construction chooses \AtlasInlineMath{R_{\mathrm{hard}}\le\sqrt{2\Delta/\beta}}; this proof radius is not an additional public input.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v30/Shamir13.html}{[4]} theorem: alpha=2: S13 Theorem 7 and general-curvature scaling; alpha>2: L26 Theorem 1(b) / HSC26 Theorem 3.2, restricted to a strongly convex subclass satisfying the public initial-gap bound.; pdf pages: 10
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2610.05517v2}{[3]} theorem: alpha=2: S13 Theorem 7 and general-curvature scaling; alpha>2: L26 Theorem 1(b) / HSC26 Theorem 3.2, restricted to a strongly convex subclass satisfying the public initial-gap bound.; pdf pages: 3
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00276v2}{[2]} theorem: Strongly convex subclass: A24 for \AtlasInlineMath{\alpha=2} and HSC26 for \AtlasInlineMath{\alpha>2}
+
+\needspace{4\baselineskip}\subsection{B3 - Return the public initial point}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge \Delta}.
+
+\textbf{Local argument.} A1
+
+\needspace{4\baselineskip}\subsection{B4 - Nonnegative oracle cost}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge \Delta}.
+
+\textbf{Local argument.} A1
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Zero-query certificates}
+\textbf{Scope.} The stated sufficient accuracy regions only; no assertion that every certificate is sharp.
+
+A public feasible point whose objective gap is at most \AtlasInlineMath{G_0} solves every target \AtlasInlineMath{\varepsilon\ge G_0} with exactly zero calls.
+
+For a convex mean objective that is \AtlasInlineMath{L}-Lipschitz on a ball of radius \AtlasInlineMath{R}, the center has gap at most \AtlasInlineMath{LR}. A sample Lipschitz modulus \AtlasInlineMath{G} with \AtlasInlineMath{\mathbb E G^r\le L^r}, \AtlasInlineMath{r>1}, implies \AtlasInlineMath{\mathbb E G\le L}, so the same certificate applies to moment models. Integrability at one point ensures that the mean is defined.
+
+If a globally \AtlasInlineMath{\beta}-smooth objective has a global minimizer within distance \AtlasInlineMath{R} of the public initial point, its gradient vanishes at that minimizer and the smoothness inequality gives gap at most \AtlasInlineMath{\beta R^2/2}. In a declared norm, use the corresponding radius in that norm. For \AtlasInlineMath{B_p(R)} with Euclidean regularity this radius is \AtlasInlineMath{R} when \AtlasInlineMath{p\le2} and \AtlasInlineMath{R d^{1/2-1/p}} when \AtlasInlineMath{p\ge2}.
+
+For a known positive semidefinite quadratic matrix \AtlasInlineMath{A}, the center has gap at most \AtlasInlineMath{\lambda_{\max}(A)R^2/2}; if \AtlasInlineMath{A=0}, the loss is identically zero. A public initial-gap promise \AtlasInlineMath{\Delta} directly gives the certificate \AtlasInlineMath{G_0=\Delta}. For the Markov potential \AtlasInlineMath{r_0}, its companion initial iterate has gap at most \AtlasInlineMath{\mu r_0}. These are different certificates with different model assumptions; in particular, an unknown matrix with no public spectral bound does not acquire a uniform certificate.
+
+Call counts are nonnegative. Together with the stated algorithm, this proves exact zero complexity on each certified region. The upper/lower ratio is undefined, so it is stored as null rather than as \AtlasInlineMath{0/0}.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{7\baselineskip}\section{References}
+[1] Akhavan, Chzhen, Pontil and Tsybakov. Gradient-free optimization of highly smooth functions: improved analysis and a new algorithm. JMLR 25(370):1--50, 2024.
+
+\url{https://jmlr.org/papers/volume25/23-0733/23-0733.pdf}
+
+[2] Haihan Zhang et al.. Sharp Minimax Rates for Highly Smooth Strongly Convex Zeroth-Order Optimization. arXiv:2610.00276v2, 2026-10-19.
+
+\url{https://arxiv.org/html/2610.00276v2}
+
+[3] Loginov, Dvinskikh, Tupitsa, Osmanov, Dorn and Gasnikov. Minimax Oracle Call Complexity, Rounds and Admissible Noise in Zeroth-Order Optimization of Highly Smooth Functions. arXiv:2610.05517v2, 2026-10-14.
+
+\url{https://arxiv.org/pdf/2610.05517v2}
+
+[4] Ohad Shamir. On the Complexity of Bandit and Derivative-Free Stochastic Convex Optimization. COLT 2013, PMLR 30.
+
+\url{https://proceedings.mlr.press/v30/Shamir13.html}
+
+\end{document}

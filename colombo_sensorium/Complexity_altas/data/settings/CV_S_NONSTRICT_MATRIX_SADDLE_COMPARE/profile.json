@@ -1,0 +1,779 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE",
+  "primary_domain": "saddle_point",
+  "oracle_order_collection": null,
+  "title": "Non-strict matrix saddlepoint search with binary comparisons",
+  "summary": "Find any pure saddlepoint of a hidden square matrix, or determine that it does not exist.",
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "saddle_point"
+      ],
+      "formulation_code": "nonstrict_matrix_saddlepoint_search",
+      "formulation": "A_{ij}\\ge A_{ik}\\ \\forall k,\\qquad A_{ij}\\le A_{\\ell j}\\ \\forall\\ell",
+      "formulation_latex": "A_{ij}\\ge A_{ik}\\ \\forall k,\\qquad A_{ij}\\le A_{\\ell j}\\ \\forall\\ell",
+      "solution_goal": "find_nonstrict_saddlepoint_or_absence",
+      "protocol_ref": null,
+      "description_paragraphs": [
+        "Find an entry attaining its row maximum and column minimum. If no such entry exists, report absence. Ties are permitted. Return any qualifying index when there are several."
+      ]
+    },
+    "model": {
+      "instance": "An arbitrary fixed hidden matrix $A\\in\\mathbb R^{n\\times n}$.",
+      "assumptions": [
+        {
+          "subject_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__obj_A",
+          "property_code": "arbitrary_real_matrix",
+          "variable_blocks": [],
+          "norm_ref": null,
+          "parameter_refs": [
+            "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n"
+          ],
+          "scope": "Whole fixed matrix",
+          "description": "Entries may tie and existence is unrestricted."
+        }
+      ],
+      "parameter_domain_description": "Public integer $n\\ge1$.",
+      "description_paragraphs": [
+        "Fix $A\\in\\mathbb R^{n\\times n}$. Entries may repeat. A non-strict saddlepoint may be absent or nonunique."
+      ]
+    },
+    "oracle": {
+      "public_inputs": [
+        "n"
+      ],
+      "hidden_objects": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__obj_A"
+      ],
+      "auxiliary_interfaces": [],
+      "protocol_ref": null,
+      "query_domain_description": "Two entry indices in the same fixed matrix.",
+      "operations": [
+        {
+          "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__ora_compare",
+          "operation_code": "binary_matrix_entry_comparison",
+          "target_object": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__obj_A",
+          "variable_blocks": [],
+          "query_signature": "$((i,j),(\\ell,k))\\in([n]\\times[n])^2$",
+          "response_signature": "$\\mathbf{1}\\{A_{ij}<A_{\\ell k}\\}$",
+          "derivative_order": "not_applicable",
+          "order_convention": "Reversing the indices permits equality to be detected with two calls.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "One exact binary comparison result."
+          },
+          "domain_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__dom_cells",
+          "coupling": "Every query concerns the same fixed hidden matrix.",
+          "index_control": "The algorithm selects the ordered pair of indices.",
+          "access_schedule": "Sequential adaptive comparisons are permitted.",
+          "cost_rule_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__res_compare"
+        }
+      ],
+      "description_paragraphs": [
+        "Choose any ordered pair of matrix cells and receive the exact bit $\\mathbf{1}\\{A_{ij}<A_{\\ell k}\\}$. Equality can be identified with a second query in the reverse direction.",
+        "The interface reveals only the comparison bits."
+      ]
+    },
+    "output": {
+      "object_type": "matrix_index_or_absence",
+      "feasibility": "One index pair or the absence symbol.",
+      "certificate_requirement": "No additional output certificate is required.",
+      "description_paragraphs": [
+        "Return any $(i,j)\\in[n]\\times[n]$ satisfying both inequalities, or $\\bot$ exactly when no such entry exists."
+      ]
+    },
+    "metric": {
+      "criterion": "exact_saddlepoint_identification",
+      "base_expression": "\\mathbf{1}\\{\\widehat s\\notin S(A)\\}",
+      "description_paragraphs": [
+        "Let $S(A)$ be the set of acceptable outputs: all saddlepoint indices, or $\\{\\bot\\}$ if the matrix has none. The identification error is $\\mathbf{1}\\{\\widehat s\\notin S(A)\\}$."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "oracle_calls",
+          "unit": "comparison",
+          "description": "One binary comparison request."
+        }
+      ],
+      "cost_rules": [
+        {
+          "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__res_compare",
+          "operation_refs": [
+            "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__ora_compare"
+          ],
+          "cost": {
+            "oracle_calls": 1
+          }
+        }
+      ],
+      "budget_semantics": "Worst-instance expected comparison cost at fixed success probability.",
+      "scalarization": "Compare the number of charged comparisons.",
+      "setup_cost": "Public dimension access is uncharged.",
+      "description_paragraphs": [
+        "Each ordered binary comparison costs one unit. For each fixed matrix take the expectation over private randomness, then take the supremum over matrices. The cost includes all comparisons made."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "randomized_expected_comparisons",
+      "label": "Randomized fixed confidence and expected comparisons",
+      "algorithms": {
+        "randomization": "Private randomness is allowed.",
+        "adaptivity": "Fully adaptive comparisons.",
+        "restrictions": [],
+        "description_paragraphs": [
+          "Any adaptive comparison strategy with a private seed independent of the matrix is admissible."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "success_5_6",
+          "complete_expression": "\\Pr(\\widehat s\\in S(A))\\ge5/6\\quad\\forall A",
+          "randomness_sources": [
+            "Private random seed"
+          ],
+          "confidence_parameters": [
+            "Fixed success probability 5/6"
+          ],
+          "description_paragraphs": [
+            "For every fixed admissible matrix $A$, the algorithm returns a correct index or absence verdict with probability at least $5/6$ over its own randomness."
+          ]
+        }
+      ],
+      "budget": {
+        "description": "Worst-instance expected comparison count."
+      },
+      "specification_overrides": {}
+    }
+  ],
+  "parameters": [
+    {
+      "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n",
+      "symbol": "n",
+      "meaning": "Number of rows and columns",
+      "kind": "independent",
+      "domain": "$\\mathbb N_{\\ge1}$",
+      "public": true,
+      "definition": "The public side length of the square matrix.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "n",
+      "meaning": "Number of rows and columns",
+      "domain": "$\\mathbb N_{\\ge1}$",
+      "definition": "The public side length of the square matrix.",
+      "parameter_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n"
+    },
+    {
+      "symbol_latex": "A",
+      "meaning": "Fixed hidden real matrix",
+      "domain": "$\\mathbb R^{n\\times n}$",
+      "definition": "The algorithm only accesses comparisons between its entries.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Number of charged binary comparisons",
+      "domain": "$\\mathbb N_{\\ge0}$",
+      "definition": "One comparison request costs one unit, regardless of the chosen pair.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\bot",
+      "meaning": "No saddlepoint exists",
+      "domain": "Output symbol",
+      "definition": "The correct output if no saddlepoint exists.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "kind": "target_accuracy_cost",
+      "view_id": "randomized_expected_comparisons",
+      "guarantee_id": "success_5_6",
+      "optimization_direction": "minimize",
+      "units": "comparisons",
+      "tracked_parameters": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n"
+      ],
+      "fixed_parameters": [],
+      "label": "Minimum worst-instance expected comparisons at fixed confidence",
+      "expression_latex": "N^\\star(n)=\\inf_{\\mathcal A:\\,\\forall A\\ \\Pr(\\widehat s\\in S(A))\\ge5/6}\\ \\sup_A\\mathbb E[N_{\\mathcal A}(A)]",
+      "analysis_scope": "All adaptive randomized comparison algorithms on the full square-matrix instance class."
+    }
+  ],
+  "resource_projections": [
+    {
+      "resource_projection_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__projection",
+      "expression": "\\sup_A\\mathbb E N",
+      "description": "Worst-instance expected number of charged binary comparisons.",
+      "mode": "multiplicative_rate"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_general",
+      "specification_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE",
+      "name": "At least two rows and columns",
+      "predicate": {
+        "cmp": {
+          "left": {
+            "parameter": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n"
+          },
+          "op": "ge",
+          "right": 2
+        }
+      },
+      "predicate_text": "$n\\ge2$",
+      "parameter_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n"
+      ],
+      "kind": "theorem_window"
+    },
+    {
+      "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_single",
+      "specification_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE",
+      "name": "One cell",
+      "predicate": {
+        "cmp": {
+          "left": {
+            "parameter": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n"
+          },
+          "op": "eq",
+          "right": 1
+        }
+      },
+      "predicate_text": "$n=1$",
+      "parameter_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n"
+      ],
+      "kind": "theorem_window"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_general_upper",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "view_id": "randomized_expected_comparisons",
+      "guarantee_id": "success_5_6",
+      "quantity_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "formula_latex": "O(n^2)",
+      "method": "Row and column scan",
+      "algorithm_or_hard_family": "Row and column scan",
+      "claim_semantics": "numerical_inequality",
+      "region_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_general"
+      ],
+      "source_refs": [],
+      "evidence_refs": [],
+      "proof_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__proof_lower"
+      ],
+      "resource_costs": {
+        "oracle_calls": "O(n^2)"
+      },
+      "eligible_for_bracket": true,
+      "included_in_bracket": true,
+      "selected_in_regimes": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__c_general"
+      ],
+      "applicability": {
+        "conditions": [
+          "$n\\ge2$"
+        ],
+        "oracle_mapping": "Exact ordered binary comparisons.",
+        "guarantee_mapping": "Success probability at least 5/6 on every fixed matrix.",
+        "resource_mapping": "Worst-instance expected comparisons."
+      },
+      "witness_type": "deterministic",
+      "evidence_role": "algorithmic_witness"
+    },
+    {
+      "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_general_lower",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "view_id": "randomized_expected_comparisons",
+      "guarantee_id": "success_5_6",
+      "quantity_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "formula_latex": "\\Omega(n^2)",
+      "method": "Randomized entry-query lower bound",
+      "algorithm_or_hard_family": "Dallant et al. hard distribution",
+      "claim_semantics": "numerical_inequality",
+      "region_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_general"
+      ],
+      "source_refs": [
+        "SP_DALLANT_ESA_2024"
+      ],
+      "evidence_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__e_lower"
+      ],
+      "proof_refs": [],
+      "resource_costs": {
+        "oracle_calls": "\\Omega(n^2)"
+      },
+      "eligible_for_bracket": true,
+      "included_in_bracket": true,
+      "selected_in_regimes": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__c_general"
+      ],
+      "applicability": {
+        "conditions": [
+          "$n\\ge2$"
+        ],
+        "oracle_mapping": "Exact ordered binary comparisons.",
+        "guarantee_mapping": "Success probability at least 5/6 on every fixed matrix.",
+        "resource_mapping": "Worst-instance expected comparisons."
+      },
+      "lower_scope_type": "all_admissible_algorithms",
+      "evidence_role": "all_algorithm_necessity",
+      "lower_algorithm_scope": "All admissible adaptive randomized comparison algorithms.",
+      "derivation": "Given a comparison algorithm for the coordinate-or-absence output, simulate each comparison by reading at most two values. On a coordinate output, use at most one additional read to recover the alleged saddlepoint value. A correct output gives the correct decision and value. Therefore the randomized entry-read lower bound in Theorem 15 at success probability 5/6 also bounds worst-instance expected comparison cost up to a constant factor and one read."
+    },
+    {
+      "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_single_upper",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "view_id": "randomized_expected_comparisons",
+      "guarantee_id": "success_5_6",
+      "quantity_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "formula_latex": "0",
+      "method": "One-cell regime",
+      "algorithm_or_hard_family": "One-cell regime",
+      "claim_semantics": "numerical_inequality",
+      "region_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_single"
+      ],
+      "source_refs": [],
+      "evidence_refs": [],
+      "proof_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__proof_trivial"
+      ],
+      "resource_costs": {
+        "oracle_calls": "0"
+      },
+      "eligible_for_bracket": true,
+      "included_in_bracket": true,
+      "selected_in_regimes": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__c_single"
+      ],
+      "applicability": {
+        "conditions": [
+          "$n=1$"
+        ],
+        "oracle_mapping": "Exact ordered binary comparisons.",
+        "guarantee_mapping": "Success probability at least 5/6 on every fixed matrix.",
+        "resource_mapping": "Worst-instance expected comparisons."
+      },
+      "witness_type": "deterministic",
+      "evidence_role": "algorithmic_witness"
+    },
+    {
+      "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_single_lower",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "view_id": "randomized_expected_comparisons",
+      "guarantee_id": "success_5_6",
+      "quantity_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "formula_latex": "0",
+      "method": "One-cell regime",
+      "algorithm_or_hard_family": "One-cell regime",
+      "claim_semantics": "numerical_inequality",
+      "region_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_single"
+      ],
+      "source_refs": [],
+      "evidence_refs": [],
+      "proof_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__proof_trivial"
+      ],
+      "resource_costs": {
+        "oracle_calls": "0"
+      },
+      "eligible_for_bracket": true,
+      "included_in_bracket": true,
+      "selected_in_regimes": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__c_single"
+      ],
+      "applicability": {
+        "conditions": [
+          "$n=1$"
+        ],
+        "oracle_mapping": "Exact ordered binary comparisons.",
+        "guarantee_mapping": "Success probability at least 5/6 on every fixed matrix.",
+        "resource_mapping": "Worst-instance expected comparisons."
+      },
+      "lower_scope_type": "all_admissible_algorithms",
+      "evidence_role": "all_algorithm_necessity",
+      "lower_algorithm_scope": "All admissible adaptive randomized comparison algorithms."
+    }
+  ],
+  "comparisons": [
+    {
+      "comparison_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__c_general",
+      "comparison_key": {
+        "setting_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE",
+        "view_id": "randomized_expected_comparisons",
+        "guarantee_id": "success_5_6",
+        "quantity_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__quantity",
+        "resource_projection_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__projection",
+        "regime_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_general"
+      },
+      "label": "At least two rows and columns",
+      "view_id": "randomized_expected_comparisons",
+      "guarantee_id": "success_5_6",
+      "quantity_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "resource_projection_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__projection",
+      "regime_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_general",
+      "source_region_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_general",
+      "predicate": {
+        "cmp": {
+          "left": {
+            "parameter": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n"
+          },
+          "op": "ge",
+          "right": 2
+        }
+      },
+      "predicate_text": "$n\\ge2$",
+      "parameter_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n"
+      ],
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "upper_refs": [
+          "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_general_upper"
+        ],
+        "lower_refs": [
+          "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_general_lower"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "comparison_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__c_general",
+        "quantity_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__quantity",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "\\sup_A\\mathbb E N",
+        "resource_projection_description": "Worst-instance expected number of charged binary comparisons.",
+        "ratio_or_gap": "$\\Theta(n^2)$",
+        "envelopes": {
+          "upper": {
+            "expression": "O(n^2)",
+            "expression_latex": "O(n^2)",
+            "claim_refs": [
+              "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_general_upper"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "\\Omega(n^2)",
+            "expression_latex": "\\Omega(n^2)",
+            "claim_refs": [
+              "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_general_lower"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_general_upper",
+            "when_region_refs": [
+              "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_general"
+            ],
+            "meaning": "At least two rows and columns"
+          }
+        ],
+        "claim_guards": {
+          "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_general_upper": [
+            {
+              "region_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_general",
+              "predicate_text": "$n\\ge2$"
+            }
+          ],
+          "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_general_lower": [
+            {
+              "region_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_general",
+              "predicate_text": "$n\\ge2$"
+            }
+          ]
+        },
+        "envelope_certificate": "Matching bounds throughout the stated matrix-shape regime."
+      }
+    },
+    {
+      "comparison_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__c_single",
+      "comparison_key": {
+        "setting_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE",
+        "view_id": "randomized_expected_comparisons",
+        "guarantee_id": "success_5_6",
+        "quantity_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__quantity",
+        "resource_projection_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__projection",
+        "regime_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_single"
+      },
+      "label": "One cell",
+      "view_id": "randomized_expected_comparisons",
+      "guarantee_id": "success_5_6",
+      "quantity_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "resource_projection_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__projection",
+      "regime_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_single",
+      "source_region_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_single",
+      "predicate": {
+        "cmp": {
+          "left": {
+            "parameter": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n"
+          },
+          "op": "eq",
+          "right": 1
+        }
+      },
+      "predicate_text": "$n=1$",
+      "parameter_refs": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__p_n"
+      ],
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "upper_refs": [
+          "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_single_upper"
+        ],
+        "lower_refs": [
+          "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_single_lower"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "comparison_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__c_single",
+        "quantity_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__quantity",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "\\sup_A\\mathbb E N",
+        "resource_projection_description": "Worst-instance expected number of charged binary comparisons.",
+        "ratio_or_gap": "$0$",
+        "envelopes": {
+          "upper": {
+            "expression": "0",
+            "expression_latex": "0",
+            "claim_refs": [
+              "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_single_upper"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "0",
+            "expression_latex": "0",
+            "claim_refs": [
+              "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_single_lower"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_single_upper",
+            "when_region_refs": [
+              "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_single"
+            ],
+            "meaning": "One cell"
+          }
+        ],
+        "claim_guards": {
+          "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_single_upper": [
+            {
+              "region_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_single",
+              "predicate_text": "$n=1$"
+            }
+          ],
+          "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__b_single_lower": [
+            {
+              "region_ref": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__r_single",
+              "predicate_text": "$n=1$"
+            }
+          ]
+        },
+        "envelope_certificate": "Matching bounds throughout the stated matrix-shape regime."
+      }
+    }
+  ],
+  "bracket_rows": [
+    {
+      "row_id": "row_general",
+      "comparison_ids": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__c_general"
+      ],
+      "view_ids": [
+        "randomized_expected_comparisons"
+      ]
+    },
+    {
+      "row_id": "row_single",
+      "comparison_ids": [
+        "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__c_single"
+      ],
+      "view_ids": [
+        "randomized_expected_comparisons"
+      ]
+    }
+  ],
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "comparison_count": 2,
+    "status_counts": {
+      "optimal": 2
+    },
+    "missing_sides": [],
+    "gap_classes": [],
+    "gap_details": [],
+    "special_statuses": []
+  },
+  "proofs": [
+    {
+      "proof_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__proof_lower",
+      "title": "Row and column scan",
+      "body": [
+        "Find one maximum index in each row and one minimum index in each column using linear scans. For every cell, use comparisons in both directions to test equality with its row maximum and column minimum. Return the first cell satisfying both tests, or report absence if no cell does."
+      ],
+      "scope": "Every square matrix, including ties",
+      "algorithm_scope": "Deterministic witness"
+    },
+    {
+      "proof_id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__proof_trivial",
+      "title": "One-cell regime",
+      "body": [
+        "The only entry is both a row maximum and a column minimum. Output (1,1) immediately."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__e_lower",
+      "source_ref": "SP_DALLANT_ESA_2024",
+      "locator": {
+        "theorem": "Theorems 2 and 15",
+        "pdf_pages": [
+          2,
+          10,
+          11
+        ]
+      },
+      "supports": "Given a comparison algorithm for the coordinate-or-absence output, simulate each comparison by reading at most two values. On a coordinate output, use at most one additional read to recover the alleged saddlepoint value. A correct output gives the correct decision and value. Therefore the randomized entry-read lower bound in Theorem 15 at success probability 5/6 also bounds worst-instance expected comparison cost up to a constant factor and one read.",
+      "statement_summary": [
+        "Given a comparison algorithm for the coordinate-or-absence output, simulate each comparison by reading at most two values. On a coordinate output, use at most one additional read to recover the alleged saddlepoint value. A correct output gives the correct decision and value. Therefore the randomized entry-read lower bound in Theorem 15 at success probability 5/6 also bounds worst-instance expected comparison cost up to a constant factor and one read."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "SP_DALLANT_ESA_2024",
+      "title": "An Optimal Randomized Algorithm for Finding the Saddlepoint",
+      "authors": [
+        "Justin Dallant",
+        "Frederik Haagensen",
+        "Riko Jacob",
+        "László Kozma",
+        "Sebastian Wild"
+      ],
+      "year": 2024,
+      "url": "https://doi.org/10.4230/LIPIcs.ESA.2024.44",
+      "venue": "ESA 2024",
+      "doi": "10.4230/LIPIcs.ESA.2024.44",
+      "publication_status": "published"
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__obj_A",
+        "definition": "Fixed hidden real matrix $A$.",
+        "type": "matrix",
+        "depends_on": []
+      }
+    ],
+    "variable_blocks": [],
+    "domains": [
+      {
+        "id": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__dom_cells",
+        "definition": "$[n]\\times[n]$",
+        "roles": [
+          "comparison_indices",
+          "output_indices"
+        ]
+      }
+    ],
+    "norms": [],
+    "protocols": [],
+    "comparators": []
+  },
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "saddle_point"
+    },
+    {
+      "facet": "goal",
+      "value": "exact_saddlepoint_identification"
+    },
+    {
+      "facet": "structure",
+      "value": "arbitrary_real_matrix"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_comparison"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_adaptive"
+    },
+    {
+      "facet": "guarantee",
+      "value": "fixed_probability"
+    },
+    {
+      "facet": "resource",
+      "value": "oracle_calls"
+    }
+  ],
+  "relations": [
+    {
+      "target_setting_id": "CV_S_SIMPLEX_MATRIX_GAME",
+      "relation": "different_protocol",
+      "notes": "The neighboring setting outputs approximate mixed strategies under two-sided matrix-vector products."
+    },
+    {
+      "target_setting_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE",
+      "relation": "different_solution_requirement",
+      "notes": "The strict output requires strict row and column inequalities. Here ties may qualify, and the admissible output set can contain several indices."
+    }
+  ],
+  "aliases": [],
+  "provenance": {
+    "source_schema_version": "6.1.0",
+    "source_snapshot": "scout-census-2024-2026",
+    "source_order": 421,
+    "source_json_sha256": "cb5d13b710eaee42db83f50aca19b9738d21afbdd72141bda001661f19ae931a",
+    "transformations": [
+      "source_backed_new_profile",
+      "binary_comparison_model_normalization"
+    ]
+  }
+}

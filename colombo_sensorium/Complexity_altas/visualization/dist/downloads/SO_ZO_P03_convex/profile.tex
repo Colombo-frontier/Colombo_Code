@@ -1,0 +1,439 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Convex optimization with heavy-tailed samples: at most two values per sample\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}ZO\_\allowbreak{}P03\_\allowbreak{}convex}
+
+Single-objective optimization
+
+Minimize \AtlasInlineMath{f} globally over \AtlasInlineMath{B_2(0,R)} and return a point with small objective gap.
+
+\textbf{Status.} Polynomial gap present
+
+\textbf{TASK tags.} formulation: Global minimization; solution concept: Global minimization; task family: Single objective
+
+\textbf{MODEL tags.} convexity: Convex; stochastic model: Sample function lipschitz r moment; structure: Expectation of sample functions
+
+\textbf{ORACLE tags.} access order: Zeroth-order interface; interface family: Same sample paired value; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required
+
+\textbf{METRIC tags.} criterion: Objective gap
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; mode: Expectation
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Minimize \AtlasInlineMath{f} globally over \AtlasInlineMath{B_2(0,R)} and return a point with small objective gap.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+Each sample function \AtlasInlineMath{F(\cdot;Z)} is convex on \AtlasInlineMath{B_2(0,2R)} and satisfies \AtlasInlineMath{\mathbb{E}|F(0;Z)|<\infty}, so \AtlasInlineMath{f(x)=\mathbb{E}[F(x;Z)]} is well defined. The optimization domain is \AtlasInlineMath{B_2(0,R)}.
+
+The sample Lipschitz coefficient \AtlasInlineMath{G(Z)} satisfies \AtlasInlineMath{|F(x;Z)-F(y;Z)|\le G(Z)\|x-y\|_2} and \AtlasInlineMath{\mathbb{E}[G(Z)^r]\le L^r}, with moment exponent \AtlasInlineMath{1<r\le2}.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+A new sample handle corresponds to an independent draw of the hidden sample \AtlasInlineMath{Z}. Given its handle and \AtlasInlineMath{x\in B_2(0,2R)}, the interface returns the exact sample value \AtlasInlineMath{F(x;Z)}. The algorithm observes only handles and numerical values, not the underlying sample data or the complete sample function.
+
+At most two paid evaluations are allowed per handle; the second point may depend on the first response. Distinct handles are independent.
+
+Projection and the stated proximal operations over known geometry are free.
+
+The public inputs are \AtlasInlineMath{d}, \AtlasInlineMath{L}, \AtlasInlineMath{R}, \AtlasInlineMath{r}, \AtlasInlineMath{\varepsilon}, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return \AtlasInlineMath{\widehat{x}\in B_2(0,R)}. The output may be an unqueried point, a random choice among previous points, or an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The base loss is \AtlasInlineMath{\ell(I,x)=f(x)-f_*}, where \AtlasInlineMath{f_*=\inf_{u\in B_2(0,R)}f(u)}. This nonnegative loss is evaluated at the output, with tolerance \AtlasInlineMath{\varepsilon}.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+One scalar sample-function value costs \AtlasInlineMath{1} call; two points with the same sample handle or Markov state cost \AtlasInlineMath{2} calls. Batches, initialization and repeated visits are charged per value. An empty handle supplies no free instance information.
+
+Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.
+
+Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately.
+
+After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. Require \AtlasInlineMath{\mathbb{E}[\ell(I,\widehat{x})]\le \varepsilon}, fixing the instance before averaging over algorithmic and feedback randomness.
+
+Oracle cost uses a deterministic worst-case budget: \AtlasInlineMath{N\le T} on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{d}: Dimension of the variable space \textbf{Domain:} \AtlasInlineMath{d\in\mathbb{N},\ d\ge1}.
+
+\AtlasInlineMath{L}: Moment budget of the sample Lipschitz coefficient \textbf{Domain:} \AtlasInlineMath{L>0}.
+
+\AtlasInlineMath{\mathbb{E}[G(Z)^r]\le L^r}
+
+\AtlasInlineMath{R}: Feasible-ball radius \textbf{Domain:} \AtlasInlineMath{R>0}.
+
+The output must belong to \AtlasInlineMath{B_2(0,R)}; the query radius is specified separately in the interface.
+
+\AtlasInlineMath{r}: Moment exponent of the sample Lipschitz coefficient \textbf{Domain:} \AtlasInlineMath{1<r\le2}.
+
+\AtlasInlineMath{\mathbb{E}[G(Z)^r]\le L^r}
+
+\AtlasInlineMath{\varepsilon}: Error target; norm and squared-norm criteria use different thresholds \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{A}: Lipschitz accuracy ratio \textbf{Domain:} \AtlasInlineMath{A>0}.
+
+\AtlasInlineMath{A=LR/\varepsilon}
+
+\AtlasInlineMath{x,y,u}: Function arguments and dummy variables in the formulas \textbf{Domain:} \AtlasInlineMath{x,y,u\in\mathbb{R}^d}; spherical domains are embedded in \AtlasInlineMath{\mathbb{R}^{d+1}}.
+
+Admissible ranges are specified separately by the task, model and oracle in this profile.
+
+\AtlasInlineMath{\widehat{x}}: Final algorithm output \textbf{Domain:} \AtlasInlineMath{B_2(0,R)}.
+
+\AtlasInlineMath{I}: Complete problem instance \textbf{Domain:} \AtlasInlineMath{I\in\mathcal{I}}.
+
+Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.
+
+\AtlasInlineMath{\mathcal{I}}: Admissible instance class determined by the eight specification fields in this profile \textbf{Domain:} Instances satisfying the public parameter bounds.
+
+\AtlasInlineMath{\mathcal{A}}: Algorithm or strategy \textbf{Domain:} Measurable adaptive strategies allowed in this profile.
+
+The algorithm is selected before the hidden instance.
+
+\AtlasInlineMath{\ell}: Base loss or residual \textbf{Domain:} \AtlasInlineMath{\ell:\mathcal{I}\times\mathcal{X}_{\mathrm{out}}\to[0,+\infty]}.
+
+The exact formula appears in this profile's performance-criterion section.
+
+\AtlasInlineMath{\mathbb{E},\Pr}: Expectation and probability \textbf{Domain:} Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee.
+
+Fix the instance first; aggregate cost and error separately.
+
+\AtlasInlineMath{\inf,\sup}: Infimum and supremum \textbf{Domain:} Evaluated only over the variable sets explicitly specified in the formula.
+
+In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.
+
+\AtlasInlineMath{\|\cdot\|_2,\langle\cdot,\cdot\rangle}: Euclidean norm and inner product \textbf{Domain:} \AtlasInlineMath{\|x\|_2=\sqrt{\langle x,x\rangle}}.
+
+\AtlasInlineMath{\langle x,y\rangle=x^\top y}
+
+\AtlasInlineMath{B_p(c,R)}: Closed norm ball \textbf{Domain:} \AtlasInlineMath{p\in[1,\infty],\ R\ge0}.
+
+\AtlasInlineMath{B_p(c,R)=\{x:\|x-c\|_p\le R\}}; \AtlasInlineMath{B_2} denotes the Euclidean ball.
+
+\AtlasInlineMath{N,T}: Actual call count and declared budget \textbf{Domain:} \AtlasInlineMath{N,T\in\mathbb{N}_0}.
+
+A fixed budget bounds every execution path; the Markov specification uses an expected budget.
+
+\AtlasInlineMath{O,\Omega,\Theta,\widetilde{O}}: Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms \textbf{Domain:} Within the joint parameter window specified for each complexity regime.
+
+Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.
+
+\AtlasInlineMath{c,C,c_\alpha,C_\alpha}: Positive constant in a proof or asymptotic bound \textbf{Domain:} \AtlasInlineMath{0<c,C,c_\alpha,C_\alpha<\infty}.
+
+Unsubscripted constants have the dependencies stated in the bound; constants subscripted by \AtlasInlineMath{\alpha} may depend only on the fixed smoothness order.
+
+\AtlasInlineMath{\log,\log_+,e}: Natural logarithm, truncated logarithm, and Euler's number \textbf{Domain:} \AtlasInlineMath{z>0}.
+
+\AtlasInlineMath{\log_+(z)=\max\{0,\log z\}}; \AtlasInlineMath{e=\exp(1)}, and \AtlasInlineMath{\log_2} denotes the base-two logarithm.
+
+\AtlasInlineMath{f,f_*}: Population objective and its optimal value \textbf{Domain:} \AtlasInlineMath{f:\mathcal{X}_{\mathrm{fun}}\to\mathbb{R}}.
+
+\AtlasInlineMath{f_*=\inf_{x\in B_2(0,R)}f(x)}.
+
+\AtlasInlineMath{Z,F(\cdot;Z)}: Hidden sample and its associated sample function \textbf{Domain:} Samples lie in an admissible probability space; each sample function is real-valued on the declared domain.
+
+The population objective is the expectation under the sample distribution or stationary distribution.
+
+\AtlasInlineMath{G(Z)}: Random sample Lipschitz coefficient \textbf{Domain:} \AtlasInlineMath{G(Z)\ge0}.
+
+The model's difference inequality holds for each sample, with the moment budget fixed as specified here.
+
+\AtlasInlineMath{\mathcal{X}_{\mathrm{fun}},\mathcal{X}_{\mathrm{out}},\mathcal{X}}: Function domain, admissible output domain and optimization domain \textbf{Domain:} Each is the Euclidean space or subset explicitly specified in this profile.
+
+\AtlasInlineMath{\mathcal{X}_{\mathrm{out}}=B_2(0,R)} and \AtlasInlineMath{\mathcal{X}=B_2(0,R)}; the function domain is the region on which the model imposes regularity.
+
+\AtlasInlineMath{N^*}: Optimal worst-case oracle complexity satisfying the complete guarantee \textbf{Domain:} \AtlasInlineMath{N^*\in[0,+\infty]}.
+
+Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one paid scalar function value
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsection{R1 - Parameter regime P03.R1}
+\textbf{Region.} Convex specification, \AtlasInlineMath{r=2}, \AtlasInlineMath{d\ge1}, \AtlasInlineMath{L,R>0} and \AtlasInlineMath{0<\varepsilon\le LR/2^{17}}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} one paid scalar function value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{\Omega(dL^2R^2/\varepsilon^2)}
+\textbf{Upper bound.} B1
+
+\AtlasMath{O(dL^2R^2/\varepsilon^2)}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\needspace{4\baselineskip}\subsection{R2 - Parameter regime P03.R2}
+\textbf{Region.} Convex specification; fixed \AtlasInlineMath{1<r<2}, \AtlasInlineMath{d\ge2}, \AtlasInlineMath{0<\varepsilon\le LR/2^{17}} and \AtlasInlineMath{A=LR/\varepsilon}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} one paid scalar function value
+
+\textbf{Status.} Polynomial gap
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{\Omega_r(\max\{dA^2,A^{r/(r-1)}\})}
+\textbf{Upper bound.} B1
+
+\AtlasMath{O_r(d^{r/[2(r-1)]}A^{r/(r-1)})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O_r(d^{r/[2(r-1)]}A^{r/(r-1)}/\max\{dA^2,A^{r/(r-1)}\})}
+
+\needspace{4\baselineskip}\subsection{R3 - Parameter regime P03.R4}
+\textbf{Region.} Convex specification, \AtlasInlineMath{d=1}; fixed \AtlasInlineMath{1<r<2}, \AtlasInlineMath{L,R>0} and \AtlasInlineMath{0<\varepsilon\le LR/2^{17}}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} one paid scalar function value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{\Omega_r(A^{r/(r-1)})}
+\textbf{Upper bound.} B1
+
+\AtlasMath{O_r(A^{r/(r-1)})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O_r(1)}
+
+\needspace{4\baselineskip}\subsection{R4 - Parameter regime P03.R\_zero}
+\textbf{Region.} \AtlasInlineMath{\varepsilon\ge LR}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} one paid scalar function value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B4
+
+\AtlasMath{0}
+\textbf{Upper bound.} B3
+
+\AtlasMath{0}
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} Preserve sample handles and their reuse limits. Each queried point returns one sample value; sample data and sample gradients are not available for free.
+
+\textbf{Guarantee mapping.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Output mapping.} The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+\textbf{Resource mapping.} Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
+
+\needspace{4\baselineskip}\subsection{B1 - Clipped two-point estimation with projection and restarting}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\mathrm{Convex}:\quad O_r((\sqrt d\,LR/\varepsilon)^{r/(r-1)})}
+\textbf{Sources.} \href{https://jmlr.org/papers/volume18/16-632/16-632.pdf}{[1]}
+
+\textbf{Conditions.} Sample rth moment; \AtlasInlineMath{hL\le c\varepsilon}.
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B2 - Finite-second-moment subclass and a rare-nonzero-sample test}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\mathrm{Convex}:\ \Omega_r\!\left(\max\{d(LR/\varepsilon)^2,(LR/\varepsilon)^{r/(r-1)}\}\right)}
+\textbf{Conditions.} The first term comes from P01; the second from the probability of observing a nonzero sample. The terms are not multiplied.
+
+\textbf{Local argument.} A4, A5
+
+\needspace{4\baselineskip}\subsection{B3 - Return the public initial point}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge LR}.
+
+\textbf{Local argument.} A6
+
+\needspace{4\baselineskip}\subsection{B4 - Nonnegative oracle cost}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge LR}.
+
+\textbf{Local argument.} A6
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Ball smoothing and the same-sample directional moment}
+\textbf{Scope.} A fresh sample each round; the same sample supplies both values; sample Lipschitz modulus \AtlasInlineMath{G} on the stated query neighborhood; \AtlasInlineMath{\mathbb E G^r\le L^r}, \AtlasInlineMath{1<r\le2}.
+
+With ball smoothing \AtlasInlineMath{f_h(x)=\mathbb E_{U\sim\operatorname{Unif}(B_2)}f(x+hU)} and a sphere direction \AtlasInlineMath{u},
+
+\AtlasMath{g_h(x)=\frac d{2h}[F(x+hu;Z)-F(x-hu;Z)]u,\quad\mathbb E g_h=\nabla f_h,\quad\mathbb E\|g_h\|^r\le(\sqrt{2d}L)^r.}
+
+For \AtlasInlineMath{r=2}, the bound is \AtlasInlineMath{2dL^2}.
+
+For each fixed sample, the scalar difference \AtlasInlineMath{a(u)=F(x+hu;Z)-F(x-hu;Z)} is odd on the sphere, hence has mean zero, and has Lipschitz constant at most \AtlasInlineMath{2hG}. Sphere Poincare gives \AtlasInlineMath{\mathbb E_u a(u)^2\le4h^2G^2/(d-1)} for \AtlasInlineMath{d\ge2}. Thus \AtlasInlineMath{\mathbb E_u\|g_h\|^2\le d^2G^2/(d-1)\le2dG^2}; for \AtlasInlineMath{d=1} the difference quotient is directly bounded by \AtlasInlineMath{G}. Apply Jensen only to the direction expectation and then integrate over the sample:
+
+\AtlasMath{\mathbb E_{Z,u}\|g_h\|^r\le\mathbb E_Z(\mathbb E_u\|g_h\|^2)^{r/2}\le(2d)^{r/2}\mathbb E G^r.}
+
+No second moment of \AtlasInlineMath{G} is needed when \AtlasInlineMath{r<2}. The divergence theorem for ball convolution gives the unbiasedness identity. Integrability follows from the Lipschitz difference bound. Convexity gives \AtlasInlineMath{f_h\ge f}, and \AtlasInlineMath{|f_h-f|\le hL}; mean strong convexity is preserved on the region where every translated point satisfies it. All statements hold conditionally on the past when the next sample and direction are fresh. Reusing an old adaptively explored sample does not automatically preserve this conditional moment calculation.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\textbf{Sources.} \href{https://jmlr.org/papers/volume18/16-632/16-632.pdf}{[1]}
+
+\needspace{4\baselineskip}\subsection{A2 - Clipped projected methods with a local \AtlasInlineMath{r}-moment budget}
+\textbf{Scope.} Sample/query domain \AtlasInlineMath{B_2(2R)}; optimization/output domain \AtlasInlineMath{B_2(R)}; fresh paired samples; \AtlasInlineMath{1<r\le2} fixed. Mean strong convexity is sufficient for the strongly convex branch.
+
+Put \AtlasInlineMath{q=(r-1)/r} and \AtlasInlineMath{M=\sqrt{2d}L}. The convex upper is \AtlasInlineMath{O_r((\sqrt d\,LR/\varepsilon)^{1/q})} and the strongly convex upper is \AtlasInlineMath{O_r((dL^2/(\mu\varepsilon))^{1/(2q)})}.
+
+Run the projected algorithm on \AtlasInlineMath{K_h=B_2(R-h)}. Every smoothing translate then lies in \AtlasInlineMath{B_2(R)}, where mean strong convexity is promised. The shrinkage comparator \AtlasInlineMath{(1-h/R)x_*} and smoothing together cost at most \AtlasInlineMath{2hL}. The paired-moment lemma gives \AtlasInlineMath{\mathbb E[\|g_t\|^r\mid\mathcal F_t]\le M^r}. For \AtlasInlineMath{v_t=g_t\min\{1,b_t/\|g_t\|\}}, its conditional bias and total second moment obey
+
+\AtlasMath{B_t\le M^rb_t^{1-r},\qquad V_t\le M^rb_t^{2-r}.}
+
+For the convex case take \AtlasInlineMath{b=MT^{1/r}} and \AtlasInlineMath{\eta=R/(MT^{1/r})}. Projection and convexity yield
+
+\AtlasMath{2\eta\mathbb E\delta_t\le\mathbb ED_t-\mathbb ED_{t+1}+4\eta RB+\eta^2V.}
+
+Since \AtlasInlineMath{D_1\le R^2}, averaging gives \AtlasInlineMath{\mathbb E[f_h(\bar x_T)-\min_Kf_h]\le3RMT^{-q}}. Adding at most \AtlasInlineMath{2hL} for smoothing and comparator shrinkage, choose \AtlasInlineMath{h=\min\{R/2,\varepsilon/(4L)\}} and \AtlasInlineMath{T\ge(6RM/\varepsilon)^{1/q}}. Each round costs two values.
+
+For the strongly convex case take \AtlasInlineMath{b_t=M(t+1)^{1/r}} and \AtlasInlineMath{\eta_t=4/[\mu(t+1)]}, starting at \AtlasInlineMath{t=1}. The inequality \AtlasInlineMath{2B_t\sqrt{D_t}\le(\mu/2)D_t+2B_t^2/\mu} gives
+
+\AtlasMath{\mathbb ED_{t+1}\le(1-\mu\eta_t/2)\mathbb ED_t-2\eta_t\mathbb E\delta_t+\eta_t^2V_t+(2\eta_t/\mu)B_t^2.}
+
+Divide by \AtlasInlineMath{2\eta_t} and multiply by \AtlasInlineMath{t}. The distance terms are \AtlasInlineMath{\mu[t(t-1)D_t-t(t+1)D_{t+1}]/8}, and the remainder is at most \AtlasInlineMath{(3M^2/\mu)t(t+1)^{-2q}}. They telescope from a zero initial coefficient. As \AtlasInlineMath{0<q\le1/2}, \AtlasInlineMath{\sum_{t=1}^Tt(t+1)^{-2q}\le T^{2-2q}}. Weighted averaging therefore gives gap at most \AtlasInlineMath{6M^2/(\mu T^{2q})+2hL}. Choose \AtlasInlineMath{T\ge(12M^2/(\mu\varepsilon))^{1/(2q)}} and the same \AtlasInlineMath{h}.
+
+The feasible minimizer can lie on the boundary; no stationary unconstrained minimizer or additional gradient self-bounding assumption is used. Fixed success follows from a constant-factor tighter expectation target and Markov. Constants may depend on fixed \AtlasInlineMath{r} and are not asserted uniform as \AtlasInlineMath{r\downarrow1}.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{4\baselineskip}\subsection{A3 - A joint dimension and accuracy lower bound under a second-moment sample budget}
+\textbf{Scope.} Independent Gaussian sample functions; arbitrary adaptive scalar queries and even paid unlimited reuse of each sample; expected objective error under a fixed call cap.
+
+For \AtlasInlineMath{L\ge2\mu R},
+
+\AtlasMath{\mathfrak R_T\ge\left[\frac{16\mu T}{dL^2}+\frac{8\pi^2}{\mu R^2}\right]^{-1}.}
+
+In particular, \AtlasInlineMath{0<\varepsilon\le\mu R^2/(16\pi^2)} requires \AtlasInlineMath{T\ge dL^2/(32\mu\varepsilon)}.
+
+Use \AtlasInlineMath{F_\theta(x;Z)=\mu\|x\|^2/2+\langle Z,x\rangle}, with \AtlasInlineMath{Z\sim N(\theta,(v^2/d)I)}, \AtlasInlineMath{v^2=L^2/8}, and \AtlasInlineMath{\|\theta\|\le a=\mu R/2}. The mean minimizer is \AtlasInlineMath{-\theta/\mu\in B_2(R/2)}, and objective loss is \AtlasInlineMath{\|\widehat\theta-\theta\|^2/(2\mu)} for \AtlasInlineMath{\widehat\theta=-\mu\widehat x}. On the query ball a sample Lipschitz modulus is \AtlasInlineMath{\mu R+\|Z\|}, whose second moment is at most \AtlasInlineMath{2\mu^2R^2+2a^2+2v^2\le7L^2/8} under the stated slack. Every sample is itself \AtlasInlineMath{\mu}-smooth and \AtlasInlineMath{\mu}-strongly convex.
+
+Subtracting the known quadratic leaves linear observations of \AtlasInlineMath{Z}. Within one sample, project a new query vector onto the complement of its previously observed span. Its conditional innovation has variance \AtlasInlineMath{(v^2/d)\|x_\perp\|^2} and Fisher trace \AtlasInlineMath{d/v^2} if nonzero; a dependent query gives no new information. The adaptive query rule is fixed once the previous transcript is conditioned on and contributes no extra Fisher term. Thus \AtlasInlineMath{T} charged scalars contribute total trace at most \AtlasInlineMath{Td/v^2}, even with unlimited paid reuse.
+
+Give each coordinate of \AtlasInlineMath{\theta} the density \AtlasInlineMath{(\sqrt d/a)\cos^2(\pi\sqrt d\,u/(2a))} on \AtlasInlineMath{[-a/\sqrt d,a/\sqrt d]}. It is supported in the legal parameter ball and has total prior Fisher information \AtlasInlineMath{\pi^2d^2/a^2}. The vector van Trees inequality gives
+
+\AtlasMath{\mathbb E\|\widehat\theta-\theta\|^2\ge\frac{d^2}{Td/v^2+\pi^2d^2/a^2}.}
+
+Divide by \AtlasInlineMath{2\mu} and substitute \AtlasInlineMath{v,a}. Gaussian Lipschitz moduli are unbounded random variables; this construction proves a second-moment-model lower bound, including its sample-smooth and paid-reuse variants, but not a uniform almost-sure Lipschitz lower bound.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{4\baselineskip}\subsection{A4 - The second-moment subclass supplies the heavy-tail dimension lower bound}
+\textbf{Scope.} The local \AtlasInlineMath{r}-moment class on \AtlasInlineMath{B_2(2R)}, \AtlasInlineMath{1<r\le2}; fixed-success and expected-error variants are distinguished.
+
+For \AtlasInlineMath{L\ge8\mu R} and \AtlasInlineMath{\varepsilon\le\mu R^2/4096}, fixed success \AtlasInlineMath{2/3} requires \AtlasInlineMath{T>dL^2/(256\mu\varepsilon)}. The expected-error version uses \AtlasInlineMath{768} and the window \AtlasInlineMath{\varepsilon\le\mu R^2/12288}. The convex class inherits \AtlasInlineMath{\Omega(dL^2R^2/\varepsilon^2)} on a sufficiently small explicit window.
+
+Use the Gaussian linear-quadratic samples from the paired lower lemma, now with \AtlasInlineMath{v^2=L^2/4} and \AtlasInlineMath{\|\theta\|\le a\le\mu R/2}. Their Lipschitz modulus on \AtlasInlineMath{B_2(2R)} is \AtlasInlineMath{2\mu R+\|Z\|}. Minkowski and \AtlasInlineMath{L\ge8\mu R} give \AtlasInlineMath{(\mathbb EG^2)^{1/2}<L}, hence \AtlasInlineMath{\mathbb EG^r\le L^r}.
+
+For a fixed-success argument take the untruncated analysis prior \AtlasInlineMath{\theta\sim N(0,s^2I)}. Every new scalar innovation adds rank-one precision with trace at most \AtlasInlineMath{d/v^2}, including adaptively reused labels. Conditional posterior covariance satisfies
+
+\AtlasMath{S=\operatorname{tr}\Sigma\ge\frac{ds^2}{1+Ts^2/v^2}.}
+
+For any transcript-measurable estimator, Gaussian integration and Markov give \AtlasInlineMath{\Pr(\|\theta-\widehat\theta\|^2\le b\mid\text{transcript})\le\sqrt{eb/S}}. Choose \AtlasInlineMath{a^2=1024\mu\varepsilon} and \AtlasInlineMath{s^2=a^2/(16d)}. The legal event \AtlasInlineMath{\|\theta\|\le a} has probability at least \AtlasInlineMath{15/16}. If \AtlasInlineMath{T\le v^2/s^2=dL^2/(256\mu\varepsilon)}, then \AtlasInlineMath{S\ge32\mu\varepsilon}. Objective success implies squared error at most \AtlasInlineMath{b=2\mu\varepsilon}, giving unconditional probability at most \AtlasInlineMath{\sqrt e/4<1/2}. But success \AtlasInlineMath{2/3} on every legal instance would imply unconditional probability at least \AtlasInlineMath{(15/16)(2/3)=5/8}, a contradiction. The radius condition follows from \AtlasInlineMath{\varepsilon\le\mu R^2/4096}.
+
+Expected gap at most \AtlasInlineMath{\varepsilon} implies \AtlasInlineMath{2/3} success at error \AtlasInlineMath{3\varepsilon} by Markov, giving the stated expected lower. For the convex class choose the hard subclass curvature \AtlasInlineMath{\mu_0=12288\varepsilon/R^2}. When \AtlasInlineMath{\varepsilon\le LR/98304}, the slack condition holds and the expected lower becomes a universal constant times \AtlasInlineMath{dL^2R^2/\varepsilon^2}. This curvature is a choice inside the proof, not a new public parameter of the convex model.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{4\baselineskip}\subsection{A5 - Rare-spike testing supplies a separate heavy-tail accuracy lower bound}
+\textbf{Scope.} Any paid scalar query can access at most one new sample label; repeated access to a zero label is uninformative. Both expected-error and fixed-success guarantees are covered.
+
+With \AtlasInlineMath{q=(r-1)/r}, the convex lower is \AtlasInlineMath{\Omega_r((LR/\varepsilon)^{1/q})} and the strongly convex lower is \AtlasInlineMath{\Omega_r((L^2/(\mu\varepsilon))^{1/(2q)})}. Combine these with dimension lower bounds by a maximum, never a product.
+
+For a sign \AtlasInlineMath{s\in\{-1,1\}}, let a fresh label give \AtlasInlineMath{Z_s=0} with probability \AtlasInlineMath{1-\pi} and \AtlasInlineMath{Z_s=sB} with probability \AtlasInlineMath{\pi}. For the convex family set \AtlasInlineMath{F_s(x;Z)=Z_sx_1}, \AtlasInlineMath{B=L\pi^{-1/r}}, and mean slope \AtlasInlineMath{m=L\pi^q=4\varepsilon/R}. Thus \AtlasInlineMath{\pi=(4\varepsilon/(LR))^{1/q}\le1/2} when \AtlasInlineMath{\varepsilon\le LR/8}, and \AtlasInlineMath{\mathbb E\operatorname{Lip}(F)^r=L^r}. Even reveal the full \AtlasInlineMath{Z} at each charged fresh-label query. With probability \AtlasInlineMath{(1-\pi)^T} the first \AtlasInlineMath{T} labels are all zero and the two transcripts agree. At a common output, the average gap of the two signs is exactly \AtlasInlineMath{mR=4\varepsilon}. Expected error at most \AtlasInlineMath{\varepsilon} therefore requires \AtlasInlineMath{T\ge\log4/[2\pi]}. The two success sets are disjoint, so the fixed-success version follows from failure probability at least \AtlasInlineMath{(1-\pi)^T/2}.
+
+For strong convexity add the common term \AtlasInlineMath{\mu\|x\|^2/2}. Use noise budget \AtlasInlineMath{L_0=L/2} and \AtlasInlineMath{m=L_0\pi^q=4\sqrt{\mu\varepsilon}}, so \AtlasInlineMath{\pi=(8\sqrt{\mu\varepsilon}/L)^{1/q}}. Under \AtlasInlineMath{L\ge8\mu R} and \AtlasInlineMath{\varepsilon\le\mu R^2/64}, both minimizers lie in \AtlasInlineMath{B_2(R/2)} and \AtlasInlineMath{\pi\le1/2}. On \AtlasInlineMath{B_2(2R)}, Minkowski gives \AtlasInlineMath{(\mathbb E(2\mu R+|Z|)^r)^{1/r}\le3L/4}. On the all-zero transcript the average gap is at least \AtlasInlineMath{m^2/(2\mu)=8\varepsilon}. The same testing argument yields \AtlasInlineMath{T\ge\log8/(2\pi)}, and disjoint success balls give the fixed-success form. The full sample function is random; this is not an independent additive-value-noise model.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{4\baselineskip}\subsection{A6 - Zero-query certificates}
+\textbf{Scope.} The stated sufficient accuracy regions only; no assertion that every certificate is sharp.
+
+A public feasible point whose objective gap is at most \AtlasInlineMath{G_0} solves every target \AtlasInlineMath{\varepsilon\ge G_0} with exactly zero calls.
+
+For a convex mean objective that is \AtlasInlineMath{L}-Lipschitz on a ball of radius \AtlasInlineMath{R}, the center has gap at most \AtlasInlineMath{LR}. A sample Lipschitz modulus \AtlasInlineMath{G} with \AtlasInlineMath{\mathbb E G^r\le L^r}, \AtlasInlineMath{r>1}, implies \AtlasInlineMath{\mathbb E G\le L}, so the same certificate applies to moment models. Integrability at one point ensures that the mean is defined.
+
+If a globally \AtlasInlineMath{\beta}-smooth objective has a global minimizer within distance \AtlasInlineMath{R} of the public initial point, its gradient vanishes at that minimizer and the smoothness inequality gives gap at most \AtlasInlineMath{\beta R^2/2}. In a declared norm, use the corresponding radius in that norm. For \AtlasInlineMath{B_p(R)} with Euclidean regularity this radius is \AtlasInlineMath{R} when \AtlasInlineMath{p\le2} and \AtlasInlineMath{R d^{1/2-1/p}} when \AtlasInlineMath{p\ge2}.
+
+For a known positive semidefinite quadratic matrix \AtlasInlineMath{A}, the center has gap at most \AtlasInlineMath{\lambda_{\max}(A)R^2/2}; if \AtlasInlineMath{A=0}, the loss is identically zero. A public initial-gap promise \AtlasInlineMath{\Delta} directly gives the certificate \AtlasInlineMath{G_0=\Delta}. For the Markov potential \AtlasInlineMath{r_0}, its companion initial iterate has gap at most \AtlasInlineMath{\mu r_0}. These are different certificates with different model assumptions; in particular, an unknown matrix with no public spectral bound does not acquire a uniform certificate.
+
+Call counts are nonnegative. Together with the stated algorithm, this proves exact zero complexity on each certified region. The upper/lower ratio is undefined, so it is stored as null rather than as \AtlasInlineMath{0/0}.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{7\baselineskip}\section{References}
+[1] Ohad Shamir. An Optimal Algorithm for Bandit and Zero-Order Convex Optimization with Two-Point Feedback. JMLR 18(52):1--11, 2017.
+
+\url{https://jmlr.org/papers/volume18/16-632/16-632.pdf}
+
+\end{document}

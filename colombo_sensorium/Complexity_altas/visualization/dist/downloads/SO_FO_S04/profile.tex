@@ -1,0 +1,1029 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Stochastic global PL minimization: stochastic full gradients\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}FO\_\allowbreak{}S04}
+
+Single-objective optimization
+
+Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.
+
+\textbf{Status.} Other quantified gap present
+
+\textbf{Gap classes present.} Other quantified gap; Logarithmic gap
+
+The regional bracket below specifies the quantified gaps and their parameter dependence.
+
+\textbf{TASK tags.} formulation: Global minimization; task family: Single objective
+
+\textbf{MODEL tags.} convexity: Convexity not assumed; geometry: Full space; growth: Global polyak lojasiewicz; smoothness: Lipschitz gradient; stochastic model: Centered alpha moment noise
+
+\textbf{ORACLE tags.} access order: First-order interface; feedback quality: Stochastic; interface family: Stochastic gradient; operation: Stochastic gradient; public information: Hidden objects explicitly declared; public information: Known lower bound; public information: Known upper bound; public information: Known exact value; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; computation: Internal arithmetic uncharged; randomization: Deterministic; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; feasibility: Required; object: Point; postprocessing: Unqueried output explicitly allowed
+
+\textbf{METRIC tags.} criterion: Objective gap
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; confidence: Failure probability parameter explicitly declared; mode: Expectation; mode: Probability; randomness: Algorithm private seed; randomness: Oracle samples
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget; measure: Samples; precision: Bit precision not counted
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.
+
+
+\AtlasMath{\min_{x\in \mathbb{R}^d}f(x)}
+
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The unknown function \AtlasInlineMath{f:\mathbb R^d\to\mathbb R} is globally \AtlasInlineMath{\beta}-smooth and satisfies \AtlasInlineMath{\|\nabla f(x)\|^2\ge2\mu(f(x)-f^\star)}, with \AtlasInlineMath{f(x_0)-f^\star\le\Delta}. Nonconvexity is allowed; \AtlasInlineMath{\mu} is the PL constant.
+
+Unless another geometry is specified, vectors use the Euclidean norm \AtlasInlineMath{\|\cdot\|_2}, and matrices and higher derivatives use the corresponding operator norm. The assumptions hold uniformly throughout the declared domain.
+
+Here \AtlasInlineMath{\beta}-smoothness means \AtlasInlineMath{\|\nabla f(u)-\nabla f(v)\|_2\le\beta\|u-v\|_2} for all \AtlasInlineMath{u,v} in the declared model domain.
+
+Admissible parameter domain:
+
+
+\AtlasMath{\begin{gathered}\varepsilon > 0,\quad d \ge 1,\quad \mu > 0,\quad \kappa \ge 6\\\varepsilon \le c\,\Delta,\quad \beta > 0,\quad \Delta > 0,\quad \sigma \ge 0\\\alpha > 1,\quad \alpha \le 2,\quad \mu \le \beta\end{gathered}}
+
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Public numerical inputs: \AtlasInlineMath{d,\ \alpha,\ \varepsilon,\ x_0}.
+
+Public upper bounds: \AtlasInlineMath{\beta,\ \Delta,\ \sigma}.
+
+Public lower bounds: \AtlasInlineMath{\mu}.
+
+The unknown object is the objective \AtlasInlineMath{f}.
+
+Query points lie in \AtlasInlineMath{\mathbb{R}^d}; feedback consists of stochastic full gradients:
+
+
+\AtlasMath{\mathbb{E}_tG_t=\nabla f(x_t),\quad\mathbb{E}_t\|G_t-\nabla f(x_t)\|^\alpha\le\sigma^\alpha}
+
+
+Samples in a same-point batch are conditionally independent and satisfy the same history-conditional moment bound. No additional independence across adaptively chosen locations is imposed.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return a point \AtlasInlineMath{\widehat x\in\mathbb R^d}.
+
+The output may be unqueried or constructed from the query history, provided it is feasible. No additional function value or accuracy certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+\AtlasMath{\ell(I,\widehat{x})=f(\widehat{x})-f^\star}
+
+
+\AtlasInlineMath{f^\star=\inf_{x\in \mathbb{R}^d}f(x)}. The existence, compactness, or initial-suboptimality assumptions ensure that the optimal value in this comparison is finite.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+Cost is bounded uniformly on every execution path. All calls used for initialization, repetition, batching, or candidate verification are counted.
+
+Real arithmetic, precision, and storage applied to already available information are uncharged. Public geometric operations are limited to those explicitly granted by the oracle. Query complexity alone does not imply arithmetic, memory, or communication complexity.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+\needspace{4\baselineskip}\subsubsection{Deterministic / Expected loss}
+The algorithm uses no private random numbers. Query and stopping decisions may depend adaptively on the observed feedback.
+
+No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+
+\AtlasMath{\forall I\,\forall\mathcal{O}\in\mathcal{O}(I):\ \mathbb{E}_{A,\mathcal{O}}\ell(I,\widehat{x})\le\varepsilon}
+
+
+The probability space includes observation noise. The algorithm uses no private random numbers. The instance and its admissible oracle law are fixed before randomness is averaged.
+
+\needspace{4\baselineskip}\subsubsection{Randomized / Expected loss}
+Private randomization is allowed. Queries, stopping decisions, and postprocessing may adapt to observed feedback.
+
+No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+
+\AtlasMath{\forall I\,\forall\mathcal{O}\in\mathcal{O}(I):\ \mathbb{E}_{A,\mathcal{O}}\ell(I,\widehat{x})\le\varepsilon}
+
+
+The probability space includes observation noise and the algorithm's private randomness. The instance and its admissible oracle law are fixed before randomness is averaged.
+
+\needspace{4\baselineskip}\subsubsection{Deterministic / Probability guarantee}
+The algorithm uses no private random numbers. Query and stopping decisions may depend adaptively on the observed feedback.
+
+No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+
+\AtlasMath{\forall I\,\forall\mathcal{O}:\ \mathbb{P}(\ell(I,\widehat{x})>\varepsilon)\le\delta}
+
+
+The probability space includes observation noise. The algorithm uses no private random numbers. The instance and its admissible oracle law are fixed before randomness is averaged.
+
+\textbf{Oracle qualification.} This view additionally takes the public confidence parameter \AtlasInlineMath{\delta}, with \AtlasInlineMath{0<\delta<1/2}.
+
+\needspace{4\baselineskip}\subsubsection{Randomized / Probability guarantee}
+Private randomization is allowed. Queries, stopping decisions, and postprocessing may adapt to observed feedback.
+
+No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+
+\AtlasMath{\forall I\,\forall\mathcal{O}:\ \mathbb{P}(\ell(I,\widehat{x})>\varepsilon)\le\delta}
+
+
+The probability space includes observation noise and the algorithm's private randomness. The instance and its admissible oracle law are fixed before randomness is averaged.
+
+\textbf{Oracle qualification.} This view additionally takes the public confidence parameter \AtlasInlineMath{\delta}, with \AtlasInlineMath{0<\delta<1/2}.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{x,\widehat{x}}: Query points and final output; their permitted spaces are specified separately by the oracle and output contracts \textbf{Domain:} \AtlasInlineMath{\widehat{x}\in \mathbb{R}^d}.
+
+\AtlasInlineMath{f}: Unknown objective, with domain and structure specified by the model
+
+\AtlasInlineMath{\nabla f}: Full gradient of the differentiable objective or smooth term with respect to the decision variable
+
+\AtlasInlineMath{x_0}: Public initial point satisfying the stated initial-distance or initial-suboptimality condition
+
+\AtlasInlineMath{f^\star}: Optimal value of the complete task; the oracle need not return it
+
+
+\AtlasMath{f^\star=\inf_{x\in \mathbb{R}^d}f(x)}
+
+
+\AtlasInlineMath{\mathbb{R}^d}: Real vector space with \AtlasInlineMath{d} coordinates
+
+\AtlasInlineMath{\|\cdot\|_2,\langle\cdot,\cdot\rangle}: Euclidean norm and inner product
+
+\AtlasInlineMath{G_t}: \AtlasInlineMath{t}th full stochastic gradient or subgradient observation
+
+\AtlasInlineMath{\mathbb{E}_t}: Conditional expectation given the previous history and current query; the query is selected before the fresh observation is drawn
+
+\AtlasInlineMath{d}: Ambient dimension; a positive integer tracked explicitly. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb{N}_{\ge1}}.
+
+\AtlasInlineMath{\beta}: Public upper bound on the gradient smoothness constant. Any mean-square interpretation is specified in the model. \textbf{Domain:} \AtlasInlineMath{\beta>0}.
+
+\AtlasInlineMath{\mu}: Known lower bound on the global PL modulus \textbf{Domain:} \AtlasInlineMath{\mu>0}.
+
+\AtlasInlineMath{\Delta}: Public upper bound on initial suboptimality. \textbf{Domain:} \AtlasInlineMath{\Delta>0}.
+
+\AtlasInlineMath{\sigma}: Public upper bound on the scale of the conditional centered noise moment. \textbf{Domain:} \AtlasInlineMath{\sigma\ge0}.
+
+\AtlasInlineMath{\alpha}: Order of the centered noise moment. Every bound with a subscripted constant treats this order as fixed; uniformity as it approaches one is not asserted. \textbf{Domain:} \AtlasInlineMath{1<\alpha\le2}.
+
+\AtlasInlineMath{\varepsilon}: Target tolerance for the underlying error defined by the accuracy measure \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{c}: Sufficiently small universal positive constant, potentially different between theorems; it is not a numerical threshold. \textbf{Domain:} \AtlasInlineMath{0<c<1}.
+
+\AtlasInlineMath{C}: Sufficiently large universal constant, independent of the tracked parameters; no numerical value is specified. \textbf{Domain:} \AtlasInlineMath{C>1}.
+
+\AtlasInlineMath{\kappa}: \AtlasInlineMath{\beta/\mu}, where \AtlasInlineMath{\mu} is the PL constant; strong convexity is not assumed.
+
+
+\AtlasMath{\kappa=\frac{\beta}{\mu}}
+
+
+\AtlasInlineMath{S}: Number of halving stages, \AtlasInlineMath{\lceil\log_2(\Delta/\epsilon)\rceil}; not an independent parameter.
+
+
+\AtlasMath{S=\lceil\log_2(\Delta/\varepsilon)\rceil}
+
+
+\AtlasInlineMath{V}: Statistical term at the final accuracy scale.
+
+
+\AtlasMath{V={\frac{{\sigma}^{2}}{\mu\,\varepsilon}}^{\frac{\alpha}{2\,((\alpha-1))}}}
+
+
+\AtlasInlineMath{d_{\rm hd}}: Sufficient construction dimension in OW26, equation (166): \AtlasInlineMath{\widetilde O_\alpha(\kappa^2[\Delta/\epsilon+V])}. Only logarithmic factors are hidden. This is not a necessary dimension threshold. \textbf{Domain:} \AtlasInlineMath{d_{\rm hd}=\widetilde{O}_\alpha(\kappa^2[\Delta/\varepsilon+V])}.
+
+\AtlasInlineMath{c_\alpha}: Positive multiplicative constant depending only on the fixed \AtlasInlineMath{\alpha}; uniform boundedness as \AtlasInlineMath{\alpha\downarrow1} is not asserted. \textbf{Domain:} \AtlasInlineMath{0<c_\alpha<\infty}.
+
+\AtlasInlineMath{C_\alpha}: Positive multiplicative constant depending only on the fixed \AtlasInlineMath{\alpha}; uniform boundedness as \AtlasInlineMath{\alpha\downarrow1} is not asserted. \textbf{Domain:} \AtlasInlineMath{0<C_\alpha<\infty}.
+
+\AtlasInlineMath{\ell}: The underlying loss or error defined by the accuracy measure; its expected, probabilistic, or worst-case aggregation is specified by the success contract
+
+\AtlasInlineMath{I,\mathcal{O},A}: Admissible instance, a response rule consistent with that instance, and an algorithm; the algorithm is selected before the unknown instance
+
+\AtlasInlineMath{\mathbb{E}}: Expectation over the declared randomness after fixing the instance and admissible response law
+
+\AtlasInlineMath{O,\Omega,\Theta,\widetilde{O},\widetilde\Omega}: Notation for asymptotic upper and lower bounds, constant-factor matching rates, and explicitly permitted logarithmic factors. Hidden-constant dependence is specified in each regime.
+
+\AtlasInlineMath{\delta}: Allowed failure probability; expected-error and probability contracts are kept distinct. \textbf{Domain:} \AtlasInlineMath{0<\delta<1/2}.
+
+\AtlasInlineMath{\Pr,\mathbb{P}}: Event probability after the instance and admissible response law are fixed
+
+\AtlasInlineMath{\log}: Natural logarithm; changing to another fixed base affects only a constant
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\textbf{View.} Deterministic / Expected loss
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q2 - target accuracy cost}
+\textbf{View.} Randomized / Expected loss
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q3 - target accuracy cost}
+\textbf{View.} Deterministic / Probability guarantee
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q4 - target accuracy cost}
+\textbf{View.} Randomized / Probability guarantee
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q5 - target accuracy cost}
+\textbf{View.} Randomized / Probability guarantee
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsection{R1 - Native high-dimensional theorem window}
+\textbf{Region.} \AtlasInlineMath{\kappa\ge\kappa_{\rm hd},\quad d\ge d_{\rm hd},\quad0<\varepsilon\le c_{0,\alpha}\Delta}
+
+\textbf{Views.} Deterministic / Expected loss; Randomized / Expected loss
+
+\textbf{Quantity.} Q1; Q2
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2, B4
+
+\AtlasMath{c_\alpha\kappa(S+V)}
+\textbf{Upper bound.} B1, B3
+
+\AtlasMath{C_\alpha\kappa(S+V)}
+\textbf{Gap or comparison.} \AtlasInlineMath{O_\alpha(1)}
+
+\needspace{4\baselineskip}\subsection{R2 - High-dimensional regime with fixed confidence}
+\textbf{Region.} \AtlasInlineMath{\theta\in\Theta_{\rm hd},\quad\delta=1/4}
+
+\textbf{Views.} Deterministic / Probability guarantee
+
+\textbf{Quantity.} Q3
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B6
+
+\AtlasMath{c_\alpha\kappa(S+V)}
+\textbf{Upper bound.} B5
+
+\AtlasMath{C_\alpha\kappa(S+V)\log(64\kappa S)}
+\textbf{Gap or comparison.} \AtlasInlineMath{O_\alpha(\log(64\kappa S))}
+
+\needspace{4\baselineskip}\subsection{R3 - High-dimensional regime with fixed confidence}
+\textbf{Region.} \AtlasInlineMath{\theta\in\Theta_{\rm hd},\quad\delta=1/4}
+
+\textbf{Views.} Randomized / Probability guarantee
+
+\textbf{Quantity.} Q4
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B8
+
+\AtlasMath{c_\alpha\kappa(S+V)}
+\textbf{Upper bound.} B7
+
+\AtlasMath{C_\alpha\kappa(S+V)\log(64\kappa S)}
+\textbf{Gap or comparison.} \AtlasInlineMath{O_\alpha(\log(64\kappa S))}
+
+\needspace{4\baselineskip}\subsection{R4 - Fixed-dimensional branch d=1}
+\textbf{Region.} \AtlasInlineMath{d=1,\quad\theta\in\Theta_{\rm fixed}}
+
+\textbf{Views.} Randomized / Probability guarantee
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B9
+
+\AtlasMath{c_\alpha(S+V)}
+\textbf{Upper bound.} B10, B7
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(\min\{\kappa(S+V),S+V\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{\operatorname{polylog}(\kappa,\Delta/\varepsilon)}
+
+\textbf{Comparison argument.} Compare on the intersection of S04.probability-R.parameter-domain and S04.d1. In one dimension the gap is logarithmic. In other dimensions, retain the explicit interaction between \AtlasInlineMath{\kappa} and the statistical term. Constants allowed to depend on fixed \AtlasInlineMath{d} cannot establish joint optimality in \AtlasInlineMath{d}.
+
+\needspace{4\baselineskip}\subsection{R5 - Fixed-dimensional branch d=2}
+\textbf{Region.} \AtlasInlineMath{d=2,\quad\theta\in\Theta_{\rm fixed}}
+
+\textbf{Views.} Randomized / Probability guarantee
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B9
+
+\AtlasMath{c_\alpha(S+V)}
+\textbf{Upper bound.} B11, B7
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(\min\{\kappa(S+V),\kappa^{2/3}S+V\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{\widetilde{O}_{\alpha,d}\!\left({\min\{\kappa(S+V),\kappa^{2/3}S+V\}\over S+V}\right)}
+
+\textbf{Comparison argument.} Compare on the intersection of S04.probability-R.parameter-domain and S04.d2. In one dimension the gap is logarithmic. In other dimensions, retain the explicit interaction between \AtlasInlineMath{\kappa} and the statistical term. Constants allowed to depend on fixed \AtlasInlineMath{d} cannot establish joint optimality in \AtlasInlineMath{d}.
+
+\needspace{4\baselineskip}\subsection{R6 - Fixed-dimensional statistically dominated regime}
+\textbf{Region.} \AtlasInlineMath{V\ge \kappa^{2/3}S}
+
+\textbf{Views.} Randomized / Probability guarantee
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B9
+
+\AtlasMath{c_\alpha V}
+\textbf{Upper bound.} B11, B7
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(V)}
+\textbf{Gap or comparison.} \AtlasInlineMath{\operatorname{polylog}(\kappa,\Delta/\varepsilon)}
+
+\textbf{Comparison argument.} Compare on the intersection of S04.probability-R.parameter-domain and S04.d2-statistics. Statistical dominance allows \AtlasInlineMath{V} to absorb the optimization term. Constants retain the stated fixed-dimension convention.
+
+\needspace{4\baselineskip}\subsection{R7 - Fixed-dimensional branch d=3}
+\textbf{Region.} \AtlasInlineMath{d=3,\quad\theta\in\Theta_{\rm fixed}}
+
+\textbf{Views.} Randomized / Probability guarantee
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B9
+
+\AtlasMath{c_\alpha(S+V)}
+\textbf{Upper bound.} B12, B7
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(\min\{\kappa(S+V),\kappa S+V\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{\widetilde{O}_{\alpha,d}\!\left({\min\{\kappa(S+V),\kappa S+V\}\over S+V}\right)}
+
+\textbf{Comparison argument.} Compare on the intersection of S04.probability-R.parameter-domain and S04.d3. In one dimension the gap is logarithmic. In other dimensions, retain the explicit interaction between \AtlasInlineMath{\kappa} and the statistical term. Constants allowed to depend on fixed \AtlasInlineMath{d} cannot establish joint optimality in \AtlasInlineMath{d}.
+
+\needspace{4\baselineskip}\subsection{R8 - Fixed-dimensional statistically dominated regime}
+\textbf{Region.} \AtlasInlineMath{V\ge \kappa S}
+
+\textbf{Views.} Randomized / Probability guarantee
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B9
+
+\AtlasMath{c_\alpha V}
+\textbf{Upper bound.} B12, B7
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(V)}
+\textbf{Gap or comparison.} \AtlasInlineMath{\operatorname{polylog}(\kappa,\Delta/\varepsilon)}
+
+\textbf{Comparison argument.} Compare on the intersection of S04.probability-R.parameter-domain and S04.d3-statistics. Statistical dominance allows \AtlasInlineMath{V} to absorb the optimization term. Constants retain the stated fixed-dimension convention.
+
+\needspace{4\baselineskip}\subsection{R9 - Fixed-dimensional branch \AtlasInlineMath{d>3,\ \alpha/(\alpha-1)\ge d-1}}
+\textbf{Region.} \AtlasInlineMath{d>3,\ \alpha/(\alpha-1)\ge d-1,\quad\theta\in\Theta_{\rm fixed}}
+
+\textbf{Views.} Randomized / Probability guarantee
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B9
+
+\AtlasMath{c_\alpha(S+V)}
+\textbf{Upper bound.} B13, B7
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(\min\{\kappa(S+V),\kappa^{(d-1)/2}S+V\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{\widetilde{O}_{\alpha,d}\!\left({\min\{\kappa(S+V),\kappa^{(d-1)/2}S+V\}\over S+V}\right)}
+
+\textbf{Comparison argument.} Compare on the intersection of S04.probability-R.parameter-domain and S04.dplus-heavy. In one dimension the gap is logarithmic. In other dimensions, retain the explicit interaction between \AtlasInlineMath{\kappa} and the statistical term. Constants allowed to depend on fixed \AtlasInlineMath{d} cannot establish joint optimality in \AtlasInlineMath{d}.
+
+\needspace{4\baselineskip}\subsection{R10 - Fixed-dimensional statistically dominated regime}
+\textbf{Region.} \AtlasInlineMath{V\ge \kappa^{(d-1)/2}S}
+
+\textbf{Views.} Randomized / Probability guarantee
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B9
+
+\AtlasMath{c_\alpha V}
+\textbf{Upper bound.} B13, B7
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(V)}
+\textbf{Gap or comparison.} \AtlasInlineMath{\operatorname{polylog}(\kappa,\Delta/\varepsilon)}
+
+\textbf{Comparison argument.} Compare on the intersection of S04.probability-R.parameter-domain and S04.dplus-heavy-statistics. Statistical dominance allows \AtlasInlineMath{V} to absorb the optimization term. Constants retain the stated fixed-dimension convention.
+
+\needspace{4\baselineskip}\subsection{R11 - Fixed-dimensional branch \AtlasInlineMath{d>3,\ \alpha/(\alpha-1)<d-1}}
+\textbf{Region.} \AtlasInlineMath{d>3,\ \alpha/(\alpha-1)<d-1,\quad\theta\in\Theta_{\rm fixed}}
+
+\textbf{Views.} Randomized / Probability guarantee
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B9
+
+\AtlasMath{c_\alpha(S+V)}
+\textbf{Upper bound.} B14, B7
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(\min\{\kappa(S+V),\kappa^{(d-1)/2}S+\kappa^{[d-1-\alpha/(\alpha-1)]/2}V\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{\widetilde{O}_{\alpha,d}\!\left({\min\{\kappa(S+V),\kappa^{(d-1)/2}S+\kappa^{[d-1-\alpha/(\alpha-1)]/2}V\}\over S+V}\right)}
+
+\textbf{Comparison argument.} Compare on the intersection of S04.probability-R.parameter-domain and S04.dplus-light. In one dimension the gap is logarithmic. In other dimensions, retain the explicit interaction between \AtlasInlineMath{\kappa} and the statistical term. Constants allowed to depend on fixed \AtlasInlineMath{d} cannot establish joint optimality in \AtlasInlineMath{d}.
+
+\needspace{4\baselineskip}\subsection{R12 - Fixed dimension four, \AtlasInlineMath{1<\alpha\le3/2}}
+\textbf{Region.} \AtlasInlineMath{d=4,\quad 1<\alpha\le3/2}
+
+\textbf{Views.} Randomized / Probability guarantee
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B9
+
+\AtlasMath{c_\alpha(S+V)}
+\textbf{Upper bound.} B15, B7
+
+\AtlasMath{\widetilde{O}_\alpha(\min\{\kappa(S+V),\kappa^{3/2}S+V\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{\widetilde{O}_\alpha\!\left({\min\{\kappa(S+V),\kappa^{3/2}S+V\}\over S+V}\right)}
+
+\textbf{Comparison argument.} Compare on the intersection of S04.probability-R.parameter-domain and S04.d4-heavy. Retain the complete ratio of the two bounds. For fixed \AtlasInlineMath{\kappa}, the leading accuracy and noise dependence differs only logarithmically; this does not imply closure when \AtlasInlineMath{\kappa} grows jointly.
+
+\needspace{4\baselineskip}\subsection{R13 - Fixed dimension four, \AtlasInlineMath{3/2<\alpha\le2}}
+\textbf{Region.} \AtlasInlineMath{d=4,\quad 3/2<\alpha\le2}
+
+\textbf{Views.} Randomized / Probability guarantee
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} One full stochastic-gradient sample costs one call; a batch of \AtlasInlineMath{b} samples costs \AtlasInlineMath{b} calls.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B9
+
+\AtlasMath{c_\alpha(S+V)}
+\textbf{Upper bound.} B16, B7
+
+\AtlasMath{\widetilde{O}_\alpha(\min\{\kappa(S+V),\kappa^{3/2}S+\kappa^{[3-\alpha/(\alpha-1)]/2}V\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{\widetilde{O}_\alpha\!\left({\min\{\kappa(S+V),\kappa^{3/2}S+\kappa^{[3-\alpha/(\alpha-1)]/2}V\}\over S+V}\right)}
+
+\textbf{Comparison argument.} Compare on the intersection of S04.probability-R.parameter-domain and S04.d4-light. Retain the complete ratio of the two bounds. For fixed \AtlasInlineMath{\kappa}, the leading accuracy and noise dependence differs only logarithmically; this does not imply closure when \AtlasInlineMath{\kappa} grows jointly.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Output mapping.} The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+\textbf{Resource mapping.} Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+\needspace{4\baselineskip}\subsection{B1 - Deterministic multistage gradient descent with robust batches}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic / Expected loss
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{C_\alpha\kappa(S+V)}
+\textbf{Conditions.} 
+\AtlasMath{\mu>0,\quad\kappa\ge6,\quad0<\varepsilon\le c_\alpha\Delta}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\mu>0,\quad\kappa\ge6,\quad0<\varepsilon\le c_\alpha\Delta}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} After fixing the instance and admissible response law, take expectation over the declared randomness and control the underlying error. Query policies and postprocessing use no private random numbers; all randomness comes from observations.
+
+\textbf{Local argument.} A1
+
+\needspace{4\baselineskip}\subsection{B2 - OW26 high-dimensional lower bound for arbitrary randomized algorithms}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic / Expected loss
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c_\alpha\kappa(S+V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{\kappa\ge\kappa_{\rm hd},\quad d\ge d_{\rm hd},\quad0<\varepsilon\le c_{0,\alpha}\Delta}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\kappa\ge\kappa_{\rm hd},\quad d\ge d_{\rm hd},\quad0<\varepsilon\le c_{0,\alpha}\Delta}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: arXiv2609.03990v2 (26 September 2026), Thm3.1, Eq.(166); PDF p.7, AppendixB.5
+
+\needspace{4\baselineskip}\subsection{B3 - Deterministic multistage gradient descent with robust batches}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Expected loss
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{C_\alpha\kappa(S+V)}
+\textbf{Conditions.} 
+\AtlasMath{\mu>0,\quad\kappa\ge6,\quad0<\varepsilon\le c_\alpha\Delta}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\mu>0,\quad\kappa\ge6,\quad0<\varepsilon\le c_\alpha\Delta}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} After fixing the instance and admissible response law, take expectation over the declared randomness and control the underlying error. Query policies and postprocessing use no private random numbers; all randomness comes from observations.
+
+\textbf{Local argument.} A1
+
+\needspace{4\baselineskip}\subsection{B4 - OW26 high-dimensional lower bound for arbitrary randomized algorithms}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized / Expected loss
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c_\alpha\kappa(S+V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{\kappa\ge\kappa_{\rm hd},\quad d\ge d_{\rm hd},\quad0<\varepsilon\le c_{0,\alpha}\Delta}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\kappa\ge\kappa_{\rm hd},\quad d\ge d_{\rm hd},\quad0<\varepsilon\le c_{0,\alpha}\Delta}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: arXiv2609.03990v2 (26 September 2026), Thm3.1, Eq.(166); PDF p.7, AppendixB.5
+
+\needspace{4\baselineskip}\subsection{B5 - High-probability CC-MD guarantee}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{C_\alpha\kappa(S+V)\log(16\kappa S/\delta)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{\theta\in\Theta_{\rm regular},\quad0<\delta<1/2}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\theta\in\Theta_{\rm regular},\quad0<\delta<1/2}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region. Query policies and postprocessing use no private random numbers; all randomness comes from observations.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: Theorem4.3; AppendixC.2, Eq.(192); PDF pp.9,46
+
+\needspace{4\baselineskip}\subsection{B6 - High-dimensional regime with constant failure probability}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c_\alpha\kappa(S+V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{\theta\in\Theta_{\rm hd},\quad\delta=1/4}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\theta\in\Theta_{\rm hd},\quad\delta=1/4}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: arXiv2609.03990v2 (26 September 2026), Thm3.1, Eq.(166); PDF p.7, AppendixB.5
+
+\needspace{4\baselineskip}\subsection{B7 - High-probability CC-MD guarantee}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{C_\alpha\kappa(S+V)\log(16\kappa S/\delta)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{\theta\in\Theta_{\rm regular},\quad0<\delta<1/2}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\theta\in\Theta_{\rm regular},\quad0<\delta<1/2}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region. Query policies and postprocessing use no private random numbers; all randomness comes from observations.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: Theorem4.3; AppendixC.2, Eq.(192); PDF pp.9,46
+
+\needspace{4\baselineskip}\subsection{B8 - High-dimensional regime with constant failure probability}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c_\alpha\kappa(S+V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{\theta\in\Theta_{\rm hd},\quad\delta=1/4}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\theta\in\Theta_{\rm hd},\quad\delta=1/4}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: arXiv2609.03990v2 (26 September 2026), Thm3.1, Eq.(166); PDF p.7, AppendixB.5
+
+\needspace{4\baselineskip}\subsection{B9 - One-dimensional embedded lower bound for fixed \AtlasInlineMath{d}}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c_\alpha(S+V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{\kappa\ge6,\quad\delta=1/4,\quad0<\varepsilon\le c_\alpha\Delta}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\kappa\ge6,\quad\delta=1/4,\quad0<\varepsilon\le c_\alpha\Delta}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10-12,53-65
+
+\needspace{4\baselineskip}\subsection{B10 - Robust stochastic bisection}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(S+V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{d=1,\quad\theta\in\Theta_{\rm fixed}}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d=1,\quad\theta\in\Theta_{\rm fixed}}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10-12,53-65
+
+\needspace{4\baselineskip}\subsection{B11 - Two-dimensional gradient-flow traps}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(\kappa^{2/3}S+V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{d=2,\quad\theta\in\Theta_{\rm fixed}}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d=2,\quad\theta\in\Theta_{\rm fixed}}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10-12,53-65
+
+\needspace{4\baselineskip}\subsection{B12 - Three-dimensional gradient-flow traps}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(\kappa S+V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{d=3,\quad\theta\in\Theta_{\rm fixed}}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d=3,\quad\theta\in\Theta_{\rm fixed}}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10-12,53-65
+
+\needspace{4\baselineskip}\subsection{B13 - Surface reconstruction at fixed \AtlasInlineMath{d} without an additional power of \AtlasInlineMath{\kappa} in the heavy-tailed statistical term}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(\kappa^{(d-1)/2}S+V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{d>3,\ \alpha/(\alpha-1)\ge d-1,\quad\theta\in\Theta_{\rm fixed}}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d>3,\ \alpha/(\alpha-1)\ge d-1,\quad\theta\in\Theta_{\rm fixed}}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10-12,53-65
+
+\needspace{4\baselineskip}\subsection{B14 - Additional surface-entropy factor at fixed \AtlasInlineMath{d}}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\widetilde{O}_{\alpha,d}(\kappa^{(d-1)/2}S+\kappa^{[d-1-\alpha/(\alpha-1)]/2}V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{d>3,\ \alpha/(\alpha-1)<d-1,\quad\theta\in\Theta_{\rm fixed}}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d>3,\ \alpha/(\alpha-1)<d-1,\quad\theta\in\Theta_{\rm fixed}}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10-12,53-65
+
+\needspace{4\baselineskip}\subsection{B15 - OW26 fixed-dimensional result evaluated at \AtlasInlineMath{d=4}}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\widetilde{O}_\alpha(\kappa^{3/2}S+V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{d=4,\quad 1<\alpha\le3/2}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d=4,\quad 1<\alpha\le3/2}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10-12,53-65
+
+\needspace{4\baselineskip}\subsection{B16 - OW26 fixed-dimensional result evaluated at \AtlasInlineMath{d=4}}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Probability guarantee
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\widetilde{O}_\alpha(\kappa^{3/2}S+\kappa^{[3-\alpha/(\alpha-1)]/2}V)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.03990}{[1]}
+
+\textbf{Conditions.} 
+\AtlasMath{d=4,\quad 3/2<\alpha\le2}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d=4,\quad 3/2<\alpha\le2}
+
+\textbf{Oracle correspondence.} Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.03990}{[1]} theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10-12,53-65
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Heavy-tailed gradient estimation and PL stages}
+\textbf{Scope.} Conditionally independent fresh samples in each same-point batch, with centered norm moment of order greater than one.
+
+\textbf{Algorithm scope.} PL upper witness has deterministic policies; nonconvex stationarity output uses private randomization.
+
+Condition on the history at an adaptively selected point. Fresh samples are conditionally independent, have mean \AtlasInlineMath{g}, and obey
+\AtlasInlineMath{\mathbb E\|G-g\|^\alpha\le\sigma^\alpha}, \AtlasInlineMath{1<\alpha\le2}.
+Form nine block means of \AtlasInlineMath{b} samples and take their geometric median with deterministic tie breaking. Symmetrization and the Hilbert-space moment inequality give
+\AtlasInlineMath{\mathbb E\|Z_j-g\|^\alpha\le2^\alpha\sigma^\alpha b^{1-\alpha}}.
+If seven blocks lie within radius \AtlasInlineMath{r}, median optimality gives
+\AtlasInlineMath{5\|\widehat g-g\|\le14r}.
+An error larger than \AtlasInlineMath{3r} requires at least three bad blocks, so
+
+\AtlasMath{\Pr(\|\widehat g-g\|>3r)\le
+84\min\{1,(2\sigma b^{-(\alpha-1)/\alpha}/r)^{3\alpha}\}.}
+
+Integrating the tail, since \AtlasInlineMath{3\alpha>2}, yields
+
+\AtlasMath{\mathbb E[\|\widehat g-g\|^2\mid\mathcal H]
+\le C_\alpha\sigma^2b^{-2(\alpha-1)/\alpha}.}
+
+Individual samples need not have finite variance. Independence within a batch is essential.
+
+The update \AtlasInlineMath{x^+=x-\widehat g/\beta} satisfies
+
+\AtlasMath{f(x^+)\le f(x)-\|\nabla f(x)\|^2/(2\beta)
++\|\widehat g-\nabla f(x)\|^2/(2\beta),}
+
+even if the estimate is biased. Under PL this gives conditional expected contraction with additive term
+\AtlasInlineMath{C_\alpha\sigma^2/[2\beta b^{2(\alpha-1)/\alpha}]}.
+At scale \AtlasInlineMath{u_s=\Delta/2^s}, choose
+
+\AtlasMath{b_s=\left\lceil\max\{1,(C_\alpha\sigma^2/(\mu u_s))^{\alpha/[2(\alpha-1)]}\}\right\rceil}
+
+and \AtlasInlineMath{J=\lceil\kappa\log4\rceil} steps. Starting from expected gap at most \AtlasInlineMath{u_s}, the next stage has gap at most \AtlasInlineMath{u_s/2}. Summing the charged \AtlasInlineMath{9Jb_s} samples gives
+
+\AtlasMath{C_\alpha\kappa\left[\log(2+\Delta/\epsilon)
++(\sigma^2/(\mu\epsilon))^{\alpha/[2(\alpha-1)]}\right].}
+
+The schedule and output require no private randomness.
+
+For general nonconvex stationarity, choose
+\AtlasInlineMath{b=C_\alpha[1+(\sigma/\epsilon)^{\alpha/(\alpha-1)}]},
+run \AtlasInlineMath{C\beta\Delta/\epsilon^2} updates, and return a uniformly random iterate. Summing descent gives expected squared gradient norm at most \AtlasInlineMath{\epsilon^2}, hence expected norm at most \AtlasInlineMath{\epsilon}. This output rule is private randomization.
+
+\textbf{Limits of the argument.} The proof does not apply to arbitrarily dependent samples within a batch.
+
+\needspace{7\baselineskip}\section{References}
+[1] Weiming Ou; Xiao Wang. Tight Heavy-Tailed Complexity Bounds for Optimizing Polyak-Łojasiewicz Objectives. 2026-09-26; preprintv2; Theorem 3.1; Theorems 4.3,5.1,5.3; Appendix B Lemmas B.13-B.15; Eq.(166),(192)..
+
+\url{https://arxiv.org/pdf/2609.03990}
+
+\end{document}

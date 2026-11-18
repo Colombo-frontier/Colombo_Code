@@ -1,0 +1,1499 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ON_LINSTO_S",
+  "title": "Stochastic linear bandits on a Euclidean ball with independent scalar Gaussian noise.",
+  "summary": "The learner chooses actions in the Euclidean unit ball and observes their inner products with a fixed unknown parameter plus independent standard Gaussian noise. The target is cumulative mean reward relative to the best fixed action. Reducing action magnitude does not reduce the noise variance.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "pseudo_regret"
+    },
+    {
+      "facet": "structure",
+      "value": "linear"
+    },
+    {
+      "facet": "feedback",
+      "value": "selected_reward"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation_code": "stochastic_linear_bandit",
+      "formulation": "sum_t (||θ||_2−<x_t,θ>)",
+      "solution_goal": "minimize_expected_cumulative_pseudo_regret",
+      "protocol_ref": "ON_LINSTO_S_pro_5dc63b47c2",
+      "code": "stochastic_linear_bandit",
+      "formulation_latex": "Y_t=\\langle x_t,\\theta\\rangle+Z_t,\\quad Z_t\\overset{\\mathrm{i.i.d.}}\\sim\\mathcal N(0,1),\\qquad R_T=\\sum_t(\\|\\theta\\|_2-\\langle x_t,\\theta\\rangle)",
+      "goal_latex": "\\inf_{\\mathcal A}\\sup_{\\|\\theta\\|_2\\le1}\\mathbb E_{\\mathcal A,Z}[R_T]",
+      "description_paragraphs": [
+        "The learner chooses actions in the Euclidean unit ball and observes their inner products with a fixed unknown parameter plus independent standard Gaussian noise. The target is cumulative mean reward relative to the best fixed action. Reducing action magnitude does not reduce the noise variance."
+      ]
+    },
+    "model": {
+      "instance": "Actions satisfy $x_t\\in B_2^d(1)$ and the unknown parameter satisfies $\\theta\\in B_2^d(1)$. Observe $Y_t=\\langle x_t,\\theta\\rangle+Z_t$, with independent standard Gaussian $Z_t$. Noise is added after the inner product, and its variance does not scale with action length.",
+      "assumptions": [
+        {
+          "subject_id": "ON_LINSTO_S_obj_e2f46dc230",
+          "property_code": "parameter_ball",
+          "variable_blocks": [],
+          "norm_ref": "ON_LINSTO_S_nor_326b4c7f62",
+          "parameter_refs": [
+            "ON_LINSTO_S_p_136cb4ee93",
+            "ON_LINSTO_S_p_76dd32a562"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "‖θ‖₂≤1."
+        },
+        {
+          "subject_id": "ON_LINSTO_S_obj_d11b4cc9d5",
+          "property_code": "additive_scalar_noise",
+          "variable_blocks": [],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_LINSTO_S_p_136cb4ee93",
+            "ON_LINSTO_S_p_76dd32a562"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "Noise is added outside the inner product. Conditional on any action $x$, it is $\\mathcal N(0,1)$, with variance independent of $\\|x\\|_2$."
+        }
+      ],
+      "parameter_domain_description": "T: $T\\in\\mathbb N,\\ T\\ge1$ (public); d: $d\\in\\mathbb N,\\ d\\ge1$ (public)",
+      "code": "model_declared",
+      "interaction_timing": [
+        "The parameter $\\theta$ is fixed; $d,T$, the action domain, and noise variance are public.",
+        "The learner selects x_t from the history.",
+        "Returns $\\langle x_t,\\theta\\rangle+Z_t$.",
+        "Accumulate the mean gap ||theta||_2-<x_t,theta> and continue to the next round."
+      ],
+      "adversary_information": "The unknown distribution or parameter is fixed before interaction. Learner randomness and sample randomness are independent. No adversary changes the distribution round by round from the learner's history.",
+      "unresolved_applicability": [
+        "General sub-Gaussian noise, parameter-vector noise, and other action geometries each require separate checks of the native oracle and parameter window."
+      ],
+      "description_paragraphs": [
+        "The hidden reward parameter $\\theta$ is fixed before interaction and satisfies $\\|\\theta\\|_2\\le1$.",
+        "Scalar observation noise is i.i.d. $Z_t\\sim N(0,1)$ and independent of the pre-action history. The observation variance remains one even when $x_t=0$. This specification uses additive scalar noise.",
+        "The actual action is also the sole observation point and satisfies $\\|x_t\\|_2\\le1$.",
+        "Require $d,T\\ge1$. Both actions and the unknown parameter lie in the unit Euclidean ball."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "ON_LINSTO_S_ora_80b533819a",
+          "operation_code": "observe_scalar_linear_loss",
+          "target_object": "ON_LINSTO_S_obj_de97b64e00",
+          "variable_blocks": [
+            "ON_LINSTO_S_var_52ce4df2e5"
+          ],
+          "query_signature": "Input: $t,\\ x_t\\in B_2^d(1)$. The specification's protocol governs timing and visible information.",
+          "response_signature": "Response: $Y_t\\mid\\mathcal H_{t-1},x_t\\sim\\mathcal N(\\langle x_t,\\theta\\rangle,1)$.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "order is relative to the current member f_t(x), f(x), or sample F(x;ξ_t) of the named indexed function family and only with respect to x; finite feedback interfaces have no derivative order",
+          "feedback_quality": {
+            "code": "gaussian_additive_noise",
+            "description": "Choose x_t, then draw Z_t and return one scalar. Neither theta, a gradient, nor another directional projection in the same round is revealed. Repeating x in another round uses fresh noise and is charged again."
+          },
+          "domain_ref": "ON_LINSTO_S_dom_436f28c0d5",
+          "coupling": "Choose x_t, then draw Z_t and return one scalar. Neither theta, a gradient, nor another directional projection in the same round is revealed. Repeating x in another round uses fresh noise and is charged again.",
+          "index_control": "The learner selects feasible actions and any probes permitted by the specification. The environment determines current losses, outcomes, or fresh samples. The learner cannot select future rounds.",
+          "access_schedule": "Interaction follows the sequence in registry.protocols. Current loss feedback is available only after the action is submitted. Any pre-action disclosure of context or advice is specified separately.",
+          "accuracy_argument": null,
+          "cost_rule_ref": "ON_LINSTO_S_res_b979d6b766",
+          "query_latex": "t,\\ x_t\\in B_2^d(1)",
+          "response_latex": "Y_t\\mid\\mathcal H_{t-1},x_t\\sim\\mathcal N(\\langle x_t,\\theta\\rangle,1)"
+        }
+      ],
+      "public_inputs": [
+        "d",
+        "T",
+        "Action domain $B_2^d(1)$",
+        "Parameter-norm bound equal to $1$",
+        "Known scalar noise N(0,1)."
+      ],
+      "hidden_objects": [
+        "ON_LINSTO_S_obj_de97b64e00",
+        "ON_LINSTO_S_obj_e2f46dc230"
+      ],
+      "auxiliary_interfaces": [
+        "No additional access to hidden losses, means, or gradients is available. Projection, sampling, and internal optimization over public domains may have separately recorded computation costs; they are not free loss oracles."
+      ],
+      "protocol_ref": "ON_LINSTO_S_pro_5dc63b47c2",
+      "query_domain_description": "unit B2^d",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "Linear rewards with independent scalar noise:",
+        "$$\nt,\\ x_t\\in B_2^d(1)\\ \\longmapsto\\ Y_t\\mid\\mathcal{H}_{t-1},x_t\\sim\\mathcal{N}(\\langle x_t,\\theta\\rangle,1)\n$$",
+        "Choose action $x_t$, then draw fresh noise $Z_t$ and return one scalar observation.",
+        "Neither $\\theta$, a gradient, nor projections onto other directions in the same round are returned.",
+        "The same x may be measured again in another round, with fresh noise and a new charge.",
+        "Public inputs are $d,T$, action domain $B_2^d(1)$, parameter-norm bound one, and known scalar noise $\\mathcal N(0,1)$."
+      ]
+    },
+    "output": {
+      "object_type": "action_trajectory",
+      "domain_ref": "ON_LINSTO_S_dom_436f28c0d5",
+      "feasibility": "Every loss-bearing action must belong to the action domain. The final output retains the complete action trajectory.",
+      "allowed_postprocessing": "Any measurable computation on received feedback is allowed. No native observation may be added after the budget is exhausted or the algorithm stops.",
+      "certificate_requirement": "Only the stated statistical guarantee is required, not a certificate verifiable through the feedback interface.",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "sum_t (||θ||_2−<x_t,θ>)",
+      "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+      "reference_object": "ON_LINSTO_S_obj_de97b64e00",
+      "nonnegativity": true,
+      "finiteness_conditions": "The unit mean/loss range or the stated Lipschitz amplitude bound limits the per-round excess loss to two. Cumulative regret is therefore at most 2T. Unbounded observation noise does not enter pseudo-regret.",
+      "comparator_ref": "ON_LINSTO_S_com_5f40abce0a",
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "$$\nY_t=\\langle x_t,\\theta\\rangle+Z_t,\\quad Z_t\\overset{\\mathrm{i.i.d.}}\\sim\\mathcal{N}(0,1),\\qquad R_T=\\sum_t(\\|\\theta\\|_2-\\langle x_t,\\theta\\rangle)\n$$"
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "Sequential online rounds; only information permitted by the protocol is visible in each round."
+        },
+        {
+          "code": "native_feedback",
+          "unit": "feedback_event",
+          "description": "$T$ rounds provide $T$ scalar noisy linear observations."
+        },
+        {
+          "code": "optimistic_solves",
+          "unit": "optimization_problem",
+          "description": "OFUL maximizes optimistic reward over a confidence ellipsoid and the public action set. The cost of this internal optimization is recorded separately and is not free target feedback."
+        },
+        {
+          "code": "matrix_updates",
+          "unit": "matrix_update",
+          "description": "This auxiliary resource depends on the algorithm and is recorded per bound. Its resource coordinate is not claimed optimal."
+        }
+      ],
+      "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+      "cost_rules": [
+        {
+          "id": "ON_LINSTO_S_res_b979d6b766",
+          "operation_refs": [
+            "ON_LINSTO_S_ora_80b533819a"
+          ],
+          "cost": {
+            "rounds": 1,
+            "native_feedback": 1
+          }
+        }
+      ],
+      "scalarization": "Retain the native objective and complete resource vector. At fixed $T$, compare cumulative regret. Best-arm-identification stopping times and error probabilities use their own task-specific criteria.",
+      "setup_cost": "Only declared public inputs may be read. Hidden losses, means, or samples cannot be accessed in advance or outside the $T$ rounds or $\\tau$ samples.",
+      "online_cost": "Any causal randomized policy is permitted; OFUL supplies one admitted upper bound. OFUL maintains a $d\\times d$ design matrix and confidence set and solves an optimistic decision problem. Matrix updates and optimistic optimization are not charged as a single bandit observation.",
+      "amortization_scope": "The algorithm runs on one environment. Charged feedback cannot be reused across independent instances.",
+      "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "$T$ rounds provide $T$ scalar noisy linear observations.",
+        "Any causal randomized policy is allowed. OFUL is one verified upper-bound method.",
+        "OFUL maintains a $d\\times d$ design matrix and confidence set and solves an optimistic decision problem. Matrix updates and optimistic optimization are not one bandit call.",
+        "Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "Private randomization is allowed. The seed is hidden from the environment and independent of the fixed instance and sample randomness.",
+        "adaptivity": "The action and every probe in a round may depend only on previous-round feedback, public inputs, any context or advice already revealed that round, and private randomness. They may not use unrevealed current losses or samples.",
+        "restrictions": [
+          "All measurable causal policies satisfying the declared information timing and feasible domain are allowed, without extra span, iteration-form, or polynomial-time restrictions."
+        ],
+        "internal_computation": "Arbitrary measurable exact-real internal computation and causal randomized policies are allowed. OFUL is one checked upper-bound algorithm. It maintains a $d\\times d$ design matrix and confidence set and solves an optimistic decision problem. Matrix updates and optimistic optimization are separate from scalar bandit feedback; feedback complexity gives no arithmetic or bit bound.",
+        "parallelism": "Interaction proceeds in sequential time rounds. A two-point evaluation is one pair of same-round responses only where explicitly permitted; it is not equivalent to two independent rounds.",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "The native target is $\\inf_{\\mathcal A}\\sup_{\\|\\theta\\|_2\\le1}\\mathbb E_{\\mathcal A,Z}[R_T]$.",
+          "aggregation_order": [
+            "Take the infimum over causal learners unaware of the hidden distribution, parameter, or objective.",
+            "Take the supremum over fixed model instances.",
+            "The comparator uses population means or true function optima, defined before samples are realized.",
+            "Expectation includes learner randomness and observation noise or samples. The comparator is not chosen in hindsight from realized noisy rewards."
+          ],
+          "quantifier_order": "One learning algorithm must apply to every instance in the declared class. It may use public inputs only, not hidden instance parameters.",
+          "randomness_sources": [
+            "Learner's private randomness",
+            "environment samples/noise"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "The horizon T is fixed and public. The guarantee holds for that T; it does not automatically give an anytime result or a simultaneous high-probability statement for all T.",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "$$\n\\inf_{\\mathcal{A}}\\sup_{\\|\\theta\\|_2\\le1}\\mathbb{E}_{\\mathcal{A},Z}[R_T]\n$$",
+            "Choose one algorithm using public inputs before taking the worst case over all admissible instances. Expectation covers the algorithm's private randomness and the observation randomness specified by the model. Comparator choice and the order of summation, minimization, and expectation follow the displayed formula."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+        "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+        "scalarization": "Retain the native objective and complete resource vector. At fixed $T$, compare cumulative regret. Best-arm-identification stopping times and error probabilities use their own task-specific criteria."
+      },
+      "alias_ids": [
+        "ON_LINSTO_S"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ON_LINSTO_S_obj_de97b64e00",
+        "type": "loss_environment",
+        "definition": "The linear objective is $f_\\theta(x)=\\langle x,\\theta\\rangle$, with observation $f_\\theta(x)+Z_t$.",
+        "depends_on": [
+          "ON_LINSTO_S_obj_e2f46dc230"
+        ],
+        "role_code": "linear_mean_reward"
+      },
+      {
+        "id": "ON_LINSTO_S_obj_e2f46dc230",
+        "type": "parameter_vector",
+        "definition": "A fixed unknown parameter theta in the Euclidean unit ball.",
+        "depends_on": [],
+        "role_code": "linear_reward_parameter"
+      },
+      {
+        "id": "ON_LINSTO_S_obj_d11b4cc9d5",
+        "type": "scalar_noise_process",
+        "definition": "The variables Z_t are i.i.d. N(0,1), independent of pre-action history and learner randomness.",
+        "depends_on": [],
+        "role_code": "additive_observation_noise"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ON_LINSTO_S_var_52ce4df2e5",
+        "dimension": "d",
+        "space": "unit B2^d"
+      }
+    ],
+    "domains": [
+      {
+        "id": "ON_LINSTO_S_dom_436f28c0d5",
+        "definition": "unit B2^d",
+        "roles": [
+          "action_domain",
+          "query_domain"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "ON_LINSTO_S_nor_326b4c7f62",
+        "definition": "Euclidean two-norm on the explicitly specified d-dimensional function argument, gradient, or model vector."
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ON_LINSTO_S_pro_5dc63b47c2",
+        "steps": [
+          "The parameter $\\theta$ is fixed; $d,T$, the action domain, and noise variance are public.",
+          "The learner selects x_t from the history.",
+          "Returns $\\langle x_t,\\theta\\rangle+Z_t$.",
+          "Accumulate the mean gap ||theta||_2-<x_t,theta> and continue to the next round."
+        ],
+        "adversary_information": "The unknown distribution or parameter is fixed before interaction. Learner randomness and sample randomness are independent. No adversary changes the distribution round by round from the learner's history.",
+        "loss_bearing_points": "The selected x_t generates a reward. Regret uses mean differences, excluding observation noise from the comparator.",
+        "queries_per_round": "$T$ rounds provide $T$ scalar noisy linear observations.",
+        "past_requery": "No new information may be requested from past rounds or previously used samples. Received feedback may be stored and processed. In a stochastic model, an action may be repeated in a new round, with a fresh charged sample."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ON_LINSTO_S_com_5f40abce0a",
+        "definition": "The maximum true mean reward on the unit ball, ‖θ‖₂."
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ON_LINSTO_S_p_76dd32a562",
+      "symbol": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_LINSTO_S_p_136cb4ee93",
+      "symbol": "d",
+      "meaning": "The ambient dimension of actions or feature vectors.",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "public": true,
+      "definition": "Vectors belong to $\\mathbb R^d$; dimension is still denoted d when a non-Euclidean norm is used.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "parameter_ref": "ON_LINSTO_S_p_76dd32a562"
+    },
+    {
+      "symbol_latex": "d",
+      "meaning": "The ambient dimension of actions or feature vectors.",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "definition": "Vectors belong to $\\mathbb R^d$; dimension is still denoted d when a non-Euclidean norm is used.",
+      "parameter_ref": "ON_LINSTO_S_p_136cb4ee93"
+    },
+    {
+      "symbol_latex": "\\theta",
+      "meaning": "Fixed hidden linear-reward parameter",
+      "domain": "$\\theta\\in B_2^d(1)$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_t",
+      "meaning": "Current action and sole observation point",
+      "domain": "$x_t\\in B_2^d(1)$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "Z_t",
+      "meaning": "Independent scalar observation noise.",
+      "domain": "$Z_t\\overset{\\mathrm{i.i.d.}}\\sim\\mathcal N(0,1)$",
+      "definition": "Noise variance does not scale with the action norm; the zero action also has observation variance one.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "Y_t",
+      "meaning": "Scalar reward observed in the current round",
+      "domain": "$Y_t\\in\\mathbb R$",
+      "definition": "$Y_t=\\langle x_t,\\theta\\rangle+Z_t$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\lambda,S,L,R_{\\mathrm{noise}},\\delta",
+      "meaning": "Source notation in the earlier OFUL branch",
+      "domain": "Used only to specialize this upper bound",
+      "definition": "These denote the ridge parameter, parameter-norm bound, action-norm bound, sub-Gaussian noise scale, and failure probability, respectively. Set the first four to one and impose $\\delta=1/T$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "A,\\|\\theta\\|_A,\\sigma",
+      "meaning": "Ellipsoidal parameter, dual-reward scale, and noise scale in the E2TC derivation",
+      "domain": "Used only to specialize this upper bound",
+      "definition": "For the current unit ball, use $A=I_d$, so $\\|\\theta\\|_A=\\|\\theta\\|_2$, and set $\\sigma=1$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "D,a,e_1",
+      "meaning": "Actual dimension, signal amplitude, and first coordinate unit vector in the low-dimensional lower bound",
+      "domain": "Used only in the lower-bound proof",
+      "definition": "Set $D=d$, $a=1/(4\\sqrt T)$, and hard parameters $\\theta=\\pm ae_1$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_T",
+      "meaning": "Cumulative pseudoregret evaluated using the mean functions",
+      "domain": "Nonnegative real-valued random variable",
+      "definition": "$R_T=\\sum_t(\\|\\theta\\|_2-\\langle x_t,\\theta\\rangle)$ Realized observation noise is excluded from the loss difference. Probability or expectation aggregation is specified separately by the guarantee.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal R_T^*",
+      "meaning": "Minimax expected regret under the current information protocol and parameter region.",
+      "domain": "A nonnegative real.",
+      "definition": "$$\n\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{\\|\\theta\\|_2\\le1}\\mathbb E_{\\mathcal A,Z}[R_T],\\\\ R_T&=\\sum_{t=1}^T(\\|\\theta\\|_2-\\langle x_t,\\theta\\rangle).\\end{aligned}\n$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation includes learner randomness and the explicitly specified reward or sample randomness. Conditional expectations retain their stated history conditioning.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "B_2^d(r)",
+      "meaning": "Closed Euclidean ball of radius r",
+      "domain": "$r\\ge0$",
+      "definition": "$B_2^d(r)=\\{x\\in\\mathbb R^d:\\|x\\|_2\\le r\\}$. The symbol r is a placeholder radius, instantiated as R or 1 in the relevant specification.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Cumulative observations counted according to the declared feedback type.",
+      "domain": "Nonnegative integer or integer-valued stopping time",
+      "definition": "The quantity $N=T$ counts cumulative native scalar feedback under a one-point or one-arm protocol.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ON_LINSTO_S__main__q1",
+      "kind": "minimax_cumulative_pseudo_regret",
+      "expression": "R*_T = inf_{A in admissible nonanticipating randomized learners} sup_{I in declared model} E_A,I[sum_t (||θ||_2−<x_t,θ>)].",
+      "optimization_direction": "minimize",
+      "units": "loss",
+      "budget_variables": [
+        "ON_LINSTO_S_p_76dd32a562"
+      ],
+      "tolerance_variables": [],
+      "analysis_scope": "Compare only this specification and the listed parameter regions.",
+      "tracked_parameters": [
+        "ON_LINSTO_S_p_76dd32a562",
+        "ON_LINSTO_S_p_136cb4ee93"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{\\|\\theta\\|_2\\le1}\\mathbb E_{\\mathcal A,Z}[R_T],\\\\ R_T&=\\sum_{t=1}^T(\\|\\theta\\|_2-\\langle x_t,\\theta\\rangle).\\end{aligned}",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound.",
+      "expression": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_351fb610de"
+    },
+    {
+      "description": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+      "expression": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+      "mode": "native_metric",
+      "resource_projection_id": "resource_6a63cfee9f"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ON_LINSTO_S__main__r1",
+      "specification_ref": "ON_LINSTO_S",
+      "name": "MAIN",
+      "predicate_text": "T≥d²; d≥1; T≥2",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_LINSTO_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "op": "pow",
+                "args": [
+                  {
+                    "parameter": "ON_LINSTO_S_p_136cb4ee93"
+                  },
+                  2
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_LINSTO_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": 2
+            }
+          }
+        ]
+      },
+      "parameter_refs": [
+        "ON_LINSTO_S_p_136cb4ee93",
+        "ON_LINSTO_S_p_76dd32a562"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Proof constants are independent of all declared tracked parameters. Thresholds without numerical values remain symbolic."
+    },
+    {
+      "id": "ON_LINSTO_S__main__r2",
+      "specification_ref": "ON_LINSTO_S",
+      "name": "ALL_D_T",
+      "predicate_text": "All integers $d,T\\ge1$, with noise variance fixed to $1$",
+      "predicate_latex": "d,T\\in\\mathbb N_{\\ge1}",
+      "kind": "theorem_window",
+      "parameter_refs": [],
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "d,T\\in\\mathbb N_{\\ge1}"
+      },
+      "endpoint_notes": "Unspecified numerical thresholds remain symbolic. Fixed-parameter dependence does not imply dimension-uniform constants."
+    },
+    {
+      "id": "ON_LINSTO_S__main__r3",
+      "specification_ref": "ON_LINSTO_S",
+      "name": "SAT",
+      "predicate_text": "$1\\le T\\le d^{2}$.",
+      "predicate_latex": "1\\le T\\le d^2",
+      "kind": "theorem_window",
+      "parameter_refs": [],
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "1\\le T\\le d^2"
+      },
+      "endpoint_notes": "Unspecified numerical thresholds remain symbolic. Fixed-parameter dependence does not imply dimension-uniform constants."
+    },
+    {
+      "id": "ON_LINSTO_S__main__r4",
+      "specification_ref": "ON_LINSTO_S",
+      "name": "LONG",
+      "predicate_text": "$T\\ge d^{2}$.",
+      "predicate_latex": "T\\ge d^2",
+      "kind": "theorem_window",
+      "parameter_refs": [],
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "T\\ge d^2"
+      },
+      "endpoint_notes": "Unspecified numerical thresholds remain symbolic. Fixed-parameter dependence does not imply dimension-uniform constants."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ON_LINSTO_S__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\le C d\\sqrt T\\log(2T)",
+      "quantity_ref": "ON_LINSTO_S__main__q1",
+      "region_refs": [
+        "ON_LINSTO_S__main__r1"
+      ],
+      "method": "OFUL",
+      "algorithm_or_hard_family": "OFUL",
+      "algorithm_class_scope": "A deterministic decision strategy suffices. Rewards or observations may still be random, with error quantifiers specified separately under GUARANTEE.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T scalar observations",
+        "optimistic_solves": "≤T",
+        "matrix_updates": "≤T rank-one d×d updates"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_OFUL"
+      ],
+      "evidence_refs": [
+        "ON_LINSTO_S__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [],
+      "applicability": {
+        "conditions": [
+          "This bound requires $d\\ge1$, $T\\ge2$, and $T\\ge d^2$, with actions in the unit Euclidean ball, parameter norm at most one, and unit Gaussian scalar observation noise."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "This simplified expression retains one log(2T) factor. The source gives a sharper determinant and logarithmic expression."
+      ],
+      "derivation": "In Theorem 3 set $\\lambda=S=L=R_{\\mathrm{noise}}=1$ and $\\delta=1/T$. Although Gaussian observations are unbounded, the mean reward difference per round is at most two. Adding the failure-event contribution, at most $2T\\delta$, to the high-probability regret bound gives the expected bound.",
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_LINSTO_S__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\ge\\frac{d\\sqrt T}{16\\sqrt3}",
+      "quantity_ref": "ON_LINSTO_S__main__q1",
+      "region_refs": [
+        "ON_LINSTO_S__main__r1"
+      ],
+      "method": "Gaussian scalar-noise hypercube family in Theorem24.2",
+      "algorithm_or_hard_family": "Gaussian scalar-noise hypercube family in Theorem24.2",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_BOOK"
+      ],
+      "evidence_refs": [
+        "ON_LINSTO_S__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_LINSTO_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "This bound requires $d\\ge1$, $T\\ge2$, and $T\\ge d^2$, with actions in the unit Euclidean ball, parameter norm at most one, and unit Gaussian scalar observation noise."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_LINSTO_S__main__b3",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "C\\min\\{T,d\\sqrt T\\}",
+      "quantity_ref": "ON_LINSTO_S__main__q1",
+      "region_refs": [
+        "ON_LINSTO_S__main__r2",
+        "ON_LINSTO_S__main__r3",
+        "ON_LINSTO_S__main__r4"
+      ],
+      "method": "E2TC: explore, test, then commit",
+      "algorithm_or_hard_family": "E2TC: explore, test, then commit",
+      "algorithm_class_scope": "A deterministic decision strategy suffices; observation noise remains stochastic.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "Use the native per-round protocol specified by the contract."
+      },
+      "source_refs": [
+        "ON_REV_SRC_ELLIPSOID2025"
+      ],
+      "evidence_refs": [
+        "ON_LINSTO_S__main__e3"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_LINSTO_S__main__c1",
+        "ON_LINSTO_S__main__c2",
+        "ON_LINSTO_S__main__c3",
+        "ON_LINSTO_S__main__c4"
+      ],
+      "applicability": {
+        "conditions": [
+          "Assume integer $d,T\\ge1$, actions in the unit Euclidean ball, $\\|\\theta\\|_2\\le1$, and independent standard Gaussian scalar noise."
+        ],
+        "guarantee_mapping": "The accompanying argument states the native guarantee and necessary conversion.",
+        "oracle_mapping": "Preserve this setting's feedback type, within-round coupling, and historical information",
+        "source_guards_original": [
+          "Assume integer $d,T\\ge1$, actions in the unit Euclidean ball, $\\|\\theta\\|_2\\le1$, and independent standard Gaussian scalar noise."
+        ]
+      },
+      "hidden_constants": "Dependence is allowed only on parameters declared fixed in the applicability conditions.",
+      "hidden_logs": [
+        "The displayed expression uses no notation that suppresses logarithmic factors."
+      ],
+      "derivation": "Corollary 8 gives $O(\\min\\{\\sigma d\\sqrt T+d\\|\\theta\\|_A,\\ T\\|\\theta\\|_A\\})$. Set $A=I$, $\\sigma=1$, and $\\|\\theta\\|_2\\le1$ and use $d\\le d\\sqrt T$ to obtain the stated worst-case upper bound.",
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_LINSTO_S__main__b4",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "c\\min\\{T,d\\sqrt T\\}",
+      "quantity_ref": "ON_LINSTO_S__main__q1",
+      "region_refs": [
+        "ON_LINSTO_S__main__r2",
+        "ON_LINSTO_S__main__r3",
+        "ON_LINSTO_S__main__r4"
+      ],
+      "method": "Local spherical hard instances; dimensions d = 1,2 use two Gaussian sign hypotheses.",
+      "algorithm_or_hard_family": "Local spherical hard instances; dimensions d = 1,2 use two Gaussian sign hypotheses.",
+      "algorithm_class_scope": "All causal randomized algorithms with the stated permissions; directions of information and algorithm-class transfers are given in the derivation.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "Use the native per-round protocol specified by the contract."
+      },
+      "source_refs": [
+        "ON_REV_SRC_ELLIPSOID2025"
+      ],
+      "evidence_refs": [
+        "ON_LINSTO_S__main__e4"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_LINSTO_S__main__c1",
+        "ON_LINSTO_S__main__c2",
+        "ON_LINSTO_S__main__c3",
+        "ON_LINSTO_S__main__c4"
+      ],
+      "applicability": {
+        "conditions": [
+          "The bound requires integer $d,T\\ge 1$ and the same standard-Gaussian unit-ball model."
+        ],
+        "guarantee_mapping": "The accompanying argument states the native guarantee and necessary conversion.",
+        "oracle_mapping": "Preserve this setting's feedback type, within-round coupling, and historical information",
+        "source_guards_original": [
+          "Positive integers d,T; the same unit-ball model with standard Gaussian noise."
+        ]
+      },
+      "hidden_constants": "Dependence is allowed only on parameters declared fixed in the applicability conditions.",
+      "hidden_logs": [
+        "The displayed expression uses no notation that suppresses logarithmic factors."
+      ],
+      "derivation": "The source lower bound writes ambient dimension as $d+2$. If actual dimension is denoted $D$, then $D\\ge3$ implies $D-2\\ge D/3$, so relabeling preserves the order. For $D=1,2$, embed the two parameters $\\theta=\\pm ae_1$ with $a=1/(4\\sqrt T)$. Under any policy the KL divergence between transcript laws is at most $2a^2T=1/8$. Pinsker's inequality gives constant sign-error probability and cumulative regret $\\Omega(\\sqrt T)$. Since $\\min\\{T,D\\sqrt T\\}\\le2\\sqrt T$, the required order also holds in these small dimensions.",
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "MAIN",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_LINSTO_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "op": "pow",
+                "args": [
+                  {
+                    "parameter": "ON_LINSTO_S_p_136cb4ee93"
+                  },
+                  2
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_LINSTO_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": 2
+            }
+          }
+        ]
+      },
+      "predicate_text": "$T\\ge d^2; d\\ge 1; T\\ge 2$",
+      "parameter_refs": [
+        "ON_LINSTO_S_p_136cb4ee93",
+        "ON_LINSTO_S_p_76dd32a562"
+      ],
+      "source_region_ref": "ON_LINSTO_S__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_LINSTO_S__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_LINSTO_S__main__q1",
+      "resource_projection_id": "resource_351fb610de",
+      "regime_id": "ON_LINSTO_S__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "ON_LINSTO_S__main__b3"
+        ],
+        "lower_refs": [
+          "ON_LINSTO_S__main__b2",
+          "ON_LINSTO_S__main__b4"
+        ],
+        "comparison_ref": "ON_LINSTO_S__main__c1",
+        "quantity_ref": "ON_LINSTO_S__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+        "ratio_or_gap": "E2TC at COLT 2025 removes the logarithmic factor in earlier bounds; retain its original applicability region.",
+        "envelopes": {
+          "upper": {
+            "expression": "O(d\\sqrt T)",
+            "claim_refs": [
+              "ON_LINSTO_S__main__b3"
+            ],
+            "display_latex": "O(d\\sqrt T)",
+            "included": true,
+            "expression_latex": "O(d\\sqrt T)"
+          },
+          "lower": {
+            "expression": "\\Omega(d\\sqrt T)",
+            "claim_refs": [
+              "ON_LINSTO_S__main__b2",
+              "ON_LINSTO_S__main__b4"
+            ],
+            "display_latex": "\\Omega(d\\sqrt T)",
+            "included": true,
+            "expression_latex": "\\Omega(d\\sqrt T)"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_LINSTO_S__main__b1",
+            "when_region_refs": [
+              "ON_LINSTO_S__main__r1"
+            ],
+            "meaning": "Invoke each algorithm only in its applicability region; the scalar upper envelope minimizes over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "ON_LINSTO_S__main__b3": [
+            {
+              "region_ref": "ON_LINSTO_S__main__r2",
+              "predicate_text": "All integers $d,T\\ge1$, with noise variance fixed to $1$"
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r3",
+              "predicate_text": "$1\\le T\\le d^{2}$."
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r4",
+              "predicate_text": "$T\\ge d^{2}$."
+            }
+          ],
+          "ON_LINSTO_S__main__b2": [
+            {
+              "region_ref": "ON_LINSTO_S__main__r1",
+              "predicate_text": "$T\\ge d^2; d\\ge 1; T\\ge 2$"
+            }
+          ],
+          "ON_LINSTO_S__main__b4": [
+            {
+              "region_ref": "ON_LINSTO_S__main__r2",
+              "predicate_text": "All integers $d,T\\ge1$, with noise variance fixed to $1$"
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r3",
+              "predicate_text": "$1\\le T\\le d^{2}$."
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r4",
+              "predicate_text": "$T\\ge d^{2}$."
+            }
+          ]
+        },
+        "envelope_certificate": "Only individually audited compatible claims enter. Baseline bracket; no claim that remaining logarithm is necessary or that all action geometries share this rate.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound."
+      },
+      "comparison_key": {
+        "setting_id": "ON_LINSTO_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_LINSTO_S__main__q1",
+        "resource_projection_id": "resource_351fb610de",
+        "regime_id": "ON_LINSTO_S__main__r1"
+      }
+    },
+    {
+      "label": "ALL_D_T",
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "d,T\\in\\mathbb N_{\\ge1}"
+      },
+      "predicate_text": "All integers $d,T\\ge1$, with noise variance fixed to $1$",
+      "parameter_refs": [],
+      "source_region_ref": "ON_LINSTO_S__main__r2",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_LINSTO_S__main__c2",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_LINSTO_S__main__q1",
+      "resource_projection_id": "resource_6a63cfee9f",
+      "regime_id": "ON_LINSTO_S__main__r2",
+      "bracket": {
+        "upper_refs": [
+          "ON_LINSTO_S__main__b3"
+        ],
+        "lower_refs": [
+          "ON_LINSTO_S__main__b4"
+        ],
+        "comparison_ref": "ON_LINSTO_S__main__c2",
+        "quantity_ref": "ON_LINSTO_S__main__q1",
+        "comparison_mode": "native_metric",
+        "resource_projection": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+        "ratio_or_gap": "Constant ratio; dimension $d=1$ is included.",
+        "envelopes": {
+          "upper": {
+            "expression": "O(\\min\\{T,d\\sqrt T\\})",
+            "display_latex": "O(\\min\\{T,d\\sqrt T\\})",
+            "claim_refs": [
+              "ON_LINSTO_S__main__b3"
+            ],
+            "included": true,
+            "expression_latex": "O(\\min\\{T,d\\sqrt T\\})"
+          },
+          "lower": {
+            "expression": "\\Omega(\\min\\{T,d\\sqrt T\\})",
+            "display_latex": "\\Omega(\\min\\{T,d\\sqrt T\\})",
+            "claim_refs": [
+              "ON_LINSTO_S__main__b4"
+            ],
+            "included": true,
+            "expression_latex": "\\Omega(\\min\\{T,d\\sqrt T\\})"
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "ON_LINSTO_S__main__b3": [
+            {
+              "region_ref": "ON_LINSTO_S__main__r2",
+              "predicate_text": "All integers $d,T\\ge1$, with noise variance fixed to $1$"
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r3",
+              "predicate_text": "$1\\le T\\le d^{2}$."
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r4",
+              "predicate_text": "$T\\ge d^{2}$."
+            }
+          ],
+          "ON_LINSTO_S__main__b4": [
+            {
+              "region_ref": "ON_LINSTO_S__main__r2",
+              "predicate_text": "All integers $d,T\\ge1$, with noise variance fixed to $1$"
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r3",
+              "predicate_text": "$1\\le T\\le d^{2}$."
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r4",
+              "predicate_text": "$T\\ge d^{2}$."
+            }
+          ]
+        },
+        "envelope_certificate": "",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Fixed native online budget, with computational, communication, and privacy resources retained separately."
+      },
+      "comparison_key": {
+        "setting_id": "ON_LINSTO_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_LINSTO_S__main__q1",
+        "resource_projection_id": "resource_6a63cfee9f",
+        "regime_id": "ON_LINSTO_S__main__r2"
+      }
+    },
+    {
+      "label": "SAT",
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "1\\le T\\le d^2"
+      },
+      "predicate_text": "$1\\le T\\le d^{2}$.",
+      "parameter_refs": [],
+      "source_region_ref": "ON_LINSTO_S__main__r3",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_LINSTO_S__main__c3",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_LINSTO_S__main__q1",
+      "resource_projection_id": "resource_6a63cfee9f",
+      "regime_id": "ON_LINSTO_S__main__r3",
+      "bracket": {
+        "upper_refs": [
+          "ON_LINSTO_S__main__b3"
+        ],
+        "lower_refs": [
+          "ON_LINSTO_S__main__b4"
+        ],
+        "comparison_ref": "ON_LINSTO_S__main__c3",
+        "quantity_ref": "ON_LINSTO_S__main__q1",
+        "comparison_mode": "native_metric",
+        "resource_projection": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+        "ratio_or_gap": "Constant ratio",
+        "envelopes": {
+          "upper": {
+            "expression": "O(T)",
+            "display_latex": "O(T)",
+            "claim_refs": [
+              "ON_LINSTO_S__main__b3"
+            ],
+            "included": true,
+            "expression_latex": "O(T)"
+          },
+          "lower": {
+            "expression": "\\Omega(T)",
+            "display_latex": "\\Omega(T)",
+            "claim_refs": [
+              "ON_LINSTO_S__main__b4"
+            ],
+            "included": true,
+            "expression_latex": "\\Omega(T)"
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "ON_LINSTO_S__main__b3": [
+            {
+              "region_ref": "ON_LINSTO_S__main__r2",
+              "predicate_text": "All integers $d,T\\ge1$, with noise variance fixed to $1$"
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r3",
+              "predicate_text": "$1\\le T\\le d^{2}$."
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r4",
+              "predicate_text": "$T\\ge d^{2}$."
+            }
+          ],
+          "ON_LINSTO_S__main__b4": [
+            {
+              "region_ref": "ON_LINSTO_S__main__r2",
+              "predicate_text": "All integers $d,T\\ge1$, with noise variance fixed to $1$"
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r3",
+              "predicate_text": "$1\\le T\\le d^{2}$."
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r4",
+              "predicate_text": "$T\\ge d^{2}$."
+            }
+          ]
+        },
+        "envelope_certificate": "",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Fixed native online budget, with computational, communication, and privacy resources retained separately."
+      },
+      "comparison_key": {
+        "setting_id": "ON_LINSTO_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_LINSTO_S__main__q1",
+        "resource_projection_id": "resource_6a63cfee9f",
+        "regime_id": "ON_LINSTO_S__main__r3"
+      }
+    },
+    {
+      "label": "LONG",
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "T\\ge d^2"
+      },
+      "predicate_text": "$T\\ge d^{2}$.",
+      "parameter_refs": [],
+      "source_region_ref": "ON_LINSTO_S__main__r4",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_LINSTO_S__main__c4",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_LINSTO_S__main__q1",
+      "resource_projection_id": "resource_6a63cfee9f",
+      "regime_id": "ON_LINSTO_S__main__r4",
+      "bracket": {
+        "upper_refs": [
+          "ON_LINSTO_S__main__b3"
+        ],
+        "lower_refs": [
+          "ON_LINSTO_S__main__b4"
+        ],
+        "comparison_ref": "ON_LINSTO_S__main__c4",
+        "quantity_ref": "ON_LINSTO_S__main__q1",
+        "comparison_mode": "native_metric",
+        "resource_projection": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+        "ratio_or_gap": "Constant ratio",
+        "envelopes": {
+          "upper": {
+            "expression": "O(d\\sqrt T)",
+            "display_latex": "O(d\\sqrt T)",
+            "claim_refs": [
+              "ON_LINSTO_S__main__b3"
+            ],
+            "included": true,
+            "expression_latex": "O(d\\sqrt T)"
+          },
+          "lower": {
+            "expression": "\\Omega(d\\sqrt T)",
+            "display_latex": "\\Omega(d\\sqrt T)",
+            "claim_refs": [
+              "ON_LINSTO_S__main__b4"
+            ],
+            "included": true,
+            "expression_latex": "\\Omega(d\\sqrt T)"
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "ON_LINSTO_S__main__b3": [
+            {
+              "region_ref": "ON_LINSTO_S__main__r2",
+              "predicate_text": "All integers $d,T\\ge1$, with noise variance fixed to $1$"
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r3",
+              "predicate_text": "$1\\le T\\le d^{2}$."
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r4",
+              "predicate_text": "$T\\ge d^{2}$."
+            }
+          ],
+          "ON_LINSTO_S__main__b4": [
+            {
+              "region_ref": "ON_LINSTO_S__main__r2",
+              "predicate_text": "All integers $d,T\\ge1$, with noise variance fixed to $1$"
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r3",
+              "predicate_text": "$1\\le T\\le d^{2}$."
+            },
+            {
+              "region_ref": "ON_LINSTO_S__main__r4",
+              "predicate_text": "$T\\ge d^{2}$."
+            }
+          ]
+        },
+        "envelope_certificate": "",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Fixed native online budget, with computational, communication, and privacy resources retained separately."
+      },
+      "comparison_key": {
+        "setting_id": "ON_LINSTO_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_LINSTO_S__main__q1",
+        "resource_projection_id": "resource_6a63cfee9f",
+        "regime_id": "ON_LINSTO_S__main__r4"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ON_LINSTO_S__main__e1",
+      "source_ref": "ON_SRC_BOOK",
+      "locator": {
+        "theorem": "Theorem 24.2",
+        "section": "",
+        "pdf_pages": [
+          299,
+          300
+        ],
+        "printed_pages": [
+          290,
+          291
+        ],
+        "equations": []
+      },
+      "supports": "Source support for the listed results and necessary explicit transfers: $\\mathcal{R}_T^*\\ge\\frac{d\\sqrt T}{16\\sqrt3}$. Applicability is restricted separately by each atomic bound's model, feedback, regime, and quantifiers.",
+      "notes": [
+        "Actions lie in the unit ball and feedback has independent standard Gaussian scalar noise. Hard parameters satisfy $\\|\\theta\\|_2^2=d^2/(48T)$ and yield lower bound $d\\sqrt T/(16\\sqrt3)$; $T\\ge d^2$ ensures they lie in the unit ball."
+      ]
+    },
+    {
+      "id": "ON_LINSTO_S__main__e2",
+      "source_ref": "ON_SRC_OFUL",
+      "locator": {
+        "theorem": "Theorem 3",
+        "section": "",
+        "pdf_pages": [
+          5
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "The source supports $\\mathcal{R}_T^*\\le C d\\sqrt T\\log(2T)$ and the stated reductions, subject to each atomic claim's model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "Use OFUL's high-probability bound under $\\lambda=S=L=R_{\\mathrm{noise}}=1$ and $\\delta=1/T$. Mean gaps per round are at most two, so failure contributes at most $2T\\delta$ to expected regret. Optimistic optimization remains a required algorithmic operation."
+      ]
+    },
+    {
+      "id": "ON_LINSTO_S__main__e3",
+      "source_ref": "ON_REV_SRC_ELLIPSOID2025",
+      "locator": {
+        "theorem": "Corollary 8, Theorem 7",
+        "section": "",
+        "pdf_pages": [],
+        "equations": []
+      },
+      "supports": "Source support for the listed results and necessary explicit transfers: $C\\min\\{T,d\\sqrt T\\}$. Applicability is restricted separately by each atomic bound's model, feedback, regime, and quantifiers.",
+      "notes": [
+        "Corollary 8 gives $O(\\min\\{\\sigma d\\sqrt T+d\\|\\theta\\|_A,\\ T\\|\\theta\\|_A\\})$. Set $A=I$, $\\sigma=1$, and $\\|\\theta\\|_2\\le1$ and use $d\\le d\\sqrt T$ to obtain the stated worst-case upper bound."
+      ]
+    },
+    {
+      "id": "ON_LINSTO_S__main__e4",
+      "source_ref": "ON_REV_SRC_ELLIPSOID2025",
+      "locator": {
+        "theorem": "Theorem 1 and the accompanying two-hypothesis argument in low dimension",
+        "section": "",
+        "pdf_pages": [],
+        "equations": []
+      },
+      "supports": "Source support for the result and explicit transfer: $c\\min\\{T,d\\sqrt T\\}$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "The source lower bound writes ambient dimension as $d+2$. If actual dimension is denoted $D$, then $D\\ge3$ implies $D-2\\ge D/3$, so relabeling preserves the order. For $D=1,2$, embed the two parameters $\\theta=\\pm ae_1$ with $a=1/(4\\sqrt T)$. Under any policy the KL divergence between transcript laws is at most $2a^2T=1/8$. Pinsker's inequality gives constant sign-error probability and cumulative regret $\\Omega(\\sqrt T)$. Since $\\min\\{T,D\\sqrt T\\}\\le2\\sqrt T$, the required order also holds in these small dimensions."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "ON_REV_SRC_ELLIPSOID2025",
+      "authors": [
+        "Raymond Zhang",
+        "Hédi Hadiji",
+        "Richard Combes"
+      ],
+      "title": "Linear Bandits on Ellipsoids: Minimax Optimal Algorithms",
+      "year": 2025,
+      "version": "COLT2025, PMLR291:6016–6040",
+      "url": "https://proceedings.mlr.press/v291/zhang25b.html",
+      "publication_status": "published"
+    },
+    {
+      "id": "ON_SRC_BOOK",
+      "authors": [
+        "Tor Lattimore",
+        "Csaba Szepesvári"
+      ],
+      "title": "Bandit Algorithms",
+      "year": 2020,
+      "version": "online book PDF accessed 2026-10-31; printed/PDF pages recorded separately",
+      "url": "https://tor-lattimore.com/downloads/book/book.pdf",
+      "publication_status": "published"
+    },
+    {
+      "id": "ON_SRC_OFUL",
+      "authors": [
+        "Yasin Abbasi-Yadkori",
+        "Dávid Pál",
+        "Csaba Szepesvári"
+      ],
+      "title": "Improved Algorithms for Linear Stochastic Bandits",
+      "year": 2011,
+      "version": "NeurIPS 24:2312–2320",
+      "url": "https://proceedings.neurips.cc/paper/2011/file/e1d5be1c7f2f456670de3d53c7b54f4a-Paper.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [
+    {
+      "id": "ON_REL_LIN_TO_BCO",
+      "source_ref": "ON_LINSTO_S",
+      "target_ref": "ON_BCO1_STO_S",
+      "relation_kind": "subclass_lower_bound",
+      "conditions": [
+        "Actions lie in the unit ball. Negate rewards to obtain losses, with additive scalar Gaussian noise of variance one."
+      ],
+      "instance_map": "f(x)=−<θ,x>",
+      "output_map": "same actions",
+      "error_map": "identical pseudo-regret",
+      "oracle_simulation": "negate observations; Gaussian noise symmetric",
+      "cost_map": {
+        "expression": "one scalar observation per round unchanged",
+        "components": {}
+      },
+      "evidence_refs": [
+        "ON_LINSTO_S__main__e1"
+      ]
+    },
+    {
+      "id": "ON_REL_STOLIN_NOT_BLO",
+      "source_ref": "ON_LINSTO_S",
+      "target_ref": "ON_LINADV_S",
+      "relation_kind": "distinct_feedback_models",
+      "conditions": [
+        "One interface adds observation noise to an inner product; the other returns the exact projection of a bounded random vector or a vector fixed in advance."
+      ],
+      "instance_map": "No class inclusion for arbitrary x; action-norm dependence of conditional variance differs.",
+      "output_map": "No transfer asserted.",
+      "error_map": "d sqrtT versus sqrt(dT) can coexist.",
+      "oracle_simulation": "Cannot rescale one observation law into the other without changing information.",
+      "cost_map": {
+        "expression": "Not asserted",
+        "components": {}
+      },
+      "evidence_refs": [
+        "ON_LINSTO_S__main__e1"
+      ]
+    }
+  ],
+  "aliases": [
+    {
+      "legacy_id": "ON_LINSTO_S",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 4,
+    "status_counts": {
+      "optimal": 4
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ON_LINSTO_S__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "ON_LINSTO_S__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_3",
+      "comparison_ids": [
+        "ON_LINSTO_S__main__c3"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_4",
+      "comparison_ids": [
+        "ON_LINSTO_S__main__c4"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "0344c01766f050a51f9e7742adfc38d1be35d51ec2a78ef985f2e00d9d1b96b1",
+    "source_order": 65,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

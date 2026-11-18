@@ -1,0 +1,738 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Relatively smooth convex minimization: primal first-order and mirror-map access\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}FO\_\allowbreak{}C08}
+
+Single-objective optimization
+
+Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.
+
+\textbf{Status.} Polynomial gap present
+
+\textbf{Gap classes present.} Polynomial gap; Other quantified gap
+
+The regional bracket below specifies the quantified gaps and their parameter dependence.
+
+\textbf{TASK tags.} formulation: Global minimization; task family: Single objective
+
+\textbf{MODEL tags.} convexity: Convex; geometry: Convex body; smoothness: Relative smoothness
+
+\textbf{ORACLE tags.} access order: First-order interface; feedback quality: Exact; interface family: Bregman first order and mirror; interface family: Mixed; operation: Values gradients and mirror; public information: Computable access; public information: Hidden objects explicitly declared; public information: Known upper bound; public information: Known exact value; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; adaptivity: Explicit restriction; computation: Internal arithmetic uncharged; randomization: Deterministic; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; feasibility: Required; object: Point; postprocessing: Unqueried output explicitly allowed
+
+\textbf{METRIC tags.} criterion: Objective gap
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; mode: Deterministic; mode: Expectation; randomness: Algorithm private seed
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget; measure: Oracle calls; precision: Bit precision not counted
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.
+
+
+\AtlasMath{\min_{x\in Q}f(x)}
+
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The unknown pair \AtlasInlineMath{(f,h)} consists of a proper closed kernel \AtlasInlineMath{h} that is strictly convex and differentiable in the interior, and a differentiable convex function \AtlasInlineMath{f}. The function \AtlasInlineMath{\beta_hh-f} is convex, and \AtlasInlineMath{D_h(x^\star,x_0)\le R^2}. Every linearly perturbed kernel subproblem has a unique interior solution. The complete formula for \AtlasInlineMath{h} is not additionally disclosed.
+
+Feasible geometry: \AtlasInlineMath{Q=\operatorname{dom}h\subseteq\mathbb{R}^d}.
+
+Admissible parameter domain:
+
+
+\AtlasMath{R>0,\quad \beta_h>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0}
+
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Public numerical inputs: \AtlasInlineMath{d,\ \varepsilon,\ x_0}.
+
+Public upper bounds: \AtlasInlineMath{\beta_h,\ R}.
+
+The unknown object is the function pair \AtlasInlineMath{(f,h)}.
+
+Query points lie in \AtlasInlineMath{Q}; feedback consists of primal first-order information and mirror-map access:
+
+
+\AtlasMath{(f(x),\nabla f(x),h(x),\nabla h(x));\quad\nabla h^*(y)=\arg\min_{z\in Q}\{h(z)-\langle y,z\rangle\}}
+
+
+All responses are consistent with one fixed function instance. Exact values and derivatives agree across repeated queries at the same point.
+
+The mirror-map interface accepts a dual vector \AtlasInlineMath{y\in\mathbb R^d} and returns \AtlasInlineMath{\nabla h^*(y)}.
+
+Primal first-order queries lie in \AtlasInlineMath{\operatorname{int}(\operatorname{dom}h)}; mirror queries lie in the dual space. The initial primal query is also charged.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return a point \AtlasInlineMath{\widehat x\in Q}.
+
+The output may be unqueried or constructed from the query history, provided it is feasible. No additional function value or accuracy certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+\AtlasMath{\ell(f,x)=f(x)-f^\star}
+
+
+\AtlasInlineMath{f^\star=\inf_{x\in Q}f(x)}. The existence, compactness, or initial-suboptimality assumptions ensure that the optimal value in this comparison is finite.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Retain the primal and mirror query counts \AtlasInlineMath{(N_{\rm primal},N_{\rm mirror})}. Each call increments its own coordinate by one. The scalar cost is \AtlasInlineMath{T=N_{\rm primal}+N_{\rm mirror}}.
+
+Cost is bounded uniformly on every execution path. All calls used for initialization, repetition, batching, or candidate verification are counted.
+
+Real arithmetic, precision, and storage applied to already available information are uncharged. Public geometric operations are limited to those explicitly granted by the oracle. Query complexity alone does not imply arithmetic, memory, or communication complexity.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+\needspace{4\baselineskip}\subsubsection{Deterministic / Linear span / Pointwise guarantee}
+The algorithm uses no private random numbers. Query and stopping decisions may depend adaptively on the observed feedback.
+
+Let \AtlasInlineMath{X_t} and \AtlasInlineMath{Y_t} denote the primal and dual histories. Initially \AtlasInlineMath{X_0=\{x_0\}}; after the primal response at \AtlasInlineMath{x_0}, add \AtlasInlineMath{\nabla f(x_0)} and \AtlasInlineMath{\nabla h(x_0)} to \AtlasInlineMath{Y_0}. Primal queries lie in \AtlasInlineMath{\operatorname{span}X_{t-1}\cap\operatorname{dom}\nabla h} and their responses enlarge only \AtlasInlineMath{Y_t}. Mirror queries lie in \AtlasInlineMath{\operatorname{span}Y_{t-1}} and their responses enlarge only \AtlasInlineMath{X_t}. The output lies in \AtlasInlineMath{\operatorname{span}X_T\cap Q}.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+
+\AtlasMath{\exists A\ \forall I,\mathcal{O}:\ \ell(I,\widehat{x})\le\varepsilon}
+
+
+The error guarantee holds for every instance; it is not averaged over an input distribution.
+
+\textbf{Output qualification.} The output must also satisfy the support, atomic-hull, or historical-span restriction of its algorithm view. An unqueried output remains subject to these restrictions.
+
+\needspace{4\baselineskip}\subsubsection{Randomized / Linear span / Expected loss}
+Private randomization is allowed. Queries, stopping decisions, and postprocessing may adapt to observed feedback.
+
+Let \AtlasInlineMath{X_t} and \AtlasInlineMath{Y_t} denote the primal and dual histories. Initially \AtlasInlineMath{X_0=\{x_0\}}; after the primal response at \AtlasInlineMath{x_0}, add \AtlasInlineMath{\nabla f(x_0)} and \AtlasInlineMath{\nabla h(x_0)} to \AtlasInlineMath{Y_0}. Primal queries lie in \AtlasInlineMath{\operatorname{span}X_{t-1}\cap\operatorname{dom}\nabla h} and their responses enlarge only \AtlasInlineMath{Y_t}. Mirror queries lie in \AtlasInlineMath{\operatorname{span}Y_{t-1}} and their responses enlarge only \AtlasInlineMath{X_t}. The output lies in \AtlasInlineMath{\operatorname{span}X_T\cap Q}.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+
+\AtlasMath{\exists A\ \forall I,\mathcal{O}:\ \mathbb{E}_A[\ell(I,\widehat{x})]\le\varepsilon}
+
+
+The probability space includes the algorithm's private randomness. The instance and its admissible oracle law are fixed before randomness is averaged.
+
+\textbf{Output qualification.} The output must also satisfy the support, atomic-hull, or historical-span restriction of its algorithm view. An unqueried output remains subject to these restrictions.
+
+\needspace{4\baselineskip}\subsubsection{Deterministic / Pointwise guarantee}
+The algorithm uses no private random numbers. Query and stopping decisions may depend adaptively on the observed feedback.
+
+No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+
+\AtlasMath{\exists A\ \forall I,\mathcal{O}:\ \ell(I,\widehat{x})\le\varepsilon}
+
+
+The error guarantee holds for every instance; it is not averaged over an input distribution.
+
+\needspace{4\baselineskip}\subsubsection{Randomized / Expected loss}
+Private randomization is allowed. Queries, stopping decisions, and postprocessing may adapt to observed feedback.
+
+No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+
+\AtlasMath{\exists A\ \forall I,\mathcal{O}:\ \mathbb{E}_A[\ell(I,\widehat{x})]\le\varepsilon}
+
+
+The probability space includes the algorithm's private randomness. The instance and its admissible oracle law are fixed before randomness is averaged.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{x,\widehat{x}}: Query points and final output; their permitted spaces are specified separately by the oracle and output contracts \textbf{Domain:} \AtlasInlineMath{\widehat{x}\in Q}.
+
+\AtlasInlineMath{f}: Unknown objective, with domain and structure specified by the model
+
+\AtlasInlineMath{\nabla f}: Full gradient of the differentiable objective or smooth term with respect to the decision variable
+
+\AtlasInlineMath{\nabla h}: Full gradient of the differentiable kernel or the unknown Hölder-smooth term
+
+\AtlasInlineMath{x_0}: Public initial point satisfying the stated initial-distance or initial-suboptimality condition
+
+\AtlasInlineMath{f^\star}: Optimal value of the complete task; the oracle need not return it
+
+
+\AtlasMath{f^\star=\inf_{x\in Q}f(x)}
+
+
+\AtlasInlineMath{x^\star}: A global minimizer whose existence is promised by the model; unique under strong convexity
+
+\AtlasInlineMath{Q}: Feasible set of the task
+
+
+\AtlasMath{Q=\operatorname{dom}h\subseteq\mathbb{R}^d}
+
+
+\AtlasInlineMath{\mathbb{R}^d}: Real vector space with \AtlasInlineMath{d} coordinates
+
+\AtlasInlineMath{\|\cdot\|_2,\langle\cdot,\cdot\rangle}: Euclidean norm and inner product
+
+\AtlasInlineMath{h,h^*}: Kernel function and its Fenchel conjugate
+
+
+\AtlasMath{h^*(y)=\sup_{x\in Q}\{\langle y,x\rangle-h(x)\}}
+
+
+\AtlasInlineMath{D_h}: Bregman divergence induced by the kernel
+
+
+\AtlasMath{D_h(u,v)=h(u)-h(v)-\langle\nabla h(v),u-v\rangle}
+
+
+\AtlasInlineMath{X_t,Y_t}: Primal history of points and dual history of vectors; their update rules are specified by the algorithm view \textbf{Domain:} \AtlasInlineMath{t\in\mathbb{N}_{\ge0}}.
+
+\AtlasInlineMath{\operatorname{span}}: Linear space of all finite real linear combinations of vectors in the set
+
+\AtlasInlineMath{d}: Dimension; a public positive integer whose dependence is tracked jointly \textbf{Domain:} \AtlasInlineMath{d\in\mathbb{N}_{\ge1}}.
+
+\AtlasInlineMath{\beta_h}: Public upper bound on the relative smoothness constant \textbf{Domain:} \AtlasInlineMath{\beta_h>0}.
+
+\AtlasInlineMath{R}: Public upper bound on the square root of the initial Bregman divergence \textbf{Domain:} \AtlasInlineMath{R>0}.
+
+\AtlasInlineMath{\varepsilon}: Target tolerance for the underlying error defined by the accuracy measure \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{c}: Sufficiently small universal positive constant, not specified numerically and potentially different between theorems. \textbf{Domain:} \AtlasInlineMath{0<c<1}.
+
+\AtlasInlineMath{C}: Sufficiently large universal positive constant, not specified numerically and potentially different between theorems. \textbf{Domain:} \AtlasInlineMath{C>1}.
+
+\AtlasInlineMath{T}: Total budget for the declared resource projection; for a risk curve, the budget is fixed in advance \textbf{Domain:} \AtlasInlineMath{T\in\mathbb{N}_{\ge0}}.
+
+\AtlasInlineMath{N_{\mathrm{primal}},N_{\mathrm{mirror}}}: Numbers of primal first-order and mirror-map calls \textbf{Domain:} All are nonnegative integers.
+
+\AtlasInlineMath{\ell}: The underlying loss or error defined by the accuracy measure; its expected, probabilistic, or worst-case aggregation is specified by the success contract
+
+\AtlasInlineMath{I,\mathcal{O},A}: Admissible instance, a response rule consistent with that instance, and an algorithm; the algorithm is selected before the unknown instance
+
+\AtlasInlineMath{O,\Omega,\Theta,\widetilde{O},\widetilde\Omega}: Notation for asymptotic upper and lower bounds, constant-factor matching rates, and explicitly permitted logarithmic factors. Hidden-constant dependence is specified in each regime.
+
+\AtlasInlineMath{\log}: Natural logarithm; changing to another fixed base affects only a constant
+
+\AtlasInlineMath{\mathbb{E}}: Expectation over the declared randomness after fixing the instance and admissible response law
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\textbf{View.} Deterministic / Linear span / Pointwise guarantee
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} Each primal first-order query and each mirror-map query costs one call; one NoLips iteration uses one of each.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q2 - target accuracy cost}
+\textbf{View.} Randomized / Linear span / Expected loss
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} Each primal first-order query and each mirror-map query costs one call; one NoLips iteration uses one of each.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q3 - target accuracy cost}
+\textbf{View.} Deterministic / Pointwise guarantee
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} Each primal first-order query and each mirror-map query costs one call; one NoLips iteration uses one of each.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q4 - target accuracy cost}
+\textbf{View.} Randomized / Expected loss
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} Each primal first-order query and each mirror-map query costs one call; one NoLips iteration uses one of each.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsection{R1 - Nontrivial accuracy under relative smoothness}
+\textbf{Region.} \AtlasInlineMath{0<\varepsilon\le c\beta_hR^2}
+
+\textbf{Views.} Deterministic / Linear span / Pointwise guarantee
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Each primal first-order query and each mirror-map query costs one call; one NoLips iteration uses one of each.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B2, B3, B4
+
+\AtlasMath{c\max\{\min(d,\beta_hR^2/\varepsilon),\log(2+\beta_hR^2/\varepsilon)\}}
+\textbf{Upper bound.} B1
+
+\AtlasMath{C\beta_hR^2/\varepsilon}
+\textbf{Gap or comparison.} \AtlasInlineMath{\frac{\beta_hR^2/\varepsilon}{\max\{\min(d,\beta_hR^2/\varepsilon),\log(2+\beta_hR^2/\varepsilon)\}}}
+
+\needspace{4\baselineskip}\subsection{R2 - Sufficiently high dimension for the span-restricted class}
+\textbf{Region.} \AtlasInlineMath{d\ge C\beta_hR^2/\varepsilon,\quad\varepsilon\le c\beta_hR^2}
+
+\textbf{Views.} Deterministic / Linear span / Pointwise guarantee; Randomized / Linear span / Expected loss
+
+\textbf{Quantity.} Q1; Q2
+
+\textbf{Resource.} Each primal first-order query and each mirror-map query costs one call; one NoLips iteration uses one of each.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2, B6
+
+\AtlasMath{c\beta_hR^2/\varepsilon}
+\textbf{Upper bound.} B1, B5
+
+\AtlasMath{C\beta_hR^2/\varepsilon}
+\textbf{Gap or comparison.} \AtlasInlineMath{C}
+
+\needspace{4\baselineskip}\subsection{R3 - Nontrivial accuracy under relative smoothness}
+\textbf{Region.} \AtlasInlineMath{0<\varepsilon\le c\beta_hR^2}
+
+\textbf{Views.} Randomized / Linear span / Expected loss
+
+\textbf{Quantity.} Q2
+
+\textbf{Resource.} Each primal first-order query and each mirror-map query costs one call; one NoLips iteration uses one of each.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B6, B7, B8
+
+\AtlasMath{c\max\{\min(d,\beta_hR^2/\varepsilon),\log(2+\beta_hR^2/\varepsilon)\}}
+\textbf{Upper bound.} B5
+
+\AtlasMath{C\beta_hR^2/\varepsilon}
+\textbf{Gap or comparison.} \AtlasInlineMath{\frac{\beta_hR^2/\varepsilon}{\max\{\min(d,\beta_hR^2/\varepsilon),\log(2+\beta_hR^2/\varepsilon)\}}}
+
+\needspace{4\baselineskip}\subsection{R4 - Nontrivial accuracy under relative smoothness}
+\textbf{Region.} \AtlasInlineMath{0<\varepsilon\le c\beta_hR^2}
+
+\textbf{Views.} Deterministic / Pointwise guarantee
+
+\textbf{Quantity.} Q3
+
+\textbf{Resource.} Each primal first-order query and each mirror-map query costs one call; one NoLips iteration uses one of each.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B10, B11
+
+\AtlasMath{c\max\{\min(\sqrt d,\sqrt{\beta_hR^2/\varepsilon}),\log(2+\beta_hR^2/\varepsilon)\}}
+\textbf{Upper bound.} B9
+
+\AtlasMath{C\beta_hR^2/\varepsilon}
+\textbf{Gap or comparison.} \AtlasInlineMath{\frac{\beta_hR^2/\varepsilon}{\max\{\min(\sqrt d,\sqrt{\beta_hR^2/\varepsilon}),\log(2+\beta_hR^2/\varepsilon)\}}}
+
+\needspace{4\baselineskip}\subsection{R5 - Sufficiently high dimension for the span-restricted class}
+\textbf{Region.} \AtlasInlineMath{d\ge C\beta_hR^2/\varepsilon,\quad\varepsilon\le c\beta_hR^2}
+
+\textbf{Views.} Deterministic / Pointwise guarantee
+
+\textbf{Quantity.} Q3
+
+\textbf{Resource.} Each primal first-order query and each mirror-map query costs one call; one NoLips iteration uses one of each.
+
+\textbf{Status.} Polynomial gap
+
+\textbf{Lower bound.} B10
+
+\AtlasMath{c\sqrt{\beta_hR^2/\varepsilon}}
+\textbf{Upper bound.} B9
+
+\AtlasMath{C\beta_hR^2/\varepsilon}
+\textbf{Gap or comparison.} \AtlasInlineMath{C\sqrt{\beta_hR^2/\varepsilon}}
+
+\needspace{4\baselineskip}\subsection{R6 - Nontrivial accuracy under relative smoothness}
+\textbf{Region.} \AtlasInlineMath{0<\varepsilon\le c\beta_hR^2}
+
+\textbf{Views.} Randomized / Expected loss
+
+\textbf{Quantity.} Q4
+
+\textbf{Resource.} Each primal first-order query and each mirror-map query costs one call; one NoLips iteration uses one of each.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B13, B14
+
+\AtlasMath{c\max\{\min(\sqrt d,\sqrt{\beta_hR^2/\varepsilon}),\log(2+\beta_hR^2/\varepsilon)\}}
+\textbf{Upper bound.} B12
+
+\AtlasMath{C\beta_hR^2/\varepsilon}
+\textbf{Gap or comparison.} \AtlasInlineMath{\frac{\beta_hR^2/\varepsilon}{\max\{\min(\sqrt d,\sqrt{\beta_hR^2/\varepsilon}),\log(2+\beta_hR^2/\varepsilon)\}}}
+
+\needspace{4\baselineskip}\subsection{R7 - Sufficiently high dimension for the span-restricted class}
+\textbf{Region.} \AtlasInlineMath{d\ge C\beta_hR^2/\varepsilon,\quad\varepsilon\le c\beta_hR^2}
+
+\textbf{Views.} Randomized / Expected loss
+
+\textbf{Quantity.} Q4
+
+\textbf{Resource.} Each primal first-order query and each mirror-map query costs one call; one NoLips iteration uses one of each.
+
+\textbf{Status.} Polynomial gap
+
+\textbf{Lower bound.} B13
+
+\AtlasMath{c\sqrt{\beta_hR^2/\varepsilon}}
+\textbf{Upper bound.} B12
+
+\AtlasMath{C\beta_hR^2/\varepsilon}
+\textbf{Gap or comparison.} \AtlasInlineMath{C\sqrt{\beta_hR^2/\varepsilon}}
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Conditions.} 
+\AtlasMath{0<\varepsilon\le c\beta_hR^2}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{0<\varepsilon\le c\beta_hR^2}
+
+\textbf{Output mapping.} The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+\textbf{Resource mapping.} Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+\needspace{4\baselineskip}\subsection{B1 - NoLips / Bregman gradient method}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic / Linear span / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{C\beta_hR^2/\varepsilon}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]}
+
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]} theorem: Theorem 1, PDF p. 7: native NoLips error bound \AtlasInlineMath{\beta_hD_h(x^\star,x_0)/T}
+
+\needspace{4\baselineskip}\subsection{B2 - Pathwise support expansion for a fixed Bregman hard pair}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic / Linear span / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} The stated restricted randomized class
+
+\AtlasMath{c\min\{d,\beta_hR^2/\varepsilon\}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]}
+
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]} theorem: Definition4, Proposition2, Theorem2, PDFpp.7,13; $d\ge 2T+1$
+
+\needspace{4\baselineskip}\subsection{B3 - Randomized quadratic hard instances in the public Euclidean-kernel subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic / Linear span / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c\min\{\sqrt d,\sqrt{\beta_hR^2/\varepsilon}\}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.10874}{[2]}
+
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.10874}{[2]} theorem: Theorem 1 and the dimension-truncated smooth-convex lower bound, embedded in the subclass with a fixed public Euclidean kernel
+
+\needspace{4\baselineskip}\subsection{B4 - One-dimensional localization hard instances in the public Euclidean-kernel subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic / Linear span / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c\log(2+\beta_hR^2/\varepsilon)}
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Local argument.} A1
+
+\needspace{4\baselineskip}\subsection{B5 - NoLips / Bregman gradient method}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Linear span / Expected loss
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{C\beta_hR^2/\varepsilon}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]}
+
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]} theorem: Theorem 1, PDF p. 7: native NoLips error bound \AtlasInlineMath{\beta_hD_h(x^\star,x_0)/T}
+
+\needspace{4\baselineskip}\subsection{B6 - Pathwise support expansion for a fixed Bregman hard pair}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized / Linear span / Expected loss
+
+\textbf{Witness or lower-bound scope.} The stated restricted randomized class
+
+\AtlasMath{c\min\{d,\beta_hR^2/\varepsilon\}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]}
+
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]} theorem: Definition4, Proposition2, Theorem2, PDFpp.7,13; $d\ge 2T+1$
+
+\needspace{4\baselineskip}\subsection{B7 - Randomized quadratic hard instances in the public Euclidean-kernel subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized / Linear span / Expected loss
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c\min\{\sqrt d,\sqrt{\beta_hR^2/\varepsilon}\}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.10874}{[2]}
+
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.10874}{[2]} theorem: Theorem 1 and the dimension-truncated smooth-convex lower bound, embedded in the subclass with a fixed public Euclidean kernel
+
+\needspace{4\baselineskip}\subsection{B8 - One-dimensional localization hard instances in the public Euclidean-kernel subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized / Linear span / Expected loss
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c\log(2+\beta_hR^2/\varepsilon)}
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Local argument.} A1
+
+\needspace{4\baselineskip}\subsection{B9 - NoLips / Bregman gradient method}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{C\beta_hR^2/\varepsilon}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]}
+
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]} theorem: Theorem 1, PDF p. 7: native NoLips error bound \AtlasInlineMath{\beta_hD_h(x^\star,x_0)/T}
+
+\needspace{4\baselineskip}\subsection{B10 - Randomized quadratic hard instances in the public Euclidean-kernel subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c\min\{\sqrt d,\sqrt{\beta_hR^2/\varepsilon}\}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.10874}{[2]}
+
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.10874}{[2]} theorem: Theorem 1 and the dimension-truncated smooth-convex lower bound, embedded in the subclass with a fixed public Euclidean kernel
+
+\needspace{4\baselineskip}\subsection{B11 - One-dimensional localization hard instances in the public Euclidean-kernel subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c\log(2+\beta_hR^2/\varepsilon)}
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Local argument.} A1
+
+\needspace{4\baselineskip}\subsection{B12 - NoLips / Bregman gradient method}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Expected loss
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{C\beta_hR^2/\varepsilon}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]}
+
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/1911.08510v3}{[1]} theorem: Theorem 1, PDF p. 7: native NoLips error bound \AtlasInlineMath{\beta_hD_h(x^\star,x_0)/T}
+
+\needspace{4\baselineskip}\subsection{B13 - Randomized quadratic hard instances in the public Euclidean-kernel subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized / Expected loss
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c\min\{\sqrt d,\sqrt{\beta_hR^2/\varepsilon}\}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.10874}{[2]}
+
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.10874}{[2]} theorem: Theorem 1 and the dimension-truncated smooth-convex lower bound, embedded in the subclass with a fixed public Euclidean kernel
+
+\needspace{4\baselineskip}\subsection{B14 - One-dimensional localization hard instances in the public Euclidean-kernel subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized / Expected loss
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c\log(2+\beta_hR^2/\varepsilon)}
+\textbf{Oracle correspondence.} Applicable interfaces: primal first-order information and a mirror map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Local argument.} A1
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - A one-dimensional lower bound with exact values and gradients}
+\textbf{Scope.} Exact values and gradients; unbounded real-line queries, with higher-dimensional embeddings.
+
+\textbf{Algorithm scope.} Lower bounds against arbitrary randomized adaptive algorithms, including unqueried output.
+
+Fix \AtlasInlineMath{1<\kappa=\beta/\mu}. Choose a fixed smooth \AtlasInlineMath{\psi}, equal to \AtlasInlineMath{-x} on \AtlasInlineMath{[-1/2,1/2]} and zero outside \AtlasInlineMath{[-1,1]}, and let \AtlasInlineMath{C_\psi=\max\{1,\|\psi''\|_\infty\}}. Set
+
+\AtlasMath{\beta_0=(\beta+\mu)/2,\quad a={\kappa-1\over8C_\psi(\kappa+1)},\quad
+\eta=a/4,\quad \rho_0={(1-\eta)\over a}\sqrt{\Delta/\beta}.}
+
+For independent uniform signs \AtlasInlineMath{b_i}, define \AtlasInlineMath{u_0=0},
+\AtlasInlineMath{u_i=u_{i-1}+b_i a\rho_{i-1}}, \AtlasInlineMath{\rho_i=\eta\rho_{i-1}}, and
+
+\AtlasMath{f_b(x)=\beta_0x^2/2+
+\beta_0\sum_{i=1}^N b_i a\rho_{i-1}^2
+\psi((x-u_{i-1})/\rho_{i-1}).}
+
+The two child intervals \AtlasInlineMath{I_i=[u_i-\rho_i,u_i+\rho_i]} are disjoint and lie inside the central half of the parent. Second derivatives of successive bumps have disjoint shell supports. Thus \AtlasInlineMath{\mu\le f_b''\le\beta}, and \AtlasInlineMath{f_b''\ge7\beta/16}. Within \AtlasInlineMath{I_i}, the partial sum through level \AtlasInlineMath{i} is a quadratic centered at \AtlasInlineMath{u_i}. The final minimizer is \AtlasInlineMath{u_N}, with \AtlasInlineMath{|u_N|\le\sqrt{\Delta/\beta}} and initial gap at most \AtlasInlineMath{\Delta/2}.
+
+A stronger oracle reveals the next bit when the query lies in the current unresolved interval, continuing only while it lies in the selected child. Unrevealed bumps vanish near the query, so the revealed prefix computes the exact value and derivative. Conditional on history, a fixed point belongs to at most one child; one query reveals at most \AtlasInlineMath{\sum_{j\ge1}2^{-(j-1)}=2} new bits in expectation.
+
+Treat the final output as one more such query. If \AtlasInlineMath{|\widehat x-u_N|<\rho_N}, all \AtlasInlineMath{N} bits are revealed. Its probability is at most \AtlasInlineMath{2(T+1)/N}. Otherwise the loss is at least
+\AtlasInlineMath{c\beta\rho_N^2=c'\Delta\eta^{2(N-1)}}.
+Choose \AtlasInlineMath{N} at the accuracy scale and use opposite translations to exclude zero calls. For expected error and constant-probability accuracy,
+
+\AtlasMath{T\ge c\left[1+{\log(\Delta/\epsilon)\over
+\log(C\kappa/(\kappa-1))}\right].}
+
+Queries may be arbitrary, randomized, adaptive, and unbounded.
+
+Fixing \AtlasInlineMath{\kappa=2}, \AtlasInlineMath{\Delta=c\beta R^2}, gives the initial-distance logarithmic bound. The gradient version uses
+\AtlasInlineMath{|f_b'(x)|\ge(7\beta/16)|x-u_N|}.
+Add a public quadratic to embed in higher dimension. For composite minimization, apply the construction on total curvature interval \AtlasInlineMath{[\mu,\mu+\beta]}, with public \AtlasInlineMath{h(x)=\mu x^2/2}; the unknown remainder is convex and \AtlasInlineMath{\beta}-smooth, and every proximal response for \AtlasInlineMath{h} is independent of the hidden bits.
+
+\textbf{Limits of the argument.} Curvature, initialization, and nontrivial-accuracy restrictions remain explicit; the composite transfer lower-bounds unknown-gradient calls.
+
+\needspace{7\baselineskip}\section{References}
+[1] Radu-Alexandru Dragomir; Adrien Taylor; Alexandre d’Aspremont; Jérôme Bolte. Optimal Complexity and Certification of Bregman First-Order Methods. 2021; arXiv1911.08510v3.
+
+\url{https://arxiv.org/pdf/1911.08510v3}
+
+[2] Ohad Shamir. A Simple Complexity Lower Bound for Solving Ax=b. 2026-09-09; preprintv1.
+
+\url{https://arxiv.org/pdf/2609.10874}
+
+\end{document}

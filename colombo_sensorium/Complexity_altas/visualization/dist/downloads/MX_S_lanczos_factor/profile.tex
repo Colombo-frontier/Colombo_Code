@@ -1,0 +1,241 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Lanczos approximation of matrix functions: worst-case approximation factor\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{MX\_\allowbreak{}S\_\allowbreak{}lanczos\_\allowbreak{}factor}
+
+Matrix computation
+
+Compare the \AtlasInlineMath{t}-step Lanczos function approximation \AtlasInlineMath{y_t=V_t h(T_t)V_t^*b} with the best approximation in \AtlasInlineMath{\mathcal{K}_t(A,b)}, under \AtlasInlineMath{T_t=V_t^*AV_t}.
+
+\textbf{Status.} Fully optimal
+
+\textbf{TASK tags.} formulation: Matrix function action; solution concept: Krylov near optimality ratio; task family: Matrix computation
+
+\textbf{MODEL tags.} spectral structure: Hermitian positive definite; spectral structure: Hermitian positive stieltjes; spectral structure: Stieltjes extension
+
+\textbf{ORACLE tags.} feedback quality: Exact; interface family: Exact complex matvec; operation: Matrix right matvec; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} named method: Lanczos fa; randomization: Deterministic
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Vector
+
+\textbf{METRIC tags.} criterion: Worst case approximation factor
+
+\textbf{GUARANTEE tags.} mode: Deterministic
+
+\textbf{RESOURCE tags.} measure: N right
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Compare the \AtlasInlineMath{t}-step Lanczos function approximation \AtlasInlineMath{y_t=V_t h(T_t)V_t^*b} with the best approximation in \AtlasInlineMath{\mathcal{K}_t(A,b)}, under \AtlasInlineMath{T_t=V_t^*AV_t}.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The matrix \AtlasInlineMath{A\in\mathbb{C}^{d\times d}} is Hermitian positive definite with actual condition number \AtlasInlineMath{\kappa=\lambda_{\max}(A)/\lambda_{\min}(A)>1} and at least \AtlasInlineMath{t+1} distinct eigenvalues; \AtlasInlineMath{1\le t<d}. Also \AtlasInlineMath{b\ne0} and \AtlasInlineMath{\alpha\in\mathbb{R}}. The function class consists of \AtlasInlineMath{h} or functions whose \AtlasInlineMath{z\mapsto h(z)/z} is Stieltjes: it admits the representation \AtlasInlineMath{\int_0^\infty(z+s)^{-1}\,d\nu(s)} with positive measure \AtlasInlineMath{\nu} satisfying \AtlasInlineMath{\int_0^\infty(1+s)^{-1}\,d\nu(s)<\infty}.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+The data \AtlasInlineMath{d,t,\kappa,\alpha,h,b} are public and \AtlasInlineMath{A} is hidden. For any complex vector \AtlasInlineMath{v}, the interface returns exact \AtlasInlineMath{Av}. Internal complex arithmetic and scalar function evaluations are free.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return the fixed algorithm's \AtlasInlineMath{y_t}. Substituting the best Krylov approximation would change the object being evaluated.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+Define the weighted norm \AtlasInlineMath{\|z\|_{A^\alpha}=(z^*A^\alpha z)^{1/2}} and Krylov space \AtlasInlineMath{\mathcal{K}_t(A,b)=\operatorname{span}\{b,Ab,\ldots,A^{t-1}b\}}. Compare the fixed Lanczos output with the best approximation in that space through the error ratio 
+\AtlasMath{\mathcal{C}=\frac{\|h(A)b-y_t\|_{A^\alpha}}{\min_{y\in\mathcal{K}_t(A,b)}\|h(A)b-y\|_{A^\alpha}}.}
+. Use the conventions \AtlasInlineMath{0/0=1} and positive numbers divided by zero equal \AtlasInlineMath{+\infty}.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+The quantity is the dimensionless approximation factor \AtlasInlineMath{\mathcal{C}}, not the minimum query count for a target tolerance. The algorithm uses at most \AtlasInlineMath{t} exact matrix-vector products. Internal arithmetic and scalar-function evaluations are uncharged.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+The exact Lanczos function-approximation algorithm is fixed, without minimization over general algorithms. Equivalent orthonormal-basis implementations are allowed if they produce the same mathematical approximation.
+
+The upper bound holds deterministically for every admissible fixed input. The lower bound concerns worst-case inputs for the fixed algorithm. The supremum over admissible inputs gives the stated sharp factor, generally through arbitrarily close lower examples.
+
+\textbf{Budget convention.} For fixed t, Lanczos uses at most t matrix actions and possibly fewer under early termination. The native comparison target is an error factor.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{d}: Order of the Hermitian input matrix \textbf{Domain:} \AtlasInlineMath{d\in\mathbb N,\ d\ge t+1}.
+
+\AtlasInlineMath{A\in\mathbb C^{d\times d}}
+
+\AtlasInlineMath{t}: The step count of the exact Lanczos algorithm being evaluated. \textbf{Domain:} \AtlasInlineMath{t\in\mathbb N,\ 1\le t<d}.
+
+\AtlasInlineMath{\mathcal K_t(A,b)=\operatorname{span}\{b,Ab,\ldots,A^{t-1}b\}}
+
+\AtlasInlineMath{\kappa}: Actual spectral condition number of the positive definite input matrix \textbf{Domain:} \AtlasInlineMath{\kappa>1}.
+
+\AtlasInlineMath{\kappa=\lambda_{\max}(A)/\lambda_{\min}(A)}
+
+\AtlasInlineMath{\alpha}: Matrix-power exponent in the error norm \textbf{Domain:} \AtlasInlineMath{\alpha\in\mathbb R}.
+
+\AtlasInlineMath{\|z\|_{A^\alpha}=(z^*A^\alpha z)^{1/2}}
+
+\AtlasInlineMath{A}: The hidden matrix is Hermitian positive definite and has at least t + 1 distinct eigenvalues. \textbf{Domain:} \AtlasInlineMath{\mathbb C^{d\times d}}.
+
+\AtlasInlineMath{b}: Public nonzero initial vector \textbf{Domain:} \AtlasInlineMath{\mathbb C^d\setminus\{0\}}.
+
+\AtlasInlineMath{h}: A public function with \AtlasInlineMath{h} or \AtlasInlineMath{z\mapsto h(z)/z} in the Stieltjes class. \textbf{Domain:} Scalar function on the positive real axis.
+
+\AtlasInlineMath{\nu,s}: Positive measure and integration variable in the Stieltjes representation. \textbf{Domain:} \AtlasInlineMath{s\ge0,\ \int_0^\infty(1+s)^{-1}\,d\nu(s)<\infty}.
+
+Either \AtlasInlineMath{h(z)} or \AtlasInlineMath{h(z)/z} equals \AtlasInlineMath{\int_0^\infty(z+s)^{-1}\,d\nu(s)}; MODEL specifies the function class.
+
+\AtlasInlineMath{\mathcal K_t(A,b)}: Order-t Krylov subspace \textbf{Domain:} A linear subspace of \AtlasInlineMath{\mathbb C^d}.
+
+\AtlasInlineMath{\mathcal K_t(A,b)=\operatorname{span}\{b,Ab,\ldots,A^{t-1}b\}}
+
+\AtlasInlineMath{V_t,T_t}: Orthonormal basis matrix of the Krylov subspace and the compressed Hermitian matrix \textbf{Domain:} Use the actual subspace dimension if exact termination occurs early.
+
+\AtlasInlineMath{V_t^*V_t=I,\quad T_t=V_t^*AV_t}
+
+\AtlasInlineMath{y_t}: Function approximation by a fixed Lanczos algorithm. \textbf{Domain:} \AtlasInlineMath{\mathbb C^d}.
+
+\AtlasInlineMath{y_t=V_t h(T_t)V_t^*b}
+
+\AtlasInlineMath{\|z\|_{A^\alpha}}: Weighted vector norm defined by a power of the input matrix \textbf{Domain:} A nonnegative real.
+
+\AtlasInlineMath{\|z\|_{A^\alpha}=(z^*A^\alpha z)^{1/2}}
+
+\AtlasInlineMath{\mathcal C}: Ratio of fixed-Lanczos error to the best error in the same Krylov space. \textbf{Domain:} \AtlasInlineMath{[0,\infty]}, with the convention \AtlasInlineMath{0/0=1}.
+
+\AtlasInlineMath{\mathcal C=\frac{\|h(A)b-y_t\|_{A^\alpha}}{\min_{y\in\mathcal K_t(A,b)}\|h(A)b-y\|_{A^\alpha}}}
+
+\AtlasInlineMath{E}: Exponent in the sharp approximation factor \textbf{Domain:} \AtlasInlineMath{E\ge1/2}.
+
+\AtlasInlineMath{E=\max\{\alpha,1-\alpha\}}
+
+\AtlasInlineMath{\zeta}: An arbitrary relative slack approaching the supremal worst-case factor. \textbf{Domain:} \AtlasInlineMath{0<\zeta\le1}.
+
+\AtlasInlineMath{N}: The exact matrix-vector product count of the fixed algorithm. \textbf{Domain:} \AtlasInlineMath{\mathbb N_0}.
+
+\AtlasInlineMath{N\le t}
+
+\AtlasInlineMath{(\cdot)^*}: Conjugate transpose \textbf{Domain:} Complex matrix or vector.
+
+\AtlasInlineMath{\lambda_i(A)}: Eigenvalues of a real symmetric or Hermitian matrix in nonincreasing order. \textbf{Domain:} \AtlasInlineMath{1\le i\le d}.
+
+\AtlasInlineMath{\lambda_1(A)\ge\cdots\ge\lambda_d(A)}
+
+\AtlasInlineMath{\|z\|_2}: Euclidean norm of a vector \textbf{Domain:} Finite-dimensional real or complex vector.
+
+\AtlasInlineMath{\|z\|_2=(\sum_i|z_i|^2)^{1/2}}
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - fixed budget risk}
+\AtlasMath{\sup_{A,h,b}C\!\left(h,A,b,t,\|\cdot\|_{A^\alpha}\right)}
+\textbf{Scope.} The algorithm is fixed to exact single-start Lanczos-FA. For the given d, $\kappa$, t, and $\alpha$, take the supremum of the error approximation factor over all admissible A, h, and b. There is no infimum over algorithms and no conversion to minimum query complexity at a prescribed tolerance.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsection{R1 - Nondegenerate Lanczos approximation factor}
+\textbf{Region.} Assume \AtlasInlineMath{\kappa>1}, integers \AtlasInlineMath{t\ge1} and \AtlasInlineMath{d\ge t+1}, and \AtlasInlineMath{\alpha\in\mathbb{R}}. The input matrix has at least \AtlasInlineMath{t+1} distinct eigenvalues.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Worst-case approximation factor of the fixed algorithm over admissible inputs.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{\frac12(\kappa^{E/2}+\kappa^{-E/2}),\quad E=\max\{\alpha,1-\alpha\}}
+\textbf{Upper bound.} B1
+
+\AtlasMath{\frac12(\kappa^{E/2}+\kappa^{-E/2}),\quad E=\max\{\alpha,1-\alpha\}}
+\textbf{Gap or comparison.} \AtlasInlineMath{0}
+
+\textbf{Comparison argument.} For the fixed Lanczos algorithm, the instancewise upper factor is attained arbitrarily closely by worst-case inputs. The dimensionless approximation factor is sharp; this is not query optimality over general algorithms.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} Exact \AtlasInlineMath{Av} access for a complex Hermitian positive definite matrix. Queries follow the fixed single-start Lanczos recurrence initialized at public \AtlasInlineMath{b}; they are not chosen by a general algorithm.
+
+\textbf{Guarantee mapping.} Fully deterministic. The upper bound holds for every instance. For a suitable A, the lower bound provides h and b achieving any factor 1-eta; letting eta tend to zero gives a supremum, without claiming equality on every instance.
+
+\textbf{Output mapping.} The output must be the fixed Lanczos-FA value f\_t. Compare its $A^\alpha -norm$ error with the minimum error in the same K\_t(A,b), using the convention 0/0 = 1.
+
+\textbf{Resource mapping.} The native comparison quantity is the dimensionless approximation factor \AtlasInlineMath{\mathcal C}, not the minimum query count needed for a tolerance. The algorithm uses at most \AtlasInlineMath{t} exact matrix-vector products. Internal arithmetic and scalar function evaluations are free.
+
+\needspace{4\baselineskip}\subsection{B1 - Per-input approximation-factor upper bound for the fixed exact Lanczos algorithm}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{\mathcal{C}\le \frac{1}{2}(\kappa^{E/2}+\kappa^{-E/2}),\quad E=\max\{\alpha,1-\alpha\}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2608.07160v1}{[1]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{N right.} t
+
+\textbf{factor.}
+
+\AtlasMath{\frac12(\kappa^{E/2}+\kappa^{-E/2}),\quad E=\max\{\alpha,1-\alpha\}}
+\textbf{Constants.} Universal constants, with only the parameter dependence permitted by this bound’s region and expression.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2608.07160v1}{[1]} theorem: Theorems 1 and 2; section: §1.2; pdf pages: 3; 4; equations: (4); (6)
+
+Let \AtlasInlineMath{S=\{h:h\text{ or }h/z\text{ is Stieltjes}\}}. For each \AtlasInlineMath{A} with at least \AtlasInlineMath{t+1} eigenvalues and condition number \AtlasInlineMath{\kappa}, suitable \AtlasInlineMath{h,b} attain any prescribed fraction \AtlasInlineMath{1-\eta} in the lower bound.
+
+\needspace{4\baselineskip}\subsection{B2 - A worst-case function and starting vector for fixed Lanczos.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} The stated restricted deterministic class
+
+\AtlasMath{\sup\mathcal{C}\ge \frac{1}{2}(\kappa^{E/2}+\kappa^{-E/2}),\quad E=\max\{\alpha,1-\alpha\}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2608.07160v1}{[1]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{N right.} t
+
+\textbf{factor.}
+
+\AtlasMath{\frac12(\kappa^{E/2}+\kappa^{-E/2}),\quad E=\max\{\alpha,1-\alpha\}}
+\textbf{Constants.} Universal constants, with only the parameter dependence permitted by this bound’s region and expression.
+
+\textbf{Derivation.} For each \AtlasInlineMath{0<\zeta\le1}, Theorem 2 supplies an admissible input attaining the stated factor times \AtlasInlineMath{(1-\zeta)}. Letting \AtlasInlineMath{\zeta\downarrow0} gives the lower bound on the supremum approximation ratio. A finite instance need not attain the supremum exactly.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2608.07160v1}{[1]} theorem: Theorems 1 and 2; section: §1.2; pdf pages: 3; 4; equations: (4); (6)
+
+Let \AtlasInlineMath{S=\{h:h\text{ or }h/z\text{ is Stieltjes}\}}. For each \AtlasInlineMath{A} with at least \AtlasInlineMath{t+1} eigenvalues and condition number \AtlasInlineMath{\kappa}, suitable \AtlasInlineMath{h,b} attain any prescribed fraction \AtlasInlineMath{1-\eta} in the lower bound.
+
+\needspace{7\baselineskip}\section{References}
+[1] Tyler Chen; David Persson. Optimal near-optimality bounds for the Lanczos method for matrix functions. 2026. arXiv:2608.07160v1; 2026-08-07.
+
+\url{https://arxiv.org/pdf/2608.07160v1}
+
+\end{document}

@@ -1,0 +1,1046 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "MX_S_trace_general",
+  "title": "Trace estimation for general symmetric matrices with Schatten-normalized error",
+  "summary": "Estimate the trace $\\tau=\\operatorname{tr}(A)$ of a symmetric matrix.",
+  "primary_domain": "matrix_computation",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "matrix_computation"
+    },
+    {
+      "facet": "goal",
+      "value": "schatten_normalized_trace_error"
+    },
+    {
+      "facet": "structure",
+      "value": "symmetric_indefinite_allowed"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_right_matvec"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_adaptive"
+    },
+    {
+      "facet": "guarantee",
+      "value": "confidence"
+    },
+    {
+      "facet": "resource",
+      "value": "matvec_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "matrix_computation"
+      ],
+      "formulation_code": "matrix_trace",
+      "formulation": "\\operatorname{tr}(A)",
+      "solution_goal": "schatten_scaled_additive_error",
+      "protocol_ref": null,
+      "code": "matrix_trace",
+      "formulation_latex": "\\tau=\\operatorname{tr}(A)",
+      "description_zh": "Estimate the trace $\\tau=\\operatorname{tr}(A)$ of a symmetric matrix.",
+      "description_paragraphs": [
+        "Estimate the trace $\\tau=\\operatorname{tr}(A)$ of a symmetric matrix."
+      ]
+    },
+    "model": {
+      "instance": "The unknown input is an arbitrary real symmetric matrix $A\\in\\mathbb R^{d\\times d}$, possibly indefinite or zero. This specification imposes $1\\le p\\le2$.",
+      "assumptions": [
+        {
+          "subject_id": "MX_S_trace_general_obj_c591ea87d4",
+          "property_code": "symmetric",
+          "variable_blocks": [],
+          "norm_ref": "MX_S_trace_general_nor_c0635cecc4",
+          "parameter_refs": [
+            "MX_S_trace_general_p_1d1d52d4bc",
+            "MX_S_trace_general_p_706a52c72b"
+          ],
+          "scope": "Entire fixed input instance",
+          "description": "Positive semidefiniteness is not assumed; the spectrum may contain both signs."
+        }
+      ],
+      "parameter_domain_description": "Assume $d\\ge1$, $1\\le p\\le2$, $\\epsilon>0$, and $0<\\delta<1/2$, intersected with the shared MX_p parameter domain.",
+      "code": "model_declared",
+      "description_zh": "The matrix satisfies $A=A^{\\mathsf T}\\in\\mathbb R^{d\\times d}$ and may be indefinite or zero. The norm exponent satisfies $1\\le p\\le2$.",
+      "description_paragraphs": [
+        "Assume $A=A^{\\mathsf T}\\in\\mathbb{R}^{d\\times d}$, allowing indefinite or zero matrices; the norm order is $1\\le p\\le2$."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "MX_S_trace_general_ora_7a221671b7",
+          "operation_code": "matrix_right_matvec",
+          "target_object": "MX_S_trace_general_obj_c591ea87d4",
+          "variable_blocks": [
+            "MX_S_trace_general_var_83c97e94ab"
+          ],
+          "query_signature": "Input an arbitrary vector $v\\in\\mathbb R^d$.",
+          "response_signature": "Return exact Av ∈ R^d.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "Native linear action of the specified matrix; no derivative order of an unregistered scalar function is implied.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact real vector responses, with no observation noise or rounding."
+          },
+          "domain_ref": "MX_S_trace_general_dom_9c9c3c21a7",
+          "coupling": "Every query accesses the same fixed matrix; repeated queries are allowed.",
+          "index_control": "The algorithm selects vectors and an available channel; block width is charged by column.",
+          "access_schedule": "offline adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "MX_S_trace_general_res_3568f51283"
+        }
+      ],
+      "public_inputs": [
+        "d,p,ε,δ"
+      ],
+      "hidden_objects": [
+        "MX_S_trace_general_obj_c591ea87d4"
+      ],
+      "auxiliary_interfaces": [],
+      "protocol_ref": null,
+      "query_domain_description": "Right products map R^d to R^d, with only the listed right-product channel available. A q-column block costs q calls. Entries, inverse actions, shifted solves, and matrix-function actions are not free additional feedback.",
+      "code": "oracle_declared",
+      "description_zh": "The quantity $d,p,\\varepsilon,\\delta$ is public and $A$ is hidden. Any $v\\in\\mathbb R^d$ returns exact $Av$; repeated and adaptive queries are allowed.",
+      "description_paragraphs": [
+        "The information $d,p,\\varepsilon,\\delta$ is public and $A$ is hidden. Query $v\\in\\mathbb{R}^d$ returns exact $Av$. Repeated adaptive queries are allowed."
+      ]
+    },
+    "output": {
+      "object_type": "scalar",
+      "domain_ref": "MX_S_trace_general_dom_6ece5ff8d8",
+      "feasibility": "R",
+      "allowed_postprocessing": "Arbitrary admissible postprocessing; the output need not have appeared as a query vector.",
+      "certificate_requirement": "Only the true-loss guarantee is required; no computable certificate is requested.",
+      "code": "output_declared",
+      "description_zh": "Return a scalar $\\widehat\\tau\\in\\mathbb R$; no additional certificate is required.",
+      "description_paragraphs": [
+        "Return a scalar $\\widehat\\tau\\in\\mathbb{R}$; no additional certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "|\\widehat\\tau-\\tau|\\le\\varepsilon\\|A\\|_{S_p}",
+      "normalization": "If both numerator and denominator are zero, the loss is zero. A zero denominator with nonzero numerator gives +∞. Otherwise use the stated ratio.",
+      "reference_object": "MX_S_trace_general_obj_c591ea87d4",
+      "nonnegativity": true,
+      "finiteness_conditions": "The specified dimension is finite, and the model and spectral assumptions hold.",
+      "comparator_ref": null,
+      "code": "metric_declared",
+      "goal_latex": "\\Pr[|\\widehat t-\\operatorname{tr}(A)|\\le\\varepsilon\\|A\\|_{S_p}]\\ge1-\\delta",
+      "description_zh": "The success event is $|\\widehat\\tau-\\operatorname{tr}(A)|\\le\\varepsilon\\|A\\|_{S_p}$, where $\\|A\\|_{S_p}=(\\sum_i\\sigma_i(A)^p)^{1/p}$. When $A=0$, the output must be zero. A general matrix can have zero trace and nonzero norm.",
+      "base_expression_latex": "|\\widehat\\tau-\\tau|\\le\\varepsilon\\|A\\|_{S_p}",
+      "description_paragraphs": [
+        "The success event is $|\\widehat\\tau-\\operatorname{tr}(A)|\\le\\varepsilon\\|A\\|_{S_p}$, where $\\|A\\|_{S_p}=(\\sum_i\\sigma_i(A)^p)^{1/p}$. When $A=0$, the output must be zero. A general matrix can have zero trace and nonzero norm."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "N_right",
+          "unit": "vector product",
+          "description": "One right product Av with a single vector"
+        }
+      ],
+      "budget_semantics": "A fixed worst-case budget respected for every input and private seed.",
+      "cost_rules": [
+        {
+          "id": "MX_S_trace_general_res_3568f51283",
+          "operation_refs": [
+            "MX_S_trace_general_ora_7a221671b7"
+          ],
+          "cost": {
+            "N_right": 1
+          }
+        }
+      ],
+      "scalarization": "The resource is $Q=N_{\\mathrm{right}}$. No separate left-product channel is present. Each block-query column is charged.",
+      "setup_cost": "Reading public parameters and explicitly public $b,x_0,h$, mask, or tree incurs no matrix-vector call. Information about hidden $A$ comes only from native responses.",
+      "online_cost": "not_applicable",
+      "amortization_scope": "One output for one instance",
+      "precision_model": "Inputs, queries, and responses are exact reals. Query vectors have no bit-length restriction. Internal arithmetic, storage, and precision are outside the query budget, so this is not a finite-word implementation guarantee.",
+      "code": "resource_declared",
+      "description_zh": "Count right single-vector products $N=N_{\\mathrm{r}}$; a block of width $q$ costs $q$ calls.\n\nThe cap holds for every fixed input and private seed. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. The unit is one single-vector oracle call.",
+      "description_paragraphs": [
+        "Count right products with single vectors only: $N=N_{\\mathrm r}$. A block of width $q$ costs $q$ calls.",
+        "The budget bounds calls for every fixed input and every private seed. Reading public inputs, exact real arithmetic, storage, and postprocessing are free. One call applies the interface to one vector."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "An independent private random seed is allowed",
+        "adaptivity": "Arbitrary measurable adaptivity",
+        "restrictions": [],
+        "internal_computation": "Arbitrary measurable internal computation on public data and the transcript is free in matrix–vector query units. No Krylov or linear-span restriction applies.",
+        "parallelism": "A q-column block still costs q vector products. Round count differs from call count.",
+        "code": "algorithms_declared",
+        "description_zh": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+        "description_paragraphs": [
+          "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "For each fixed symmetric A, the event |t_hat-tr(A)|<=epsilon ||A||_{S_p} has probability at least 1-delta. For A=0, the output must be zero.",
+          "aggregation_order": [
+            "Pr over seed"
+          ],
+          "quantifier_order": "exists algorithm; forall symmetric A; Pr_seed>=1-delta",
+          "randomness_sources": [
+            "algorithm_private_seed"
+          ],
+          "confidence_parameters": [
+            "MX_S_trace_general_p_c8bdef7655"
+          ],
+          "time_uniformity": "fixed budget",
+          "code": "guarantee_declared",
+          "description_zh": "The algorithm is selected using public inputs only. For every admissible input fixed before generation of the private seed, success probability over private randomness is at least $1-\\delta$.",
+          "description_paragraphs": [
+            "The algorithm is selected using public inputs only. For every admissible input fixed before generation of the private seed, success probability over private randomness is at least $1-\\delta$."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "A fixed worst-case budget respected for every input and private seed.",
+        "precision_model": "Inputs, queries, and responses are exact reals. Query vectors have no bit-length restriction. Internal arithmetic, storage, and precision are outside the query budget, so this is not a finite-word implementation guarantee.",
+        "scalarization": "The resource is $Q=N_{\\mathrm{right}}$. No separate left-product channel is present. Each block-query column is charged."
+      },
+      "alias_ids": [
+        "MX_S_trace_general"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "MX_S_trace_general_obj_c591ea87d4",
+        "type": "matrix",
+        "definition": "An unknown real symmetric d × d matrix, possibly indefinite or zero, with possibly zero trace.",
+        "depends_on": [],
+        "role_code": "matrix"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "MX_S_trace_general_var_83c97e94ab",
+        "dimension": "d",
+        "space": "R^d, the right-product query space"
+      }
+    ],
+    "domains": [
+      {
+        "id": "MX_S_trace_general_dom_9c9c3c21a7",
+        "definition": "$\\mathbb R^d$, the complete right-query space without a norm restriction",
+        "roles": [
+          "query"
+        ]
+      },
+      {
+        "id": "MX_S_trace_general_dom_6ece5ff8d8",
+        "definition": "R",
+        "roles": [
+          "output"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "MX_S_trace_general_nor_c0635cecc4",
+        "definition": "Euclidean vector norm $\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}$ and matrix operator norm $\\|M\\|_{\\rm op}=\\max_{\\|z\\|_2=1}\\|Mz\\|_2$. Define $\\|M\\|_{S_p}=(\\sum_i\\sigma_i(M)^p)^{1/p}$; settings allowing p=infinity use $\\|M\\|_{S_\\infty}=\\|M\\|_{\\rm op}$."
+      }
+    ],
+    "protocols": [],
+    "comparators": [],
+    "local_symbols": [
+      {
+        "symbol": "d",
+        "meaning": "The order of the square input matrix and the dimension of each query vector.",
+        "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+        "definition": "A\\in\\mathbb R^{d\\times d}"
+      },
+      {
+        "symbol": "p",
+        "meaning": "The Schatten-norm order used to normalize trace error.",
+        "domain": "$1\\le p\\le2$",
+        "definition": "\\|A\\|_{S_p}=(\\sum_{i=1}^d\\sigma_i(A)^p)^{1/p}"
+      },
+      {
+        "symbol": "\\varepsilon",
+        "meaning": "Absolute trace-estimation error as a fraction of the input Schatten norm",
+        "domain": "$\\varepsilon>0$",
+        "definition": "|\\widehat\\tau-\\operatorname{tr}(A)|\\le\\varepsilon\\|A\\|_{S_p}"
+      },
+      {
+        "symbol": "\\delta",
+        "meaning": "Allowed failure probability for each fixed admissible input",
+        "domain": "$0<\\delta<1/2$",
+        "definition": "$\\Pr(\\mathrm{success})\\ge 1-\\delta$."
+      },
+      {
+        "symbol": "C_0",
+        "meaning": "Sufficient-dimension constant for the Gaussian hard-instance embedding in DT Theorem 4.2.",
+        "domain": "The quantity $C_0>0$ is universal and fixed.",
+        "definition": "d\\ge C_0(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p"
+      },
+      {
+        "symbol": "A",
+        "meaning": "A hidden real symmetric matrix, possibly indefinite or zero.",
+        "domain": "$\\mathbb R^{d\\times d}$",
+        "definition": null
+      },
+      {
+        "symbol": "\\tau,\\widehat\\tau",
+        "meaning": "True trace and output estimate",
+        "domain": "$\\mathbb R$",
+        "definition": "\\tau=\\operatorname{tr}(A)=\\sum_{i=1}^d A_{ii}"
+      },
+      {
+        "symbol": "\\sigma_i(M)",
+        "meaning": "Singular values in nonincreasing order",
+        "domain": "$1\\le i\\le\\min\\{\\operatorname{rows}(M),\\operatorname{cols}(M)\\}$",
+        "definition": "\\sigma_1(M)\\ge\\cdots\\ge\\sigma_{\\min\\{\\operatorname{rows}(M),\\operatorname{cols}(M)\\}}(M)\\ge0"
+      },
+      {
+        "symbol": "\\|A\\|_{S_p}",
+        "meaning": "Schatten norm that sets the scale of the trace error",
+        "domain": "A nonnegative real.",
+        "definition": "\\|A\\|_{S_p}=(\\sum_{i=1}^d\\sigma_i(A)^p)^{1/p}"
+      },
+      {
+        "symbol": "c",
+        "meaning": "Universal constant in the small-accuracy regime of DT, Theorem 4.2",
+        "domain": "Fixed positive number",
+        "definition": "0<\\varepsilon<c[\\log(1/\\delta)]^{1/2-1/p}"
+      },
+      {
+        "symbol": "C",
+        "meaning": "The universal multiplier in the upper bound.",
+        "domain": "Fixed positive number",
+        "definition": null
+      },
+      {
+        "symbol": "\\|z\\|_2",
+        "meaning": "Euclidean norm of a vector",
+        "domain": "Finite-dimensional real or complex vector",
+        "definition": "\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}"
+      },
+      {
+        "symbol": "\\log",
+        "meaning": "Natural logarithm",
+        "domain": "Positive real argument",
+        "definition": "\\log x=\\ln x"
+      },
+      {
+        "symbol": "O,\\Omega,\\Theta",
+        "meaning": "Upper, lower, and two-sided bounds up to constants in the same applicable regime",
+        "domain": "Hidden constants have only the parameter dependence explicitly permitted by the associated bound.",
+        "definition": null
+      },
+      {
+        "symbol": "N,N_{\\mathrm r}",
+        "meaning": "Single-vector query budget for exact right products Av. A block is charged by its column count.",
+        "domain": "$\\mathbb N_0$",
+        "definition": "N=N_{\\mathrm r}"
+      },
+      {
+        "symbol": "N^\\star",
+        "meaning": "Minimum worst-case query budget attaining this profile's success guarantee",
+        "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+        "definition": "\\inf_{\\mathcal A\\ \\mathrm{satisfying\\ the\\ guarantee}}\\sup_{I,\\omega}N_{\\mathcal A}(I,\\omega)"
+      },
+      {
+        "symbol": "\\mathcal A,I,\\omega",
+        "meaning": "The algorithm, fixed admissible input, and private algorithmic seed.",
+        "domain": "Quantifiers for worst-case input and execution cost. Success probability is taken over ω.",
+        "definition": null
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "MX_S_trace_general_p_844b173858",
+      "symbol": "C_0",
+      "meaning": "Sufficient-dimension constant for the Gaussian hard-instance embedding in DT Theorem 4.2.",
+      "kind": "proof_constant",
+      "domain": "The quantity $C_0>0$ is universal and fixed.",
+      "public": true,
+      "definition": "$d\\ge C_0(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_trace_general_p_1d1d52d4bc",
+      "symbol": "d",
+      "meaning": "The order of the square input matrix and the dimension of each query vector.",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "public": true,
+      "definition": "$A\\in\\mathbb R^{d\\times d}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_d"
+    },
+    {
+      "id": "MX_S_trace_general_p_c8bdef7655",
+      "symbol": "\\delta",
+      "meaning": "Allowed failure probability for each fixed admissible input",
+      "kind": "independent",
+      "domain": "$0<\\delta<1/2$",
+      "public": true,
+      "definition": "Success probability is at least $1-\\delta$.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_delta"
+    },
+    {
+      "id": "MX_S_trace_general_p_4bcd38c674",
+      "symbol": "\\varepsilon",
+      "meaning": "Absolute trace-estimation error as a fraction of the input Schatten norm",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": true,
+      "definition": "$|\\widehat\\tau-\\operatorname{tr}(A)|\\le\\varepsilon\\|A\\|_{S_p}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_eps"
+    },
+    {
+      "id": "MX_S_trace_general_p_706a52c72b",
+      "symbol": "p",
+      "meaning": "The Schatten-norm order used to normalize trace error.",
+      "kind": "independent",
+      "domain": "$1\\le p\\le2$",
+      "public": true,
+      "definition": "$\\|A\\|_{S_p}=(\\sum_{i=1}^d\\sigma_i(A)^p)^{1/p}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_p"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "The order of the square input matrix and the dimension of each query vector.",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "definition": "$A\\in\\mathbb R^{d\\times d}$",
+      "parameter_ref": "MX_S_trace_general_p_1d1d52d4bc"
+    },
+    {
+      "symbol_latex": "p",
+      "meaning": "The Schatten-norm order used to normalize trace error.",
+      "domain": "$1\\le p\\le2$",
+      "definition": "$\\|A\\|_{S_p}=(\\sum_{i=1}^d\\sigma_i(A)^p)^{1/p}$",
+      "parameter_ref": "MX_S_trace_general_p_706a52c72b"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Absolute trace-estimation error as a fraction of the input Schatten norm",
+      "domain": "$\\varepsilon>0$",
+      "definition": "$|\\widehat\\tau-\\operatorname{tr}(A)|\\le\\varepsilon\\|A\\|_{S_p}$",
+      "parameter_ref": "MX_S_trace_general_p_4bcd38c674"
+    },
+    {
+      "symbol_latex": "\\delta",
+      "meaning": "Allowed failure probability for each fixed admissible input",
+      "domain": "$0<\\delta<1/2$",
+      "definition": "Success probability is at least $1-\\delta$.",
+      "parameter_ref": "MX_S_trace_general_p_c8bdef7655"
+    },
+    {
+      "symbol_latex": "C_0",
+      "meaning": "Sufficient-dimension constant for the Gaussian hard-instance embedding in DT Theorem 4.2.",
+      "domain": "The quantity $C_0>0$ is universal and fixed.",
+      "definition": "$d\\ge C_0(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p$",
+      "parameter_ref": "MX_S_trace_general_p_844b173858"
+    },
+    {
+      "symbol_latex": "A",
+      "meaning": "A hidden real symmetric matrix, possibly indefinite or zero.",
+      "domain": "$\\mathbb R^{d\\times d}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\tau,\\widehat\\tau",
+      "meaning": "True trace and output estimate",
+      "domain": "$\\mathbb R$",
+      "definition": "$\\tau=\\operatorname{tr}(A)=\\sum_{i=1}^d A_{ii}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\sigma_i(M)",
+      "meaning": "Singular values in nonincreasing order",
+      "domain": "$1\\le i\\le\\min\\{\\operatorname{rows}(M),\\operatorname{cols}(M)\\}$",
+      "definition": "$\\sigma_1(M)\\ge\\cdots\\ge\\sigma_{\\min\\{\\operatorname{rows}(M),\\operatorname{cols}(M)\\}}(M)\\ge0$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|A\\|_{S_p}",
+      "meaning": "Schatten norm that sets the scale of the trace error",
+      "domain": "A nonnegative real.",
+      "definition": "$\\|A\\|_{S_p}=(\\sum_{i=1}^d\\sigma_i(A)^p)^{1/p}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c",
+      "meaning": "Universal constant in the small-accuracy regime of DT, Theorem 4.2",
+      "domain": "Fixed positive number",
+      "definition": "$0<\\varepsilon<c[\\log(1/\\delta)]^{1/2-1/p}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "C",
+      "meaning": "The universal multiplier in the upper bound.",
+      "domain": "Fixed positive number",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|z\\|_2",
+      "meaning": "Euclidean norm of a vector",
+      "domain": "Finite-dimensional real or complex vector",
+      "definition": "$\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log",
+      "meaning": "Natural logarithm",
+      "domain": "Positive real argument",
+      "definition": "$\\log x=\\ln x$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta",
+      "meaning": "Upper, lower, and two-sided bounds up to constants in the same applicable regime",
+      "domain": "Hidden constants have only the parameter dependence explicitly permitted by the associated bound.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,N_{\\mathrm r}",
+      "meaning": "Single-vector query budget for exact right products Av. A block is charged by its column count.",
+      "domain": "$\\mathbb N_0$",
+      "definition": "$N=N_{\\mathrm r}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^\\star",
+      "meaning": "Minimum worst-case query budget attaining this profile's success guarantee",
+      "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+      "definition": "The quantity is $N^\\star=\\inf_{\\mathcal A}\\sup_{I,\\omega}N_{\\mathcal A}(I,\\omega)$, where the infimum ranges over admissible algorithms satisfying this profile's success guarantee.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A,I,\\omega",
+      "meaning": "The algorithm, fixed admissible input, and private algorithmic seed.",
+      "domain": "Quantifiers for worst-case input and execution cost. Success probability is taken over ω.",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "MX_S_trace_general__main__q1",
+      "kind": "target_accuracy_cost",
+      "expression": "N^*(\\varepsilon,\\delta;d,p)",
+      "optimization_direction": "minimize",
+      "units": "matvec calls",
+      "budget_variables": [
+        "N"
+      ],
+      "tolerance_variables": [
+        "MX_S_trace_general_p_4bcd38c674",
+        "MX_S_trace_general_p_c8bdef7655"
+      ],
+      "analysis_scope": "Within the cited complete specification, select an algorithm before taking the worst case over all fixed inputs. Information permissions remain unchanged.",
+      "tracked_parameters": [
+        "MX_S_trace_general_p_1d1d52d4bc",
+        "MX_S_trace_general_p_706a52c72b",
+        "MX_S_trace_general_p_4bcd38c674",
+        "MX_S_trace_general_p_c8bdef7655"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "N^\\star(\\varepsilon,\\delta;d,p)",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Number of right matrix-vector product queries.",
+      "expression": "N_right",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_b185f53633"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "MX_S_trace_general__main__r1",
+      "specification_ref": "MX_S_trace_general",
+      "name": "Regime with matching Schatten-normalized bounds",
+      "predicate_text": "Assume $1\\le p\\le2$, $0<\\delta<1/4$, $0<\\varepsilon<c[\\log(1/\\delta)]^{1/2-1/p}$, and $d\\ge C_0(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p$. The quantity $c,C_0>0$ is the universal sufficient constant in the source.",
+      "predicate": {
+        "predicate": {
+          "name": "trace_gen",
+          "args": [
+            "MX_S_trace_general_p_1d1d52d4bc",
+            "MX_S_trace_general_p_706a52c72b",
+            "MX_S_trace_general_p_4bcd38c674",
+            "MX_S_trace_general_p_c8bdef7655",
+            "MX_S_trace_general_p_844b173858"
+          ],
+          "description": "1≤p≤2, δ∈(0,1/4), 0<ε<c[log(1/δ)]^(1/2−1/p), d≥C0(√log(1/δ)/ε)^p"
+        }
+      },
+      "parameter_refs": [
+        "MX_S_trace_general_p_1d1d52d4bc",
+        "MX_S_trace_general_p_706a52c72b",
+        "MX_S_trace_general_p_4bcd38c674",
+        "MX_S_trace_general_p_c8bdef7655",
+        "MX_S_trace_general_p_844b173858"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Universal constants and dimension thresholds without numerical values remain symbolic; the three-valued decision is unknown."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "MX_S_trace_general__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\le C[(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p+\\log(1/\\delta)]",
+      "quantity_ref": "MX_S_trace_general__main__q1",
+      "region_refs": [
+        "MX_S_trace_general__main__r1"
+      ],
+      "method": "Randomized trace estimation with Schatten-norm error",
+      "algorithm_or_hard_family": "Randomized trace estimation with Schatten-norm error",
+      "algorithm_class_scope": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+      "resource_costs": {
+        "N_right": " C[(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p+\\log(1/\\delta)]"
+      },
+      "parameter_choice": "Determined by public parameters and the source algorithm; one algorithm jointly attains the listed costs",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_DT"
+      ],
+      "evidence_refs": [
+        "MX_S_trace_general__main__e3"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_trace_general__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "",
+        "guarantee_mapping": "For each fixed A, success probability is at least 1 − δ. The lower bound retains its accuracy, confidence, and sufficient-dimension region.",
+        "oracle_mapping": "Only exact Av is available, with arbitrary randomized adaptive real-vector queries. A is one fixed general real symmetric matrix, and each vector costs one call.",
+        "output_mapping": "Return a real scalar t_hat with error at most epsilon ||A||_{S_p}, for 1<=p<=2. Error is not normalized by the possibly zero trace.",
+        "resource_mapping": "Count only right multiplication by a single vector, $N=N_{\\mathrm r}$. A block product of width $q$ costs $q$ calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.",
+        "output_metric_mapping": "Return the scalar $\\widehat\\tau\\in\\mathbb R$ without an additional certificate. Success means $|\\widehat\\tau-\\operatorname{tr}(A)|\\le\\varepsilon\\|A\\|_{S_p}$, where $\\|A\\|_{S_p}=(\\sum_i\\sigma_i(A)^p)^{1/p}$. If $A=0$, output zero. A general matrix can have zero trace with nonzero norm."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": null,
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "MX_S_trace_general__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\ge c(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p",
+      "quantity_ref": "MX_S_trace_general__main__q1",
+      "region_refs": [
+        "MX_S_trace_general__main__r1"
+      ],
+      "method": "Unrestricted randomized adaptive queries; Gaussian posterior information lower bound.",
+      "algorithm_or_hard_family": "Unrestricted randomized adaptive queries; Gaussian posterior information lower bound.",
+      "algorithm_class_scope": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+      "resource_costs": {
+        "N": "N\\ge c(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p"
+      },
+      "parameter_choice": "Use the cited hard-input construction with the dimension, accuracy, and success-probability conditions attached to this bound.",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_DT"
+      ],
+      "evidence_refs": [
+        "MX_S_trace_general__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_trace_general__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "$d\\ge C_0\\bigl(\\sqrt{\\log(1/\\delta)}/\\varepsilon\\bigr)^p$. The quantity $C_0>0$ is the sufficient dimension constant in the source lower bound.",
+        "guarantee_mapping": "For each fixed A, success probability is at least 1 − δ. The lower bound retains its accuracy, confidence, and sufficient-dimension region.",
+        "oracle_mapping": "Only exact Av is available, with arbitrary randomized adaptive real-vector queries. A is one fixed general real symmetric matrix, and each vector costs one call.",
+        "output_mapping": "Return a real scalar t_hat with error at most epsilon ||A||_{S_p}, for 1<=p<=2. Error is not normalized by the possibly zero trace.",
+        "resource_mapping": "Count only right multiplication by a single vector, $N=N_{\\mathrm r}$. A block product of width $q$ costs $q$ calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.",
+        "output_metric_mapping": "Return the scalar $\\widehat\\tau\\in\\mathbb R$ without an additional certificate. Success means $|\\widehat\\tau-\\operatorname{tr}(A)|\\le\\varepsilon\\|A\\|_{S_p}$, where $\\|A\\|_{S_p}=(\\sum_i\\sigma_i(A)^p)^{1/p}$. If $A=0$, output zero. A general matrix can have zero trace with nonzero norm."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "MX_S_trace_general__main__b3",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\le d",
+      "quantity_ref": "MX_S_trace_general__main__q1",
+      "region_refs": [
+        "MX_S_trace_general__main__r1"
+      ],
+      "method": "Deterministic reconstruction using the standard basis, followed by free exact solution of the target task",
+      "algorithm_or_hard_family": "Deterministic reconstruction using the standard basis, followed by free exact solution of the target task",
+      "algorithm_class_scope": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+      "resource_costs": {
+        "N_right": "d"
+      },
+      "parameter_choice": "Query standard basis vectors on the smaller matrix dimension, then perform the allowed exact postprocessing.",
+      "joint_budget_constraints": [],
+      "source_refs": [],
+      "evidence_refs": [
+        "MX_S_trace_general__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_trace_general__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "",
+        "guarantee_mapping": "For each fixed A, success probability is at least 1 − δ. The lower bound retains its accuracy, confidence, and sufficient-dimension region.",
+        "oracle_mapping": "Only exact Av is available, with arbitrary randomized adaptive real-vector queries. A is one fixed general real symmetric matrix, and each vector costs one call.",
+        "output_mapping": "Return a real scalar t_hat with error at most epsilon ||A||_{S_p}, for 1<=p<=2. Error is not normalized by the possibly zero trace.",
+        "resource_mapping": "Count only right multiplication by a single vector, $N=N_{\\mathrm r}$. A block product of width $q$ costs $q$ calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.",
+        "output_metric_mapping": "Return the scalar $\\widehat\\tau\\in\\mathbb R$ without an additional certificate. Success means $|\\widehat\\tau-\\operatorname{tr}(A)|\\le\\varepsilon\\|A\\|_{S_p}$, where $\\|A\\|_{S_p}=(\\sum_i\\sigma_i(A)^p)^{1/p}$. If $A=0$, output zero. A general matrix can have zero trace with nonzero norm."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": "Standard-basis queries reveal every matrix column.",
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "SIX_PROOF_7ed1f0347d6b"
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Regime with matching Schatten-normalized bounds",
+      "predicate": {
+        "predicate": {
+          "name": "trace_gen",
+          "args": [
+            "MX_S_trace_general_p_1d1d52d4bc",
+            "MX_S_trace_general_p_706a52c72b",
+            "MX_S_trace_general_p_4bcd38c674",
+            "MX_S_trace_general_p_c8bdef7655",
+            "MX_S_trace_general_p_844b173858"
+          ],
+          "description": "1≤p≤2, δ∈(0,1/4), 0<ε<c[log(1/δ)]^(1/2−1/p), d≥C0(√log(1/δ)/ε)^p"
+        }
+      },
+      "predicate_text": "Assume $1\\le p\\le2$, $0<\\delta<1/4$, $0<\\varepsilon<c[\\log(1/\\delta)]^{1/2-1/p}$, and $d\\ge C_0(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p$. The quantity $c,C_0>0$ is the universal sufficient constant in the source.",
+      "parameter_refs": [
+        "MX_S_trace_general_p_1d1d52d4bc",
+        "MX_S_trace_general_p_706a52c72b",
+        "MX_S_trace_general_p_4bcd38c674",
+        "MX_S_trace_general_p_c8bdef7655",
+        "MX_S_trace_general_p_844b173858"
+      ],
+      "source_region_ref": "MX_S_trace_general__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "MX_S_trace_general__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_trace_general__main__q1",
+      "resource_projection_id": "resource_b185f53633",
+      "regime_id": "MX_S_trace_general__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "MX_S_trace_general__main__b1",
+          "MX_S_trace_general__main__b3"
+        ],
+        "lower_refs": [
+          "MX_S_trace_general__main__b2"
+        ],
+        "comparison_ref": "MX_S_trace_general__main__c1",
+        "quantity_ref": "MX_S_trace_general__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_right",
+        "ratio_or_gap": "$O(1)$",
+        "envelopes": {
+          "upper": {
+            "expression": "O((\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p)",
+            "claim_refs": [
+              "MX_S_trace_general__main__b1",
+              "MX_S_trace_general__main__b3"
+            ],
+            "included": true,
+            "expression_latex": "O((\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p)"
+          },
+          "lower": {
+            "expression": "\\Omega((\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p)",
+            "claim_refs": [
+              "MX_S_trace_general__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "\\Omega((\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p)"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "MX_S_trace_general__main__b1",
+            "when_region_refs": [
+              "MX_S_trace_general__main__r1"
+            ],
+            "meaning": "Use this algorithm only on its own applicability region; scalar envelopes take minimum over applicable branches."
+          },
+          {
+            "claim_ref": "MX_S_trace_general__main__b3",
+            "when_region_refs": [
+              "MX_S_trace_general__main__r1"
+            ],
+            "meaning": "Use this algorithm only on its own applicability region; scalar envelopes take minimum over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "MX_S_trace_general__main__b1": [
+            {
+              "region_ref": "MX_S_trace_general__main__r1",
+              "predicate_text": "Assume $1\\le p\\le2$, $0<\\delta<1/4$, $0<\\varepsilon<c[\\log(1/\\delta)]^{1/2-1/p}$, and $d\\ge C_0(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p$. The quantity $c,C_0>0$ is the universal sufficient constant in the source."
+            }
+          ],
+          "MX_S_trace_general__main__b3": [
+            {
+              "region_ref": "MX_S_trace_general__main__r1",
+              "predicate_text": "Assume $1\\le p\\le2$, $0<\\delta<1/4$, $0<\\varepsilon<c[\\log(1/\\delta)]^{1/2-1/p}$, and $d\\ge C_0(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p$. The quantity $c,C_0>0$ is the universal sufficient constant in the source."
+            }
+          ],
+          "MX_S_trace_general__main__b2": [
+            {
+              "region_ref": "MX_S_trace_general__main__r1",
+              "predicate_text": "Assume $1\\le p\\le2$, $0<\\delta<1/4$, $0<\\varepsilon<c[\\log(1/\\delta)]^{1/2-1/p}$, and $d\\ge C_0(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p$. The quantity $c,C_0>0$ is the universal sufficient constant in the source."
+            }
+          ]
+        },
+        "envelope_certificate": "The window ensures that the log(1/δ) term does not dominate. Removing this window would invalidate a claim of full-parameter matching.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Number of right matrix-vector product queries."
+      },
+      "comparison_key": {
+        "setting_id": "MX_S_trace_general",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_trace_general__main__q1",
+        "resource_projection_id": "resource_b185f53633",
+        "regime_id": "MX_S_trace_general__main__r1"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "proof_id": "SIX_PROOF_7ed1f0347d6b",
+      "title": "Deterministic reconstruction using the standard basis, followed by free exact solution of the target task",
+      "body": "Query all $d$ standard basis vectors, fixed before any response if nonadaptivity is required. These responses recover all columns. Summing their diagonal entries returns the exact trace. The argument applies to the stated matrix class, including zero trace, and uses $d$ right queries with deterministic success.",
+      "scope": "All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "MX_S_trace_general__main__e1",
+      "kind": "local_argument",
+      "proof_refs": [
+        "SIX_PROOF_7ed1f0347d6b"
+      ],
+      "location": "Deterministic reconstruction using the standard basis, followed by free exact solution of the target task"
+    },
+    {
+      "id": "MX_S_trace_general__main__e2",
+      "source_ref": "MX_SRC_DT",
+      "locator": {
+        "theorem": "Theorem 4.2",
+        "section": "§4.2; Appendix C.2",
+        "pdf_pages": [
+          10,
+          25
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "The Wigner posterior trace is Gaussian. Retain the source's choice of $n$ and the check $n\\ge\\log(1/\\delta)$. Zero padding embeds the instance in larger dimensions.",
+      "notes": [
+        "The Wigner posterior trace is Gaussian. Retain the source's choice of $n$ and the check $n\\ge\\log(1/\\delta)$. Zero padding embeds the instance in larger dimensions."
+      ]
+    },
+    {
+      "id": "MX_S_trace_general__main__e3",
+      "source_ref": "MX_SRC_DT",
+      "locator": {
+        "theorem": "Theorem B.1",
+        "section": "Appendix B",
+        "pdf_pages": [
+          18
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Static Schatten-$p$ Hutch++ upper bound; non-PSD inputs use an additive norm scale.",
+      "notes": [
+        "Static Schatten-$p$ Hutch++ upper bound; non-PSD inputs use an additive norm scale."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "MX_SRC_DT",
+      "authors": [
+        "David P. Woodruff",
+        "Fred Zhang",
+        "Qiuyi (Richard) Zhang"
+      ],
+      "title": "Optimal Query Complexities for Dynamic Trace Estimation",
+      "year": 2022,
+      "version": "arXiv:2209.15219v1; 2022-09-30",
+      "url": "https://arxiv.org/pdf/2209.15219v1",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [
+    {
+      "id": "MX_REL_psd_trace_general",
+      "source_ref": "MX_S_trace_ad",
+      "target_ref": "MX_S_trace_general",
+      "relation_kind": "model_restriction",
+      "conditions": [
+        "Set p=1 and restrict inputs to positive semidefinite matrices, preserving adaptivity, randomization, delta, dimension, and output."
+      ],
+      "instance_map": "The input is unchanged.",
+      "output_map": "Retain the same scalar estimate",
+      "error_map": "For PSD matrices, $\\|A\\|_{S_1}=\\operatorname{tr}(A)$, so relative trace error equals additive error normalized by the Schatten-one norm.",
+      "oracle_simulation": "The same matrix-vector product interface",
+      "cost_map": {
+        "expression": null,
+        "components": {
+          "N_right": "Unchanged"
+        }
+      },
+      "evidence_refs": [
+        "MX_S_trace_general__main__e3"
+      ]
+    },
+    {
+      "id": "MX_REL_logdet_trace",
+      "source_ref": "MX_S_logdet",
+      "target_ref": "MX_S_trace_general",
+      "relation_kind": "one_way_simulation_template",
+      "conditions": [
+        "B=log A may be indefinite. A Bv call is not automatically free, and the error and target normalization must be checked again."
+      ],
+      "instance_map": "A->B=logA",
+      "output_map": "trace scalar equals logdetA",
+      "error_map": "The original trace error is $\\epsilon\\|\\log A\\|_{S_p}$. To make it at most $\\eta$, use a known valid norm bound and a budget for simulation error.",
+      "oracle_simulation": "The action $Bv$ may be approximated by polynomials or Lanczos; it is not one exact $Av$ call. The included argument covers the SLQ quadratic-form route only.",
+      "cost_map": {
+        "expression": null,
+        "components": {
+          "cost": "Each simulation costs the approximation degree for h = log. Trace upper and lower bounds do not transfer one for one."
+        }
+      },
+      "evidence_refs": []
+    }
+  ],
+  "aliases": [
+    {
+      "legacy_id": "MX_S_trace_general",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "optimal": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "MX_S_trace_general__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "20036432fe3657c2d2bbb421c27f6a920f17fa4e602ac416f80d3a587c9d1b8d",
+    "source_order": 46,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

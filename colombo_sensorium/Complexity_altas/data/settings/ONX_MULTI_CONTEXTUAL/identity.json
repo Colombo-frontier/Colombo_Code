@@ -1,0 +1,576 @@
+{
+  "schema_version": "1.0.0",
+  "record_type": "setting_identity",
+  "setting_id": "ONX_MULTI_CONTEXTUAL",
+  "normalization_version": "0.2.0",
+  "profile_version": "6.1.0",
+  "profile_sha256": "c4aeb5c748aeca4657523eda93bd330f4610c7fe8e5cc5f7e30f2bb28766b2ff",
+  "source_document": "profile.json",
+  "completeness": "unreviewed",
+  "normalization_scope": "source_field_extraction_only",
+  "matching_state": "unreviewed",
+  "missing_field_semantics": "unknown_not_unrestricted",
+  "axes": {
+    "task": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/task",
+      "source_fields": {
+        "navigation_domains": [
+          "online_bandit"
+        ],
+        "formulation_code": "onx_multi_contextual",
+        "formulation": "Multiple linear bandit tasks share an unknown low-dimensional representation. All task actions must be submitted together before the batch of scalar rewards is revealed. Performance is the sum of cumulative pseudo-regret across tasks. Each task’s predictable action set may change over time.",
+        "formulation_latex": "R_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).",
+        "solution_goal": "Minimize performance as defined by the metric, guarantee, and native resource.",
+        "protocol_ref": "ONX_MULTI_CONTEXTUAL_pro_3bab662a5e"
+      },
+      "narrative_pointers": [
+        "/common_specification/task/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    },
+    "instance_model": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/model",
+      "source_fields": {
+        "instance": "There are $M$ parallel tasks, each with $T$ rounds and one action per task per round. The parameter matrix and shared representation satisfy $$\\Theta=[\\theta_1,\\ldots,\\theta_M],\\qquad \\operatorname{rank}(\\Theta)\\le r,\\qquad \\|\\theta_m\\|_2\\le1.$$. Current action sets $\\mathcal A_{t,m}\\subseteq B_2^d(1)$ may depend on past history and are revealed before the full action batch. No task-diversity or covariance-eigenvalue lower bound is imposed.",
+        "assumptions": [
+          {
+            "subject_id": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+            "property_code": "explicit_model_clause",
+            "variable_blocks": [
+              "ONX_MULTI_CONTEXTUAL_var_7106cc02bf"
+            ],
+            "norm_ref": "ONX_MULTI_CONTEXTUAL_nor_be509bad68",
+            "scope": "All admissible values of the listed variables and round indices",
+            "description": "There are $M$ parallel tasks, each lasting $T$ rounds, with one action per task per round. The parameter matrix and shared representation satisfy:"
+          },
+          {
+            "subject_id": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+            "property_code": "explicit_model_clause",
+            "variable_blocks": [
+              "ONX_MULTI_CONTEXTUAL_var_7106cc02bf"
+            ],
+            "norm_ref": "ONX_MULTI_CONTEXTUAL_nor_be509bad68",
+            "scope": "All admissible values of the listed variables and round indices",
+            "description": "$$\\Theta=[\\theta_1,\\ldots,\\theta_M],\\qquad \\operatorname{rank}(\\Theta)\\le r,\\qquad \\|\\theta_m\\|_2\\le1.$$"
+          },
+          {
+            "subject_id": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+            "property_code": "explicit_model_clause",
+            "variable_blocks": [
+              "ONX_MULTI_CONTEXTUAL_var_7106cc02bf"
+            ],
+            "norm_ref": "ONX_MULTI_CONTEXTUAL_nor_be509bad68",
+            "scope": "All admissible values of the listed variables and round indices",
+            "description": "The current action set $\\mathcal A_{t,m}\\subseteq B_2^d(1)$ may depend on past history and is revealed before the action batch is chosen. No task-diversity or covariance-eigenvalue lower bound is imposed."
+          }
+        ],
+        "structured_source_contract": {
+          "parameters": "rank([theta_1,...,theta_M])<=r; ||theta_m||_2<=1",
+          "actions": "arbitrary predictable A_(t,m) subset unit Euclidean ball, revealed before batch actions",
+          "tasks": "M tasks concurrently, one action per task per round",
+          "diversity": "no task-diversity or covariance lower-bound assumption imposed"
+        },
+        "information_registry_ref": "ONX_MULTI_CONTEXTUAL_INFORMATION",
+        "existence": "Use the model's concrete compactness, continuity, unique-optimum, or controllability promises; add none implicitly.",
+        "parameter_domain_description": "M: $M\\in\\mathbb N,\\ M\\ge1$ (public); T: $T\\in\\mathbb N,\\ T\\ge1$ (public); d: $d\\in\\mathbb N,\\ d\\ge1$ (public); \\delta_{\\mathrm{conf}}: $0<\\delta_{\\mathrm{conf}}<1$ (public); r: $r\\in\\mathbb N,\\ 1\\le r\\le\\min\\{d,M\\}$ (public)"
+      },
+      "narrative_pointers": [
+        "/common_specification/model/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    },
+    "oracle_interface": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/oracle",
+      "source_fields": {
+        "operations": [
+          {
+            "id": "ONX_MULTI_CONTEXTUAL_ora_6f0f6f3180",
+            "operation_code": "batched_task_rewards",
+            "target_object": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+            "query_signature": "Submit all $M$ actions simultaneously, then receive all rewards together. No action may use an earlier response from the same batch. $$Y_{t,m}=\\langle x_{t,m},\\theta_m\\rangle+\\eta_{t,m}.$$ Conditional on the past and chosen actions, noise has mean zero and is $1$-sub-Gaussian. Centralized causal learning is allowed. Inputs $M,d,r,T,\\delta_{\\mathrm{conf}}$ and current action sets are public; the shared representation $B$ and individual $w_m$ are hidden. Received feedback may be stored and reused computationally. No unrevealed historical information or extra queries to exhausted samples are available; any within-round full-function or common-sample access must be explicit.",
+            "response_signature": {
+              "feedback": "batch of M scalar rewards <x_(t,m),theta_m>+eta_(t,m)",
+              "noise": "conditionally zero-mean 1-sub-Gaussian given history and current selected actions"
+            },
+            "domain_ref": "ONX_MULTI_CONTEXTUAL_dom_6488c80ee2",
+            "feedback_quality": {
+              "feedback": "batch of M scalar rewards <x_(t,m),theta_m>+eta_(t,m)",
+              "noise": "conditionally zero-mean 1-sub-Gaussian given history and current selected actions"
+            },
+            "access_schedule_ref": "ONX_MULTI_CONTEXTUAL_pro_3bab662a5e",
+            "cost_rule_ref": "ONX_MULTI_CONTEXTUAL_res_dcee84d9d6",
+            "display_label_zh": "Rewards for tasks in a simultaneous batch"
+          }
+        ],
+        "public_inputs": [
+          "M",
+          "d",
+          "r",
+          "T",
+          "delta_conf",
+          "current action sets"
+        ],
+        "hidden_objects": [
+          "B",
+          "w_m"
+        ],
+        "auxiliary_interfaces": {
+          "feedback": "batch of M scalar rewards <x_(t,m),theta_m>+eta_(t,m)",
+          "noise": "conditionally zero-mean 1-sub-Gaussian given history and current selected actions"
+        },
+        "protocol_ref": "ONX_MULTI_CONTEXTUAL_pro_3bab662a5e"
+      },
+      "narrative_pointers": [
+        "/common_specification/oracle/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    },
+    "output": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/output",
+      "source_fields": {
+        "object_type": "online_trajectory",
+        "feasibility": "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required.",
+        "allowed_postprocessing": "Previously executed online actions cannot be changed.",
+        "certificate_requirement": "No function value, optimality certificate, or final recommendation is required unless explicitly listed for this axis."
+      },
+      "narrative_pointers": [
+        "/common_specification/output/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    },
+    "metric": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/metric",
+      "source_fields": {
+        "base_expression": "$$R_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).$$",
+        "base_expression_latex": "R_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).",
+        "normalization": "Sum over all M tasks and T rounds per task, without dividing by M or T.",
+        "comparator_ref": "ONX_MULTI_CONTEXTUAL_com_53f5fb1f93",
+        "finiteness_conditions": "Actions and parameters in every task have norm at most one, so total pseudo-regret lies in [0,2MT].",
+        "nonnegativity": true
+      },
+      "narrative_pointers": [
+        "/common_specification/metric/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    },
+    "resource_model": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/resource",
+      "source_fields": {
+        "components": [
+          {
+            "code": "rounds",
+            "unit": "round",
+            "description": "$T$ sequential rounds, or $T$ rounds per task"
+          },
+          {
+            "code": "native_feedback",
+            "unit": "as_specified",
+            "description": "$$N=MT.$$ Here $T$ is the number of rounds per task, and $N$ is the total number of scalar reward observations across tasks. Exploration, initialization, and system identification all consume the stated online budget. Oracle calls, arithmetic, communication rounds and bits, and memory remain distinct coordinates of the resource vector; arithmetic and bit complexity are not certified as optimal."
+          }
+        ],
+        "cost_rules": [
+          {
+            "id": "ONX_MULTI_CONTEXTUAL_res_dcee84d9d6",
+            "operation_refs": [
+              "ONX_MULTI_CONTEXTUAL_ora_6f0f6f3180"
+            ],
+            "cost": {
+              "N": "M T",
+              "computation": "statistical theorem assumes exact nonconvex optimizations; polynomial-time implementation not certified"
+            }
+          }
+        ],
+        "scalarization": "Compare only at the specified joint budget and with the same native performance measure.",
+        "setup_cost": "All initialization, exploration, and identification calls are included in the budget.",
+        "precision_model": "Exact real-arithmetic model; bit complexity is unspecified"
+      },
+      "narrative_pointers": [
+        "/common_specification/resource/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    }
+  },
+  "parameters": {
+    "source_pointer": "/parameters",
+    "cross_setting_alignment": "unreviewed",
+    "parameter_ids": [
+      "ONX_MULTI_CONTEXTUAL_p_f1bac165c7",
+      "ONX_MULTI_CONTEXTUAL_p_1610f7c272",
+      "ONX_MULTI_CONTEXTUAL_p_6e898943e7",
+      "ONX_MULTI_CONTEXTUAL_p_23f704c160",
+      "ONX_MULTI_CONTEXTUAL_p_680b03d963"
+    ]
+  },
+  "regime_predicates": [
+    {
+      "regime_id": "ONX_MULTI_CONTEXTUAL__main__r1",
+      "source_pointer": "/regimes/0",
+      "predicate_pointer": "/regimes/0/predicate",
+      "evaluation_state": "unparsed"
+    },
+    {
+      "regime_id": "ONX_MULTI_CONTEXTUAL__main__r2",
+      "source_pointer": "/regimes/1",
+      "predicate_pointer": "/regimes/1/predicate",
+      "evaluation_state": "unparsed"
+    }
+  ],
+  "view_override_policy": {
+    "object_values": "recursive_key_merge",
+    "array_and_scalar_values": "override_replaces_entire_value",
+    "absent_override_keys": "inherit_from_common_specification",
+    "null": "explicit_value_not_deletion",
+    "limitations": "Mechanical merge does not certify consistency or mathematical identity. Narrative qualifications and source conditions remain authoritative."
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "source_pointer": "/views/0",
+      "algorithms": {
+        "state": "source_structured",
+        "source_pointer": "/views/0/algorithms",
+        "source_fields": {
+          "randomization": "Private randomness is allowed and independent of the fixed instance and future external randomness.",
+          "adaptivity": "Strictly follows the per-round and within-batch protocol of the oracle",
+          "restrictions": [
+            "The statistical upper bound permits exact solution of nonconvex low-rank least-squares and optimistic-maximization problems. A polynomial-time implementation is not thereby certified.",
+            "Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits."
+          ],
+          "internal_computation": "Unrestricted except for explicit polynomial-time or protocol constraints",
+          "parallelism": "Follows the simultaneous-query, task-batch, and communication timing specified by the oracle"
+        },
+        "narrative_pointers": [
+          "/views/0/algorithms/description_paragraphs"
+        ],
+        "equivalence_review": "unreviewed",
+        "semantic_validation": "not_performed"
+      },
+      "guarantees": [
+        {
+          "state": "source_structured",
+          "source_pointer": "/views/0/guarantees/0",
+          "source_fields": {
+            "guarantee_id": "g1",
+            "complete_expression": "The source guarantee controls $R_T$ with probability at least $1-\\delta_{\\mathrm{conf}}$, uniformly over the shared parameters and predictable action sets. This is a high-probability pseudo-regret guarantee, not regret computed from realized observation noise.",
+            "aggregation_order": [
+              "The source guarantee controls $R_T$ with probability at least $1-\\delta_{\\mathrm{conf}}$, uniformly over the shared parameters and predictable action sets. This is a high-probability pseudo-regret guarantee, not regret computed from realized observation noise."
+            ],
+            "quantifier_order": "One admissible algorithm using only public information must handle every prescribed instance; adaptation to unknown budgets must be performed by that same algorithm.",
+            "randomness_sources": [
+              "Private randomness of the algorithm",
+              "Observation or environment randomness explicitly allowed by the oracle."
+            ],
+            "runtime_guarantee": "The resource budget is fixed. Expected error is not automatically converted to high probability or a random-runtime bound."
+          },
+          "narrative_pointers": [
+            "/views/0/guarantees/0/description_paragraphs"
+          ],
+          "equivalence_review": "unreviewed",
+          "semantic_validation": "not_performed",
+          "guarantee_id": "g1"
+        }
+      ],
+      "budget": {
+        "state": "source_structured",
+        "source_pointer": "/views/0/budget",
+        "source_fields": {
+          "precision_model": "Exact real-arithmetic model; bit complexity is unspecified",
+          "scalarization": "Compare only at the specified joint budget and with the same native performance measure."
+        },
+        "narrative_pointers": [],
+        "equivalence_review": "unreviewed",
+        "semantic_validation": "not_performed"
+      },
+      "effective_specification": {
+        "task": {
+          "navigation_domains": [
+            "online_bandit"
+          ],
+          "formulation_code": "onx_multi_contextual",
+          "formulation": "Multiple linear bandit tasks share an unknown low-dimensional representation. All task actions must be submitted together before the batch of scalar rewards is revealed. Performance is the sum of cumulative pseudo-regret across tasks. Each task’s predictable action set may change over time.",
+          "formulation_latex": "R_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).",
+          "solution_goal": "Minimize performance as defined by the metric, guarantee, and native resource.",
+          "protocol_ref": "ONX_MULTI_CONTEXTUAL_pro_3bab662a5e",
+          "description_paragraphs": [
+            "Multiple linear bandit tasks share an unknown low-dimensional representation. All task actions must be submitted together before the batch of scalar rewards is revealed. Performance is the sum of cumulative pseudo-regret across tasks. Each task’s predictable action set may change over time."
+          ]
+        },
+        "model": {
+          "instance": "There are $M$ parallel tasks, each with $T$ rounds and one action per task per round. The parameter matrix and shared representation satisfy $$\\Theta=[\\theta_1,\\ldots,\\theta_M],\\qquad \\operatorname{rank}(\\Theta)\\le r,\\qquad \\|\\theta_m\\|_2\\le1.$$. Current action sets $\\mathcal A_{t,m}\\subseteq B_2^d(1)$ may depend on past history and are revealed before the full action batch. No task-diversity or covariance-eigenvalue lower bound is imposed.",
+          "assumptions": [
+            {
+              "subject_id": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+              "property_code": "explicit_model_clause",
+              "variable_blocks": [
+                "ONX_MULTI_CONTEXTUAL_var_7106cc02bf"
+              ],
+              "norm_ref": "ONX_MULTI_CONTEXTUAL_nor_be509bad68",
+              "scope": "All admissible values of the listed variables and round indices",
+              "description": "There are $M$ parallel tasks, each lasting $T$ rounds, with one action per task per round. The parameter matrix and shared representation satisfy:"
+            },
+            {
+              "subject_id": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+              "property_code": "explicit_model_clause",
+              "variable_blocks": [
+                "ONX_MULTI_CONTEXTUAL_var_7106cc02bf"
+              ],
+              "norm_ref": "ONX_MULTI_CONTEXTUAL_nor_be509bad68",
+              "scope": "All admissible values of the listed variables and round indices",
+              "description": "$$\\Theta=[\\theta_1,\\ldots,\\theta_M],\\qquad \\operatorname{rank}(\\Theta)\\le r,\\qquad \\|\\theta_m\\|_2\\le1.$$"
+            },
+            {
+              "subject_id": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+              "property_code": "explicit_model_clause",
+              "variable_blocks": [
+                "ONX_MULTI_CONTEXTUAL_var_7106cc02bf"
+              ],
+              "norm_ref": "ONX_MULTI_CONTEXTUAL_nor_be509bad68",
+              "scope": "All admissible values of the listed variables and round indices",
+              "description": "The current action set $\\mathcal A_{t,m}\\subseteq B_2^d(1)$ may depend on past history and is revealed before the action batch is chosen. No task-diversity or covariance-eigenvalue lower bound is imposed."
+            }
+          ],
+          "structured_source_contract": {
+            "parameters": "rank([theta_1,...,theta_M])<=r; ||theta_m||_2<=1",
+            "actions": "arbitrary predictable A_(t,m) subset unit Euclidean ball, revealed before batch actions",
+            "tasks": "M tasks concurrently, one action per task per round",
+            "diversity": "no task-diversity or covariance lower-bound assumption imposed"
+          },
+          "information_registry_ref": "ONX_MULTI_CONTEXTUAL_INFORMATION",
+          "existence": "Use the model's concrete compactness, continuity, unique-optimum, or controllability promises; add none implicitly.",
+          "description_paragraphs": [
+            "There are $M$ parallel tasks, each lasting $T$ rounds, with one action per task per round. The parameter matrix and shared representation satisfy:",
+            "$$\n\\Theta=[\\theta_1,\\ldots,\\theta_M],\\qquad \\operatorname{rank}(\\Theta)\\le r,\\qquad \\|\\theta_m\\|_2\\le1.\n$$",
+            "The current action set $\\mathcal{A}_{t,m}\\subseteq B_2^d(1)$ may depend on past history and is revealed before the action batch is chosen. No task-diversity or covariance-eigenvalue lower bound is imposed."
+          ],
+          "parameter_domain_description": "M: $M\\in\\mathbb N,\\ M\\ge1$ (public); T: $T\\in\\mathbb N,\\ T\\ge1$ (public); d: $d\\in\\mathbb N,\\ d\\ge1$ (public); \\delta_{\\mathrm{conf}}: $0<\\delta_{\\mathrm{conf}}<1$ (public); r: $r\\in\\mathbb N,\\ 1\\le r\\le\\min\\{d,M\\}$ (public)"
+        },
+        "oracle": {
+          "operations": [
+            {
+              "id": "ONX_MULTI_CONTEXTUAL_ora_6f0f6f3180",
+              "operation_code": "batched_task_rewards",
+              "target_object": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+              "query_signature": "Submit all $M$ actions simultaneously, then receive all rewards together. No action may use an earlier response from the same batch. $$Y_{t,m}=\\langle x_{t,m},\\theta_m\\rangle+\\eta_{t,m}.$$ Conditional on the past and chosen actions, noise has mean zero and is $1$-sub-Gaussian. Centralized causal learning is allowed. Inputs $M,d,r,T,\\delta_{\\mathrm{conf}}$ and current action sets are public; the shared representation $B$ and individual $w_m$ are hidden. Received feedback may be stored and reused computationally. No unrevealed historical information or extra queries to exhausted samples are available; any within-round full-function or common-sample access must be explicit.",
+              "response_signature": {
+                "feedback": "batch of M scalar rewards <x_(t,m),theta_m>+eta_(t,m)",
+                "noise": "conditionally zero-mean 1-sub-Gaussian given history and current selected actions"
+              },
+              "domain_ref": "ONX_MULTI_CONTEXTUAL_dom_6488c80ee2",
+              "feedback_quality": {
+                "feedback": "batch of M scalar rewards <x_(t,m),theta_m>+eta_(t,m)",
+                "noise": "conditionally zero-mean 1-sub-Gaussian given history and current selected actions"
+              },
+              "access_schedule_ref": "ONX_MULTI_CONTEXTUAL_pro_3bab662a5e",
+              "cost_rule_ref": "ONX_MULTI_CONTEXTUAL_res_dcee84d9d6",
+              "display_label_zh": "Rewards for tasks in a simultaneous batch"
+            }
+          ],
+          "public_inputs": [
+            "M",
+            "d",
+            "r",
+            "T",
+            "delta_conf",
+            "current action sets"
+          ],
+          "hidden_objects": [
+            "B",
+            "w_m"
+          ],
+          "auxiliary_interfaces": {
+            "feedback": "batch of M scalar rewards <x_(t,m),theta_m>+eta_(t,m)",
+            "noise": "conditionally zero-mean 1-sub-Gaussian given history and current selected actions"
+          },
+          "protocol_ref": "ONX_MULTI_CONTEXTUAL_pro_3bab662a5e",
+          "description_paragraphs": [
+            "Submit all $M$ actions simultaneously, then receive all rewards simultaneously. Later actions in a batch cannot use earlier rewards from that batch.",
+            "$$\nY_{t,m}=\\langle x_{t,m},\\theta_m\\rangle+\\eta_{t,m}.\n$$",
+            "Given past history and the current action, noise has conditional mean zero and is $1$-sub-Gaussian.",
+            "A centralized causal learner is permitted. The parameters $M,d,r,T,\\delta_{\\mathrm{conf}}$ and current action sets are public; the shared representation $B$ and individual $w_m$ are hidden.",
+            "Received feedback may be stored and reused in computation. Unrevealed information cannot be requested from past rounds, and consumed random samples cannot receive additional queries. Current-round exceptions are limited to the explicitly supplied full-function access or same-sample two-point interface."
+          ]
+        },
+        "output": {
+          "object_type": "online_trajectory",
+          "feasibility": "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required.",
+          "allowed_postprocessing": "Previously executed online actions cannot be changed.",
+          "certificate_requirement": "No function value, optimality certificate, or final recommendation is required unless explicitly listed for this axis.",
+          "description_paragraphs": [
+            "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+          ]
+        },
+        "metric": {
+          "base_expression": "$$R_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).$$",
+          "base_expression_latex": "R_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).",
+          "normalization": "Sum over all M tasks and T rounds per task, without dividing by M or T.",
+          "comparator_ref": "ONX_MULTI_CONTEXTUAL_com_53f5fb1f93",
+          "finiteness_conditions": "Actions and parameters in every task have norm at most one, so total pseudo-regret lies in [0,2MT].",
+          "description_paragraphs": [
+            "$$\nR_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal{A}_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).\n$$"
+          ],
+          "nonnegativity": true
+        },
+        "resource": {
+          "components": [
+            {
+              "code": "rounds",
+              "unit": "round",
+              "description": "$T$ sequential rounds, or $T$ rounds per task"
+            },
+            {
+              "code": "native_feedback",
+              "unit": "as_specified",
+              "description": "$$N=MT.$$ Here $T$ is the number of rounds per task, and $N$ is the total number of scalar reward observations across tasks. Exploration, initialization, and system identification all consume the stated online budget. Oracle calls, arithmetic, communication rounds and bits, and memory remain distinct coordinates of the resource vector; arithmetic and bit complexity are not certified as optimal."
+            }
+          ],
+          "cost_rules": [
+            {
+              "id": "ONX_MULTI_CONTEXTUAL_res_dcee84d9d6",
+              "operation_refs": [
+                "ONX_MULTI_CONTEXTUAL_ora_6f0f6f3180"
+              ],
+              "cost": {
+                "N": "M T",
+                "computation": "statistical theorem assumes exact nonconvex optimizations; polynomial-time implementation not certified"
+              }
+            }
+          ],
+          "scalarization": "Compare only at the specified joint budget and with the same native performance measure.",
+          "setup_cost": "All initialization, exploration, and identification calls are included in the budget.",
+          "precision_model": "Exact real-arithmetic model; bit complexity is unspecified",
+          "description_paragraphs": [
+            "$$\nN=MT.\n$$",
+            "The quantity $T$ is rounds per task; $N$ is total scalar rewards across all tasks.",
+            "Exploration, initialization, and system identification all consume the stated online budget. Queries, arithmetic, communication rounds or bits, and memory remain joint resources. No arithmetic or bit-complexity optimality is asserted."
+          ]
+        }
+      },
+      "effective_leaf_sources": {
+        "/task/navigation_domains/0": "/common_specification/task/navigation_domains/0",
+        "/task/formulation_code": "/common_specification/task/formulation_code",
+        "/task/formulation": "/common_specification/task/formulation",
+        "/task/formulation_latex": "/common_specification/task/formulation_latex",
+        "/task/solution_goal": "/common_specification/task/solution_goal",
+        "/task/protocol_ref": "/common_specification/task/protocol_ref",
+        "/task/description_paragraphs/0": "/common_specification/task/description_paragraphs/0",
+        "/model/instance": "/common_specification/model/instance",
+        "/model/assumptions/0/subject_id": "/common_specification/model/assumptions/0/subject_id",
+        "/model/assumptions/0/property_code": "/common_specification/model/assumptions/0/property_code",
+        "/model/assumptions/0/variable_blocks/0": "/common_specification/model/assumptions/0/variable_blocks/0",
+        "/model/assumptions/0/norm_ref": "/common_specification/model/assumptions/0/norm_ref",
+        "/model/assumptions/0/scope": "/common_specification/model/assumptions/0/scope",
+        "/model/assumptions/0/description": "/common_specification/model/assumptions/0/description",
+        "/model/assumptions/1/subject_id": "/common_specification/model/assumptions/1/subject_id",
+        "/model/assumptions/1/property_code": "/common_specification/model/assumptions/1/property_code",
+        "/model/assumptions/1/variable_blocks/0": "/common_specification/model/assumptions/1/variable_blocks/0",
+        "/model/assumptions/1/norm_ref": "/common_specification/model/assumptions/1/norm_ref",
+        "/model/assumptions/1/scope": "/common_specification/model/assumptions/1/scope",
+        "/model/assumptions/1/description": "/common_specification/model/assumptions/1/description",
+        "/model/assumptions/2/subject_id": "/common_specification/model/assumptions/2/subject_id",
+        "/model/assumptions/2/property_code": "/common_specification/model/assumptions/2/property_code",
+        "/model/assumptions/2/variable_blocks/0": "/common_specification/model/assumptions/2/variable_blocks/0",
+        "/model/assumptions/2/norm_ref": "/common_specification/model/assumptions/2/norm_ref",
+        "/model/assumptions/2/scope": "/common_specification/model/assumptions/2/scope",
+        "/model/assumptions/2/description": "/common_specification/model/assumptions/2/description",
+        "/model/structured_source_contract/parameters": "/common_specification/model/structured_source_contract/parameters",
+        "/model/structured_source_contract/actions": "/common_specification/model/structured_source_contract/actions",
+        "/model/structured_source_contract/tasks": "/common_specification/model/structured_source_contract/tasks",
+        "/model/structured_source_contract/diversity": "/common_specification/model/structured_source_contract/diversity",
+        "/model/information_registry_ref": "/common_specification/model/information_registry_ref",
+        "/model/existence": "/common_specification/model/existence",
+        "/model/description_paragraphs/0": "/common_specification/model/description_paragraphs/0",
+        "/model/description_paragraphs/1": "/common_specification/model/description_paragraphs/1",
+        "/model/description_paragraphs/2": "/common_specification/model/description_paragraphs/2",
+        "/model/parameter_domain_description": "/common_specification/model/parameter_domain_description",
+        "/oracle/operations/0/id": "/common_specification/oracle/operations/0/id",
+        "/oracle/operations/0/operation_code": "/common_specification/oracle/operations/0/operation_code",
+        "/oracle/operations/0/target_object": "/common_specification/oracle/operations/0/target_object",
+        "/oracle/operations/0/query_signature": "/common_specification/oracle/operations/0/query_signature",
+        "/oracle/operations/0/response_signature/feedback": "/common_specification/oracle/operations/0/response_signature/feedback",
+        "/oracle/operations/0/response_signature/noise": "/common_specification/oracle/operations/0/response_signature/noise",
+        "/oracle/operations/0/domain_ref": "/common_specification/oracle/operations/0/domain_ref",
+        "/oracle/operations/0/feedback_quality/feedback": "/common_specification/oracle/operations/0/feedback_quality/feedback",
+        "/oracle/operations/0/feedback_quality/noise": "/common_specification/oracle/operations/0/feedback_quality/noise",
+        "/oracle/operations/0/access_schedule_ref": "/common_specification/oracle/operations/0/access_schedule_ref",
+        "/oracle/operations/0/cost_rule_ref": "/common_specification/oracle/operations/0/cost_rule_ref",
+        "/oracle/operations/0/display_label_zh": "/common_specification/oracle/operations/0/display_label_zh",
+        "/oracle/public_inputs/0": "/common_specification/oracle/public_inputs/0",
+        "/oracle/public_inputs/1": "/common_specification/oracle/public_inputs/1",
+        "/oracle/public_inputs/2": "/common_specification/oracle/public_inputs/2",
+        "/oracle/public_inputs/3": "/common_specification/oracle/public_inputs/3",
+        "/oracle/public_inputs/4": "/common_specification/oracle/public_inputs/4",
+        "/oracle/public_inputs/5": "/common_specification/oracle/public_inputs/5",
+        "/oracle/hidden_objects/0": "/common_specification/oracle/hidden_objects/0",
+        "/oracle/hidden_objects/1": "/common_specification/oracle/hidden_objects/1",
+        "/oracle/auxiliary_interfaces/feedback": "/common_specification/oracle/auxiliary_interfaces/feedback",
+        "/oracle/auxiliary_interfaces/noise": "/common_specification/oracle/auxiliary_interfaces/noise",
+        "/oracle/protocol_ref": "/common_specification/oracle/protocol_ref",
+        "/oracle/description_paragraphs/0": "/common_specification/oracle/description_paragraphs/0",
+        "/oracle/description_paragraphs/1": "/common_specification/oracle/description_paragraphs/1",
+        "/oracle/description_paragraphs/2": "/common_specification/oracle/description_paragraphs/2",
+        "/oracle/description_paragraphs/3": "/common_specification/oracle/description_paragraphs/3",
+        "/oracle/description_paragraphs/4": "/common_specification/oracle/description_paragraphs/4",
+        "/output/object_type": "/common_specification/output/object_type",
+        "/output/feasibility": "/common_specification/output/feasibility",
+        "/output/allowed_postprocessing": "/common_specification/output/allowed_postprocessing",
+        "/output/certificate_requirement": "/common_specification/output/certificate_requirement",
+        "/output/description_paragraphs/0": "/common_specification/output/description_paragraphs/0",
+        "/metric/base_expression": "/common_specification/metric/base_expression",
+        "/metric/base_expression_latex": "/common_specification/metric/base_expression_latex",
+        "/metric/normalization": "/common_specification/metric/normalization",
+        "/metric/comparator_ref": "/common_specification/metric/comparator_ref",
+        "/metric/finiteness_conditions": "/common_specification/metric/finiteness_conditions",
+        "/metric/description_paragraphs/0": "/common_specification/metric/description_paragraphs/0",
+        "/metric/nonnegativity": "/common_specification/metric/nonnegativity",
+        "/resource/components/0/code": "/common_specification/resource/components/0/code",
+        "/resource/components/0/unit": "/common_specification/resource/components/0/unit",
+        "/resource/components/0/description": "/common_specification/resource/components/0/description",
+        "/resource/components/1/code": "/common_specification/resource/components/1/code",
+        "/resource/components/1/unit": "/common_specification/resource/components/1/unit",
+        "/resource/components/1/description": "/common_specification/resource/components/1/description",
+        "/resource/cost_rules/0/id": "/common_specification/resource/cost_rules/0/id",
+        "/resource/cost_rules/0/operation_refs/0": "/common_specification/resource/cost_rules/0/operation_refs/0",
+        "/resource/cost_rules/0/cost/N": "/common_specification/resource/cost_rules/0/cost/N",
+        "/resource/cost_rules/0/cost/computation": "/common_specification/resource/cost_rules/0/cost/computation",
+        "/resource/scalarization": "/common_specification/resource/scalarization",
+        "/resource/setup_cost": "/common_specification/resource/setup_cost",
+        "/resource/precision_model": "/common_specification/resource/precision_model",
+        "/resource/description_paragraphs/0": "/common_specification/resource/description_paragraphs/0",
+        "/resource/description_paragraphs/1": "/common_specification/resource/description_paragraphs/1",
+        "/resource/description_paragraphs/2": "/common_specification/resource/description_paragraphs/2"
+      },
+      "merge_review": "mechanical_merge_only_not_mathematical_equivalence"
+    }
+  ],
+  "relations_source_pointer": "/relations",
+  "matching_policy": {
+    "candidate_retrieval": [
+      "legacy_alias",
+      "declared_facets",
+      "text"
+    ],
+    "accepted_relations": [
+      "exact_match",
+      "same_setting_new_view",
+      "candidate_is_special_case",
+      "candidate_is_generalization",
+      "partial_overlap",
+      "distinct",
+      "undetermined"
+    ],
+    "identity_decision": "requires_explicit_axis_correspondences_and_review",
+    "hash_semantics": "file_integrity_only_not_mathematical_equivalence"
+  }
+}

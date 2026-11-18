@@ -1,0 +1,196 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} One-pass low-rank approximation from row streams, with real-register memory.\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{MX\_\allowbreak{}S\_\allowbreak{}stream\_\allowbreak{}real}
+
+Matrix computation
+
+After one pass over the rows of \AtlasInlineMath{A\in\mathbb{R}^{m\times n}}, return a rank-\AtlasInlineMath{k} orthogonal right projection.
+
+\textbf{Status.} Bounds missing
+
+\textbf{TASK tags.} formulation: Row streaming lowrank; solution concept: Relative frobenius squared projection; task family: Matrix computation
+
+\textbf{MODEL tags.} spectral structure: Arbitrary real matrix; structure: Row stream
+
+\textbf{ORACLE tags.} feedback quality: Exact; interface family: Row stream; operation: Matrix stream update; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} memory: Exact-real register state; randomization: Private randomness allowed; restriction: No past requery; restriction: One pass
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Orthogonal projector or basis
+
+\textbf{METRIC tags.} criterion: Relative squared projection residual
+
+\textbf{GUARANTEE tags.} randomness: Algorithm private seed; time uniformity: Fixed time or accuracy
+
+\textbf{RESOURCE tags.} measure: Arithmetic; measure: Memory registers; measure: Passes; measure: Stream rows
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+After one pass over the rows of \AtlasInlineMath{A\in\mathbb{R}^{m\times n}}, return a rank-\AtlasInlineMath{k} orthogonal right projection.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The input \AtlasInlineMath{A} is an arbitrary real matrix with a row order fixed in advance. Assume \AtlasInlineMath{m,n\ge1}, \AtlasInlineMath{1\le k<\min\{m,n\}}, and \AtlasInlineMath{\varepsilon>0}.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+The quantity \AtlasInlineMath{m,n,k,\varepsilon} is public. Each call returns only the next complete row. Consumed rows are unavailable again, and the algorithm cannot query \AtlasInlineMath{Av} or reread the input after the stream ends.
+
+\needspace{4\baselineskip}\subsection{Output}
+After the stream, use only retained state to output \AtlasInlineMath{P=P^{\mathsf T}=P^2\in\mathbb{R}^{n\times n}} with \AtlasInlineMath{\operatorname{rank}(P)=k}; an orthonormal-basis representation is allowed. Returning \AtlasInlineMath{AP} is unnecessary.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+Let \AtlasInlineMath{A_k} be any best rank-\AtlasInlineMath{k} Frobenius approximation. Success requires \AtlasInlineMath{\|A(I_n-P)\|_{\mathrm{F}}^2\le(1+\varepsilon)\|A-A_k\|_{\mathrm{F}}^2}; the residual is explicitly squared. When the optimal residual is zero, the row space must be recovered exactly.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+The native resource is the maximum number \AtlasInlineMath{S_{\mathbb R}} of simultaneously retained exact real registers. One pass is fixed by the protocol, and arithmetic is free. No bit width per register is specified.
+
+The cost limit holds for every input and private seed. The final output must be decoded from the charged state, without an unregistered external cache.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Randomized single-pass streaming algorithms are permitted. State consists of exact-real registers updated by ordinary arithmetic and comparisons. Uncharged arbitrary encodings that compress the entire real input stream into one register are excluded. Apart from the single-pass and register-memory constraints, internal arithmetic time is unrestricted.
+
+The algorithm is selected using only public inputs. For every admissible input fixed before its private seed is generated, the success event has probability at least \AtlasInlineMath{2/3} over that private randomness.
+
+\textbf{Budget convention.} One pass; peak memory is bounded for every input and random seed.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{m}: Number of rows of the input matrix \textbf{Domain:} \AtlasInlineMath{m\in\mathbb N,\ m\ge1}.
+
+\AtlasInlineMath{A\in\mathbb R^{m\times n}}
+
+\AtlasInlineMath{n}: Number of columns of the input matrix \textbf{Domain:} \AtlasInlineMath{n\in\mathbb N,\ n\ge1}.
+
+\AtlasInlineMath{A\in\mathbb R^{m\times n}}
+
+\AtlasInlineMath{k}: The exact rank of the orthogonal right projection returned after the stream. \textbf{Domain:} \AtlasInlineMath{k\in\mathbb N,\ 1\le k<\min\{m,n\}}.
+
+\AtlasInlineMath{\operatorname{rank}(P)=k}
+
+\AtlasInlineMath{\varepsilon}: Additional relative factor over the optimal squared Frobenius residual \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{\|A(I_n-P)\|_F^2\le(1+\varepsilon)\|A-A_k\|_F^2}
+
+\AtlasInlineMath{A}: The input matrix arriving in a precommitted row order. \textbf{Domain:} \AtlasInlineMath{\mathbb R^{m\times n}}.
+
+\AtlasInlineMath{P}: Right orthogonal projector returned after the stream ends \textbf{Domain:} \AtlasInlineMath{\mathbb R^{n\times n}}.
+
+\AtlasInlineMath{P=P^{\mathsf T}=P^2,\quad\operatorname{rank}(P)=k}
+
+\AtlasInlineMath{I_n}: The order-n identity matrix. \textbf{Domain:} \AtlasInlineMath{\mathbb R^{n\times n}}.
+
+\AtlasInlineMath{A_k}: Best Frobenius approximation of rank at most \AtlasInlineMath{k} \textbf{Domain:} \AtlasInlineMath{\mathbb R^{m\times n}}.
+
+\AtlasInlineMath{A_k\in\arg\min_{\operatorname{rank}(B)\le k}\|A-B\|_F}
+
+\AtlasInlineMath{\|M\|_{\mathrm F}}: The Frobenius norm. \textbf{Domain:} An arbitrary real or complex matrix.
+
+\AtlasInlineMath{\|M\|_{\mathrm F}=(\sum_{ij}|M_{ij}|^2)^{1/2}=(\sum_i\sigma_i(M)^2)^{1/2}}
+
+\AtlasInlineMath{c,C}: Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value. \textbf{Domain:} Independent of the dimension, accuracy, and probability parameters tracked by this bound.
+
+\AtlasInlineMath{O,\Omega,\Theta}: Upper, lower, and two-sided bounds up to constants in the same applicable regime \textbf{Domain:} Hidden constants have only the parameter dependence explicitly permitted by the associated bound.
+
+\AtlasInlineMath{S_{\mathbb R}}: Maximum number of exact real registers retained simultaneously during execution \textbf{Domain:} \AtlasInlineMath{\mathbb N_0}.
+
+\AtlasInlineMath{M^\star_{\mathrm{real}}}: Minimum worst-case number of real registers needed for the one-pass output guarantee \textbf{Domain:} \AtlasInlineMath{\mathbb N_0\cup\{+\infty\}}.
+
+\AtlasInlineMath{\ell}: Number of rows in the Frequent Directions sketch \textbf{Domain:} \AtlasInlineMath{\mathbb N}.
+
+\AtlasInlineMath{\ell=\lceil k+k/\varepsilon\rceil\le n}
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - memory complexity}
+\AtlasMath{M^\star_{\mathrm{real}}(m,n,k,\varepsilon)}
+\textbf{Scope.} Within the cited complete specification, select an algorithm before taking the worst case over all fixed inputs. Information permissions remain unchanged.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsection{R1 - Frequent Directions sketch-size window}
+\textbf{Region.} Assume \AtlasInlineMath{1\le k<\min\{m,n\}}, \AtlasInlineMath{0<\varepsilon<1}, and \AtlasInlineMath{\lceil k+k/\varepsilon\rceil\le n}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Number of real-valued registers
+
+\textbf{Status.} Lower bound missing
+
+\textbf{Lower bound.} No admitted bound for this comparison
+
+\textbf{Upper bound.} B1
+
+\AtlasMath{O(nk/\varepsilon)}
+\textbf{Comparison argument.} Only feasible joint resource points are asserted. No unconditional real-register lower bound is claimed.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Conditions.} The same choice of \AtlasInlineMath{\ell} simultaneously attains the space, time, and one-pass requirements.
+
+\textbf{Oracle mapping.} A single-pass row-arrival interface with row order fixed in advance. Each step reveals only the current complete row; no Av, A\textasciicircum{}T u, selectable-row query, or rereading is available.
+
+\textbf{Guarantee mapping.} The verified Frequent Directions upper bound is deterministic and holds for every fixed real-valued row stream, so it meets the required success probability of at least \AtlasInlineMath{2/3}.
+
+\textbf{Output mapping.} Return only a right rank-k subspace or basis satisfying ||A-A $P_hat\|_F^2$ <= $(1+epsilon)\|A-A_k\|_F^2$; neither the complete product A P\_hat nor an unsquared residual is the output target.
+
+\textbf{Resource mapping.} The native resource is peak exact-real registers \AtlasInlineMath{S_{\mathbb R}}. One pass is a fixed protocol and arithmetic is free; register bit lengths are unspecified. The cap holds for every input and seed. Final output decodes only from charged state, without unrecorded external storage.
+
+\needspace{4\baselineskip}\subsection{B1 - Deterministic one-pass Frequent Directions sketch}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{S_{\mathbb{R}}\le Cn\left\lceil k+\frac{k}{\varepsilon}\right\rceil}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1501.01711}{[1]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{memory registers.} O(n ceil(k+k/eps))
+
+\textbf{passes.} 1
+
+\textbf{arithmetic.} O(m n ceil(k+k/eps))
+
+\textbf{stream rows.} m
+
+\textbf{Constants.} Universal constants, with only the parameter dependence permitted by this bound’s region and expression.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/1501.01711}{[1]} theorem: Theorems 1.2 and 1.5; section: §1.4; pdf pages: 4
+
+Store O(n ell) floating-point numbers; accuracy is interpreted through an exact-arithmetic analysis. Set ell=ceil(k+k/epsilon). The output is a rank-k projection, not a higher-rank bicriteria approximation.
+
+\needspace{7\baselineskip}\section{References}
+[1] Mina Ghashami; Edo Liberty; Jeff M. Phillips; David P. Woodruff. Frequent Directions: Simple and Deterministic Matrix Sketching. 2016. arXiv:1501.01711; SIAM Journal on Computing publication.
+
+\url{https://arxiv.org/pdf/1501.01711}
+
+\end{document}

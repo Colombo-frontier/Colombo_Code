@@ -1,0 +1,874 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ON_EXP_S",
+  "title": "Finite experts: full loss-vector feedback and external regret",
+  "summary": "In each round the learner chooses one of finitely many experts, incurs its loss, and then observes every expert's current loss. The objective is comparison with the best fixed expert in hindsight. The loss sequence is fixed before interaction, and the learner may randomize.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "external_regret"
+    },
+    {
+      "facet": "structure",
+      "value": "finite_actions"
+    },
+    {
+      "facet": "feedback",
+      "value": "full_loss_vector"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation_code": "online_external_regret",
+      "formulation": "sum_t l_t(a_t) − min_i sum_t l_t(i)",
+      "solution_goal": "minimize_expected_cumulative_regret",
+      "protocol_ref": "ON_EXP_S_pro_8ec054c937",
+      "code": "online_external_regret",
+      "formulation_latex": "\\ell_t\\in[0,1]^K,\\quad a_t\\in[K],\\qquad R_T=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i)",
+      "goal_latex": "\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\mathbb E_{\\mathcal A}[R_T]",
+      "description_paragraphs": [
+        "In each round the learner chooses one of finitely many experts, incurs its loss, and then observes every expert's current loss. The objective is comparison with the best fixed expert in hindsight. The loss sequence is fixed before interaction, and the learner may randomize."
+      ]
+    },
+    "model": {
+      "instance": "The environment fixes ell_1,...,ell_T in [0,1]^K before interaction. Each round, the learner first samples an expert a_t and then observes the complete K-dimensional loss vector.",
+      "assumptions": [
+        {
+          "subject_id": "ON_EXP_S_obj_b07c4a00b6",
+          "property_code": "coordinate_range",
+          "variable_blocks": [],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_EXP_S_p_eec81dc26b",
+            "ON_EXP_S_p_76dd32a562"
+          ],
+          "scope": "Every t and every expert coordinate.",
+          "description": "For every $t\\in[T]$ and $i\\in[K]$, $0\\le\\ell_t(i)\\le1$. Complete vectors are fixed before interaction."
+        }
+      ],
+      "parameter_domain_description": "K: $K\\in\\mathbb N,\\ K\\ge2$ (public); T: $T\\in\\mathbb N,\\ T\\ge1$ (public)",
+      "code": "model_declared",
+      "interaction_timing": [
+        "The environment fixes ell_1:T.",
+        "The learner forms a distribution from past vector feedback and selects $a_t$.",
+        "Incur ℓ_t(a_t), then observe the entire ℓ_t.",
+        "Retain the feedback and proceed to round t+1."
+      ],
+      "adversary_information": "The environment fixes the complete loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner's private seed. This is an oblivious environment; nonanticipation describes the learner's causal information and does not extend the specification to a history-adaptive adversary.",
+      "unresolved_applicability": [
+        "The current matching region does not cover all K,T endpoints. Short horizons and very large K retain the coverage gaps recorded in the evidence ledger."
+      ],
+      "description_paragraphs": [
+        "The hidden loss-vector sequence is $\\ell_{1:T}$, with every coordinate in [0,1]. There is no observation noise, and the fixed sequence is independent of the learner's randomness.",
+        "The loss-bearing expert $a_t$ is selected before the current loss vector is observed.",
+        "The hindsight fixed comparator $i$ uses the same expert throughout all T rounds.",
+        "Require $K\\ge2$ and $T\\ge1$.",
+        "Actual actions lie in $[K]$. The learner may select a distribution from the simplex $\\Delta_K$ and randomize, but the sampled expert $a_t$ incurs the loss."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "ON_EXP_S_ora_cdfe5f71a2",
+          "operation_code": "reveal_loss_vector",
+          "target_object": "ON_EXP_S_obj_b07c4a00b6",
+          "variable_blocks": [
+            "ON_EXP_S_var_7e7d9a6c73"
+          ],
+          "query_signature": "Inputs: $t,\\ a_t\\in[K]$. Timing and visible information follow the specified protocol.",
+          "response_signature": "Return $(\\ell_t(1),\\ldots,\\ell_t(K))$.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "order is relative to the current member f_t(x), f(x), or sample F(x;ξ_t) of the named indexed function family and only with respect to x; finite feedback interfaces have no derivative order",
+          "feedback_quality": {
+            "code": "exact_loss_vector",
+            "description": "Return all K current loss coordinates exactly, with no sampling noise."
+          },
+          "domain_ref": "ON_EXP_S_dom_45b55ca932",
+          "coupling": "First choose an action and incur ell_t(a_t), then receive the full vector. All K coordinates are returned, including unselected experts; this is not K independent arm samples. There is no second hidden loss vector in the same round, and future rounds cannot be queried.",
+          "index_control": "The learner selects feasible actions and any probes permitted by the specification. The environment determines current losses, outcomes, or fresh samples. The learner cannot select future rounds.",
+          "access_schedule": "Interaction follows the sequence in registry.protocols. Current loss feedback is available only after the action is submitted. Any pre-action disclosure of context or advice is specified separately.",
+          "accuracy_argument": null,
+          "cost_rule_ref": "ON_EXP_S_res_409c850caa",
+          "query_latex": "t,\\ a_t\\in[K]",
+          "response_latex": "(\\ell_t(1),\\ldots,\\ell_t(K))"
+        }
+      ],
+      "public_inputs": [
+        "K",
+        "T",
+        "Loss-coordinate range [0,1]"
+      ],
+      "hidden_objects": [
+        "ON_EXP_S_obj_b07c4a00b6"
+      ],
+      "auxiliary_interfaces": [
+        "No additional access to hidden losses, means, or gradients is available. Projection, sampling, and internal optimization over public domains may have separately recorded computation costs; they are not free loss oracles."
+      ],
+      "protocol_ref": "ON_EXP_S_pro_8ec054c937",
+      "query_domain_description": "The finite action set $[K]=\\{1,\\ldots,K\\}$.",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "Full loss-vector feedback:",
+        "$$\nt,\\ a_t\\in[K]\\ \\longmapsto\\ (\\ell_t(1),\\ldots,\\ell_t(K))\n$$",
+        "Choose an action and incur $\\ell_t(a_t)$, then receive the complete current loss vector.",
+        "All K coordinates are returned, including unselected experts; this is not K independent arm samples.",
+        "There is no second hidden loss vector in the round and no access to future rounds.",
+        "Public inputs are K, T, and the loss-coordinate range [0,1]."
+      ]
+    },
+    "output": {
+      "object_type": "action_trajectory",
+      "domain_ref": "ON_EXP_S_dom_45b55ca932",
+      "feasibility": "Every loss-bearing action must belong to the action domain. The final output retains the complete action trajectory.",
+      "allowed_postprocessing": "Any measurable computation on received feedback is allowed. No native observation may be added after the budget is exhausted or the algorithm stops.",
+      "certificate_requirement": "Only the stated statistical guarantee is required, not a certificate verifiable through the feedback interface.",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "sum_t l_t(a_t) − min_i sum_t l_t(i)",
+      "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+      "reference_object": "ON_EXP_S_obj_b07c4a00b6",
+      "nonnegativity": false,
+      "finiteness_conditions": "Both cumulative losses lie in [0,T], so their difference on each execution path lies in [-T,T].",
+      "comparator_ref": "ON_EXP_S_com_3eb211f69f",
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "$$\n\\ell_t\\in[0,1]^K,\\quad a_t\\in[K],\\qquad R_T=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i)\n$$"
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "Sequential online rounds; only information permitted by the protocol is visible in each round."
+        },
+        {
+          "code": "native_feedback",
+          "unit": "feedback_event",
+          "description": "Each round has one feedback event containing $K$ scalars: $KT$ loss coordinates over $T$ rounds."
+        },
+        {
+          "code": "revealed_coordinates",
+          "unit": "scalar",
+          "description": "Reveal $K$ loss coordinates per round, for $KT$ coordinates in total."
+        }
+      ],
+      "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+      "cost_rules": [
+        {
+          "id": "ON_EXP_S_res_409c850caa",
+          "operation_refs": [
+            "ON_EXP_S_ora_cdfe5f71a2"
+          ],
+          "cost": {
+            "rounds": 1,
+            "native_feedback": 1,
+            "revealed_coordinates": "K"
+          }
+        }
+      ],
+      "scalarization": "Retain the native objective and complete resource vector. At fixed $T$, compare cumulative regret. Best-arm-identification stopping times and error probabilities use their own task-specific criteria.",
+      "setup_cost": "Only declared public inputs may be read. Hidden losses, means, or samples cannot be accessed in advance or outside the $T$ rounds or $\\tau$ samples.",
+      "online_cost": "Any causal randomized strategy is allowed; Hedge attains an upper bound. Hedge maintains K weights. Reading the vector and performing standard updates costs O(K) real operations per round; arithmetic and feedback quantities are recorded separately.",
+      "amortization_scope": "The algorithm runs on one environment. Charged feedback cannot be reused across independent instances.",
+      "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "Each round has one feedback event containing $K$ scalars: $KT$ loss coordinates over $T$ rounds.",
+        "Any causal randomized policy is allowed. Hedge is a valid upper-bound policy.",
+        "Hedge stores $K$ weights. Reading the vector and standard updates require $O(K)$ real operations per round. Arithmetic cost and feedback volume are recorded separately.",
+        "Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "Private randomization is allowed. The seed is hidden from the environment and independent of the fixed instance and sample randomness.",
+        "adaptivity": "The action and every probe in a round may depend only on previous-round feedback, public inputs, any context or advice already revealed that round, and private randomness. They may not use unrevealed current losses or samples.",
+        "restrictions": [
+          "All measurable causal policies satisfying the declared information timing and feasible domain are allowed, without extra span, iteration-form, or polynomial-time restrictions."
+        ],
+        "internal_computation": "Arbitrary measurable computation with exact real arithmetic is permitted; feedback complexity does not imply arithmetic or bit complexity. Any causal randomized policy is admissible, and Hedge provides an upper bound. Hedge maintains $K$ weights; reading the vector and standard updates use $O(K)$ real operations per round. Arithmetic cost and feedback are reported separately.",
+        "parallelism": "Interaction proceeds in sequential time rounds. A two-point evaluation is one pair of same-round responses only where explicitly permitted; it is not equivalent to two independent rounds.",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "The native objective is $\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\mathbb E_{\\mathcal A}[R_T]$.",
+          "aggregation_order": [
+            "First take the infimum over complete nonanticipating learning policies using only public inputs.",
+            "Then take the supremum over instances fixed before interaction that satisfy the stated model.",
+            "Expectation includes learner randomness and, when present, observation noise or random samples.",
+            "The objective fixes the comparator. Per-round optimal actions, a fixed action, and a sample-path optimum are not interchangeable."
+          ],
+          "quantifier_order": "One learning algorithm must apply to every instance in the declared class. It may use public inputs only, not hidden instance parameters.",
+          "randomness_sources": [
+            "Learner's private randomness"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "The horizon T is fixed and public. The guarantee holds for that T; it does not automatically give an anytime result or a simultaneous high-probability statement for all T.",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "$$\n\\inf_{\\mathcal{A}}\\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\mathbb{E}_{\\mathcal{A}}[R_T]\n$$",
+            "Choose one algorithm using public inputs before taking the worst case over all admissible instances. Expectation covers the algorithm's private randomness and the observation randomness specified by the model. Comparator choice and the order of summation, minimization, and expectation follow the displayed formula."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+        "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+        "scalarization": "Retain the native objective and complete resource vector. At fixed $T$, compare cumulative regret. Best-arm-identification stopping times and error probabilities use their own task-specific criteria."
+      },
+      "alias_ids": [
+        "ON_EXP_S"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ON_EXP_S_obj_b07c4a00b6",
+        "type": "loss_environment",
+        "definition": "The environment fixes ell_1,...,ell_T in [0,1]^K before interaction. Each round, the learner first samples an expert a_t and then observes the complete K-dimensional loss vector.",
+        "depends_on": [],
+        "role_code": "loss_vector_sequence"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ON_EXP_S_var_7e7d9a6c73",
+        "dimension": "One discrete action index",
+        "space": "The finite action set $[K]=\\{1,\\ldots,K\\}$."
+      }
+    ],
+    "domains": [
+      {
+        "id": "ON_EXP_S_dom_45b55ca932",
+        "definition": "The finite action set $[K]=\\{1,\\ldots,K\\}$.",
+        "roles": [
+          "action_domain",
+          "query_domain"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "ON_EXP_S_nor_60596e4d87",
+        "definition": "The model specifies coordinate ranges of finite vectors. Discrete action labels have no derivative order. A placeholder norm imposes no additional geometric assumption."
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ON_EXP_S_pro_8ec054c937",
+        "steps": [
+          "The environment fixes ell_1:T.",
+          "The learner forms a distribution from past vector feedback and selects $a_t$.",
+          "Incur ℓ_t(a_t), then observe the entire ℓ_t.",
+          "Retain the feedback and proceed to round t+1."
+        ],
+        "adversary_information": "The environment fixes the complete loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner's private seed. This is an oblivious environment; nonanticipation describes the learner's causal information and does not extend the specification to a history-adaptive adversary.",
+        "loss_bearing_points": "Only a_t incurs the current loss ℓ_t(a_t).",
+        "queries_per_round": "Each round has one feedback event containing $K$ scalars: $KT$ loss coordinates over $T$ rounds.",
+        "past_requery": "No new information may be requested from past rounds or previously used samples. Received feedback may be stored and processed. In a stochastic model, an action may be repeated in a new round, with a fresh charged sample."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ON_EXP_S_com_3eb211f69f",
+        "definition": "Single fixed expert $i\\in[K]$ that is optimal in hindsight"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ON_EXP_S_p_eec81dc26b",
+      "symbol": "K",
+      "meaning": "Number of experts",
+      "kind": "independent",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "public": true,
+      "definition": "The expert set is $[K]$.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_EXP_S_p_76dd32a562",
+      "symbol": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "K",
+      "meaning": "Number of experts",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "definition": "The expert set is $[K]$.",
+      "parameter_ref": "ON_EXP_S_p_eec81dc26b"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "parameter_ref": "ON_EXP_S_p_76dd32a562"
+    },
+    {
+      "symbol_latex": "\\ell_t",
+      "meaning": "Hidden loss vector at round t",
+      "domain": "$\\ell_t\\in[0,1]^K$",
+      "definition": "The entire sequence is fixed before interaction; only coordinates allowed by the protocol become visible after acting.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "a_t",
+      "meaning": "Arm or expert that actually incurs loss in round $t$",
+      "domain": "$a_t\\in[K]$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "[K]",
+      "meaning": "Index set of K arms or experts",
+      "domain": "A finite set.",
+      "definition": "$[K]=\\{1,\\ldots,K\\}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "i",
+      "meaning": "The fixed comparator expert’s index.",
+      "domain": "$i\\in[K]$",
+      "definition": "A single expert is used throughout the $T$ rounds and chosen in hindsight to minimize cumulative loss.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Delta_K",
+      "meaning": "Probability simplex used for randomized expert selection",
+      "domain": "$\\Delta_K\\subset\\mathbb R^K$",
+      "definition": "$\\Delta_K=\\{p\\in[0,1]^K:\\sum_i p_i=1\\}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\eta",
+      "meaning": "Learning rate used in the Hedge upper bound",
+      "domain": "Positive real number",
+      "definition": "The quantity $\\eta=\\sqrt{8\\log K/T}$ is used only for algorithm tuning.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_T",
+      "meaning": "Cumulative loss difference relative to the comparator specified in this profile",
+      "domain": "Real-valued random variable",
+      "definition": "$R_T=\\sum_t\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_t\\ell_t(i)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal R_T^*",
+      "meaning": "Minimax expected regret under the current information protocol and parameter region.",
+      "domain": "A nonnegative real.",
+      "definition": "$$\n\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\mathbb E_{\\mathcal A}[R_T],\\\\ R_T&=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).\\end{aligned}\n$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation includes the learner's private randomness and, when allowed, the environment strategy's randomness. A fixed loss sequence introduces no additional observation noise.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Cumulative observations counted according to the declared feedback type.",
+      "domain": "Nonnegative integer or integer-valued stopping time",
+      "definition": "The quantity $N=T$ counts complete loss-vector feedback events; the corresponding scalar-coordinate count is KT.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ON_EXP_S__main__q1",
+      "kind": "cumulative_regret",
+      "expression": "R*_T = inf_{A in admissible nonanticipating randomized learners} sup_{I in declared model} E_A,I[sum_t l_t(a_t) − min_i sum_t l_t(i)].",
+      "optimization_direction": "minimize",
+      "units": "loss",
+      "budget_variables": [
+        "ON_EXP_S_p_76dd32a562"
+      ],
+      "tolerance_variables": [],
+      "analysis_scope": "Compare only this specification and the listed parameter regions.",
+      "tracked_parameters": [
+        "ON_EXP_S_p_eec81dc26b",
+        "ON_EXP_S_p_76dd32a562"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "source_kind_label": "minimax_cumulative_regret",
+      "expression_latex": "\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\mathbb E_{\\mathcal A}[R_T],\\\\ R_T&=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).\\end{aligned}",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound.",
+      "expression": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_351fb610de"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ON_EXP_S__main__r1",
+      "specification_ref": "ON_EXP_S",
+      "name": "MAIN",
+      "predicate_text": "K≥2, T≥K",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_EXP_S_p_eec81dc26b"
+              },
+              "op": "ge",
+              "right": 2
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_EXP_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "ON_EXP_S_p_eec81dc26b"
+              }
+            }
+          }
+        ]
+      },
+      "parameter_refs": [
+        "ON_EXP_S_p_eec81dc26b",
+        "ON_EXP_S_p_76dd32a562"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Proof constants are independent of all declared tracked parameters. Thresholds without numerical values remain symbolic."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ON_EXP_S__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\le\\sqrt{T\\log K/2}",
+      "quantity_ref": "ON_EXP_S__main__q1",
+      "region_refs": [
+        "ON_EXP_S__main__r1"
+      ],
+      "method": "Hedge / full-information specialization of Theorem 7",
+      "algorithm_or_hard_family": "Hedge / full-information specialization of Theorem 7",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T vector reveals",
+        "revealed_coordinates": "KT"
+      },
+      "parameter_choice": "Choose $\\eta=\\sqrt{8\\log K/T}$; the Hedge decomposition is $(\\log K)/\\eta+\\eta T/8$.",
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_MOSS"
+      ],
+      "evidence_refs": [
+        "ON_EXP_S__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_EXP_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Require $K\\ge2$ and $T\\ge K$. Select an expert before acting, then observe every current loss afterward."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_EXP_S__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\ge0.03\\sqrt{T\\log K}",
+      "quantity_ref": "ON_EXP_S__main__q1",
+      "region_refs": [
+        "ON_EXP_S__main__r1"
+      ],
+      "method": "Bernoulli expert construction, Yao principle",
+      "algorithm_or_hard_family": "Bernoulli expert construction, Yao principle",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_MOSS"
+      ],
+      "evidence_refs": [
+        "ON_EXP_S__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_EXP_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Require $K\\ge2$ and $T\\ge K$. Select an expert before acting, then observe every current loss afterward."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "MAIN",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_EXP_S_p_eec81dc26b"
+              },
+              "op": "ge",
+              "right": 2
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_EXP_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "ON_EXP_S_p_eec81dc26b"
+              }
+            }
+          }
+        ]
+      },
+      "predicate_text": "$K\\ge 2, T\\ge K$",
+      "parameter_refs": [
+        "ON_EXP_S_p_eec81dc26b",
+        "ON_EXP_S_p_76dd32a562"
+      ],
+      "source_region_ref": "ON_EXP_S__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_EXP_S__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_EXP_S__main__q1",
+      "resource_projection_id": "resource_351fb610de",
+      "regime_id": "ON_EXP_S__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "ON_EXP_S__main__b1"
+        ],
+        "lower_refs": [
+          "ON_EXP_S__main__b2"
+        ],
+        "comparison_ref": "ON_EXP_S__main__c1",
+        "quantity_ref": "ON_EXP_S__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+        "ratio_or_gap": "≤1/(0.03sqrt2)",
+        "envelopes": {
+          "upper": {
+            "expression": "sqrt(T lnK/2)",
+            "claim_refs": [
+              "ON_EXP_S__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "\\sqrt{T lnK/2}"
+          },
+          "lower": {
+            "expression": "0.03 sqrt(T lnK)",
+            "claim_refs": [
+              "ON_EXP_S__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "0.03 \\sqrt{T lnK}"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_EXP_S__main__b1",
+            "when_region_refs": [
+              "ON_EXP_S__main__r1"
+            ],
+            "meaning": "Invoke each algorithm only in its applicability region; the scalar upper envelope minimizes over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "ON_EXP_S__main__b1": [
+            {
+              "region_ref": "ON_EXP_S__main__r1",
+              "predicate_text": "$K\\ge 2, T\\ge K$"
+            }
+          ],
+          "ON_EXP_S__main__b2": [
+            {
+              "region_ref": "ON_EXP_S__main__r1",
+              "predicate_text": "$K\\ge 2, T\\ge K$"
+            }
+          ]
+        },
+        "envelope_certificate": "Admit only individually checked claims compatible with this contract.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound."
+      },
+      "comparison_key": {
+        "setting_id": "ON_EXP_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_EXP_S__main__q1",
+        "resource_projection_id": "resource_351fb610de",
+        "regime_id": "ON_EXP_S__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ON_EXP_S__main__e1",
+      "source_ref": "ON_SRC_MOSS",
+      "locator": {
+        "theorem": "Theorem 30 and proof",
+        "section": "Appendix B",
+        "pdf_pages": [
+          28,
+          29,
+          30
+        ],
+        "printed_pages": [
+          2812,
+          2813,
+          2814
+        ],
+        "equations": []
+      },
+      "supports": "The source supports $\\mathcal{R}_T^*\\ge0.03\\sqrt{T\\log K}$ and the stated reductions, subject to each atomic claim's model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "Only the full-information experts branch is used, with source sampling budget $m_{\\mathrm{src}}=T$. This source parameter is not an objective count, coordinate count, or memory length here. Independent Bernoulli hard instances extend to randomized learners by Yao's principle."
+      ]
+    },
+    {
+      "id": "ON_EXP_S__main__e2",
+      "source_ref": "ON_SRC_MOSS",
+      "locator": {
+        "theorem": "Theorem 7",
+        "section": "",
+        "pdf_pages": [
+          12
+        ],
+        "printed_pages": [
+          2796
+        ],
+        "equations": []
+      },
+      "supports": "The source supports $\\mathcal{R}_T^*\\le\\sqrt{T\\log K/2}$ and the stated reductions, subject to each atomic claim's model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "Set the observation budget $m=T$ in the source's label-efficient full-information theorem. Losses are fixed in advance; expectation is over the learner's private randomness only."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "ON_SRC_MOSS",
+      "authors": [
+        "Jean-Yves Audibert",
+        "Sébastien Bubeck"
+      ],
+      "title": "Regret Bounds and Minimax Policies under Partial Monitoring",
+      "year": 2010,
+      "version": "JMLR 11:2785–2836",
+      "url": "https://jmlr.org/papers/volume11/audibert10a/audibert10a.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [
+    {
+      "id": "ON_REL_FULL_TO_BANDIT",
+      "source_ref": "ON_EXP_S",
+      "target_ref": "ON_ADV_S",
+      "relation_kind": "oracle_dominance",
+      "conditions": [
+        "The loss sequence and comparison objective are unchanged."
+      ],
+      "instance_map": "identity",
+      "output_map": "identity action trajectory",
+      "error_map": "identical regret",
+      "oracle_simulation": "Discard all coordinates except chosen arm; full information simulates bandit.",
+      "cost_map": {
+        "expression": "T vector reveals → T arm replies, but KT revealed coordinates consumed.",
+        "components": {}
+      },
+      "evidence_refs": [
+        "ON_EXP_S__main__e1"
+      ]
+    }
+  ],
+  "aliases": [
+    {
+      "legacy_id": "ON_EXP_S",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "optimal": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ON_EXP_S__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "149ebc5e12047186ae8163e29110047fb6024b3ffe9d600423de76b6372c16b0",
+    "source_order": 58,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

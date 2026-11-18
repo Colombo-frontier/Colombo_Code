@@ -1,0 +1,275 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Higher-order smoothness only at the lower level: joint gradients and a mean-square target\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{BL\_\allowbreak{}SPEC\_\allowbreak{}fresh\_\allowbreak{}lower\_\allowbreak{}p}
+
+Bilevel optimization
+
+Solve the bilevel problem \AtlasInlineMath{\min_x\Phi(x)}, where \AtlasInlineMath{\Phi(x)=f(x,y^*(x))} and \AtlasInlineMath{y^*(x)=\operatorname*{argmin}_y g(x,y)} is the unique global lower-level solution. The upper- and lower-level variables are \AtlasInlineMath{x\in\mathbb{R}^{d_x}} and \AtlasInlineMath{y\in\mathbb{R}^{d_y}}. Seek approximate stationarity of the reduced objective under the declared criterion and guarantee; assumptions on \AtlasInlineMath{f}, \AtlasInlineMath{g}, and \AtlasInlineMath{\Phi} are specified separately.
+
+\textbf{Status.} Fully optimal
+
+\textbf{TASK tags.} formulation: Bilevel unique reduced; task family: Bilevel
+
+\textbf{MODEL tags.} convexity: Lower objective strongly convex in its lower variable; initialization: Normalized initial distance; initialization: Normalized initial gap; smoothness: Bounded partial gradient; smoothness: Fixed order smoothness; smoothness: Hessian or cross derivative lipschitz; smoothness: Higher lower variable derivatives; smoothness: Lipschitz gradient; structure: Normalized common budgets
+
+\textbf{ORACLE tags.} feedback quality: Fresh; interface family: Fresh gradient; operation: Joint primitive gradient response; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared; scalar derivative order: Scalar-function first derivative
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; computation: Internal arithmetic uncharged; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Outer point x hat
+
+\textbf{METRIC tags.} criterion: Reduced-objective gradient norm
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; aggregation: Second moment of the complete error; mode: Expectation; randomness: Algorithm private seed; randomness: Oracle samples
+
+\textbf{RESOURCE tags.} accounting: Joint coordinates retained; budget: Fixed worst-case budget; measure: N joint sample; precision: Bit precision not counted
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Solve the bilevel problem \AtlasInlineMath{\min_x\Phi(x)}, where \AtlasInlineMath{\Phi(x)=f(x,y^*(x))} and \AtlasInlineMath{y^*(x)=\operatorname*{argmin}_y g(x,y)} is the unique global lower-level solution. The upper- and lower-level variables are \AtlasInlineMath{x\in\mathbb{R}^{d_x}} and \AtlasInlineMath{y\in\mathbb{R}^{d_y}}. Seek approximate stationarity of the reduced objective under the declared criterion and guarantee; assumptions on \AtlasInlineMath{f}, \AtlasInlineMath{g}, and \AtlasInlineMath{\Phi} are specified separately.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+For every fixed upper-level point \AtlasInlineMath{x}, \AtlasInlineMath{g(x,\cdot)} is \AtlasInlineMath{\mu}-strongly convex on all of \AtlasInlineMath{\mathbb{R}^{d_y}}. Convexity in \AtlasInlineMath{x} or joint convexity in \AtlasInlineMath{(x,y)} is not required.
+
+The population full gradient \AtlasInlineMath{\nabla f=(\nabla_x f,\nabla_y f)} is globally \AtlasInlineMath{L}-Lipschitz in \AtlasInlineMath{(x,y)}. Convexity of \AtlasInlineMath{f} is not required.
+
+The population full gradient \AtlasInlineMath{\nabla g=(\nabla_x g,\nabla_y g)} is globally \AtlasInlineMath{L}-Lipschitz in \AtlasInlineMath{(x,y)}.
+
+For every \AtlasInlineMath{(x,y)}, \AtlasInlineMath{\|\nabla_y f(x,y)\|\le C_f}. Equivalently, for fixed \AtlasInlineMath{x} the function \AtlasInlineMath{f(x,\cdot)} is \AtlasInlineMath{C_f}-Lipschitz. This does not assert that \AtlasInlineMath{f} is globally Lipschitz in value with respect to \AtlasInlineMath{x}.
+
+The derivatives \AtlasInlineMath{g_{xy}=\mathrm{D}_y\nabla_x g} and \AtlasInlineMath{g_{yy}=\mathrm{D}_y\nabla_y g} exist and are each \AtlasInlineMath{\rho}-Lipschitz jointly in \AtlasInlineMath{(x,y)}. No Lipschitz budget for \AtlasInlineMath{g_{xx}} is assumed.
+
+For every \AtlasInlineMath{\ell\in\{x,y\}}, \AtlasInlineMath{D_y^p\nabla_\ell g} exists and is \AtlasInlineMath{L_p}-Lipschitz in \AtlasInlineMath{y} for all \AtlasInlineMath{x}. No additional intermediate-order bounds or high-order assumptions on \AtlasInlineMath{f} are imposed. The case \AtlasInlineMath{p=1} follows from the basic Hessian-block budgets.
+
+Initialization is \AtlasInlineMath{x_0=0} with \AtlasInlineMath{\Phi(0)-\inf\Phi\le1}. Use the source normalized lower-bound class \AtlasInlineMath{\mathcal{P}_p(M)}, with budgets stated below. Thus \AtlasInlineMath{\Delta} is not an independently varying parameter.
+
+Choose \AtlasInlineMath{y_0=0} and \AtlasInlineMath{\|y^*(0)\|\le1}. Initialize the algorithm's adjoint variable at zero; no free linear-system solution is required.
+
+The source requires \AtlasInlineMath{\max\{\ell_f,\ell_g,\rho_1,L_p,B_f,\sigma,\mu^{-1}\}\le M}. Here \AtlasInlineMath{\ell_f,\ell_g} bounds both levels' gradient Lipschitz constants, \AtlasInlineMath{B_f} bounds the lower-variable block of the upper-level gradient, and \AtlasInlineMath{\rho_1} bounds the relevant lower-level Hessian blocks. Use the public bound \AtlasInlineMath{L} for \AtlasInlineMath{\ell_f,\ell_g} and write \AtlasInlineMath{C_f=B_f} and \AtlasInlineMath{\rho=\rho_1}. These budgets and \AtlasInlineMath{L_p} are all at most \AtlasInlineMath{M}.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Public inputs are dimension, target accuracy, the model's budgets, and the initial point. The original functions, their lower-level solutions, and the reduced objective are hidden. Queries are restricted to the stated interfaces; inner optima and undeclared derivatives are not available for free.
+
+\AtlasInlineMath{(x,y)\longmapsto (G_{f,x},G_{f,y},G_{g,x},G_{g,y})}. Conditional on the pre-query history, each block has the corresponding population partial gradient as its mean. The sum of the four conditional mean-square errors is at most \AtlasInlineMath{\sigma^2\le M^2}.
+
+The four blocks within a response may be arbitrarily correlated. Distinct calls use fresh randomness and are conditionally independent given the common history and query. Samples cannot be retained for cross-point reuse.
+
+\needspace{4\baselineskip}\subsection{Output}
+Output one outer point \AtlasInlineMath{\widehat{x}\in\mathbb{R}^{d_x}}. An inner solution, function value, or computable accuracy certificate is not required. Arbitrary admissible postprocessing and unqueried outputs are allowed.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The base error is \AtlasInlineMath{\|\nabla\Phi(\widehat{x})\|_2^2}. The tolerance \AtlasInlineMath{\varepsilon} is always expressed on the gradient-norm scale. The mean-square requirement is equivalent to the RMS gradient being at most this tolerance.
+
+In this unconstrained model with a strongly convex lower level, \AtlasInlineMath{\nabla\Phi(x)=\nabla_x f(x,y^*)-g_{xy}(x,y^*)g_{yy}(x,y^*)^{-1}\nabla_y f(x,y^*)}, where \AtlasInlineMath{g_{xy}=\mathrm{D}_y\nabla_x g} and \AtlasInlineMath{g_{yy}=\mathrm{D}_y\nabla_y g}, and \AtlasInlineMath{y^*} denotes \AtlasInlineMath{y^*(x)}. The identity defines the hypergradient without granting additional query access.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Compare \AtlasInlineMath{Q=N_{\rm joint}}. A joint response containing the four gradient estimates \AtlasInlineMath{(f_x,f_y,g_x,g_y)} at one point costs one call; a batch of size \AtlasInlineMath{m} costs \AtlasInlineMath{m} calls.
+
+Initialization oracle calls count toward the total. A finite initialization bound is an instance-class assumption, not free access to an inner solver.
+
+The budget is a fixed worst-case cap on every execution path; every actual response within a batch is counted.
+
+Internal processing of available information is free. Comparisons use the explicitly specified scalarization or resource vector. Different resources without given weights cannot be assembled coordinatewise from separate algorithms.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Algorithms may use private randomness. Queries, stopping, and postprocessing may be arbitrary measurable functions of the transcript. The output may be unqueried, a random selection of a past point, or an admissible average. No linear-span or zero-respecting restriction is imposed. Queries are sequential; each actual response in a parallel batch is charged separately. Arithmetic, linear algebra, and storage using received data are uncharged. Internal operations, memory, and communication are not tracked by this quantity.
+
+Choose one algorithm from the public parameters, then require \AtlasInlineMath{\mathbb{E}\|\nabla\Phi(\widehat{x})\|_2^2\le\varepsilon^2} for every admissible instance and legal oracle law. Expectation includes all algorithmic and feedback randomness, with the instance fixed first.
+
+\textbf{Budget convention.} fixed worst-case total number of calls on every execution
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{x,y}: The upper- and lower-level variables. \textbf{Domain:} \AtlasInlineMath{x\in\mathbb R^{d_x},y\in\mathbb R^{d_y}}.
+
+\AtlasInlineMath{f,g}: The original upper- and lower-level real-valued functions. \textbf{Domain:} \AtlasInlineMath{f,g:\mathbb R^{d_x}\times\mathbb R^{d_y}\to\mathbb R}.
+
+\AtlasInlineMath{\widehat x,x_0,y_0}: Output outer point, public outer initial point, and public lower-level initial point \textbf{Domain:} Each lies in its corresponding variable space.
+
+\AtlasInlineMath{\Phi}: The reduced objective. \textbf{Domain:} Defined in the task specification.
+
+\AtlasInlineMath{y^*}: Mapping to the unique lower-level global minimizer \textbf{Domain:} Constraints specified under TASK.
+
+\AtlasInlineMath{\nabla,\|\cdot\|}: Euclidean gradient and vector norm; matrix and higher-derivative norms are the induced Euclidean operator norms
+
+\AtlasInlineMath{\mathbb E,\Pr,\inf,\sup}: Expectation, probability, infimum, and supremum, with aggregation order and randomness specified by the guarantee.
+
+\AtlasInlineMath{\mathcal O,\Omega,\Theta,\widetilde{\mathcal O}}: Asymptotic upper, lower, matching-order, and declared-logarithm upper bounds; fixed parameters are specified in each evidence record
+
+\AtlasInlineMath{c,C}: Positive absolute constants or functions of fixed budgets, with dependencies specified by the corresponding result \textbf{Domain:} \AtlasInlineMath{0<c,C<\infty}.
+
+\AtlasInlineMath{\varepsilon}: Target accuracy. Whether error is squared is determined by the metric and guarantee formulas. \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{d_x}: Upper-level dimension \textbf{Domain:} Positive integer.
+
+\AtlasInlineMath{d_y}: Lower-level dimension \textbf{Domain:} Positive integer.
+
+\AtlasInlineMath{L}: Common joint-variable Lipschitz upper bound for the complete gradients at both levels \textbf{Domain:} \AtlasInlineMath{L\ge\mu>0}.
+
+\AtlasInlineMath{C_f}: A uniform norm bound on the population upper function’s lower-variable gradient block. \textbf{Domain:} \AtlasInlineMath{C_f\ge0}.
+
+\AtlasInlineMath{\|\nabla_yf(x,y)\|\le C_f}
+
+\AtlasInlineMath{\mu}: The uniform strong-convexity modulus in the lower-level variable. \textbf{Domain:} \AtlasInlineMath{\mu>0}.
+
+\AtlasInlineMath{\rho}: Common joint Lipschitz upper bound for the lower function's cross-Hessian block and lower-variable Hessian block \textbf{Domain:} \AtlasInlineMath{\rho\ge0}.
+
+\AtlasInlineMath{\Delta}: Normalized budget on the initial reduced-objective gap \textbf{Domain:} \AtlasInlineMath{\Delta=1}.
+
+\AtlasInlineMath{R_0}: The normalized initial lower-level distance budget. \textbf{Domain:} \AtlasInlineMath{R_0=1}.
+
+\AtlasInlineMath{p}: Order of the specified lower-direction regularity; it does not increase the oracle's derivative order \textbf{Domain:} Positive integer.
+
+\AtlasInlineMath{L_p}: Lipschitz upper bound, in the lower-level variable, for the pth lower-direction derivative of the complete lower-level gradient \textbf{Domain:} \AtlasInlineMath{L_p\ge0}.
+
+\AtlasInlineMath{M}: The total budget of the normalized instance class. \textbf{Domain:} \AtlasInlineMath{M>0}.
+
+\AtlasInlineMath{\max\{L,\rho,L_p,C_f,\sigma,\mu^{-1}\}\le M}
+
+\AtlasInlineMath{\sigma}: Conditional standard-deviation upper bound for a stochastic full gradient; ORACLE specifies which gradient is constrained \textbf{Domain:} \AtlasInlineMath{\sigma\ge0}.
+
+\AtlasInlineMath{g_{xy},g_{yy}}: Mixed lower-level Hessian block and lower-variable Hessian block \textbf{Domain:} \AtlasInlineMath{g_{xy}\in\mathbb R^{d_x\times d_y},g_{yy}\in\mathbb R^{d_y\times d_y}}.
+
+\AtlasInlineMath{g_{xy}=\mathrm D_y\nabla_xg,\quad g_{yy}=\mathrm D_y\nabla_yg}
+
+\AtlasInlineMath{\mathrm D_y^q}: The qth Fréchet derivative in the lower-level variable. \textbf{Domain:} Fix \AtlasInlineMath{x} and use the induced multilinear operator norm.
+
+\AtlasInlineMath{q,j,r}: Derivative order, derivative-budget index, and effective order selected by the algorithm. \textbf{Domain:} The range is specified by the model or the subscript of the bound.
+
+\AtlasInlineMath{G_f,G_g,\mathcal H}: Upper- and lower-level stochastic full-gradient responses and the pre-draw history. \textbf{Domain:} \AtlasInlineMath{G_f,G_g\in\mathbb R^{d_x+d_y}}.
+
+\AtlasInlineMath{G_{f,x},G_{f,y},G_{g,x},G_{g,y}}: Outer and lower blocks of the corresponding full stochastic gradient \textbf{Domain:} Outer-block dimension d\_x and lower-block dimension d\_y.
+
+\AtlasInlineMath{\ell_f,\ell_g,\rho_1,B_f}: Source budgets for upper-level smoothness, lower-level smoothness, Hessian-block variation, and the lower-variable block of the upper gradient.
+
+\AtlasInlineMath{\ell_f,\ell_g\le L,\ \rho_1=\rho,\ B_f=C_f}
+
+\AtlasInlineMath{\mathcal P_p(M)}: Normalized instance class whose total model budget is at most \AtlasInlineMath{M}
+
+\AtlasInlineMath{K,m,\tau,\Delta_0}: Outer iteration count, batch size, perturbation scale, and initial potential difference in this upper-bound derivation \textbf{Domain:} Used only in the stated derivation; here \AtlasInlineMath{\tau} is the algorithm's perturbation scale.
+
+\AtlasInlineMath{N_{\rm joint}}: The number of joint full-gradient sample responses for both levels. \textbf{Domain:} A nonnegative integer. The resource section specifies the runtime-cost guarantee.
+
+\AtlasInlineMath{N,Q}: This is the total call budget under the stated resource projection. If only one symbol is used, the two names are aliases for that same budget. \textbf{Domain:} RESOURCE specifies which operations are summed; no additional unit cost is introduced.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\AtlasMath{\begin{gathered}Q^*(\varepsilon)=\inf_{\mathcal A\in\mathfrak A_\varepsilon}\sup_{I,\mathcal O,\omega}C_{\mathcal A},\\\mathfrak A_\varepsilon=\{\mathcal A\in\mathfrak A_{\rm spec}:\ \forall(I,\mathcal O),\ \mathbb E\|\nabla\Phi_I(\hat x_{\mathcal A})\|^2\le\varepsilon^2\}.\\C=N_{\mathrm{joint}}.\end{gathered}}
+\textbf{Scope.} worst admissible instance and arbitrary finite dimension unless model fixes dimensions
+
+\textbf{Optimization direction.} minimize resources subject to accuracy
+
+\needspace{4\baselineskip}\subsection{R1 - The normalized instance class at fixed order.}
+\textbf{Region.} The order \AtlasInlineMath{p} is fixed and finite. Assume normalized public budget \AtlasInlineMath{M\ge M_0} and \AtlasInlineMath{0<\varepsilon\le\varepsilon_0}. The quantity \AtlasInlineMath{M_0} is the universal source threshold. All baseline and lower-level-only higher-order conditions in the model hold.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Sum the unit costs of actual primitive responses in the oracle specification. Separate requests for the two levels cost two calls.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{\Omega (\varepsilon ^{-4-2/p})}
+\textbf{Upper bound.} B1
+
+\AtlasMath{O_p(\varepsilon ^{-4-2/p})}
+\textbf{Gap or comparison.} For fixed \AtlasInlineMath{p}, the accuracy rate is \AtlasInlineMath{\Theta_p(\varepsilon^{-4-2/p})}.
+
+\textbf{Comparison argument.} Each included claim has verified statement and applicability; mathematics review is separately labeled. No numerical threshold inferred from asymptotics.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} One fresh joint call returns the four gradient blocks \AtlasInlineMath{f,g} and costs one call. The additional smoothness of order \AtlasInlineMath{p} constrains only the stated lower-level derivative blocks of \AtlasInlineMath{g}. The initial function gap and lower-level distance satisfy the normalization \AtlasInlineMath{\mathcal P_p(M)}.
+
+\textbf{Guarantee mapping.} The native target is \AtlasInlineMath{\mathbb E\|\nabla\Phi(\widehat x)\|^2\le\varepsilon^2}, a root-mean-square tolerance, rather than \AtlasInlineMath{\mathbb E\|\nabla\Phi(\widehat x)\|\le\varepsilon^2}.
+
+\textbf{Output mapping.} Return one outer point \AtlasInlineMath{\widehat x}. Expectation uses the oracle and algorithm randomness stated in the contract.
+
+\textbf{Resource mapping.} The charged resources are \AtlasInlineMath{N_{\rm joint}}. Cost is a fixed worst-case budget for every execution, not expected calls.
+
+\needspace{4\baselineskip}\subsection{B1 - p-point lower-gradient extrapolation}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\mathcal{O}_p(\varepsilon^{-4-2/p})}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2610.01843v1}{[1]}
+
+\textbf{Dimension conditions.} Valid in every finite dimension of the declared model. No additional dimension dependence is introduced beyond the formula.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{N joint sample.}
+
+\AtlasMath{(2p+5)mK=O_p(\varepsilon ^{-4-2/p})}
+\textbf{N HVP.} 0
+
+\textbf{N JVP.} 0
+
+\textbf{N inner solve.} 0
+
+\textbf{Constants.} Upper-bound constants may depend on \AtlasInlineMath{p} and the instance-class budgets.
+
+\textbf{Derivation.} The source Theorem 3.1 bounds mean-square error by \AtlasInlineMath{C(\Delta_0/K+\tau^{2p}+1/(m\tau^2))}. Here \AtlasInlineMath{K} is the outer iteration count, \AtlasInlineMath{m} the batch size, \AtlasInlineMath{\tau} the perturbation scale, and \AtlasInlineMath{\Delta_0} the initial potential gap. Choose \AtlasInlineMath{\tau\asymp\varepsilon^{1/p}}, \AtlasInlineMath{m\asymp\varepsilon^{-2}\tau^{-2}}, and \AtlasInlineMath{K\asymp\Delta_0\varepsilon^{-2}} so that each term has the target squared-error order.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2610.01843v1}{[1]} theorem: Theorem 3.1; section: 2-3; pdf pages: 4; 5; 7; equations: (18)
+
+\needspace{4\baselineskip}\subsection{B2 - unrestricted randomized hard family}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(\varepsilon^{-4-2/p})}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2610.01843v1}{[1]}
+
+\textbf{Dimension conditions.} The lower-level dimension may be \AtlasInlineMath{d_y=1}, and the hard upper-level dimension is \AtlasInlineMath{d_x=O(\varepsilon^{-6-2/p}\log(1/\varepsilon))}. Dimensions may grow with the requested accuracy.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{declared scalar projection.}
+
+\AtlasMath{\Omega (\varepsilon ^{-4-2/p})}
+\textbf{Constants.} The lower-bound constant and threshold \AtlasInlineMath{M_0} in Theorem 4.3 are universal; the corresponding upper-bound constant may still depend on \AtlasInlineMath{p}.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2610.01843v1}{[1]} theorem: Theorem 4.3; section: 4; pdf pages: 11; equations: (29); (30); (31)
+
+\needspace{7\baselineskip}\section{References}
+[1] Linxuan Pan; Junchi Yang. Optimal Stochastic Bilevel Optimization with First-Order Oracles. 2026. arXiv:2610.01843v1, 2026-10-01.
+
+\url{https://arxiv.org/pdf/2610.01843v1}
+
+\end{document}

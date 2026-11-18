@@ -1,0 +1,1055 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "SO_FO_QC_BALL_FRESH",
+  "title": "Smooth quasar-convex minimization on a ball: fresh stochastic gradients",
+  "summary": "Minimize expected objective gap over a public Euclidean ball with a fixed budget of unbiased, bounded-variance gradient calls.",
+  "primary_domain": "single_objective",
+  "oracle_order_collection": "fo",
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "single_objective"
+    },
+    {
+      "facet": "goal",
+      "value": "global_minimization"
+    },
+    {
+      "facet": "structure",
+      "value": "quasar_convex"
+    },
+    {
+      "facet": "feedback",
+      "value": "fresh_stochastic_gradient"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expected_loss"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "solution_goal": "global_minimization",
+      "code": "single_objective_optimization",
+      "description_paragraphs": [
+        "Solve $\\min_{x\\in Q} f(x)$ using stochastic gradient responses queried inside $Q$. At a fixed query budget, minimize the worst-case expected objective gap of the returned feasible point."
+      ],
+      "navigation_domains": [
+        "single_objective"
+      ],
+      "formulation_code": "SO.global_minimization"
+    },
+    "model": {
+      "properties": {
+        "convexity": "quasar_convex",
+        "regularity": [
+          "gradient_lipschitz"
+        ],
+        "structure": [],
+        "growth": []
+      },
+      "domain_roles": {
+        "function": "$\\mathbb R^d$",
+        "optimization": "$Q$",
+        "query": "$Q$",
+        "output": "$Q$"
+      },
+      "code": "admissible_model_class",
+      "description_paragraphs": [
+        "The public feasible set is the Euclidean ball $Q=B_2(0,D)=\\{x\\in\\mathbb R^d:\\|x\\|_2\\le D\\}$. The unknown differentiable $f:\\mathbb R^d\\to\\mathbb R$ has an $L$-Lipschitz gradient on the full space. At least one global minimizer is in $Q$, and the set $S=\\arg\\min_{x\\in Q} f(x)$ is convex.",
+        "For all $x\\in Q$, let $p_S(x)$ be the Euclidean projection onto the minimizer set. The model requires",
+        "$$\\tau(f(x)-f_*)\\le \\langle\\nabla f(x),x-p_S(x)\\rangle.$$",
+        "The projection onto the hidden minimizer set defines quasar-convexity and is used in analysis. Only the projection onto the public ball is an available operation."
+      ],
+      "geometry_refs": [
+        "SO_FO_QC_BALL_FRESH__main__ambient",
+        "SO_FO_QC_BALL_FRESH__main__ball"
+      ]
+    },
+    "oracle": {
+      "code": "fresh_stochastic_gradient",
+      "domain": "$Q$",
+      "variant": "fresh_unbiased_bounded_variance_gradient",
+      "public_inputs": [
+        "SO_FO_QC_BALL_FRESH__main__p_d",
+        "SO_FO_QC_BALL_FRESH__main__p_L",
+        "SO_FO_QC_BALL_FRESH__main__p_D",
+        "SO_FO_QC_BALL_FRESH__main__p_tau",
+        "SO_FO_QC_BALL_FRESH__main__p_sigma",
+        "SO_FO_QC_BALL_FRESH__main__p_T",
+        "SO_FO_QC_BALL_FRESH__main__public_ball"
+      ],
+      "hidden_objects": [
+        "SO_FO_QC_BALL_FRESH__main__f"
+      ],
+      "operations": [
+        {
+          "id": "SO_FO_QC_BALL_FRESH__main__fresh_gradient",
+          "operation_code": "fresh_stochastic_gradient",
+          "target_object": "SO_FO_QC_BALL_FRESH__main__f",
+          "domain_ref": "SO_FO_QC_BALL_FRESH__main__ball",
+          "query_signature": "$x\\in Q$",
+          "response_signature": "$g(x;\\xi)\\in\\mathbb R^d$",
+          "derivative_order": "first",
+          "feedback_quality": {
+            "code": "stochastic_unbiased"
+          },
+          "coupling": "One fresh independent draw per response. There is no sample handle or scalar function value.",
+          "cost_rule_ref": "SO_FO_QC_BALL_FRESH__main__gradient_cost"
+        }
+      ],
+      "description_paragraphs": [
+        "Each call at $x\\in Q$ returns a single full stochastic gradient $g(x;\\xi)\\in\\mathbb R^d$. Conditional on the query and past, $\\mathbb E[g(x;\\xi)]=\\nabla f(x)$ and $\\mathbb E\\|g(x;\\xi)-\\nabla f(x)\\|_2^2\\le\\sigma^2$.",
+        "The oracle law is fixed before interaction. Each call uses fresh independent randomness. There is no value feedback or sample handle. The learner can project onto $Q$ using its public center and radius."
+      ]
+    },
+    "output": {
+      "domain": "$Q$",
+      "code": "output_space",
+      "description_paragraphs": [
+        "Return a feasible point $\\widehat x\\in Q$. Any measurable feasible postprocessing is allowed, including an unqueried point, random iterate or convex combination. No function value or certificate is required."
+      ]
+    },
+    "metric": {
+      "code": "objective_gap",
+      "formula_latex": "f(\\widehat x)-f_*\\,,\\qquad f_*=\\min_{x\\in Q} f(x)",
+      "base_expression": "f(\\widehat x)-f_*\\,,\\qquad f_*=\\min_{x\\in Q} f(x)",
+      "description_paragraphs": [
+        "Evaluate the unnormalized loss $f(\\widehat x)-f_*\\,,\\qquad f_*=\\min_{x\\in Q} f(x)$. It is finite and nonnegative. The minimizer promise means $f_*$ also equals the full-space minimum."
+      ]
+    },
+    "resource": {
+      "unit": "One full stochastic-gradient response",
+      "budget_mode": "fixed_worst_case",
+      "accounting": {
+        "atomic_unit": "One full stochastic-gradient response",
+        "budget_mode": "fixed_worst_case",
+        "arithmetic_precision": "exact_real_unpriced_unless_specified",
+        "free_operations": "Public ball projection, internal arithmetic, and storage on available information."
+      },
+      "code": "oracle_resource",
+      "description_paragraphs": [
+        "Every full response costs one call, including all responses to batch queries. The cap is $N\\le T$ on every run. Internal computation, storage and projection onto $Q$ are free."
+      ],
+      "components": [
+        {
+          "code": "N_gradient",
+          "unit": "call",
+          "description": "One full fresh stochastic gradient response."
+        }
+      ],
+      "cost_rules": [
+        {
+          "id": "SO_FO_QC_BALL_FRESH__main__gradient_cost",
+          "operation_refs": [
+            "SO_FO_QC_BALL_FRESH__main__fresh_gradient"
+          ],
+          "cost": {
+            "N_gradient": 1
+          }
+        }
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Adaptive methods with expected gap",
+      "algorithms": {
+        "randomization": "randomized_allowed",
+        "adaptivity": "sequential_adaptive",
+        "restrictions": [],
+        "code": "randomized_allowed",
+        "description_paragraphs": [
+          "Private randomization and arbitrary measurable adaptive queries and postprocessing are allowed. The private seed is independent of the fixed instance and oracle samples.",
+          "Charge each stochastic gradient response. Public ball projection, internal arithmetic, and storage are free."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "quantifiers": "one_algorithm_for_all_admissible_instances",
+          "probability_space": "The algorithm's private seed and all randomness in the stated oracle or environment, after the instance and feedback law are fixed.",
+          "formula_latex": "\\sup_{I}\\mathbb E_{A,\\xi}[f(\\widehat x)-f_*]",
+          "code": "expected_loss",
+          "description_paragraphs": [
+            "Choose one algorithm for the public parameters. For each fixed admissible objective and oracle law, take the expectation of the objective gap over the algorithm's private random seed and oracle noise. Then take the worst case over those instances.",
+            "The call cap $N\\le T$ applies on every path, independent of the average error guarantee."
+          ],
+          "mode": "expected_loss"
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "SO_FO_QC_BALL_FRESH__main__f",
+        "information": "hidden",
+        "description": "Unknown scalar objective and its minimum.",
+        "knowledge": "only_through_oracle"
+      },
+      {
+        "id": "SO_FO_QC_BALL_FRESH__main__public_ball",
+        "information": "public",
+        "description": "$Q=B_2(0,D)=\\{x\\in\\mathbb R^d:\\|x\\|_2\\le D\\}$",
+        "knowledge": "declared_public_input"
+      }
+    ],
+    "variable_blocks": [],
+    "norms": [],
+    "protocols": [],
+    "comparators": [],
+    "domains": [
+      {
+        "id": "SO_FO_QC_BALL_FRESH__main__ambient",
+        "roles": [
+          "function"
+        ],
+        "description": "$\\mathbb R^d$"
+      },
+      {
+        "id": "SO_FO_QC_BALL_FRESH__main__ball",
+        "roles": [
+          "optimization",
+          "query",
+          "output"
+        ],
+        "description": "$Q=B_2(0,D)=\\{x\\in\\mathbb R^d:\\|x\\|_2\\le D\\}$"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__p_d",
+      "symbol": "d",
+      "meaning": "Dimension of the variable space.",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N$, $d\\ge1$.",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "d"
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__p_L",
+      "symbol": "L",
+      "meaning": "Population-gradient Lipschitz constant in the Euclidean norm.",
+      "kind": "independent",
+      "domain": "$L>0$.",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "L"
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__p_D",
+      "symbol": "D",
+      "meaning": "Radius of the public ball centered at the origin.",
+      "kind": "independent",
+      "domain": "$D>0$.",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "D"
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__p_tau",
+      "symbol": "\\tau",
+      "meaning": "Quasar-convexity parameter on the feasible ball.",
+      "kind": "independent",
+      "domain": "$0<\\tau\\le1$.",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "tau"
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__p_sigma",
+      "symbol": "\\sigma",
+      "meaning": "Upper bound on the standard deviation of a full stochastic gradient.",
+      "kind": "independent",
+      "domain": "$\\sigma\\ge0$.",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "sigma"
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__p_T",
+      "symbol": "T",
+      "meaning": "Deterministic worst-case cap on the number of gradient responses.",
+      "kind": "resource_budget",
+      "domain": "$T\\in\\mathbb N$, $T\\ge1$.",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "T"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "Dimension of the variable space.",
+      "domain": "$d\\in\\mathbb N$, $d\\ge1$.",
+      "parameter_ref": "SO_FO_QC_BALL_FRESH__main__p_d"
+    },
+    {
+      "symbol_latex": "L",
+      "meaning": "Population-gradient Lipschitz constant in the Euclidean norm.",
+      "domain": "$L>0$.",
+      "parameter_ref": "SO_FO_QC_BALL_FRESH__main__p_L"
+    },
+    {
+      "symbol_latex": "D",
+      "meaning": "Radius of the public ball centered at the origin.",
+      "domain": "$D>0$.",
+      "parameter_ref": "SO_FO_QC_BALL_FRESH__main__p_D"
+    },
+    {
+      "symbol_latex": "\\tau",
+      "meaning": "Quasar-convexity parameter on the feasible ball.",
+      "domain": "$0<\\tau\\le1$.",
+      "parameter_ref": "SO_FO_QC_BALL_FRESH__main__p_tau"
+    },
+    {
+      "symbol_latex": "\\sigma",
+      "meaning": "Upper bound on the standard deviation of a full stochastic gradient.",
+      "domain": "$\\sigma\\ge0$.",
+      "parameter_ref": "SO_FO_QC_BALL_FRESH__main__p_sigma"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Deterministic worst-case cap on the number of gradient responses.",
+      "domain": "$T\\in\\mathbb N$, $T\\ge1$.",
+      "parameter_ref": "SO_FO_QC_BALL_FRESH__main__p_T"
+    }
+  ],
+  "quantities": [
+    {
+      "key": "expected_gap_at_T",
+      "kind": "minimax_fixed_budget_error",
+      "projection": "declared_budget",
+      "label": "Expected objective gap at budget T",
+      "units": "loss",
+      "id": "SO_FO_QC_BALL_FRESH__main__q1",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [
+        "SO_FO_QC_BALL_FRESH__main__p_d",
+        "SO_FO_QC_BALL_FRESH__main__p_L",
+        "SO_FO_QC_BALL_FRESH__main__p_D",
+        "SO_FO_QC_BALL_FRESH__main__p_tau",
+        "SO_FO_QC_BALL_FRESH__main__p_sigma",
+        "SO_FO_QC_BALL_FRESH__main__p_T"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": "expected_gap_at_T",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "expression_latex": "R_T^*=\\inf_{A:N_A\\le T\\ \\mathrm{on\\ every\\ path}}\\ \\sup_I\\ \\mathbb E_{A,\\xi}[f(\\widehat x)-f_*]",
+      "definition_note": "Take the expectation for each fixed instance, then the worst case over all admissible objectives and oracle laws."
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Expected gap under a deterministic cap on fresh gradient responses.",
+      "expression": "declared_budget",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "SO_FO_QC_BALL_FRESH__main__projection"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__r1",
+      "specification_ref": "SO_FO_QC_BALL_FRESH",
+      "name": "Noise-dominated high-dimensional window",
+      "predicate_text": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}\\ge LD$.",
+      "predicate": {
+        "description": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}\\ge LD$."
+      },
+      "parameter_refs": [
+        "SO_FO_QC_BALL_FRESH__main__p_d",
+        "SO_FO_QC_BALL_FRESH__main__p_L",
+        "SO_FO_QC_BALL_FRESH__main__p_D",
+        "SO_FO_QC_BALL_FRESH__main__p_tau",
+        "SO_FO_QC_BALL_FRESH__main__p_sigma",
+        "SO_FO_QC_BALL_FRESH__main__p_T"
+      ],
+      "kind": "theorem_window"
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__r2",
+      "specification_ref": "SO_FO_QC_BALL_FRESH",
+      "name": "Transient and noise in the high-dimensional window",
+      "predicate_text": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}<LD$.",
+      "predicate": {
+        "description": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}<LD$."
+      },
+      "parameter_refs": [
+        "SO_FO_QC_BALL_FRESH__main__p_d",
+        "SO_FO_QC_BALL_FRESH__main__p_L",
+        "SO_FO_QC_BALL_FRESH__main__p_D",
+        "SO_FO_QC_BALL_FRESH__main__p_tau",
+        "SO_FO_QC_BALL_FRESH__main__p_sigma",
+        "SO_FO_QC_BALL_FRESH__main__p_T"
+      ],
+      "kind": "theorem_window"
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__r3",
+      "specification_ref": "SO_FO_QC_BALL_FRESH",
+      "name": "Outside the certified lower-bound window",
+      "predicate_text": "$\\sigma=0$, $d<3\\log_{16/15}(2/\\tau)$, or $T<16\\sigma^2/(\\tau^2 L^2D^2)$.",
+      "predicate": {
+        "description": "$\\sigma=0$, $d<3\\log_{16/15}(2/\\tau)$, or $T<16\\sigma^2/(\\tau^2 L^2D^2)$."
+      },
+      "parameter_refs": [
+        "SO_FO_QC_BALL_FRESH__main__p_d",
+        "SO_FO_QC_BALL_FRESH__main__p_L",
+        "SO_FO_QC_BALL_FRESH__main__p_D",
+        "SO_FO_QC_BALL_FRESH__main__p_tau",
+        "SO_FO_QC_BALL_FRESH__main__p_sigma",
+        "SO_FO_QC_BALL_FRESH__main__p_T"
+      ],
+      "kind": "theorem_window"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__b1_upper",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "O(D\\sigma/(\\tau\\sqrt{T}))",
+      "quantity_ref": "SO_FO_QC_BALL_FRESH__main__q1",
+      "quantity_refs": [
+        "SO_FO_QC_BALL_FRESH__main__q1"
+      ],
+      "region_refs": [
+        "SO_FO_QC_BALL_FRESH__main__r1"
+      ],
+      "method": "Projected stochastic gradient and a uniform iterate",
+      "source_refs": [
+        "SO_SAAD_LEE_ORABONA_2025"
+      ],
+      "evidence_refs": [
+        "SO_FO_QC_BALL_FRESH__main__e1_upper"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_QC_BALL_FRESH__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}\\ge LD$."
+        ],
+        "oracle_mapping": "Full fresh gradient response with bounded variance.",
+        "guarantee_mapping": "Expected function gap over both randomness sources.",
+        "resource_mapping": "Deterministic cap of T gradient responses.",
+        "output_mapping": "One feasible point in the public ball."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "derivation": "Let $x_0=0$ and $x_{t+1}=P_Q(x_t-\\eta g_t)$ with $\\eta=\\min\\{\\tau/(2L),D/(\\sigma\\sqrt{T})\\}$, using $+\\infty$ for the second term at $\\sigma=0$. For $p_t=P_S(x_t)$, projection nonexpansiveness and quasar-convexity give $\\mathbb E_t\\operatorname{dist}(x_{t+1},S)^2\\le\\operatorname{dist}(x_t,S)^2-2\\eta\\tau(f(x_t)-f_*)+\\eta^2\\mathbb E_t\\|g_t\\|^2$. Global smoothness and the global minimum promise give $\\|\\nabla f(x_t)\\|^2\\le2L(f(x_t)-f_*)$, so the coefficient of the gap after absorbing the second moment is at most $-\\eta\\tau$. Sum over $t=0,\\dots,T-1$, use $\\operatorname{dist}(0,S)\\le D$, and return a uniform sampled iterate. The gap is at most $D^2/(\\eta\\tau T)+\\eta\\sigma^2/\\tau$."
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__b1_lower",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "\\Omega\\!\\left(\\frac{D\\sigma}{\\tau\\sqrt{T\\ln(2/\\tau)}}\\right)",
+      "quantity_ref": "SO_FO_QC_BALL_FRESH__main__q1",
+      "quantity_refs": [
+        "SO_FO_QC_BALL_FRESH__main__q1"
+      ],
+      "region_refs": [
+        "SO_FO_QC_BALL_FRESH__main__r1"
+      ],
+      "method": "Packed radial objectives and KL divergence decomposition",
+      "source_refs": [
+        "SO_SAAD_LEE_ORABONA_2025"
+      ],
+      "evidence_refs": [
+        "SO_FO_QC_BALL_FRESH__main__e1_lower"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_QC_BALL_FRESH__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}\\ge LD$."
+        ],
+        "oracle_mapping": "Full fresh gradient response with bounded variance.",
+        "guarantee_mapping": "Expected function gap over both randomness sources.",
+        "resource_mapping": "Deterministic cap of T gradient responses.",
+        "output_mapping": "One feasible point in the public ball."
+      },
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "derivation": "Use Appendix D's packing with $d_0=\\lceil2\\log_{16/15}(2/\\tau)\\rceil$, $m\\ge2/\\tau^2$, and the radial objectives with centers of norm at most $2D/3$. Their gradients are globally $L$-Lipschitz: the radial derivative has slope of magnitude at most $L$ and its tangential Lipschitz factor is at most $L$. The affine ambient minimizer set intersects $Q$ in a convex set. The QC inner product only uses the first $d_0$ coordinates and is unchanged by projecting onto this intersection. Set the construction's width to $\\Delta=\\sigma/(4L\\tau\\sqrt{d_0 T})$. The displayed budget guard ensures $\\Delta<D/16$. Equation (19) bounds the mean KL divergence by $3/64$. Pinsker's inequality and the disjoint packing therefore give a universal positive average misidentification probability. Equation (17) then yields $\\Omega(LD\\Delta)$, the displayed lower bound. The guard is deliberately narrower than the theorem statement to make the width condition explicit.",
+      "lower_scope_type": "arbitrary_randomized"
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__b2_upper",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "O\\!\\left(\\frac{LD^2}{\\tau^2T}+\\frac{D\\sigma}{\\tau\\sqrt T}\\right)",
+      "quantity_ref": "SO_FO_QC_BALL_FRESH__main__q1",
+      "quantity_refs": [
+        "SO_FO_QC_BALL_FRESH__main__q1"
+      ],
+      "region_refs": [
+        "SO_FO_QC_BALL_FRESH__main__r2"
+      ],
+      "method": "Projected stochastic gradient and a uniform iterate",
+      "source_refs": [
+        "SO_SAAD_LEE_ORABONA_2025"
+      ],
+      "evidence_refs": [
+        "SO_FO_QC_BALL_FRESH__main__e2_upper"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_QC_BALL_FRESH__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}<LD$."
+        ],
+        "oracle_mapping": "Full fresh gradient response with bounded variance.",
+        "guarantee_mapping": "Expected function gap over both randomness sources.",
+        "resource_mapping": "Deterministic cap of T gradient responses.",
+        "output_mapping": "One feasible point in the public ball."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "derivation": "Let $x_0=0$ and $x_{t+1}=P_Q(x_t-\\eta g_t)$ with $\\eta=\\min\\{\\tau/(2L),D/(\\sigma\\sqrt{T})\\}$, using $+\\infty$ for the second term at $\\sigma=0$. For $p_t=P_S(x_t)$, projection nonexpansiveness and quasar-convexity give $\\mathbb E_t\\operatorname{dist}(x_{t+1},S)^2\\le\\operatorname{dist}(x_t,S)^2-2\\eta\\tau(f(x_t)-f_*)+\\eta^2\\mathbb E_t\\|g_t\\|^2$. Global smoothness and the global minimum promise give $\\|\\nabla f(x_t)\\|^2\\le2L(f(x_t)-f_*)$, so the coefficient of the gap after absorbing the second moment is at most $-\\eta\\tau$. Sum over $t=0,\\dots,T-1$, use $\\operatorname{dist}(0,S)\\le D$, and return a uniform sampled iterate. The gap is at most $D^2/(\\eta\\tau T)+\\eta\\sigma^2/\\tau$."
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__b2_lower",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "\\Omega\\!\\left(\\frac{D\\sigma}{\\tau\\sqrt{T\\ln(2/\\tau)}}\\right)",
+      "quantity_ref": "SO_FO_QC_BALL_FRESH__main__q1",
+      "quantity_refs": [
+        "SO_FO_QC_BALL_FRESH__main__q1"
+      ],
+      "region_refs": [
+        "SO_FO_QC_BALL_FRESH__main__r2"
+      ],
+      "method": "Packed radial objectives and KL divergence decomposition",
+      "source_refs": [
+        "SO_SAAD_LEE_ORABONA_2025"
+      ],
+      "evidence_refs": [
+        "SO_FO_QC_BALL_FRESH__main__e2_lower"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_QC_BALL_FRESH__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}<LD$."
+        ],
+        "oracle_mapping": "Full fresh gradient response with bounded variance.",
+        "guarantee_mapping": "Expected function gap over both randomness sources.",
+        "resource_mapping": "Deterministic cap of T gradient responses.",
+        "output_mapping": "One feasible point in the public ball."
+      },
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "derivation": "Use Appendix D's packing with $d_0=\\lceil2\\log_{16/15}(2/\\tau)\\rceil$, $m\\ge2/\\tau^2$, and the radial objectives with centers of norm at most $2D/3$. Their gradients are globally $L$-Lipschitz: the radial derivative has slope of magnitude at most $L$ and its tangential Lipschitz factor is at most $L$. The affine ambient minimizer set intersects $Q$ in a convex set. The QC inner product only uses the first $d_0$ coordinates and is unchanged by projecting onto this intersection. Set the construction's width to $\\Delta=\\sigma/(4L\\tau\\sqrt{d_0 T})$. The displayed budget guard ensures $\\Delta<D/16$. Equation (19) bounds the mean KL divergence by $3/64$. Pinsker's inequality and the disjoint packing therefore give a universal positive average misidentification probability. Equation (17) then yields $\\Omega(LD\\Delta)$, the displayed lower bound. The guard is deliberately narrower than the theorem statement to make the width condition explicit.",
+      "lower_scope_type": "arbitrary_randomized"
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__b3_upper",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "O\\!\\left(\\frac{LD^2}{\\tau^2T}+\\frac{D\\sigma}{\\tau\\sqrt T}\\right)",
+      "quantity_ref": "SO_FO_QC_BALL_FRESH__main__q1",
+      "quantity_refs": [
+        "SO_FO_QC_BALL_FRESH__main__q1"
+      ],
+      "region_refs": [
+        "SO_FO_QC_BALL_FRESH__main__r3"
+      ],
+      "method": "Projected stochastic gradient and a uniform iterate",
+      "source_refs": [
+        "SO_SAAD_LEE_ORABONA_2025"
+      ],
+      "evidence_refs": [
+        "SO_FO_QC_BALL_FRESH__main__e3_upper"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_QC_BALL_FRESH__main__c3"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\sigma=0$, $d<3\\log_{16/15}(2/\\tau)$, or $T<16\\sigma^2/(\\tau^2 L^2D^2)$."
+        ],
+        "oracle_mapping": "Full fresh gradient response with bounded variance.",
+        "guarantee_mapping": "Expected function gap over both randomness sources.",
+        "resource_mapping": "Deterministic cap of T gradient responses.",
+        "output_mapping": "One feasible point in the public ball."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "derivation": "Let $x_0=0$ and $x_{t+1}=P_Q(x_t-\\eta g_t)$ with $\\eta=\\min\\{\\tau/(2L),D/(\\sigma\\sqrt{T})\\}$, using $+\\infty$ for the second term at $\\sigma=0$. For $p_t=P_S(x_t)$, projection nonexpansiveness and quasar-convexity give $\\mathbb E_t\\operatorname{dist}(x_{t+1},S)^2\\le\\operatorname{dist}(x_t,S)^2-2\\eta\\tau(f(x_t)-f_*)+\\eta^2\\mathbb E_t\\|g_t\\|^2$. Global smoothness and the global minimum promise give $\\|\\nabla f(x_t)\\|^2\\le2L(f(x_t)-f_*)$, so the coefficient of the gap after absorbing the second moment is at most $-\\eta\\tau$. Sum over $t=0,\\dots,T-1$, use $\\operatorname{dist}(0,S)\\le D$, and return a uniform sampled iterate. The gap is at most $D^2/(\\eta\\tau T)+\\eta\\sigma^2/\\tau$."
+    }
+  ],
+  "comparisons": [
+    {
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_QC_BALL_FRESH__main__q1",
+      "resource_projection_id": "SO_FO_QC_BALL_FRESH__main__projection",
+      "regime_id": "SO_FO_QC_BALL_FRESH__main__r1",
+      "comparison_key": {
+        "setting_id": "SO_FO_QC_BALL_FRESH",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_QC_BALL_FRESH__main__q1",
+        "resource_projection_id": "SO_FO_QC_BALL_FRESH__main__projection",
+        "regime_id": "SO_FO_QC_BALL_FRESH__main__r1"
+      },
+      "label": "Noise-dominated high-dimensional window",
+      "predicate": {
+        "description": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}\\ge LD$."
+      },
+      "predicate_text": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}\\ge LD$.",
+      "parameter_refs": [
+        "SO_FO_QC_BALL_FRESH__main__p_d",
+        "SO_FO_QC_BALL_FRESH__main__p_L",
+        "SO_FO_QC_BALL_FRESH__main__p_D",
+        "SO_FO_QC_BALL_FRESH__main__p_tau",
+        "SO_FO_QC_BALL_FRESH__main__p_sigma",
+        "SO_FO_QC_BALL_FRESH__main__p_T"
+      ],
+      "source_region_ref": "SO_FO_QC_BALL_FRESH__main__r1",
+      "comparison_id": "SO_FO_QC_BALL_FRESH__main__c1",
+      "status": {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap",
+        "missing_sides": []
+      },
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_QC_BALL_FRESH__main__b1_upper"
+        ],
+        "lower_refs": [
+          "SO_FO_QC_BALL_FRESH__main__b1_lower"
+        ],
+        "comparison_ref": "SO_FO_QC_BALL_FRESH__main__c1",
+        "quantity_ref": "SO_FO_QC_BALL_FRESH__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "ratio_or_gap": "The ratio is at most $O(\\sqrt{\\ln(2/\\tau)})$.",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "O(D\\sigma/(\\tau\\sqrt{T}))",
+            "claim_refs": [
+              "SO_FO_QC_BALL_FRESH__main__b1_upper"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega\\!\\left(\\frac{D\\sigma}{\\tau\\sqrt{T\\ln(2/\\tau)}}\\right)",
+            "claim_refs": [
+              "SO_FO_QC_BALL_FRESH__main__b1_lower"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_QC_BALL_FRESH__main__b1_upper": [
+            {
+              "region_ref": "SO_FO_QC_BALL_FRESH__main__r1",
+              "predicate_text": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}\\ge LD$."
+            }
+          ],
+          "SO_FO_QC_BALL_FRESH__main__b1_lower": [
+            {
+              "region_ref": "SO_FO_QC_BALL_FRESH__main__r1",
+              "predicate_text": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}\\ge LD$."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Expected gap under a deterministic cap on fresh gradient responses."
+      }
+    },
+    {
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_QC_BALL_FRESH__main__q1",
+      "resource_projection_id": "SO_FO_QC_BALL_FRESH__main__projection",
+      "regime_id": "SO_FO_QC_BALL_FRESH__main__r2",
+      "comparison_key": {
+        "setting_id": "SO_FO_QC_BALL_FRESH",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_QC_BALL_FRESH__main__q1",
+        "resource_projection_id": "SO_FO_QC_BALL_FRESH__main__projection",
+        "regime_id": "SO_FO_QC_BALL_FRESH__main__r2"
+      },
+      "label": "Transient and noise in the high-dimensional window",
+      "predicate": {
+        "description": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}<LD$."
+      },
+      "predicate_text": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}<LD$.",
+      "parameter_refs": [
+        "SO_FO_QC_BALL_FRESH__main__p_d",
+        "SO_FO_QC_BALL_FRESH__main__p_L",
+        "SO_FO_QC_BALL_FRESH__main__p_D",
+        "SO_FO_QC_BALL_FRESH__main__p_tau",
+        "SO_FO_QC_BALL_FRESH__main__p_sigma",
+        "SO_FO_QC_BALL_FRESH__main__p_T"
+      ],
+      "source_region_ref": "SO_FO_QC_BALL_FRESH__main__r2",
+      "comparison_id": "SO_FO_QC_BALL_FRESH__main__c2",
+      "status": {
+        "code": "other_quantified_gap",
+        "label": "Other quantified gap",
+        "missing_sides": []
+      },
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_QC_BALL_FRESH__main__b2_upper"
+        ],
+        "lower_refs": [
+          "SO_FO_QC_BALL_FRESH__main__b2_lower"
+        ],
+        "comparison_ref": "SO_FO_QC_BALL_FRESH__main__c2",
+        "quantity_ref": "SO_FO_QC_BALL_FRESH__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "ratio_or_gap": "The ratio is at most $O((1+LD/(\\tau\\sigma\\sqrt{T}))\\sqrt{\\ln(2/\\tau)})$.",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "O\\!\\left(\\frac{LD^2}{\\tau^2T}+\\frac{D\\sigma}{\\tau\\sqrt T}\\right)",
+            "claim_refs": [
+              "SO_FO_QC_BALL_FRESH__main__b2_upper"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega\\!\\left(\\frac{D\\sigma}{\\tau\\sqrt{T\\ln(2/\\tau)}}\\right)",
+            "claim_refs": [
+              "SO_FO_QC_BALL_FRESH__main__b2_lower"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_QC_BALL_FRESH__main__b2_upper": [
+            {
+              "region_ref": "SO_FO_QC_BALL_FRESH__main__r2",
+              "predicate_text": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}<LD$."
+            }
+          ],
+          "SO_FO_QC_BALL_FRESH__main__b2_lower": [
+            {
+              "region_ref": "SO_FO_QC_BALL_FRESH__main__r2",
+              "predicate_text": "$\\sigma>0$, $d\\ge 3\\log_{16/15}(2/\\tau)$, and $T\\ge 16\\sigma^2/(\\tau^2L^2D^2)$ and $\\tau\\sigma\\sqrt{T}<LD$."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Expected gap under a deterministic cap on fresh gradient responses."
+      }
+    },
+    {
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_QC_BALL_FRESH__main__q1",
+      "resource_projection_id": "SO_FO_QC_BALL_FRESH__main__projection",
+      "regime_id": "SO_FO_QC_BALL_FRESH__main__r3",
+      "comparison_key": {
+        "setting_id": "SO_FO_QC_BALL_FRESH",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_QC_BALL_FRESH__main__q1",
+        "resource_projection_id": "SO_FO_QC_BALL_FRESH__main__projection",
+        "regime_id": "SO_FO_QC_BALL_FRESH__main__r3"
+      },
+      "label": "Outside the certified lower-bound window",
+      "predicate": {
+        "description": "$\\sigma=0$, $d<3\\log_{16/15}(2/\\tau)$, or $T<16\\sigma^2/(\\tau^2 L^2D^2)$."
+      },
+      "predicate_text": "$\\sigma=0$, $d<3\\log_{16/15}(2/\\tau)$, or $T<16\\sigma^2/(\\tau^2 L^2D^2)$.",
+      "parameter_refs": [
+        "SO_FO_QC_BALL_FRESH__main__p_d",
+        "SO_FO_QC_BALL_FRESH__main__p_L",
+        "SO_FO_QC_BALL_FRESH__main__p_D",
+        "SO_FO_QC_BALL_FRESH__main__p_tau",
+        "SO_FO_QC_BALL_FRESH__main__p_sigma",
+        "SO_FO_QC_BALL_FRESH__main__p_T"
+      ],
+      "source_region_ref": "SO_FO_QC_BALL_FRESH__main__r3",
+      "comparison_id": "SO_FO_QC_BALL_FRESH__main__c3",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_QC_BALL_FRESH__main__b3_upper"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "SO_FO_QC_BALL_FRESH__main__c3",
+        "quantity_ref": "SO_FO_QC_BALL_FRESH__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "ratio_or_gap": "The same projected SGD bound remains valid.",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "O\\!\\left(\\frac{LD^2}{\\tau^2T}+\\frac{D\\sigma}{\\tau\\sqrt T}\\right)",
+            "claim_refs": [
+              "SO_FO_QC_BALL_FRESH__main__b3_upper"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_QC_BALL_FRESH__main__b3_upper": [
+            {
+              "region_ref": "SO_FO_QC_BALL_FRESH__main__r3",
+              "predicate_text": "$\\sigma=0$, $d<3\\log_{16/15}(2/\\tau)$, or $T<16\\sigma^2/(\\tau^2 L^2D^2)$."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Expected gap under a deterministic cap on fresh gradient responses."
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__e1_upper",
+      "source_ref": "SO_SAAD_LEE_ORABONA_2025",
+      "supports": [
+        "SO_FO_QC_BALL_FRESH__main__b1_upper"
+      ],
+      "locator": {
+        "theorem": "Section 1 and Table 1, with the projected SGD derivation in this profile",
+        "pdf_pages": [
+          2,
+          6
+        ],
+        "printed_pages": []
+      },
+      "notes": [
+        "Let $x_0=0$ and $x_{t+1}=P_Q(x_t-\\eta g_t)$ with $\\eta=\\min\\{\\tau/(2L),D/(\\sigma\\sqrt{T})\\}$, using $+\\infty$ for the second term at $\\sigma=0$. For $p_t=P_S(x_t)$, projection nonexpansiveness and quasar-convexity give $\\mathbb E_t\\operatorname{dist}(x_{t+1},S)^2\\le\\operatorname{dist}(x_t,S)^2-2\\eta\\tau(f(x_t)-f_*)+\\eta^2\\mathbb E_t\\|g_t\\|^2$. Global smoothness and the global minimum promise give $\\|\\nabla f(x_t)\\|^2\\le2L(f(x_t)-f_*)$, so the coefficient of the gap after absorbing the second moment is at most $-\\eta\\tau$. Sum over $t=0,\\dots,T-1$, use $\\operatorname{dist}(0,S)\\le D$, and return a uniform sampled iterate. The gap is at most $D^2/(\\eta\\tau T)+\\eta\\sigma^2/\\tau$."
+      ]
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__e1_lower",
+      "source_ref": "SO_SAAD_LEE_ORABONA_2025",
+      "supports": [
+        "SO_FO_QC_BALL_FRESH__main__b1_lower"
+      ],
+      "locator": {
+        "theorem": "Theorem 9 and Appendix D, Equations (17)–(19)",
+        "pdf_pages": [
+          7,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38
+        ],
+        "printed_pages": []
+      },
+      "notes": [
+        "Use Appendix D's packing with $d_0=\\lceil2\\log_{16/15}(2/\\tau)\\rceil$, $m\\ge2/\\tau^2$, and the radial objectives with centers of norm at most $2D/3$. Their gradients are globally $L$-Lipschitz: the radial derivative has slope of magnitude at most $L$ and its tangential Lipschitz factor is at most $L$. The affine ambient minimizer set intersects $Q$ in a convex set. The QC inner product only uses the first $d_0$ coordinates and is unchanged by projecting onto this intersection. Set the construction's width to $\\Delta=\\sigma/(4L\\tau\\sqrt{d_0 T})$. The displayed budget guard ensures $\\Delta<D/16$. Equation (19) bounds the mean KL divergence by $3/64$. Pinsker's inequality and the disjoint packing therefore give a universal positive average misidentification probability. Equation (17) then yields $\\Omega(LD\\Delta)$, the displayed lower bound. The guard is deliberately narrower than the theorem statement to make the width condition explicit."
+      ]
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__e2_upper",
+      "source_ref": "SO_SAAD_LEE_ORABONA_2025",
+      "supports": [
+        "SO_FO_QC_BALL_FRESH__main__b2_upper"
+      ],
+      "locator": {
+        "theorem": "Section 1 and Table 1, with the projected SGD derivation in this profile",
+        "pdf_pages": [
+          2,
+          6
+        ],
+        "printed_pages": []
+      },
+      "notes": [
+        "Let $x_0=0$ and $x_{t+1}=P_Q(x_t-\\eta g_t)$ with $\\eta=\\min\\{\\tau/(2L),D/(\\sigma\\sqrt{T})\\}$, using $+\\infty$ for the second term at $\\sigma=0$. For $p_t=P_S(x_t)$, projection nonexpansiveness and quasar-convexity give $\\mathbb E_t\\operatorname{dist}(x_{t+1},S)^2\\le\\operatorname{dist}(x_t,S)^2-2\\eta\\tau(f(x_t)-f_*)+\\eta^2\\mathbb E_t\\|g_t\\|^2$. Global smoothness and the global minimum promise give $\\|\\nabla f(x_t)\\|^2\\le2L(f(x_t)-f_*)$, so the coefficient of the gap after absorbing the second moment is at most $-\\eta\\tau$. Sum over $t=0,\\dots,T-1$, use $\\operatorname{dist}(0,S)\\le D$, and return a uniform sampled iterate. The gap is at most $D^2/(\\eta\\tau T)+\\eta\\sigma^2/\\tau$."
+      ]
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__e2_lower",
+      "source_ref": "SO_SAAD_LEE_ORABONA_2025",
+      "supports": [
+        "SO_FO_QC_BALL_FRESH__main__b2_lower"
+      ],
+      "locator": {
+        "theorem": "Theorem 9 and Appendix D, Equations (17)–(19)",
+        "pdf_pages": [
+          7,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38
+        ],
+        "printed_pages": []
+      },
+      "notes": [
+        "Use Appendix D's packing with $d_0=\\lceil2\\log_{16/15}(2/\\tau)\\rceil$, $m\\ge2/\\tau^2$, and the radial objectives with centers of norm at most $2D/3$. Their gradients are globally $L$-Lipschitz: the radial derivative has slope of magnitude at most $L$ and its tangential Lipschitz factor is at most $L$. The affine ambient minimizer set intersects $Q$ in a convex set. The QC inner product only uses the first $d_0$ coordinates and is unchanged by projecting onto this intersection. Set the construction's width to $\\Delta=\\sigma/(4L\\tau\\sqrt{d_0 T})$. The displayed budget guard ensures $\\Delta<D/16$. Equation (19) bounds the mean KL divergence by $3/64$. Pinsker's inequality and the disjoint packing therefore give a universal positive average misidentification probability. Equation (17) then yields $\\Omega(LD\\Delta)$, the displayed lower bound. The guard is deliberately narrower than the theorem statement to make the width condition explicit."
+      ]
+    },
+    {
+      "id": "SO_FO_QC_BALL_FRESH__main__e3_upper",
+      "source_ref": "SO_SAAD_LEE_ORABONA_2025",
+      "supports": [
+        "SO_FO_QC_BALL_FRESH__main__b3_upper"
+      ],
+      "locator": {
+        "theorem": "Section 1 and Table 1, with the projected SGD derivation in this profile",
+        "pdf_pages": [
+          2,
+          6
+        ],
+        "printed_pages": []
+      },
+      "notes": [
+        "Let $x_0=0$ and $x_{t+1}=P_Q(x_t-\\eta g_t)$ with $\\eta=\\min\\{\\tau/(2L),D/(\\sigma\\sqrt{T})\\}$, using $+\\infty$ for the second term at $\\sigma=0$. For $p_t=P_S(x_t)$, projection nonexpansiveness and quasar-convexity give $\\mathbb E_t\\operatorname{dist}(x_{t+1},S)^2\\le\\operatorname{dist}(x_t,S)^2-2\\eta\\tau(f(x_t)-f_*)+\\eta^2\\mathbb E_t\\|g_t\\|^2$. Global smoothness and the global minimum promise give $\\|\\nabla f(x_t)\\|^2\\le2L(f(x_t)-f_*)$, so the coefficient of the gap after absorbing the second moment is at most $-\\eta\\tau$. Sum over $t=0,\\dots,T-1$, use $\\operatorname{dist}(0,S)\\le D$, and return a uniform sampled iterate. The gap is at most $D^2/(\\eta\\tau T)+\\eta\\sigma^2/\\tau$."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "SO_SAAD_LEE_ORABONA_2025",
+      "authors": "El Mehdi Saad, Wei-Cheng Lee and Francesco Orabona",
+      "title": "New Lower Bounds for Stochastic Non-Convex Optimization through Divergence Decomposition",
+      "year": 2025,
+      "version": "COLT 2025, PMLR 291, arXiv:2502.14060v2",
+      "url": "https://proceedings.mlr.press/v291/saad25a.html",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [],
+  "review": {
+    "scientific_evidence": "Primary theorem and Appendix D inspected. The lower-bound guard is a sufficient narrowed window from the proof. The projected-SGD upper is derived explicitly for the stated oracle and feasible domain."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap present"
+      },
+      {
+        "code": "other_quantified_gap",
+        "label": "Other quantified gap present"
+      },
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [
+      "logarithmic_gap",
+      "other_quantified_gap"
+    ],
+    "missing_sides": [
+      "lower"
+    ],
+    "special_statuses": [],
+    "comparison_count": 3,
+    "status_counts": {
+      "logarithmic_gap": 1,
+      "other_quantified_gap": 1,
+      "missing_lower": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "SO_FO_QC_BALL_FRESH__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "SO_FO_QC_BALL_FRESH__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_3",
+      "comparison_ids": [
+        "SO_FO_QC_BALL_FRESH__main__c3"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.1.0",
+    "source_snapshot": "literature-census-2024-2026",
+    "source_order": 425,
+    "source_json_sha256": "53b27654092e3620208ee011e174dd335b3f985d2094ae36c337eb406d91d122",
+    "transformations": [
+      "authored_from_versioned_primary_sources"
+    ],
+    "mathematical_content_policy": "Specify the oracle, model, fixed-budget loss and guard of every bound."
+  }
+}

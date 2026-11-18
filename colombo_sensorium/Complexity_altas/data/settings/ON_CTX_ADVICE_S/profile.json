@@ -1,0 +1,928 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ON_CTX_ADVICE_S",
+  "title": "Bandits with expert advice: pre-action advice and post-action single-arm feedback.",
+  "summary": "Each round reveals all experts' distributions over arms before the learner selects an arm and observes only its loss. The target is the best fixed advice expert, whose cumulative benchmark is expected loss under its advice distributions.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "external_regret"
+    },
+    {
+      "facet": "structure",
+      "value": "finite_actions"
+    },
+    {
+      "facet": "feedback",
+      "value": "selected_reward"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation_code": "bandit_expert_advice_regret",
+      "formulation": "sum_t ℓ_t(a_t)−min_{i≤M}sum_t<q_t,i,ℓ_t>",
+      "solution_goal": "minimize_expected_cumulative_expert_advice_regret",
+      "protocol_ref": "ON_CTX_ADVICE_S_pro_202b6ab8c4",
+      "code": "bandit_expert_advice_regret",
+      "formulation_latex": "q_{t,i}\\in\\Delta_K,\\quad R_T=\\sum_t\\ell_t(a_t)-\\min_{i\\in[M]}\\sum_t\\langle q_{t,i},\\ell_t\\rangle",
+      "goal_latex": "\\inf_{\\mathcal A}\\sup_{(q_{t,i}),\\ell_{1:T}}\\mathbb E_{\\mathcal A}[R_T]",
+      "description_paragraphs": [
+        "Each round reveals all experts' distributions over arms before the learner selects an arm and observes only its loss. The target is the best fixed advice expert, whose cumulative benchmark is expected loss under its advice distributions."
+      ]
+    },
+    "model": {
+      "instance": "The environment fixes losses ell_t in [0,1]^K and advice q_{t,i} in the probability simplex for M experts in advance. Each round reveals all current advice before arm selection, then reveals only the chosen arm's loss.",
+      "assumptions": [
+        {
+          "subject_id": "ON_CTX_ADVICE_S_obj_f1baa72708",
+          "property_code": "expert_probabilities",
+          "variable_blocks": [],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_CTX_ADVICE_S_p_585fcb7010",
+            "ON_CTX_ADVICE_S_p_76dd32a562",
+            "ON_CTX_ADVICE_S_p_790b92b98a"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "For each t and i, q_{t,i} is a probability distribution over K arms."
+        },
+        {
+          "subject_id": "ON_CTX_ADVICE_S_obj_1785c45ae4",
+          "property_code": "loss_range",
+          "variable_blocks": [],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_CTX_ADVICE_S_p_585fcb7010",
+            "ON_CTX_ADVICE_S_p_76dd32a562",
+            "ON_CTX_ADVICE_S_p_790b92b98a"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "Every loss coordinate ℓ_t(a) lies in [0,1], with no additional observation noise."
+        }
+      ],
+      "parameter_domain_description": "$K$: $K\\in\\mathbb N,\\ K\\ge2$ (public); $M$: $M\\in\\mathbb N,\\ M\\ge K$ (public); $T$: $T\\in\\mathbb N,\\ T\\ge1$ (public).",
+      "code": "model_declared",
+      "interaction_timing": [
+        "Fix q and ℓ in advance.",
+        "All $M$ advice vectors for the current round are revealed.",
+        "The learner chooses $a_t$ from advice, history, and private randomness.",
+        "Incur and observe ℓ_t(a_t), then proceed to the next round."
+      ],
+      "adversary_information": "The environment fixes the entire loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner’s private seed. This is an oblivious-adversary specification and does not automatically extend to history-dependent adaptive adversaries.",
+      "unresolved_applicability": [
+        "Matching lower bounds for the restricted protocol that selects an expert before seeing advice do not apply to this stronger feedback model. The current gap is retained."
+      ],
+      "description_paragraphs": [
+        "Expert i’s current advice distribution $q_{t,i}$ lies in the K-dimensional probability simplex. All M advice distributions are visible before the arm is selected.",
+        "The hidden loss vector $\\ell_t$ lies in [0,1]^K and is not visible before acting.",
+        "The comparator is the best fixed expert in hindsight, $i$, whose cumulative loss is the expected loss of its advice distribution, $\\sum_t\\langle q_{t,i},\\ell_t\\rangle$. Experts do not receive separately sampled reward trajectories.",
+        "This specification requires $K\\ge2$, $M\\ge K$, and $T\\ge1$, with actions in $[K]$.",
+        "Advice is supplied through a dense M-by-K numerical interface; future advice remains hidden."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "ON_CTX_ADVICE_S_ora_bab6a72204",
+          "operation_code": "observe_expert_advice_then_selected_arm",
+          "target_object": "ON_CTX_ADVICE_S_obj_1785c45ae4",
+          "variable_blocks": [
+            "ON_CTX_ADVICE_S_var_5c6206093f"
+          ],
+          "query_signature": "Input: $(q_{t,1},\\ldots,q_{t,M})\\ \\longrightarrow\\ a_t\\in[K]$. The specification's protocol governs timing and visible information.",
+          "response_signature": "Response: $Y_t=\\ell_t(a_t)$.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "order is relative to the current member f_t(x), f(x), or sample F(x;ξ_t) of the named indexed function family and only with respect to x; finite feedback interfaces have no derivative order",
+          "feedback_quality": {
+            "code": "exact_feedback",
+            "description": "All current advice is visible before arm selection; the learner need not select an expert before advice is revealed. After acting, only the chosen arm's loss is returned, not the full loss vector or every expert's true loss. Advice and losses are fixed in advance, with no additional observation noise."
+          },
+          "domain_ref": "ON_CTX_ADVICE_S_dom_11673a929a",
+          "coupling": "All current advice is visible before arm selection; the learner need not select an expert before advice is revealed. After acting, only the chosen arm's loss is returned, not the full loss vector or every expert's true loss. Advice and losses are fixed in advance, with no additional observation noise.",
+          "index_control": "The learner selects feasible actions and explicitly permitted probes. The environment controls the current loss, outcome, or fresh sample; the learner cannot select future rounds.",
+          "access_schedule": "Follow the interaction order in registry.protocols exactly. Current loss feedback follows the action; any pre-action context or advice phase is specified separately.",
+          "accuracy_argument": null,
+          "cost_rule_ref": "ON_CTX_ADVICE_S_res_fb8e703d8a",
+          "query_latex": "(q_{t,1},\\ldots,q_{t,M})\\ \\longrightarrow\\ a_t\\in[K]",
+          "response_latex": "Y_t=\\ell_t(a_t)"
+        }
+      ],
+      "public_inputs": [
+        "K",
+        "T",
+        "M",
+        "All M current advice vectors are revealed before arm selection; future advice is not supplied in advance."
+      ],
+      "hidden_objects": [
+        "ON_CTX_ADVICE_S_obj_1785c45ae4"
+      ],
+      "auxiliary_interfaces": [
+        "No additional access to hidden losses, means, or gradients is available. Projection, sampling, and internal optimization over public domains may have separately recorded computation costs; they are not free loss oracles."
+      ],
+      "protocol_ref": "ON_CTX_ADVICE_S_pro_202b6ab8c4",
+      "query_domain_description": "[K]",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "Full advice is revealed first, followed by the selected-arm loss.",
+        "$$\n(q_{t,1},\\ldots,q_{t,M})\\ \\longrightarrow\\ a_t\\in[K]\\ \\longmapsto\\ Y_t=\\ell_t(a_t)\n$$",
+        "All current advice is visible before selecting an arm. Selection of an expert before advice is not required.",
+        "After acting, only the selected arm's loss is returned, not the full $\\ell$_t or the true loss of every expert.",
+        "Expert advice and losses are fixed in advance; there is no additional observation noise.",
+        "Public inputs are $K,T,M$. All $M$ current recommendation vectors are revealed before arm selection; future recommendations are not supplied."
+      ]
+    },
+    "output": {
+      "object_type": "action_trajectory",
+      "domain_ref": "ON_CTX_ADVICE_S_dom_11673a929a",
+      "feasibility": "Every loss-bearing action must belong to the action domain. The final output retains the complete action trajectory.",
+      "allowed_postprocessing": "Any measurable computation on received feedback is allowed. No native observation may be added after the budget is exhausted or the algorithm stops.",
+      "certificate_requirement": "Only the stated statistical guarantee is required, not a certificate verifiable through the feedback interface.",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "sum_t ℓ_t(a_t)−min_{i≤M}sum_t<q_t,i,ℓ_t>",
+      "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+      "reference_object": "ON_CTX_ADVICE_S_obj_1785c45ae4",
+      "nonnegativity": false,
+      "finiteness_conditions": "Both cumulative losses lie in [0,T], so their difference on each execution path lies in [-T,T].",
+      "comparator_ref": "ON_CTX_ADVICE_S_com_2c3e887fde",
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "$$\nq_{t,i}\\in\\Delta_K,\\quad R_T=\\sum_t\\ell_t(a_t)-\\min_{i\\in[M]}\\sum_t\\langle q_{t,i},\\ell_t\\rangle\n$$"
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "Sequential online rounds; only information permitted by the protocol is visible in each round."
+        },
+        {
+          "code": "native_feedback",
+          "unit": "arm_pull",
+          "description": "Each round reveals M × K advice values and one loss scalar, for T selected-arm feedback observations."
+        },
+        {
+          "code": "advice_entries",
+          "unit": "scalar",
+          "description": "The dense expert-advice interface reveals MK numbers per round and MKT in total. Compressed or structured advice is a different interface."
+        }
+      ],
+      "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+      "cost_rules": [
+        {
+          "id": "ON_CTX_ADVICE_S_res_fb8e703d8a",
+          "operation_refs": [
+            "ON_CTX_ADVICE_S_ora_bab6a72204"
+          ],
+          "cost": {
+            "rounds": 1,
+            "native_feedback": 1,
+            "advice_entries": "MK"
+          }
+        }
+      ],
+      "scalarization": "At fixed T, compare the native cumulative quantity in the objective. Retain the full resource vector; internal optimization, projection, and sampling are not implicitly one loss query.",
+      "setup_cost": "Only declared public inputs may be read. Hidden losses, means, or samples cannot be accessed in advance or outside the $T$ rounds or $\\tau$ samples.",
+      "online_cost": "Any policy based on the revealed advice is permitted. q-FTRL may maintain expert weights and sample arms from their mixture. Dense advice contains $MK$ numbers per round. Mixing, importance weighting, and solving FTRL subproblems are internal computations, not bandit observations.",
+      "amortization_scope": "The algorithm runs on one environment. Charged feedback cannot be reused across independent instances.",
+      "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "Each round reveals M × K advice values and one loss scalar, for T selected-arm feedback observations.",
+        "Any policy acting after recommendations are revealed is allowed. q-FTRL may maintain expert weights and sample an arm from their mixture.",
+        "Dense advice itself contains MK numbers per round. Mixing, importance weighting, and FTRL subproblems are internal computation and are not hidden inside the bandit sample count.",
+        "Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "Private randomization is allowed. The seed is hidden from the environment and independent of the fixed instance and sample randomness.",
+        "adaptivity": "The action and every probe in a round may depend only on previous-round feedback, public inputs, any context or advice already revealed that round, and private randomness. They may not use unrevealed current losses or samples.",
+        "restrictions": [
+          "All measurable causal policies satisfying the declared information timing and feasible domain are allowed, without extra span, iteration-form, or polynomial-time restrictions."
+        ],
+        "internal_computation": "Arbitrary measurable computation with exact real arithmetic is permitted; feedback complexity does not imply arithmetic or bit complexity. The policy may depend on the revealed advice. q-FTRL may maintain expert weights and sample an arm from their mixture. Dense advice contains $MK$ numbers per round. Mixing, importance weighting, and FTRL subproblems are internal computations and are not absorbed into the bandit sample count.",
+        "parallelism": "Online rounds proceed sequentially. A two-point evaluation is a same-round feedback pair, not two independent rounds.",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "The native objective is $\\inf_{\\mathcal A}\\sup_{(q_{t,i}),\\ell_{1:T}}\\mathbb E_{\\mathcal A}[R_T]$.",
+          "aggregation_order": [
+            "First take the infimum over complete nonanticipating learning policies using only public inputs.",
+            "Then take the supremum over instances fixed before interaction and satisfying the model assumptions.",
+            "Expectation includes learner randomness and any sampling or observation noise.",
+            "Fixed, per-round, and sample-path comparators are distinguished exactly as in the target expression."
+          ],
+          "quantifier_order": "One learning algorithm must apply to every instance in the declared class. It may use public inputs only, not hidden instance parameters.",
+          "randomness_sources": [
+            "Learner's private randomness"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "The T-round horizon is fixed and public. No anytime or simultaneous-all-T high-probability guarantee is implied.",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "$$\n\\inf_{\\mathcal{A}}\\sup_{(q_{t,i}),\\ell_{1:T}}\\mathbb{E}_{\\mathcal{A}}[R_T]\n$$",
+            "Choose one algorithm using public inputs before taking the worst case over all admissible instances. Expectation covers the algorithm's private randomness and the observation randomness specified by the model. Comparator choice and the order of summation, minimization, and expectation follow the displayed formula."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+        "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+        "scalarization": "At fixed T, compare the native cumulative quantity in the objective. Retain the full resource vector; internal optimization, projection, and sampling are not implicitly one loss query."
+      },
+      "alias_ids": [
+        "ON_CTX_ADVICE_S"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ON_CTX_ADVICE_S_obj_1785c45ae4",
+        "type": "loss_environment",
+        "definition": "The environment fixes losses ell_t in [0,1]^K and advice q_{t,i} in the probability simplex for M experts in advance. Each round reveals all current advice before arm selection, then reveals only the chosen arm's loss.",
+        "depends_on": [],
+        "role_code": "loss_vector_sequence"
+      },
+      {
+        "id": "ON_CTX_ADVICE_S_obj_f1baa72708",
+        "type": "expert_advice_sequence",
+        "definition": "The environment fixes q_{t,i} in the probability simplex in advance. Each round reveals only all current q_{t,1:M} before the action.",
+        "depends_on": [],
+        "role_code": "expert_advice"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ON_CTX_ADVICE_S_var_5c6206093f",
+        "dimension": "One discrete action index",
+        "space": "[K]"
+      }
+    ],
+    "domains": [
+      {
+        "id": "ON_CTX_ADVICE_S_dom_11673a929a",
+        "definition": "[K]",
+        "roles": [
+          "action_domain",
+          "query_domain"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "ON_CTX_ADVICE_S_nor_60596e4d87",
+        "definition": "The model specifies coordinate ranges of finite vectors. Discrete action labels have no derivative order. A placeholder norm imposes no additional geometric assumption."
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ON_CTX_ADVICE_S_pro_202b6ab8c4",
+        "steps": [
+          "Fix q and ℓ in advance.",
+          "All $M$ advice vectors for the current round are revealed.",
+          "The learner chooses $a_t$ from advice, history, and private randomness.",
+          "Incur and observe ℓ_t(a_t), then proceed to the next round."
+        ],
+        "adversary_information": "The environment fixes the entire loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner’s private seed. This is an oblivious-adversary specification and does not automatically extend to history-dependent adaptive adversaries.",
+        "loss_bearing_points": "Only the final a_t incurs loss. Expert advice does not generate additional charged loss.",
+        "queries_per_round": "Each round reveals M × K advice values and one loss scalar, for T selected-arm feedback observations.",
+        "past_requery": "The learner may not request new information from past rounds or previously used samples. Previously received feedback may be stored and processed. In stochastic models, an action may be repeated in a new round, using a fresh charged sample."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ON_CTX_ADVICE_S_com_2c3e887fde",
+        "definition": "Use expert i’s complete advice sequence and average losses according to its recommended probabilities."
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ON_CTX_ADVICE_S_p_585fcb7010",
+      "symbol": "K",
+      "meaning": "The finite number of arms.",
+      "kind": "independent",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "public": true,
+      "definition": "The arm set is $[K]=\\{1,\\ldots,K\\}$.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_CTX_ADVICE_S_p_790b92b98a",
+      "symbol": "M",
+      "meaning": "Number of advice experts",
+      "kind": "independent",
+      "domain": "$M\\in\\mathbb N,\\ M\\ge K$",
+      "public": true,
+      "definition": "Before acting each round, observe M experts' advice distributions over K arms.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_CTX_ADVICE_S_p_76dd32a562",
+      "symbol": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "K",
+      "meaning": "The finite number of arms.",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "definition": "The arm set is $[K]=\\{1,\\ldots,K\\}$.",
+      "parameter_ref": "ON_CTX_ADVICE_S_p_585fcb7010"
+    },
+    {
+      "symbol_latex": "M",
+      "meaning": "Number of advice experts",
+      "domain": "$M\\in\\mathbb N,\\ M\\ge K$",
+      "definition": "Before acting each round, observe M experts' advice distributions over K arms.",
+      "parameter_ref": "ON_CTX_ADVICE_S_p_790b92b98a"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "parameter_ref": "ON_CTX_ADVICE_S_p_76dd32a562"
+    },
+    {
+      "symbol_latex": "\\ell_t",
+      "meaning": "Hidden loss vector at round t",
+      "domain": "$\\ell_t\\in[0,1]^K$",
+      "definition": "The entire sequence is fixed before interaction; only coordinates allowed by the protocol become visible after acting.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "a_t",
+      "meaning": "Arm or expert that actually incurs loss in round $t$",
+      "domain": "$a_t\\in[K]$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "[K]",
+      "meaning": "Index set of K arms or experts",
+      "domain": "A finite set.",
+      "definition": "$[K]=\\{1,\\ldots,K\\}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "q_{t,i}",
+      "meaning": "Expert i’s current advice distribution.",
+      "domain": "$q_{t,i}\\in\\Delta_K$",
+      "definition": "Coordinate a is the probability of recommending arm a. All current advice is visible before acting.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Delta_K",
+      "meaning": "Probability simplex over $K$ arms",
+      "domain": "$\\Delta_K\\subset\\mathbb R^K$",
+      "definition": "$\\{q\\in[0,1]^K:\\sum_aq_a=1\\}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "i,[M]",
+      "meaning": "Index and index set of the fixed advice experts",
+      "domain": "$i\\in[M]=\\{1,\\ldots,M\\}$",
+      "definition": "The comparator loss is $\\sum_t\\langle q_{t,i},\\ell_t\\rangle$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "e",
+      "meaning": "Base of the natural logarithm in the explicit upper-bound constant",
+      "domain": "Constant",
+      "definition": "$e=\\exp(1)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_T",
+      "meaning": "Cumulative loss difference relative to the comparator specified in this profile",
+      "domain": "Real-valued random variable",
+      "definition": "$R_T=\\sum_t\\ell_t(a_t)-\\min_{i\\in[M]}\\sum_t\\langle q_{t,i},\\ell_t\\rangle$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal R_T^*",
+      "meaning": "Minimax expected regret under the current information protocol and parameter region.",
+      "domain": "A nonnegative real.",
+      "definition": "$$\n\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{(q,\\ell)\\in\\mathcal I}\\mathbb E_{\\mathcal A}[R_T],\\\\ R_T&=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[M]}\\sum_{t=1}^T\\langle q_{t,i},\\ell_t\\rangle,\\\\ q_{t,i}&\\in\\Delta_K,\\qquad\\ell_t\\in[0,1]^K.\\end{aligned}\n$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation includes the learner's private randomness and, when allowed, the environment strategy's randomness. A fixed loss sequence introduces no additional observation noise.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Cumulative observations counted according to the declared feedback type.",
+      "domain": "Nonnegative integer or integer-valued stopping time",
+      "definition": "The quantity $N=T$ counts cumulative native scalar feedback under a one-point or one-arm protocol.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal I",
+      "meaning": "The complete environment class in the current minimax objective.",
+      "domain": "Collection of function classes or reward-distribution classes",
+      "definition": "The loss and advice arrays $(\\ell_{1:T},q_{1:T,1:M})$ are fixed before interaction, with $\\ell_t\\in[0,1]^K$ and $q_{t,i}\\in\\Delta_K$. All current advice is revealed before the action in each round.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ON_CTX_ADVICE_S__main__q1",
+      "kind": "minimax_cumulative_expert_advice_regret",
+      "expression": "R*_T = inf_{A in admissible nonanticipating randomized learners} sup_{I in declared model} E_A,I[sum_t ℓ_t(a_t)−min_{i≤M}sum_t<q_t,i,ℓ_t>].",
+      "optimization_direction": "minimize",
+      "units": "loss",
+      "budget_variables": [
+        "ON_CTX_ADVICE_S_p_76dd32a562"
+      ],
+      "tolerance_variables": [],
+      "analysis_scope": "Compare only this specification and the listed parameter regions.",
+      "tracked_parameters": [
+        "ON_CTX_ADVICE_S_p_585fcb7010",
+        "ON_CTX_ADVICE_S_p_790b92b98a",
+        "ON_CTX_ADVICE_S_p_76dd32a562"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{(q,\\ell)\\in\\mathcal I}\\mathbb E_{\\mathcal A}[R_T],\\\\ R_T&=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[M]}\\sum_{t=1}^T\\langle q_{t,i},\\ell_t\\rangle,\\\\ q_{t,i}&\\in\\Delta_K,\\qquad\\ell_t\\in[0,1]^K.\\end{aligned}",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound.",
+      "expression": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_351fb610de"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ON_CTX_ADVICE_S__main__r1",
+      "specification_ref": "ON_CTX_ADVICE_S",
+      "name": "MAIN",
+      "predicate_text": "M≥K≥2; T≥K",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_CTX_ADVICE_S_p_790b92b98a"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "ON_CTX_ADVICE_S_p_585fcb7010"
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_CTX_ADVICE_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "ON_CTX_ADVICE_S_p_585fcb7010"
+              }
+            }
+          }
+        ]
+      },
+      "parameter_refs": [
+        "ON_CTX_ADVICE_S_p_585fcb7010",
+        "ON_CTX_ADVICE_S_p_76dd32a562",
+        "ON_CTX_ADVICE_S_p_790b92b98a"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Proof constants are independent of all declared tracked parameters. Thresholds without numerical values remain symbolic."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ON_CTX_ADVICE_S__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\le2\\sqrt{eKT\\bigl(2+\\log(M/K)\\bigr)}",
+      "quantity_ref": "ON_CTX_ADVICE_S__main__q1",
+      "region_refs": [
+        "ON_CTX_ADVICE_S__main__r1"
+      ],
+      "method": "Tsallis regularization tuned to K,M",
+      "algorithm_or_hard_family": "Tsallis regularization tuned to K,M",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T selected losses",
+        "advice_entries": "MKT"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_ADVICE"
+      ],
+      "evidence_refs": [
+        "ON_CTX_ADVICE_S__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_CTX_ADVICE_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Assume $M\\ge K\\ge2$ and $T\\ge K$. Every expert's current recommendation is public before arm selection. After selecting an arm, only that arm's loss is observed."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_CTX_ADVICE_S__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\ge0.04\\sqrt{KT}",
+      "quantity_ref": "ON_CTX_ADVICE_S__main__q1",
+      "region_refs": [
+        "ON_CTX_ADVICE_S__main__r1"
+      ],
+      "method": "K constant deterministic arm experts plus duplicate experts",
+      "algorithm_or_hard_family": "K constant deterministic arm experts plus duplicate experts",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_MOSS"
+      ],
+      "evidence_refs": [
+        "ON_CTX_ADVICE_S__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_CTX_ADVICE_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Assume $M\\ge K\\ge2$ and $T\\ge K$. Every expert's current recommendation is public before arm selection. After selecting an arm, only that arm's loss is observed."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": "Let the first $K$ experts always recommend distinct fixed arms, and let all remaining experts duplicate those recommendations. Revealed advice carries no loss information, and the best-expert comparator becomes the best fixed arm. The finite-armed bandit lower bound therefore applies directly.",
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "MAIN",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_CTX_ADVICE_S_p_790b92b98a"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "ON_CTX_ADVICE_S_p_585fcb7010"
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_CTX_ADVICE_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "ON_CTX_ADVICE_S_p_585fcb7010"
+              }
+            }
+          }
+        ]
+      },
+      "predicate_text": "$M\\ge K\\ge 2; T\\ge K$",
+      "parameter_refs": [
+        "ON_CTX_ADVICE_S_p_585fcb7010",
+        "ON_CTX_ADVICE_S_p_76dd32a562",
+        "ON_CTX_ADVICE_S_p_790b92b98a"
+      ],
+      "source_region_ref": "ON_CTX_ADVICE_S__main__r1",
+      "status": {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_CTX_ADVICE_S__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_CTX_ADVICE_S__main__q1",
+      "resource_projection_id": "resource_351fb610de",
+      "regime_id": "ON_CTX_ADVICE_S__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "ON_CTX_ADVICE_S__main__b1"
+        ],
+        "lower_refs": [
+          "ON_CTX_ADVICE_S__main__b2"
+        ],
+        "comparison_ref": "ON_CTX_ADVICE_S__main__c1",
+        "quantity_ref": "ON_CTX_ADVICE_S__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+        "ratio_or_gap": "O(sqrt[1+ln(M/K)])",
+        "envelopes": {
+          "upper": {
+            "expression": "2sqrt[eKT(2+ln(M/K))]",
+            "claim_refs": [
+              "ON_CTX_ADVICE_S__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "2sqrt[eKT(2+ln(M/K))]"
+          },
+          "lower": {
+            "expression": "0.04sqrt(KT)",
+            "claim_refs": [
+              "ON_CTX_ADVICE_S__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "0.04\\sqrt{KT}"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_CTX_ADVICE_S__main__b1",
+            "when_region_refs": [
+              "ON_CTX_ADVICE_S__main__r1"
+            ],
+            "meaning": "Invoke each algorithm only in its applicability region; the scalar upper envelope minimizes over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "ON_CTX_ADVICE_S__main__b1": [
+            {
+              "region_ref": "ON_CTX_ADVICE_S__main__r1",
+              "predicate_text": "$M\\ge K\\ge 2; T\\ge K$"
+            }
+          ],
+          "ON_CTX_ADVICE_S__main__b2": [
+            {
+              "region_ref": "ON_CTX_ADVICE_S__main__r1",
+              "predicate_text": "$M\\ge K\\ge 2; T\\ge K$"
+            }
+          ]
+        },
+        "envelope_certificate": "Only individually audited compatible claims enter. Certified baseline polylog bracket, not exact expert-count dependence. Restricted feedback Th5.1 is expressly excluded.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound."
+      },
+      "comparison_key": {
+        "setting_id": "ON_CTX_ADVICE_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_CTX_ADVICE_S__main__q1",
+        "resource_projection_id": "resource_351fb610de",
+        "regime_id": "ON_CTX_ADVICE_S__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ON_CTX_ADVICE_S__main__e1",
+      "source_ref": "ON_SRC_MOSS",
+      "locator": {
+        "theorem": "Theorem 30 and proof",
+        "section": "Appendix B",
+        "pdf_pages": [
+          28,
+          29,
+          30
+        ],
+        "printed_pages": [
+          2812,
+          2813,
+          2814
+        ],
+        "equations": []
+      },
+      "supports": "The source supports $\\mathcal{R}_T^*\\ge0.04\\sqrt{KT}$ and the stated reductions, subject to each atomic claim's model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "Use only the K-armed bandit branch with source sampling budget $m_{\\mathrm{src}}=T$. In context-block reductions each block uses its own length. Bernoulli hard instances and Yao's principle give the randomized-learner lower bound."
+      ]
+    },
+    {
+      "id": "ON_CTX_ADVICE_S__main__e2",
+      "source_ref": "ON_SRC_ADVICE",
+      "locator": {
+        "theorem": "Theorem 3.1",
+        "section": "",
+        "pdf_pages": [
+          4
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Supports the stated results and explicit reductions: $\\mathcal{R}_T^*\\le2\\sqrt{eKT\\bigl(2+\\log(M/K)\\bigr)}$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "The source upper bound is $2\\sqrt{e(K\\wedge M)T(2+\\log(M/(K\\wedge M)))}$. This setting reveals all expert advice before the action, so it can simulate the feedback required by the proved algorithm."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "ON_SRC_ADVICE",
+      "authors": [
+        "Nicolò Cesa-Bianchi",
+        "Khaled Eldowa",
+        "Emmanuel Esposito",
+        "Julia Olkhovskaya"
+      ],
+      "title": "Improved Regret Bounds for Bandits with Expert Advice",
+      "year": 2024,
+      "version": "arXiv:2406.16802v1, 2024-06-24; subsequent JAIR 83 article 6, July 2025",
+      "url": "https://arxiv.org/pdf/2406.16802v1",
+      "publication_status": "published_with_preprint_used"
+    },
+    {
+      "id": "ON_SRC_MOSS",
+      "authors": [
+        "Jean-Yves Audibert",
+        "Sébastien Bubeck"
+      ],
+      "title": "Regret Bounds and Minimax Policies under Partial Monitoring",
+      "year": 2010,
+      "version": "JMLR 11:2785–2836",
+      "url": "https://jmlr.org/papers/volume11/audibert10a/audibert10a.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "ON_CTX_ADVICE_S",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap present"
+      }
+    ],
+    "gap_classes": [
+      "logarithmic_gap"
+    ],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "logarithmic_gap": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ON_CTX_ADVICE_S__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "6b5891e8b4b6aaf1619709c62af1c0a1d2f96f6dc4f27b2fafd9b53f76010a74",
+    "source_order": 68,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

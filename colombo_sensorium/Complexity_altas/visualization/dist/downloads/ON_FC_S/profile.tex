@@ -1,0 +1,1274 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\newfontfamily\AtlasUnicodeText{Arial Unicode MS}
+\newfontfamily\AtlasUnicodeSymbols{STIX Two Math}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Bernoulli best-arm identification: fixed confidence and expected stopping cost\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{ON\_\allowbreak{}\allowbreak{}FC\_\allowbreak{}\allowbreak{}S}
+
+Online learning and bandits
+
+The algorithm adaptively samples Bernoulli arms, chooses a stopping time, and recommends the unique best arm. It must attain the prescribed confidence for every admissible mean vector. Cost is the expected number of samples on the instance; the central comparison concerns the leading constant as confidence tends to one for a fixed instance.
+
+\textbf{Status.} Fully optimal
+
+\textbf{TASK tags.} formulation: Best arm fixed confidence; solution concept: Minimize expected stopping time; task family: Online bandit
+
+\textbf{MODEL tags.} stochastic model: Parametric bernoulli; structure: Finite actions; structure: Unique best
+
+\textbf{ORACLE tags.} feedback quality: Source-declared exact feedback (may be a random reward); interface family: Selected reward; operation: Sample selected arm; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} randomization: Private randomness allowed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Stopping time and arm recommendation
+
+\textbf{METRIC tags.} criterion: Uniform fixed-confidence identification correctness
+
+\textbf{GUARANTEE tags.} confidence: Confidence parameter explicitly declared; mode: Uniform fixed-confidence identification correctness; randomness: Algorithm private seed; randomness: Oracle samples
+
+\textbf{RESOURCE tags.} accounting: Joint coordinates retained; budget: Instancewise expected stopping cost (not a worst-instance supremum); measure: Samples; measure: Stopping checks
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+The algorithm adaptively samples Bernoulli arms, chooses a stopping time, and recommends the unique best arm. It must attain the prescribed confidence for every admissible mean vector. Cost is the expected number of samples on the instance; the central comparison concerns the leading constant as confidence tends to one for a fixed instance.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The fixed unknown mean vector satisfies \AtlasInlineMath{\mu\in(0,1)^K} and has a unique best arm. Both means and individual arm gaps are hidden.
+
+The data-dependent stopping time \AtlasInlineMath{\tau_\delta} is measurable with respect to observed history and is not a fixed horizon.
+
+The arm \AtlasInlineMath{\widehat{b}} is recommended at stopping. Correctness must hold uniformly over all admissible mean vectors.
+
+The comparison characteristic time \AtlasInlineMath{T^*(\mu)} is defined by the allocation problem using forward \AtlasInlineMath{\operatorname{KL}(\nu_{\mu_i}\,\|\,\nu_{\lambda_i})}. It is an analytical benchmark, not an input supplied to the algorithm.
+
+The full characteristic time \AtlasInlineMath{T^*(\mu)} is defined by \AtlasInlineMath{T^*(\mu)^{-1}=\sup_{w\in\Delta_K}\inf_{\lambda\in\operatorname{Alt}(\mu)}\sum_i w_i\operatorname{kl}(\mu_i,\lambda_i)}. The alternative class, Bernoulli KL divergence, and simplex are defined in the local notation table.
+
+Require \AtlasInlineMath{K\ge2} and \AtlasInlineMath{0<\delta<1/2}. Both round actions and the final recommendation lie in \AtlasInlineMath{[K]}.
+
+Take delta to zero with the instance mu fixed. Finite-parameter conclusions in which K or mu also vary are not part of this leading-constant comparison.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Bernoulli arm sampling:
+
+
+\AtlasMath{a_t\in[K],\quad t\le\tau_\delta\ \longmapsto\ Y_t\in\{0,1\},\quad \mathbb{P}(Y_t=1\mid\mathcal{H}_{t-1},a_t)=\mu_{a_t}}
+
+
+Each call returns a fresh independent Bernoulli sample.
+
+Arm choices depend only on the history; stopping and recommendation use information already obtained.
+
+No extra samples are taken after stopping. This task has no regret-bearing action point.
+
+Public inputs are K, $\delta$, and the Bernoulli family. The means $\mu$ and gaps are hidden.
+
+\needspace{4\baselineskip}\subsection{Output}
+Output an almost surely finite stopping time \AtlasInlineMath{\tau_\delta} and recommended arm \AtlasInlineMath{\widehat{b}\in[K]}. A computable correctness certificate is not required. No samples may be drawn after stopping.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+\AtlasMath{p_\mu(\mathcal{A}_\delta)=\Pr_\mu(\widehat{b}\ne b(\mu)),\qquad C_\mu(\mathcal{A}_\delta)=\mathbb{E}_\mu[\tau_\delta].}
+
+
+The identification loss is an error indicator, and expected stopping time is the cost. The asymptotic efficiency quantity \AtlasInlineMath{\mathbb{E}_\mu[\tau_\delta]/\log(1/\delta)} is kept distinct from fixed-budget error probability.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Each arm pull yields one charged sample. The total number of samples is the random stopping time \AtlasInlineMath{\tau_\delta}, and the primary resource objective is the instancewise expectation \AtlasInlineMath{\mathbb{E}_\mu[\tau_\delta]}.
+
+Any causal randomized algorithm that is uniformly delta-correct is allowed.
+
+Track-and-Stop maintains empirical means, sample counts, and likelihood ratios and numerically computes allocation proportions. Those computations are not identified with one sample at no additional accounting cost.
+
+Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Arbitrary causal randomized sampling, stopping, and recommendation rules are allowed. The algorithm must achieve the confidence guarantee uniformly over all admissible mean vectors and stop almost surely. Internal computation and storage are unrestricted.
+
+One algorithm family \AtlasInlineMath{\{\mathcal{A}_\delta\}} must satisfy \AtlasInlineMath{\Pr_\mu(\widehat{b}=b(\mu))\ge1-\delta} for every admissible mean vector \AtlasInlineMath{\mu} and stop almost surely. Expected-cost guarantees are instancewise. In the limit \AtlasInlineMath{\delta\downarrow0}, hold \AtlasInlineMath{K} and the entire \AtlasInlineMath{\mu} fixed. Randomness includes sampling and the algorithm.
+
+\textbf{Budget convention.} The sample count \AtlasInlineMath{\tau_\delta} is random, with primary cost \AtlasInlineMath{\mathbb E_\mu\tau_\delta}. There is no prespecified hard budget \AtlasInlineMath{T}.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{K}: The finite number of arms. \textbf{Domain:} \AtlasInlineMath{K\in\mathbb N,\ K\ge2}.
+
+The arm set is \AtlasInlineMath{[K]=\{1,\ldots,K\}}.
+
+\AtlasInlineMath{\delta}: The allowed statistical failure probability. \textbf{Domain:} \AtlasInlineMath{0<\delta<1/2}.
+
+Used only for statistical correctness or high-probability performance, and distinct from the privacy relaxation parameter.
+
+\AtlasInlineMath{\mu}: Unknown Bernoulli mean vector \textbf{Domain:} The vector \AtlasInlineMath{\mu\in(0,1)^K} has a unique largest component.
+
+\AtlasInlineMath{\mu_i=\mathbb E_{Y\sim\nu_i}Y}, where \AtlasInlineMath{\nu_i=\operatorname{Bernoulli}(\mu_i)}.
+
+\AtlasInlineMath{[K]}: Index set of K arms or experts \textbf{Domain:} A finite set.
+
+\AtlasInlineMath{[K]=\{1,\ldots,K\}}.
+
+\AtlasInlineMath{\mathcal M_K}: Class of Bernoulli mean vectors with a unique best arm \textbf{Domain:} \AtlasInlineMath{\mathcal M_K\subset(0,1)^K}.
+
+The instance class is \AtlasInlineMath{\mathcal M_K=\{\mu\in(0,1)^K:\arg\max_i\mu_i\text{ contains exactly one arm}\}}.
+
+\AtlasInlineMath{b(\mu)}: Unique best arm of mean vector mu \textbf{Domain:} \AtlasInlineMath{b(\mu)\in[K]}.
+
+\AtlasInlineMath{b(\mu)=\arg\max_i\mu_i}.
+
+\AtlasInlineMath{\tau_\delta}: A stopping time determined by observed data. \textbf{Domain:} A nonnegative integer-valued stopping time.
+
+The quantity \AtlasInlineMath{\mu\in\mathcal M_K} is almost surely finite on every admissible instance. Its expectation is the charged sampling cost.
+
+\AtlasInlineMath{\widehat b_{\tau_\delta}}: Arm recommended upon stopping \textbf{Domain:} \AtlasInlineMath{\widehat b_{\tau_\delta}\in[K]}.
+
+The guarantee \AtlasInlineMath{\Pr_\mu(\widehat b_{\tau_\delta}\ne b(\mu))\le\delta} holds for every admissible mu.
+
+\AtlasInlineMath{\operatorname{Alt}(\mu)}: Alternative mean vectors with a different best arm. \textbf{Domain:} The set of mean vectors.
+
+The expression is \AtlasInlineMath{\{\lambda\in\mathcal M_K:b(\lambda)\ne b(\mu)\}}; taking the closure in the inner infimum gives an equivalent value.
+
+\AtlasInlineMath{\operatorname{kl}(p,q)}: Forward relative entropy of Bernoulli distributions. \textbf{Domain:} \AtlasInlineMath{p,q\in(0,1)}.
+
+The expression is \AtlasInlineMath{p\log(p/q)+(1-p)\log((1-p)/(1-q))}, with endpoints defined by continuous limits.
+
+\AtlasInlineMath{\Delta_K,w}: The sampling-proportion simplex and its elements. \textbf{Domain:} \AtlasInlineMath{w\in\Delta_K}.
+
+\AtlasInlineMath{\Delta_K=\{w\in[0,1]^K:\sum_iw_i=1\}}.
+
+\AtlasInlineMath{\lambda}: Alternative means in the inner characteristic-time optimization. \textbf{Domain:} \AtlasInlineMath{\lambda\in\operatorname{Alt}(\mu)}.
+
+\AtlasInlineMath{T^*(\mu)}: Instance characteristic time for fixed-confidence identification \textbf{Domain:} Positive real number used only in analysis of the hidden instance.
+
+
+\AtlasMath{T^*(\mu)^{-1}=\sup_{w\in\Delta_K}\inf_{\lambda\in\operatorname{Alt}(\mu)}\sum_iw_i\operatorname{kl}(\mu_i,\lambda_i)}
+.
+
+\AtlasInlineMath{\mathcal T_\delta(\mu)}: Minimum expected sample count among all uniformly delta-correct algorithms that stop almost surely \textbf{Domain:} A nonnegative real.
+
+\AtlasInlineMath{\mathcal T_\delta(\mu)=\inf_{\mathcal A\ \delta\text{correct}}\mathbb E_\mu\tau_\delta}. The algorithm must first be uniformly correct; its performance is then evaluated at the fixed instance $\mu$.
+
+\AtlasInlineMath{\beta(t,\delta)}: Public threshold in the Chernoff stopping rule \textbf{Domain:} Real number.
+
+\AtlasInlineMath{\beta(t,\delta)=\log(2(K-1)t/\delta)}.
+
+\AtlasInlineMath{\widehat\mu,w^*(\widehat\mu)}: Empirical arm means and their characteristic-time-optimal allocation. \textbf{Domain:} Algorithm's internal statistic.
+
+The vector \AtlasInlineMath{w^*} is an optimal sampling proportion in the outer maximization defining characteristic time. It cannot be computed using the hidden true mu as an input.
+
+\AtlasInlineMath{\mathcal A}: Learning policies satisfying the specified information, computation, and privacy restrictions \textbf{Domain:} A measurable causal policy.
+
+Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.
+
+\AtlasInlineMath{t}: Interaction-time index \textbf{Domain:} \AtlasInlineMath{t\in\mathbb N,\ t\ge1}.
+
+Sampling time. The data-dependent stopping time \AtlasInlineMath{\tau_\delta} has no prespecified horizon \AtlasInlineMath{T}.
+
+\AtlasInlineMath{\mathbb E}: Mean operator \textbf{Domain:} Expectation over the specified random variables.
+
+Expectation includes learner randomness and the explicitly specified reward or sample randomness. Conditional expectations retain their stated history conditioning.
+
+\AtlasInlineMath{\log,\log_2}: Natural and binary logarithms \textbf{Domain:} Function on the positive real axis.
+
+\AtlasInlineMath{\log x=\ln x}, \AtlasInlineMath{\log_2x=\log x/\log2}.
+
+\AtlasInlineMath{c,C}: Positive constant in the bound without an assigned numerical value \textbf{Domain:} Positive real number.
+
+Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.
+
+\AtlasInlineMath{O,\Omega,\widetilde O,\widetilde\Omega}: Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression. \textbf{Domain:} Asymptotic comparison notation.
+
+The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.
+
+\AtlasInlineMath{N}: Cumulative observations counted according to the declared feedback type. \textbf{Domain:} Nonnegative integer or integer-valued stopping time.
+
+The quantity \AtlasInlineMath{N=\tau_\delta} is the cumulative number of scalar reward samples before stopping.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - asymptotic expected sample constant}
+\AtlasMath{\begin{aligned} C_{\rm FC}(\mu)&=\lim_{\delta\downarrow0}\inf_{\mathcal A\in\mathfrak A_\delta}\frac{\mathbb E_{\mu,\mathcal A}[\tau_\delta]}{\log(1/\delta)},\qquad \mu,K\ \text{fixed},\\ \mathfrak A_\delta&=\{\mathcal A:\ \forall\lambda\in\mathcal M_K,\ \mathbb P_{\lambda,\mathcal A}(\tau_\delta<\infty)=1,\\ &\hspace{5em}\mathbb P_{\lambda,\mathcal A}(\widehat b_{\tau_\delta}\ne b(\lambda))\le\delta\},\\ \mathcal M_K&=\{\mu\in(0,1)^K:\ b(\mu)\text{ is unique}\}.\end{aligned}}
+\textbf{Scope.} Compare only this specification and the listed parameter regions.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsection{R1 - ASYMPTOTIC}
+\textbf{Region.} Fix a mean vector mu with a unique best arm and arm count K, then take delta to zero.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Native sequential interaction rounds or samples; additional resources remain attached to each bound.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{T*(\mu )}
+\textbf{Upper bound.} B1
+
+\AtlasMath{T*(\mu )}
+\textbf{Gap or comparison.} The same leading asymptotic constant when \AtlasInlineMath{\mu} and \AtlasInlineMath{K} are fixed.
+
+\textbf{Comparison argument.} Only individually audited compatible claims enter. No inversion into fixed-budget exponent; its KL orientation and quantifiers differ.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Conditions.} Fix the arm count \AtlasInlineMath{K} and mean vector \AtlasInlineMath{\mu} with a unique best arm, and consider \AtlasInlineMath{\delta\to0}. The confidence requirement holds on every admissible instance, not merely one known instance.
+
+\textbf{Dimension conditions.} Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.
+
+\textbf{Oracle mapping.} Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.
+
+\textbf{Guarantee mapping.} Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.
+
+\textbf{Output mapping.} Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.
+
+\textbf{Resource mapping.} Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free.
+
+\needspace{4\baselineskip}\subsection{B1 - Track-and-Stop with C-/D-tracking and Bernoulli Chernoff threshold}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{\limsup_{\delta\downarrow0}\frac{\mathbb{E}_\mu[\tau_\delta]}{\log(1/\delta)}\le T^*(\mu)}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v49/garivier16a.pdf}{[1]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{samples.}
+
+\AtlasMath{E_mu \tau}
+\textbf{stopping checks.}
+
+\AtlasMath{\le \tau}
+\textbf{Constants.} Universal constants independent of the parameters explicitly tracked in this claim
+
+\textbf{Logarithmic factors.} None.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v49/garivier16a.pdf}{[1]} pdf pages: 10; 13; theorem: Theorems 10 and 14
+
+For Bernoulli rewards, use Chernoff stopping threshold \AtlasInlineMath{\log(2(K-1)t/\delta)} with C- or D-tracking. The source choice \AtlasInlineMath{\alpha=1} yields asymptotic expected-sample constant \AtlasInlineMath{T^\star(\mu)}.
+
+\needspace{4\baselineskip}\subsection{B2 - Change of measure across $Alt(\mu )$}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\begin{aligned}[c]\mathbb{E}_\mu[\tau_\delta]&\ge T^*(\mu)\operatorname{kl}(\delta,1-\delta),\\ \liminf_{\delta\downarrow0}\frac{\mathbb{E}_\mu[\tau_\delta]}{\log(1/\delta)}&\ge T^*(\mu),\\ T^*(\mu)^{-1}&=\sup_{w\in\Delta_K}\inf_{\lambda\in\operatorname{Alt}(\mu)}\sum_{i=1}^K w_i\operatorname{kl}(\mu_i,\lambda_i).\end{aligned}}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v49/garivier16a.pdf}{[1]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{samples.}
+
+\AtlasMath{E_mu \tau}
+\textbf{Constants.} Universal constants independent of the parameters explicitly tracked in this claim
+
+\textbf{Logarithmic factors.} None.
+
+\textbf{Derivation.} Fix the number of arms and a mean vector with a unique best arm, and let \AtlasInlineMath{\delta\to0}. The binary relative entropy satisfies \AtlasInlineMath{\operatorname{kl}(\delta,1-\delta)/\log(1/\delta)\to1}, giving the asymptotic sample constant. No uniform statement is made when arm gaps shrink simultaneously.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v49/garivier16a.pdf}{[1]} pdf pages: 3; 4; theorem: Theorem 1
+
+Every policy that is \AtlasInlineMath{\delta}-PAC on the entire admissible instance class satisfies \AtlasInlineMath{\mathbb E_\mu\tau\ge T^\star(\mu)\operatorname{kl}(\delta,1-\delta)}. The characteristic time uses the forward divergence \AtlasInlineMath{\operatorname{KL}(\mu_i,\lambda_i)}.
+
+\needspace{7\baselineskip}\section{Maintenance appendix: Native proof extensions}
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{7\baselineskip}\section{Maintenance appendix: Complete native joint analysis}
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+\needspace{4\baselineskip}\subsection{Native joint analysis}
+Native pointer: /joint\_\allowbreak{}analysis; canonical SHA-256: 0ced878efd60acd4d210dae9ea3a11a334e7803e272afd7b3e6c384dbedf5250
+
+\needspace{4\baselineskip}\subsubsection{Native field: comparisons}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons; canonical SHA-256: 39c1c3af88e8e395d942d8492e97be5422aedebd0cfa90a76b479f1bdbe52362
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0; canonical SHA-256: 281764c14e2ff9febc07d69b867bda757144880fcb185f7a15cd570d3b06073e
+
+\needspace{4\baselineskip}\subsubsection{Native field: bound\_\allowbreak{}uses}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses; canonical SHA-256: b9060dc2b21a4de32cbda4fc76a39dfe437acd8609f7bc4741f8d1b651e9e8ee
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/0; canonical SHA-256: 4a43477754b9f78bd4e3e0510c5459422822980c2b30c33e83f409f854dd2b74
+
+\needspace{4\baselineskip}\subsubsection{Native field: adopted\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/0/adopted\_\allowbreak{}region; canonical SHA-256: 4843e7aa04287c6760c9654d26f01b7046b115ed8600a58ac02428eae0d5e8e3
+
+\begingroup\raggedright\sloppy For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: bound\_\allowbreak{}id}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/0/bound\_\allowbreak{}id; canonical SHA-256: afebc9ca67d4df5153efffb1f5a968ab3c6d5922d9e22b9109ad91713df922ac
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}b1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: disposition}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/0/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+
+\begingroup\raggedright\sloppy included\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: mapping\_\allowbreak{}proof\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/0/mapping\_\allowbreak{}proof\_\allowbreak{}refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: reason}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/0/reason; canonical SHA-256: f4114c9c6fb61d6fa57c225d00634405570c866498bcbf220a14bdcd66268a21
+
+\begingroup\raggedright\sloppy Retain the Bernoulli Track-and-Stop expected-cost limsup bound with the threshold log(2(K-1)t/\allowbreak{}delta). It is an admissible uniformly delta-correct algorithm,\allowbreak{} not an algorithm given the hidden instance. No finite-parameter uniformity follows.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: validity\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/0/validity\_\allowbreak{}region; canonical SHA-256: 4843e7aa04287c6760c9654d26f01b7046b115ed8600a58ac02428eae0d5e8e3
+
+\begingroup\raggedright\sloppy For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/1; canonical SHA-256: ad29789bb77c4c30687263a40703bbb0564cf801f205b7c6e509c21ef0034601
+
+\needspace{4\baselineskip}\subsubsection{Native field: adopted\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/1/adopted\_\allowbreak{}region; canonical SHA-256: 4843e7aa04287c6760c9654d26f01b7046b115ed8600a58ac02428eae0d5e8e3
+
+\begingroup\raggedright\sloppy For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: bound\_\allowbreak{}id}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/1/bound\_\allowbreak{}id; canonical SHA-256: 3bcea0ae6698f89ee64beb75653c0a9a0422536f433bfe8d9c81c7c1985b9bae
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}b2\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: disposition}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/1/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+
+\begingroup\raggedright\sloppy included\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: mapping\_\allowbreak{}proof\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/1/mapping\_\allowbreak{}proof\_\allowbreak{}refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: reason}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/1/reason; canonical SHA-256: dd68f216b5f297853c35c43390debfa22206cec02eda2ad78e1ffd270e0456b8
+
+\begingroup\raggedright\sloppy Retain the change-of-measure lower bound for all admissible causal randomized procedures. Taking kl(delta,\allowbreak{}1-delta)/\allowbreak{}log(1/\allowbreak{}delta) to 1 gives the lower constant. Both mechanical candidates are accounted for;\allowbreak{} the catalogue contains no unused compatible native bounds.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: validity\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/bound\_\allowbreak{}uses/1/validity\_\allowbreak{}region; canonical SHA-256: 9fd58573df1e93893112f95722cc6e7ca7271d59e92a8b4d0d5a61dc21c03556
+
+\begingroup\raggedright\sloppy For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2. Its recorded finite-delta inequality holds on the native interval 0<delta<1/\allowbreak{}2.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: boundary\_\allowbreak{}checks}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/boundary\_\allowbreak{}checks; canonical SHA-256: f27dfe923843285a96d9c77e0297de96b46fc9a146b812160b2805e1985a7ec5
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/boundary\_\allowbreak{}checks/0; canonical SHA-256: be8a537e07af7146cf835b1f8b6643d2ff650c9a4d53b55448c79db5cc341e6b
+
+\begingroup\raggedright\sloppy K=\allowbreak{}2 is included:\allowbreak{} the source explicitly gives its two-arm specialization;\allowbreak{} no large-K activation guard is needed.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/boundary\_\allowbreak{}checks/1; canonical SHA-256: 4c634c8ae94e7870de58a87a8a14b79cf0edb53090704784a08db1760eb34a1a
+
+\begingroup\raggedright\sloppy The means remain strictly between 0 and 1 and the best arm is unique. Ties and Bernoulli endpoints are outside the immutable domain.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 3}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/boundary\_\allowbreak{}checks/2; canonical SHA-256: b4becb3dfc64ec8aad14253abc8b17d3bc8c3f228c9a52025265451665dd0132
+
+\begingroup\raggedright\sloppy delta=\allowbreak{}0 is only a limiting direction;\allowbreak{} delta=\allowbreak{}1/\allowbreak{}2 is excluded. Neither endpoint is inserted as an admissible finite-confidence branch.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 4}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/boundary\_\allowbreak{}checks/3; canonical SHA-256: 5f5cca24c97e93228c93c9c5089188a6bc41ce6cc5acfbc2e706cdbc402cc9ae
+
+\begingroup\raggedright\sloppy For every fixed admissible instance the characteristic time is positive and finite,\allowbreak{} as in the source's allocation characterization. Thus the retained lower bound diverges with log(1/\allowbreak{}delta);\allowbreak{} a zero-query or bounded-query saturation branch cannot replace this limit.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 5}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/boundary\_\allowbreak{}checks/4; canonical SHA-256: 10f9e0df4970bc0f1be70b7252a5fe4349dd7a9dd2a7ae7357dc1e06966b8440
+
+\begingroup\raggedright\sloppy Optimality and correctness have different quantifiers:\allowbreak{} correctness holds for every instance,\allowbreak{} while convergence of normalized expected cost is pointwise in the fixed instance.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 6}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/boundary\_\allowbreak{}checks/5; canonical SHA-256: 5178c4cb60520eaf8d6a3d1339394f26800d2a39ad618674697a9d2e4022ca9b
+
+\begingroup\raggedright\sloppy The quantity lists mu among tracked parameters and also fixes it in the limit. Its explicit expression and fixed\_\allowbreak{}parameters resolve the roles:\allowbreak{} mu is the argument of the limiting function,\allowbreak{} not an additional asymptotic variable. No metadata normalization is proposed.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: comparison\_\allowbreak{}id}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/comparison\_\allowbreak{}id; canonical SHA-256: 3f7c7cdad55a60d9fe94c9e9aa4a2391a0a9a330afda0ac08654eb19f9b24f35
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}c1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: constant\_\allowbreak{}dependencies}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/constant\_\allowbreak{}dependencies; canonical SHA-256: 736998c0b26e22ec52bb8b13d9374a2856bfdb2cdf3e8de1e22720c00aa4f6d9
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/constant\_\allowbreak{}dependencies/0; canonical SHA-256: 8f9202e72d60e2684c29ef437ba11efc1fb50e7c0ee4824c7f5c69d2c96b2f92
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}585fcb7010\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/constant\_\allowbreak{}dependencies/1; canonical SHA-256: 19e02389706214ed7d32db77f93d2a69760e81c866381eb3a95049b4503ecd37
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}3c4ea41351\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: fixed\_\allowbreak{}parameters}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/fixed\_\allowbreak{}parameters; canonical SHA-256: 736998c0b26e22ec52bb8b13d9374a2856bfdb2cdf3e8de1e22720c00aa4f6d9
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/fixed\_\allowbreak{}parameters/0; canonical SHA-256: 8f9202e72d60e2684c29ef437ba11efc1fb50e7c0ee4824c7f5c69d2c96b2f92
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}585fcb7010\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/fixed\_\allowbreak{}parameters/1; canonical SHA-256: 19e02389706214ed7d32db77f93d2a69760e81c866381eb3a95049b4503ecd37
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}3c4ea41351\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: gap}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/gap; canonical SHA-256: 0c820ed3694cca73acb7af4298753ec761fc6c6ab377c1ff9f859148b3f84bdd
+
+\begingroup\raggedright\sloppy Upper/\allowbreak{}lower leading-constant ratio 1:\allowbreak{} C\_\allowbreak{}FC(mu)=\allowbreak{}T*(mu). This ratio is for samples per nat of confidence,\allowbreak{} not a ratio of finite-delta stopping costs.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: lower\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/lower\_\allowbreak{}envelope; canonical SHA-256: 432c1d08c780d1d468689453f5f3ee99143ffe63bfff66fa99eefb91b4de245d
+
+\begingroup\raggedright\sloppy C\_\allowbreak{}FC(mu) >=\allowbreak{} T*(mu),\allowbreak{} for each fixed admissible K,\allowbreak{}mu;\allowbreak{} the stronger recorded finite-confidence statement is E\_\allowbreak{}mu[tau\_\allowbreak{}delta] >=\allowbreak{} T*(mu) kl(delta,\allowbreak{}1-delta),\allowbreak{} without a matching finite-confidence upper envelope asserted here.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: remaining\_\allowbreak{}gap}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/remaining\_\allowbreak{}gap; canonical SHA-256: 9aaed67f4b23b7069102a3adf3a6adcaa09dd45b7ef9bf6a1481854428146bf8
+
+\begingroup\raggedright\sloppy No leading-constant gap in the registered pointwise limit,\allowbreak{} conditional on retained premises. Uniform finite-confidence bounds,\allowbreak{} coupled parameter limits,\allowbreak{} and sharper lower-order terms are unassessed and are not certified open problems.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: role}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/role; canonical SHA-256: 8f94b762b3127329eb134abfe8b8ca262f59c15e9c4e0e3f86d45886d57a82de
+
+\begingroup\raggedright\sloppy joint\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: slice}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/slice; canonical SHA-256: 74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b
+
+Native value (null): null
+
+\needspace{4\baselineskip}\subsubsection{Native field: upper\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/comparisons/0/upper\_\allowbreak{}envelope; canonical SHA-256: a8297ed4f9245380271525b63bf188bf14ec37c429849e65e19cf00cc8f1ee6e
+
+\begingroup\raggedright\sloppy C\_\allowbreak{}FC(mu) <=\allowbreak{} T*(mu),\allowbreak{} for each fixed admissible K,\allowbreak{}mu;\allowbreak{} achieved by the retained Bernoulli Track-and-Stop family.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: domain\_\allowbreak{}map}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map; canonical SHA-256: edbaf8af4fe88c37243d6ddb5fa6fc0f3e666f0f65f1f2f4d4248d52598e62dd
+
+\needspace{4\baselineskip}\subsubsection{Native field: cells}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells; canonical SHA-256: 15e911751f2c99b127c78164e3a324236f9e2cc1b60c6c5f60538b02471f61ed
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells/0; canonical SHA-256: 85e139edc9b8d1605ce8af2fa120b45ed5043155f1ee4b1d93b7f1ffc43b1216
+
+\needspace{4\baselineskip}\subsubsection{Native field: cell\_\allowbreak{}id}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells/0/cell\_\allowbreak{}id; canonical SHA-256: 3066de202469eedd07eb2b0d1279fe976c1a35de97a3a4526ae8d64a462d67a9
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}pointwise\_\allowbreak{}confidence\_\allowbreak{}limit\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: closure}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells/0/closure; canonical SHA-256: c1672a184c5e9c7f4ad1d8e613a970b1a4eb14b001d5b8b0c47a3ee5c8d86d8a
+
+\begingroup\raggedright\sloppy not\_\allowbreak{}claimed\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: closure\_\allowbreak{}proof\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells/0/closure\_\allowbreak{}proof\_\allowbreak{}refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: comparison\_\allowbreak{}ids}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells/0/comparison\_\allowbreak{}ids; canonical SHA-256: 1b79c2f8e558a05a62b8f00617badff4fe3bea7c5ed5bee10fa90f38715d4b36
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells/0/comparison\_\allowbreak{}ids/0; canonical SHA-256: 3f7c7cdad55a60d9fe94c9e9aa4a2391a0a9a330afda0ac08654eb19f9b24f35
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}c1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: note}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells/0/note; canonical SHA-256: ee23cca2b12b81324a2a7099cb84f7cbd83b7d449d7ac6e27962238860c32a89
+
+\begingroup\raggedright\sloppy This single cell covers every admissible fixed instance for the native limiting quantity. It does not assert simultaneous asymptotics in K,\allowbreak{} mu and delta. Existing optimal comparison states are conditionally retained;\allowbreak{} this metadata migration issues no new native-proof closure certificate for historical source-only records.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: predicate}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells/0/predicate; canonical SHA-256: 4843e7aa04287c6760c9654d26f01b7046b115ed8600a58ac02428eae0d5e8e3
+
+\begingroup\raggedright\sloppy For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: publication}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells/0/publication; canonical SHA-256: 74290158c1d7358ba35f80dfe316caf17a6c837914836d2fec5bc5cfac234003
+
+\begingroup\raggedright\sloppy unassessed\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: role}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells/0/role; canonical SHA-256: 1b1fe0e945e26ad153b0c6e5a2c8d455f335b5494422c167d6c3f82d99f1da92
+
+\begingroup\raggedright\sloppy joint\_\allowbreak{}region\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: state}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/cells/0/state; canonical SHA-256: bfb102db3cbcffdcf0a4e0c3eac375212a53ed39ea018e0164ca2b33d711c834
+
+\begingroup\raggedright\sloppy bounds\_\allowbreak{}recorded\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: partition\_\allowbreak{}argument}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/partition\_\allowbreak{}argument; canonical SHA-256: 8ad3a3726dca812d8c457712285cccfb4279b9a2b652579d6aff734022a9b337
+
+\begingroup\raggedright\sloppy For every admissible K and mu the contract specifies exactly the same one-variable confidence limit and the one registered regime. Its applicability predicate is the cell predicate. No relation between varying native parameters is imposed,\allowbreak{} so this is the primary domain rather than a secondary slice. Excluded boundary instances are not extra cells.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: residual\_\allowbreak{}domain}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/residual\_\allowbreak{}domain; canonical SHA-256: b231fd9c434135e56781ff4550ff933e486f8ace3cb5daadf59bb406dd56d0dc
+
+\begingroup\raggedright\sloppy Empty within the defined limiting quantity and registered comparison. Finite-confidence cost envelopes and paths with varying K or shrinking gaps are not assessed here;\allowbreak{} the immutable contract excludes them from this leading-constant comparison.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: status}
+Native pointer: /joint\_\allowbreak{}analysis/domain\_\allowbreak{}map/status; canonical SHA-256: 4f62e2d589ff517ecc4f19af0681d4da8258888404419debd532d6d7cfaefde0
+
+\begingroup\raggedright\sloppy accounted\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: impact}
+Native pointer: /joint\_\allowbreak{}analysis/impact; canonical SHA-256: a3cdc1f25cc875add5fb2c95968d47add825a323f73eadd3aaa02597b2886935
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0; canonical SHA-256: a325a422dcd7960f77940525945cb0ca49df4ee879c49599b7121c1f4dab72ae
+
+\needspace{4\baselineskip}\subsubsection{Native field: argument}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/argument; canonical SHA-256: 1bee3cab03613fd1da00a840832b762953893dba3131f395187f4ce007a5a5bf
+
+\begingroup\raggedright\sloppy Presentation restructuring of completely read frozen records;\allowbreak{} it adds no bound,\allowbreak{} widens no applicability region and changes no inequality or status.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: boundary\_\allowbreak{}type}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/boundary\_\allowbreak{}type; canonical SHA-256: 0296f22b01d3da51783b5e145c24403c9066251dff0d2f86a33204d0d2b0cd38
+
+\begingroup\raggedright\sloppy not\_\allowbreak{}applicable\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: comparison\_\allowbreak{}ids}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/comparison\_\allowbreak{}ids; canonical SHA-256: 1b79c2f8e558a05a62b8f00617badff4fe3bea7c5ed5bee10fa90f38715d4b36
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/comparison\_\allowbreak{}ids/0; canonical SHA-256: 3f7c7cdad55a60d9fe94c9e9aa4a2391a0a9a330afda0ac08654eb19f9b24f35
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}c1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: extension\_\allowbreak{}witness}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/extension\_\allowbreak{}witness; canonical SHA-256: 74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b
+
+Native value (null): null
+
+\needspace{4\baselineskip}\subsubsection{Native field: finding\_\allowbreak{}id}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/finding\_\allowbreak{}id; canonical SHA-256: 125538e8af63071c18c6b4a1a6ea500ffe83f57f49ac48a54145df0708522f4d
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}first\_\allowbreak{}joint\_\allowbreak{}annotation\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: improvement\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/improvement\_\allowbreak{}region; canonical SHA-256: e864b25287332828f784ee72ee63f54344af0dae6de9bd27b0c8879589b9f24b
+
+\begingroup\raggedright\sloppy None in sample cost;\allowbreak{} the change is the first explicit synthesis annotation.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: kind}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/kind; canonical SHA-256: f980a6033e731764ab6b313b09320614ed53f4475e6913ab95626394dc59b056
+
+\begingroup\raggedright\sloppy synthesis\_\allowbreak{}only\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: new\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/new\_\allowbreak{}envelope; canonical SHA-256: ae3034cd961be9daf418857868d9542f50a2358795923332ccd67beca7a86994
+
+\begingroup\raggedright\sloppy The same two guarded constants T*(mu),\allowbreak{} now with explicit parameter roles,\allowbreak{} domain accounting and candidate dispositions.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: old\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/old\_\allowbreak{}envelope; canonical SHA-256: 5fa1f392ada9e87fbd3648811e9156442da67bb2b653e780f30998c6157a2aa5
+
+\begingroup\raggedright\sloppy Registered pointwise lower and upper constants both T*(mu). No root joint analysis existed.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: unchanged\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/unchanged\_\allowbreak{}region; canonical SHA-256: 33fcaf421d40db4a5d1032c7e1a2d11b817d3381d21bf2b3132d3ce7fbb4c7f3
+
+\begingroup\raggedright\sloppy The entire registered pointwise asymptotic domain.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: validity\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/validity\_\allowbreak{}region; canonical SHA-256: 4843e7aa04287c6760c9654d26f01b7046b115ed8600a58ac02428eae0d5e8e3
+
+\begingroup\raggedright\sloppy For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: witness}
+Native pointer: /joint\_\allowbreak{}analysis/impact/0/witness; canonical SHA-256: 9d5219baaca1162acefe0d553a9713a58748131de3818fbcdf14b1810eab20a5
+
+\begingroup\raggedright\sloppy Both native claim IDs,\allowbreak{} guards,\allowbreak{} active bracket references and the optimal status are preserved.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1; canonical SHA-256: 00b648dc2c24e17fbe078530776057207792ec6c1478a722f1fbc264fa7eba2d
+
+\needspace{4\baselineskip}\subsubsection{Native field: argument}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/argument; canonical SHA-256: 2cd92e19ed61948c7889fe7a532e707d8448b1de56790b669ab6578379b3b4ea
+
+\begingroup\raggedright\sloppy The decisive published theorem text matches the retained expected-sample statements and quantifiers. No main-rate correction,\allowbreak{} stronger compatible leading constant or extra endpoint branch was established.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: boundary\_\allowbreak{}type}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/boundary\_\allowbreak{}type; canonical SHA-256: 0296f22b01d3da51783b5e145c24403c9066251dff0d2f86a33204d0d2b0cd38
+
+\begingroup\raggedright\sloppy not\_\allowbreak{}applicable\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: comparison\_\allowbreak{}ids}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/comparison\_\allowbreak{}ids; canonical SHA-256: 1b79c2f8e558a05a62b8f00617badff4fe3bea7c5ed5bee10fa90f38715d4b36
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/comparison\_\allowbreak{}ids/0; canonical SHA-256: 3f7c7cdad55a60d9fe94c9e9aa4a2391a0a9a330afda0ac08654eb19f9b24f35
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}c1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: extension\_\allowbreak{}witness}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/extension\_\allowbreak{}witness; canonical SHA-256: 74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b
+
+Native value (null): null
+
+\needspace{4\baselineskip}\subsubsection{Native field: finding\_\allowbreak{}id}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/finding\_\allowbreak{}id; canonical SHA-256: fb3d98bdd00db02e58c891c8cb570bc0799008d63cde17a3321616178d4218be
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}pmlr\_\allowbreak{}theorem\_\allowbreak{}check\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: improvement\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/improvement\_\allowbreak{}region; canonical SHA-256: 3bc472ac9d1996a3c56f6b71040d755923fdb418e20481428989143fa40e0f6d
+
+\begingroup\raggedright\sloppy Empty.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: kind}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/kind; canonical SHA-256: 0156322ed8506611831c391ce78dbd50d13a3d191f80b7a2c8880d6a2de161b1
+
+\begingroup\raggedright\sloppy no\_\allowbreak{}effect\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: new\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/new\_\allowbreak{}envelope; canonical SHA-256: 286db01a4470d0ad21351e54154146775671c9b1187945797fdfbac94dfa3b23
+
+\begingroup\raggedright\sloppy T*(mu) <=\allowbreak{} C\_\allowbreak{}FC(mu) <=\allowbreak{} T*(mu).\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: old\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/old\_\allowbreak{}envelope; canonical SHA-256: 286db01a4470d0ad21351e54154146775671c9b1187945797fdfbac94dfa3b23
+
+\begingroup\raggedright\sloppy T*(mu) <=\allowbreak{} C\_\allowbreak{}FC(mu) <=\allowbreak{} T*(mu).\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: unchanged\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/unchanged\_\allowbreak{}region; canonical SHA-256: 33fcaf421d40db4a5d1032c7e1a2d11b817d3381d21bf2b3132d3ce7fbb4c7f3
+
+\begingroup\raggedright\sloppy The entire registered pointwise asymptotic domain.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: validity\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/validity\_\allowbreak{}region; canonical SHA-256: 4843e7aa04287c6760c9654d26f01b7046b115ed8600a58ac02428eae0d5e8e3
+
+\begingroup\raggedright\sloppy For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: witness}
+Native pointer: /joint\_\allowbreak{}analysis/impact/1/witness; canonical SHA-256: e179a2c6286cb3d089d540792450a67d6f42e76b87462ca85639d389f811a20c
+
+\begingroup\raggedright\sloppy Theorems 1,\allowbreak{} 10 and 14;\allowbreak{} alpha=\allowbreak{}1 is explicitly permitted for the Bernoulli threshold.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 3}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2; canonical SHA-256: 5ce918c355cf2132d00353aab0362f20ff5db972e7ae6905b42ad3c10f35fe3d
+
+\needspace{4\baselineskip}\subsubsection{Native field: argument}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/argument; canonical SHA-256: b2e928d8486efc3abd3ef6c26e66b0cae7593e747ce70c2aeafdd905fced9687
+
+\begingroup\raggedright\sloppy With M=\allowbreak{}1,\allowbreak{} the alternative class and max-min allocation become the retained unique-optimum formula,\allowbreak{} as Remark 6 also states. This paper uses base-2 logs:\allowbreak{} d\_\allowbreak{}bits=\allowbreak{}d\_\allowbreak{}nats/\allowbreak{}ln(2) and T\_\allowbreak{}bits=\allowbreak{}ln(2) T\_\allowbreak{}nats,\allowbreak{} so T\_\allowbreak{}bits*kl\_\allowbreak{}bits=\allowbreak{}T\_\allowbreak{}nats*kl\_\allowbreak{}nats. It yields no stronger lower envelope. No claim from the tied-arm model is transferred.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: boundary\_\allowbreak{}type}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/boundary\_\allowbreak{}type; canonical SHA-256: 0296f22b01d3da51783b5e145c24403c9066251dff0d2f86a33204d0d2b0cd38
+
+\begingroup\raggedright\sloppy not\_\allowbreak{}applicable\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: comparison\_\allowbreak{}ids}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/comparison\_\allowbreak{}ids; canonical SHA-256: 1b79c2f8e558a05a62b8f00617badff4fe3bea7c5ed5bee10fa90f38715d4b36
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/comparison\_\allowbreak{}ids/0; canonical SHA-256: 3f7c7cdad55a60d9fe94c9e9aa4a2391a0a9a330afda0ac08654eb19f9b24f35
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}c1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: extension\_\allowbreak{}witness}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/extension\_\allowbreak{}witness; canonical SHA-256: 74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b
+
+Native value (null): null
+
+\needspace{4\baselineskip}\subsubsection{Native field: finding\_\allowbreak{}id}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/finding\_\allowbreak{}id; canonical SHA-256: 88031f0be92b0ce65ade50ed20f3809e0396152802107e48e379f83445576419
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}multi\_\allowbreak{}optima\_\allowbreak{}v2\_\allowbreak{}screen\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: improvement\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/improvement\_\allowbreak{}region; canonical SHA-256: 3bc472ac9d1996a3c56f6b71040d755923fdb418e20481428989143fa40e0f6d
+
+\begingroup\raggedright\sloppy Empty.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: kind}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/kind; canonical SHA-256: 0156322ed8506611831c391ce78dbd50d13a3d191f80b7a2c8880d6a2de161b1
+
+\begingroup\raggedright\sloppy no\_\allowbreak{}effect\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: new\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/new\_\allowbreak{}envelope; canonical SHA-256: be81cc82434e277f87da77bf71c8ccb1e008681cfcb8e3dee9521b1465378337
+
+\begingroup\raggedright\sloppy Lower leading constant T*(mu).\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: old\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/old\_\allowbreak{}envelope; canonical SHA-256: be81cc82434e277f87da77bf71c8ccb1e008681cfcb8e3dee9521b1465378337
+
+\begingroup\raggedright\sloppy Lower leading constant T*(mu).\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: unchanged\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/unchanged\_\allowbreak{}region; canonical SHA-256: 33fcaf421d40db4a5d1032c7e1a2d11b817d3381d21bf2b3132d3ce7fbb4c7f3
+
+\begingroup\raggedright\sloppy The entire registered pointwise asymptotic domain.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: validity\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/validity\_\allowbreak{}region; canonical SHA-256: dff3de0fcfa48e7b173a9edbfb442d55172b819c0d149d4cfca328f5acea954c
+
+\begingroup\raggedright\sloppy The paper's M=\allowbreak{}1 specialization intersects the native unique-best-arm model. Its M>1 claims are outside the fixed contract.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: witness}
+Native pointer: /joint\_\allowbreak{}analysis/impact/2/witness; canonical SHA-256: 669c39074002b268d1c65d7c56db5bc684b86a079a1d5c87d9ecc5b46bca7cde
+
+\begingroup\raggedright\sloppy arXiv:\allowbreak{}2505.15643v2,\allowbreak{} Sections III-IV,\allowbreak{} Theorem 5 equations (14)-(20),\allowbreak{} Remark 6;\allowbreak{} source 3f1586c5da0bd27b1e0b5a3e184b799e4d6856ac5dbac5c328996a397ead3b9c,\allowbreak{} chars 10000:\allowbreak{}20000.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 4}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3; canonical SHA-256: 98e086f44c14f6ea3a1c759bbbf402c9e72167a39444e3f347eb8950443187e5
+
+\needspace{4\baselineskip}\subsubsection{Native field: argument}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/argument; canonical SHA-256: 82ad21831e5823d21add25baf8dbc12b0bbe0afc6c9339aedbb1202444ba4cfb
+
+\begingroup\raggedright\sloppy Explicit canonical state/\allowbreak{}summary correction where applicable and conditional v2 synthesis migration. All native inequalities,\allowbreak{} source guards and contracts are retained unless separately enumerated in the pinned profile. Remaining literature,\allowbreak{} normalization and unassessed-domain obligations are not resolved by this migration.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: boundary\_\allowbreak{}type}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/boundary\_\allowbreak{}type; canonical SHA-256: 0296f22b01d3da51783b5e145c24403c9066251dff0d2f86a33204d0d2b0cd38
+
+\begingroup\raggedright\sloppy not\_\allowbreak{}applicable\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: comparison\_\allowbreak{}ids}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/comparison\_\allowbreak{}ids; canonical SHA-256: 1b79c2f8e558a05a62b8f00617badff4fe3bea7c5ed5bee10fa90f38715d4b36
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/comparison\_\allowbreak{}ids/0; canonical SHA-256: 3f7c7cdad55a60d9fe94c9e9aa4a2391a0a9a330afda0ac08654eb19f9b24f35
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}c1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: extension\_\allowbreak{}witness}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/extension\_\allowbreak{}witness; canonical SHA-256: 74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b
+
+Native value (null): null
+
+\needspace{4\baselineskip}\subsubsection{Native field: finding\_\allowbreak{}id}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/finding\_\allowbreak{}id; canonical SHA-256: 9080af474c4c7e207e57197578a6f85fa801d1616e6cd01bfdd8b63c429d3087
+
+\begingroup\raggedright\sloppy curated\_\allowbreak{}feedback\_\allowbreak{}ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}20261116\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: improvement\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/improvement\_\allowbreak{}region; canonical SHA-256: 81a158f98ff637af0d622b4a3853f29fad5745273e3842b600adb901cb43095e
+
+\begingroup\raggedright\sloppy Only the explicitly proved local regions;\allowbreak{} canonical code repairs alone do not improve inequalities.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: kind}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/kind; canonical SHA-256: f980a6033e731764ab6b313b09320614ed53f4475e6913ab95626394dc59b056
+
+\begingroup\raggedright\sloppy synthesis\_\allowbreak{}only\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: new\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/new\_\allowbreak{}envelope; canonical SHA-256: 94ec5ad95d931dd789ca32c17c70fb12963e526befacac6400154bb84a0c4dc4
+
+\begingroup\raggedright\sloppy Exact prepared native comparisons and their guarded syntheses;\allowbreak{} this curation adds no unstated rate claim.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: old\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/old\_\allowbreak{}envelope; canonical SHA-256: e681f7209687aaf72c80f792fc38b67417a0dccd17ece3d1ff81c546f773cb1e
+
+\begingroup\raggedright\sloppy Exact frozen baseline,\allowbreak{} retained except for the explicitly enumerated candidate changes.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: unchanged\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/unchanged\_\allowbreak{}region; canonical SHA-256: 44c7f6e062dbc75b9247f22ce4a64392ddfd8802dd0387f1209691e0f5ce1cf0
+
+\begingroup\raggedright\sloppy All other claims retain their original guards and conditional evidence basis.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: validity\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/validity\_\allowbreak{}region; canonical SHA-256: fe4fd20b84e18bf53db16741dbb48145a3f30835519641974818806d338a9a3b
+
+\begingroup\raggedright\sloppy The native quantity ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}q1 is the pointwise limit of infimum expected samples over all causal algorithms that are delta-correct and stop almost surely on every admissible instance,\allowbreak{} divided by natural log(1/\allowbreak{}delta). For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2. There is no worst-case-over-mu operation. K and mu index pointwise problems;\allowbreak{} they are not joint asymptotic variables. Dependence of non-leading convergence thresholds on these fixed parameters is permitted;\allowbreak{} the retained leading coefficient is exactly T*(mu),\allowbreak{} with no hidden multiplier. No uniform convergence in K or mu is asserted.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: witness}
+Native pointer: /joint\_\allowbreak{}analysis/impact/3/witness; canonical SHA-256: 5355b9fb3c529abb99043b7f05f8eca4b1418754a2e9d740ac1f257db9cae2ae
+
+\begingroup\raggedright\sloppy Prepared proof records and the exact changed comparison predicates.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 5}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4; canonical SHA-256: 31f7d58b764c74bfcd2d5591271e412932900d0810e0563598137680da06d2b5
+
+\needspace{4\baselineskip}\subsubsection{Native field: argument}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/argument; canonical SHA-256: 27f13269515265b1342c5f746170f0138e34ac988e3697d1c69e363782cc4706
+
+\begingroup\raggedright\sloppy The exact previously adopted science is conditionally retained. Correct only open-cell closure-publication metadata to the current explicit unassessed convention;\allowbreak{} no bound,\allowbreak{} guard,\allowbreak{} comparison,\allowbreak{} scientific contract or summary changes. Grouped cross-ID opportunities remain unassessed pending work,\allowbreak{} without any adopted reduction. This is presentation restructuring,\allowbreak{} not a new theorem or blind research.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: boundary\_\allowbreak{}type}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/boundary\_\allowbreak{}type; canonical SHA-256: 0296f22b01d3da51783b5e145c24403c9066251dff0d2f86a33204d0d2b0cd38
+
+\begingroup\raggedright\sloppy not\_\allowbreak{}applicable\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: comparison\_\allowbreak{}ids}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/comparison\_\allowbreak{}ids; canonical SHA-256: 1b79c2f8e558a05a62b8f00617badff4fe3bea7c5ed5bee10fa90f38715d4b36
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/comparison\_\allowbreak{}ids/0; canonical SHA-256: 3f7c7cdad55a60d9fe94c9e9aa4a2391a0a9a330afda0ac08654eb19f9b24f35
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}c1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: extension\_\allowbreak{}witness}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/extension\_\allowbreak{}witness; canonical SHA-256: 74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b
+
+Native value (null): null
+
+\needspace{4\baselineskip}\subsubsection{Native field: finding\_\allowbreak{}id}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/finding\_\allowbreak{}id; canonical SHA-256: 1d01f3d3da2745492f174cc9b3a94929bdc7190a336b89027272f447b0914abf
+
+\begingroup\raggedright\sloppy curated\_\allowbreak{}feedback\_\allowbreak{}ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}20261116\_\allowbreak{}42b1a1bbfb\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: improvement\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/improvement\_\allowbreak{}region; canonical SHA-256: 81a158f98ff637af0d622b4a3853f29fad5745273e3842b600adb901cb43095e
+
+\begingroup\raggedright\sloppy Only the explicitly proved local regions;\allowbreak{} canonical code repairs alone do not improve inequalities.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: kind}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/kind; canonical SHA-256: f980a6033e731764ab6b313b09320614ed53f4475e6913ab95626394dc59b056
+
+\begingroup\raggedright\sloppy synthesis\_\allowbreak{}only\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: new\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/new\_\allowbreak{}envelope; canonical SHA-256: 94ec5ad95d931dd789ca32c17c70fb12963e526befacac6400154bb84a0c4dc4
+
+\begingroup\raggedright\sloppy Exact prepared native comparisons and their guarded syntheses;\allowbreak{} this curation adds no unstated rate claim.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: old\_\allowbreak{}envelope}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/old\_\allowbreak{}envelope; canonical SHA-256: e681f7209687aaf72c80f792fc38b67417a0dccd17ece3d1ff81c546f773cb1e
+
+\begingroup\raggedright\sloppy Exact frozen baseline,\allowbreak{} retained except for the explicitly enumerated candidate changes.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: unchanged\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/unchanged\_\allowbreak{}region; canonical SHA-256: 44c7f6e062dbc75b9247f22ce4a64392ddfd8802dd0387f1209691e0f5ce1cf0
+
+\begingroup\raggedright\sloppy All other claims retain their original guards and conditional evidence basis.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: validity\_\allowbreak{}region}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/validity\_\allowbreak{}region; canonical SHA-256: fe4fd20b84e18bf53db16741dbb48145a3f30835519641974818806d338a9a3b
+
+\begingroup\raggedright\sloppy The native quantity ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}q1 is the pointwise limit of infimum expected samples over all causal algorithms that are delta-correct and stop almost surely on every admissible instance,\allowbreak{} divided by natural log(1/\allowbreak{}delta). For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2. There is no worst-case-over-mu operation. K and mu index pointwise problems;\allowbreak{} they are not joint asymptotic variables. Dependence of non-leading convergence thresholds on these fixed parameters is permitted;\allowbreak{} the retained leading coefficient is exactly T*(mu),\allowbreak{} with no hidden multiplier. No uniform convergence in K or mu is asserted.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: witness}
+Native pointer: /joint\_\allowbreak{}analysis/impact/4/witness; canonical SHA-256: 5355b9fb3c529abb99043b7f05f8eca4b1418754a2e9d740ac1f257db9cae2ae
+
+\begingroup\raggedright\sloppy Prepared proof records and the exact changed comparison predicates.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: normalization\_\allowbreak{}requests}
+Native pointer: /joint\_\allowbreak{}analysis/normalization\_\allowbreak{}requests; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: pending\_\allowbreak{}obligations}
+Native pointer: /joint\_\allowbreak{}analysis/pending\_\allowbreak{}obligations; canonical SHA-256: 7e4d1f254e33e95b0ae9090c93264cb8ad5729eebebebc3e940dd60368b28b0e
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/pending\_\allowbreak{}obligations/0; canonical SHA-256: 77c7bfa320b590e1beb7a14ec5097a427bc13246621fe8348df6050c3a5280e6
+
+\begingroup\raggedright\sloppy This is feedback-guided curation,\allowbreak{} not a new blind or exhaustive literature search. Preserve all native pending obligations.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: provenance}
+Native pointer: /joint\_\allowbreak{}analysis/provenance; canonical SHA-256: 391752a321a7ec804e6a9fb7e019cdd3ec21c7d245e4eef248ef5d21f2ba05db
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/0; canonical SHA-256: 5d5f7b2e01e45d27a5e2e0d35b5ddabc610487b5eb6af38371cd1185edd41b1a
+
+\needspace{4\baselineskip}\subsubsection{Native field: bound\_\allowbreak{}id}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/0/bound\_\allowbreak{}id; canonical SHA-256: afebc9ca67d4df5153efffb1f5a968ab3c6d5922d9e22b9109ad91713df922ac
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}b1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: mapping}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/0/mapping; canonical SHA-256: cd0e208b6352ce9fd8f51d52f3e2e37c4c8be94f56a031984d9e2eb68220c276
+
+\begingroup\raggedright\sloppy Conditional retention of the unchanged native claim. One fresh selected-arm Bernoulli observation costs one sample;\allowbreak{} empirical means and allocation computations use no extra oracle. Theorem 10 supplies uniform error control,\allowbreak{} Proposition 13 almost-sure stopping,\allowbreak{} and Theorem 14 the expected-cost coefficient. Internal arithmetic is not identified with sample complexity.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: origin}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/0/origin; canonical SHA-256: 1587d37ff9394a18bd27593510d9b06024d7bec02b3ba0ac518868fba9abc518
+
+\begingroup\raggedright\sloppy retained\_\allowbreak{}baseline\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: proof\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/0/proof\_\allowbreak{}refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: source\_\allowbreak{}domain}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/0/source\_\allowbreak{}domain; canonical SHA-256: f2753be0bb869cce0969618448acd19bc75671a23464be51795564b8fdfac349
+
+\begingroup\raggedright\sloppy Bernoulli bandits with a unique best arm;\allowbreak{} Chernoff stopping plus C- or D-tracking,\allowbreak{} alpha=\allowbreak{}1 and r(t)=\allowbreak{}2(K-1)t.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: source\_\allowbreak{}locator}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/0/source\_\allowbreak{}locator; canonical SHA-256: 93d690b09f3f31470cb64865cb55608338d8608a82bec44a2a7d0951c7a0f78c
+
+\begingroup\raggedright\sloppy Frozen /\allowbreak{}bounds/\allowbreak{}0 and ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}e2;\allowbreak{} Garivier--Kaufmann,\allowbreak{} COLT/\allowbreak{}PMLR 49 (2016),\allowbreak{} Theorems 10 and 14,\allowbreak{} Proposition 13. Independently reread archived source 6ad45d19aa4867fe21f5dcb223ad647bbed3748491afe3197c5ddd9ef21f5bdd,\allowbreak{} chars 22400:\allowbreak{}30900,\allowbreak{} PDF pp.9-13.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: source\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/0/source\_\allowbreak{}refs; canonical SHA-256: 9aa7f0254c0425363a9b0d4f03527910cef66849e3edabb8fb970d4b33aa1516
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/0/source\_\allowbreak{}refs/0; canonical SHA-256: 7854d10becf5322c035de14248e52572469e908b27326e1f07659efd4e1ae50b
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}SRC\_\allowbreak{}FC\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: target\_\allowbreak{}domain}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/0/target\_\allowbreak{}domain; canonical SHA-256: 4843e7aa04287c6760c9654d26f01b7046b115ed8600a58ac02428eae0d5e8e3
+
+\begingroup\raggedright\sloppy For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/1; canonical SHA-256: 71306bc229693e33bcf6a394d3e88691c923ddfa8933f671866ed87c9173957c
+
+\needspace{4\baselineskip}\subsubsection{Native field: bound\_\allowbreak{}id}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/1/bound\_\allowbreak{}id; canonical SHA-256: 3bcea0ae6698f89ee64beb75653c0a9a0422536f433bfe8d9c81c7c1985b9bae
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}b2\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: mapping}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/1/mapping; canonical SHA-256: 75d29872d14e8b1868f56fc96b06b2ab2d798c446c0c7660f133d150042562a0
+
+\begingroup\raggedright\sloppy Conditional retention of the unchanged native claim. The source's universal correctness and almost-sure stopping match main/\allowbreak{}g1;\allowbreak{} expected counts sum to the stopping cost. Forward Bernoulli KL and the full alternative class are preserved. No fixed-budget error exponent is inferred.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: origin}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/1/origin; canonical SHA-256: 1587d37ff9394a18bd27593510d9b06024d7bec02b3ba0ac518868fba9abc518
+
+\begingroup\raggedright\sloppy retained\_\allowbreak{}baseline\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: proof\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/1/proof\_\allowbreak{}refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: source\_\allowbreak{}domain}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/1/source\_\allowbreak{}domain; canonical SHA-256: da771b87b26aa6daeeb4f2de5ee1617c1ee6dc45c50cb03a0a672774c0d69f9f
+
+\begingroup\raggedright\sloppy All delta-PAC strategies on the unique-best-arm exponential-family class,\allowbreak{} specialized to Bernoulli distributions and native delta<1/\allowbreak{}2.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: source\_\allowbreak{}locator}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/1/source\_\allowbreak{}locator; canonical SHA-256: c5dd674a348df0d6de5f8719da7da7e4a0b615784689d34ab2b8c10b020e5b0e
+
+\begingroup\raggedright\sloppy Frozen /\allowbreak{}bounds/\allowbreak{}1 and ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}e1;\allowbreak{} Garivier--Kaufmann,\allowbreak{} COLT/\allowbreak{}PMLR 49 (2016),\allowbreak{} Theorem 1 and Remark 2. Independently reread source 6ad45d19aa4867fe21f5dcb223ad647bbed3748491afe3197c5ddd9ef21f5bdd,\allowbreak{} chars 7800:\allowbreak{}13200,\allowbreak{} PDF pp.3-5;\allowbreak{} allocation and two-arm discussion chars 13200:\allowbreak{}17300,\allowbreak{} pp.5-7.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: source\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/1/source\_\allowbreak{}refs; canonical SHA-256: 9aa7f0254c0425363a9b0d4f03527910cef66849e3edabb8fb970d4b33aa1516
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/1/source\_\allowbreak{}refs/0; canonical SHA-256: 7854d10becf5322c035de14248e52572469e908b27326e1f07659efd4e1ae50b
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}SRC\_\allowbreak{}FC\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: target\_\allowbreak{}domain}
+Native pointer: /joint\_\allowbreak{}analysis/provenance/1/target\_\allowbreak{}domain; canonical SHA-256: 4843e7aa04287c6760c9654d26f01b7046b115ed8600a58ac02428eae0d5e8e3
+
+\begingroup\raggedright\sloppy For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: synthesis\_\allowbreak{}coverage}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage; canonical SHA-256: 9f18bdca893057951acbc6045903b3a9d829f028bc5be2fb32141f1b15c53f6a
+
+\needspace{4\baselineskip}\subsubsection{Native field: comparison\_\allowbreak{}ids}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/comparison\_\allowbreak{}ids; canonical SHA-256: 1b79c2f8e558a05a62b8f00617badff4fe3bea7c5ed5bee10fa90f38715d4b36
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/comparison\_\allowbreak{}ids/0; canonical SHA-256: 3f7c7cdad55a60d9fe94c9e9aa4a2391a0a9a330afda0ac08654eb19f9b24f35
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}c1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: gap\_\allowbreak{}basis}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/gap\_\allowbreak{}basis; canonical SHA-256: 88bc670ca99c5d2acb1243e5e5fd21f0b795c16c627e10e97e985091ad96a280
+
+\begingroup\raggedright\sloppy registered\_\allowbreak{}envelope\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: literature}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/literature; canonical SHA-256: d4d3066227543deefb2bd165a10a4f8922532486377109007e37e62d29936c86
+
+\needspace{4\baselineskip}\subsubsection{Native field: scope}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/literature/scope; canonical SHA-256: f44902418633a6a927c42d0e451b78fdca596b9167d496f6305c3031528c835c
+
+\begingroup\raggedright\sloppy No new blind literature search in this migration. Conditional retention of the exact preceding accepted analysis and its finite historical scope;\allowbreak{} all stated pending work remains pending.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: status}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/literature/status; canonical SHA-256: 75e1201b5806b4beceaea38103cfdedaa20e45f4ee6d958b61e380cb5772cd57
+
+\begingroup\raggedright\sloppy not\_\allowbreak{}assessed\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: obligations}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations; canonical SHA-256: 353a4be156187b9c69d547d7bd30e96df68f731889bbc7b1c5e0269ae89b2a28
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0; canonical SHA-256: 702e9a72444300376281195b7934833043e70f19b293fe5c0bca6e0990e4e79f
+
+\needspace{4\baselineskip}\subsubsection{Native field: affects\_\allowbreak{}gap}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/affects\_\allowbreak{}gap; canonical SHA-256: fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa
+
+Native value (boolean): false
+
+\needspace{4\baselineskip}\subsubsection{Native field: argument}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/argument; canonical SHA-256: b034a9bb30ea7c7c9704b620dc3d27844f8f795e54940ec8dac69c8b5f47de70
+
+\begingroup\raggedright\sloppy Conditionally retain the exact native compatible-bound ledger for this comparison,\allowbreak{} including every listed bound's disposition and guard. This migration does not recertify retained source theorems. Any new local consequence is separately proved in the native candidate.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: bound\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/bound\_\allowbreak{}refs; canonical SHA-256: 7ea78a41f6f353cf044cae5099302c3f1e635f8d791924c4e8efa2ba38f5fc80
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/bound\_\allowbreak{}refs/0; canonical SHA-256: afebc9ca67d4df5153efffb1f5a968ab3c6d5922d9e22b9109ad91713df922ac
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}b1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/bound\_\allowbreak{}refs/1; canonical SHA-256: 3bcea0ae6698f89ee64beb75653c0a9a0422536f433bfe8d9c81c7c1985b9bae
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}b2\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: cell\_\allowbreak{}ids}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/cell\_\allowbreak{}ids; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: comparison\_\allowbreak{}ids}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/comparison\_\allowbreak{}ids; canonical SHA-256: 1b79c2f8e558a05a62b8f00617badff4fe3bea7c5ed5bee10fa90f38715d4b36
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/comparison\_\allowbreak{}ids/0; canonical SHA-256: 3f7c7cdad55a60d9fe94c9e9aa4a2391a0a9a330afda0ac08654eb19f9b24f35
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}c1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: id}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/id; canonical SHA-256: cbd717faae83a18dcd0984f69326879d0fe1418a4573e90441638e7d8eb23ec6
+
+\begingroup\raggedright\sloppy synthesis-0\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: kind}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/kind; canonical SHA-256: bfae5f6daa03006fec98e26fd755918445e662d473f2937f56185e6284333167
+
+\begingroup\raggedright\sloppy compatible\_\allowbreak{}candidates\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: lead}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/lead; canonical SHA-256: 74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b
+
+Native value (null): null
+
+\needspace{4\baselineskip}\subsubsection{Native field: proof\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/proof\_\allowbreak{}refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: state}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/0/state; canonical SHA-256: 0772fde17309bd271c343f359e848907b3a93b420878fd1e0b68bbdadcd98eda
+
+\begingroup\raggedright\sloppy resolved\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1; canonical SHA-256: 9659e813601c72bdf41946230a491a4c71839d8529fbb28ac953f06db82b8c0d
+
+\needspace{4\baselineskip}\subsubsection{Native field: affects\_\allowbreak{}gap}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1/affects\_\allowbreak{}gap; canonical SHA-256: b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b
+
+Native value (boolean): true
+
+\needspace{4\baselineskip}\subsubsection{Native field: argument}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1/argument; canonical SHA-256: fc4c68ce157c7a2f8540ddb7c3741c6e85dd9d2117ba6ccc960c85a288c87e26
+
+\begingroup\raggedright\sloppy The registered envelope is assessed only for this finite curation. This does not certify literature exhaustion or the unassessed complement.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: bound\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1/bound\_\allowbreak{}refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: cell\_\allowbreak{}ids}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1/cell\_\allowbreak{}ids; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: comparison\_\allowbreak{}ids}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1/comparison\_\allowbreak{}ids; canonical SHA-256: 1b79c2f8e558a05a62b8f00617badff4fe3bea7c5ed5bee10fa90f38715d4b36
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1/comparison\_\allowbreak{}ids/0; canonical SHA-256: 3f7c7cdad55a60d9fe94c9e9aa4a2391a0a9a330afda0ac08654eb19f9b24f35
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}c1\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: id}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1/id; canonical SHA-256: 8f3893b390dbf1c98368d6b451c613dd05f798a42d5bd62383775de81d03258c
+
+\begingroup\raggedright\sloppy curated-scope-limit\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: kind}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1/kind; canonical SHA-256: a79094d5206499c86794e049e918245ccb55ee6590e84c279e1d00b26cceffc7
+
+\begingroup\raggedright\sloppy material\_\allowbreak{}lead\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: lead}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1/lead; canonical SHA-256: 77c7bfa320b590e1beb7a14ec5097a427bc13246621fe8348df6050c3a5280e6
+
+\begingroup\raggedright\sloppy This is feedback-guided curation,\allowbreak{} not a new blind or exhaustive literature search. Preserve all native pending obligations.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: proof\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1/proof\_\allowbreak{}refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: state}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/obligations/1/state; canonical SHA-256: 12adac54ac6f7140109391b670b3cbcd51f083d8f5ee62ce26857c794ed67d36
+
+\begingroup\raggedright\sloppy pending\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: status}
+Native pointer: /joint\_\allowbreak{}analysis/synthesis\_\allowbreak{}coverage/status; canonical SHA-256: 8ac24611cfe47c129e37108bc6adc6843c4fe8fb9c37c27fac8a1835ba660307
+
+\begingroup\raggedright\sloppy partial\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: target}
+Native pointer: /joint\_\allowbreak{}analysis/target; canonical SHA-256: 00fba149fc3ed337cd1b5f3d97801271f33fec78a9165a003df64def33857be0
+
+\needspace{4\baselineskip}\subsubsection{Native field: allowed\_\allowbreak{}constant\_\allowbreak{}dependencies}
+Native pointer: /joint\_\allowbreak{}analysis/target/allowed\_\allowbreak{}constant\_\allowbreak{}dependencies; canonical SHA-256: 736998c0b26e22ec52bb8b13d9374a2856bfdb2cdf3e8de1e22720c00aa4f6d9
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/target/allowed\_\allowbreak{}constant\_\allowbreak{}dependencies/0; canonical SHA-256: 8f9202e72d60e2684c29ef437ba11efc1fb50e7c0ee4824c7f5c69d2c96b2f92
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}585fcb7010\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+Native pointer: /joint\_\allowbreak{}analysis/target/allowed\_\allowbreak{}constant\_\allowbreak{}dependencies/1; canonical SHA-256: 19e02389706214ed7d32db77f93d2a69760e81c866381eb3a95049b4503ecd37
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}3c4ea41351\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: contract\_\allowbreak{}refs}
+Native pointer: /joint\_\allowbreak{}analysis/target/contract\_\allowbreak{}refs; canonical SHA-256: f039c018213abff211d96900d7187110d3b83d1d6615e54cea16f0860d0e8a3d
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/target/contract\_\allowbreak{}refs/0; canonical SHA-256: ca04624bce4c51f581bf1916545176dc59691d417183c0bb0be9d36b4218387d
+
+\begingroup\raggedright\sloppy /\allowbreak{}common\_\allowbreak{}specification\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+Native pointer: /joint\_\allowbreak{}analysis/target/contract\_\allowbreak{}refs/1; canonical SHA-256: b91103c440937fa2adc4e43c26a410dfc6f7e6000ced0d07f988b89ea330217f
+
+\begingroup\raggedright\sloppy /\allowbreak{}views/\allowbreak{}0\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 3}
+Native pointer: /joint\_\allowbreak{}analysis/target/contract\_\allowbreak{}refs/2; canonical SHA-256: cd119ad47e9ced40b85135236eae81d1dcf7308ea9db8b43913681bf4ad6234c
+
+\begingroup\raggedright\sloppy /\allowbreak{}quantities/\allowbreak{}0\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 4}
+Native pointer: /joint\_\allowbreak{}analysis/target/contract\_\allowbreak{}refs/3; canonical SHA-256: af27968018201257d1ad04238c4bdc9761a84ab7c257fb50c11373bdb5dd72c0
+
+\begingroup\raggedright\sloppy /\allowbreak{}resource\_\allowbreak{}projections/\allowbreak{}0\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: fixed\_\allowbreak{}parameters}
+Native pointer: /joint\_\allowbreak{}analysis/target/fixed\_\allowbreak{}parameters; canonical SHA-256: a81f0883e496ac5b7392c427a3d8c14df3a7692724c4cd7ac93e6370cd363ebf
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/target/fixed\_\allowbreak{}parameters/0; canonical SHA-256: 051a679315401c14f2436de1eb9a7fdf899cac11e88cf87b5f1e63409cb1e8c8
+
+\needspace{4\baselineskip}\subsubsection{Native field: domain}
+Native pointer: /joint\_\allowbreak{}analysis/target/fixed\_\allowbreak{}parameters/0/domain; canonical SHA-256: a7119a9501a8bf5005d2c1de0c27a99cd0726892416df266bded3ba8bae46d32
+
+\begingroup\raggedright\sloppy Each fixed integer K>=\allowbreak{}2.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: parameter\_\allowbreak{}ref}
+Native pointer: /joint\_\allowbreak{}analysis/target/fixed\_\allowbreak{}parameters/0/parameter\_\allowbreak{}ref; canonical SHA-256: 8f9202e72d60e2684c29ef437ba11efc1fb50e7c0ee4824c7f5c69d2c96b2f92
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}585fcb7010\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: symbol}
+Native pointer: /joint\_\allowbreak{}analysis/target/fixed\_\allowbreak{}parameters/0/symbol; canonical SHA-256: 8f9202e72d60e2684c29ef437ba11efc1fb50e7c0ee4824c7f5c69d2c96b2f92
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}585fcb7010\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+Native pointer: /joint\_\allowbreak{}analysis/target/fixed\_\allowbreak{}parameters/1; canonical SHA-256: 5af3d8a154093f18cf5dbd053b265721babfb7d321eb717ace4b7d6449787556
+
+\needspace{4\baselineskip}\subsubsection{Native field: domain}
+Native pointer: /joint\_\allowbreak{}analysis/target/fixed\_\allowbreak{}parameters/1/domain; canonical SHA-256: 0d24ce2132333e5d620d76fe06cb2d8dbadc7a71ba8a887e8d22caa038d63164
+
+\begingroup\raggedright\sloppy Each fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: parameter\_\allowbreak{}ref}
+Native pointer: /joint\_\allowbreak{}analysis/target/fixed\_\allowbreak{}parameters/1/parameter\_\allowbreak{}ref; canonical SHA-256: 19e02389706214ed7d32db77f93d2a69760e81c866381eb3a95049b4503ecd37
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}3c4ea41351\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: symbol}
+Native pointer: /joint\_\allowbreak{}analysis/target/fixed\_\allowbreak{}parameters/1/symbol; canonical SHA-256: 19e02389706214ed7d32db77f93d2a69760e81c866381eb3a95049b4503ecd37
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}3c4ea41351\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: full\_\allowbreak{}domain}
+Native pointer: /joint\_\allowbreak{}analysis/target/full\_\allowbreak{}domain; canonical SHA-256: fe4fd20b84e18bf53db16741dbb48145a3f30835519641974818806d338a9a3b
+
+\begingroup\raggedright\sloppy The native quantity ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}\_\allowbreak{}main\_\allowbreak{}\_\allowbreak{}q1 is the pointwise limit of infimum expected samples over all causal algorithms that are delta-correct and stop almost surely on every admissible instance,\allowbreak{} divided by natural log(1/\allowbreak{}delta). For each fixed finite K>=\allowbreak{}2 and fixed mu in (0,\allowbreak{}1)\textasciicircum{}K with a unique largest coordinate,\allowbreak{} take delta down to 0 through 0<delta<1/\allowbreak{}2. There is no worst-case-over-mu operation. K and mu index pointwise problems;\allowbreak{} they are not joint asymptotic variables. Dependence of non-leading convergence thresholds on these fixed parameters is permitted;\allowbreak{} the retained leading coefficient is exactly T*(mu),\allowbreak{} with no hidden multiplier. No uniform convergence in K or mu is asserted.\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: joint\_\allowbreak{}variables}
+Native pointer: /joint\_\allowbreak{}analysis/target/joint\_\allowbreak{}variables; canonical SHA-256: 8d80514474847d61c209aae25ee9126b75133e90fb3a14f8b43f2a96767e4f7f
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/target/joint\_\allowbreak{}variables/0; canonical SHA-256: 412d9bf5c9168c7387cf0ec32de334a352ae23a20a7ea9077b957ac96fcadbd8
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}e0e6d54b5e\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: normalized\_\allowbreak{}variables}
+Native pointer: /joint\_\allowbreak{}analysis/target/normalized\_\allowbreak{}variables; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty\_\allowbreak{}array): []
+
+\needspace{4\baselineskip}\subsubsection{Native field: resolution}
+Native pointer: /joint\_\allowbreak{}analysis/target/resolution; canonical SHA-256: 0772fde17309bd271c343f359e848907b3a93b420878fd1e0b68bbdadcd98eda
+
+\begingroup\raggedright\sloppy resolved\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: uniform\_\allowbreak{}in}
+Native pointer: /joint\_\allowbreak{}analysis/target/uniform\_\allowbreak{}in; canonical SHA-256: 8d80514474847d61c209aae25ee9126b75133e90fb3a14f8b43f2a96767e4f7f
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+Native pointer: /joint\_\allowbreak{}analysis/target/uniform\_\allowbreak{}in/0; canonical SHA-256: 412d9bf5c9168c7387cf0ec32de334a352ae23a20a7ea9077b957ac96fcadbd8
+
+\begingroup\raggedright\sloppy ON\_\allowbreak{}FC\_\allowbreak{}S\_\allowbreak{}p\_\allowbreak{}e0e6d54b5e\par\endgroup
+
+\needspace{4\baselineskip}\subsubsection{Native field: version}
+Native pointer: /joint\_\allowbreak{}analysis/version; canonical SHA-256: d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35
+
+Native value (number): 2
+
+\needspace{7\baselineskip}\section{References}
+[1] Aurélien Garivier; Emilie Kaufmann. Optimal Best Arm Identification with Fixed Confidence. 2016. COLT / PMLR 49:998-1027.
+
+\url{https://proceedings.mlr.press/v49/garivier16a.pdf}
+
+\end{document}

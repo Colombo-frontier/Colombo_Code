@@ -1,0 +1,2386 @@
+# Global minimization of Lipschitz strongly convex functions: one full subgradient
+
+**Setting ID.** `SO_FO_C02_SG`
+
+Single-objective optimization
+
+Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.
+
+**Status.** Other quantified gap present
+
+**Gap classes present.** Other quantified gap; Logarithmic gap
+
+The regional bracket below specifies the quantified gaps and their parameter dependence.
+
+**TASK tags.** formulation: Global minimization; task family: Single objective
+
+**MODEL tags.** convexity: Strong convexity norm r; convexity: Strongly convex; geometry: Full space; geometry: Norm ball; geometry: Norm mismatch allowed; smoothness: Lipschitz function
+
+**ORACLE tags.** access order: First-order interface; feedback quality: Exact; interface family: Sg; operation: Subgradient; public information: Computable access; public information: Hidden objects explicitly declared; public information: Known lower bound; public information: Known upper bound; public information: Known exact value; public information: Public inputs explicitly declared
+
+**ALGORITHMS tags.** adaptivity: Adaptive; computation: Internal arithmetic uncharged; randomization: Deterministic; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+**OUTPUT tags.** certificate: No additional output certificate required; feasibility: Required; object: Feasible point; postprocessing: Unqueried output explicitly allowed
+
+**METRIC tags.** criterion: Objective gap
+
+**GUARANTEE tags.** aggregation: Per instance; mode: Deterministic; mode: Expectation; randomness: Algorithm private seed
+
+**RESOURCE tags.** budget: Fixed worst-case budget; measure: Oracle calls; precision: Bit precision not counted
+
+## 1. Setting specification
+
+### Task
+
+Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.
+
+$$\min_{x\in Q}f(x)$$
+
+### Admissible model
+
+The public feasible set is $Q=RB_p^d$. The function $f$ is convex on an open neighborhood of $Q$, $L$-Lipschitz on $Q$ in the $q$ norm, and $\mu$-strongly convex on $Q$ in the $r$ norm. Every returned ambient subgradient satisfies $\|g\|_{q^\star}\le L$. Strong convexity is required only on $Q$; simultaneous global Lipschitz continuity and global strong convexity are not assumed.
+
+Strong convexity means $f(v)\ge f(u)+\langle g,v-u\rangle+\frac\mu2\|v-u\|_r^2$ for $u,v\in Q$ and admissible ambient subgradients $g\in\partial f(u)$. Only nonempty instance classes satisfying all assumptions are considered. In Euclidean geometry, compatibility requires $\mu R\le L$.
+
+Admissible parameter domain:
+
+$$L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1,\quad \bigl(p=2,\quad q=2,\quad r=2,\quad \mu\,R\le L\ \lor\ \neg\bigl(p=2,\quad q=2,\quad r=2\bigr),\quad \text{\text{the stated geometric nonemptiness}/\text{endpoint conditions};\quad \text{not specified numerically}}\bigr)$$
+
+### Oracle interface
+
+Public numerical inputs: $d,\ p,\ q,\ r,\ \varepsilon$.
+
+Public upper bounds: $L,\ R$.
+
+Public lower bounds: $\mu$.
+
+The unknown object is the objective $f$.
+
+Query points lie in $Q$; the response is one full subgradient:
+
+$$g\in\partial f(x)$$
+
+All responses are consistent with one fixed function instance. If several subgradients are admissible, the oracle selects one; the algorithm receives only that vector.
+
+Every returned ambient subgradient must also satisfy $\|g\|_{q^\star}\le L$, where $1/q+1/q^\star=1$.
+
+### Output
+
+Return a point $\widehat x\in Q$.
+
+The output may be unqueried or constructed from the query history, provided it is feasible. No additional function value or accuracy certificate is required.
+
+### Loss or accuracy criterion
+
+$$\ell(f,x)=f(x)-f^\star$$
+
+$f^\star=\inf_{x\in Q}f(x)$. The existence, compactness, or initial-suboptimality assumptions ensure that the optimal value in this comparison is finite.
+
+### Resource accounting
+
+One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+Cost is bounded uniformly on every execution path. All calls used for initialization, repetition, batching, or candidate verification are counted.
+
+Real arithmetic, precision, and storage applied to already available information are uncharged. Public geometric operations are limited to those explicitly granted by the oracle. Query complexity alone does not imply arithmetic, memory, or communication complexity.
+
+### Algorithm views and success guarantees
+
+#### Deterministic / Pointwise guarantee
+
+The algorithm uses no private random numbers. Query and stopping decisions may depend adaptively on the observed feedback.
+
+No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+$$\exists A\ \forall I,\mathcal{O}:\ \ell(I,\widehat{x})\le\varepsilon$$
+
+The error guarantee holds for every instance; it is not averaged over an input distribution.
+
+#### Randomized / Expected loss
+
+Private randomization is allowed. Queries, stopping decisions, and postprocessing may adapt to observed feedback.
+
+No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+$$\exists A\ \forall I,\mathcal{O}:\ \mathbb{E}_A[\ell(I,\widehat{x})]\le\varepsilon$$
+
+The probability space includes the algorithm's private randomness. The instance and its admissible oracle law are fixed before randomness is averaged.
+
+## 2. Notation and parameters
+
+$x,\widehat{x}$: Query points and final output; their permitted spaces are specified separately by the oracle and output contracts **Domain:** $\widehat{x}\in Q$.
+
+$f$: Unknown objective, with domain and structure specified by the model
+
+$f^\star$: Optimal value of the complete task; the oracle need not return it
+
+$$f^\star=\inf_{x\in Q}f(x)$$
+
+$Q$: Feasible set of the task
+
+$$Q=RB_p^d$$
+
+$\mathbb{R}^d$: Real vector space with $d$ coordinates
+
+$\|\cdot\|_2,\langle\cdot,\cdot\rangle$: Euclidean norm and inner product
+
+$\|\cdot\|_p,\|\cdot\|_q,\|\cdot\|_r$: Standard finite-dimensional norm with the indicated exponent **Domain:** Endpoint norm $\|x\|_\infty=\max_{1\le j\le d}|x_j|$.
+
+$$\|x\|_a=(\sum_{j=1}^d|x_j|^a)^{1/a},\quad1\le a<\infty$$
+
+$B_p^d$: Unit ball of the $p$ norm
+
+$$B_p^d=\{x\in\mathbb{R}^d:\|x\|_p\le1\}$$
+
+$\partial f(x)$: Ambient subdifferential of the corresponding convex function
+
+$$\partial f(x)=\{g:f(u)\ge f(x)+\langle g,u-x\rangle\ \forall u\in\operatorname{dom}f\}$$
+
+$g$: One subgradient vector selected and returned by the oracle, rather than the entire subdifferential
+
+$d$: Dimension; a public positive integer whose dependence is tracked jointly **Domain:** $d\in\mathbb{N}_{\ge1}$.
+
+$L$: Public upper bound on the function Lipschitz constant **Domain:** $L>0$.
+
+$\mu$: Lower bound on the strong-convexity modulus of the objective specified by the model **Domain:** $\mu>0$.
+
+$R$: Radius of the public feasible ball **Domain:** $R>0$.
+
+$\varepsilon$: Target tolerance for the underlying error defined by the accuracy measure **Domain:** $\varepsilon>0$.
+
+$p$: Public norm exponent specifying the feasible-set or localization geometry **Domain:** $1\le p\le\infty$.
+
+$q$: Public norm exponent specifying the Lipschitz or gradient-regularity geometry **Domain:** $1\le q\le\infty$.
+
+$r$: Public norm exponent for the strong-convexity assumption **Domain:** $1\le r\le\infty$.
+
+$c$: Sufficiently small universal positive constant, not specified numerically and potentially different between theorems. **Domain:** $0<c<1$.
+
+$C$: Sufficiently large universal positive constant, not specified numerically and potentially different between theorems. **Domain:** $C>1$.
+
+$H_\varepsilon$: Minimum of the convex and strongly convex query scales
+
+$$H_\varepsilon=\min\{{\frac{L\,R}{\varepsilon}}^{2},\frac{{L}^{2}}{\mu\,\varepsilon}\}$$
+
+$L_{\rm rem}$: Residual Lipschitz budget at the Euclidean compatibility boundary
+
+$$L_{\rm rem}=(L-\mu\,R)$$
+
+$H_{\rm rem}$: Local query scale near the compatibility boundary
+
+$$H_{\rm rem}=\frac{{L_{\rm rem}}^{2}}{\mu\,\varepsilon}$$
+
+$\Gamma_p(d)$: Public prox-geometry factor: $\log(2d)$ for $p=1$; $\min\{(p-1)^{-1},\log(2d)\}$ for $1<p\le2$; and $d^{1-2/p}$ for $p>2$.
+
+$$\Gamma_p(d)=\begin{cases}\log(2d)&p=1\\\min\{(p-1)^{-1},\log(2d)\}&1<p\le2\\d^{1-2/p}&p>2\end{cases}$$
+
+$\mu_{\rm quad}$: Coefficient of a public Euclidean quadratic sufficient for strong convexity in the $r$ norm
+
+$$\mu_{\rm quad}=\mu\,({d}^{2\,(\max\{0,(\frac{1}{r}-0.5)\})})$$
+
+$H_{p,2}$: Complexity scale for the slice $p=q>2$, $r=2$.
+
+$$H_{p,2}=\min\{{\frac{L\,R}{\varepsilon}}^{p},\frac{{L}^{2}}{\mu\,\varepsilon}\}$$
+
+$C_{p}$: Positive multiplicative constant, not specified numerically, depending only on the following parameters fixed in advance: $p$. **Domain:** $C_{p}>0$.
+
+$c_{p}$: Positive multiplicative constant, not specified numerically, depending only on the following parameters fixed in advance: $p$. **Domain:** $c_{p}>0$.
+
+$q^\star$: Conjugate exponent of $q$
+
+$$1/q+1/q^\star=1,\quad1^\star=\infty,\quad\infty^\star=1$$
+
+$\ell$: The underlying loss or error defined by the accuracy measure; its expected, probabilistic, or worst-case aggregation is specified by the success contract
+
+$I,\mathcal{O},A$: Admissible instance, a response rule consistent with that instance, and an algorithm; the algorithm is selected before the unknown instance
+
+$O,\Omega,\Theta,\widetilde{O},\widetilde\Omega$: Notation for asymptotic upper and lower bounds, constant-factor matching rates, and explicitly permitted logarithmic factors. Hidden-constant dependence is specified in each regime.
+
+$\log$: Natural logarithm; changing to another fixed base affects only a constant
+
+$\log_+$: Truncated positive logarithm
+
+$$\log_+u=\max\{0,\log u\}$$
+
+$[a]_+$: Positive part of a real number
+
+$$[a]_+=\max\{a,0\}$$
+
+$\mathbb{E}$: Expectation over the declared randomness after fixing the instance and admissible response law
+
+## 3. Complexity bracket
+
+### Compared quantities
+
+#### Q1 - target accuracy cost
+
+**View.** Deterministic / Pointwise guarantee
+
+$$
+C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}
+$$
+
+**Definition.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Scope.** declared_joint_parameter_window
+
+**Optimization direction.** minimize
+
+Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+#### Q2 - target accuracy cost
+
+**View.** Randomized / Expected loss
+
+$$
+C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}
+$$
+
+**Definition.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Scope.** declared_joint_parameter_window
+
+**Optimization direction.** minimize
+
+Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+### R1 - Euclidean geometry with fixed compatibility slack
+
+**Region.** $p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$
+
+**Views.** Deterministic / Pointwise guarantee
+
+**Quantity.** Q1
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B4
+
+$$
+cd\log(1+H_\varepsilon/d)
+$$
+
+**Upper bound.** B1, B2, B3
+
+$$
+C\min\{H_\varepsilon,d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $C\log(2+d)$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $C\log(2+d)$
+
+### R2 - High-dimensional Euclidean regime dominated by general convexity
+
+**Region.** $\mu R\le L/2,\quad\mu R^2\le\varepsilon\le cLR,\quad d\ge C(LR/\varepsilon)^2,\quad p=q=r=2$
+
+**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+**Quantity.** Q1; Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Optimal
+
+**Lower bound.** B4, B28
+
+$$
+c(LR/\varepsilon)^2
+$$
+
+**Upper bound.** B1, B25
+
+$$
+C(LR/\varepsilon)^2
+$$
+
+**Gap or comparison.** $C$
+
+### R3 - High-dimensional Euclidean regime dominated by strong convexity
+
+**Region.** $\mu R\le L/2,\quad\varepsilon\le\mu R^2,\quad d\ge CL^2/(\mu\varepsilon),\quad p=q=r=2$
+
+**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+**Quantity.** Q1; Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Optimal
+
+**Lower bound.** B4, B28
+
+$$
+c L^2/(\mu\varepsilon)
+$$
+
+**Upper bound.** B2, B26
+
+$$
+C L^2/(\mu\varepsilon)
+$$
+
+**Gap or comparison.** $C$
+
+### R4 - Sufficiently high accuracy in Euclidean geometry
+
+**Region.** $p=q=r=2,\quad\mu R\le L/2,\quad H_\varepsilon\ge d^2,\quad\varepsilon\le cLR$
+
+**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+**Quantity.** Q1; Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Optimal
+
+**Lower bound.** B4, B28
+
+$$
+c d\log(2+LR/\varepsilon)
+$$
+
+**Upper bound.** B3, B27
+
+$$
+C d\log(2+LR/\varepsilon)
+$$
+
+**Gap or comparison.** $C$
+
+### R5 - Joint transition window in Euclidean geometry
+
+**Region.** $p=q=r=2,\quad\mu R\le L/2,\quad d<H_\varepsilon<d^2$
+
+**Views.** Deterministic / Pointwise guarantee
+
+**Quantity.** Q1
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B4
+
+$$
+cd\log(1+H_\varepsilon/d)
+$$
+
+**Upper bound.** B1, B2, B3
+
+$$
+C\min\{H_\varepsilon,d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $C\log(2+d)$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $C\log(2+d)$
+
+### R6 - Euclidean geometry near the compatibility boundary
+
+**Region.** $p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$
+
+**Views.** Deterministic / Pointwise guarantee
+
+**Quantity.** Q1
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B7
+
+$$
+cd\log(1+H_{\rm rem}/d)
+$$
+
+**Upper bound.** B5, B6
+
+$$
+C\min\{H_{\rm rem},d\log(2+H_{\rm rem})\}
+$$
+
+**Gap or comparison.** $C\log(2+d)$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $C\log(2+d)$
+
+### R7 - Constant-factor optimal regime near the compatibility boundary
+
+**Region.** $\Theta_{\rm boundary},\quad H_{\rm rem}\le d$
+
+**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+**Quantity.** Q1; Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Optimal
+
+**Lower bound.** B7, B31
+
+$$
+c\min\{H_{\rm rem},d\log(2+H_{\rm rem})\}
+$$
+
+**Upper bound.** B5, B6, B29, B30
+
+$$
+C\min\{H_{\rm rem},d\log(2+H_{\rm rem})\}
+$$
+
+**Gap or comparison.** $C$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $C$
+
+### R8 - Constant-factor optimal regime near the compatibility boundary
+
+**Region.** $\Theta_{\rm boundary},\quad H_{\rm rem}\ge d^2$
+
+**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+**Quantity.** Q1; Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Optimal
+
+**Lower bound.** B7, B31
+
+$$
+c\min\{H_{\rm rem},d\log(2+H_{\rm rem})\}
+$$
+
+**Upper bound.** B5, B6, B29, B30
+
+$$
+C\min\{H_{\rm rem},d\log(2+H_{\rm rem})\}
+$$
+
+**Gap or comparison.** $C$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $C$
+
+### R9 - Euclidean zero-query boundary
+
+**Region.** $p=q=r=2,\quad\mu R\le L,\quad\varepsilon\ge(L-\mu R)^2/(2\mu)$
+
+**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+**Quantity.** Q1; Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Optimal
+
+**Lower bound.** Nonnegativity of the compared quantity
+
+$$
+0
+$$
+
+**Upper bound.** B8, B32
+
+$$
+0
+$$
+
+### R10 - Matching norm with 1<p<=2
+
+**Region.** $1<p=q=r\le2,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$
+
+**Views.** Deterministic / Pointwise guarantee
+
+**Quantity.** Q1
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Other quantified gap
+
+**Lower bound.** B13, B16
+
+$$
+c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\Gamma_p(d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]
+$$
+
+**Upper bound.** B9, B10, B3
+
+$$
+C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $\frac{C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}}{c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\Gamma_p(d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: These are conservative geometric envelopes. Joint dependence for p>2 may have a polynomial gap; the included lower bound is not asserted to be the strongest in the entire literature. Ratio: $\frac{C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}}{c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\Gamma_p(d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$; Permitted fixed-parameter dependence: p.
+
+### R11 - Matching l1 endpoint
+
+**Region.** $p=q=r=1,\quad\mu R\log(2d)\le cL,\quad\varepsilon\le cLR$
+
+**Views.** Deterministic / Pointwise guarantee
+
+**Quantity.** Q1
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Other quantified gap
+
+**Lower bound.** B14, B16
+
+$$
+c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\log(2d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]
+$$
+
+**Upper bound.** B9, B10, B3
+
+$$
+C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $\frac{C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}}{c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\log(2d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: These are conservative geometric envelopes. Joint dependence for p>2 may have a polynomial gap; the included lower bound is not asserted to be the strongest in the entire literature. Ratio: $\frac{C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}}{c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\log(2d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$; Permitted fixed-parameter dependence: p.
+
+### R12 - Matching norm with p>2
+
+**Region.** $2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$
+
+**Views.** Deterministic / Pointwise guarantee
+
+**Quantity.** Q1
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Other quantified gap
+
+**Lower bound.** B15, B16
+
+$$
+c_p\min\{d,(LR/\varepsilon)^p,L^2/(\mu\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]
+$$
+
+**Upper bound.** B11, B12, B9, B10, B3
+
+$$
+C_p\min\{(LR/\varepsilon)^p,\Gamma_p(d)(LR/\varepsilon)^2,\Gamma_p(d)L^2/(\mu\varepsilon),(L^2/(\mu\varepsilon))^{p/2},d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $\frac{C_p\min\{(LR/\varepsilon)^p,\Gamma_p(d)(LR/\varepsilon)^2,\Gamma_p(d)L^2/(\mu\varepsilon),(L^2/(\mu\varepsilon))^{p/2},d\log(2+LR/\varepsilon)\}}{c_p\min\{d,(LR/\varepsilon)^p,L^2/(\mu\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: These are conservative geometric envelopes. Joint dependence for p>2 may have a polynomial gap; the included lower bound is not asserted to be the strongest in the entire literature. Ratio: $\frac{C_p\min\{(LR/\varepsilon)^p,\Gamma_p(d)(LR/\varepsilon)^2,\Gamma_p(d)L^2/(\mu\varepsilon),(L^2/(\mu\varepsilon))^{p/2},d\log(2+LR/\varepsilon)\}}{c_p\min\{d,(LR/\varepsilon)^p,L^2/(\mu\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$; Permitted fixed-parameter dependence: p.
+
+### R13 - Sufficiently high-dimensional regime with fixed $1<p\le2$
+
+**Region.** $1<p=q=r\le2\text{fixed},\quad\mu R\Gamma_p(d)\le cL,\quad d\ge C_pH_\varepsilon$
+
+**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+**Quantity.** Q1; Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Optimal
+
+**Lower bound.** B13, B37
+
+$$
+c_pH_\varepsilon
+$$
+
+**Upper bound.** B9, B10, B33, B34
+
+$$
+C_pH_\varepsilon
+$$
+
+**Gap or comparison.** $C_p$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $C_p$; Permitted fixed-parameter dependence: p.
+
+### R14 - Sufficient high-accuracy regime for fixed finite $p$
+
+**Region.** $p=q=r<\infty\text{fixed},\quad\mu R\Gamma_p(d)\le cL,\quad LR/\varepsilon\ge C_p d^{4/p}$
+
+**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+**Quantity.** Q1; Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Optimal
+
+**Lower bound.** B16, B40
+
+$$
+c_pd\log(2+LR/\varepsilon)
+$$
+
+**Upper bound.** B3, B27
+
+$$
+Cd\log(2+LR/\varepsilon)
+$$
+
+**Gap or comparison.** $C_p$
+
+### R15 - Public-quadratic construction window for general $p,q,r$
+
+**Region.** $\mu_{\rm quad}R d^{(1-1/p-1/q)_+}\le L/2,\quad\varepsilon\le cLR$
+
+**Views.** Deterministic / Pointwise guarantee
+
+**Quantity.** Q1
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Other quantified gap
+
+**Lower bound.** B19, B20
+
+$$
+c\min\{d,(cLR/\varepsilon)^p,L^2/(\mu_{\rm quad}\varepsilon)\}+cd\log_+[\frac{cL}{\varepsilon}\min\{Rd^{-1/p},\sqrt{\varepsilon/(\mu_{\rm quad}d)}\}]
+$$
+
+**Upper bound.** B17, B18, B3
+
+$$
+C\min\{(LR/\varepsilon)^2d^{2(1/q-1/2)_++2(1/2-1/p)_+},\frac{L^2}{\mu\varepsilon}d^{2(1/q-1/2)_++2(1/2-1/r)_+},d\log(2+LRd^{(1/q-1/p)_+}/\varepsilon)\}
+$$
+
+**Gap or comparison.** $\frac{C\min\{(LR/\varepsilon)^2d^{2(1/q-1/2)_++2(1/2-1/p)_+},\frac{L^2}{\mu\varepsilon}d^{2(1/q-1/2)_++2(1/2-1/r)_+},d\log(2+LRd^{(1/q-1/p)_+}/\varepsilon)\}}{c\min\{d,(cLR/\varepsilon)^p,L^2/(\mu_{\rm quad}\varepsilon)\}+cd\log_+[\frac{cL}{\varepsilon}\min\{Rd^{-1/p},\sqrt{\varepsilon/(\mu_{\rm quad}d)}\}]}$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: General norm-embedding baseline; the sharpest joint bracket for every p,q,r has not been certified. Ratio: $\frac{C\min\{(LR/\varepsilon)^2d^{2(1/q-1/2)_++2(1/2-1/p)_+},\frac{L^2}{\mu\varepsilon}d^{2(1/q-1/2)_++2(1/2-1/r)_+},d\log(2+LRd^{(1/q-1/p)_+}/\varepsilon)\}}{c\min\{d,(cLR/\varepsilon)^p,L^2/(\mu_{\rm quad}\varepsilon)\}+cd\log_+[\frac{cL}{\varepsilon}\min\{Rd^{-1/p},\sqrt{\varepsilon/(\mu_{\rm quad}d)}\}]}$
+
+### R16 - Matching infinity-norm compatibility regime
+
+**Region.** $p=q=r=\infty,\quad\mu Rd\le cL,\quad\varepsilon\le cLR$
+
+**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+**Quantity.** Q1; Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Optimal
+
+**Lower bound.** B21, B45
+
+$$
+cd\log(2+LR/\varepsilon)
+$$
+
+**Upper bound.** B3, B27
+
+$$
+Cd\log(2+LR/\varepsilon)
+$$
+
+**Gap or comparison.** $C$
+
+### R17 - Verified logarithmic-gap window at the l1 endpoint
+
+**Region.** $p=q=r=1,\quad\mu R\log(2d)\le cL,\quad d\ge\min\{(LR/\varepsilon)^2,L^2/(\mu\varepsilon\log(2d))\}$
+
+**Views.** Deterministic / Pointwise guarantee
+
+**Quantity.** Q1
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B14, B16
+
+$$
+c\min\{(LR/\varepsilon)^2,L^2/(\mu\varepsilon\log(2d))\}
+$$
+
+**Upper bound.** B9, B10, B3
+
+$$
+C\min\{\log(2d)H_\varepsilon,d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $C\log^2(2d)$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: The conservative endpoint bracket has at most a squared-logarithmic gap. Its lower bound is not asserted to be the strongest among all joint-endpoint results. Ratio: $C\log^2(2d)$
+
+### R18 - High-dimensional regime: p=q>2 and Euclidean strong convexity
+
+**Region.** $2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$
+
+**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+**Quantity.** Q1; Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Optimal
+
+**Lower bound.** B24, B48
+
+$$
+c_pH_{p,2}
+$$
+
+**Upper bound.** B22, B23, B46, B47
+
+$$
+C_pH_{p,2}
+$$
+
+**Gap or comparison.** $C_p$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $C_p$; Permitted fixed-parameter dependence: p.
+
+### R19 - Euclidean geometry with fixed compatibility slack
+
+**Region.** $p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B28
+
+$$
+cd\log(1+H_\varepsilon/d)
+$$
+
+**Upper bound.** B25, B26, B27
+
+$$
+C\min\{H_\varepsilon,d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $C\log(2+d)$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $C\log(2+d)$
+
+### R20 - Joint transition window in Euclidean geometry
+
+**Region.** $p=q=r=2,\quad\mu R\le L/2,\quad d<H_\varepsilon<d^2$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B28
+
+$$
+cd\log(1+H_\varepsilon/d)
+$$
+
+**Upper bound.** B25, B26, B27
+
+$$
+C\min\{H_\varepsilon,d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $C\log(2+d)$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $C\log(2+d)$
+
+### R21 - Euclidean geometry near the compatibility boundary
+
+**Region.** $p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B31
+
+$$
+cd\log(1+H_{\rm rem}/d)
+$$
+
+**Upper bound.** B29, B30
+
+$$
+C\min\{H_{\rm rem},d\log(2+H_{\rm rem})\}
+$$
+
+**Gap or comparison.** $C\log(2+d)$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $C\log(2+d)$
+
+### R22 - Matching norm with 1<p<=2
+
+**Region.** $1<p=q=r\le2,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Other quantified gap
+
+**Lower bound.** B37, B40
+
+$$
+c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\Gamma_p(d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]
+$$
+
+**Upper bound.** B33, B34, B27
+
+$$
+C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $\frac{C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}}{c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\Gamma_p(d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: These are conservative geometric envelopes. Joint dependence for p>2 may have a polynomial gap; the included lower bound is not asserted to be the strongest in the entire literature. Ratio: $\frac{C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}}{c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\Gamma_p(d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$; Permitted fixed-parameter dependence: p.
+
+### R23 - Matching l1 endpoint
+
+**Region.** $p=q=r=1,\quad\mu R\log(2d)\le cL,\quad\varepsilon\le cLR$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Other quantified gap
+
+**Lower bound.** B38, B40
+
+$$
+c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\log(2d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]
+$$
+
+**Upper bound.** B33, B34, B27
+
+$$
+C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $\frac{C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}}{c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\log(2d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: These are conservative geometric envelopes. Joint dependence for p>2 may have a polynomial gap; the included lower bound is not asserted to be the strongest in the entire literature. Ratio: $\frac{C_p\min\{\Gamma_p(d)H_\varepsilon,d\log(2+LR/\varepsilon)\}}{c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\log(2d)\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$; Permitted fixed-parameter dependence: p.
+
+### R24 - Matching norm with p>2
+
+**Region.** $2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Other quantified gap
+
+**Lower bound.** B39, B40
+
+$$
+c_p\min\{d,(LR/\varepsilon)^p,L^2/(\mu\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]
+$$
+
+**Upper bound.** B35, B36, B33, B34, B27
+
+$$
+C_p\min\{(LR/\varepsilon)^p,\Gamma_p(d)(LR/\varepsilon)^2,\Gamma_p(d)L^2/(\mu\varepsilon),(L^2/(\mu\varepsilon))^{p/2},d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $\frac{C_p\min\{(LR/\varepsilon)^p,\Gamma_p(d)(LR/\varepsilon)^2,\Gamma_p(d)L^2/(\mu\varepsilon),(L^2/(\mu\varepsilon))^{p/2},d\log(2+LR/\varepsilon)\}}{c_p\min\{d,(LR/\varepsilon)^p,L^2/(\mu\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: These are conservative geometric envelopes. Joint dependence for p>2 may have a polynomial gap; the included lower bound is not asserted to be the strongest in the entire literature. Ratio: $\frac{C_p\min\{(LR/\varepsilon)^p,\Gamma_p(d)(LR/\varepsilon)^2,\Gamma_p(d)L^2/(\mu\varepsilon),(L^2/(\mu\varepsilon))^{p/2},d\log(2+LR/\varepsilon)\}}{c_p\min\{d,(LR/\varepsilon)^p,L^2/(\mu\varepsilon)\}+cd\log_+[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}]}$; Permitted fixed-parameter dependence: p.
+
+### R25 - Public-quadratic construction window for general $p,q,r$
+
+**Region.** $\mu_{\rm quad}R d^{(1-1/p-1/q)_+}\le L/2,\quad\varepsilon\le cLR$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Other quantified gap
+
+**Lower bound.** B43, B44
+
+$$
+c\min\{d,(cLR/\varepsilon)^p,L^2/(\mu_{\rm quad}\varepsilon)\}+cd\log_+[\frac{cL}{\varepsilon}\min\{Rd^{-1/p},\sqrt{\varepsilon/(\mu_{\rm quad}d)}\}]
+$$
+
+**Upper bound.** B41, B42, B27
+
+$$
+C\min\{(LR/\varepsilon)^2d^{2(1/q-1/2)_++2(1/2-1/p)_+},\frac{L^2}{\mu\varepsilon}d^{2(1/q-1/2)_++2(1/2-1/r)_+},d\log(2+LRd^{(1/q-1/p)_+}/\varepsilon)\}
+$$
+
+**Gap or comparison.** $\frac{C\min\{(LR/\varepsilon)^2d^{2(1/q-1/2)_++2(1/2-1/p)_+},\frac{L^2}{\mu\varepsilon}d^{2(1/q-1/2)_++2(1/2-1/r)_+},d\log(2+LRd^{(1/q-1/p)_+}/\varepsilon)\}}{c\min\{d,(cLR/\varepsilon)^p,L^2/(\mu_{\rm quad}\varepsilon)\}+cd\log_+[\frac{cL}{\varepsilon}\min\{Rd^{-1/p},\sqrt{\varepsilon/(\mu_{\rm quad}d)}\}]}$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: General norm-embedding baseline; the sharpest joint bracket for every p,q,r has not been certified. Ratio: $\frac{C\min\{(LR/\varepsilon)^2d^{2(1/q-1/2)_++2(1/2-1/p)_+},\frac{L^2}{\mu\varepsilon}d^{2(1/q-1/2)_++2(1/2-1/r)_+},d\log(2+LRd^{(1/q-1/p)_+}/\varepsilon)\}}{c\min\{d,(cLR/\varepsilon)^p,L^2/(\mu_{\rm quad}\varepsilon)\}+cd\log_+[\frac{cL}{\varepsilon}\min\{Rd^{-1/p},\sqrt{\varepsilon/(\mu_{\rm quad}d)}\}]}$
+
+### R26 - Verified logarithmic-gap window at the l1 endpoint
+
+**Region.** $p=q=r=1,\quad\mu R\log(2d)\le cL,\quad d\ge\min\{(LR/\varepsilon)^2,L^2/(\mu\varepsilon\log(2d))\}$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q2
+
+**Resource.** One declared full first-order response costs one call; its vector coordinates are not charged separately.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B38, B40
+
+$$
+c\min\{(LR/\varepsilon)^2,L^2/(\mu\varepsilon\log(2d))\}
+$$
+
+**Upper bound.** B33, B34, B27
+
+$$
+C\min\{\log(2d)H_\varepsilon,d\log(2+LR/\varepsilon)\}
+$$
+
+**Gap or comparison.** $C\log^2(2d)$
+
+**Comparison argument.** The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: The conservative endpoint bracket has at most a squared-logarithmic gap. Its lower bound is not asserted to be the strongest among all joint-endpoint results. Ratio: $C\log^2(2d)$
+
+## 4. Bounds and supporting evidence
+
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+**Output mapping.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource mapping.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+### B1 - Projected subgradient method
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C L^2R^2/\varepsilon^2
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980)
+
+**Conditions.** $$p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B2 - Weighted subgradient method for strongly convex objectives
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C L^2/(\mu\varepsilon)
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980)
+
+**Conditions.** $$p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B3 - Centroid cutting planes and subgradient certificates
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C d\log(2+LRd^{(1/q-1/p)_+}/\varepsilon)
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980) [3](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) [4](https://arxiv.org/pdf/2609.20701)
+
+**Conditions.** $$L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$$
+
+**Dimension conditions.** $L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Local argument.** A1
+
+### B4 - Localized nonsmooth convex hard instances plus a public quadratic
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c d\log(1+H_\varepsilon/d)
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B5 - Strongly convex subgradient method using the residual Lipschitz budget
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C(L-\mu R)^2/(\mu\varepsilon)
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980) [3](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) [4](https://arxiv.org/pdf/2609.20701)
+
+**Conditions.** $$p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$$
+
+**Dimension conditions.** $p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Local argument.** A3, A4, A1
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B6 - Cutting planes using the residual Lipschitz budget
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+Cd\log(2+(L-\mu R)^2/(\mu\varepsilon))
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980) [3](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) [4](https://arxiv.org/pdf/2609.20701)
+
+**Conditions.** $$p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$$
+
+**Dimension conditions.** $p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Local argument.** A3, A4, A1
+
+### B7 - Local hard instances near the compatibility boundary
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+cd\log(1+(L-\mu R)^2/(d\mu\varepsilon))
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$$
+
+**Dimension conditions.** $p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B8 - Return the public initial point
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+0
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980) [3](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) [4](https://arxiv.org/pdf/2609.20701)
+
+**Conditions.** $$p=q=r=2,\quad\mu R\le L,\quad\varepsilon\ge(L-\mu R)^2/(2\mu)$$
+
+**Dimension conditions.** $p=q=r=2,\quad\mu R\le L,\quad\varepsilon\ge(L-\mu R)^2/(2\mu)$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Local argument.** A3, A4, A1
+
+### B9 - Primal-dual subgradient method for matching norms
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C\Gamma_p(d)L^2R^2/\varepsilon^2
+$$
+
+**Sources.** [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [2](https://arxiv.org/pdf/1401.1792) theorem: Section 2.3, Algorithms 1–2, and Theorem 1, with uniform-convexity order two
+
+### B10 - Primal-dual subgradient method in uniformly convex geometry
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C\Gamma_p(d)L^2/(\mu\varepsilon)
+$$
+
+**Sources.** [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [2](https://arxiv.org/pdf/1401.1792) theorem: Section 2.3, Algorithms 1–2, and Theorem 1, with uniform-convexity order two
+
+### B11 - Subgradient method in higher-order norm geometry
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C_p(LR/\varepsilon)^p
+$$
+
+**Sources.** [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [2](https://arxiv.org/pdf/1401.1792) theorem: Section 2.3, Algorithms 1–2, and Theorem 1, with uniform-convexity order two
+
+### B12 - Localization and restart
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C_p(L^2/(\mu\varepsilon))^{p/2}
+$$
+
+**Sources.** [2](https://arxiv.org/pdf/1401.1792) [5](https://arxiv.org/pdf/1407.5144)
+
+**Conditions.** $$2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Local argument.** A2
+
+**Source location.** [2](https://arxiv.org/pdf/1401.1792) theorem: Section 2.3, Algorithms 1–2, and Theorem 1, with uniform-convexity order two
+
+### B13 - Strongly convex regularization of nonsmooth hard instances
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\Gamma_p(d)\varepsilon)\}
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$1<p=q=r\le2,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $1<p=q=r\le2,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B14 - Strongly convex regularization of the $\ell_1$ box construction
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\log(2d)\varepsilon)\}
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r=1,\quad\mu R\log(2d)\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r=1,\quad\mu R\log(2d)\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B15 - Strongly convex regularization of hard instances for large $p$
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c_p\min\{d,(LR/\varepsilon)^p,L^2/(\mu\varepsilon)\}
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B16 - Multiscale hard instances for matching geometry
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+cd\log_+\left[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}\right]
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B17 - Explicit norm conversion and Euclidean subgradient descent
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C(LR/\varepsilon)^2d^{2(1/q-1/2)_++2(1/2-1/p)_+}
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980)
+
+**Conditions.** $$L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$$
+
+**Dimension conditions.** $L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B18 - Norm conversion and weighted subgradient descent under strong convexity
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C\frac{L^2}{\mu\varepsilon}d^{2(1/q-1/2)_++2(1/2-1/r)_+}
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980)
+
+**Conditions.** $$L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$$
+
+**Dimension conditions.** $L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B19 - Euclidean quadratic regularization and norm-embedding hard instances
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c\min\{d,(cLR/\varepsilon)^p,L^2/(\mu_{\rm quad}\varepsilon)\}
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$\mu_{\rm quad}R d^{(1-1/p-1/q)_+}\le L/2,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $\mu_{\rm quad}R d^{(1-1/p-1/q)_+}\le L/2,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B20 - Local multiscale hard instances
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+cd\log_+\left[\frac{cL}{\varepsilon}\min\{Rd^{-1/p},\sqrt{\varepsilon/(\mu_{\rm quad}d)}\}\right]
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$\mu_{\rm quad}R d^{(1-1/p-1/q)_+}\le L/2,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $\mu_{\rm quad}R d^{(1-1/p-1/q)_+}\le L/2,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B21 - Hard instances for box geometry
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+cd\log(2+LR/\varepsilon)
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r=\infty,\quad\mu Rd\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r=\infty,\quad\mu Rd\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B22 - Mirror descent in the $p$ norm
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C_p(LR/\varepsilon)^p
+$$
+
+**Sources.** [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [2](https://arxiv.org/pdf/1401.1792) theorem: Section 2.3, Algorithms 1–2, and Theorem 1, with uniform-convexity order two
+
+### B23 - Euclidean weighted subgradient method under strong convexity
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+CL^2/(\mu\varepsilon)
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980)
+
+**Conditions.** $$2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B24 - Strongly convex hard instances with mixed norms
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Deterministic / Pointwise guarantee
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c_pH_{p,2}
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B25 - Projected subgradient method
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C L^2R^2/\varepsilon^2
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980)
+
+**Conditions.** $$p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B26 - Weighted subgradient method for strongly convex objectives
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C L^2/(\mu\varepsilon)
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980)
+
+**Conditions.** $$p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B27 - Centroid cutting planes and subgradient certificates
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C d\log(2+LRd^{(1/q-1/p)_+}/\varepsilon)
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980) [3](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) [4](https://arxiv.org/pdf/2609.20701)
+
+**Conditions.** $$L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$$
+
+**Dimension conditions.** $L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Local argument.** A1
+
+### B28 - Localized nonsmooth convex hard instances plus a public quadratic
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c d\log(1+H_\varepsilon/d)
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r=2,\quad0<\mu R\le L/2,\quad0<\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B29 - Strongly convex subgradient method using the residual Lipschitz budget
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C(L-\mu R)^2/(\mu\varepsilon)
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980) [3](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) [4](https://arxiv.org/pdf/2609.20701)
+
+**Conditions.** $$p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$$
+
+**Dimension conditions.** $p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Local argument.** A3, A4, A1
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B30 - Cutting planes using the residual Lipschitz budget
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+Cd\log(2+(L-\mu R)^2/(\mu\varepsilon))
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980) [3](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) [4](https://arxiv.org/pdf/2609.20701)
+
+**Conditions.** $$p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$$
+
+**Dimension conditions.** $p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Local argument.** A3, A4, A1
+
+### B31 - Local hard instances near the compatibility boundary
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+cd\log(1+(L-\mu R)^2/(d\mu\varepsilon))
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$$
+
+**Dimension conditions.** $p=q=r=2,\quad L/2\le\mu R<L,\quad0<\varepsilon\le c(L-\mu R)^2/\mu$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B32 - Return the public initial point
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+0
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980) [3](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) [4](https://arxiv.org/pdf/2609.20701)
+
+**Conditions.** $$p=q=r=2,\quad\mu R\le L,\quad\varepsilon\ge(L-\mu R)^2/(2\mu)$$
+
+**Dimension conditions.** $p=q=r=2,\quad\mu R\le L,\quad\varepsilon\ge(L-\mu R)^2/(2\mu)$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Local argument.** A3, A4, A1
+
+### B33 - Primal-dual subgradient method for matching norms
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C\Gamma_p(d)L^2R^2/\varepsilon^2
+$$
+
+**Sources.** [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [2](https://arxiv.org/pdf/1401.1792) theorem: Section 2.3, Algorithms 1–2, and Theorem 1, with uniform-convexity order two
+
+### B34 - Primal-dual subgradient method in uniformly convex geometry
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C\Gamma_p(d)L^2/(\mu\varepsilon)
+$$
+
+**Sources.** [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [2](https://arxiv.org/pdf/1401.1792) theorem: Section 2.3, Algorithms 1–2, and Theorem 1, with uniform-convexity order two
+
+### B35 - Subgradient method in higher-order norm geometry
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C_p(LR/\varepsilon)^p
+$$
+
+**Sources.** [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [2](https://arxiv.org/pdf/1401.1792) theorem: Section 2.3, Algorithms 1–2, and Theorem 1, with uniform-convexity order two
+
+### B36 - Localization and restart
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C_p(L^2/(\mu\varepsilon))^{p/2}
+$$
+
+**Sources.** [2](https://arxiv.org/pdf/1401.1792) [5](https://arxiv.org/pdf/1407.5144)
+
+**Conditions.** $$2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Local argument.** A2
+
+**Source location.** [2](https://arxiv.org/pdf/1401.1792) theorem: Section 2.3, Algorithms 1–2, and Theorem 1, with uniform-convexity order two
+
+### B37 - Strongly convex regularization of nonsmooth hard instances
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\Gamma_p(d)\varepsilon)\}
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$1<p=q=r\le2,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $1<p=q=r\le2,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B38 - Strongly convex regularization of the $\ell_1$ box construction
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c\min\{d,(LR/\varepsilon)^2,L^2/(\mu\log(2d)\varepsilon)\}
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r=1,\quad\mu R\log(2d)\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r=1,\quad\mu R\log(2d)\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B39 - Strongly convex regularization of hard instances for large $p$
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c_p\min\{d,(LR/\varepsilon)^p,L^2/(\mu\varepsilon)\}
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q=r<\infty,\quad\mu R d^{1-2/p}\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B40 - Multiscale hard instances for matching geometry
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+cd\log_+\left[\frac{L}{\varepsilon d^{1/p}}\min\{R,\sqrt{\varepsilon/(\mu\Gamma_p(d))}\}\right]
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r,\quad\mu R\Gamma_p(d)\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B41 - Explicit norm conversion and Euclidean subgradient descent
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C(LR/\varepsilon)^2d^{2(1/q-1/2)_++2(1/2-1/p)_+}
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980)
+
+**Conditions.** $$L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$$
+
+**Dimension conditions.** $L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B42 - Norm conversion and weighted subgradient descent under strong convexity
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C\frac{L^2}{\mu\varepsilon}d^{2(1/q-1/2)_++2(1/2-1/r)_+}
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980)
+
+**Conditions.** $$L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$$
+
+**Dimension conditions.** $L>0,\quad R>0,\quad d\in\mathbb{N}_{\ge1},\quad \varepsilon>0,\quad \mu>0,\quad p\ge1,\quad q\ge1,\quad r\ge1$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B43 - Euclidean quadratic regularization and norm-embedding hard instances
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c\min\{d,(cLR/\varepsilon)^p,L^2/(\mu_{\rm quad}\varepsilon)\}
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$\mu_{\rm quad}R d^{(1-1/p-1/q)_+}\le L/2,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $\mu_{\rm quad}R d^{(1-1/p-1/q)_+}\le L/2,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B44 - Local multiscale hard instances
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+cd\log_+\left[\frac{cL}{\varepsilon}\min\{Rd^{-1/p},\sqrt{\varepsilon/(\mu_{\rm quad}d)}\}\right]
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$\mu_{\rm quad}R d^{(1-1/p-1/q)_+}\le L/2,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $\mu_{\rm quad}R d^{(1-1/p-1/q)_+}\le L/2,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B45 - Hard instances for box geometry
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+cd\log(2+LR/\varepsilon)
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$p=q=r=\infty,\quad\mu Rd\le cL,\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $p=q=r=\infty,\quad\mu Rd\le cL,\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+### B46 - Mirror descent in the $p$ norm
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+C_p(LR/\varepsilon)^p
+$$
+
+**Sources.** [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [2](https://arxiv.org/pdf/1401.1792) theorem: Section 2.3, Algorithms 1–2, and Theorem 1, with uniform-convexity order two
+
+### B47 - Euclidean weighted subgradient method under strong convexity
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+CL^2/(\mu\varepsilon)
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980)
+
+**Conditions.** $$2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+**Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Source location.** [1](https://arxiv.org/pdf/1405.4980) theorem: Theorems 3.2 and 3.9: convex and strongly convex weighted subgradient methods
+
+### B48 - Strongly convex hard instances with mixed norms
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+c_pH_{p,2}
+$$
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+**Conditions.** $$2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$$
+
+**Dimension conditions.** $2<p=q<\infty,\quad r=2,\quad\mu R d^{1-2/p}\le cL,\quad d\ge C_pH_{p,2},\quad\varepsilon\le cLR$
+
+**Oracle correspondence.** Applicable interfaces: one full subgradient, function value and one full subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+**Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Local argument.** A2
+
+## 5. Local arguments
+
+### A1 - Subgradient certificates and centroid cuts
+
+**Scope.** One full subgradient is sufficient. Public compact convex geometry and exact internal geometric computation are available.
+
+**Algorithm scope.** Deterministic upper-bound witness; valid as an upper bound for randomized views.
+
+Let $Q\subset\mathbb R^d$ be public, compact, convex, and full dimensional, with diameter at most $D$ in the stated norm. Suppose all returned subgradients have dual norm at most $L$. Query $g_i\in\partial f(x_i)$ at the centroid of the current body and retain $\langle g_i,x_i-x\rangle\ge0$. The centroid halfspace theorem bounds the retained volume by $(1-e^{-1})^T\operatorname{vol}(Q)$.
+
+The computable certificate is
+$$
+\Gamma_T=\min_{\lambda\in\Delta_T}\max_{x\in Q}\sum_i\lambda_i\langle g_i,x_i-x\rangle
+=\max_{x\in Q}\min_i\langle g_i,x_i-x\rangle.
+$$
+The equality is convex minimax. Subgradient inequalities and convexity imply
+$f(\sum_i\lambda_ix_i)-\min_Qf\le\Gamma_T$.
+If $\Gamma_T>\epsilon$, choose $z\in Q$ with all cut margins greater than $\epsilon$. The copy $(1-a)z+aQ$, where $a=\epsilon/[2(\epsilon+LD)]$, survives every cut. Its volume is $a^d\operatorname{vol}(Q)$, contradicting centroid shrinkage once $T>C d\log(2+LD/\epsilon)$. If the body loses volume earlier, the same positive-volume argument already certifies the error. No function values or inscribed-ball estimate are required.
+
+For $Q=RB_p^d$ and $\ell_q$-Lipschitz objectives, use $D=2Rd^{(1/q-1/p)_+}$. Returning the center has error at most $LRd^{(1/q-1/p)_+}$, giving the coarse zero-query regime. Exact centroid, minimax, and public geometric calculations are uncharged internal operations.
+
+For a deterministic selector with total movement at most $W(T)$ on nested convex sets, instead impose deep cuts of margin $2LW(T)/T$. If all $T$ sets are nonempty, every move has length at least $2W(T)/T$, contradicting the movement bound. At the first empty intersection, minimax gives error at most $2LW(T)/T$. Substitution of the cited stable-movement theorem yields the recorded nondual upper bound. Its deterministic information scope is distinct from the scope of randomized implementations.
+
+**Limits of the argument.** The stable-selector branch imports its movement theorem and does not claim efficient deterministic arithmetic time.
+
+**Sources.** [1](https://arxiv.org/pdf/1405.4980) [3](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) [4](https://arxiv.org/pdf/2609.20701)
+
+### A2 - Strongly convex information-theoretic reductions
+
+**Scope.** Exact value and one full subgradient; original query domain and public regularizer.
+
+**Algorithm scope.** Lower bounds against arbitrary randomized adaptive algorithms.
+
+The imported ingredients are Braun–Guzmán–Pokutta's string-guessing simulation (Lemma V.4), recursive boxes (Section IV and Lemma IV.7), and Proposition III.3. Their arbitrary-randomized local-information scope includes values and subgradients.
+
+For $\mu R\le L/2$, put $a=L/2$ and
+$$
+F_s(x)=a\max_{i\le m}s_ix_i+\mu\|x\|^2/2.
+$$
+At $x_i=-s_i\min\{R/\sqrt m,a/(\mu m)\}$, its value is at most
+$-\tfrac a2\min\{R/\sqrt m,a/(\mu m)\}$.
+Whenever
+
+$$m\le c\min\{d,(LR/\epsilon)^2,L^2/(\mu\epsilon)\},$$
+
+any sufficiently accurate output identifies all signs. Subtracting the public quadratic leaves the imported string simulation and proves the dimension-truncated power term.
+
+For the logarithmic term, set $R_{\rm loc}=\min\{R,\sqrt{\epsilon/\mu}\}$, $b=R_{\rm loc}/\sqrt d$, and
+$$
+h_s(x)=ab\max_{i\le d}\phi_{s_i}(x_i/b),\qquad
+F_s=h_s+\mu\|x\|^2/2.
+$$
+The recursive convex one-Lipschitz functions $\phi_s$ have equal minima and continue as $|u|$ outside $[-1,1]$. A minimizer $y$ of $h_s$ lies in the small box. An $O(\epsilon)$-solution of $F_s$ is an $O(\epsilon)$-solution of $h_s$, because only the comparison term $\mu\|y\|^2/2$ enters the bound. Outside the box, a public absolute-value tail attains the maximum and supplies feedback without revealing bits. Inside, Lemma IV.7 applies. The resulting lower term is
+$$
+\Omega\!\left(d\log_+\!\left[{L\over\epsilon\sqrt d}
+\min\{R,\sqrt{\epsilon/\mu}\}\right]\right).
+$$
+Combining it with the power term gives the displayed $d\log(1+H_\epsilon/d)$ rate. Markov's inequality converts expected error to constant-probability accuracy. Near the compatibility boundary, replace $a$ by $L_{\rm rem}/2$ and retain $\epsilon\le cL_{\rm rem}^2/\mu$. A globally convex Lipschitz extension is the supremum of the supporting affine functions on the compact query domain.
+
+For matching $1\le p\le2$, use a public prox $\psi_p$ that is one-strongly convex in $\ell_p$, satisfies $\psi_p(x)\le C\Gamma_p(d)\|x\|_p^2$, and has Lipschitz constant at most $CR\Gamma_p(d)$ on $RB_p^d$. A construction is
+$$
+u=\max\{p,\min\{2,1+1/\log(2d)\}\},\quad
+\psi_p(x)={\|x\|_u^2\over2(u-1)d^{2(1/u-1/p)}}.
+$$
+The squared-norm fact is supplied by Juditsky–Nesterov. In $m$ coordinates use a normalized Hadamard basis $v_i$ and
+$h_s=a m^{1/p-1/2}\max_i s_i\langle v_i,x\rangle$.
+The point $y=-R_{\rm loc}m^{-1/p}\sum_i s_iv_i$ has
+$\|y\|_p\le R_{\rm loc}$, $h_s(y)=-aR_{\rm loc}/\sqrt m$, and
+$\psi_p(y)\le C\Gamma_p(d)R_{\rm loc}^2$.
+Optimizing $R_{\rm loc}\le R$ gives
+$\min\{d,(LR/\epsilon)^2,L^2/[\mu\Gamma_p(d)\epsilon]\}$.
+Subtract the public prox before the information simulation. Restricting $m$ to powers of two changes only constants.
+
+For $p>2$, standard coordinate signs and $\psi_p=\|\cdot\|_2^2/2$ give
+$\min\{d,(LR/\epsilon)^p,L^2/(\mu\epsilon)\}$.
+Recursive boxes of half-width $R_{\rm loc}d^{-1/p}$ give the companion logarithmic term. The declared compatibility slack reserves a constant share of the Lipschitz budget for the hidden function.
+
+For general $(p,q,r)$, set $\mu_{\rm quad}=\mu d^{2(1/r-1/2)_+}$. The public quadratic is $\mu$-strongly convex in $\ell_r$, and its gradient norm on $RB_p^d$ is at most
+$\mu_{\rm quad}R d^{(1-1/p-1/q)_+}$ in $\ell_{q^\star}$.
+Under the stated slack condition, a hidden single-coordinate slope of size $L/2$ is legal. The same sign and box arguments give the general formulas, with constants inside variable powers retained.
+
+The $p>2$ upper term $(L^2/(\mu\epsilon))^{p/2}$ follows by restarting a convex $C_p(LR/u)^p$ method at error scale $u$, using radius $O(\sqrt{u/\mu})$. The geometrically decreasing stages are dominated by the final stage. These reductions do not assert uniform optimality across geometries.
+
+**Limits of the argument.** Uses identified primary information-theoretic lemmas. Retain compatibility slack, norm dependence, and the accuracy windows.
+
+**Sources.** [5](https://arxiv.org/pdf/1407.5144) [2](https://arxiv.org/pdf/1401.1792)
+
+### A3 - Compatibility and the residual Lipschitz budget
+
+**Scope.** Lipschitz convex functions strongly convex only on the specified ball or box.
+
+**Algorithm scope.** Instancewise deterministic zero-query and localization upper bounds.
+
+Let $f$ be $L$-Lipschitz and $\mu$-strongly convex on $B(0,R)$. Strong monotonicity at opposite boundary points implies $\mu R\le L$. Write $L_{\rm rem}=L-\mu R$. From an interior $x$, move in direction $g/\|g\|$ to the boundary, a distance at least $R-\|x\|$. Strong monotonicity and the boundary norm bound imply
+$\|g\|\le L_{\rm rem}+\mu\|x\|$.
+Thus $\|g_0\|\le L_{\rm rem}$, and strong convexity gives
+$$
+f(0)-\min_Qf\le L_{\rm rem}^2/(2\mu).
+$$
+Strong monotonicity and constrained optimality also give $\|x^\star\|\le L_{\rm rem}/\mu$. When $L/2\le\mu R<L$, optimize on this smaller public ball, where subgradient norms are at most $2L_{\rm rem}$. The two budgets are
+$$
+O(L_{\rm rem}^2/(\mu\epsilon)),\qquad
+O(d\log(2+L_{\rm rem}^2/(\mu\epsilon))).
+$$
+At $\mu R=L$, zero is optimal. If $\mu R>L$, the model is empty.
+
+For the box $[-R/\sqrt d,R/\sqrt d]^d$, opposite corners give the same compatibility condition. At equality, every corner subgradient is $\mu v$. The convex function $f-\mu\|\cdot\|^2/2$ therefore has zero subgradient at all corners; all corners minimize it, so it is constant on their convex hull. The box-constrained optimum is again zero without querying.
+
+**Limits of the argument.** The ball localization and box equality arguments have separate geometries; do not transfer the ball radius formula to arbitrary domains.
+
+### A4 - Projected and weighted subgradient bounds
+
+**Scope.** Public Euclidean projection; unbiased conditional subgradient mean and a total second-moment bound, or exact subgradients.
+
+**Algorithm scope.** Deterministic policies and deterministic averages; randomness may come from observations.
+
+Projection onto a public closed convex set gives
+$$
+\|x_{t+1}-x^\star\|^2\le\|x_t-x^\star\|^2
+-2\eta_t\langle g_t,x_t-x^\star\rangle+\eta_t^2\|g_t\|^2.
+$$
+For convex $f$, initial distance at most $R$, and conditional second moment at most $V$, the constant step $R/\sqrt{VK}$ and averaged output have expected gap at most $R\sqrt{V/K}$. Exact subgradients correspond to $V=L^2$.
+
+Under $\mu$-strong convexity, use $\eta_t=2/[\mu(t+1)]$. With $a_t=\mathbb E\|x_t-x^\star\|^2$,
+$$
+\mathbb E[f(x_t)-f^\star]\le{\mu(t-1)\over4}a_t
+-{\mu(t+1)\over4}a_{t+1}+{V\over\mu(t+1)}.
+$$
+Multiply by $t$, sum, and use convexity. The weighted output
+$\sum_{t=1}^K2t\,x_t/[K(K+1)]$ has expected gap at most $2V/[\mu(K+1)]$. Neither output rule requires private randomness. Apply norm conversion before these inequalities, preserving all dimension factors.
+
+**Limits of the argument.** Norm-conversion factors must be applied explicitly. No noisy cutting-plane result follows from this recursion.
+
+## References
+
+[1] Sébastien Bubeck. Convex Optimization: Algorithms and Complexity. 2015.
+
+https://arxiv.org/pdf/1405.4980
+
+[2] Anatoli Juditsky; Yuri Nesterov. Primal-dual subgradient methods for minimizing uniformly convex functions; journal version: Deterministic and Stochastic Primal-Dual Subgradient Algorithms for Uniformly Convex Minimization. 2014.
+
+https://arxiv.org/pdf/1401.1792
+
+[3] Arkadi Nemirovski; Shmuel Onn; Uriel G. Rothblum. Accuracy Certificates for Computational Problems with Convex Structure. 2010.
+
+https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf
+
+[4] David Martínez-Rubio; Cristóbal Guzmán. Stable Movement for Nondual Lipschitz Convex Optimization: Efficiency and Nearly Optimal Oracle Rates. 2026-09-17; preprintv1.
+
+https://arxiv.org/pdf/2609.20701
+
+[5] Gábor Braun; Cristóbal Guzmán; Sebastian Pokutta. Lower Bounds on the Oracle Complexity of Nonsmooth Convex Optimization via Information Theory. 2017; arXiv v3 2023.
+
+https://arxiv.org/pdf/1407.5144

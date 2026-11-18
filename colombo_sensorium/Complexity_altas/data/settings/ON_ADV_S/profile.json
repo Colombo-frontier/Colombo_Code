@@ -1,0 +1,897 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ON_ADV_S",
+  "title": "Adversarial finite-armed bandits: selected-arm feedback and external regret",
+  "summary": "The environment fixes all arms' losses before interaction, and each round reveals only the chosen arm's loss. The target is worst-case expected external regret over all causal randomized strategies.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "external_regret"
+    },
+    {
+      "facet": "structure",
+      "value": "finite_actions"
+    },
+    {
+      "facet": "feedback",
+      "value": "selected_reward"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation_code": "online_bandit_external_regret",
+      "formulation": "sum_t l_t(a_t) − min_i sum_t l_t(i)",
+      "solution_goal": "minimize_expected_cumulative_regret",
+      "protocol_ref": "ON_ADV_S_pro_1ad04c9362",
+      "code": "online_bandit_external_regret",
+      "formulation_latex": "R_T=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i),\\qquad \\ell_t\\in[0,1]^K",
+      "goal_latex": "\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}}\\mathbb E_{\\mathcal A}[R_T]",
+      "description_paragraphs": [
+        "The environment fixes all arms' losses before interaction, and each round reveals only the chosen arm's loss. The target is worst-case expected external regret over all causal randomized strategies."
+      ]
+    },
+    "model": {
+      "instance": "The environment fixes loss vectors ell_t in [0,1]^K in advance. Each round, the learner selects a_t and observes only the exact current coordinate ell_t(a_t). No additional stochastic observation noise is present.",
+      "assumptions": [
+        {
+          "subject_id": "ON_ADV_S_obj_1ffb680223",
+          "property_code": "loss_range",
+          "variable_blocks": [],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_ADV_S_p_585fcb7010",
+            "ON_ADV_S_p_76dd32a562"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "Every coordinate of each obliviously fixed loss vector belongs to $[0,1]$."
+        }
+      ],
+      "parameter_domain_description": "K: $K\\in\\mathbb N,\\ K\\ge2$ (public); T: $T\\in\\mathbb N,\\ T\\ge1$ (public)",
+      "code": "model_declared",
+      "interaction_timing": [
+        "The environment fixes the loss sequence.",
+        "The learner randomizes $a_t$ using previously selected arms and observed losses.",
+        "The learner incurs and observes $\\ell_t(a_t)$.",
+        "The policy is updated; the next round's loss remains unobserved."
+      ],
+      "adversary_information": "The environment fixes the complete loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner's private seed. This is an oblivious environment; nonanticipation describes the learner's causal information and does not extend the specification to a history-adaptive adversary.",
+      "unresolved_applicability": [
+        "The present expected external regret is defined for a fixed sequence. Under adaptive adversaries, the differing placements of expectation in pseudo-regret and realized regret must remain distinct."
+      ],
+      "description_paragraphs": [
+        "The hidden loss sequence $\\ell_{1:T}$ is fixed before interaction, with every coordinate in $[0,1]$.",
+        "The current arm is $a_t$, chosen without knowing $\\ell$_t.",
+        "The hindsight fixed-arm comparator is $i$, not the best arm chosen separately each round.",
+        "Require $K\\ge2$ and $T\\ge1$, with actual action $a_t\\in[K]$."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "ON_ADV_S_ora_d7f3dc57ae",
+          "operation_code": "sample_selected_arm",
+          "target_object": "ON_ADV_S_obj_1ffb680223",
+          "variable_blocks": [
+            "ON_ADV_S_var_5c6206093f"
+          ],
+          "query_signature": "Inputs: $t,\\ a_t\\in[K]$. Timing and visible information follow the specified protocol.",
+          "response_signature": "Response: $Y_t=\\ell_t(a_t)$.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "order is relative to the current member f_t(x), f(x), or sample F(x;ξ_t) of the named indexed function family and only with respect to x; finite feedback interfaces have no derivative order",
+          "feedback_quality": {
+            "code": "exact_selected_loss",
+            "description": "Return exact ℓ_t(a_t), not a random reward draw."
+          },
+          "domain_ref": "ON_ADV_S_dom_11673a929a",
+          "coupling": "Only one scalar is returned, with no feedback for unselected arms. This is an exact reading of a fixed loss: the operation code sample_selected_arm does not indicate a fresh random reward sample. One loss-incurring arm is selected per round; there are no additional free probes.",
+          "index_control": "The learner selects feasible actions and any probes permitted by the specification. The environment determines current losses, outcomes, or fresh samples. The learner cannot select future rounds.",
+          "access_schedule": "Interaction follows the sequence in registry.protocols. Current loss feedback is available only after the action is submitted. Any pre-action disclosure of context or advice is specified separately.",
+          "accuracy_argument": null,
+          "cost_rule_ref": "ON_ADV_S_res_fa21edc32a",
+          "query_latex": "t,\\ a_t\\in[K]",
+          "response_latex": "Y_t=\\ell_t(a_t)"
+        }
+      ],
+      "public_inputs": [
+        "K",
+        "T",
+        "Loss-coordinate range [0,1]"
+      ],
+      "hidden_objects": [
+        "ON_ADV_S_obj_1ffb680223"
+      ],
+      "auxiliary_interfaces": [
+        "No additional access to hidden losses, means, or gradients is available. Projection, sampling, and internal optimization over public domains may have separately recorded computation costs; they are not free loss oracles."
+      ],
+      "protocol_ref": "ON_ADV_S_pro_1ad04c9362",
+      "query_domain_description": "[K]",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "The selected arm’s exact loss:",
+        "$$\nt,\\ a_t\\in[K]\\ \\longmapsto\\ Y_t=\\ell_t(a_t)\n$$",
+        "Only one scalar is returned; rewards of unselected arms are not observed.",
+        "The response is the exact selected entry of a loss table fixed in advance, not a fresh random reward from a fixed arm distribution.",
+        "Only one loss-incurring arm may be selected per round; no additional free probes are available.",
+        "Public inputs are K, T, and the loss-coordinate range [0,1]."
+      ]
+    },
+    "output": {
+      "object_type": "action_trajectory",
+      "domain_ref": "ON_ADV_S_dom_11673a929a",
+      "feasibility": "Every loss-bearing action must belong to the action domain. The final output retains the complete action trajectory.",
+      "allowed_postprocessing": "Any measurable computation on received feedback is allowed. No native observation may be added after the budget is exhausted or the algorithm stops.",
+      "certificate_requirement": "Only the stated statistical guarantee is required, not a certificate verifiable through the feedback interface.",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "sum_t l_t(a_t) − min_i sum_t l_t(i)",
+      "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+      "reference_object": "ON_ADV_S_obj_1ffb680223",
+      "nonnegativity": false,
+      "finiteness_conditions": "Both cumulative losses lie in [0,T], so their difference on each execution path lies in [-T,T].",
+      "comparator_ref": "ON_ADV_S_com_1365e7e04e",
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "$$\nR_T=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i),\\qquad \\ell_t\\in[0,1]^K\n$$"
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "Sequential online rounds; only information permitted by the protocol is visible in each round."
+        },
+        {
+          "code": "native_feedback",
+          "unit": "arm_pull",
+          "description": "One selected-arm response per round, for $T$ scalar observations."
+        }
+      ],
+      "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+      "cost_rules": [
+        {
+          "id": "ON_ADV_S_res_fa21edc32a",
+          "operation_refs": [
+            "ON_ADV_S_ora_d7f3dc57ae"
+          ],
+          "cost": {
+            "rounds": 1,
+            "native_feedback": 1
+          }
+        }
+      ],
+      "scalarization": "Retain the native objective and complete resource vector. At fixed $T$, compare cumulative regret. Best-arm-identification stopping times and error probabilities use their own task-specific criteria.",
+      "setup_cost": "Only declared public inputs may be read. Hidden losses, means, or samples cannot be accessed in advance or outside the $T$ rounds or $\\tau$ samples.",
+      "online_cost": "Any causal randomized strategy is allowed; Tsallis-INF attains an upper bound. Importance weighting, weight updates, and probability sampling are internal computation. Arithmetic for solving the regularized subproblem is not identified with a single feedback event.",
+      "amortization_scope": "The algorithm runs on one environment. Charged feedback cannot be reused across independent instances.",
+      "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "One selected-arm response per round, for $T$ scalar observations.",
+        "Arbitrary causal randomized policies; Tsallis-INF supplies an available upper bound.",
+        "Importance weighting, weight updates, and probability sampling are internal computation. Solving a regularized subproblem is not treated as a single feedback operation.",
+        "Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "Private randomization is allowed. The seed is hidden from the environment and independent of the fixed instance and sample randomness.",
+        "adaptivity": "The action and every probe in a round may depend only on previous-round feedback, public inputs, any context or advice already revealed that round, and private randomness. They may not use unrevealed current losses or samples.",
+        "restrictions": [
+          "All measurable causal policies satisfying the declared information timing and feasible domain are allowed, without extra span, iteration-form, or polynomial-time restrictions."
+        ],
+        "internal_computation": "Arbitrary causal randomized policies and measurable exact-real internal computation are allowed. Tsallis-INF supplies an upper bound. Importance weighting, weight updates, sampling, and regularized subproblem solves are internal work, distinct from feedback calls. No arithmetic or bit guarantee follows automatically.",
+        "parallelism": "Interaction proceeds in sequential time rounds. A two-point evaluation is one pair of same-round responses only where explicitly permitted; it is not equivalent to two independent rounds.",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "The native objective is $\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}}\\mathbb E_{\\mathcal A}[R_T]$.",
+          "aggregation_order": [
+            "First take the infimum over complete nonanticipating learning policies using only public inputs.",
+            "Then take the supremum over instances fixed before interaction that satisfy the stated model.",
+            "Expectation includes learner randomness and, when present, observation noise or random samples.",
+            "The objective fixes the comparator. Per-round optimal actions, a fixed action, and a sample-path optimum are not interchangeable."
+          ],
+          "quantifier_order": "One learning algorithm must apply to every instance in the declared class. It may use public inputs only, not hidden instance parameters.",
+          "randomness_sources": [
+            "Learner's private randomness"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "The horizon T is fixed and public. The guarantee holds for that T; it does not automatically give an anytime result or a simultaneous high-probability statement for all T.",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "$$\n\\inf_{\\mathcal{A}}\\sup_{\\ell_{1:T}}\\mathbb{E}_{\\mathcal{A}}[R_T]\n$$",
+            "Choose one algorithm using public inputs before taking the worst case over all admissible instances. Expectation covers the algorithm's private randomness and the observation randomness specified by the model. Comparator choice and the order of summation, minimization, and expectation follow the displayed formula."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+        "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+        "scalarization": "Retain the native objective and complete resource vector. At fixed $T$, compare cumulative regret. Best-arm-identification stopping times and error probabilities use their own task-specific criteria."
+      },
+      "alias_ids": [
+        "ON_ADV_S"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ON_ADV_S_obj_1ffb680223",
+        "type": "loss_environment",
+        "definition": "The environment fixes loss vectors ell_t in [0,1]^K in advance. Each round, the learner selects a_t and observes only the exact current coordinate ell_t(a_t). No additional stochastic observation noise is present.",
+        "depends_on": [],
+        "role_code": "loss_vector_sequence"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ON_ADV_S_var_5c6206093f",
+        "dimension": "One discrete action index",
+        "space": "[K]"
+      }
+    ],
+    "domains": [
+      {
+        "id": "ON_ADV_S_dom_11673a929a",
+        "definition": "[K]",
+        "roles": [
+          "action_domain",
+          "query_domain"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "ON_ADV_S_nor_60596e4d87",
+        "definition": "The model specifies coordinate ranges of finite vectors. Discrete action labels have no derivative order. A placeholder norm imposes no additional geometric assumption."
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ON_ADV_S_pro_1ad04c9362",
+        "steps": [
+          "The environment fixes the loss sequence.",
+          "The learner randomizes $a_t$ using previously selected arms and observed losses.",
+          "The learner incurs and observes $\\ell_t(a_t)$.",
+          "The policy is updated; the next round's loss remains unobserved."
+        ],
+        "adversary_information": "The environment fixes the complete loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner's private seed. This is an oblivious environment; nonanticipation describes the learner's causal information and does not extend the specification to a history-adaptive adversary.",
+        "loss_bearing_points": "The sole loss-bearing point is $a_t$, and its loss is the returned $\\ell_t(a_t)$.",
+        "queries_per_round": "One selected-arm response per round, for $T$ scalar observations.",
+        "past_requery": "No new information may be requested from past rounds or previously used samples. Received feedback may be stored and processed. In a stochastic model, an action may be repeated in a new round, with a fresh charged sample."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ON_ADV_S_com_1365e7e04e",
+        "definition": "Best fixed arm in hindsight."
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ON_ADV_S_p_585fcb7010",
+      "symbol": "K",
+      "meaning": "The finite number of arms.",
+      "kind": "independent",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "public": true,
+      "definition": "The arm set is $[K]=\\{1,\\ldots,K\\}$.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_ADV_S_p_76dd32a562",
+      "symbol": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "K",
+      "meaning": "The finite number of arms.",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "definition": "The arm set is $[K]=\\{1,\\ldots,K\\}$.",
+      "parameter_ref": "ON_ADV_S_p_585fcb7010"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "parameter_ref": "ON_ADV_S_p_76dd32a562"
+    },
+    {
+      "symbol_latex": "\\ell_t",
+      "meaning": "Hidden loss vector at round t",
+      "domain": "$\\ell_t\\in[0,1]^K$",
+      "definition": "The entire sequence is fixed before interaction; only coordinates allowed by the protocol become visible after acting.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "a_t",
+      "meaning": "Arm or expert that actually incurs loss in round $t$",
+      "domain": "$a_t\\in[K]$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "[K]",
+      "meaning": "Index set of K arms or experts",
+      "domain": "A finite set.",
+      "definition": "$[K]=\\{1,\\ldots,K\\}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "i",
+      "meaning": "Comparator arm fixed over the entire horizon",
+      "domain": "$i\\in[K]$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "Y_t",
+      "meaning": "Exact loss observed in the current round",
+      "domain": "$Y_t\\in[0,1]$",
+      "definition": "$Y_t=\\ell_t(a_t)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\alpha,\\eta_t",
+      "meaning": "The Tsallis-INF regularization exponent and round-t learning rate.",
+      "domain": "Algorithm-tuning parameter",
+      "definition": "The quantities $\\alpha=1/2$ and $\\eta_t=2/\\sqrt t$ are not curvature or statistical-confidence parameters.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_T",
+      "meaning": "Cumulative loss difference relative to the comparator specified in this profile",
+      "domain": "Real-valued random variable",
+      "definition": "$R_T=\\sum_t\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_t\\ell_t(i)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal R_T^*",
+      "meaning": "Minimax expected regret under the current information protocol and parameter region.",
+      "domain": "A nonnegative real.",
+      "definition": "$$\n\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\mathbb E_{\\mathcal A}[R_T],\\\\ R_T&=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).\\end{aligned}\n$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation includes the learner's private randomness and, when allowed, the environment strategy's randomness. A fixed loss sequence introduces no additional observation noise.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Cumulative observations counted according to the declared feedback type.",
+      "domain": "Nonnegative integer or integer-valued stopping time",
+      "definition": "The quantity $N=T$ counts cumulative native scalar feedback under a one-point or one-arm protocol.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ON_ADV_S__main__q1",
+      "kind": "cumulative_regret",
+      "expression": "R*_T = inf_{A in admissible nonanticipating randomized learners} sup_{I in declared model} E_A,I[sum_t l_t(a_t) − min_i sum_t l_t(i)].",
+      "optimization_direction": "minimize",
+      "units": "loss",
+      "budget_variables": [
+        "ON_ADV_S_p_76dd32a562"
+      ],
+      "tolerance_variables": [],
+      "analysis_scope": "Compare only this specification and the listed parameter regions.",
+      "tracked_parameters": [
+        "ON_ADV_S_p_585fcb7010",
+        "ON_ADV_S_p_76dd32a562"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "source_kind_label": "minimax_cumulative_regret",
+      "expression_latex": "\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\mathbb E_{\\mathcal A}[R_T],\\\\ R_T&=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).\\end{aligned}",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound.",
+      "expression": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_351fb610de"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ON_ADV_S__main__r1",
+      "specification_ref": "ON_ADV_S",
+      "name": "MAIN",
+      "predicate_text": "T≥K≥2",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "ON_ADV_S_p_585fcb7010"
+              }
+            }
+          }
+        ]
+      },
+      "parameter_refs": [
+        "ON_ADV_S_p_585fcb7010",
+        "ON_ADV_S_p_76dd32a562"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Proof constants are independent of all declared tracked parameters. Thresholds without numerical values remain symbolic."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ON_ADV_S__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\le4\\sqrt{KT}+1",
+      "quantity_ref": "ON_ADV_S__main__q1",
+      "region_refs": [
+        "ON_ADV_S__main__r1"
+      ],
+      "method": "Tsallis-INF, IW estimators",
+      "algorithm_or_hard_family": "Tsallis-INF, IW estimators",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": "Use Tsallis parameter $\\alpha=1/2$, the symmetric regularizer, and $\\eta_t=2/\\sqrt t$.",
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_INF"
+      ],
+      "evidence_refs": [
+        "ON_ADV_S__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_ADV_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Require $T\\ge K\\ge2$. The loss sequence is precommitted, and each round reveals only the selected arm’s loss."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_ADV_S__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\ge0.04\\sqrt{KT}",
+      "quantity_ref": "ON_ADV_S__main__q1",
+      "region_refs": [
+        "ON_ADV_S__main__r1"
+      ],
+      "method": "i.i.d. Bernoulli hard distribution implies an oblivious deterministic-sequence witness",
+      "algorithm_or_hard_family": "i.i.d. Bernoulli hard distribution implies an oblivious deterministic-sequence witness",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_MOSS"
+      ],
+      "evidence_refs": [
+        "ON_ADV_S__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_ADV_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Require $T\\ge K\\ge2$. The loss sequence is precommitted, and each round reveals only the selected arm’s loss."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "MAIN",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "ON_ADV_S_p_585fcb7010"
+              }
+            }
+          }
+        ]
+      },
+      "predicate_text": "$T\\ge K\\ge 2$",
+      "parameter_refs": [
+        "ON_ADV_S_p_585fcb7010",
+        "ON_ADV_S_p_76dd32a562"
+      ],
+      "source_region_ref": "ON_ADV_S__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_ADV_S__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_ADV_S__main__q1",
+      "resource_projection_id": "resource_351fb610de",
+      "regime_id": "ON_ADV_S__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "ON_ADV_S__main__b1"
+        ],
+        "lower_refs": [
+          "ON_ADV_S__main__b2"
+        ],
+        "comparison_ref": "ON_ADV_S__main__c1",
+        "quantity_ref": "ON_ADV_S__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+        "ratio_or_gap": "Controlled by universal constants for $T\\ge K\\ge2$",
+        "envelopes": {
+          "upper": {
+            "expression": "4sqrt(KT)+1",
+            "claim_refs": [
+              "ON_ADV_S__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "4\\sqrt{KT}+1"
+          },
+          "lower": {
+            "expression": "0.04sqrt(KT)",
+            "claim_refs": [
+              "ON_ADV_S__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "0.04\\sqrt{KT}"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_ADV_S__main__b1",
+            "when_region_refs": [
+              "ON_ADV_S__main__r1"
+            ],
+            "meaning": "Invoke each algorithm only in its applicability region; the scalar upper envelope minimizes over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "ON_ADV_S__main__b1": [
+            {
+              "region_ref": "ON_ADV_S__main__r1",
+              "predicate_text": "$T\\ge K\\ge 2$"
+            }
+          ],
+          "ON_ADV_S__main__b2": [
+            {
+              "region_ref": "ON_ADV_S__main__r1",
+              "predicate_text": "$T\\ge K\\ge 2$"
+            }
+          ]
+        },
+        "envelope_certificate": "Admit only individually checked claims compatible with this contract.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound."
+      },
+      "comparison_key": {
+        "setting_id": "ON_ADV_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_ADV_S__main__q1",
+        "resource_projection_id": "resource_351fb610de",
+        "regime_id": "ON_ADV_S__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ON_ADV_S__main__e1",
+      "source_ref": "ON_SRC_INF",
+      "locator": {
+        "theorem": "Theorem 1, IW case",
+        "section": "",
+        "pdf_pages": [
+          9
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "The source supports $\\mathcal{R}_T^*\\le4\\sqrt{KT}+1$ and the stated reductions, subject to each atomic claim's model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "Tsallis-INF has adversarial bandit pseudo-regret at most $4\\sqrt{KT}+1$. For a deterministic loss sequence fixed before interaction, this equals expected realized external regret."
+      ]
+    },
+    {
+      "id": "ON_ADV_S__main__e2",
+      "source_ref": "ON_SRC_MOSS",
+      "locator": {
+        "theorem": "Theorem 30 and proof",
+        "section": "Appendix B",
+        "pdf_pages": [
+          28,
+          29,
+          30
+        ],
+        "printed_pages": [
+          2812,
+          2813,
+          2814
+        ],
+        "equations": []
+      },
+      "supports": "The source supports $\\mathcal{R}_T^*\\ge0.04\\sqrt{KT}$ and the stated reductions, subject to each atomic claim's model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "Use only the K-armed bandit branch with source sampling budget $m_{\\mathrm{src}}=T$. In context-block reductions each block uses its own length. Bernoulli hard instances and Yao's principle give the randomized-learner lower bound."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "ON_SRC_INF",
+      "authors": [
+        "Julian Zimmert",
+        "Yevgeny Seldin"
+      ],
+      "title": "Tsallis-INF: An Optimal Algorithm for Stochastic and Adversarial Bandits",
+      "year": 2021,
+      "version": "JMLR 22(28):1–49",
+      "url": "https://jmlr.org/papers/volume22/19-753/19-753.pdf",
+      "publication_status": "published"
+    },
+    {
+      "id": "ON_SRC_MOSS",
+      "authors": [
+        "Jean-Yves Audibert",
+        "Sébastien Bubeck"
+      ],
+      "title": "Regret Bounds and Minimax Policies under Partial Monitoring",
+      "year": 2010,
+      "version": "JMLR 11:2785–2836",
+      "url": "https://jmlr.org/papers/volume11/audibert10a/audibert10a.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [
+    {
+      "id": "ON_REL_FULL_TO_BANDIT",
+      "source_ref": "ON_EXP_S",
+      "target_ref": "ON_ADV_S",
+      "relation_kind": "oracle_dominance",
+      "conditions": [
+        "The loss sequence and comparison objective are unchanged."
+      ],
+      "instance_map": "identity",
+      "output_map": "identity action trajectory",
+      "error_map": "identical regret",
+      "oracle_simulation": "Discard all coordinates except chosen arm; full information simulates bandit.",
+      "cost_map": {
+        "expression": "T vector reveals → T arm replies, but KT revealed coordinates consumed.",
+        "components": {}
+      },
+      "evidence_refs": [
+        "ON_ADV_S__main__e2"
+      ]
+    },
+    {
+      "id": "ON_REL_TAB_DIRECTSUM",
+      "source_ref": "ON_ADV_S",
+      "target_ref": "ON_CTX_TAB_S",
+      "relation_kind": "direct_sum",
+      "conditions": [
+        "Balanced S contexts, T/S≥K."
+      ],
+      "instance_map": "S independent K-arm environments",
+      "output_map": "run/collect one learner per context",
+      "error_map": "regret is sum of S component regrets",
+      "oracle_simulation": "one current-context arm feedback per global round",
+      "cost_map": {
+        "expression": "S runs of n=T/S rounds → T total pulls",
+        "components": {}
+      },
+      "evidence_refs": [
+        "ON_ADV_S__main__e2",
+        "ON_ADV_S__main__e1"
+      ]
+    },
+    {
+      "id": "ON_REL_COMB_DIRECTSUM",
+      "source_ref": "ON_ADV_S",
+      "target_ref": "ON_COMB_S",
+      "relation_kind": "direct_sum_lower_bound",
+      "conditions": [
+        "$m$ divides $d$, the action space is the public product set, and $T\\ge d/m$."
+      ],
+      "instance_map": "m independent d/m-arm bandits",
+      "output_map": "combine m arm indices into m-hot action",
+      "error_map": "sum regrets; m sqrt((d/m)T)=sqrt(mdT)",
+      "oracle_simulation": "one selected sample per group in same round",
+      "cost_map": {
+        "expression": "T rounds; mT coordinate observations",
+        "components": {}
+      },
+      "evidence_refs": []
+    }
+  ],
+  "aliases": [
+    {
+      "legacy_id": "ON_ADV_S",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "optimal": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ON_ADV_S__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "cbcac5e168e13c177969ce233c206c26eb0891d2e4fc0fba64133236db5f6bc7",
+    "source_order": 60,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

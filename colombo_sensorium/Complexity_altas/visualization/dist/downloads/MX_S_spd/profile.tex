@@ -1,0 +1,389 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Symmetric positive-definite linear systems with normalized energy error.\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{MX\_\allowbreak{}S\_\allowbreak{}spd}
+
+Matrix computation
+
+Solve \AtlasInlineMath{Ax=b}, whose unique solution is \AtlasInlineMath{x^\star=A^{-1}b}.
+
+\textbf{Status.} Logarithmic gap present
+
+\textbf{TASK tags.} formulation: Linear system; solution concept: Solution energy error; task family: Matrix computation
+
+\textbf{MODEL tags.} spectral structure: Positive definite; spectral structure: Real spd
+
+\textbf{ORACLE tags.} feedback quality: Exact; interface family: Exact right matvec; operation: Matrix right matvec; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; randomization: Private randomness allowed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Vector
+
+\textbf{METRIC tags.} criterion: Linear system energy error
+
+\textbf{GUARANTEE tags.} randomness: Algorithm private seed; time uniformity: Fixed time or accuracy
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget; measure: N right
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Solve \AtlasInlineMath{Ax=b}, whose unique solution is \AtlasInlineMath{x^\star=A^{-1}b}.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The matrix \AtlasInlineMath{A\in\mathbb{R}^{d\times d}} is symmetric positive definite, \AtlasInlineMath{d\ge1}, and its spectral condition number is \AtlasInlineMath{\lambda_{\max}(A)/\lambda_{\min}(A)\le\kappa}, where \AtlasInlineMath{\kappa\ge1}. No absolute spectral scale, sparsity, or preconditioner is promised.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Inputs \AtlasInlineMath{d,\kappa,\varepsilon,b,x_0} are public, with \AtlasInlineMath{b,x_0\in\mathbb{R}^d}; \AtlasInlineMath{A} is hidden. Any \AtlasInlineMath{v\in\mathbb{R}^d} may be queried for exact \AtlasInlineMath{Av}. All responses use one fixed matrix; repetitions are not independent samples.
+
+Entries, inverse actions, shifted solves, and the complete matrix are not free interfaces.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return any \AtlasInlineMath{\widehat x\in\mathbb R^d}, including an unqueried point or any postprocessing of the transcript. No additional error certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The energy norm is \AtlasInlineMath{\|z\|_A^2=z^{\mathsf T}Az}. If \AtlasInlineMath{x_0\ne x^\star}, the base loss is \AtlasInlineMath{\ell(\widehat{x})=\|\widehat{x}-x^\star\|_A^2/(\|A\|_{\mathrm{op}}\|x_0-x^\star\|_2^2)} and must satisfy \AtlasInlineMath{\ell\le\varepsilon}.
+
+If \AtlasInlineMath{x_0=x^\star}, success requires \AtlasInlineMath{\widehat x=x^\star}. The criterion is neither relative initial energy error nor relative residual.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Count right products with single vectors only: \AtlasInlineMath{N=N_{\mathrm r}}. A block of width \AtlasInlineMath{q} costs \AtlasInlineMath{q} calls.
+
+The budget bounds calls for every fixed input and every private seed. Reading public inputs, exact real arithmetic, storage, and postprocessing are free. One call applies the interface to one vector.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.
+
+The algorithm is selected using only public inputs. For every admissible input fixed before its private seed is generated, the success event has probability at least \AtlasInlineMath{2/3} over that private randomness.
+
+\textbf{Budget convention.} A fixed worst-case budget respected for every input and private seed.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{d}: The order of the square input matrix and the dimension of each query vector. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb N,\ d\ge1}.
+
+\AtlasInlineMath{A\in\mathbb R^{d\times d}}
+
+\AtlasInlineMath{\kappa}: Public upper bound on the spectral condition number of the positive definite input matrix \textbf{Domain:} \AtlasInlineMath{\kappa\ge1}.
+
+\AtlasInlineMath{\lambda_{\max}(A)/\lambda_{\min}(A)\le\kappa}
+
+\AtlasInlineMath{\varepsilon}: Energy-error tolerance normalized by the spectral norm times the squared initial Euclidean error. \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{\|\widehat x-x^\star\|_A^2\le\varepsilon\|A\|_{\rm op}\|x_0-x^\star\|_2^2}
+
+\AtlasInlineMath{C_0}: The sufficient-dimension constant in the lower-bound window of FL Theorem 26. \textbf{Domain:} The quantity \AtlasInlineMath{C_0>0} is universal and fixed.
+
+\AtlasInlineMath{d\ge C_0\sqrt{\kappa}+1}
+
+\AtlasInlineMath{A}: Hidden symmetric positive definite input matrix \textbf{Domain:} \AtlasInlineMath{\mathbb R^{d\times d}}.
+
+\AtlasInlineMath{b}: Public right-hand side, possibly zero \textbf{Domain:} \AtlasInlineMath{\mathbb R^d}.
+
+\AtlasInlineMath{x_0}: Public initial point \textbf{Domain:} \AtlasInlineMath{\mathbb R^d}.
+
+\AtlasInlineMath{x^\star}: The unique exact solution. \textbf{Domain:} \AtlasInlineMath{\mathbb R^d}.
+
+\AtlasInlineMath{x^\star=A^{-1}b}
+
+\AtlasInlineMath{\widehat x}: The solution vector returned by the algorithm. \textbf{Domain:} \AtlasInlineMath{\mathbb R^d}.
+
+\AtlasInlineMath{\|z\|_A}: Energy norm induced by the input A \textbf{Domain:} \AtlasInlineMath{z\in\mathbb R^d}.
+
+\AtlasInlineMath{\|z\|_A=(z^{\mathsf T}Az)^{1/2}}
+
+\AtlasInlineMath{\lambda_{\min}(A),\lambda_{\max}(A)}: Smallest and largest eigenvalues \textbf{Domain:} Positive real number.
+
+\AtlasInlineMath{\lambda_{\min}(A)=\lambda_d(A),\ \lambda_{\max}(A)=\lambda_1(A)}
+
+\AtlasInlineMath{\ell(\widehat x)}: Squared normalized energy error. \textbf{Domain:} Nonnegative real number; a zero denominator invokes the exact-solution convention.
+
+\AtlasInlineMath{\ell(\widehat x)=\|\widehat x-x^\star\|_A^2/(\|A\|_{\rm op}\|x_0-x^\star\|_2^2)}
+
+\AtlasInlineMath{t}: Number of conjugate-gradient iterations \textbf{Domain:} \AtlasInlineMath{\mathbb N_0}.
+
+\AtlasInlineMath{\mu_A,\beta_A}: The actual smallest and largest eigenvalues in the error-conversion proof. \textbf{Domain:} Auxiliary proof quantity.
+
+\AtlasInlineMath{\mu_A=\lambda_{\min}(A),\quad\beta_A=\|A\|_{\rm op}}
+
+\AtlasInlineMath{e_x}: The solution-error vector in the error-conversion proof. \textbf{Domain:} \AtlasInlineMath{\mathbb R^d}.
+
+\AtlasInlineMath{e_x=\widehat x-x^\star}
+
+\AtlasInlineMath{\delta_0,\eta_0}: Two auxiliary parameters fixed when instantiating the DEM26 lower bound. \textbf{Domain:} A fixed constant.
+
+\AtlasInlineMath{\delta_0=\eta_0=1/2}
+
+\AtlasInlineMath{\lambda_i(A)}: Eigenvalues of a real symmetric or Hermitian matrix in nonincreasing order. \textbf{Domain:} \AtlasInlineMath{1\le i\le d}.
+
+\AtlasInlineMath{\lambda_1(A)\ge\cdots\ge\lambda_d(A)}
+
+\AtlasInlineMath{\|z\|_2}: Euclidean norm of a vector \textbf{Domain:} Finite-dimensional real or complex vector.
+
+\AtlasInlineMath{\|z\|_2=(\sum_i|z_i|^2)^{1/2}}
+
+\AtlasInlineMath{\|M\|_{\mathrm{op}}}: The matrix operator norm induced by the Euclidean norm. \textbf{Domain:} Any compatible matrix.
+
+\AtlasInlineMath{\|M\|_{\mathrm{op}}=\max_{\|z\|_2=1}\|Mz\|_2=\sigma_1(M)}
+
+\AtlasInlineMath{c,C}: Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value. \textbf{Domain:} Independent of the dimension, accuracy, and probability parameters tracked by this bound.
+
+\AtlasInlineMath{\log}: Natural logarithm \textbf{Domain:} Positive real argument.
+
+\AtlasInlineMath{\log x=\ln x}
+
+\AtlasInlineMath{O,\Omega,\Theta}: Upper, lower, and two-sided bounds up to constants in the same applicable regime \textbf{Domain:} Hidden constants have only the parameter dependence explicitly permitted by the associated bound.
+
+\AtlasInlineMath{N,N_{\mathrm r}}: Single-vector query budget for exact right products Av. A block is charged by its column count. \textbf{Domain:} \AtlasInlineMath{\mathbb N_0}.
+
+\AtlasInlineMath{N=N_{\mathrm r}}
+
+\AtlasInlineMath{N^\star}: Minimum worst-case query budget attaining this profile's success guarantee \textbf{Domain:} \AtlasInlineMath{\mathbb N_0\cup\{+\infty\}}.
+
+The quantity is \AtlasInlineMath{N^\star=\inf_{\mathcal A}\sup_{I,\omega}N_{\mathcal A}(I,\omega)}, where the infimum ranges over admissible algorithms satisfying this profile's success guarantee.
+
+\AtlasInlineMath{\mathcal A,I,\omega}: The algorithm, fixed admissible input, and private algorithmic seed. \textbf{Domain:} Quantifiers for worst-case input and execution cost. Success probability is taken over $\omega$.
+
+\AtlasInlineMath{q_{\rm quad}}: Associated quadratic objective equivalent to the current SPD solve. \textbf{Domain:} Auxiliary function in the associated reduction.
+
+\AtlasInlineMath{q_{\rm quad}(x)=\tfrac12x^{\mathsf T}Ax-b^{\mathsf T}x}
+
+\AtlasInlineMath{e_0}: Initial solution-error vector \textbf{Domain:} \AtlasInlineMath{\mathbb R^d}.
+
+\AtlasInlineMath{e_0=x_0-x^\star}
+
+\AtlasInlineMath{B_{\rm normal},c_{\rm normal}}: Normal-equation matrix and right-hand side in the least-squares-to-SPD reduction \textbf{Domain:} An auxiliary object in the associated reduction.
+
+\AtlasInlineMath{B_{\rm normal}=A^{\mathsf T}A,\quad c_{\rm normal}=A^{\mathsf T}b}
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\AtlasMath{N^\star(\varepsilon;d,\kappa)}
+\textbf{Scope.} Within the cited complete specification, select an algorithm before taking the worst case over all fixed inputs. Information permissions remain unchanged.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsection{R1 - The established randomized lower-bound window.}
+\textbf{Region.} Assume \AtlasInlineMath{\kappa\ge2}, \AtlasInlineMath{d\ge C_0\sqrt\kappa+1}, and \AtlasInlineMath{0<\varepsilon\le1/(e\kappa)}. The sufficient dimension constant \AtlasInlineMath{C_0>0} is from Theorem 26 of the source; retain this restriction of the hard construction.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Number of right matrix-vector product queries
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{\Omega(\sqrt\kappa/[\log^2(2+\kappa)\log\log(e^e+\kappa)])}
+\textbf{Upper bound.} B1, B3
+
+\AtlasMath{O(\min\{d,\sqrt\kappa\log(4/\varepsilon)\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(\log(4/\varepsilon)\log^2(2+\kappa)\log\log(e^e+\kappa))}
+
+\textbf{Comparison argument.} CG and reconstruction upper bounds apply on a wider domain. The cited randomized lower bound requires \AtlasInlineMath{d\ge C_0\sqrt\kappa+1} and \AtlasInlineMath{\epsilon\le1/(e\kappa)} and leaves the displayed logarithmic gap. The 2026 high-accuracy strip is recorded separately.
+
+\needspace{4\baselineskip}\subsection{R2 - High-accuracy matching window from the 2026 result}
+\textbf{Region.} Assume \AtlasInlineMath{\kappa\ge2}, \AtlasInlineMath{d\ge C\kappa^{13}}, and \AtlasInlineMath{d^{-4}\le\varepsilon\le\kappa^{-2}d^{-2}}. The universal constant \AtlasInlineMath{C} is inherited from the theorem and is not assigned an arbitrary numerical value.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Number of right matrix-vector product queries
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B4
+
+\AtlasMath{\Omega(\sqrt\kappa\log d)}
+\textbf{Upper bound.} B1, B3
+
+\AtlasMath{O(\sqrt\kappa\log d)}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\textbf{Comparison argument.} The source accuracy is tied to dimension; a constant-factor match is asserted only in the stated high-accuracy band.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+\needspace{4\baselineskip}\subsection{B1 - Deterministic conjugate gradient, charged by actual \AtlasInlineMath{Av} calls}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{N\le\lceil C\sqrt{\kappa}\log(4/\varepsilon)\rceil}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1708.07788v2}{[4]}
+
+\textbf{Oracle correspondence.} Only exact Av is available for v $\in$ R\textasciicircum{}d. Each vector costs one N\_right call, and a q-column block costs q calls. The vectors b and x0 are public; inversion and preconditioning are not additional interfaces.
+
+\textbf{Guarantee conversion.} Success probability is at least 2/3 for each fixed (A,b,x0). The deterministic upper bound satisfies a stronger guarantee. The lower bound constrains general randomized adaptive algorithms only within its stated region.
+
+\textbf{Output rule.} Return \AtlasInlineMath{\widehat x\in\mathbb R^d} with \AtlasInlineMath{\|\widehat x-x^\star\|_A^2\le\epsilon\|A\|_{\mathrm{op}}\|x_0-x^\star\|_2^2}. Retain this initial point and normalization.
+
+\textbf{Resource conversion.} Count only right multiplication by a single vector, \AtlasInlineMath{N=N_{\mathrm r}}. A block product of width \AtlasInlineMath{q} costs \AtlasInlineMath{q} calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{N right.}
+
+\AtlasMath{\lceil C\sqrt\kappa\log(4/\varepsilon)\rceil}
+\textbf{Constants.} Universal constants, with only the parameter dependence permitted by this bound’s region and expression.
+
+\textbf{Derivation.} The iteration budget uses only kappa and epsilon; the unknown norm ||A|| need not be accessible to the algorithm. The first query identifies zero initial residual.
+
+\textbf{Local argument.} A1
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/1708.07788v2}{[4]} theorem: Theorem 24 proof; section: Appendix B.1; equations: 86; pdf pages: 45; 46
+
+\needspace{4\baselineskip}\subsection{B2 - Lower bounds for arbitrary randomized adaptive algorithms using Wishart hard families and reductions.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{N\ge c\sqrt{\kappa}/[\log^2(2+\kappa)\log\log(e^e+\kappa)]}
+\textbf{Sources.} \href{https://jmlr.org/papers/volume26/24-1906/24-1906.pdf}{[3]} \href{https://proceedings.mlr.press/v125/braverman20a/braverman20a.pdf}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\le1/(e\kappa)}; set \AtlasInlineMath{\ell=1}.
+
+\textbf{Dimension conditions.} $d\ge C0$ $sqrt\kappa +1$
+
+\textbf{Oracle correspondence.} Only exact Av is available for v $\in$ R\textasciicircum{}d. Each vector costs one N\_right call, and a q-column block costs q calls. The vectors b and x0 are public; inversion and preconditioning are not additional interfaces.
+
+\textbf{Guarantee conversion.} Success probability is at least 2/3 for each fixed (A,b,x0). The deterministic upper bound satisfies a stronger guarantee. The lower bound constrains general randomized adaptive algorithms only within its stated region.
+
+\textbf{Output rule.} Return \AtlasInlineMath{\widehat x\in\mathbb R^d} with \AtlasInlineMath{\|\widehat x-x^\star\|_A^2\le\epsilon\|A\|_{\mathrm{op}}\|x_0-x^\star\|_2^2}. Retain this initial point and normalization.
+
+\textbf{Resource conversion.} Count only right multiplication by a single vector, \AtlasInlineMath{N=N_{\mathrm r}}. A block product of width \AtlasInlineMath{q} costs \AtlasInlineMath{q} calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{N.}
+
+\AtlasMath{N\ge c\sqrt\kappa/[\log^2(2+\kappa)\log\log(e^e+\kappa)]}
+\textbf{Constants.} Universal constants, with only the parameter dependence permitted by this bound’s region and expression.
+
+\textbf{Source location.} \href{https://jmlr.org/papers/volume26/24-1906/24-1906.pdf}{[3]} theorem: Theorem 26; Lemma 28; proof of Theorem 26; section: §9; pdf pages: 36; 37
+
+Set the spectral-tail parameter \AtlasInlineMath{\ell=1} to recover the ordinary condition number. Retain construction dimension at least \AtlasInlineMath{C\sqrt\kappa} and the source loss \AtlasInlineMath{\|e\|_A^2/(\|A\|\|e_0\|^2)}.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v125/braverman20a/braverman20a.pdf}{[1]} theorem: Theorem 6; Appendix B; as restated in FL Lemma 28; pdf pages: 7
+
+BH gives an unrestricted randomized linear-system query lower bound with explicit loss \AtlasInlineMath{\log^2s\,\log\log s}. FL Lemma 28 and Theorem 26 use this result to obtain the lower bound for the energy-error criterion here.
+
+\needspace{4\baselineskip}\subsection{B3 - Deterministic reconstruction using the standard basis, followed by free exact solution of the target task}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{N\le d}
+\textbf{Oracle correspondence.} Only exact Av is available for v $\in$ R\textasciicircum{}d. Each vector costs one N\_right call, and a q-column block costs q calls. The vectors b and x0 are public; inversion and preconditioning are not additional interfaces.
+
+\textbf{Guarantee conversion.} Success probability is at least 2/3 for each fixed (A,b,x0). The deterministic upper bound satisfies a stronger guarantee. The lower bound constrains general randomized adaptive algorithms only within its stated region.
+
+\textbf{Output rule.} Return \AtlasInlineMath{\widehat x\in\mathbb R^d} with \AtlasInlineMath{\|\widehat x-x^\star\|_A^2\le\epsilon\|A\|_{\mathrm{op}}\|x_0-x^\star\|_2^2}. Retain this initial point and normalization.
+
+\textbf{Resource conversion.} Count only right multiplication by a single vector, \AtlasInlineMath{N=N_{\mathrm r}}. A block product of width \AtlasInlineMath{q} costs \AtlasInlineMath{q} calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{N right.} d
+
+\textbf{Constants.} Universal constants, with only the parameter dependence permitted by this bound’s region and expression.
+
+\textbf{Derivation.} Standard-basis queries reveal every matrix column.
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B4 - General randomized adaptive queries; randomly rotated spectral families and polynomial-approximation lower bounds}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{N\ge c\sqrt\kappa\log d}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v336/derezinski26a.html}{[2]}
+
+\textbf{Constants.} Positive universal constants, permitted to depend on any explicitly fixed auxiliary parameters.
+
+\textbf{Derivation.} Fix the auxiliary parameters in the source Theorem E.2 at \AtlasInlineMath{\delta_0=\eta_0=1/2}. Its sufficient dimension condition is \AtlasInlineMath{d\ge C\kappa^{13}}, its residual threshold is \AtlasInlineMath{1/d}, and its required success probability is \AtlasInlineMath{5/6}. Choose the hard-instance initial point \AtlasInlineMath{x_0=0}. Let \AtlasInlineMath{e_x=\widehat x-x^\star}, \AtlasInlineMath{\beta_A=\|A\|_{\mathrm{op}}}, and \AtlasInlineMath{\mu_A=\lambda_{\min}(A)}. Then
+
+\AtlasMath{\|Ae_x\|_2^2\le\beta_A\|e_x\|_A^2\le\varepsilon\beta_A^2\|x^\star\|_2^2,\qquad \|b\|_2\ge\mu_A\|x^\star\|_2,}
+
+so the relative residual on success is at most \AtlasInlineMath{\kappa\sqrt\varepsilon}. The condition \AtlasInlineMath{\varepsilon\le\kappa^{-2}d^{-2}} ensures the source residual threshold. Run a \AtlasInlineMath{2/3}-success algorithm independently three times, spend one additional \AtlasInlineMath{A\widehat x} query per output, and select the smallest residual. At least one run succeeds with probability \AtlasInlineMath{1-(1/3)^3=26/27>5/6}. If the original budget is \AtlasInlineMath{N}, the source theorem excludes \AtlasInlineMath{3(N+1)<c\sqrt\kappa\log d}, giving \AtlasInlineMath{N\ge c'\sqrt\kappa\log d-O(1)}. On the strip \AtlasInlineMath{d^{-4}\le\varepsilon\le\kappa^{-2}d^{-2}}, we have \AtlasInlineMath{\log(1/\varepsilon)=\Theta(\log d)}, while \AtlasInlineMath{d\ge C\kappa^{13}} ensures that the reconstruction branch does not change the order. Thus deterministic CG and the unrestricted randomized lower bound match up to constants in this strip; this does not establish optimality for every \AtlasInlineMath{(d,\kappa,\varepsilon)}.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v336/derezinski26a.html}{[2]} theorem: Theorem E.2, PDF p.30
+
+Fix the auxiliary parameters in the source Theorem E.2 at \AtlasInlineMath{\delta_0=\eta_0=1/2}. Its sufficient dimension condition is \AtlasInlineMath{d\ge C\kappa^{13}}, its residual threshold is \AtlasInlineMath{1/d}, and its required success probability is \AtlasInlineMath{5/6}. Choose the hard-instance initial point \AtlasInlineMath{x_0=0}. Let \AtlasInlineMath{e=\widehat x-x^\star}, \AtlasInlineMath{\beta=\|A\|_{\mathrm{op}}}, and \AtlasInlineMath{\mu=\lambda_{\min}(A)}. Then
+
+\AtlasMath{\|Ae\|_2^2\le\beta\|e\|_A^2\le\varepsilon\beta^2\|x^\star\|_2^2,\qquad \|b\|_2\ge\mu\|x^\star\|_2,}
+
+so the relative residual on success is at most \AtlasInlineMath{\kappa\sqrt\varepsilon}. The condition \AtlasInlineMath{\varepsilon\le\kappa^{-2}d^{-2}} ensures the source residual threshold. Run a \AtlasInlineMath{2/3}-success algorithm independently three times, spend one additional \AtlasInlineMath{A\widehat x} query per output, and select the smallest residual. At least one run succeeds with probability \AtlasInlineMath{1-(1/3)^3=26/27>5/6}. If the original budget is \AtlasInlineMath{N}, the source theorem excludes \AtlasInlineMath{3(N+1)<c\sqrt\kappa\log d}, giving \AtlasInlineMath{N\ge c'\sqrt\kappa\log d-O(1)}. On the strip \AtlasInlineMath{d^{-4}\le\varepsilon\le\kappa^{-2}d^{-2}}, we have \AtlasInlineMath{\log(1/\varepsilon)=\Theta(\log d)}, while \AtlasInlineMath{d\ge C\kappa^{13}} ensures that the reconstruction branch does not change the order. Thus deterministic CG and the unrestricted randomized lower bound match up to constants in this strip; this does not establish optimality for every \AtlasInlineMath{(d,\kappa,\varepsilon)}.
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Deterministic conjugate gradients with actual Av calls charged}
+\textbf{Scope.} All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force.
+
+Let \AtlasInlineMath{x^\star=A^{-1}b}, \AtlasInlineMath{e_0=x_0-x^\star}, and \AtlasInlineMath{r_0=b-Ax_0}. One charged product forms \AtlasInlineMath{r_0}; if it is zero, return the exact solution \AtlasInlineMath{x_0}. Exact conjugate gradients minimizes the \AtlasInlineMath{A}-norm error over \AtlasInlineMath{x_0+\mathcal K_t(A,r_0)}. For every degree-\AtlasInlineMath{t} polynomial \AtlasInlineMath{p} with \AtlasInlineMath{p(0)=1}, this gives
+
+\AtlasMath{\|x_t-x^\star\|_A\le\max_{\lambda\in\operatorname{spec}(A)}|p(\lambda)|\,\|e_0\|_A.}
+
+A scaled Chebyshev polynomial yields
+
+\AtlasMath{\|x_t-x^\star\|_A^2\le4\left(\frac{\sqrt\kappa-1}{\sqrt\kappa+1}\right)^{2t}\|e_0\|_A^2\le4\left(\frac{\sqrt\kappa-1}{\sqrt\kappa+1}\right)^{2t}\|A\|_{\rm op}\|e_0\|_2^2.}
+
+Thus \AtlasInlineMath{t=O(\sqrt\kappa\log(4/\varepsilon))} suffices in the nontrivial accuracy region. The initial residual call and the one product per CG iteration are included by increasing the universal constant in the registered ceiling. Actual spectral endpoints are used only to prove the polynomial bound; the algorithm uses the public condition-number bound and tolerance. This argument covers arbitrary public \AtlasInlineMath{x_0}, not only \AtlasInlineMath{x_0=0}. The Krylov minimum-error property is the cited primary ingredient; the normalization and resource accounting are explicit here.
+
+\textbf{Sources.} \href{https://arxiv.org/pdf/1708.07788v2}{[4]}
+
+\needspace{4\baselineskip}\subsection{A2 - Deterministic reconstruction using the standard basis, followed by free exact solution of the target task}
+\textbf{Scope.} All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force.
+
+Query all \AtlasInlineMath{d} standard basis vectors to recover every column of \AtlasInlineMath{A}. Exact internal linear algebra returns \AtlasInlineMath{A^{-1}b}, giving zero energy error, including the zero-denominator case. The algorithm is deterministic and uses exactly \AtlasInlineMath{d} right products.
+
+\needspace{7\baselineskip}\section{References}
+[1] Mark Braverman; Elad Hazan; Max Simchowitz; Blake Woodworth. The Gradient Complexity of Linear Regression. 2020. COLT 2020 PMLR 125 PDF, 21 pages.
+
+\url{https://proceedings.mlr.press/v125/braverman20a/braverman20a.pdf}
+
+[2] Michał Dereziński; Ethan N. Epperly; Raphael A. Meyer. The matrix-vector complexity of Ax = b. 2026. PMLR proceedings PDF, 34 pages.
+
+\url{https://proceedings.mlr.press/v336/derezinski26a.html}
+
+[3] Michal Dereziński; Daniel LeJeune; Deanna Needell; Elizaveta Rebrova. Fine-grained Analysis and Faster Algorithms for Iteratively Solving Linear Systems. 2025. JMLR 26 (2025), published June 2025, 49-page PDF.
+
+\url{https://jmlr.org/papers/volume26/24-1906/24-1906.pdf}
+
+[4] Cameron Musco; Christopher Musco; Aaron Sidford. Stability of the Lanczos Method for Matrix Function Approximation. 2018. arXiv:1708.07788v2, revised 2024-11-18; SODA 2018.
+
+\url{https://arxiv.org/pdf/1708.07788v2}
+
+\end{document}

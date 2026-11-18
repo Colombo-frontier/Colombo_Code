@@ -1,0 +1,1142 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "SO_ZO_O04b_rand_native",
+  "title": "Noisy comparisons: a fixed bounded query cube",
+  "summary": "Minimize $f$ globally over $\\mathbb{R}^d$ and return a point with small objective gap.",
+  "primary_domain": "single_objective",
+  "oracle_order_collection": "zo",
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "single_objective"
+    },
+    {
+      "facet": "oracle_order",
+      "value": "zero"
+    },
+    {
+      "facet": "goal",
+      "value": "global_minimization"
+    },
+    {
+      "facet": "structure",
+      "value": "strongly_convex"
+    },
+    {
+      "facet": "feedback",
+      "value": "noisy_comparison"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "fixed_success_probability"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_worst_case"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "solution_goal": "global_minimization",
+      "code": "single_objective_optimization",
+      "description_paragraphs": [
+        "Minimize $f$ globally over $\\mathbb{R}^d$ and return a point with small objective gap."
+      ],
+      "navigation_domains": [
+        "single_objective"
+      ],
+      "formulation_code": "SO.global_minimization"
+    },
+    "model": {
+      "properties": {
+        "convexity": "strongly_convex",
+        "regularity": [
+          "gradient_lipschitz"
+        ],
+        "structure": [],
+        "growth": []
+      },
+      "domain_roles": {
+        "function": "All of R^d; regularity constraints are as stated in the model.",
+        "optimization": "Global minimization over all of R^d, with a unique minimizer x* in [-R,R]^d.",
+        "query": "$Q_c=[-R,R]^d$",
+        "output": "$Q_c=[-R,R]^d$",
+        "localization": "$x_0=0$ and $x^*\\in[-R,R]^d$; global optimality gives $\\nabla f(x^*)=0$."
+      },
+      "code": "admissible_model_class",
+      "description_paragraphs": [
+        "$f:\\mathbb{R}^d\\to\\mathbb{R}$ is differentiable and satisfies $\\|\\nabla f(x)-\\nabla f(y)\\|_2\\le\\beta\\|x-y\\|_2$ for every $x,y\\in\\mathbb{R}^d$.",
+        "Strong convexity is defined in the Euclidean norm: $f((1-t)x+ty)\\le(1-t)f(x)+tf(y)-\\frac{\\mu}{2}t(1-t)\\|x-y\\|_2^2$ for $x,y$ and $t\\in[0,1]$ in the domain.",
+        "$0<\\mu\\le\\beta$. The unique minimizer satisfies $x_*\\in Q_c:=[-R,R]^d$, and the known initial point is $0$. Consequently, the initial objective gap is at most $\\beta dR^2/2$.",
+        "The comparison kernel has parameters $a\\ge0$, $0<c_0\\le1/4$, and $\\nu>0$; when $a=0$, require $\\nu\\le c_0$. These parameters describe the feedback distribution and do not alter the objective's strong-convexity and smoothness budgets."
+      ],
+      "geometry_refs": [
+        "SO_ZO_O04b_rand_native_dom_ee4105a4ce",
+        "SO_ZO_O04b_rand_native_dom_b22791b784",
+        "SO_ZO_O04b_rand_native_dom_f11b4f7ee8",
+        "SO_ZO_O04b_rand_native_dom_d48144fbac",
+        "SO_ZO_O04b_rand_native_dom_fffc4cba79"
+      ]
+    },
+    "oracle": {
+      "public_inputs": [
+        "SO_ZO_O04b_rand_native_p_bb728db2b9",
+        "\\beta",
+        "\\mu",
+        "SO_ZO_O04b_rand_native_p_22a8c37f10",
+        "\\varepsilon",
+        "SO_ZO_O04b_rand_native_p_51ca5b9768",
+        "SO_ZO_O04b_rand_native_obj_fe94649219",
+        "\\nu"
+      ],
+      "domain": "$Q_c=[-R,R]^d$",
+      "variant": null,
+      "code": "noisy_comparison",
+      "description_paragraphs": [
+        "Both entries of the pair $(x,y)$ must belong to $Q_c=[-R,R]^d$. The response is $C_t\\in\\{-1,1\\}$. When $f(x)\\ne f(y)$, conditional on the history and current pair, the probability of correct ordering is at least $\\frac12+\\min\\{c_0,\\nu|f(y)-f(x)|^a\\}$, where the correct sign is $\\operatorname{sign}(f(y)-f(x))$.",
+        "Each instance has a fixed unknown response kernel on point pairs. Repeated comparisons use fresh independent randomness, and ties may be resolved arbitrarily. Performance is worst-case over all admissible response kernels.",
+        "The public inputs are $d$, $\\beta$, $\\mu$, $R$, $\\varepsilon$, $a$, $c_0$, $\\nu$, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface."
+      ]
+    },
+    "output": {
+      "domain": "$Q_c=[-R,R]^d$",
+      "code": "output_space",
+      "description_paragraphs": [
+        "Return $\\widehat{x}\\in Q_c=[-R,R]^d$. The output may be an unqueried point, a random choice among previous points, or an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output."
+      ]
+    },
+    "metric": {
+      "native_metric_wording": "The base loss is $\\ell(I,x)=f(x)-f_*$, where $f_*=\\inf_{u\\in \\mathbb{R}^d}f(u)$. This nonnegative loss is evaluated at the output, with tolerance $\\varepsilon$.",
+      "formula_latex": "f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)",
+      "threshold_latex": "\\varepsilon",
+      "code": "global_minimization",
+      "description_paragraphs": [
+        "The base loss is $\\ell(I,x)=f(x)-f_*$, where $f_*=\\inf_{u\\in \\mathbb{R}^d}f(u)$. This nonnegative loss is evaluated at the output, with tolerance $\\varepsilon$."
+      ],
+      "base_expression": "f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)"
+    },
+    "resource": {
+      "unit": "One binary comparison reply",
+      "budget_mode": "fixed_worst_case",
+      "accounting": {
+        "atomic_unit": "One binary comparison reply",
+        "budget_mode": "fixed_worst_case",
+        "arithmetic_precision": "exact_real_unpriced_unless_specified",
+        "free_operations": "Only the public operations explicitly stated in this specification are free. Operations accessing the unknown instance provide no free information."
+      },
+      "code": "oracle_resource",
+      "description_paragraphs": [
+        "One point-pair comparison costs $1$ call. Every repeated comparison and every comparison in a line search is charged. The budget $T$ counts scalar comparison replies.",
+        "Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "randomized_allowed",
+        "adaptivity": "sequential_adaptive",
+        "restrictions": [],
+        "code": "randomized_allowed",
+        "description_paragraphs": [
+          "Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.",
+          "Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "quantifiers": "one_algorithm_for_all_admissible_instances",
+          "probability_space": "The algorithm's private seed and all randomness in the stated oracle or environment, after the instance and feedback law are fixed.",
+          "formula_latex": "\\exists\\mathcal{A}\\ \\forall I\\in\\mathcal{I}:\\ \\Pr(f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)\\le \\varepsilon)\\ge2/3",
+          "code": "fixed_success_probability",
+          "description_paragraphs": [
+            "After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. The error requirement is $\\Pr(\\ell(I,\\widehat{x})\\le \\varepsilon)\\ge2/3$.",
+            "Probability is over both the algorithm's seed and all feedback randomness, after fixing the instance and admissible environment law.",
+            "Oracle cost uses a deterministic worst-case budget: $N\\le T$ on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "SO_ZO_O04b_rand_native"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "SO_ZO_O04b_rand_native_obj_fe94649219",
+        "information": "public",
+        "description": "c_0",
+        "knowledge": "declared_public_input"
+      }
+    ],
+    "variable_blocks": [],
+    "domains": [
+      {
+        "id": "SO_ZO_O04b_rand_native_dom_ee4105a4ce",
+        "roles": [
+          "function"
+        ],
+        "description": "All of R^d; regularity constraints are as stated in the model."
+      },
+      {
+        "id": "SO_ZO_O04b_rand_native_dom_b22791b784",
+        "roles": [
+          "optimization"
+        ],
+        "description": "Global minimization over all of R^d, with a unique minimizer x* in [-R,R]^d."
+      },
+      {
+        "id": "SO_ZO_O04b_rand_native_dom_f11b4f7ee8",
+        "roles": [
+          "query"
+        ],
+        "description": "$Q_c=[-R,R]^d$"
+      },
+      {
+        "id": "SO_ZO_O04b_rand_native_dom_d48144fbac",
+        "roles": [
+          "output"
+        ],
+        "description": "$Q_c=[-R,R]^d$"
+      },
+      {
+        "id": "SO_ZO_O04b_rand_native_dom_fffc4cba79",
+        "roles": [
+          "localization"
+        ],
+        "description": "$x_0=0$ and $x^*\\in[-R,R]^d$; global optimality gives $\\nabla f(x^*)=0$."
+      }
+    ],
+    "norms": [],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "SO_ZO_O04b_rand_native_p_bb728db2b9",
+      "symbol": "d",
+      "meaning": "Dimension of the variable space",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "d"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native_p_1c5476f952",
+      "symbol": "\\beta",
+      "meaning": "Public upper bound on the gradient Lipschitz constant",
+      "kind": "independent",
+      "domain": "$\\beta>0$",
+      "public": false,
+      "definition": "The object, norm and domain are fixed by the specific inequalities in this profile's model.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "beta"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native_p_7ce7a5991a",
+      "symbol": "\\mu",
+      "meaning": "Public lower bound on the strong-convexity modulus",
+      "kind": "independent",
+      "domain": "$\\mu>0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "mu"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native_p_22a8c37f10",
+      "symbol": "R",
+      "meaning": "Half side length of the minimizer-localization cube",
+      "kind": "independent",
+      "domain": "$R>0$",
+      "public": true,
+      "definition": "$x_*\\in[-R,R]^d$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "R"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native_p_5c322c6737",
+      "symbol": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "epsilon"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native_p_51ca5b9768",
+      "symbol": "a",
+      "meaning": "Margin exponent for the correctness probability of a noisy comparison",
+      "kind": "independent",
+      "domain": "$a\\ge0$",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "a"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native_p_ebe31f71f7",
+      "symbol": "c_0",
+      "meaning": "Saturation level of the comparison's advantage over random guessing",
+      "kind": "independent",
+      "domain": "$0<c_0\\le1/4$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "c0"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native_p_3168ab99c4",
+      "symbol": "\\nu",
+      "meaning": "Margin coefficient in comparison correctness probability",
+      "kind": "independent",
+      "domain": "$\\nu>0$, with $\\nu\\le c_0$ when $a=0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "nu_margin"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native_p_f80bfb74b8",
+      "symbol": "\\kappa",
+      "meaning": "Ratio of the known smoothness and strong-convexity bounds",
+      "kind": "derived",
+      "domain": "$\\kappa\\ge1$",
+      "public": false,
+      "definition": "$\\kappa=\\beta/\\mu$",
+      "dependencies": [
+        "SO_ZO_O04b_rand_native_p_1c5476f952",
+        "SO_ZO_O04b_rand_native_p_7ce7a5991a"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "kappa"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native_p_77aa6fcf28",
+      "symbol": "\\bar\\varepsilon",
+      "meaning": "Normalized optimization accuracy for comparison feedback",
+      "kind": "derived",
+      "domain": "$\\bar\\varepsilon>0$",
+      "public": false,
+      "definition": "$\\bar\\varepsilon=\\varepsilon/(\\mu R^2)$",
+      "dependencies": [
+        "SO_ZO_O04b_rand_native_p_5c322c6737",
+        "SO_ZO_O04b_rand_native_p_7ce7a5991a",
+        "SO_ZO_O04b_rand_native_p_22a8c37f10"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "epsilon_bar"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native_p_358b5ed618",
+      "symbol": "\\bar\\nu",
+      "meaning": "Normalized comparison-margin coefficient",
+      "kind": "derived",
+      "domain": "$\\bar\\nu>0$",
+      "public": false,
+      "definition": "$\\bar\\nu=\\nu(\\mu R^2)^a$",
+      "dependencies": [
+        "SO_ZO_O04b_rand_native_p_3168ab99c4",
+        "SO_ZO_O04b_rand_native_p_7ce7a5991a",
+        "SO_ZO_O04b_rand_native_p_22a8c37f10",
+        "SO_ZO_O04b_rand_native_p_51ca5b9768"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "nu_bar"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "Dimension of the variable space",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_O04b_rand_native_p_bb728db2b9"
+    },
+    {
+      "symbol_latex": "\\beta",
+      "meaning": "Public upper bound on the gradient Lipschitz constant",
+      "domain": "$\\beta>0$",
+      "definition": "The object, norm and domain are fixed by the specific inequalities in this profile's model.",
+      "parameter_ref": "SO_ZO_O04b_rand_native_p_1c5476f952"
+    },
+    {
+      "symbol_latex": "\\mu",
+      "meaning": "Public lower bound on the strong-convexity modulus",
+      "domain": "$\\mu>0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_O04b_rand_native_p_7ce7a5991a"
+    },
+    {
+      "symbol_latex": "R",
+      "meaning": "Half side length of the minimizer-localization cube",
+      "domain": "$R>0$",
+      "definition": "$x_*\\in[-R,R]^d$",
+      "parameter_ref": "SO_ZO_O04b_rand_native_p_22a8c37f10"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "domain": "$\\varepsilon>0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_O04b_rand_native_p_5c322c6737"
+    },
+    {
+      "symbol_latex": "a",
+      "meaning": "Margin exponent for the correctness probability of a noisy comparison",
+      "domain": "$a\\ge0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_O04b_rand_native_p_51ca5b9768"
+    },
+    {
+      "symbol_latex": "c_0",
+      "meaning": "Saturation level of the comparison's advantage over random guessing",
+      "domain": "$0<c_0\\le1/4$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_O04b_rand_native_p_ebe31f71f7"
+    },
+    {
+      "symbol_latex": "\\nu",
+      "meaning": "Margin coefficient in comparison correctness probability",
+      "domain": "$\\nu>0$, with $\\nu\\le c_0$ when $a=0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_O04b_rand_native_p_3168ab99c4"
+    },
+    {
+      "symbol_latex": "\\kappa",
+      "meaning": "Ratio of the known smoothness and strong-convexity bounds",
+      "domain": "$\\kappa\\ge1$",
+      "definition": "$\\kappa=\\beta/\\mu$",
+      "parameter_ref": "SO_ZO_O04b_rand_native_p_f80bfb74b8"
+    },
+    {
+      "symbol_latex": "\\bar\\varepsilon",
+      "meaning": "Normalized optimization accuracy for comparison feedback",
+      "domain": "$\\bar\\varepsilon>0$",
+      "definition": "$\\bar\\varepsilon=\\varepsilon/(\\mu R^2)$",
+      "parameter_ref": "SO_ZO_O04b_rand_native_p_77aa6fcf28"
+    },
+    {
+      "symbol_latex": "\\bar\\nu",
+      "meaning": "Normalized comparison-margin coefficient",
+      "domain": "$\\bar\\nu>0$",
+      "definition": "$\\bar\\nu=\\nu(\\mu R^2)^a$",
+      "parameter_ref": "SO_ZO_O04b_rand_native_p_358b5ed618"
+    },
+    {
+      "symbol_latex": "x,y,u",
+      "meaning": "Function arguments and dummy variables in the formulas",
+      "domain": "$x,y,u\\in\\mathbb{R}^d$; spherical domains are embedded in $\\mathbb{R}^{d+1}$",
+      "definition": "Admissible ranges are specified separately by the task, model and oracle in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat{x}",
+      "meaning": "Final algorithm output",
+      "domain": "$Q_c=[-R,R]^d$",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "I",
+      "meaning": "Complete problem instance",
+      "domain": "$I\\in\\mathcal{I}$",
+      "definition": "Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{I}",
+      "meaning": "Admissible instance class determined by the eight specification fields in this profile",
+      "domain": "Instances satisfying the public parameter bounds",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{A}",
+      "meaning": "Algorithm or strategy",
+      "domain": "Measurable adaptive strategies allowed in this profile",
+      "definition": "The algorithm is selected before the hidden instance.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\ell",
+      "meaning": "Base loss or residual",
+      "domain": "$\\ell:\\mathcal{I}\\times\\mathcal{X}_{\\mathrm{out}}\\to[0,+\\infty]$",
+      "definition": "The exact formula appears in this profile's performance-criterion section.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb{E},\\Pr",
+      "meaning": "Expectation and probability",
+      "domain": "Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee",
+      "definition": "Fix the instance first; aggregate cost and error separately.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\inf,\\sup",
+      "meaning": "Infimum and supremum",
+      "domain": "Evaluated only over the variable sets explicitly specified in the formula",
+      "definition": "In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_2,\\langle\\cdot,\\cdot\\rangle",
+      "meaning": "Euclidean norm and inner product",
+      "domain": "$\\|x\\|_2=\\sqrt{\\langle x,x\\rangle}$",
+      "definition": "$\\langle x,y\\rangle=x^\\top y$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "B_p(c,R)",
+      "meaning": "Closed norm ball",
+      "domain": "$p\\in[1,\\infty],\\ R\\ge0$",
+      "definition": "$B_p(c,R)=\\{x:\\|x-c\\|_p\\le R\\}$; $B_2$ denotes the Euclidean ball.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,T",
+      "meaning": "Actual call count and declared budget",
+      "domain": "$N,T\\in\\mathbb{N}_0$",
+      "definition": "A fixed budget bounds every execution path; the Markov specification uses an expected budget.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta,\\widetilde{O}",
+      "meaning": "Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms",
+      "domain": "Within the joint parameter window specified for each complexity regime",
+      "definition": "Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C,c_\\alpha,C_\\alpha",
+      "meaning": "Positive constant in a proof or asymptotic bound",
+      "domain": "$0<c,C,c_\\alpha,C_\\alpha<\\infty$",
+      "definition": "Unsubscripted constants have the dependencies stated in the bound; constants subscripted by $\\alpha$ may depend only on the fixed smoothness order.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_+,e",
+      "meaning": "Natural logarithm, truncated logarithm, and Euler's number",
+      "domain": "$z>0$",
+      "definition": "$\\log_+(z)=\\max\\{0,\\log z\\}$; $e=\\exp(1)$, and $\\log_2$ denotes the base-two logarithm.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,f_*",
+      "meaning": "Population objective and its optimal value",
+      "domain": "$f:\\mathcal{X}_{\\mathrm{fun}}\\to\\mathbb{R}$",
+      "definition": "$f_*=\\inf_{x\\in \\mathbb{R}^d}f(x)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla f,\\nabla^2f,D^jf",
+      "meaning": "Gradient, Hessian, and higher Fréchet derivatives",
+      "domain": "$\\nabla f\\in\\mathbb{R}^d,\\ \\nabla^2f\\in\\mathbb{R}^{d\\times d}$; $D^jf$ is a $j$-linear form",
+      "definition": "Used only at derivative orders and on regions where the model guarantees its existence.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_{\\mathrm{op}}",
+      "meaning": "Euclidean induced matrix or tensor operator norm",
+      "domain": "Take the supremum over Euclidean unit input vectors of the corresponding order.",
+      "definition": "$\\|T\\|_{\\mathrm{op}}=\\sup_{\\|u_1\\|_2,\\ldots,\\|u_j\\|_2\\le1}|T[u_1,\\ldots,u_j]|$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "Q_c,C_t",
+      "meaning": "Localization cube and comparison-reply signs",
+      "domain": "$Q_c=[-R,R]^d,\\ C_t\\in\\{-1,1\\}$",
+      "definition": "Distinguish the query domain from the localization region.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\chi",
+      "meaning": "Comparison-model alias for the smoothness-to-strong-convexity ratio",
+      "domain": "$\\chi\\ge1$",
+      "definition": "$\\chi=\\beta/\\mu=\\kappa$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "M,H",
+      "meaning": "Number of grid points and depth of the comparison-elimination tree",
+      "domain": "$M\\in\\mathbb{N},\\ M\\ge2,\\ H\\in\\mathbb{N}$",
+      "definition": "$M\\le(2+2R\\sqrt{\\beta d/\\varepsilon})^d$, $H=\\lceil\\log_2M\\rceil$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{X}_{\\mathrm{fun}},\\mathcal{X}_{\\mathrm{out}},\\mathcal{X}",
+      "meaning": "Function domain, admissible output domain and optimization domain",
+      "domain": "Each is the Euclidean space or subset explicitly specified in this profile",
+      "definition": "$\\mathcal{X}_{\\mathrm{out}}=Q_c=[-R,R]^d$ and $\\mathcal{X}=\\mathbb{R}^d$; the function domain is the region on which the model imposes regularity.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^*",
+      "meaning": "Optimal worst-case oracle complexity satisfying the complete guarantee",
+      "domain": "$N^*\\in[0,+\\infty]$",
+      "definition": "Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_*",
+      "meaning": "A global minimizer or quadratic center whose existence is promised by the model",
+      "domain": "Belongs to the localization domain specified here; used only under the stated existence promise",
+      "definition": "The full-space minimizer is unique in the strongly convex class. The center of a positive semidefinite quadratic model need not be unique.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "b_0",
+      "meaning": "Correctness-advantage scale in the comparison-information lower bound",
+      "domain": "$b_0>0$",
+      "definition": "$b_0=\\nu$ when $a=0$; $b_0=c_0$ when $a>0$.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "key": "calls",
+      "kind": "target_accuracy_cost",
+      "projection": "declared_atomic_resource",
+      "label": "One binary comparison reply",
+      "units": "One binary comparison reply",
+      "id": "SO_ZO_O04b_rand_native__main__q1",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": "oracle_call_complexity",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "expression_latex": "C^\\star_{v,\\pi}(\\varepsilon;\\theta)=\\inf\\{B\\ge0:\\exists\\mathcal A\\in\\mathfrak A_v,\\ C_\\pi(\\mathcal A,I)\\le B\\ \\text{and}\\ G_v(\\mathcal A,I;\\varepsilon)\\ \\forall I\\}",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "One binary comparison reply",
+      "expression": "declared_atomic_resource",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_f5e6aa0923"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "SO_ZO_O04b_rand_native__main__r1",
+      "specification_ref": "SO_ZO_O04b_rand_native",
+      "name": "Additional theorem window",
+      "universe_ref": null,
+      "predicate": {
+        "description": "Fixed query cube; $d\\ge8$, $0<\\varepsilon\\le c\\mu R^2$ and $M\\ge2$, with margin parameters as specified in the model."
+      },
+      "predicate_text": "Fixed query cube; $d\\ge8$, $0<\\varepsilon\\le c\\mu R^2$ and $M\\ge2$, with margin parameters as specified in the model.",
+      "kind": "theorem_window"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native__main__r2",
+      "specification_ref": "SO_ZO_O04b_rand_native",
+      "name": "Additional theorem window",
+      "universe_ref": null,
+      "predicate": {
+        "description": "$a>0$, $d\\ge16$, $\\nu(2\\mu dR^2)^a\\le\\min\\{c_0,1/4\\}$, $\\varepsilon\\le c^{\\prime}\\mu dR^2$."
+      },
+      "predicate_text": "$a>0$, $d\\ge16$, $\\nu(2\\mu dR^2)^a\\le\\min\\{c_0,1/4\\}$, $\\varepsilon\\le c^{\\prime}\\mu dR^2$.",
+      "kind": "theorem_window"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "SO_ZO_O04b_rand_native__main__b1",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "N\\le C M\\log(6M)[c_0^{-2}+\\nu^{-2}(2H/\\varepsilon)^{2a}],\\quad M\\le(2+2R\\sqrt{\\beta d/\\varepsilon})^d,\\ H=\\lceil\\log_2 M\\rceil",
+      "quantity_ref": "SO_ZO_O04b_rand_native__main__q1",
+      "quantity_refs": [
+        "SO_ZO_O04b_rand_native__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Fixed feasible grid with repeated-comparison elimination",
+      "source_refs": [
+        "SO_SRC_72bcc2188cedd4f4"
+      ],
+      "evidence_refs": [
+        "SO_ZO_O04b_rand_native__main__e1",
+        "SO_ZO_O04b_rand_native__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_O04b_rand_native__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Use a grid with at least two points, $0<\\varepsilon\\le c\\mu R^2$. When $a=0$, the bracketed expression may be set directly to $\\nu^{-2}$. This is a verifiable upper bound on the same domain, without a claim that it is the strongest known; JNR12, Theorem 2 itself establishes only the full-space version."
+        ],
+        "oracle_mapping": "Each pairwise ordering response costs one call. Bounds transfer between value and comparison interfaces only through the stated direction of simulation.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_NOISY_COMPARE"
+      ]
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native__main__b2",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "a=0:\\ \\Omega\\!\\left(d\\nu^{-2}\\log(\\mu R^2/\\varepsilon)\\right);\\quad a>0:\\ \\Omega\\!\\left(dc_0^{-2}\\log(\\mu R^2/\\varepsilon)\\right)",
+      "quantity_ref": "SO_ZO_O04b_rand_native__main__q1",
+      "quantity_refs": [
+        "SO_ZO_O04b_rand_native__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Packing under ordering feedback and saturation tests on a fixed domain",
+      "source_refs": [
+        "SO_SRC_72bcc2188cedd4f4"
+      ],
+      "evidence_refs": [
+        "SO_ZO_O04b_rand_native__main__e3",
+        "SO_ZO_O04b_rand_native__main__e4",
+        "SO_ZO_O04b_rand_native__main__e5"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_O04b_rand_native__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "$d\\ge8$ and $0<\\varepsilon\\le c\\mu R^2$, with a fixed constant success probability. Restricting both queried points to the known cube preserves this information lower bound."
+        ],
+        "oracle_mapping": "Each pairwise ordering response costs one call. Bounds transfer between value and comparison interfaces only through the stated direction of simulation.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_NOISY_COMPARE"
+      ]
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native__main__b3",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "N\\ge c\\,d/[\\nu^2(2\\mu dR^2)^{2a}]",
+      "quantity_ref": "SO_ZO_O04b_rand_native__main__q1",
+      "quantity_refs": [
+        "SO_ZO_O04b_rand_native__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Packing under ordering feedback and saturation tests on a fixed domain",
+      "source_refs": [
+        "SO_SRC_72bcc2188cedd4f4"
+      ],
+      "evidence_refs": [
+        "SO_ZO_O04b_rand_native__main__e6",
+        "SO_ZO_O04b_rand_native__main__e7",
+        "SO_ZO_O04b_rand_native__main__e8"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_O04b_rand_native__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$a>0,\\ d\\ge16,\\ \\nu(2\\mu dR^2)^a\\le\\min(c_0,1/4),\\ \\varepsilon\\le c'\\mu dR^2$. Only the saturation lower bound on this fixed domain is asserted; it does not imply an $\\varepsilon^{-2a}$ query lower bound at all accuracy levels."
+        ],
+        "oracle_mapping": "Each pairwise ordering response costs one call. Bounds transfer between value and comparison interfaces only through the stated direction of simulation.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_NOISY_COMPARE"
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Additional theorem window",
+      "predicate": {
+        "description": "Fixed query cube; $d\\ge8$, $0<\\varepsilon\\le c\\mu R^2$ and $M\\ge2$, with margin parameters as specified in the model."
+      },
+      "predicate_text": "Fixed query cube; $d\\ge8$, $0<\\varepsilon\\le c\\mu R^2$ and $M\\ge2$, with margin parameters as specified in the model.",
+      "parameter_refs": [
+        "SO_ZO_O04b_rand_native_p_bb728db2b9",
+        "SO_ZO_O04b_rand_native_p_1c5476f952",
+        "SO_ZO_O04b_rand_native_p_7ce7a5991a",
+        "SO_ZO_O04b_rand_native_p_22a8c37f10",
+        "SO_ZO_O04b_rand_native_p_5c322c6737",
+        "SO_ZO_O04b_rand_native_p_51ca5b9768",
+        "SO_ZO_O04b_rand_native_p_ebe31f71f7",
+        "SO_ZO_O04b_rand_native_p_3168ab99c4",
+        "SO_ZO_O04b_rand_native_p_f80bfb74b8",
+        "SO_ZO_O04b_rand_native_p_77aa6fcf28",
+        "SO_ZO_O04b_rand_native_p_358b5ed618"
+      ],
+      "source_region_ref": "SO_ZO_O04b_rand_native__main__r1",
+      "status": {
+        "code": "other_quantified_gap",
+        "label": "Other quantified gap",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_O04b_rand_native__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_O04b_rand_native__main__q1",
+      "resource_projection_id": "resource_f5e6aa0923",
+      "regime_id": "SO_ZO_O04b_rand_native__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_O04b_rand_native__main__b1"
+        ],
+        "lower_refs": [
+          "SO_ZO_O04b_rand_native__main__b2"
+        ],
+        "comparison_ref": "SO_ZO_O04b_rand_native__main__c1",
+        "quantity_ref": "SO_ZO_O04b_rand_native__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$O\\!\\left(\\frac{M\\log(6M)[c_0^{-2}+\\nu^{-2}(2H/\\varepsilon)^{2a}]}{d b_0^{-2}\\log(\\mu R^2/\\varepsilon)}\\right),\\quad b_0=\\nu\\ (a=0),\\ b_0=c_0\\ (a>0)$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "CM\\log(6M)[c_0^{-2}+\\nu^{-2}(2H/\\varepsilon)^{2a}]",
+            "claim_refs": [
+              "SO_ZO_O04b_rand_native__main__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega(d\\nu^{-2}\\log(\\mu R^2/\\varepsilon))\\ (a=0);\\quad\\Omega(dc_0^{-2}\\log(\\mu R^2/\\varepsilon))\\ (a>0)",
+            "claim_refs": [
+              "SO_ZO_O04b_rand_native__main__b2"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {},
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "One binary comparison reply",
+        "tracked_parameters": [],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_O04b_rand_native",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_O04b_rand_native__main__q1",
+        "resource_projection_id": "resource_f5e6aa0923",
+        "regime_id": "SO_ZO_O04b_rand_native__main__r1"
+      }
+    },
+    {
+      "label": "Additional theorem window",
+      "predicate": {
+        "description": "$a>0$, $d\\ge16$, $\\nu(2\\mu dR^2)^a\\le\\min\\{c_0,1/4\\}$, $\\varepsilon\\le c^{\\prime}\\mu dR^2$."
+      },
+      "predicate_text": "$a>0$, $d\\ge16$, $\\nu(2\\mu dR^2)^a\\le\\min\\{c_0,1/4\\}$, $\\varepsilon\\le c^{\\prime}\\mu dR^2$.",
+      "parameter_refs": [
+        "SO_ZO_O04b_rand_native_p_bb728db2b9",
+        "SO_ZO_O04b_rand_native_p_1c5476f952",
+        "SO_ZO_O04b_rand_native_p_7ce7a5991a",
+        "SO_ZO_O04b_rand_native_p_22a8c37f10",
+        "SO_ZO_O04b_rand_native_p_5c322c6737",
+        "SO_ZO_O04b_rand_native_p_51ca5b9768",
+        "SO_ZO_O04b_rand_native_p_ebe31f71f7",
+        "SO_ZO_O04b_rand_native_p_3168ab99c4",
+        "SO_ZO_O04b_rand_native_p_f80bfb74b8",
+        "SO_ZO_O04b_rand_native_p_77aa6fcf28",
+        "SO_ZO_O04b_rand_native_p_358b5ed618"
+      ],
+      "source_region_ref": "SO_ZO_O04b_rand_native__main__r2",
+      "status": {
+        "code": "missing_upper",
+        "label": "Upper bound missing",
+        "missing_sides": [
+          "upper"
+        ]
+      },
+      "comparison_id": "SO_ZO_O04b_rand_native__main__c2",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_O04b_rand_native__main__q1",
+      "resource_projection_id": "resource_f5e6aa0923",
+      "regime_id": "SO_ZO_O04b_rand_native__main__r2",
+      "bracket": {
+        "upper_refs": [],
+        "lower_refs": [
+          "SO_ZO_O04b_rand_native__main__b3"
+        ],
+        "comparison_ref": "SO_ZO_O04b_rand_native__main__c2",
+        "quantity_ref": "SO_ZO_O04b_rand_native__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": null,
+          "lower": {
+            "expression_latex": "c\\,d/[\\nu^2(2\\mu dR^2)^{2a}]",
+            "claim_refs": [
+              "SO_ZO_O04b_rand_native__main__b3"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {},
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "One binary comparison reply",
+        "tracked_parameters": [],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_O04b_rand_native",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_O04b_rand_native__main__q1",
+        "resource_projection_id": "resource_f5e6aa0923",
+        "regime_id": "SO_ZO_O04b_rand_native__main__r2"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "proof_id": "ZO_PROOF_NOISY_COMPARE",
+      "title": "Noisy comparisons on fixed and unrestricted query domains",
+      "body": "An entropy lower holds on either query domain. A grid tournament supplies a conservative fixed-cube upper. A separate saturation lower for positive margin exponent retains the cube radius explicitly.\n\nFor the entropy lower use $f_\\theta(x)=\\mu\\|x-\\theta\\|^2/2$ and a packing of the public center cube $[-R,R]^d$ at separation greater than $2\\sqrt{2\\varepsilon/\\mu}$. For $\\varepsilon\\le c\\mu R^2$ and $d\\ge8$, its logarithmic cardinality is at least $cd\\log(\\mu R^2/\\varepsilon)$. Choose an admissible independent Bernoulli link attaining the declared clipped margin. For exponent $a=0$ all response probabilities lie in $[1/2-\\nu,1/2+\\nu]$; for $a>0$ they lie in $[1/2-c_0,1/2+c_0]$. If the corresponding half-width $b\\le1/4$, each KL contribution is at most $Cb^2$, regardless of the query location. Chain rule and Fano give $T\\ge cd b^{-2}\\log(\\mu R^2/\\varepsilon)$. This also permits all-space queries.\n\nFor the fixed-cube upper, choose a Cartesian grid with coordinate spacing at most $\\sqrt{\\varepsilon/(\\beta d)}$. Its nearest point to a global minimizer has squared distance at most $\\varepsilon/(4\\beta)$ and hence gap at most $\\varepsilon/8$. Let its size be $M\\le(2+2R\\sqrt{\\beta d/\\varepsilon})^d$ and set $H=\\lceil\\log_2M\\rceil$. Use a balanced knockout tournament. At each of at most $M-1$ matches, a fixed majority batch distinguishes all gaps at least $\\varepsilon/(2H)$ with failure probability at most $\\delta/(M-1)$. The batch is at most\n$$C[c_0^{-2}+\\nu^{-2}(2H/\\varepsilon)^{2a}]\\log(2M/\\delta),$$\nor $C\\nu^{-2}\\log(2M/\\delta)$ for $a=0$. On the union good event, each mistaken match adds at most $\\varepsilon/(2H)$ loss along the winning path; its depth is at most $H$, so the champion has gap below $\\varepsilon$. This uses only legal cube points and a fixed worst-case budget, without knowing an exact link function.\n\nFor the fixed-cube saturation lower with $a>0$, take the source's sign centers $R\\omega$ in the same cube. All within-function value gaps are at most $2\\mu dR^2$. If $b=\\nu(2\\mu dR^2)^a\\le\\min\\{c_0,1/4\\}$, each binary response has KL at most $Cb^2$. A Varshamov--Gilbert center packing has logarithmic size $\\Omega(d)$ and squared separation $\\Omega(dR^2)$. Fano implies $T\\ge cd/[\\nu^2(2\\mu dR^2)^{2a}]$ to reach error at most $c'\\mu dR^2$. Holding $R$ fixed does not turn this formula into an $\\varepsilon^{-2a}$ lower bound for every accuracy.\n\nThe native unrestricted-domain upper is imported directly from the source's robust line-search theorem after its notation change $\\kappa_{\\rm source}=a+1$, $\\tau_{\\rm source}=\\mu$, $L_{\\rm source}=\\beta$, and margin coefficient $\\mu_{\\rm source}=\\nu$. Its fixed nuisance parameters and hidden logarithms are retained. The positive-exponent native lower proof that shrinks its query cube with the horizon is not used as a verified fixed-domain lower.",
+      "scope": "Independent binary responses with the declared clipped comparison margin. The domain remains fixed when an accuracy parameter varies.",
+      "limitations": [
+        "Local argument and specification transfer; cited external theorems remain primary dependencies."
+      ],
+      "source_refs": [
+        "SO_SRC_72bcc2188cedd4f4"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "SO_ZO_O04b_rand_native__main__e1",
+      "source_ref": "SO_SRC_72bcc2188cedd4f4",
+      "locator": {
+        "theorem": "Oracle (1), PDF page 2; Theorems 1–2, page 3; Lemma 1 and lower proof, pages 5–6; Theorems 5–6 and robust line search, page 8"
+      },
+      "supports": [
+        "SO_ZO_O04b_rand_native__main__b1"
+      ],
+      "notes": [],
+      "proof_refs": [
+        "ZO_PROOF_NOISY_COMPARE"
+      ],
+      "note": "The primary citation supplies the stated ingredient; the local specialization is given in the linked proof module."
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native__main__e2",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_NOISY_COMPARE"
+      ],
+      "location": "Local arguments in this profile"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native__main__e3",
+      "source_ref": "SO_SRC_72bcc2188cedd4f4",
+      "locator": {
+        "theorem": "Oracle (1), PDF page 2; Theorems 1–2, page 3; Lemma 1 and lower proof, pages 5–6; Theorems 5–6 and robust line search, page 8"
+      },
+      "supports": [
+        "SO_ZO_O04b_rand_native__main__b2"
+      ],
+      "notes": [],
+      "proof_refs": [
+        "ZO_PROOF_NOISY_COMPARE"
+      ],
+      "note": "The primary citation supplies the stated ingredient; the local specialization is given in the linked proof module."
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native__main__e4",
+      "source_ref": "SO_SRC_72bcc2188cedd4f4",
+      "locator": {
+        "theorem": "Oracle (1), PDF page 2; Theorems 1–2, page 3; Lemma 1 and lower proof, pages 5–6; Theorems 5–6 and robust line search, page 8"
+      },
+      "supports": [
+        "SO_ZO_O04b_rand_native__main__b2"
+      ],
+      "notes": [],
+      "proof_refs": [
+        "ZO_PROOF_NOISY_COMPARE"
+      ],
+      "note": "The primary citation supplies the stated ingredient; the local specialization is given in the linked proof module."
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native__main__e5",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_NOISY_COMPARE"
+      ],
+      "location": "Local arguments in this profile"
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native__main__e6",
+      "source_ref": "SO_SRC_72bcc2188cedd4f4",
+      "locator": {
+        "theorem": "Oracle (1), PDF page 2; Theorems 1–2, page 3; Lemma 1 and lower proof, pages 5–6; Theorems 5–6 and robust line search, page 8"
+      },
+      "supports": [
+        "SO_ZO_O04b_rand_native__main__b3"
+      ],
+      "notes": [],
+      "proof_refs": [
+        "ZO_PROOF_NOISY_COMPARE"
+      ],
+      "note": "The primary citation supplies the stated ingredient; the local specialization is given in the linked proof module."
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native__main__e7",
+      "source_ref": "SO_SRC_72bcc2188cedd4f4",
+      "locator": {
+        "theorem": "Oracle (1), PDF page 2; Theorems 1–2, page 3; Lemma 1 and lower proof, pages 5–6; Theorems 5–6 and robust line search, page 8"
+      },
+      "supports": [
+        "SO_ZO_O04b_rand_native__main__b3"
+      ],
+      "notes": [],
+      "proof_refs": [
+        "ZO_PROOF_NOISY_COMPARE"
+      ],
+      "note": "The primary citation supplies the stated ingredient; the local specialization is given in the linked proof module."
+    },
+    {
+      "id": "SO_ZO_O04b_rand_native__main__e8",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_NOISY_COMPARE"
+      ],
+      "location": "Local arguments in this profile"
+    }
+  ],
+  "references": [
+    {
+      "id": "SO_SRC_72bcc2188cedd4f4",
+      "authors": "Jamieson, Nowak and Recht",
+      "title": "Query Complexity of Derivative-Free Optimization",
+      "version": "NeurIPS 2012",
+      "url": "https://papers.nips.cc/paper_files/paper/2012/file/e6d8545daa42d5ced125a4bf747b3688-Paper.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "SO_ZO_O04b_rand_native",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "other_quantified_gap",
+        "label": "Other quantified gap present"
+      },
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [
+      "other_quantified_gap"
+    ],
+    "missing_sides": [
+      "upper"
+    ],
+    "special_statuses": [],
+    "comparison_count": 2,
+    "status_counts": {
+      "other_quantified_gap": 1,
+      "missing_upper": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "SO_ZO_O04b_rand_native__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "SO_ZO_O04b_rand_native__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "fbc048bdbeee67e16e013d2b5d7c1fc37a69f7ba06a11583e51bdb5ce5e8d9f8",
+    "source_order": 217,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

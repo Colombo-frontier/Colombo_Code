@@ -1,0 +1,1002 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "SO_ZO_P01_main",
+  "title": "Lipschitz convex stochastic optimization with at most two values per sample",
+  "summary": "Minimize $f$ globally over $B_2(0,R)$ and return a point with small objective gap.",
+  "primary_domain": "single_objective",
+  "oracle_order_collection": "zo",
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "single_objective"
+    },
+    {
+      "facet": "oracle_order",
+      "value": "zero"
+    },
+    {
+      "facet": "goal",
+      "value": "global_minimization"
+    },
+    {
+      "facet": "structure",
+      "value": "convex"
+    },
+    {
+      "facet": "feedback",
+      "value": "same_sample_paired_value"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expected_loss"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_worst_case"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "solution_goal": "global_minimization",
+      "code": "single_objective_optimization",
+      "description_paragraphs": [
+        "Minimize $f$ globally over $B_2(0,R)$ and return a point with small objective gap."
+      ],
+      "navigation_domains": [
+        "single_objective"
+      ],
+      "formulation_code": "SO.global_minimization"
+    },
+    "model": {
+      "properties": {
+        "convexity": "convex",
+        "regularity": [
+          "sample_function_lipschitz_second_moment"
+        ],
+        "structure": [
+          "expectation_of_sample_functions"
+        ],
+        "growth": []
+      },
+      "domain_roles": {
+        "function": "B_2(0,R)",
+        "optimization": "B_2(0,R)",
+        "query": "$B_2(0,R)$",
+        "output": "$B_2(0,R)$",
+        "localization": "No additional global-minimizer localization promise; f_* is the constrained minimum on B_2(0,R)."
+      },
+      "code": "admissible_model_class",
+      "description_paragraphs": [
+        "Each sample function $F(\\cdot;Z)$ is convex on $B_2(0,R)$ and satisfies $\\mathbb{E}|F(0;Z)|<\\infty$, so $f(x)=\\mathbb{E}[F(x;Z)]$ is well defined. The optimization domain is $B_2(0,R)$.",
+        "The sample Lipschitz coefficient $G(Z)$ satisfies $|F(x;Z)-F(y;Z)|\\le G(Z)\\|x-y\\|_2$ and $\\mathbb{E}[G(Z)^2]\\le L^2$."
+      ],
+      "geometry_refs": [
+        "SO_ZO_P01_main_dom_11de70f8c2",
+        "SO_ZO_P01_main_dom_26957b8cc2",
+        "SO_ZO_P01_main_dom_fcc30587fb",
+        "SO_ZO_P01_main_dom_21b3809960",
+        "SO_ZO_P01_main_dom_2d21712a9b"
+      ]
+    },
+    "oracle": {
+      "public_inputs": [
+        "SO_ZO_P01_main_p_bb728db2b9",
+        "SO_ZO_P01_main_p_1e85890527",
+        "SO_ZO_P01_main_p_a4aab29c5f",
+        "\\varepsilon"
+      ],
+      "domain": "$B_2(0,R)$",
+      "variant": null,
+      "code": "same_sample_paired_value",
+      "description_paragraphs": [
+        "A new sample handle corresponds to an independent draw of the hidden sample $Z$. Given its handle and $x\\in B_2(0,R)$, the interface returns the exact sample value $F(x;Z)$. The algorithm observes only handles and numerical values, not the underlying sample data or the complete sample function.",
+        "At most two paid evaluations are allowed per handle; the second point may depend on the first response. Distinct handles are independent.",
+        "Projection and the stated proximal operations over known geometry are free.",
+        "The public inputs are $d$, $L$, $R$, $\\varepsilon$, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface."
+      ]
+    },
+    "output": {
+      "domain": "$B_2(0,R)$",
+      "code": "output_space",
+      "description_paragraphs": [
+        "Return $\\widehat{x}\\in B_2(0,R)$. The output may be an unqueried point, a random choice among previous points, or an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output."
+      ]
+    },
+    "metric": {
+      "native_metric_wording": "The base loss is $\\ell(I,x)=f(x)-f_*$, where $f_*=\\inf_{u\\in B_2(0,R)}f(u)$. This nonnegative loss is evaluated at the output, with tolerance $\\varepsilon$.",
+      "formula_latex": "f(\\widehat{x})-\\inf_{u\\in B_2(0,R)}f(u)",
+      "threshold_latex": "\\varepsilon",
+      "code": "global_minimization",
+      "description_paragraphs": [
+        "The base loss is $\\ell(I,x)=f(x)-f_*$, where $f_*=\\inf_{u\\in B_2(0,R)}f(u)$. This nonnegative loss is evaluated at the output, with tolerance $\\varepsilon$."
+      ],
+      "base_expression": "f(\\widehat{x})-\\inf_{u\\in B_2(0,R)}f(u)"
+    },
+    "resource": {
+      "unit": "one paid scalar function value",
+      "budget_mode": "fixed_worst_case",
+      "accounting": {
+        "atomic_unit": "one paid scalar function value",
+        "budget_mode": "fixed_worst_case",
+        "arithmetic_precision": "exact_real_unpriced_unless_specified",
+        "free_operations": "Only the public operations explicitly stated in this specification are free. Operations accessing the unknown instance provide no free information."
+      },
+      "code": "oracle_resource",
+      "description_paragraphs": [
+        "One scalar sample-function value costs $1$ call; two points with the same sample handle or Markov state cost $2$ calls. Batches, initialization and repeated visits are charged per value. An empty handle supplies no free instance information.",
+        "Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "randomized_allowed",
+        "adaptivity": "sequential_adaptive",
+        "restrictions": [],
+        "code": "randomized_allowed",
+        "description_paragraphs": [
+          "Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.",
+          "Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "quantifiers": "one_algorithm_for_all_admissible_instances",
+          "probability_space": "The algorithm's private seed and all randomness in the stated oracle or environment, after the instance and feedback law are fixed.",
+          "formula_latex": "\\exists\\mathcal{A}\\ \\forall I\\in\\mathcal{I}:\\ \\mathbb{E}[f(\\widehat{x})-\\inf_{u\\in B_2(0,R)}f(u)]\\le \\varepsilon",
+          "code": "expected_loss",
+          "description_paragraphs": [
+            "After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. Require $\\mathbb{E}[\\ell(I,\\widehat{x})]\\le \\varepsilon$, fixing the instance before averaging over algorithmic and feedback randomness.",
+            "Oracle cost uses a deterministic worst-case budget: $N\\le T$ on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "SO_ZO_P01_main"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [],
+    "variable_blocks": [],
+    "domains": [
+      {
+        "id": "SO_ZO_P01_main_dom_11de70f8c2",
+        "roles": [
+          "function"
+        ],
+        "description": "B_2(0,R)"
+      },
+      {
+        "id": "SO_ZO_P01_main_dom_26957b8cc2",
+        "roles": [
+          "optimization"
+        ],
+        "description": "B_2(0,R)"
+      },
+      {
+        "id": "SO_ZO_P01_main_dom_fcc30587fb",
+        "roles": [
+          "query"
+        ],
+        "description": "$B_2(0,R)$"
+      },
+      {
+        "id": "SO_ZO_P01_main_dom_21b3809960",
+        "roles": [
+          "output"
+        ],
+        "description": "$B_2(0,R)$"
+      },
+      {
+        "id": "SO_ZO_P01_main_dom_2d21712a9b",
+        "roles": [
+          "localization"
+        ],
+        "description": "No additional global-minimizer localization promise; f_* is the constrained minimum on B_2(0,R)."
+      }
+    ],
+    "norms": [],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "SO_ZO_P01_main_p_bb728db2b9",
+      "symbol": "d",
+      "meaning": "Dimension of the variable space",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "d"
+    },
+    {
+      "id": "SO_ZO_P01_main_p_1e85890527",
+      "symbol": "L",
+      "meaning": "Moment budget of the sample Lipschitz coefficient",
+      "kind": "independent",
+      "domain": "$L>0$",
+      "public": true,
+      "definition": "$\\mathbb{E}[G(Z)^2]\\le L^2$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "L"
+    },
+    {
+      "id": "SO_ZO_P01_main_p_a4aab29c5f",
+      "symbol": "R",
+      "meaning": "Feasible-ball radius",
+      "kind": "independent",
+      "domain": "$R>0$",
+      "public": true,
+      "definition": "The output must belong to $B_2(0,R)$; the query radius is specified separately in the interface.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "R"
+    },
+    {
+      "id": "SO_ZO_P01_main_p_5c322c6737",
+      "symbol": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "epsilon"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "Dimension of the variable space",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_P01_main_p_bb728db2b9"
+    },
+    {
+      "symbol_latex": "L",
+      "meaning": "Moment budget of the sample Lipschitz coefficient",
+      "domain": "$L>0$",
+      "definition": "$\\mathbb{E}[G(Z)^2]\\le L^2$",
+      "parameter_ref": "SO_ZO_P01_main_p_1e85890527"
+    },
+    {
+      "symbol_latex": "R",
+      "meaning": "Feasible-ball radius",
+      "domain": "$R>0$",
+      "definition": "The output must belong to $B_2(0,R)$; the query radius is specified separately in the interface.",
+      "parameter_ref": "SO_ZO_P01_main_p_a4aab29c5f"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "domain": "$\\varepsilon>0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_P01_main_p_5c322c6737"
+    },
+    {
+      "symbol_latex": "x,y,u",
+      "meaning": "Function arguments and dummy variables in the formulas",
+      "domain": "$x,y,u\\in\\mathbb{R}^d$; spherical domains are embedded in $\\mathbb{R}^{d+1}$",
+      "definition": "Admissible ranges are specified separately by the task, model and oracle in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat{x}",
+      "meaning": "Final algorithm output",
+      "domain": "$B_2(0,R)$",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "I",
+      "meaning": "Complete problem instance",
+      "domain": "$I\\in\\mathcal{I}$",
+      "definition": "Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{I}",
+      "meaning": "Admissible instance class determined by the eight specification fields in this profile",
+      "domain": "Instances satisfying the public parameter bounds",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{A}",
+      "meaning": "Algorithm or strategy",
+      "domain": "Measurable adaptive strategies allowed in this profile",
+      "definition": "The algorithm is selected before the hidden instance.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\ell",
+      "meaning": "Base loss or residual",
+      "domain": "$\\ell:\\mathcal{I}\\times\\mathcal{X}_{\\mathrm{out}}\\to[0,+\\infty]$",
+      "definition": "The exact formula appears in this profile's performance-criterion section.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb{E},\\Pr",
+      "meaning": "Expectation and probability",
+      "domain": "Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee",
+      "definition": "Fix the instance first; aggregate cost and error separately.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\inf,\\sup",
+      "meaning": "Infimum and supremum",
+      "domain": "Evaluated only over the variable sets explicitly specified in the formula",
+      "definition": "In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_2,\\langle\\cdot,\\cdot\\rangle",
+      "meaning": "Euclidean norm and inner product",
+      "domain": "$\\|x\\|_2=\\sqrt{\\langle x,x\\rangle}$",
+      "definition": "$\\langle x,y\\rangle=x^\\top y$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "B_p(c,R)",
+      "meaning": "Closed norm ball",
+      "domain": "$p\\in[1,\\infty],\\ R\\ge0$",
+      "definition": "$B_p(c,R)=\\{x:\\|x-c\\|_p\\le R\\}$; $B_2$ denotes the Euclidean ball.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,T",
+      "meaning": "Actual call count and declared budget",
+      "domain": "$N,T\\in\\mathbb{N}_0$",
+      "definition": "A fixed budget bounds every execution path; the Markov specification uses an expected budget.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta,\\widetilde{O}",
+      "meaning": "Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms",
+      "domain": "Within the joint parameter window specified for each complexity regime",
+      "definition": "Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C,c_\\alpha,C_\\alpha",
+      "meaning": "Positive constant in a proof or asymptotic bound",
+      "domain": "$0<c,C,c_\\alpha,C_\\alpha<\\infty$",
+      "definition": "Unsubscripted constants have the dependencies stated in the bound; constants subscripted by $\\alpha$ may depend only on the fixed smoothness order.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_+,e",
+      "meaning": "Natural logarithm, truncated logarithm, and Euler's number",
+      "domain": "$z>0$",
+      "definition": "$\\log_+(z)=\\max\\{0,\\log z\\}$; $e=\\exp(1)$, and $\\log_2$ denotes the base-two logarithm.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,f_*",
+      "meaning": "Population objective and its optimal value",
+      "domain": "$f:\\mathcal{X}_{\\mathrm{fun}}\\to\\mathbb{R}$",
+      "definition": "$f_*=\\inf_{x\\in B_2(0,R)}f(x)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "Z,F(\\cdot;Z)",
+      "meaning": "Hidden sample and its associated sample function",
+      "domain": "Samples lie in an admissible probability space; each sample function is real-valued on the declared domain",
+      "definition": "The population objective is the expectation under the sample distribution or stationary distribution.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "G(Z)",
+      "meaning": "Random sample Lipschitz coefficient",
+      "domain": "$G(Z)\\ge0$",
+      "definition": "The model's difference inequality holds for each sample, with the moment budget fixed as specified here.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{X}_{\\mathrm{fun}},\\mathcal{X}_{\\mathrm{out}},\\mathcal{X}",
+      "meaning": "Function domain, admissible output domain and optimization domain",
+      "domain": "Each is the Euclidean space or subset explicitly specified in this profile",
+      "definition": "$\\mathcal{X}_{\\mathrm{out}}=B_2(0,R)$ and $\\mathcal{X}=B_2(0,R)$; the function domain is the region on which the model imposes regularity.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^*",
+      "meaning": "Optimal worst-case oracle complexity satisfying the complete guarantee",
+      "domain": "$N^*\\in[0,+\\infty]$",
+      "definition": "Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "key": "calls",
+      "kind": "target_accuracy_cost",
+      "projection": "declared_atomic_resource",
+      "label": "one paid scalar function value",
+      "units": "one paid scalar function value",
+      "id": "SO_ZO_P01_main__main__q1",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [
+        "SO_ZO_P01_main_p_bb728db2b9",
+        "SO_ZO_P01_main_p_1e85890527",
+        "SO_ZO_P01_main_p_a4aab29c5f",
+        "SO_ZO_P01_main_p_5c322c6737"
+      ],
+      "fixed_parameters": [],
+      "analysis_scope": "declared_joint_parameter_window",
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": "oracle_call_complexity",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "expression_latex": "C^\\star_{v,\\pi}(\\varepsilon;\\theta)=\\inf\\{B\\ge0:\\exists\\mathcal A\\in\\mathfrak A_v,\\ C_\\pi(\\mathcal A,I)\\le B\\ \\text{and}\\ G_v(\\mathcal A,I;\\varepsilon)\\ \\forall I\\}",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "one paid scalar function value",
+      "expression": "declared_atomic_resource",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_fd5ea394a6"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "SO_ZO_P01_main__main__r1",
+      "specification_ref": "SO_ZO_P01_main",
+      "name": "Parameter regime P01.R1",
+      "universe_ref": null,
+      "predicate": {
+        "op": "source_condition",
+        "text": "$d\\ge1$, $L,R>0$ and $0<\\varepsilon\\le cLR$. Sample functions are convex and satisfy $\\mathbb{E}G(Z)^2\\le L^2$. At most two paid evaluations are available from each independent sample handle.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$d\\ge1$, $L,R>0$ and $0<\\varepsilon\\le cLR$. Sample functions are convex and satisfy $\\mathbb{E}G(Z)^2\\le L^2$. At most two paid evaluations are available from each independent sample handle.",
+      "kind": "parameter_region"
+    },
+    {
+      "id": "SO_ZO_P01_main__main__r2",
+      "specification_ref": "SO_ZO_P01_main",
+      "name": "Parameter regime P01.R2",
+      "universe_ref": null,
+      "predicate": {
+        "op": "source_condition",
+        "text": "$d\\ge1$, $L,R>0$, $\\varepsilon\\ge LR$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$d\\ge1$, $L,R>0$, $\\varepsilon\\ge LR$.",
+      "kind": "parameter_region"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "SO_ZO_P01_main__main__b1",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "O(dL^2R^2/\\varepsilon^2)",
+      "quantity_ref": "SO_ZO_P01_main__main__q1",
+      "quantity_refs": [
+        "SO_ZO_P01_main__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Projected descent with same-sample two-point smoothing",
+      "source_refs": [
+        "SO_SRC_072506cc03b2f8a7"
+      ],
+      "evidence_refs": [
+        "SO_ZO_P01_main__main__e1",
+        "SO_ZO_P01_main__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_P01_main__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Samples are convex on $B_2(0,R)$, with $\\mathbb{E} G^2\\le L^2$. Iterations stay in the shrunken ball $B_2(0,R-h)$, so both perturbed points remain in the original ball; choose $0<h<R$ sufficiently small."
+        ],
+        "oracle_mapping": "Preserve sample handles and their reuse limits. Each queried point returns one sample value; sample data and sample gradients are not available for free.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_ZO_P01_main__main__b2",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "\\Omega(dL^2R^2/\\varepsilon^2)",
+      "quantity_ref": "SO_ZO_P01_main__main__q1",
+      "quantity_refs": [
+        "SO_ZO_P01_main__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Two-point statistical lower bound from linear sample functions",
+      "source_refs": [
+        "SO_SRC_bb12c56b47e0388f"
+      ],
+      "evidence_refs": [
+        "SO_ZO_P01_main__main__e3",
+        "SO_ZO_P01_main__main__e4"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_P01_main__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "$0<\\varepsilon\\le cLR$. At most two paid evaluations are permitted per sample, the total query budget is fixed, and the error criterion is expected objective gap. The affine sample functions satisfy the required second-moment bound on their Lipschitz constants."
+        ],
+        "oracle_mapping": "Preserve sample handles and their reuse limits. Each queried point returns one sample value; sample data and sample gradients are not available for free.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_ZO_P01_main__main__b3",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "0",
+      "quantity_ref": "SO_ZO_P01_main__main__q1",
+      "quantity_refs": [
+        "SO_ZO_P01_main__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Return the public initial point",
+      "source_refs": [],
+      "evidence_refs": [
+        "SO_ZO_P01_main__main__e5",
+        "SO_ZO_P01_main__main__e6"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_P01_main__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\varepsilon\\ge LR$."
+        ],
+        "oracle_mapping": "Preserve sample handles and their reuse limits. Each queried point returns one sample value; sample data and sample gradients are not available for free.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ]
+    },
+    {
+      "id": "SO_ZO_P01_main__main__b4",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "0",
+      "quantity_ref": "SO_ZO_P01_main__main__q1",
+      "quantity_refs": [
+        "SO_ZO_P01_main__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Nonnegative oracle cost",
+      "source_refs": [],
+      "evidence_refs": [
+        "SO_ZO_P01_main__main__e7",
+        "SO_ZO_P01_main__main__e8"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_P01_main__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\varepsilon\\ge LR$."
+        ],
+        "oracle_mapping": "Preserve sample handles and their reuse limits. Each queried point returns one sample value; sample data and sample gradients are not available for free.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Parameter regime P01.R1",
+      "predicate": {
+        "op": "source_condition",
+        "text": "$d\\ge1$, $L,R>0$ and $0<\\varepsilon\\le cLR$. Sample functions are convex and satisfy $\\mathbb{E}G(Z)^2\\le L^2$. At most two paid evaluations are available from each independent sample handle.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$d\\ge1$, $L,R>0$ and $0<\\varepsilon\\le cLR$. Sample functions are convex and satisfy $\\mathbb{E}G(Z)^2\\le L^2$. At most two paid evaluations are available from each independent sample handle.",
+      "parameter_refs": [
+        "SO_ZO_P01_main_p_bb728db2b9",
+        "SO_ZO_P01_main_p_1e85890527",
+        "SO_ZO_P01_main_p_a4aab29c5f",
+        "SO_ZO_P01_main_p_5c322c6737"
+      ],
+      "source_region_ref": "SO_ZO_P01_main__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_P01_main__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_P01_main__main__q1",
+      "resource_projection_id": "resource_fd5ea394a6",
+      "regime_id": "SO_ZO_P01_main__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_P01_main__main__b1"
+        ],
+        "lower_refs": [
+          "SO_ZO_P01_main__main__b2"
+        ],
+        "comparison_ref": "SO_ZO_P01_main__main__c1",
+        "quantity_ref": "SO_ZO_P01_main__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$O(1)$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "O(dL^2R^2/\\varepsilon^2)",
+            "claim_refs": [
+              "SO_ZO_P01_main__main__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega(dL^2R^2/\\varepsilon^2)",
+            "claim_refs": [
+              "SO_ZO_P01_main__main__b2"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_ZO_P01_main__main__b1": [
+            {
+              "region_ref": null,
+              "predicate_text": "Samples are convex on $B_2(0,R)$, with $\\mathbb{E} G^2\\le L^2$. Iterations stay in the shrunken ball $B_2(0,R-h)$, so both perturbed points remain in the original ball; choose $0<h<R$ sufficiently small."
+            }
+          ],
+          "SO_ZO_P01_main__main__b2": [
+            {
+              "region_ref": null,
+              "predicate_text": "$0<\\varepsilon\\le cLR$. At most two paid evaluations are permitted per sample, the total query budget is fixed, and the error criterion is expected objective gap. The affine sample functions satisfy the required second-moment bound on their Lipschitz constants."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "one paid scalar function value",
+        "tracked_parameters": [
+          "SO_ZO_P01_main_p_bb728db2b9",
+          "SO_ZO_P01_main_p_1e85890527",
+          "SO_ZO_P01_main_p_a4aab29c5f",
+          "SO_ZO_P01_main_p_5c322c6737"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_P01_main",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_P01_main__main__q1",
+        "resource_projection_id": "resource_fd5ea394a6",
+        "regime_id": "SO_ZO_P01_main__main__r1"
+      }
+    },
+    {
+      "label": "Parameter regime P01.R2",
+      "predicate": {
+        "op": "source_condition",
+        "text": "$d\\ge1$, $L,R>0$, $\\varepsilon\\ge LR$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$d\\ge1$, $L,R>0$, $\\varepsilon\\ge LR$.",
+      "parameter_refs": [
+        "SO_ZO_P01_main_p_bb728db2b9",
+        "SO_ZO_P01_main_p_1e85890527",
+        "SO_ZO_P01_main_p_a4aab29c5f",
+        "SO_ZO_P01_main_p_5c322c6737"
+      ],
+      "source_region_ref": "SO_ZO_P01_main__main__r2",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_P01_main__main__c2",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_P01_main__main__q1",
+      "resource_projection_id": "resource_fd5ea394a6",
+      "regime_id": "SO_ZO_P01_main__main__r2",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_P01_main__main__b3"
+        ],
+        "lower_refs": [
+          "SO_ZO_P01_main__main__b4"
+        ],
+        "comparison_ref": "SO_ZO_P01_main__main__c2",
+        "quantity_ref": "SO_ZO_P01_main__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "0",
+            "claim_refs": [
+              "SO_ZO_P01_main__main__b3"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "0",
+            "claim_refs": [
+              "SO_ZO_P01_main__main__b4"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_ZO_P01_main__main__b3": [
+            {
+              "region_ref": null,
+              "predicate_text": "$\\varepsilon\\ge LR$."
+            }
+          ],
+          "SO_ZO_P01_main__main__b4": [
+            {
+              "region_ref": null,
+              "predicate_text": "$\\varepsilon\\ge LR$."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "one paid scalar function value",
+        "tracked_parameters": [
+          "SO_ZO_P01_main_p_bb728db2b9",
+          "SO_ZO_P01_main_p_1e85890527",
+          "SO_ZO_P01_main_p_a4aab29c5f",
+          "SO_ZO_P01_main_p_5c322c6737"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_P01_main",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_P01_main__main__q1",
+        "resource_projection_id": "resource_fd5ea394a6",
+        "regime_id": "SO_ZO_P01_main__main__r2"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "proof_id": "ZO_PROOF_ZERO",
+      "title": "Zero-query certificates",
+      "body": "A public feasible point whose objective gap is at most $G_0$ solves every target $\\varepsilon\\ge G_0$ with exactly zero calls.\n\nFor a convex mean objective that is $L$-Lipschitz on a ball of radius $R$, the center has gap at most $LR$. A sample Lipschitz modulus $G$ with $\\mathbb E G^r\\le L^r$, $r>1$, implies $\\mathbb E G\\le L$, so the same certificate applies to moment models. Integrability at one point ensures that the mean is defined.\n\nIf a globally $\\beta$-smooth objective has a global minimizer within distance $R$ of the public initial point, its gradient vanishes at that minimizer and the smoothness inequality gives gap at most $\\beta R^2/2$. In a declared norm, use the corresponding radius in that norm. For $B_p(R)$ with Euclidean regularity this radius is $R$ when $p\\le2$ and $R d^{1/2-1/p}$ when $p\\ge2$.\n\nFor a known positive semidefinite quadratic matrix $A$, the center has gap at most $\\lambda_{\\max}(A)R^2/2$; if $A=0$, the loss is identically zero. A public initial-gap promise $\\Delta$ directly gives the certificate $G_0=\\Delta$. For the Markov potential $r_0$, its companion initial iterate has gap at most $\\mu r_0$. These are different certificates with different model assumptions; in particular, an unknown matrix with no public spectral bound does not acquire a uniform certificate.\n\nCall counts are nonnegative. Together with the stated algorithm, this proves exact zero complexity on each certified region. The upper/lower ratio is undefined, so it is stored as null rather than as $0/0$.",
+      "scope": "The stated sufficient accuracy regions only; no assertion that every certificate is sharp.",
+      "limitations": [
+        "Local argument and specification transfer; cited external theorems remain primary dependencies."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "SO_ZO_P01_main__main__e1",
+      "source_ref": "SO_SRC_072506cc03b2f8a7",
+      "locator": {
+        "theorem": "Theorem 1 and Corollary 2, extended using the second-moment argument",
+        "pdf_pages": [
+          4
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_P01_main__main__b1"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_P01_main__main__e2",
+      "source_ref": "SO_SRC_072506cc03b2f8a7",
+      "locator": {
+        "theorem": "Theorem 1 and Corollary 2, extended using the second-moment argument",
+        "pdf_pages": [
+          7
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_P01_main__main__b1"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_P01_main__main__e3",
+      "source_ref": "SO_SRC_bb12c56b47e0388f",
+      "locator": {
+        "theorem": "Proposition 1, Euclidean $q=2$",
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_P01_main__main__b2"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_P01_main__main__e4",
+      "source_ref": "SO_SRC_bb12c56b47e0388f",
+      "locator": {
+        "theorem": "Proposition 1, Euclidean $q=2$",
+        "pdf_pages": [
+          11
+        ],
+        "printed_pages": [
+          11
+        ]
+      },
+      "supports": [
+        "SO_ZO_P01_main__main__b2"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_P01_main__main__e5",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ],
+      "location": "Local arguments in this profile"
+    },
+    {
+      "id": "SO_ZO_P01_main__main__e6",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ],
+      "location": "Local arguments in this profile"
+    },
+    {
+      "id": "SO_ZO_P01_main__main__e7",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ],
+      "location": "Local arguments in this profile"
+    },
+    {
+      "id": "SO_ZO_P01_main__main__e8",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ],
+      "location": "Local arguments in this profile"
+    }
+  ],
+  "references": [
+    {
+      "id": "SO_SRC_bb12c56b47e0388f",
+      "authors": "Duchi, Jordan, Wainwright and Wibisono",
+      "title": "Optimal Rates for Zero-Order Convex Optimization: The Power of Two Function Evaluations",
+      "version": "IEEE Transactions on Information Theory 61(5), 2015",
+      "url": "https://arxiv.org/html/1312.2139v2",
+      "publication_status": "published"
+    },
+    {
+      "id": "SO_SRC_072506cc03b2f8a7",
+      "authors": "Ohad Shamir",
+      "title": "An Optimal Algorithm for Bandit and Zero-Order Convex Optimization with Two-Point Feedback",
+      "version": "JMLR 18(52):1--11, 2017",
+      "url": "https://jmlr.org/papers/volume18/16-632/16-632.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "SO_ZO_P01_main",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 2,
+    "status_counts": {
+      "optimal": 2
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "SO_ZO_P01_main__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "SO_ZO_P01_main__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "978b56f9090d978ea777357a6e2936e746fef98a70f3b34e7b533ddb27cb7f26",
+    "source_order": 189,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

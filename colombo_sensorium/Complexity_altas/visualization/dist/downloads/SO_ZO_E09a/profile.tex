@@ -1,0 +1,1324 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Smooth convex finite-sum optimization with selectable exact component values\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}ZO\_\allowbreak{}E09a}
+
+Single-objective optimization
+
+Minimize \AtlasInlineMath{F} globally over \AtlasInlineMath{\mathbb{R}^d} and return a point with small objective gap.
+
+\textbf{Status.} Other quantified gap present
+
+\textbf{Gap classes present.} Other quantified gap; Logarithmic gap
+
+The regional bracket below specifies the quantified gaps and their parameter dependence.
+
+\textbf{TASK tags.} formulation: Global minimization; solution concept: Global minimization; task family: Single objective
+
+\textbf{MODEL tags.} convexity: Convex components; smoothness: Component gradient lipschitz; structure: Finite sum
+
+\textbf{ORACLE tags.} access order: Zeroth-order interface; interface family: Selected component value; public information: Public inputs explicitly declared; query domain: Full space
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; randomization: Deterministic; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required
+
+\textbf{METRIC tags.} criterion: Objective gap
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; mode: Deterministic; mode: Probability
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Minimize \AtlasInlineMath{F} globally over \AtlasInlineMath{\mathbb{R}^d} and return a point with small objective gap.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+\AtlasInlineMath{F(x)=n^{-1}\sum_{i=1}^n f_i(x)}, with \AtlasInlineMath{n\in\mathbb{N}}. Each component \AtlasInlineMath{f_i:\mathbb{R}^d\to\mathbb{R}} is globally convex.
+
+Every component satisfies \AtlasInlineMath{\|\nabla f_i(x)-\nabla f_i(y)\|_2\le\beta\|x-y\|_2}. Component affine terms and gradients at the optimum are unrestricted, and components need not attain minima.
+
+\AtlasInlineMath{\operatorname{argmin}F\cap B_2(0,R)\ne\varnothing}.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+The algorithm may actively choose \AtlasInlineMath{i\in\{1,\ldots,n\}} and \AtlasInlineMath{x\in\mathbb{R}^d}. The interface \AtlasInlineMath{(i,x)\mapsto f_i(x)} returns one exact component value. Components may be revisited; full-average values must be computed through component calls.
+
+The public inputs are \AtlasInlineMath{d}, \AtlasInlineMath{n}, \AtlasInlineMath{\beta}, \AtlasInlineMath{R}, \AtlasInlineMath{\varepsilon}, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return \AtlasInlineMath{\widehat{x}\in \mathbb{R}^d}. The output may be an unqueried point, an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The base loss is \AtlasInlineMath{\ell(I,x)=F(x)-F_*}, where \AtlasInlineMath{F_*=\inf_{u\in \mathbb{R}^d}F(u)}. This nonnegative loss is evaluated at the output, with tolerance \AtlasInlineMath{\varepsilon}.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+One \AtlasInlineMath{(i,x)\mapsto f_i(x)} costs \AtlasInlineMath{1} component-value calls; recomputing the full average costs \AtlasInlineMath{n} calls. Every initialization, snapshot and differencing point is charged individually.
+
+Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+\needspace{4\baselineskip}\subsubsection{Deterministic}
+Only deterministic strategies are allowed. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.
+
+Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately.
+
+After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. The requirement \AtlasInlineMath{\ell(I,\widehat{x})\le \varepsilon} holds deterministically for each instance.
+
+Oracle cost uses a deterministic worst-case budget: \AtlasInlineMath{N\le T} on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path.
+
+\needspace{4\baselineskip}\subsubsection{Randomized}
+Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.
+
+Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately.
+
+After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. The error requirement is \AtlasInlineMath{\Pr(\ell(I,\widehat{x})\le \varepsilon)\ge2/3}.
+
+Probability is over the algorithm's random seed only.
+
+Oracle cost uses a deterministic worst-case budget: \AtlasInlineMath{N\le T} on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path.
+
+\textbf{Output qualification.} Random selection among previously queried points is permitted, subject to the declared success guarantee.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{d}: Dimension of the variable space \textbf{Domain:} \AtlasInlineMath{d\in\mathbb{N},\ d\ge1}.
+
+\AtlasInlineMath{n}: Number of finite-sum components \textbf{Domain:} \AtlasInlineMath{n\in\mathbb{N},\ n\ge1}.
+
+\AtlasInlineMath{F=n^{-1}\sum_{i=1}^n f_i}
+
+\AtlasInlineMath{\beta}: Public upper bound on the gradient Lipschitz constant \textbf{Domain:} \AtlasInlineMath{\beta>0}.
+
+The object, norm and domain are fixed by the specific inequalities in this profile's model.
+
+\AtlasInlineMath{R}: Localization radius for a global minimizer \textbf{Domain:} \AtlasInlineMath{R>0}.
+
+\AtlasInlineMath{x_*\in B_2(0,R)}
+
+\AtlasInlineMath{\varepsilon}: Error target; norm and squared-norm criteria use different thresholds \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{Q}: Smoothness accuracy ratio \textbf{Domain:} \AtlasInlineMath{Q>0}.
+
+\AtlasInlineMath{Q=\beta R^2/\varepsilon}
+
+\AtlasInlineMath{x,y,u}: Function arguments and dummy variables in the formulas \textbf{Domain:} \AtlasInlineMath{x,y,u\in\mathbb{R}^d}; spherical domains are embedded in \AtlasInlineMath{\mathbb{R}^{d+1}}.
+
+Admissible ranges are specified separately by the task, model and oracle in this profile.
+
+\AtlasInlineMath{\widehat{x}}: Final algorithm output \textbf{Domain:} \AtlasInlineMath{\mathbb{R}^d}.
+
+\AtlasInlineMath{I}: Complete problem instance \textbf{Domain:} \AtlasInlineMath{I\in\mathcal{I}}.
+
+Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.
+
+\AtlasInlineMath{\mathcal{I}}: Admissible instance class determined by the eight specification fields in this profile \textbf{Domain:} Instances satisfying the public parameter bounds.
+
+\AtlasInlineMath{\mathcal{A}}: Algorithm or strategy \textbf{Domain:} Measurable adaptive strategies allowed in this profile.
+
+The algorithm is selected before the hidden instance.
+
+\AtlasInlineMath{\ell}: Base loss or residual \textbf{Domain:} \AtlasInlineMath{\ell:\mathcal{I}\times\mathcal{X}_{\mathrm{out}}\to[0,+\infty]}.
+
+The exact formula appears in this profile's performance-criterion section.
+
+\AtlasInlineMath{\mathbb{E},\Pr}: Expectation and probability \textbf{Domain:} Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee.
+
+Fix the instance first; aggregate cost and error separately.
+
+\AtlasInlineMath{\inf,\sup}: Infimum and supremum \textbf{Domain:} Evaluated only over the variable sets explicitly specified in the formula.
+
+In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.
+
+\AtlasInlineMath{\|\cdot\|_2,\langle\cdot,\cdot\rangle}: Euclidean norm and inner product \textbf{Domain:} \AtlasInlineMath{\|x\|_2=\sqrt{\langle x,x\rangle}}.
+
+\AtlasInlineMath{\langle x,y\rangle=x^\top y}
+
+\AtlasInlineMath{B_p(c,R)}: Closed norm ball \textbf{Domain:} \AtlasInlineMath{p\in[1,\infty],\ R\ge0}.
+
+\AtlasInlineMath{B_p(c,R)=\{x:\|x-c\|_p\le R\}}; \AtlasInlineMath{B_2} denotes the Euclidean ball.
+
+\AtlasInlineMath{N,T}: Actual call count and declared budget \textbf{Domain:} \AtlasInlineMath{N,T\in\mathbb{N}_0}.
+
+A fixed budget bounds every execution path; the Markov specification uses an expected budget.
+
+\AtlasInlineMath{O,\Omega,\Theta,\widetilde{O}}: Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms \textbf{Domain:} Within the joint parameter window specified for each complexity regime.
+
+Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.
+
+\AtlasInlineMath{c,C,c_\alpha,C_\alpha}: Positive constant in a proof or asymptotic bound \textbf{Domain:} \AtlasInlineMath{0<c,C,c_\alpha,C_\alpha<\infty}.
+
+Unsubscripted constants have the dependencies stated in the bound; constants subscripted by \AtlasInlineMath{\alpha} may depend only on the fixed smoothness order.
+
+\AtlasInlineMath{\log,\log_+,e}: Natural logarithm, truncated logarithm, and Euler's number \textbf{Domain:} \AtlasInlineMath{z>0}.
+
+\AtlasInlineMath{\log_+(z)=\max\{0,\log z\}}; \AtlasInlineMath{e=\exp(1)}, and \AtlasInlineMath{\log_2} denotes the base-two logarithm.
+
+\AtlasInlineMath{f_i,i}: Finite-sum components and their indices \textbf{Domain:} \AtlasInlineMath{f_i:\mathbb{R}^d\to\mathbb{R},\ i\in\{1,\ldots,n\}}.
+
+Components are unknown; indices may be selected actively and revisited at a cost.
+
+\AtlasInlineMath{F}: Finite-sum mean objective \textbf{Domain:} \AtlasInlineMath{F:\mathbb{R}^d\to\mathbb{R}}.
+
+\AtlasInlineMath{F=n^{-1}\sum_{i=1}^n f_i}
+
+\AtlasInlineMath{F_*}: Optimal value of the finite-sum objective over the optimization domain \textbf{Domain:} \AtlasInlineMath{F_*\in\mathbb{R}}.
+
+\AtlasInlineMath{F_*=\inf_{x\in\mathcal{X}}F(x)}.
+
+\AtlasInlineMath{\nabla f,\nabla^2f,D^jf}: Gradient, Hessian, and higher Fréchet derivatives \textbf{Domain:} \AtlasInlineMath{\nabla f\in\mathbb{R}^d,\ \nabla^2f\in\mathbb{R}^{d\times d}}; \AtlasInlineMath{D^jf} is a \AtlasInlineMath{j}-linear form.
+
+Used only at derivative orders and on regions where the model guarantees its existence.
+
+\AtlasInlineMath{\|\cdot\|_{\mathrm{op}}}: Euclidean induced matrix or tensor operator norm \textbf{Domain:} Take the supremum over Euclidean unit input vectors of the corresponding order.
+
+\AtlasInlineMath{\|T\|_{\mathrm{op}}=\sup_{\|u_1\|_2,\ldots,\|u_j\|_2\le1}|T[u_1,\ldots,u_j]|}
+
+\AtlasInlineMath{\mathcal{X}_{\mathrm{fun}},\mathcal{X}_{\mathrm{out}},\mathcal{X}}: Function domain, admissible output domain and optimization domain \textbf{Domain:} Each is the Euclidean space or subset explicitly specified in this profile.
+
+\AtlasInlineMath{\mathcal{X}_{\mathrm{out}}=\mathbb{R}^d} and \AtlasInlineMath{\mathcal{X}=\mathbb{R}^d}; the function domain is the region on which the model imposes regularity.
+
+\AtlasInlineMath{N^*}: Optimal worst-case oracle complexity satisfying the complete guarantee \textbf{Domain:} \AtlasInlineMath{N^*\in[0,+\infty]}.
+
+Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.
+
+\AtlasInlineMath{x_*}: A global minimizer or quadratic center whose existence is promised by the model \textbf{Domain:} Belongs to the localization domain specified here; used only under the stated existence promise.
+
+The full-space minimizer is unique in the strongly convex class. The center of a positive semidefinite quadratic model need not be unique.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\textbf{View.} Deterministic
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one exact selected component scalar value
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q2 - target accuracy cost}
+\textbf{View.} Deterministic
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one exact selected component scalar value
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q3 - target accuracy cost}
+\textbf{View.} Deterministic
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one exact selected component scalar value
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q4 - target accuracy cost}
+\textbf{View.} Randomized
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one exact selected component scalar value
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q5 - target accuracy cost}
+\textbf{View.} Randomized
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one exact selected component scalar value
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q6 - target accuracy cost}
+\textbf{View.} Randomized
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one exact selected component scalar value
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsection{R1 - Parameter regime E09a.R4}
+\textbf{Region.} \AtlasInlineMath{\varepsilon\ge\beta R^2/2}, equivalently \AtlasInlineMath{Q\le2}.
+
+\textbf{Views.} Deterministic; Randomized
+
+\textbf{Quantity.} Q1; Q4
+
+\textbf{Resource.} one exact selected component scalar value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B8, B26
+
+\AtlasMath{0}
+\textbf{Upper bound.} B7, B25
+
+\AtlasMath{0}
+\needspace{4\baselineskip}\subsection{R2 - Parameter regime E09a.NEW.det\_main}
+\textbf{Region.} \AtlasInlineMath{n\ge 2,\quad Q\ge512}.
+
+\textbf{Views.} Deterministic
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} one exact selected component scalar value
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B2, B3, B4
+
+\AtlasMath{\begin{cases}\Omega(d\max\{n,\min(d,\sqrt Q)\}),&Q<128^2,\\\Omega(d\max\{n,\min(d,\sqrt Q),\log Q\}),&Q\ge128^2.\end{cases}}
+\textbf{Upper bound.} B6, B5
+
+\AtlasMath{O(nd\min\{\sqrt Q,d\log(e+Q)\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(\min\{n\sqrt Q,nd\log(e+Q)\}/\max\{n,\min(d,\sqrt Q),\log Q\ \mathrm{if}\ Q\ge128^2\})}
+
+\needspace{4\baselineskip}\subsection{R3 - Single-component identity reduction: regime E03.R1}
+\textbf{Region.} \AtlasInlineMath{n=1}; \AtlasInlineMath{32\le Q\le d^2}.
+
+\textbf{Views.} Deterministic; Randomized
+
+\textbf{Quantity.} Q2; Q5
+
+\textbf{Resource.} one exact selected component scalar value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B10, B28
+
+\AtlasMath{\Omega(d\sqrt Q)}
+\textbf{Upper bound.} B9, B27
+
+\AtlasMath{O(d\sqrt Q)}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\needspace{4\baselineskip}\subsection{R4 - Single-component identity reduction: regime E03.R2}
+\textbf{Region.} \AtlasInlineMath{n=1}; \AtlasInlineMath{Q\ge32,\ Q>d^2}.
+
+\textbf{Views.} Deterministic
+
+\textbf{Quantity.} Q2
+
+\textbf{Resource.} one exact selected component scalar value
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B10, B13
+
+\AtlasMath{\begin{cases}\Omega(d^2),&Q<128^2,\\\Omega(\max\{d^2,d\log Q\}),&Q\ge128^2.\end{cases}}
+\textbf{Upper bound.} B9
+
+\AtlasMath{O(\min\{d\sqrt Q,d^2\log Q\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(\log Q)}
+
+\needspace{4\baselineskip}\subsection{R5 - Single-component identity reduction: regime E03.R4.part1}
+\textbf{Region.} \AtlasInlineMath{n=1}; \AtlasInlineMath{2<Q<4}.
+
+\textbf{Views.} Deterministic
+
+\textbf{Quantity.} Q2
+
+\textbf{Resource.} one exact selected component scalar value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B15
+
+\AtlasMath{\Omega(d)}
+\textbf{Upper bound.} B14
+
+\AtlasMath{O(d)}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\needspace{4\baselineskip}\subsection{R6 - Single-component identity reduction: regime E03.R4.part3}
+\textbf{Region.} \AtlasInlineMath{n=1}; \AtlasInlineMath{4\le Q<32}.
+
+\textbf{Views.} Deterministic; Randomized
+
+\textbf{Quantity.} Q2; Q5
+
+\textbf{Resource.} one exact selected component scalar value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B11, B29
+
+\AtlasMath{\Omega(d)}
+\textbf{Upper bound.} B12, B30
+
+\AtlasMath{O(d)}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\needspace{4\baselineskip}\subsection{R7 - Parameter regime E09a.R1}
+\textbf{Region.} \AtlasInlineMath{n\ge2}, \AtlasInlineMath{Q\ge512}, \AtlasInlineMath{n\ge Q}.
+
+\textbf{Views.} Randomized
+
+\textbf{Quantity.} Q4
+
+\textbf{Resource.} one exact selected component scalar value
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B19
+
+\AtlasMath{\Omega(nd)}
+\textbf{Upper bound.} B22, B23
+
+\AtlasMath{\widetilde{O}(nd)}
+\textbf{Gap or comparison.} \AtlasInlineMath{\operatorname{polylog}(n,d,Q)}
+
+\needspace{4\baselineskip}\subsection{R8 - Parameter regime E09a.R2}
+\textbf{Region.} \AtlasInlineMath{n\ge2}, \AtlasInlineMath{Q\ge512}, \AtlasInlineMath{n<Q}.
+
+\textbf{Views.} Randomized
+
+\textbf{Quantity.} Q4
+
+\textbf{Resource.} one exact selected component scalar value
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B19, B20, B21
+
+\AtlasMath{\begin{cases}\Omega(d\max\{n,\min(d,\sqrt Q)\}),&Q<128^2,\\\Omega(d\max\{n,\min(d,\sqrt Q),\log Q\}),&Q\ge128^2.\end{cases}}
+\textbf{Upper bound.} B22, B23
+
+\AtlasMath{\widetilde{O}(d\min\{n+\sqrt{nQ},nd\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{\widetilde{O}(\min\{n+\sqrt{nQ},nd\}/\max\{n,\min(d,\sqrt Q),\log Q\ \mathrm{if}\ Q\ge128^2\})}
+
+\needspace{4\baselineskip}\subsection{R9 - Single-component identity reduction: regime E03.R2}
+\textbf{Region.} \AtlasInlineMath{n=1}; \AtlasInlineMath{Q\ge32,\ Q>d^2}.
+
+\textbf{Views.} Randomized
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} one exact selected component scalar value
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B28, B31
+
+\AtlasMath{\begin{cases}\Omega(d^2),&Q<128^2,\\\Omega(\max\{d^2,d\log Q\}),&Q\ge128^2.\end{cases}}
+\textbf{Upper bound.} B27
+
+\AtlasMath{O(\min\{d\sqrt Q,d^2\log Q\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(\log Q)}
+
+\needspace{4\baselineskip}\subsection{R10 - Single-component identity reduction: regime E03.R4.part2}
+\textbf{Region.} \AtlasInlineMath{n=1}; \AtlasInlineMath{2<Q<4}.
+
+\textbf{Views.} Randomized
+
+\textbf{Quantity.} Q5
+
+\textbf{Resource.} one exact selected component scalar value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B34
+
+\AtlasMath{\Omega(\max\{1,d(1-2/Q)\})}
+\textbf{Upper bound.} B33
+
+\AtlasMath{O(\max\{1,d(1-2/Q)\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} Each source component value corresponds to one selectable component query; computing the exact mean requires accessing every component.
+
+\textbf{Output mapping.} The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+\textbf{Resource mapping.} Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
+
+\needspace{4\baselineskip}\subsection{B1 - Adaptive Gaussian component measurements and a single-function subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega\!\left(d\max\{n,\min(d,\sqrt Q),\log Q\}\right)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{0<\varepsilon\le\beta R^2/512}. The accuracy-dependent term additionally requires the parameter window of its source theorem. The \AtlasInlineMath{nd} term follows from a separate adaptive Gaussian linear-measurement argument.
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A4, A5, A6
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Appendix C.2; Theorem E.6, PDF page 36: midpoint-curvature contraction ; Theorem 2.1 and Corollary 2.4, PDF pages 3-4 ; Theorem 2.5, PDF/printed page 4
+
+\needspace{4\baselineskip}\subsection{B2 - Adaptive-measurement lower bound for independent Gaussian components}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(nd)}
+\textbf{Conditions.} \AtlasInlineMath{Q\ge512}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B3 - Adaptive Gaussian component measurements and a single-function subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d\min\{d,\sqrt Q\})}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{Q\ge32}
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A5
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem2.1; pdf pages: 3; printed pages: 3
+
+\needspace{4\baselineskip}\subsection{B4 - Multiscale hard family for accuracy dependence}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d\log Q)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{Q\ge128^2}
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A6
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem2.5; pdf pages: 4; printed pages: 4
+
+\needspace{4\baselineskip}\subsection{B5 - Deterministic convex localization}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O(nd^2\log(e+Q))}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{Q\ge1}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A4
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: AppendixC.2; pdf pages: 29; printed pages: 29
+
+\needspace{4\baselineskip}\subsection{B6 - Accelerated finite differences of the full average}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O(nd\sqrt Q)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{Q\ge1}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A4
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: AppendixC.2; pdf pages: 29; printed pages: 29
+
+\needspace{4\baselineskip}\subsection{B7 - Return the public initial point}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\beta R^2/2}.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A7
+
+\needspace{4\baselineskip}\subsection{B8 - Nonnegative oracle cost}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\beta R^2/2}.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A7
+
+\needspace{4\baselineskip}\subsection{B9 - ARCS variance reduction or acceleration using full-average evaluations}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O\!\left(\min\{d\sqrt Q,d^2\log Q\}\right)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1}; coordinate differences with error-tolerant acceleration, or localization by approximate cutting planes.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Appendix C.2; pdf pages: 29; printed pages: 29
+
+\needspace{4\baselineskip}\subsection{B10 - Adaptive Gaussian component measurements and a single-function subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\max\{5d/16,(d/4096)\min(d,\sqrt Q)\}}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1} and \AtlasInlineMath{0<\varepsilon\le\beta R^2/32}; the hard subclass consists of positive-definite quadratics.
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem 2.1
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem 2.1; pdf pages: 3; printed pages: 3
+
+\needspace{4\baselineskip}\subsection{B11 - Adaptive Gaussian component measurements and a single-function subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1}; \AtlasInlineMath{Q\ge3}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A9, A4
+
+\needspace{4\baselineskip}\subsection{B12 - ARCS variance reduction or acceleration using full-average evaluations}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O(d)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1}; \AtlasInlineMath{4\le Q\le128^2}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A9, A4
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Appendix C.2; pdf pages: 29; printed pages: 29
+
+\needspace{4\baselineskip}\subsection{B13 - Multiscale hard family for accuracy dependence}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d\log Q)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1}; \AtlasInlineMath{Q\ge128^2}
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A6, A4
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem 2.5; pdf pages: 4; printed pages: 4
+
+\needspace{4\baselineskip}\subsection{B14 - Deterministic finite-difference descent at critical accuracy}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O(d)}
+\textbf{Sources.} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1} and \AtlasInlineMath{2<Q=\beta R^2/\varepsilon<4}. Exact real-valued queries are allowed throughout the ambient space; \AtlasInlineMath{\gamma=1-2/Q}. The number of scalar evaluations has a fixed worst-case cap.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A8, A4
+
+\needspace{4\baselineskip}\subsection{B15 - Deterministic hard family with indistinguishable directions}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All deterministic adaptive algorithms
+
+\AtlasMath{\Omega(d)}
+\textbf{Sources.} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1} and \AtlasInlineMath{2<Q=\beta R^2/\varepsilon<4}. Exact real-valued queries are allowed throughout the ambient space; \AtlasInlineMath{\gamma=1-2/Q}. The number of scalar evaluations has a fixed worst-case cap.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A8, A4
+
+\needspace{4\baselineskip}\subsection{B16 - Lower bound for estimation of a random spherical center}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(\max\{1,d(1-2/Q)\})}
+\textbf{Sources.} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1} and \AtlasInlineMath{2<Q=\beta R^2/\varepsilon<4}. Exact real-valued queries are allowed throughout the ambient space; \AtlasInlineMath{\gamma=1-2/Q}. The number of scalar evaluations has a fixed worst-case cap.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A8, A4
+
+\needspace{4\baselineskip}\subsection{B17 - ARCS variance reduction or acceleration using full-average evaluations}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\widetilde{O}\!\left(d\min\{n+\sqrt{nQ},nd\}\right)}
+\textbf{Sources.} \href{https://arxiv.org/abs/2109.08858}{[2]} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]}
+
+\textbf{Conditions.} ARCS runs over the known ball \AtlasInlineMath{B(R)}. Linear minimization over this ball is a public computation. Differences may query outside the ball, and the logarithmic factors include \AtlasInlineMath{n,Q,d}.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A4
+
+\textbf{Source location.} \href{https://arxiv.org/abs/2109.08858}{[2]} theorem: ARCS, Corollary 6, with localization simulated by full-average evaluations; pdf pages: 9; printed pages: 9
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: ARCS, Corollary 6, with localization simulated by full-average evaluations
+
+\needspace{4\baselineskip}\subsection{B18 - Adaptive Gaussian component measurements and a single-function subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega\!\left(d\max\{n,\min(d,\sqrt Q),\log Q\}\right)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{0<\varepsilon\le\beta R^2/512}. The accuracy-dependent term additionally requires the parameter window of its source theorem. The \AtlasInlineMath{nd} term follows from a separate adaptive Gaussian linear-measurement argument.
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A4, A5, A6
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Appendix C.2; Theorem E.6, PDF page 36: midpoint-curvature contraction ; Theorem 2.1 and Corollary 2.4, PDF pages 3-4 ; Theorem 2.5, PDF/printed page 4
+
+\needspace{4\baselineskip}\subsection{B19 - Adaptive-measurement lower bound for independent Gaussian components}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(nd)}
+\textbf{Conditions.} \AtlasInlineMath{Q\ge512}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B20 - Adaptive Gaussian component measurements and a single-function subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d\min\{d,\sqrt Q\})}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{Q\ge32}
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A5
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem2.1; pdf pages: 3; printed pages: 3
+
+\needspace{4\baselineskip}\subsection{B21 - Multiscale hard family for accuracy dependence}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d\log Q)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{Q\ge128^2}
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A6
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem2.5; pdf pages: 4; printed pages: 4
+
+\needspace{4\baselineskip}\subsection{B22 - Randomized variance reduction with ARCS}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\widetilde{O}(d[n+\sqrt{nQ}])}
+\textbf{Sources.} \href{https://arxiv.org/abs/2109.08858}{[2]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{Q\ge1}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A4
+
+\textbf{Source location.} \href{https://arxiv.org/abs/2109.08858}{[2]} theorem: Corollary6; pdf pages: 9; printed pages: 9
+
+\needspace{4\baselineskip}\subsection{B23 - Deterministic convex localization}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O(nd^2\log(e+Q))}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{Q\ge1}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A4
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: AppendixC.2; pdf pages: 29; printed pages: 29
+
+\needspace{4\baselineskip}\subsection{B24 - Accelerated finite differences of the full average}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O(nd\sqrt Q)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{Q\ge1}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A4
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: AppendixC.2; pdf pages: 29; printed pages: 29
+
+\needspace{4\baselineskip}\subsection{B25 - Return the public initial point}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\beta R^2/2}.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A7
+
+\needspace{4\baselineskip}\subsection{B26 - Nonnegative oracle cost}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\beta R^2/2}.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A7
+
+\needspace{4\baselineskip}\subsection{B27 - ARCS variance reduction or acceleration using full-average evaluations}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O\!\left(\min\{d\sqrt Q,d^2\log Q\}\right)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1}; coordinate differences with error-tolerant acceleration, or localization by approximate cutting planes.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Appendix C.2; pdf pages: 29; printed pages: 29
+
+\needspace{4\baselineskip}\subsection{B28 - Adaptive Gaussian component measurements and a single-function subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\max\{5d/16,(d/4096)\min(d,\sqrt Q)\}}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1} and \AtlasInlineMath{0<\varepsilon\le\beta R^2/32}; the hard subclass consists of positive-definite quadratics.
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem 2.1
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem 2.1; pdf pages: 3; printed pages: 3
+
+\needspace{4\baselineskip}\subsection{B29 - Adaptive Gaussian component measurements and a single-function subclass}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1}; \AtlasInlineMath{Q\ge3}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A9, A4
+
+\needspace{4\baselineskip}\subsection{B30 - ARCS variance reduction or acceleration using full-average evaluations}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O(d)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1}; \AtlasInlineMath{4\le Q\le128^2}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A9, A4
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Appendix C.2; pdf pages: 29; printed pages: 29
+
+\needspace{4\baselineskip}\subsection{B31 - Multiscale hard family for accuracy dependence}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d\log Q)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1}; \AtlasInlineMath{Q\ge128^2}
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A6, A4
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem 2.5; pdf pages: 4; printed pages: 4
+
+\needspace{4\baselineskip}\subsection{B32 - Deterministic finite-difference descent at critical accuracy}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O(d)}
+\textbf{Sources.} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1} and \AtlasInlineMath{2<Q=\beta R^2/\varepsilon<4}. Exact real-valued queries are allowed throughout the ambient space; \AtlasInlineMath{\gamma=1-2/Q}. The number of scalar evaluations has a fixed worst-case cap.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A8, A4
+
+\needspace{4\baselineskip}\subsection{B33 - Randomized projection descent at critical accuracy}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{O(\max\{1,d(1-2/Q)\})}
+\textbf{Sources.} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1} and \AtlasInlineMath{2<Q=\beta R^2/\varepsilon<4}. Exact real-valued queries are allowed throughout the ambient space; \AtlasInlineMath{\gamma=1-2/Q}. The number of scalar evaluations has a fixed worst-case cap.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A8, A4
+
+\needspace{4\baselineskip}\subsection{B34 - Lower bound for estimation of a random spherical center}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(\max\{1,d(1-2/Q)\})}
+\textbf{Sources.} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/abs/2109.08858}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{n=1} and \AtlasInlineMath{2<Q=\beta R^2/\varepsilon<4}. Exact real-valued queries are allowed throughout the ambient space; \AtlasInlineMath{\gamma=1-2/Q}. The number of scalar evaluations has a fixed worst-case cap.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A8, A4
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Exact recovery at equal smoothness and strong convexity}
+\textbf{Scope.} Global \AtlasInlineMath{\mu}-strong convexity and \AtlasInlineMath{\beta}-smoothness with \AtlasInlineMath{\mu=\beta}; exact scalar values and unrestricted finite queries.
+
+The objective is \AtlasInlineMath{f(x)=\beta\|x\|^2/2-b^\top x+c}. Values at \AtlasInlineMath{0,e_1,\ldots,e_d} recover a minimizer in \AtlasInlineMath{d+1} calls.
+
+Strong monotonicity, Cauchy--Schwarz, and Lipschitz continuity of the gradient imply
+
+\AtlasMath{\beta\|x-y\|^2\le\langle\nabla f(x)-\nabla f(y),x-y\rangle\le\|\nabla f(x)-\nabla f(y)\|\,\|x-y\|\le\beta\|x-y\|^2.}
+
+Equality throughout forces \AtlasInlineMath{\nabla f(x)-\nabla f(y)=\beta(x-y)}. Therefore \AtlasInlineMath{b_j=\beta/2+f(0)-f(e_j)} and \AtlasInlineMath{x_*=b/\beta}. For a finite-sum average, each of these \AtlasInlineMath{d+1} average values costs \AtlasInlineMath{n} component values, giving \AtlasInlineMath{n(d+1)} calls. A one-component specialization has \AtlasInlineMath{n=1}. Restricted query domains require an admissible nonzero coordinate scale in place of unit vectors.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{4\baselineskip}\subsection{A2 - An adaptive \AtlasInlineMath{nd} lower bound for selected-component values}
+\textbf{Scope.} Fixed scalar-call cap; arbitrary measurable adaptive randomized queries, including unbounded query points; only the explicitly stated average or component localization promises.
+
+For smooth finite sums, \AtlasInlineMath{T>nd/2} is necessary at \AtlasInlineMath{\varepsilon\le\mu R^2/512}. For globally Lipschitz components the same conclusion holds at
+
+\AtlasMath{\varepsilon\le\frac{LRd}{512n[d+\log(16n)]}.}
+
+The displayed constants give success probability \AtlasInlineMath{2/3}; an expected-error transfer uses the same statement at \AtlasInlineMath{3\varepsilon}.
+
+Take independent \AtlasInlineMath{a_i\sim N(0,s^2I_d)}. A component query, after subtracting a known common term, reveals one linear measurement of \AtlasInlineMath{a_i}. Conditional on the random seed and the transcript, the components remain independent Gaussian vectors with covariance \AtlasInlineMath{s^2P_i}, where \AtlasInlineMath{P_i} projects onto the complement of the span queried in that component. Hence the mean \AtlasInlineMath{\bar a} has covariance \AtlasInlineMath{\Sigma=(s^2/n^2)\sum_iP_i} and
+
+\AtlasMath{\operatorname{tr}\Sigma\ge s^2(nd-T)/n^2,\qquad\Sigma\preceq(s^2/n)I.}
+
+For any Gaussian vector \AtlasInlineMath{Z}, any proposed center \AtlasInlineMath{b}, and \AtlasInlineMath{t>0}, Gaussian integration gives \AtlasInlineMath{\mathbb E e^{-t\|Z-b\|^2}\le(1+2t\operatorname{tr}\Sigma)^{-1/2}}. Taking \AtlasInlineMath{t=1/(2r^2)} yields
+
+\AtlasMath{\Pr(\|Z-b\|^2\le r^2)\le\sqrt{\frac{er^2}{r^2+\operatorname{tr}\Sigma}}.}
+
+In particular, \AtlasInlineMath{r^2\le\operatorname{tr}\Sigma/8} makes this at most \AtlasInlineMath{\sqrt e/3}.
+
+For the smooth family set \AtlasInlineMath{f_i(x)=\mu\|x\|^2/2-\mu\langle a_i,x\rangle} and \AtlasInlineMath{s^2=nR^2/(16d)}. The mean is minimized at \AtlasInlineMath{\bar a}. The event \AtlasInlineMath{E=\{\|\bar a\|\le R\}} has probability at least \AtlasInlineMath{15/16}. For \AtlasInlineMath{T\le nd/2}, \AtlasInlineMath{\operatorname{tr}\Sigma\ge R^2/32}. Objective accuracy \AtlasInlineMath{\varepsilon} means squared center error at most \AtlasInlineMath{2\varepsilon/\mu}, which is at most \AtlasInlineMath{\operatorname{tr}\Sigma/8} on the displayed window. The unconditional success probability is at most \AtlasInlineMath{\sqrt e/3}; conditioning on \AtlasInlineMath{E} only after this calculation bounds valid-instance success by \AtlasInlineMath{16\sqrt e/45<2/3}. Choose \AtlasInlineMath{\mu=\beta} for the merely convex smooth class, or the declared \AtlasInlineMath{\mu\le\beta} for the strongly convex class. Individual component centers are not bounded in this construction.
+
+For globally Lipschitz components define the radial Huber function
+
+\AtlasMath{h_R(x)=\begin{cases}\|x\|^2/2,&\|x\|\le R,\\R\|x\|-R^2/2,&\|x\|>R,\end{cases}\quad q=L/(2R),\quad f_i=q(h_R-\langle a_i,x\rangle).}
+
+Choose \AtlasInlineMath{s^2=R^2/[8(d+\log(16n))]}. A Gaussian tail bound and union bound give \AtlasInlineMath{\Pr(\max_i\|a_i\|\le R)\ge15/16}. On this event each component is globally convex and \AtlasInlineMath{L}-Lipschitz. Inside the feasible ball the mean gap is \AtlasInlineMath{q\|x-\bar a\|^2/2}. The same posterior argument gives \AtlasInlineMath{\operatorname{tr}\Sigma\ge R^2d/[16n(d+\log(16n))]}, proving the stated window. Every unbounded query still reveals just one linear measurement because the common Huber term is known. Inside the ball this family has curvature \AtlasInlineMath{qI}, so it also proves the average-strongly-convex finite-sum lower for every public \AtlasInlineMath{\mu\le L/(2R)}.
+
+These are joint \AtlasInlineMath{nd} arguments. Separate \AtlasInlineMath{\Omega(n)} and \AtlasInlineMath{\Omega(d)} statements would justify only a maximum, not their product.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{4\baselineskip}\subsection{A3 - Deterministic extraction of an approximate subgradient}
+\textbf{Scope.} Exact real scalar values; finite positive probe scales; free real arithmetic and no bit-precision charge. Ball-restricted variants keep all probes inside the ball; global variants allow all-space probes.
+
+A deterministic procedure obtains an \AtlasInlineMath{\eta}-accurate subgradient at a point within distance \AtlasInlineMath{\zeta} of the requested point using at most \AtlasInlineMath{7d\lceil\log_2(2L\sqrt d/\eta)\rceil} values. It yields the convex upper \AtlasInlineMath{O(dA^2\log(edA))} and the strongly convex upper \AtlasInlineMath{O(dL^2\log(edA)/(\mu\varepsilon))}, with \AtlasInlineMath{A=LR/\varepsilon}.
+
+For a convex one-dimensional restriction, maintain an active interval whose every subderivative lies in \AtlasInlineMath{[\ell,u]}. Divide it into six equal pieces and query its seven grid points. Their secant slopes satisfy \AtlasInlineMath{s_0\le\cdots\le s_5}. The intervals \AtlasInlineMath{[q_1,q_2]} and \AtlasInlineMath{[q_4,q_5]} have protected subgradient envelopes \AtlasInlineMath{[s_0,s_2]} and \AtlasInlineMath{[s_3,s_5]}. Since \AtlasInlineMath{(s_2-s_0)+(s_5-s_3)\le u-\ell}, selecting the narrower one halves the envelope width and divides the interval length by six.
+
+Set \AtlasInlineMath{\tau=\eta/\sqrt d}, \AtlasInlineMath{k=\lceil\log_2(2L/\tau)\rceil}, and \AtlasInlineMath{r_1=\zeta/2}. At coordinate \AtlasInlineMath{j}, run \AtlasInlineMath{k} subdivisions from half-width \AtlasInlineMath{r_j}, move to the final midpoint, and retain the two protected secants of denominator \AtlasInlineMath{h_j=2r_j6^{-k}}. Set \AtlasInlineMath{r_{j+1}=\tau h_j/(16L)}. Then \AtlasInlineMath{r_{j+1}/r_j\le1/8}, and all later displacement is at most \AtlasInlineMath{\tau h_j/(8L)}. Translating a protected secant by this displacement changes its slope by at most \AtlasInlineMath{\tau/4}. Thus every subgradient of the final common point \AtlasInlineMath{y} has coordinate \AtlasInlineMath{j} in \AtlasInlineMath{[\ell_j-\tau/4,u_j+\tau/4]}. The midpoint vector differs from every such subgradient by at most \AtlasInlineMath{3\eta/4} in Euclidean norm. All probe and protection points lie within \AtlasInlineMath{\zeta} of the original point. The scales may be very small, but are positive and require the same finite number of queries.
+
+For a globally Lipschitz convex function and a public projected set \AtlasInlineMath{K\subseteq B_2(R)} containing zero, the extracted vector satisfies
+
+\AtlasMath{f(z)\ge f(x)+\langle\widehat g,z-x\rangle-2L\zeta-2R\eta\quad(z\in K).}
+
+Choose \AtlasInlineMath{\zeta=\varepsilon/(16L)}, \AtlasInlineMath{\eta=\varepsilon/(16R)}, so the model error is \AtlasInlineMath{\varepsilon/4} and \AtlasInlineMath{\|\widehat g\|\le2L} in the stated nontrivial range. Projected subgradient descent with step \AtlasInlineMath{R/(2L\sqrt N)} gives averaged gap at most \AtlasInlineMath{2LR/\sqrt N+\varepsilon/4}. Taking \AtlasInlineMath{N\ge64A^2} proves the convex rate. The probes may leave \AtlasInlineMath{K} only in the all-space variant.
+
+For a function defined on the ball, keep iterates in \AtlasInlineMath{B_2(R-2\delta)}. For strong convexity, apply extraction to \AtlasInlineMath{h(x)=f(x)-\mu\|x\|^2/2}, which is convex and at most \AtlasInlineMath{2L}-Lipschitz because \AtlasInlineMath{\mu R\le L}. Choose \AtlasInlineMath{\delta=\gamma/(16L)}, vector error \AtlasInlineMath{\eta=\gamma/(8R)}, and add \AtlasInlineMath{\mu x} back. Then \AtlasInlineMath{\|\widehat g\|\le4L} and
+
+\AtlasMath{f(z)\ge f(x)+\langle\widehat g,z-x\rangle+\mu\|z-x\|^2/2-\gamma.}
+
+With \AtlasInlineMath{a_t=2/[\mu(t+1)]}, projection, and \AtlasInlineMath{D_t=\|x_t-x_*\|^2},
+
+\AtlasMath{f(x_t)-f(x_*)-\gamma\le\frac{\mu(t-1)}4D_t-\frac{\mu(t+1)}4D_{t+1}+\frac{16L^2}{\mu(t+1)}.}
+
+Multiply by \AtlasInlineMath{t} and sum. The initial distance coefficient is zero, and the remaining distance terms telescope. The weighted average has gap at most \AtlasInlineMath{32L^2/[\mu(T+1)]+\gamma}. Taking \AtlasInlineMath{\gamma=\varepsilon/8} and \AtlasInlineMath{T+1\ge128L^2/(\mu\varepsilon)}, including shrinkage loss at most \AtlasInlineMath{2L\delta}, proves the result. Ordinary convex projected descent gives the \AtlasInlineMath{A^2} branch. Deterministic value localization supplies the separate \AtlasInlineMath{d^2\log(ed)\log(4A)} branch; take the minimum only among applicable branches.
+
+For a known body \AtlasInlineMath{B_2(r_{\rm in})\subseteq K\subseteq B_2(R_{\rm out})}, the identity \AtlasInlineMath{(1-a)K+aB_2(r_{\rm in})\subseteq K} supplies feasible probe room. Choose \AtlasInlineMath{a=\gamma/(16LR_{\rm out})} and probe radius at most \AtlasInlineMath{ar_{\rm in}/2}. Shrinkage costs at most \AtlasInlineMath{LaR_{\rm out}}. The query count is independent of the probe radius and uses \AtlasInlineMath{R_{\rm out}} in place of \AtlasInlineMath{R}. A finite-sum mean value costs \AtlasInlineMath{n} component values, multiplying these deterministic bounds by \AtlasInlineMath{n}.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\textbf{Sources.} \href{https://arxiv.org/html/2607.16558v2}{[3]} \href{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}{[4]}
+
+\needspace{4\baselineskip}\subsection{A4 - Finite-sum simulation and single-component inheritance}
+\textbf{Scope.} The average objective, component regularity, public geometry, algorithm permissions, and guarantee are retained exactly.
+
+One average value costs \AtlasInlineMath{n} selected-component values. A lower bound obtained by making all components equal transfers with cost one. Bounds copied from a one-component model without an \AtlasInlineMath{n} factor apply only on \AtlasInlineMath{n=1}.
+
+For \AtlasInlineMath{F=n^{-1}\sum_i f_i}, evaluate every component at the same point and average. This exactly simulates any whole-objective value, including finite-difference probes outside the feasible ball when all-space queries are permitted. Thus deterministic convex acceleration and localization give \AtlasInlineMath{O(nd\sqrt Q)} and \AtlasInlineMath{O(nd^2\log(e+Q))}; strongly convex acceleration, restart, and localization give
+
+\AtlasMath{O\!\left(nd\min\{\sqrt Q,\sqrt\kappa[1+\log_+(Q/\kappa)],d\log(e+Q)\}\right).}
+
+The near-unit-condition-number method uses the midpoint-curvature contraction \AtlasInlineMath{(\kappa-1)/(\kappa+1)} with a finite-difference error small enough for the prescribed horizon, and each value again costs \AtlasInlineMath{n}. At \AtlasInlineMath{\kappa=1}, use exact recovery of the average quadratic. For a nonsmooth mean, multiply deterministic localization or approximate-subgradient simulation by \AtlasInlineMath{n}.
+
+For lower bounds set every component equal to a legal single-objective hard instance. A requested component index adds no information and one hard-oracle value supplies its response. This transfers the source lower bound without multiplying by \AtlasInlineMath{n}, with exactly its own dimension, accuracy, and condition-number windows. Combine it with the independent joint \AtlasInlineMath{nd} lower only where both apply. If a row imports a one-component upper or endpoint formula without an \AtlasInlineMath{n} multiplier, its condition is \AtlasInlineMath{n=1}.
+
+ARCS Corollaries 6 and 8 supply the separate randomized finite-sum upper branches. The public ball's linear minimization oracle is free in this model; the global minimizer lies in that ball, so the initial potential is bounded using \AtlasInlineMath{\beta R^2} (for the convex branch, \AtlasInlineMath{D_0\le7\beta R^2}). Its finite-difference component queries are legal in the all-space domain. A constant-factor tighter expected nonnegative gap gives fixed success by Markov's inequality. These algorithms remain randomized and do not enter a deterministic view.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/abs/2109.08858}{[2]} \href{https://arxiv.org/html/2607.16558v2}{[3]}
+
+\needspace{4\baselineskip}\subsection{A5 - The smooth strongly convex dimension lower and its finite-sum embedding}
+\textbf{Scope.} The declared public curvature budgets are lower/upper bounds, not a promise that the best curvature moduli equal them.
+
+For \AtlasInlineMath{Q=\beta R^2/\varepsilon\ge32}, the cited theorem gives
+
+\AtlasMath{\Omega\!\left(d\min\{d,\sqrt\kappa,\sqrt Q\}\right),\qquad\kappa=\beta/\mu\ge1.}
+
+For the merely convex class omit the condition-number truncation.
+
+Dorn et al., Corollary 2.4, directly covers global smoothness, global strong convexity, a global minimizer in the public radius, unrestricted exact-value queries/output, and adaptive randomized algorithms. Its explicit dimension baseline is retained, including at \AtlasInlineMath{\kappa=1}. A deterministic algorithm is included in that lower algorithm class. For selected-component access, set every component equal to the same source hard function; each requested component value is one source value. When combined with an independent \AtlasInlineMath{nd} or precision-log lower bound, retain the source window of each term and maximize only valid terms. No extra factor of \AtlasInlineMath{n} or \AtlasInlineMath{d} follows from this embedding.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\needspace{4\baselineskip}\subsection{A6 - Explicit logarithmic lower bounds and class restrictions}
+\textbf{Scope.} The source theorem retains its unrestricted query/output domain, fixed query cap, and stated accuracy window.
+
+For the smooth class, \AtlasInlineMath{Q\ge128^2} gives \AtlasInlineMath{\Omega(d\log Q)}. This also holds in a public strongly convex class with \AtlasInlineMath{\kappa\ge2}. For a ball-restricted Lipschitz class, \AtlasInlineMath{A=LR/\varepsilon\ge6\cdot128^2} gives \AtlasInlineMath{\Omega(d\log A)}.
+
+Dorn et al., Theorem 2.5, gives
+
+\AtlasMath{\frac{3d}{4000}\left[1+\frac{\log(\beta_hR_h^2/\varepsilon)}{\log((\beta_h+\mu_h)/(\beta_h-\mu_h))}\right]}
+
+when \AtlasInlineMath{\mu_h/\beta_h\in[1/2,1]} and \AtlasInlineMath{\beta_hR_h^2/\varepsilon\ge128^2}. Choose \AtlasInlineMath{\mu_h=\beta_h/2}, so the denominator is \AtlasInlineMath{\log3}. A convex \AtlasInlineMath{\beta}-smooth class contains this subclass with \AtlasInlineMath{\beta_h=\beta}, \AtlasInlineMath{R_h=R}. A public lower curvature budget \AtlasInlineMath{\mu\le\beta/2} also contains it, uniformly in the public condition number.
+
+For the ball-restricted Lipschitz class choose \AtlasInlineMath{R_h=R/2}, \AtlasInlineMath{\beta_h=2L/(3R)}, and \AtlasInlineMath{\mu_h=\beta_h/2}. On \AtlasInlineMath{B_2(R)}, \AtlasInlineMath{\|\nabla f(x)\|\le\beta_h(\|x\|+\|x_*\|)\le L}, and the global minimizer remains inside the feasible ball. One source value simulates one restricted value. The stronger source oracle permits all such algorithms, and \AtlasInlineMath{Q_h=A/6}. The explicit window makes \AtlasInlineMath{\log(A/6)} and \AtlasInlineMath{\log A} uniformly comparable.
+
+For a selected-component finite sum with all components equal to the same hard function, one component query is one source query. This transfer has cost one, not \AtlasInlineMath{n}. A logarithmic and a dimension-dependent lower bound may be maximized only where both respective windows hold.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\needspace{4\baselineskip}\subsection{A7 - Zero-query certificates}
+\textbf{Scope.} The stated sufficient accuracy regions only; no assertion that every certificate is sharp.
+
+A public feasible point whose objective gap is at most \AtlasInlineMath{G_0} solves every target \AtlasInlineMath{\varepsilon\ge G_0} with exactly zero calls.
+
+For a convex mean objective that is \AtlasInlineMath{L}-Lipschitz on a ball of radius \AtlasInlineMath{R}, the center has gap at most \AtlasInlineMath{LR}. A sample Lipschitz modulus \AtlasInlineMath{G} with \AtlasInlineMath{\mathbb E G^r\le L^r}, \AtlasInlineMath{r>1}, implies \AtlasInlineMath{\mathbb E G\le L}, so the same certificate applies to moment models. Integrability at one point ensures that the mean is defined.
+
+If a globally \AtlasInlineMath{\beta}-smooth objective has a global minimizer within distance \AtlasInlineMath{R} of the public initial point, its gradient vanishes at that minimizer and the smoothness inequality gives gap at most \AtlasInlineMath{\beta R^2/2}. In a declared norm, use the corresponding radius in that norm. For \AtlasInlineMath{B_p(R)} with Euclidean regularity this radius is \AtlasInlineMath{R} when \AtlasInlineMath{p\le2} and \AtlasInlineMath{R d^{1/2-1/p}} when \AtlasInlineMath{p\ge2}.
+
+For a known positive semidefinite quadratic matrix \AtlasInlineMath{A}, the center has gap at most \AtlasInlineMath{\lambda_{\max}(A)R^2/2}; if \AtlasInlineMath{A=0}, the loss is identically zero. A public initial-gap promise \AtlasInlineMath{\Delta} directly gives the certificate \AtlasInlineMath{G_0=\Delta}. For the Markov potential \AtlasInlineMath{r_0}, its companion initial iterate has gap at most \AtlasInlineMath{\mu r_0}. These are different certificates with different model assumptions; in particular, an unknown matrix with no public spectral bound does not acquire a uniform certificate.
+
+Call counts are nonnegative. Together with the stated algorithm, this proves exact zero complexity on each certified region. The upper/lower ratio is undefined, so it is stored as null rather than as \AtlasInlineMath{0/0}.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{4\baselineskip}\subsection{A8 - Smooth exact-value complexity just below the zero-query threshold}
+\textbf{Scope.} Global convexity and \AtlasInlineMath{\beta}-smoothness; a global minimizer in \AtlasInlineMath{B_2(R)}; unrestricted exact scalar queries and output; fixed worst-case budget; \AtlasInlineMath{2<Q=\beta R^2/\varepsilon<4}.
+
+Writing \AtlasInlineMath{\gamma=1-2/Q\in(0,1/2)},
+
+\AtlasMath{T_{\mathrm{det}}=\Theta(d),\qquad T_{\mathrm{rand},2/3}=\Theta(\max\{1,d\gamma\}).}
+
+The constants are uniform in \AtlasInlineMath{d,Q}, and in every declared strong-convexity lower budget \AtlasInlineMath{0<\mu\le\beta}.
+
+Let \AtlasInlineMath{g=\nabla f(0)}. The convex function \AtlasInlineMath{h(x)=f(x)-\langle g,x\rangle} is minimized at zero. A \AtlasInlineMath{1/\beta} descent step for \AtlasInlineMath{h} from a minimizer \AtlasInlineMath{x_*} of \AtlasInlineMath{f} gives
+
+\AtlasMath{f(0)-f_*\le R\|g\|-\|g\|^2/(2\beta).}
+
+For a rank-\AtlasInlineMath{k} orthogonal projector \AtlasInlineMath{P}, central differences in an orthonormal basis of its range yield \AtlasInlineMath{\widehat g=Pg+e} with \AtlasInlineMath{e\in\operatorname{range}(P)} and \AtlasInlineMath{\|e\|\le\beta h\sqrt{k}/2}. At \AtlasInlineMath{\widehat x=-\widehat g/\beta}, cancellation of the cross term in the smoothness inequality gives
+
+\AtlasMath{f(\widehat x)-f_*\le R\|g\|-\frac{\|g\|^2+\|Pg\|^2}{2\beta}+\frac{\|e\|^2}{2\beta}\le\frac{\beta R^2}{2(1+a)}+\frac{\|e\|^2}{2\beta},\quad a=\frac{\|Pg\|^2}{\|g\|^2}.}
+
+The zero-gradient case satisfies the same error estimate.
+
+For a Haar-uniform subspace choose \AtlasInlineMath{k=\min\{d,\max\{24,\lceil4d\gamma\rceil\}\}}. If \AtlasInlineMath{k<d}, then \AtlasInlineMath{\mathbb E a=k/d} and \AtlasInlineMath{\operatorname{Var}(a)=2k(d-k)/(d^2(d+2))\le2k/d^2}. Thus \AtlasInlineMath{\Pr(a<k/(2d))\le8/k\le1/3}, and \AtlasInlineMath{k/(2d)\ge2\gamma}. For \AtlasInlineMath{k=d}, \AtlasInlineMath{a=1\ge2\gamma} deterministically. Set
+
+\AtlasMath{m(\gamma)=(1-\gamma)-(1+2\gamma)^{-1}>0,\qquad h=R\sqrt{m(\gamma)/k}.}
+
+This finite positive step makes the displayed error strictly less than \AtlasInlineMath{\varepsilon} on the good event. It uses \AtlasInlineMath{2k} values. Taking \AtlasInlineMath{P=I} gives the deterministic \AtlasInlineMath{O(d)} upper bound.
+
+For the randomized lower bound take \AtlasInlineMath{f_v(x)=\beta\|x-v\|^2/2}, with \AtlasInlineMath{v} uniform on \AtlasInlineMath{R S^{d-1}}. A value reveals at most one linear projection of \AtlasInlineMath{v}. After at most \AtlasInlineMath{T<d} adaptive projections, the unrevealed part remains conditionally uniform on the residual sphere; the revealed squared energy \AtlasInlineMath{S} obeys \AtlasInlineMath{\mathbb E S\le TR^2/d}. If \AtlasInlineMath{S<\gamma R^2}, a success ball of radius \AtlasInlineMath{R\sqrt{1-\gamma}} covers at most half that residual sphere. Consequently \AtlasInlineMath{p_{\rm success}\le1/2+T/(2d\gamma)}, forcing \AtlasInlineMath{T\ge d\gamma/3}. Zero calls are impossible because the success balls for \AtlasInlineMath{v=\pm Re_1} are disjoint and cannot both receive probability \AtlasInlineMath{2/3}.
+
+For a deterministic algorithm with \AtlasInlineMath{T<d}, answer \AtlasInlineMath{\beta(\|x\|^2+R^2)/2}. Choose a length-\AtlasInlineMath{R} vector \AtlasInlineMath{v} orthogonal to every queried vector. The objectives \AtlasInlineMath{f_v} and \AtlasInlineMath{f_{-v}} give the same adaptive transcript, but their average loss at the common output is at least \AtlasInlineMath{\beta R^2/2>\varepsilon}. Their Hessian is \AtlasInlineMath{\beta I}, so the lower family also belongs to every strongly convex budget \AtlasInlineMath{\mu\le\beta} and to the unknown-quadratic class.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{4\baselineskip}\subsection{A9 - Extending the endpoint bound to fixed accuracy windows}
+\textbf{Scope.} All model budgets are fixed while accuracy varies; exact unrestricted value access.
+
+The endpoint lower bound at \AtlasInlineMath{Q=3} yields \AtlasInlineMath{\Omega(d)} for every \AtlasInlineMath{Q\ge3}. The deterministic finite-difference accelerated bound is \AtlasInlineMath{O(d)} on every fixed numerical interval \AtlasInlineMath{4\le Q\le128^2}.
+
+Solving to a smaller error also solves to any larger error, so minimax complexity is nondecreasing as \AtlasInlineMath{\varepsilon} decreases. At \AtlasInlineMath{Q=3}, the endpoint lemma gives \AtlasInlineMath{\gamma=1/3} and hence a uniform \AtlasInlineMath{\Omega(d)} randomized lower bound. The deterministic accelerated upper bound \AtlasInlineMath{O(d\sqrt Q)} is at most \AtlasInlineMath{128} times its universal constant on the stated interval. The same upper bound applies to randomized algorithms. The endpoint hard family is already quadratic, so the lower statement transfers unchanged to the quadratic subclass; the quadratic upper follows by restriction of the smooth algorithm.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\needspace{7\baselineskip}\section{References}
+[1] Dorn, Dvinskikh, Loginov, Osmanov, Shestakov, Tupitsa and Gasnikov. Lower Bounds For Gradient-Free Convex Optimization And Convex-Concave Saddle-Point Problems. arXiv:2610.00345v1.
+
+\url{https://arxiv.org/html/2610.00345v1}
+
+[2] Xiyuan Wei
+Bin Gu
+Heng Huang. An Accelerated Variance-Reduced Conditional Gradient Sliding Algorithm for First-order and Zeroth-order Optimization. 2021. arXiv2109.08858v1 (2021-09-18).
+
+\url{https://arxiv.org/abs/2109.08858}
+
+[3] Haihan Zhang, Chenheng Zhang, Zhiquan Qi and Zhouchen Lin. Near-Optimal Lower Bounds for Randomized Algorithms in Exact Value Zeroth-Order Convex Optimization. arXiv:2607.16558v2, 2026-07-30.
+
+\url{https://arxiv.org/html/2607.16558v2}
+
+[4] V. Yu. Protasov. Algorithms for approximate calculation of the minimum of a convex function from its values. Mathematical Notes 59(1):69--74, 1996.
+
+\url{https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper}
+
+\end{document}

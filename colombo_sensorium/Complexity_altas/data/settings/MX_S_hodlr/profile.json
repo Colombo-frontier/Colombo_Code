@@ -1,0 +1,1174 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "MX_S_hodlr",
+  "title": "Hierarchical low-rank matrix approximation: HODLR relative error.",
+  "summary": "Find $\\widehat{H}\\in\\mathcal{H}_k$, where $\\mathcal{H}_k$ is the HODLR class for the specified block tree.",
+  "primary_domain": "matrix_computation",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "matrix_computation"
+    },
+    {
+      "facet": "goal",
+      "value": "relative_hierarchical_residual"
+    },
+    {
+      "facet": "structure",
+      "value": "public_hodlr_tree"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_two_sided_matvec"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_adaptive"
+    },
+    {
+      "facet": "guarantee",
+      "value": "fixed_probability"
+    },
+    {
+      "facet": "resource",
+      "value": "two_sided_call_sum"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "matrix_computation"
+      ],
+      "formulation_code": "hierarchical_matrix_approximation",
+      "formulation": "\\min_{H\\in\\operatorname{HODLR}(k)}\\|A-H\\|_F",
+      "solution_goal": "relative_hodlr_error",
+      "protocol_ref": null,
+      "code": "hierarchical_matrix_approximation",
+      "formulation_latex": "\\min_{H\\in\\mathcal H_k}\\|A-H\\|_{\\mathrm F}",
+      "description_zh": "Find $\\widehat H\\in\\mathcal H_k$, where $\\mathcal H_k$ is the HODLR class for the specified block tree.",
+      "description_paragraphs": [
+        "Find $\\widehat{H}\\in\\mathcal{H}_k$, where $\\mathcal{H}_k$ is the HODLR class for the specified block tree."
+      ]
+    },
+    "model": {
+      "instance": "The unknown input is an arbitrary real matrix $A\\in\\mathbb R^{d\\times d}$. The rank parameter k and the recursive bisection tree are public. Here $L=\\lceil\\log_2(d/k)\\rceil\\ge1$, and $d/2^L$ is a positive integer at most k. The input A need not have HODLR structure.",
+      "assumptions": [
+        {
+          "subject_id": "MX_S_hodlr_obj_520812e23f",
+          "property_code": "unstructured_real_matrix",
+          "variable_blocks": [],
+          "norm_ref": "MX_S_hodlr_nor_0b14a2026d",
+          "parameter_refs": [
+            "MX_S_hodlr_p_1d1d52d4bc",
+            "MX_S_hodlr_p_f381d17262"
+          ],
+          "scope": "Entire fixed input instance",
+          "description": "The target is structured approximation; A need not be exactly HODLR."
+        },
+        {
+          "subject_id": "MX_S_hodlr_obj_0d254c5a8a",
+          "property_code": "balanced_hierarchical_partition",
+          "variable_blocks": [],
+          "norm_ref": "MX_S_hodlr_nor_0b14a2026d",
+          "parameter_refs": [
+            "MX_S_hodlr_p_1d1d52d4bc",
+            "MX_S_hodlr_p_f381d17262",
+            "MX_S_hodlr_p_95f98dca5f"
+          ],
+          "scope": "Entire fixed input instance",
+          "description": "The public balanced binary block tree stops at block side length at most k. Set L=ceil(log2(d/k)), with d/2^L a positive integer."
+        }
+      ],
+      "parameter_domain_description": "Require d>k>=1, L=ceil(log2(d/k)), and epsilon>0. Balanced splitting requires integer compatibility and stops when block side length is at most k.",
+      "code": "model_declared",
+      "description_zh": "The matrix $A\\in\\mathbb R^{d\\times d}$ is arbitrary. A balanced binary partition tree is public. At each level only diagonal blocks are partitioned recursively, until leaf sizes are at most $k$; every off-diagonal sibling block has rank at most $k$. Assume $1\\le k<d$ and tree depth $L=\\lceil\\log_2(d/k)\\rceil$, together with the integer compatibility conditions required for equal partitions. The full matrix need not have low rank.",
+      "description_paragraphs": [
+        "The matrix $A\\in\\mathbb{R}^{d\\times d}$ is arbitrary. A balanced binary partition tree is public. At each level only diagonal blocks are partitioned recursively, until leaf sizes are at most $k$; every off-diagonal sibling block has rank at most $k$. Assume $1\\le k<d$ and tree depth $L=\\lceil\\log_2(d/k)\\rceil$, together with the integer compatibility conditions required for equal partitions. The full matrix need not have low rank."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "MX_S_hodlr_ora_ba9bc15a30",
+          "operation_code": "matrix_right_matvec",
+          "target_object": "MX_S_hodlr_obj_520812e23f",
+          "variable_blocks": [
+            "MX_S_hodlr_var_83c97e94ab"
+          ],
+          "query_signature": "Input an arbitrary vector $v\\in\\mathbb R^d$.",
+          "response_signature": "Return exact Av ∈ R^d.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "Native linear action of the specified matrix; no derivative order of an unregistered scalar function is implied.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact real vector responses, with no observation noise or rounding."
+          },
+          "domain_ref": "MX_S_hodlr_dom_9c9c3c21a7",
+          "coupling": "Every query accesses the same fixed matrix; repeated queries are allowed.",
+          "index_control": "The algorithm selects vectors and an available channel; block width is charged by column.",
+          "access_schedule": "offline adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "MX_S_hodlr_res_930dcfe64b"
+        },
+        {
+          "id": "MX_S_hodlr_ora_2c648b282d",
+          "operation_code": "matrix_left_matvec",
+          "target_object": "MX_S_hodlr_obj_520812e23f",
+          "variable_blocks": [
+            "MX_S_hodlr_var_c8bd3b74e9"
+          ],
+          "query_signature": "Input an arbitrary vector $u\\in\\mathbb R^d$.",
+          "response_signature": "Returns the exact vector $A^\\top u\\in\\mathbb R^d$.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "Native linear action of the specified matrix; no derivative order of an unregistered scalar function is implied.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact real vector responses, with no observation noise or rounding."
+          },
+          "domain_ref": "MX_S_hodlr_dom_7b2c88c65e",
+          "coupling": "Every query accesses the same fixed matrix; repeated queries are allowed.",
+          "index_control": "The algorithm selects vectors and an available channel; block width is charged by column.",
+          "access_schedule": "offline adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "MX_S_hodlr_res_a45e48cf65"
+        }
+      ],
+      "public_inputs": [
+        "d,k,ε,balanced block tree"
+      ],
+      "hidden_objects": [
+        "MX_S_hodlr_obj_520812e23f"
+      ],
+      "auxiliary_interfaces": [],
+      "protocol_ref": null,
+      "query_domain_description": "Right and left products map $\\mathbb R^d$ to $\\mathbb R^d$. A block with $q$ columns costs $q$ calls. Entries, inverse actions, shifted solves, and matrix-function actions are not free additional feedback.",
+      "code": "oracle_declared",
+      "description_zh": "The quantity $d,k$, block tree, and $\\varepsilon$ are public; $A$ is hidden. Exact $Av$ and $A^{\\mathsf T}u$ are available for arbitrary real vectors.",
+      "description_paragraphs": [
+        "The quantity $d,k$, block tree, and $\\varepsilon$ are public; $A$ is hidden. Exact $Av$ and $A^{\\mathsf T}u$ are available for arbitrary real vectors."
+      ]
+    },
+    "output": {
+      "object_type": "structured_matrix",
+      "domain_ref": "MX_S_hodlr_dom_60434ee441",
+      "feasibility": "At every nonleaf node of the given tree, both off-diagonal child blocks have rank at most k, and diagonal blocks recurse. Leaf blocks are arbitrary real matrices. Global rank may exceed k, and symmetry is not required.",
+      "allowed_postprocessing": "Arbitrary admissible postprocessing; the output need not have appeared as a query vector.",
+      "certificate_requirement": "Only the true-loss guarantee is required; no computable certificate is requested.",
+      "code": "output_declared",
+      "description_zh": "Return $\\widehat H\\in\\mathcal H_k$ satisfying every block-rank constraint of the specified tree. A hierarchical factor representation is allowed; no certificate is required.",
+      "description_paragraphs": [
+        "Return $\\widehat{H}\\in\\mathcal{H}_k$ satisfying every block-rank constraint of the tree. A hierarchical factor representation is allowed, and no certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "\\|A-\\widehat H\\|_{\\mathrm F}\\le(1+\\varepsilon)\\operatorname{OPT}_{\\mathcal H}",
+      "normalization": "If both numerator and denominator are zero, the loss is zero. A zero denominator with nonzero numerator gives +∞. Otherwise use the stated ratio.",
+      "reference_object": "MX_S_hodlr_obj_520812e23f",
+      "nonnegativity": true,
+      "finiteness_conditions": "The specified dimension is finite, and the model and spectral assumptions hold.",
+      "comparator_ref": "MX_S_hodlr_com_a850688ab2",
+      "code": "metric_declared",
+      "goal_latex": "\\Pr[\\|A-\\widehat H\\|_F\\le(1+\\varepsilon)\\operatorname{OPT}_{\\rm HODLR}(A)]\\ge\\tfrac23",
+      "description_zh": "Define $\\operatorname{OPT}_{\\mathcal H}=\\min_{H\\in\\mathcal H_k}\\|A-H\\|_{\\mathrm F}$. Success requires $\\|A-\\widehat H\\|_{\\mathrm F}\\le(1+\\varepsilon)\\operatorname{OPT}_{\\mathcal H}$. Zero optimal error requires exact structured recovery.",
+      "base_expression_latex": "\\|A-\\widehat H\\|_{\\mathrm F}\\le(1+\\varepsilon)\\operatorname{OPT}_{\\mathcal H}",
+      "description_paragraphs": [
+        "Define $\\operatorname{OPT}_{\\mathcal{H}}=\\min_{H\\in\\mathcal{H}_k}\\|A-H\\|_{\\mathrm{F}}$. Success requires $\\|A-\\widehat{H}\\|_{\\mathrm{F}}\\le(1+\\varepsilon)\\operatorname{OPT}_{\\mathcal{H}}$. Zero optimal error requires exact structured recovery."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "N_right",
+          "unit": "vector product",
+          "description": "One right product Av with a single vector"
+        },
+        {
+          "code": "N_left",
+          "unit": "vector product",
+          "description": "One left product A^T u with a single vector"
+        }
+      ],
+      "budget_semantics": "A fixed worst-case budget respected for every input and private seed.",
+      "cost_rules": [
+        {
+          "id": "MX_S_hodlr_res_930dcfe64b",
+          "operation_refs": [
+            "MX_S_hodlr_ora_ba9bc15a30"
+          ],
+          "cost": {
+            "N_right": 1
+          }
+        },
+        {
+          "id": "MX_S_hodlr_res_a45e48cf65",
+          "operation_refs": [
+            "MX_S_hodlr_ora_2c648b282d"
+          ],
+          "cost": {
+            "N_left": 1
+          }
+        }
+      ],
+      "scalarization": "Use Q = N_right + N_left while retaining each channel count. Charge block queries per column.",
+      "setup_cost": "Reading public parameters and explicitly public $b,x_0,h$, mask, or tree incurs no matrix-vector call. Information about hidden $A$ comes only from native responses.",
+      "online_cost": "not_applicable",
+      "amortization_scope": "One output for one instance",
+      "precision_model": "Inputs, queries, and responses are exact reals. Query vectors have no bit-length restriction. Internal arithmetic, storage, and precision are outside the query budget, so this is not a finite-word implementation guarantee.",
+      "code": "resource_declared",
+      "description_zh": "Retain joint budget $(N_{\\mathrm{r}},N_{\\mathrm{l}})$ for single-vector $Av$ and $A^{\\mathsf T}u$ calls, with explicit equal-weight scalarization $N=N_{\\mathrm{r}}+N_{\\mathrm{l}}$. Each block column is charged. The call cap holds for every fixed input and private seed. Public-input access and internal exact-real arithmetic, storage, and postprocessing are free. The unit is one single-vector interface call.",
+      "description_paragraphs": [
+        "Retain the joint budget $(N_{\\mathrm{r}},N_{\\mathrm{l}})$, whose coordinates count single-vector calls to $Av$ and $A^{\\mathsf T}u$, respectively. This setting explicitly uses the equal-weight scalarization $N=N_{\\mathrm{r}}+N_{\\mathrm{l}}$. Each column of a block is charged separately.",
+        "The budget bounds calls for every fixed input and every private seed. Reading public inputs, exact real arithmetic, storage, and postprocessing are free. One call applies the interface to one vector."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "An independent private random seed is allowed",
+        "adaptivity": "Arbitrary measurable adaptivity",
+        "restrictions": [],
+        "internal_computation": "Arbitrary measurable internal computation on public data and the transcript is free in matrix–vector query units. No Krylov or linear-span restriction applies.",
+        "parallelism": "A q-column block still costs q vector products. Round count differs from call count.",
+        "code": "algorithms_declared",
+        "description_zh": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+        "description_paragraphs": [
+          "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "For each fixed A and public tree, the residual is at most (1+epsilon) times OPT_HODLR with probability at least 2/3. Zero optimum requires exact recovery.",
+          "aggregation_order": [
+            "probability over private seed",
+            "for every fixed instance"
+          ],
+          "quantifier_order": "exists algorithm; for every fixed input; Pr_seed(success)>=2/3",
+          "randomness_sources": [
+            "algorithm_private_seed"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "fixed output time",
+          "code": "guarantee_declared",
+          "description_zh": "The algorithm is selected using only public inputs. For every admissible input fixed before its private seed is generated, the success event has probability at least $2/3$ over that private randomness.",
+          "description_paragraphs": [
+            "The algorithm is selected using only public inputs. For every admissible input fixed before its private seed is generated, the success event has probability at least $2/3$ over that private randomness."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "A fixed worst-case budget respected for every input and private seed.",
+        "precision_model": "Inputs, queries, and responses are exact reals. Query vectors have no bit-length restriction. Internal arithmetic, storage, and precision are outside the query budget, so this is not a finite-word implementation guarantee.",
+        "scalarization": "Use Q = N_right + N_left while retaining each channel count. Charge block queries per column."
+      },
+      "alias_ids": [
+        "MX_S_hodlr"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "MX_S_hodlr_obj_520812e23f",
+        "type": "matrix",
+        "definition": "Unknown arbitrary real $d\\times d$ matrix; no HODLR input assumption is imposed.",
+        "depends_on": [],
+        "role_code": "matrix"
+      },
+      {
+        "id": "MX_S_hodlr_obj_0d254c5a8a",
+        "type": "partition_tree",
+        "definition": "The public balanced binary partition tree recursively bisects diagonal blocks until their side length is at most $k$. Here $L=\\lceil\\log_2(d/k)\\rceil$ and $d/2^L$ is an integer.",
+        "depends_on": [],
+        "role_code": "declared_auxiliary_object"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "MX_S_hodlr_var_83c97e94ab",
+        "dimension": "d",
+        "space": "R^d, the right-product query space"
+      },
+      {
+        "id": "MX_S_hodlr_var_c8bd3b74e9",
+        "dimension": "d",
+        "space": "$\\mathbb R^d$, the left-query vector space"
+      }
+    ],
+    "domains": [
+      {
+        "id": "MX_S_hodlr_dom_9c9c3c21a7",
+        "definition": "$\\mathbb R^d$, the complete right-query space without a norm restriction",
+        "roles": [
+          "query"
+        ]
+      },
+      {
+        "id": "MX_S_hodlr_dom_60434ee441",
+        "definition": "At every nonleaf node of the given tree, both off-diagonal child blocks have rank at most k, and diagonal blocks recurse. Leaf blocks are arbitrary real matrices. Global rank may exceed k, and symmetry is not required.",
+        "roles": [
+          "output"
+        ]
+      },
+      {
+        "id": "MX_S_hodlr_dom_7b2c88c65e",
+        "definition": "$\\mathbb R^d$, the full left-query vector space without a norm restriction.",
+        "roles": [
+          "query"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "MX_S_hodlr_nor_0b14a2026d",
+        "definition": "Euclidean vector norm $\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}$ and matrix operator norm $\\|M\\|_{\\rm op}=\\max_{\\|z\\|_2=1}\\|Mz\\|_2$; define $\\|M\\|_F=(\\sum_{ij}|M_{ij}|^2)^{1/2}$."
+      }
+    ],
+    "protocols": [],
+    "comparators": [
+      {
+        "id": "MX_S_hodlr_com_a850688ab2",
+        "definition": "Minimum Frobenius residual over HODLR($k$) matrices on the given recursive tree."
+      }
+    ],
+    "local_symbols": [
+      {
+        "symbol": "d",
+        "meaning": "The order of the square input matrix and the dimension of each query vector.",
+        "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+        "definition": "A\\in\\mathbb R^{d\\times d}"
+      },
+      {
+        "symbol": "k",
+        "meaning": "Rank cap on every sibling off-diagonal block in the public partition tree",
+        "domain": "$k\\in\\mathbb N,\\ 1\\le k<d$",
+        "definition": "$\\operatorname{rank}(H_{I,J})\\le k$ for every pair of sibling blocks I,J."
+      },
+      {
+        "symbol": "L",
+        "meaning": "Number of recursive diagonal-block bisections needed to reach leaf side length at most $k$.",
+        "domain": "$L\\in\\mathbb N,\\ d/2^L\\in\\mathbb N$",
+        "definition": "L=\\lceil\\log_2(d/k)\\rceil"
+      },
+      {
+        "symbol": "\\varepsilon",
+        "meaning": "Additional relative factor over the best HODLR Frobenius residual.",
+        "domain": "$\\varepsilon>0$",
+        "definition": "\\|A-\\widehat H\\|_F\\le(1+\\varepsilon)\\operatorname{OPT}_{\\mathcal H}"
+      },
+      {
+        "symbol": "C_0",
+        "meaning": "The sufficient-dimension constant required by the hard constructions in HD Theorems 1.2 and 6.2.",
+        "domain": "The quantity $C_0>0$ is universal and fixed.",
+        "definition": "d\\ge C_0k/\\varepsilon"
+      },
+      {
+        "symbol": "A",
+        "meaning": "The hidden arbitrary input matrix.",
+        "domain": "$\\mathbb R^{d\\times d}$",
+        "definition": null
+      },
+      {
+        "symbol": "\\mathcal T",
+        "meaning": "Public balanced binary block tree",
+        "domain": "Recursively bisect only diagonal blocks until leaf side lengths are at most $k$.",
+        "definition": null
+      },
+      {
+        "symbol": "\\mathcal H_k",
+        "meaning": "Matrices whose sibling off-diagonal blocks on the specified tree each have rank at most k",
+        "domain": "$\\mathcal H_k\\subseteq\\mathbb R^{d\\times d}$. Diagonal leaf blocks are arbitrary.",
+        "definition": null
+      },
+      {
+        "symbol": "\\widehat H",
+        "meaning": "Returned hierarchical low-rank matrix",
+        "domain": "$\\widehat H\\in\\mathcal H_k$",
+        "definition": null
+      },
+      {
+        "symbol": "\\operatorname{OPT}_{\\mathcal H}",
+        "meaning": "The optimal HODLR Frobenius residual for the specified tree.",
+        "domain": "A nonnegative real.",
+        "definition": "\\operatorname{OPT}_{\\mathcal H}=\\min_{H\\in\\mathcal H_k}\\|A-H\\|_F"
+      },
+      {
+        "symbol": "\\beta_{\\mathrm{alg}}",
+        "meaning": "Additional relative factor at each level in the HD upper bound",
+        "domain": "An internal algorithm parameter.",
+        "definition": "\\beta_{\\mathrm{alg}}=(1+\\varepsilon)^{1/L}-1"
+      },
+      {
+        "symbol": "\\Gamma",
+        "meaning": "Overall approximation factor in the source HODLR theorem.",
+        "domain": "Internal change of variables",
+        "definition": "\\Gamma=(1+\\beta_{\\mathrm{alg}})^L=1+\\varepsilon"
+      },
+      {
+        "symbol": "\\log_2",
+        "meaning": "Base-$2$ logarithm",
+        "domain": "Positive real argument",
+        "definition": null
+      },
+      {
+        "symbol": "\\|M\\|_{\\mathrm F}",
+        "meaning": "The Frobenius norm.",
+        "domain": "An arbitrary real or complex matrix.",
+        "definition": "\\|M\\|_{\\mathrm F}=(\\sum_{ij}|M_{ij}|^2)^{1/2}=(\\sum_i\\sigma_i(M)^2)^{1/2}"
+      },
+      {
+        "symbol": "c,C",
+        "meaning": "Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value.",
+        "domain": "Independent of the dimension, accuracy, and probability parameters tracked by this bound.",
+        "definition": null
+      },
+      {
+        "symbol": "\\log",
+        "meaning": "Natural logarithm",
+        "domain": "Positive real argument",
+        "definition": "\\log x=\\ln x"
+      },
+      {
+        "symbol": "O,\\Omega,\\Theta",
+        "meaning": "Upper, lower, and two-sided bounds up to constants in the same applicable regime",
+        "domain": "Hidden constants have only the parameter dependence explicitly permitted by the associated bound.",
+        "definition": null
+      },
+      {
+        "symbol": "N_{\\mathrm r},N_{\\mathrm l}",
+        "meaning": "Single-vector counts for right products Av and transpose products Aᵀu.",
+        "domain": "$\\mathbb N_0^2$",
+        "definition": null
+      },
+      {
+        "symbol": "N",
+        "meaning": "The worst-case call budget with equal costs for both product channels.",
+        "domain": "$\\mathbb N_0$",
+        "definition": "N=N_{\\mathrm r}+N_{\\mathrm l}"
+      },
+      {
+        "symbol": "N^\\star",
+        "meaning": "Minimum worst-case query budget attaining this profile's success guarantee",
+        "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+        "definition": "\\inf_{\\mathcal A\\ \\mathrm{satisfying\\ the\\ guarantee}}\\sup_{I,\\omega}N_{\\mathcal A}(I,\\omega)"
+      },
+      {
+        "symbol": "\\mathcal A,I,\\omega",
+        "meaning": "The algorithm, fixed admissible input, and private algorithmic seed.",
+        "domain": "Quantifiers for worst-case input and execution cost. Success probability is taken over ω.",
+        "definition": null
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "MX_S_hodlr_p_c9d7e07f17",
+      "symbol": "C_0",
+      "meaning": "The sufficient-dimension constant required by the hard constructions in HD Theorems 1.2 and 6.2.",
+      "kind": "proof_constant",
+      "domain": "The quantity $C_0>0$ is universal and fixed.",
+      "public": true,
+      "definition": "$d\\ge C_0k/\\varepsilon$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_hodlr_p_95f98dca5f",
+      "symbol": "L",
+      "meaning": "Number of recursive diagonal-block bisections needed to reach leaf side length at most $k$.",
+      "kind": "derived",
+      "domain": "$L\\in\\mathbb N,\\ d/2^L\\in\\mathbb N$",
+      "public": true,
+      "definition": "$L=\\lceil\\log_2(d/k)\\rceil$",
+      "dependencies": [
+        "MX_S_hodlr_p_1d1d52d4bc",
+        "MX_S_hodlr_p_f381d17262"
+      ],
+      "constant_dependencies": [
+        "MX_S_hodlr_p_1d1d52d4bc",
+        "MX_S_hodlr_p_f381d17262"
+      ],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_hodlr_p_1d1d52d4bc",
+      "symbol": "d",
+      "meaning": "The order of the square input matrix and the dimension of each query vector.",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "public": true,
+      "definition": "$A\\in\\mathbb R^{d\\times d}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_d"
+    },
+    {
+      "id": "MX_S_hodlr_p_f7fafc184f",
+      "symbol": "\\varepsilon",
+      "meaning": "Additional relative factor over the best HODLR Frobenius residual.",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": true,
+      "definition": "$\\|A-\\widehat H\\|_F\\le(1+\\varepsilon)\\operatorname{OPT}_{\\mathcal H}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_eps"
+    },
+    {
+      "id": "MX_S_hodlr_p_f381d17262",
+      "symbol": "k",
+      "meaning": "Rank cap on every sibling off-diagonal block in the public partition tree",
+      "kind": "independent",
+      "domain": "$k\\in\\mathbb N,\\ 1\\le k<d$",
+      "public": true,
+      "definition": "For every pair of sibling blocks $I,J$ in the public partition tree, $\\operatorname{rank}(H_{I,J})\\le k$.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_k"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "The order of the square input matrix and the dimension of each query vector.",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "definition": "$A\\in\\mathbb R^{d\\times d}$",
+      "parameter_ref": "MX_S_hodlr_p_1d1d52d4bc"
+    },
+    {
+      "symbol_latex": "k",
+      "meaning": "Rank cap on every sibling off-diagonal block in the public partition tree",
+      "domain": "$k\\in\\mathbb N,\\ 1\\le k<d$",
+      "definition": "For every pair of sibling blocks $I,J$ in the public partition tree, $\\operatorname{rank}(H_{I,J})\\le k$.",
+      "parameter_ref": "MX_S_hodlr_p_f381d17262"
+    },
+    {
+      "symbol_latex": "L",
+      "meaning": "Number of recursive diagonal-block bisections needed to reach leaf side length at most $k$.",
+      "domain": "$L\\in\\mathbb N,\\ d/2^L\\in\\mathbb N$",
+      "definition": "$L=\\lceil\\log_2(d/k)\\rceil$",
+      "parameter_ref": "MX_S_hodlr_p_95f98dca5f"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Additional relative factor over the best HODLR Frobenius residual.",
+      "domain": "$\\varepsilon>0$",
+      "definition": "$\\|A-\\widehat H\\|_F\\le(1+\\varepsilon)\\operatorname{OPT}_{\\mathcal H}$",
+      "parameter_ref": "MX_S_hodlr_p_f7fafc184f"
+    },
+    {
+      "symbol_latex": "C_0",
+      "meaning": "The sufficient-dimension constant required by the hard constructions in HD Theorems 1.2 and 6.2.",
+      "domain": "The quantity $C_0>0$ is universal and fixed.",
+      "definition": "$d\\ge C_0k/\\varepsilon$",
+      "parameter_ref": "MX_S_hodlr_p_c9d7e07f17"
+    },
+    {
+      "symbol_latex": "A",
+      "meaning": "The hidden arbitrary input matrix.",
+      "domain": "$\\mathbb R^{d\\times d}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal T",
+      "meaning": "Public balanced binary block tree",
+      "domain": "Recursively bisect only diagonal blocks until leaf side lengths are at most $k$.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal H_k",
+      "meaning": "Matrices whose sibling off-diagonal blocks on the specified tree each have rank at most k",
+      "domain": "$\\mathcal H_k\\subseteq\\mathbb R^{d\\times d}$. Diagonal leaf blocks are arbitrary.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat H",
+      "meaning": "Returned hierarchical low-rank matrix",
+      "domain": "$\\widehat H\\in\\mathcal H_k$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\operatorname{OPT}_{\\mathcal H}",
+      "meaning": "The optimal HODLR Frobenius residual for the specified tree.",
+      "domain": "A nonnegative real.",
+      "definition": "$\\operatorname{OPT}_{\\mathcal H}=\\min_{H\\in\\mathcal H_k}\\|A-H\\|_F$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\beta_{\\mathrm{alg}}",
+      "meaning": "Additional relative factor at each level in the HD upper bound",
+      "domain": "An internal algorithm parameter.",
+      "definition": "$\\beta_{\\mathrm{alg}}=(1+\\varepsilon)^{1/L}-1$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Gamma",
+      "meaning": "Overall approximation factor in the source HODLR theorem.",
+      "domain": "Internal change of variables",
+      "definition": "$\\Gamma=(1+\\beta_{\\mathrm{alg}})^L=1+\\varepsilon$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log_2",
+      "meaning": "Base-$2$ logarithm",
+      "domain": "Positive real argument",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|M\\|_{\\mathrm F}",
+      "meaning": "The Frobenius norm.",
+      "domain": "An arbitrary real or complex matrix.",
+      "definition": "$\\|M\\|_{\\mathrm F}=(\\sum_{ij}|M_{ij}|^2)^{1/2}=(\\sum_i\\sigma_i(M)^2)^{1/2}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value.",
+      "domain": "Independent of the dimension, accuracy, and probability parameters tracked by this bound.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log",
+      "meaning": "Natural logarithm",
+      "domain": "Positive real argument",
+      "definition": "$\\log x=\\ln x$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta",
+      "meaning": "Upper, lower, and two-sided bounds up to constants in the same applicable regime",
+      "domain": "Hidden constants have only the parameter dependence explicitly permitted by the associated bound.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_{\\mathrm r},N_{\\mathrm l}",
+      "meaning": "Single-vector counts for right products Av and transpose products Aᵀu.",
+      "domain": "$\\mathbb N_0^2$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "The worst-case call budget with equal costs for both product channels.",
+      "domain": "$\\mathbb N_0$",
+      "definition": "$N=N_{\\mathrm r}+N_{\\mathrm l}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^\\star",
+      "meaning": "Minimum worst-case query budget attaining this profile's success guarantee",
+      "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+      "definition": "The quantity is $N^\\star=\\inf_{\\mathcal A}\\sup_{I,\\omega}N_{\\mathcal A}(I,\\omega)$, where the infimum ranges over admissible algorithms satisfying this profile's success guarantee.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A,I,\\omega",
+      "meaning": "The algorithm, fixed admissible input, and private algorithmic seed.",
+      "domain": "Quantifiers for worst-case input and execution cost. Success probability is taken over ω.",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "MX_S_hodlr__main__q1",
+      "kind": "target_accuracy_cost",
+      "expression": "N^*(d,k,\\varepsilon)",
+      "optimization_direction": "minimize",
+      "units": "matvec calls",
+      "budget_variables": [
+        "N"
+      ],
+      "tolerance_variables": [
+        "MX_S_hodlr_p_f7fafc184f"
+      ],
+      "analysis_scope": "Within the cited complete specification, select an algorithm before taking the worst case over all fixed inputs. Information permissions remain unchanged.",
+      "tracked_parameters": [
+        "MX_S_hodlr_p_1d1d52d4bc",
+        "MX_S_hodlr_p_f381d17262",
+        "MX_S_hodlr_p_f7fafc184f"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "N^\\star(d,k,\\varepsilon)",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Sum of right and left matrix-vector product query counts.",
+      "expression": "N_right+N_left",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_b185f53633"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "MX_S_hodlr__main__r1",
+      "specification_ref": "MX_S_hodlr",
+      "name": "Regime for the hierarchical sketching upper bound",
+      "predicate_text": "Assume $1\\le k<d$ and $0<\\varepsilon<1$, with $d,k$ compatible with the specified balanced binary partition tree.",
+      "predicate": {
+        "predicate": {
+          "name": "hodlr_upper",
+          "args": [
+            "MX_S_hodlr_p_1d1d52d4bc",
+            "MX_S_hodlr_p_f381d17262",
+            "MX_S_hodlr_p_95f98dca5f",
+            "MX_S_hodlr_p_f7fafc184f"
+          ],
+          "description": "$1\\le k<d$, compatible tree definition, and $0<\\varepsilon<1$"
+        }
+      },
+      "parameter_refs": [
+        "MX_S_hodlr_p_1d1d52d4bc",
+        "MX_S_hodlr_p_f381d17262",
+        "MX_S_hodlr_p_95f98dca5f",
+        "MX_S_hodlr_p_f7fafc184f"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Universal constants and dimension thresholds without numerical values remain symbolic; the three-valued decision is unknown."
+    },
+    {
+      "id": "MX_S_hodlr__main__r2",
+      "specification_ref": "MX_S_hodlr",
+      "name": "The hierarchical-approximation lower-bound window.",
+      "predicate_text": "Require $0<\\varepsilon<1$ and $d\\ge C_0k/\\varepsilon$. The condition $d,k$ must be compatible with the specified balanced binary partition tree. The quantity $C_0>0$ is the sufficient dimension constant from the source.",
+      "predicate": {
+        "predicate": {
+          "name": "hodlr_lower",
+          "args": [
+            "MX_S_hodlr_p_1d1d52d4bc",
+            "MX_S_hodlr_p_f381d17262",
+            "MX_S_hodlr_p_95f98dca5f",
+            "MX_S_hodlr_p_f7fafc184f",
+            "MX_S_hodlr_p_c9d7e07f17"
+          ],
+          "description": "Assume $0<\\epsilon<1$, $d\\ge C_0k/\\epsilon$, and compatibility of $d,k$ with the balanced tree."
+        }
+      },
+      "parameter_refs": [
+        "MX_S_hodlr_p_1d1d52d4bc",
+        "MX_S_hodlr_p_f381d17262",
+        "MX_S_hodlr_p_95f98dca5f",
+        "MX_S_hodlr_p_f7fafc184f",
+        "MX_S_hodlr_p_c9d7e07f17"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Universal constants and dimension thresholds without numerical values remain symbolic; the three-valued decision is unknown."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "MX_S_hodlr__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\le C kL^4/\\varepsilon^3",
+      "quantity_ref": "MX_S_hodlr__main__q1",
+      "region_refs": [
+        "MX_S_hodlr__main__r1"
+      ],
+      "method": "Randomized nonadaptive hierarchical peeling or sketching upper bound.",
+      "algorithm_or_hard_family": "Randomized nonadaptive hierarchical peeling or sketching upper bound.",
+      "algorithm_class_scope": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+      "resource_costs": {
+        "N_right+N_left": "C k L^4 / eps^3",
+        "additional_arithmetic": "d poly(log d,k,1/eps)"
+      },
+      "parameter_choice": "Determined by public parameters and the source algorithm; one algorithm jointly attains the listed costs",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_HD"
+      ],
+      "evidence_refs": [
+        "MX_S_hodlr__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_hodlr__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "",
+        "guarantee_mapping": "The source's nonadaptive upper bound succeeds with probability $99/100$, exceeding the required $2/3$. Its parameter conversion from $(1+\\beta)^L$ to $1+\\epsilon$ retains the recorded derivation and validity region.",
+        "oracle_mapping": "Exact Av and A^T u channels, with a public balanced block tree. Each vector product costs one call, and batched sketches are charged per column. A need not itself be HODLR.",
+        "output_mapping": "Return a matrix in the specified tree's HODLR($k$) class: off-diagonal sibling blocks have rank at most $k$, and leaf blocks are unrestricted. The criterion is a $(1+\\epsilon)$ relative residual in unsquared Frobenius norm.",
+        "resource_mapping": "Retain joint budget $(N_{\\mathrm r},N_{\\mathrm l})$ for single-vector $Av$ and $A^{\\mathsf T}u$ calls, with the explicit equal-weight scalarization $N=N_{\\mathrm r}+N_{\\mathrm l}$. Charge each block column separately. The budget is a worst-case cap for every input and private seed, not an expected count. Reading public inputs and internal exact-real arithmetic, storage, and postprocessing are uncharged; query complexity is not runtime or bit complexity.",
+        "output_metric_mapping": "Return $\\widehat H\\in\\mathcal H_k$ satisfying all block-rank constraints of the tree, possibly in hierarchical-factor form, without a certificate. Define $\\operatorname{OPT}_{\\mathcal H}=\\min_{H\\in\\mathcal H_k}\\|A-H\\|_{\\mathrm F}$. Success requires $\\|A-\\widehat H\\|_{\\mathrm F}\\le(1+\\varepsilon)\\operatorname{OPT}_{\\mathcal H}$; a zero optimal error requires exact structured recovery."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": "Choose $\\beta_{\\mathrm{alg}}=(1+\\varepsilon)^{1/L}-1$, giving source error factor $\\Gamma=(1+\\beta_{\\mathrm{alg}})^L=1+\\varepsilon$. On $0<\\varepsilon<1$, we have $\\beta_{\\mathrm{alg}}=\\Theta(\\varepsilon/L)$. Substitution into the same algorithm's total bidirectional call count $O(kL/\\beta_{\\mathrm{alg}}^3)$ yields $O(kL^4/\\varepsilon^3)$.",
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "MX_S_hodlr__main__b2",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\le d",
+      "quantity_ref": "MX_S_hodlr__main__q1",
+      "region_refs": [
+        "MX_S_hodlr__main__r1"
+      ],
+      "method": "Deterministic reconstruction using the standard basis, followed by free exact solution of the target task",
+      "algorithm_or_hard_family": "Deterministic reconstruction using the standard basis, followed by free exact solution of the target task",
+      "algorithm_class_scope": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+      "resource_costs": {
+        "N_right": "d",
+        "N_left": "0"
+      },
+      "parameter_choice": "Query standard basis vectors on the smaller matrix dimension, then perform the allowed exact postprocessing.",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_HD"
+      ],
+      "evidence_refs": [
+        "MX_S_hodlr__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_hodlr__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "",
+        "guarantee_mapping": "Success probability is at least 2/3 for each fixed A and public tree. Nonadaptive peeling gives a valid upper bound; the general lower bound may still cover randomized adaptive algorithms.",
+        "oracle_mapping": "Exact Av and A^T u channels, with a public balanced block tree. Each vector product costs one call, and batched sketches are charged per column. A need not itself be HODLR.",
+        "output_mapping": "Return a matrix in the specified tree's HODLR($k$) class: off-diagonal sibling blocks have rank at most $k$, and leaf blocks are unrestricted. The criterion is a $(1+\\epsilon)$ relative residual in unsquared Frobenius norm.",
+        "resource_mapping": "Retain joint budget $(N_{\\mathrm r},N_{\\mathrm l})$ for single-vector $Av$ and $A^{\\mathsf T}u$ calls, with the explicit equal-weight scalarization $N=N_{\\mathrm r}+N_{\\mathrm l}$. Charge each block column separately. The budget is a worst-case cap for every input and private seed, not an expected count. Reading public inputs and internal exact-real arithmetic, storage, and postprocessing are uncharged; query complexity is not runtime or bit complexity.",
+        "output_metric_mapping": "Return $\\widehat H\\in\\mathcal H_k$ satisfying all block-rank constraints of the tree, possibly in hierarchical-factor form, without a certificate. Define $\\operatorname{OPT}_{\\mathcal H}=\\min_{H\\in\\mathcal H_k}\\|A-H\\|_{\\mathrm F}$. Success requires $\\|A-\\widehat H\\|_{\\mathrm F}\\le(1+\\varepsilon)\\operatorname{OPT}_{\\mathcal H}$; a zero optimal error requires exact structured recovery."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": null,
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "MX_S_hodlr__main__b3",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\ge c[k\\log(d/k)+k/\\varepsilon]",
+      "quantity_ref": "MX_S_hodlr__main__q1",
+      "region_refs": [
+        "MX_S_hodlr__main__r2"
+      ],
+      "method": "General randomized adaptive two-sided queries; exact recovery and reduction from fixed-pattern sparse approximation",
+      "algorithm_or_hard_family": "General randomized adaptive two-sided queries; exact recovery and reduction from fixed-pattern sparse approximation",
+      "algorithm_class_scope": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+      "resource_costs": {
+        "N": "N\\ge c[k\\log(d/k)+k/\\varepsilon]"
+      },
+      "parameter_choice": "Use the cited hard-input construction with the dimension, accuracy, and success-probability conditions attached to this bound.",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_HD"
+      ],
+      "evidence_refs": [
+        "MX_S_hodlr__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_hodlr__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "Require d ≥ C0 k/ε and a compatible tree.",
+        "guarantee_mapping": "The source hard threshold is below the required 2/3 success probability, so the lower bound applies. Retain sufficient-dimension and tree-compatibility conditions; it does not extend to arbitrary d.",
+        "oracle_mapping": "Exact Av and A^T u channels, with a public balanced block tree. Each vector product costs one call, and batched sketches are charged per column. A need not itself be HODLR.",
+        "output_mapping": "Return a matrix in the specified tree's HODLR($k$) class: off-diagonal sibling blocks have rank at most $k$, and leaf blocks are unrestricted. The criterion is a $(1+\\epsilon)$ relative residual in unsquared Frobenius norm.",
+        "resource_mapping": "Retain joint budget $(N_{\\mathrm r},N_{\\mathrm l})$ for single-vector $Av$ and $A^{\\mathsf T}u$ calls, with the explicit equal-weight scalarization $N=N_{\\mathrm r}+N_{\\mathrm l}$. Charge each block column separately. The budget is a worst-case cap for every input and private seed, not an expected count. Reading public inputs and internal exact-real arithmetic, storage, and postprocessing are uncharged; query complexity is not runtime or bit complexity.",
+        "output_metric_mapping": "Return $\\widehat H\\in\\mathcal H_k$ satisfying all block-rank constraints of the tree, possibly in hierarchical-factor form, without a certificate. Define $\\operatorname{OPT}_{\\mathcal H}=\\min_{H\\in\\mathcal H_k}\\|A-H\\|_{\\mathrm F}$. Success requires $\\|A-\\widehat H\\|_{\\mathrm F}\\le(1+\\varepsilon)\\operatorname{OPT}_{\\mathcal H}$; a zero optimal error requires exact structured recovery."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "The hierarchical-approximation lower-bound window.",
+      "predicate": {
+        "predicate": {
+          "name": "hodlr_lower",
+          "args": [
+            "MX_S_hodlr_p_1d1d52d4bc",
+            "MX_S_hodlr_p_f381d17262",
+            "MX_S_hodlr_p_95f98dca5f",
+            "MX_S_hodlr_p_f7fafc184f",
+            "MX_S_hodlr_p_c9d7e07f17"
+          ],
+          "description": "Assume $0<\\epsilon<1$, $d\\ge C_0k/\\epsilon$, and compatibility of $d,k$ with the balanced tree."
+        }
+      },
+      "predicate_text": "Require $0<\\varepsilon<1$ and $d\\ge C_0k/\\varepsilon$. The condition $d,k$ must be compatible with the specified balanced binary partition tree. The quantity $C_0>0$ is the sufficient dimension constant from the source.",
+      "parameter_refs": [
+        "MX_S_hodlr_p_1d1d52d4bc",
+        "MX_S_hodlr_p_f381d17262",
+        "MX_S_hodlr_p_95f98dca5f",
+        "MX_S_hodlr_p_f7fafc184f",
+        "MX_S_hodlr_p_c9d7e07f17"
+      ],
+      "source_region_ref": "MX_S_hodlr__main__r2",
+      "status": {
+        "code": "other_quantified_gap",
+        "label": "Other quantified gap",
+        "missing_sides": []
+      },
+      "comparison_id": "MX_S_hodlr__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_hodlr__main__q1",
+      "resource_projection_id": "resource_b185f53633",
+      "regime_id": "MX_S_hodlr__main__r2",
+      "bracket": {
+        "upper_refs": [
+          "MX_S_hodlr__main__b1",
+          "MX_S_hodlr__main__b2"
+        ],
+        "lower_refs": [
+          "MX_S_hodlr__main__b3"
+        ],
+        "comparison_ref": "MX_S_hodlr__main__c1",
+        "quantity_ref": "MX_S_hodlr__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_right+N_left",
+        "ratio_or_gap": "$O\\!\\left(\\frac{\\min\\{d,kL^4/\\varepsilon^3\\}}{k\\log(d/k)+k/\\varepsilon}\\right)$. Parameters vary jointly; the rate is not reduced to one accuracy exponent throughout the domain.",
+        "envelopes": {
+          "upper": {
+            "expression": "O(\\min\\{d,kL^4/\\varepsilon^3\\})",
+            "claim_refs": [
+              "MX_S_hodlr__main__b1",
+              "MX_S_hodlr__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "O(\\min\\{d,kL^4/\\varepsilon^3\\})"
+          },
+          "lower": {
+            "expression": "\\Omega(k\\log(d/k)+k/\\varepsilon)",
+            "claim_refs": [
+              "MX_S_hodlr__main__b3"
+            ],
+            "included": true,
+            "expression_latex": "\\Omega(k\\log(d/k)+k/\\varepsilon)"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "MX_S_hodlr__main__b1",
+            "when_region_refs": [
+              "MX_S_hodlr__main__r1"
+            ],
+            "meaning": "Use this algorithm only on its own applicability region; scalar envelopes take minimum over applicable branches."
+          },
+          {
+            "claim_ref": "MX_S_hodlr__main__b2",
+            "when_region_refs": [
+              "MX_S_hodlr__main__r1"
+            ],
+            "meaning": "Use this algorithm only on its own applicability region; scalar envelopes take minimum over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "MX_S_hodlr__main__b1": [
+            {
+              "region_ref": "MX_S_hodlr__main__r1",
+              "predicate_text": "Assume $1\\le k<d$ and $0<\\varepsilon<1$, with $d,k$ compatible with the specified balanced binary partition tree."
+            }
+          ],
+          "MX_S_hodlr__main__b2": [
+            {
+              "region_ref": "MX_S_hodlr__main__r1",
+              "predicate_text": "Assume $1\\le k<d$ and $0<\\varepsilon<1$, with $d,k$ compatible with the specified balanced binary partition tree."
+            }
+          ],
+          "MX_S_hodlr__main__b3": [
+            {
+              "region_ref": "MX_S_hodlr__main__r2",
+              "predicate_text": "Require $0<\\varepsilon<1$ and $d\\ge C_0k/\\varepsilon$. The condition $d,k$ must be compatible with the specified balanced binary partition tree. The quantity $C_0>0$ is the sufficient dimension constant from the source."
+            }
+          ]
+        },
+        "envelope_certificate": "Only the difference between verified envelopes is reported. On the nonsaturated slice with epsilon<=1/L, the ratio is O(L^4/epsilon²); the full multiparameter domain is not assigned a single fixed power.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Sum of right and left matrix-vector product query counts."
+      },
+      "comparison_key": {
+        "setting_id": "MX_S_hodlr",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_hodlr__main__q1",
+        "resource_projection_id": "resource_b185f53633",
+        "regime_id": "MX_S_hodlr__main__r2"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "MX_S_hodlr__main__e1",
+      "source_ref": "MX_SRC_HD",
+      "locator": {
+        "theorem": "Theorem 1.2; Theorems 6.1 and 6.2",
+        "section": "§1; §6",
+        "pdf_pages": [
+          3,
+          22,
+          23,
+          24
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "The dimension condition d>=c k/epsilon is retained in Theorem 1.2, footnote 6, and Theorem 6.2, footnote 14. The required 2/3 success probability exceeds the source lower-bound threshold 1/25.",
+      "notes": [
+        "The dimension condition d>=c k/epsilon is retained in Theorem 1.2, footnote 6, and Theorem 6.2, footnote 14. The required 2/3 success probability exceeds the source lower-bound threshold 1/25."
+      ]
+    },
+    {
+      "id": "MX_S_hodlr__main__e2",
+      "source_ref": "MX_SRC_HD",
+      "locator": {
+        "theorem": "Theorem 1.1; Definition 1.1; Problem 1.1",
+        "section": "§1",
+        "pdf_pages": [
+          2,
+          3
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Definition 1.1 and Problem 1.1 of the HD source define the same HODLR target. Theorem 1.1 gives a nonadaptive algorithm with success probability 99/100, factor Gamma=(1+beta_alg)^L, and O(kL/beta_alg^3) single-vector bidirectional calls. Section 1.1 also states the d-query reconstruction baseline followed by optimal low-rank approximation of each block.",
+      "notes": [
+        "The method is nonadaptive with success probability 99/100. Its native parameters are Γ = (1 + β)^L and q = O(kL/β³)."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "MX_SRC_HD",
+      "authors": [
+        "Tyler Chen",
+        "Feyza Duman Keles",
+        "Diana Halikias",
+        "Cameron Musco",
+        "Christopher Musco",
+        "David Persson"
+      ],
+      "title": "Near-optimal hierarchical matrix approximation from matrix-vector products",
+      "year": 2025,
+      "version": "arXiv:2407.04686v2 (2024-10-24); SODA 2025",
+      "url": "https://arxiv.org/pdf/2407.04686v2",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [
+    {
+      "id": "MX_REL_hodlr_lowrank",
+      "source_ref": "MX_S_hodlr",
+      "target_ref": "MX_S_lowrank",
+      "relation_kind": "related_compositional_task",
+      "conditions": [
+        "Each off-diagonal target block has rank at most k. The global target is HODLR, not a globally rank-k matrix."
+      ],
+      "instance_map": "Restricted separately to the matrix blocks associated with tree nodes",
+      "output_map": "Assemble block approximations along the specified tree",
+      "error_map": "Aggregate Frobenius block errors over disjoint positions and tree levels. The levelwise algorithm must control error propagation.",
+      "oracle_simulation": "Zero padding outside a block and restricting the returned coordinates simulates one subblock multiplication.",
+      "cost_map": {
+        "expression": null,
+        "components": {
+          "one_block_query": "1 full-matrix matvec; simultaneous-block interference requires source algorithm"
+        }
+      },
+      "evidence_refs": [
+        "MX_S_hodlr__main__e2"
+      ]
+    }
+  ],
+  "aliases": [
+    {
+      "legacy_id": "MX_S_hodlr",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "other_quantified_gap",
+        "label": "Other quantified gap present"
+      }
+    ],
+    "gap_classes": [
+      "other_quantified_gap"
+    ],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "other_quantified_gap": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "MX_S_hodlr__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "501e7ac1a25a3c6f4d20ab794993eb36079f095e7dda940f7aae00d6f0ae15c6",
+    "source_order": 53,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

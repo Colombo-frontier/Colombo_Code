@@ -1,0 +1,664 @@
+{
+  "schema_version": "1.0.0",
+  "record_type": "setting_identity",
+  "setting_id": "ON_LINSTO_S",
+  "normalization_version": "0.2.0",
+  "profile_version": "6.1.0",
+  "profile_sha256": "ed8446731080cf5fb70208f68e6d4fd41a2be979a8d890e7c8332046564a90f0",
+  "source_document": "profile.json",
+  "completeness": "unreviewed",
+  "normalization_scope": "source_field_extraction_only",
+  "matching_state": "unreviewed",
+  "missing_field_semantics": "unknown_not_unrestricted",
+  "axes": {
+    "task": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/task",
+      "source_fields": {
+        "navigation_domains": [
+          "online_bandit"
+        ],
+        "formulation_code": "stochastic_linear_bandit",
+        "formulation": "sum_t (||θ||_2−<x_t,θ>)",
+        "solution_goal": "minimize_expected_cumulative_pseudo_regret",
+        "protocol_ref": "ON_LINSTO_S_pro_5dc63b47c2",
+        "code": "stochastic_linear_bandit",
+        "formulation_latex": "Y_t=\\langle x_t,\\theta\\rangle+Z_t,\\quad Z_t\\overset{\\mathrm{i.i.d.}}\\sim\\mathcal N(0,1),\\qquad R_T=\\sum_t(\\|\\theta\\|_2-\\langle x_t,\\theta\\rangle)",
+        "goal_latex": "\\inf_{\\mathcal A}\\sup_{\\|\\theta\\|_2\\le1}\\mathbb E_{\\mathcal A,Z}[R_T]"
+      },
+      "narrative_pointers": [
+        "/common_specification/task/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    },
+    "instance_model": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/model",
+      "source_fields": {
+        "instance": "Actions satisfy $x_t\\in B_2^d(1)$ and the unknown parameter satisfies $\\theta\\in B_2^d(1)$. Observe $Y_t=\\langle x_t,\\theta\\rangle+Z_t$, with independent standard Gaussian $Z_t$. Noise is added after the inner product, and its variance does not scale with action length.",
+        "assumptions": [
+          {
+            "subject_id": "ON_LINSTO_S_obj_e2f46dc230",
+            "property_code": "parameter_ball",
+            "variable_blocks": [],
+            "norm_ref": "ON_LINSTO_S_nor_326b4c7f62",
+            "parameter_refs": [
+              "ON_LINSTO_S_p_136cb4ee93",
+              "ON_LINSTO_S_p_76dd32a562"
+            ],
+            "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+            "description": "‖θ‖₂≤1."
+          },
+          {
+            "subject_id": "ON_LINSTO_S_obj_d11b4cc9d5",
+            "property_code": "additive_scalar_noise",
+            "variable_blocks": [],
+            "norm_ref": null,
+            "parameter_refs": [
+              "ON_LINSTO_S_p_136cb4ee93",
+              "ON_LINSTO_S_p_76dd32a562"
+            ],
+            "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+            "description": "Noise is added outside the inner product. Conditional on any action $x$, it is $\\mathcal N(0,1)$, with variance independent of $\\|x\\|_2$."
+          }
+        ],
+        "parameter_domain_description": "T: $T\\in\\mathbb N,\\ T\\ge1$ (public); d: $d\\in\\mathbb N,\\ d\\ge1$ (public)",
+        "code": "model_declared",
+        "interaction_timing": [
+          "The parameter $\\theta$ is fixed; $d,T$, the action domain, and noise variance are public.",
+          "The learner selects x_t from the history.",
+          "Returns $\\langle x_t,\\theta\\rangle+Z_t$.",
+          "Accumulate the mean gap ||theta||_2-<x_t,theta> and continue to the next round."
+        ],
+        "adversary_information": "The unknown distribution or parameter is fixed before interaction. Learner randomness and sample randomness are independent. No adversary changes the distribution round by round from the learner's history.",
+        "unresolved_applicability": [
+          "General sub-Gaussian noise, parameter-vector noise, and other action geometries each require separate checks of the native oracle and parameter window."
+        ]
+      },
+      "narrative_pointers": [
+        "/common_specification/model/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    },
+    "oracle_interface": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/oracle",
+      "source_fields": {
+        "operations": [
+          {
+            "id": "ON_LINSTO_S_ora_80b533819a",
+            "operation_code": "observe_scalar_linear_loss",
+            "target_object": "ON_LINSTO_S_obj_de97b64e00",
+            "variable_blocks": [
+              "ON_LINSTO_S_var_52ce4df2e5"
+            ],
+            "query_signature": "Input: $t,\\ x_t\\in B_2^d(1)$. The specification's protocol governs timing and visible information.",
+            "response_signature": "Response: $Y_t\\mid\\mathcal H_{t-1},x_t\\sim\\mathcal N(\\langle x_t,\\theta\\rangle,1)$.",
+            "derivative_reference_object": null,
+            "derivative_order": "not_applicable",
+            "order_convention": "order is relative to the current member f_t(x), f(x), or sample F(x;ξ_t) of the named indexed function family and only with respect to x; finite feedback interfaces have no derivative order",
+            "feedback_quality": {
+              "code": "gaussian_additive_noise",
+              "description": "Choose x_t, then draw Z_t and return one scalar. Neither theta, a gradient, nor another directional projection in the same round is revealed. Repeating x in another round uses fresh noise and is charged again."
+            },
+            "domain_ref": "ON_LINSTO_S_dom_436f28c0d5",
+            "coupling": "Choose x_t, then draw Z_t and return one scalar. Neither theta, a gradient, nor another directional projection in the same round is revealed. Repeating x in another round uses fresh noise and is charged again.",
+            "index_control": "The learner selects feasible actions and any probes permitted by the specification. The environment determines current losses, outcomes, or fresh samples. The learner cannot select future rounds.",
+            "access_schedule": "Interaction follows the sequence in registry.protocols. Current loss feedback is available only after the action is submitted. Any pre-action disclosure of context or advice is specified separately.",
+            "accuracy_argument": null,
+            "cost_rule_ref": "ON_LINSTO_S_res_b979d6b766",
+            "query_latex": "t,\\ x_t\\in B_2^d(1)",
+            "response_latex": "Y_t\\mid\\mathcal H_{t-1},x_t\\sim\\mathcal N(\\langle x_t,\\theta\\rangle,1)"
+          }
+        ],
+        "public_inputs": [
+          "d",
+          "T",
+          "Action domain $B_2^d(1)$",
+          "Parameter-norm bound equal to $1$",
+          "Known scalar noise N(0,1)."
+        ],
+        "hidden_objects": [
+          "ON_LINSTO_S_obj_de97b64e00",
+          "ON_LINSTO_S_obj_e2f46dc230"
+        ],
+        "auxiliary_interfaces": [
+          "No additional access to hidden losses, means, or gradients is available. Projection, sampling, and internal optimization over public domains may have separately recorded computation costs; they are not free loss oracles."
+        ],
+        "protocol_ref": "ON_LINSTO_S_pro_5dc63b47c2",
+        "query_domain_description": "unit B2^d",
+        "code": "oracle_declared"
+      },
+      "narrative_pointers": [
+        "/common_specification/oracle/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    },
+    "output": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/output",
+      "source_fields": {
+        "object_type": "action_trajectory",
+        "domain_ref": "ON_LINSTO_S_dom_436f28c0d5",
+        "feasibility": "Every loss-bearing action must belong to the action domain. The final output retains the complete action trajectory.",
+        "allowed_postprocessing": "Any measurable computation on received feedback is allowed. No native observation may be added after the budget is exhausted or the algorithm stops.",
+        "certificate_requirement": "Only the stated statistical guarantee is required, not a certificate verifiable through the feedback interface.",
+        "code": "output_declared"
+      },
+      "narrative_pointers": [
+        "/common_specification/output/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    },
+    "metric": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/metric",
+      "source_fields": {
+        "base_expression": "sum_t (||θ||_2−<x_t,θ>)",
+        "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+        "reference_object": "ON_LINSTO_S_obj_de97b64e00",
+        "nonnegativity": true,
+        "finiteness_conditions": "The unit mean/loss range or the stated Lipschitz amplitude bound limits the per-round excess loss to two. Cumulative regret is therefore at most 2T. Unbounded observation noise does not enter pseudo-regret.",
+        "comparator_ref": "ON_LINSTO_S_com_5f40abce0a",
+        "code": "metric_declared"
+      },
+      "narrative_pointers": [
+        "/common_specification/metric/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    },
+    "resource_model": {
+      "state": "source_structured",
+      "source_pointer": "/common_specification/resource",
+      "source_fields": {
+        "components": [
+          {
+            "code": "rounds",
+            "unit": "round",
+            "description": "Sequential online rounds; only information permitted by the protocol is visible in each round."
+          },
+          {
+            "code": "native_feedback",
+            "unit": "feedback_event",
+            "description": "$T$ rounds provide $T$ scalar noisy linear observations."
+          },
+          {
+            "code": "optimistic_solves",
+            "unit": "optimization_problem",
+            "description": "OFUL maximizes optimistic reward over a confidence ellipsoid and the public action set. The cost of this internal optimization is recorded separately and is not free target feedback."
+          },
+          {
+            "code": "matrix_updates",
+            "unit": "matrix_update",
+            "description": "This auxiliary resource depends on the algorithm and is recorded per bound. Its resource coordinate is not claimed optimal."
+          }
+        ],
+        "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+        "cost_rules": [
+          {
+            "id": "ON_LINSTO_S_res_b979d6b766",
+            "operation_refs": [
+              "ON_LINSTO_S_ora_80b533819a"
+            ],
+            "cost": {
+              "rounds": 1,
+              "native_feedback": 1
+            }
+          }
+        ],
+        "scalarization": "Retain the native objective and complete resource vector. At fixed $T$, compare cumulative regret. Best-arm-identification stopping times and error probabilities use their own task-specific criteria.",
+        "setup_cost": "Only declared public inputs may be read. Hidden losses, means, or samples cannot be accessed in advance or outside the $T$ rounds or $\\tau$ samples.",
+        "online_cost": "Any causal randomized policy is permitted; OFUL supplies one admitted upper bound. OFUL maintains a $d\\times d$ design matrix and confidence set and solves an optimistic decision problem. Matrix updates and optimistic optimization are not charged as a single bandit observation.",
+        "amortization_scope": "The algorithm runs on one environment. Charged feedback cannot be reused across independent instances.",
+        "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+        "code": "resource_declared"
+      },
+      "narrative_pointers": [
+        "/common_specification/resource/description_paragraphs"
+      ],
+      "equivalence_review": "unreviewed",
+      "semantic_validation": "not_performed"
+    }
+  },
+  "parameters": {
+    "source_pointer": "/parameters",
+    "cross_setting_alignment": "unreviewed",
+    "parameter_ids": [
+      "ON_LINSTO_S_p_76dd32a562",
+      "ON_LINSTO_S_p_136cb4ee93"
+    ]
+  },
+  "regime_predicates": [
+    {
+      "regime_id": "ON_LINSTO_S__main__r1",
+      "source_pointer": "/regimes/0",
+      "predicate_pointer": "/regimes/0/predicate",
+      "evaluation_state": "unparsed"
+    },
+    {
+      "regime_id": "ON_LINSTO_S__main__r2",
+      "source_pointer": "/regimes/1",
+      "predicate_pointer": "/regimes/1/predicate",
+      "evaluation_state": "unparsed"
+    },
+    {
+      "regime_id": "ON_LINSTO_S__main__r3",
+      "source_pointer": "/regimes/2",
+      "predicate_pointer": "/regimes/2/predicate",
+      "evaluation_state": "unparsed"
+    },
+    {
+      "regime_id": "ON_LINSTO_S__main__r4",
+      "source_pointer": "/regimes/3",
+      "predicate_pointer": "/regimes/3/predicate",
+      "evaluation_state": "unparsed"
+    }
+  ],
+  "view_override_policy": {
+    "object_values": "recursive_key_merge",
+    "array_and_scalar_values": "override_replaces_entire_value",
+    "absent_override_keys": "inherit_from_common_specification",
+    "null": "explicit_value_not_deletion",
+    "limitations": "Mechanical merge does not certify consistency or mathematical identity. Narrative qualifications and source conditions remain authoritative."
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "source_pointer": "/views/0",
+      "algorithms": {
+        "state": "source_structured",
+        "source_pointer": "/views/0/algorithms",
+        "source_fields": {
+          "randomization": "Private randomization is allowed. The seed is hidden from the environment and independent of the fixed instance and sample randomness.",
+          "adaptivity": "The action and every probe in a round may depend only on previous-round feedback, public inputs, any context or advice already revealed that round, and private randomness. They may not use unrevealed current losses or samples.",
+          "restrictions": [
+            "All measurable causal policies satisfying the declared information timing and feasible domain are allowed, without extra span, iteration-form, or polynomial-time restrictions."
+          ],
+          "internal_computation": "Arbitrary measurable exact-real internal computation and causal randomized policies are allowed. OFUL is one checked upper-bound algorithm. It maintains a $d\\times d$ design matrix and confidence set and solves an optimistic decision problem. Matrix updates and optimistic optimization are separate from scalar bandit feedback; feedback complexity gives no arithmetic or bit bound.",
+          "parallelism": "Interaction proceeds in sequential time rounds. A two-point evaluation is one pair of same-round responses only where explicitly permitted; it is not equivalent to two independent rounds.",
+          "code": "algorithms_declared"
+        },
+        "narrative_pointers": [
+          "/views/0/algorithms/description_paragraphs"
+        ],
+        "equivalence_review": "unreviewed",
+        "semantic_validation": "not_performed"
+      },
+      "guarantees": [
+        {
+          "state": "source_structured",
+          "source_pointer": "/views/0/guarantees/0",
+          "source_fields": {
+            "guarantee_id": "g1",
+            "complete_expression": "The native target is $\\inf_{\\mathcal A}\\sup_{\\|\\theta\\|_2\\le1}\\mathbb E_{\\mathcal A,Z}[R_T]$.",
+            "aggregation_order": [
+              "Take the infimum over causal learners unaware of the hidden distribution, parameter, or objective.",
+              "Take the supremum over fixed model instances.",
+              "The comparator uses population means or true function optima, defined before samples are realized.",
+              "Expectation includes learner randomness and observation noise or samples. The comparator is not chosen in hindsight from realized noisy rewards."
+            ],
+            "quantifier_order": "One learning algorithm must apply to every instance in the declared class. It may use public inputs only, not hidden instance parameters.",
+            "randomness_sources": [
+              "Learner's private randomness",
+              "environment samples/noise"
+            ],
+            "confidence_parameters": [],
+            "time_uniformity": "The horizon T is fixed and public. The guarantee holds for that T; it does not automatically give an anytime result or a simultaneous high-probability statement for all T.",
+            "code": "guarantee_declared"
+          },
+          "narrative_pointers": [
+            "/views/0/guarantees/0/description_paragraphs"
+          ],
+          "equivalence_review": "unreviewed",
+          "semantic_validation": "not_performed",
+          "guarantee_id": "g1"
+        }
+      ],
+      "budget": {
+        "state": "source_structured",
+        "source_pointer": "/views/0/budget",
+        "source_fields": {
+          "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+          "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+          "scalarization": "Retain the native objective and complete resource vector. At fixed $T$, compare cumulative regret. Best-arm-identification stopping times and error probabilities use their own task-specific criteria."
+        },
+        "narrative_pointers": [],
+        "equivalence_review": "unreviewed",
+        "semantic_validation": "not_performed"
+      },
+      "effective_specification": {
+        "task": {
+          "navigation_domains": [
+            "online_bandit"
+          ],
+          "formulation_code": "stochastic_linear_bandit",
+          "formulation": "sum_t (||θ||_2−<x_t,θ>)",
+          "solution_goal": "minimize_expected_cumulative_pseudo_regret",
+          "protocol_ref": "ON_LINSTO_S_pro_5dc63b47c2",
+          "code": "stochastic_linear_bandit",
+          "formulation_latex": "Y_t=\\langle x_t,\\theta\\rangle+Z_t,\\quad Z_t\\overset{\\mathrm{i.i.d.}}\\sim\\mathcal N(0,1),\\qquad R_T=\\sum_t(\\|\\theta\\|_2-\\langle x_t,\\theta\\rangle)",
+          "goal_latex": "\\inf_{\\mathcal A}\\sup_{\\|\\theta\\|_2\\le1}\\mathbb E_{\\mathcal A,Z}[R_T]",
+          "description_paragraphs": [
+            "The learner chooses actions in the Euclidean unit ball and observes their inner products with a fixed unknown parameter plus independent standard Gaussian noise. The target is cumulative mean reward relative to the best fixed action. Reducing action magnitude does not reduce the noise variance."
+          ]
+        },
+        "model": {
+          "instance": "Actions satisfy $x_t\\in B_2^d(1)$ and the unknown parameter satisfies $\\theta\\in B_2^d(1)$. Observe $Y_t=\\langle x_t,\\theta\\rangle+Z_t$, with independent standard Gaussian $Z_t$. Noise is added after the inner product, and its variance does not scale with action length.",
+          "assumptions": [
+            {
+              "subject_id": "ON_LINSTO_S_obj_e2f46dc230",
+              "property_code": "parameter_ball",
+              "variable_blocks": [],
+              "norm_ref": "ON_LINSTO_S_nor_326b4c7f62",
+              "parameter_refs": [
+                "ON_LINSTO_S_p_136cb4ee93",
+                "ON_LINSTO_S_p_76dd32a562"
+              ],
+              "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+              "description": "‖θ‖₂≤1."
+            },
+            {
+              "subject_id": "ON_LINSTO_S_obj_d11b4cc9d5",
+              "property_code": "additive_scalar_noise",
+              "variable_blocks": [],
+              "norm_ref": null,
+              "parameter_refs": [
+                "ON_LINSTO_S_p_136cb4ee93",
+                "ON_LINSTO_S_p_76dd32a562"
+              ],
+              "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+              "description": "Noise is added outside the inner product. Conditional on any action $x$, it is $\\mathcal N(0,1)$, with variance independent of $\\|x\\|_2$."
+            }
+          ],
+          "parameter_domain_description": "T: $T\\in\\mathbb N,\\ T\\ge1$ (public); d: $d\\in\\mathbb N,\\ d\\ge1$ (public)",
+          "code": "model_declared",
+          "interaction_timing": [
+            "The parameter $\\theta$ is fixed; $d,T$, the action domain, and noise variance are public.",
+            "The learner selects x_t from the history.",
+            "Returns $\\langle x_t,\\theta\\rangle+Z_t$.",
+            "Accumulate the mean gap ||theta||_2-<x_t,theta> and continue to the next round."
+          ],
+          "adversary_information": "The unknown distribution or parameter is fixed before interaction. Learner randomness and sample randomness are independent. No adversary changes the distribution round by round from the learner's history.",
+          "unresolved_applicability": [
+            "General sub-Gaussian noise, parameter-vector noise, and other action geometries each require separate checks of the native oracle and parameter window."
+          ],
+          "description_paragraphs": [
+            "The hidden reward parameter $\\theta$ is fixed before interaction and satisfies $\\|\\theta\\|_2\\le1$.",
+            "Scalar observation noise is i.i.d. $Z_t\\sim N(0,1)$ and independent of the pre-action history. The observation variance remains one even when $x_t=0$. This specification uses additive scalar noise.",
+            "The actual action is also the sole observation point and satisfies $\\|x_t\\|_2\\le1$.",
+            "Require $d,T\\ge1$. Both actions and the unknown parameter lie in the unit Euclidean ball."
+          ]
+        },
+        "oracle": {
+          "operations": [
+            {
+              "id": "ON_LINSTO_S_ora_80b533819a",
+              "operation_code": "observe_scalar_linear_loss",
+              "target_object": "ON_LINSTO_S_obj_de97b64e00",
+              "variable_blocks": [
+                "ON_LINSTO_S_var_52ce4df2e5"
+              ],
+              "query_signature": "Input: $t,\\ x_t\\in B_2^d(1)$. The specification's protocol governs timing and visible information.",
+              "response_signature": "Response: $Y_t\\mid\\mathcal H_{t-1},x_t\\sim\\mathcal N(\\langle x_t,\\theta\\rangle,1)$.",
+              "derivative_reference_object": null,
+              "derivative_order": "not_applicable",
+              "order_convention": "order is relative to the current member f_t(x), f(x), or sample F(x;ξ_t) of the named indexed function family and only with respect to x; finite feedback interfaces have no derivative order",
+              "feedback_quality": {
+                "code": "gaussian_additive_noise",
+                "description": "Choose x_t, then draw Z_t and return one scalar. Neither theta, a gradient, nor another directional projection in the same round is revealed. Repeating x in another round uses fresh noise and is charged again."
+              },
+              "domain_ref": "ON_LINSTO_S_dom_436f28c0d5",
+              "coupling": "Choose x_t, then draw Z_t and return one scalar. Neither theta, a gradient, nor another directional projection in the same round is revealed. Repeating x in another round uses fresh noise and is charged again.",
+              "index_control": "The learner selects feasible actions and any probes permitted by the specification. The environment determines current losses, outcomes, or fresh samples. The learner cannot select future rounds.",
+              "access_schedule": "Interaction follows the sequence in registry.protocols. Current loss feedback is available only after the action is submitted. Any pre-action disclosure of context or advice is specified separately.",
+              "accuracy_argument": null,
+              "cost_rule_ref": "ON_LINSTO_S_res_b979d6b766",
+              "query_latex": "t,\\ x_t\\in B_2^d(1)",
+              "response_latex": "Y_t\\mid\\mathcal H_{t-1},x_t\\sim\\mathcal N(\\langle x_t,\\theta\\rangle,1)"
+            }
+          ],
+          "public_inputs": [
+            "d",
+            "T",
+            "Action domain $B_2^d(1)$",
+            "Parameter-norm bound equal to $1$",
+            "Known scalar noise N(0,1)."
+          ],
+          "hidden_objects": [
+            "ON_LINSTO_S_obj_de97b64e00",
+            "ON_LINSTO_S_obj_e2f46dc230"
+          ],
+          "auxiliary_interfaces": [
+            "No additional access to hidden losses, means, or gradients is available. Projection, sampling, and internal optimization over public domains may have separately recorded computation costs; they are not free loss oracles."
+          ],
+          "protocol_ref": "ON_LINSTO_S_pro_5dc63b47c2",
+          "query_domain_description": "unit B2^d",
+          "code": "oracle_declared",
+          "description_paragraphs": [
+            "Linear rewards with independent scalar noise:",
+            "$$\nt,\\ x_t\\in B_2^d(1)\\ \\longmapsto\\ Y_t\\mid\\mathcal{H}_{t-1},x_t\\sim\\mathcal{N}(\\langle x_t,\\theta\\rangle,1)\n$$",
+            "Choose action $x_t$, then draw fresh noise $Z_t$ and return one scalar observation.",
+            "Neither $\\theta$, a gradient, nor projections onto other directions in the same round are returned.",
+            "The same x may be measured again in another round, with fresh noise and a new charge.",
+            "Public inputs are $d,T$, action domain $B_2^d(1)$, parameter-norm bound one, and known scalar noise $\\mathcal N(0,1)$."
+          ]
+        },
+        "output": {
+          "object_type": "action_trajectory",
+          "domain_ref": "ON_LINSTO_S_dom_436f28c0d5",
+          "feasibility": "Every loss-bearing action must belong to the action domain. The final output retains the complete action trajectory.",
+          "allowed_postprocessing": "Any measurable computation on received feedback is allowed. No native observation may be added after the budget is exhausted or the algorithm stops.",
+          "certificate_requirement": "Only the stated statistical guarantee is required, not a certificate verifiable through the feedback interface.",
+          "code": "output_declared",
+          "description_paragraphs": [
+            "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+          ]
+        },
+        "metric": {
+          "base_expression": "sum_t (||θ||_2−<x_t,θ>)",
+          "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+          "reference_object": "ON_LINSTO_S_obj_de97b64e00",
+          "nonnegativity": true,
+          "finiteness_conditions": "The unit mean/loss range or the stated Lipschitz amplitude bound limits the per-round excess loss to two. Cumulative regret is therefore at most 2T. Unbounded observation noise does not enter pseudo-regret.",
+          "comparator_ref": "ON_LINSTO_S_com_5f40abce0a",
+          "code": "metric_declared",
+          "description_paragraphs": [
+            "$$\nY_t=\\langle x_t,\\theta\\rangle+Z_t,\\quad Z_t\\overset{\\mathrm{i.i.d.}}\\sim\\mathcal{N}(0,1),\\qquad R_T=\\sum_t(\\|\\theta\\|_2-\\langle x_t,\\theta\\rangle)\n$$"
+          ]
+        },
+        "resource": {
+          "components": [
+            {
+              "code": "rounds",
+              "unit": "round",
+              "description": "Sequential online rounds; only information permitted by the protocol is visible in each round."
+            },
+            {
+              "code": "native_feedback",
+              "unit": "feedback_event",
+              "description": "$T$ rounds provide $T$ scalar noisy linear observations."
+            },
+            {
+              "code": "optimistic_solves",
+              "unit": "optimization_problem",
+              "description": "OFUL maximizes optimistic reward over a confidence ellipsoid and the public action set. The cost of this internal optimization is recorded separately and is not free target feedback."
+            },
+            {
+              "code": "matrix_updates",
+              "unit": "matrix_update",
+              "description": "This auxiliary resource depends on the algorithm and is recorded per bound. Its resource coordinate is not claimed optimal."
+            }
+          ],
+          "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+          "cost_rules": [
+            {
+              "id": "ON_LINSTO_S_res_b979d6b766",
+              "operation_refs": [
+                "ON_LINSTO_S_ora_80b533819a"
+              ],
+              "cost": {
+                "rounds": 1,
+                "native_feedback": 1
+              }
+            }
+          ],
+          "scalarization": "Retain the native objective and complete resource vector. At fixed $T$, compare cumulative regret. Best-arm-identification stopping times and error probabilities use their own task-specific criteria.",
+          "setup_cost": "Only declared public inputs may be read. Hidden losses, means, or samples cannot be accessed in advance or outside the $T$ rounds or $\\tau$ samples.",
+          "online_cost": "Any causal randomized policy is permitted; OFUL supplies one admitted upper bound. OFUL maintains a $d\\times d$ design matrix and confidence set and solves an optimistic decision problem. Matrix updates and optimistic optimization are not charged as a single bandit observation.",
+          "amortization_scope": "The algorithm runs on one environment. Charged feedback cannot be reused across independent instances.",
+          "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+          "code": "resource_declared",
+          "description_paragraphs": [
+            "$T$ rounds provide $T$ scalar noisy linear observations.",
+            "Any causal randomized policy is allowed. OFUL is one verified upper-bound method.",
+            "OFUL maintains a $d\\times d$ design matrix and confidence set and solves an optimistic decision problem. Matrix updates and optimistic optimization are not one bandit call.",
+            "Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound."
+          ]
+        }
+      },
+      "effective_leaf_sources": {
+        "/task/navigation_domains/0": "/common_specification/task/navigation_domains/0",
+        "/task/formulation_code": "/common_specification/task/formulation_code",
+        "/task/formulation": "/common_specification/task/formulation",
+        "/task/solution_goal": "/common_specification/task/solution_goal",
+        "/task/protocol_ref": "/common_specification/task/protocol_ref",
+        "/task/code": "/common_specification/task/code",
+        "/task/formulation_latex": "/common_specification/task/formulation_latex",
+        "/task/goal_latex": "/common_specification/task/goal_latex",
+        "/task/description_paragraphs/0": "/common_specification/task/description_paragraphs/0",
+        "/model/instance": "/common_specification/model/instance",
+        "/model/assumptions/0/subject_id": "/common_specification/model/assumptions/0/subject_id",
+        "/model/assumptions/0/property_code": "/common_specification/model/assumptions/0/property_code",
+        "/model/assumptions/0/variable_blocks": "/common_specification/model/assumptions/0/variable_blocks",
+        "/model/assumptions/0/norm_ref": "/common_specification/model/assumptions/0/norm_ref",
+        "/model/assumptions/0/parameter_refs/0": "/common_specification/model/assumptions/0/parameter_refs/0",
+        "/model/assumptions/0/parameter_refs/1": "/common_specification/model/assumptions/0/parameter_refs/1",
+        "/model/assumptions/0/scope": "/common_specification/model/assumptions/0/scope",
+        "/model/assumptions/0/description": "/common_specification/model/assumptions/0/description",
+        "/model/assumptions/1/subject_id": "/common_specification/model/assumptions/1/subject_id",
+        "/model/assumptions/1/property_code": "/common_specification/model/assumptions/1/property_code",
+        "/model/assumptions/1/variable_blocks": "/common_specification/model/assumptions/1/variable_blocks",
+        "/model/assumptions/1/norm_ref": "/common_specification/model/assumptions/1/norm_ref",
+        "/model/assumptions/1/parameter_refs/0": "/common_specification/model/assumptions/1/parameter_refs/0",
+        "/model/assumptions/1/parameter_refs/1": "/common_specification/model/assumptions/1/parameter_refs/1",
+        "/model/assumptions/1/scope": "/common_specification/model/assumptions/1/scope",
+        "/model/assumptions/1/description": "/common_specification/model/assumptions/1/description",
+        "/model/parameter_domain_description": "/common_specification/model/parameter_domain_description",
+        "/model/code": "/common_specification/model/code",
+        "/model/interaction_timing/0": "/common_specification/model/interaction_timing/0",
+        "/model/interaction_timing/1": "/common_specification/model/interaction_timing/1",
+        "/model/interaction_timing/2": "/common_specification/model/interaction_timing/2",
+        "/model/interaction_timing/3": "/common_specification/model/interaction_timing/3",
+        "/model/adversary_information": "/common_specification/model/adversary_information",
+        "/model/unresolved_applicability/0": "/common_specification/model/unresolved_applicability/0",
+        "/model/description_paragraphs/0": "/common_specification/model/description_paragraphs/0",
+        "/model/description_paragraphs/1": "/common_specification/model/description_paragraphs/1",
+        "/model/description_paragraphs/2": "/common_specification/model/description_paragraphs/2",
+        "/model/description_paragraphs/3": "/common_specification/model/description_paragraphs/3",
+        "/oracle/operations/0/id": "/common_specification/oracle/operations/0/id",
+        "/oracle/operations/0/operation_code": "/common_specification/oracle/operations/0/operation_code",
+        "/oracle/operations/0/target_object": "/common_specification/oracle/operations/0/target_object",
+        "/oracle/operations/0/variable_blocks/0": "/common_specification/oracle/operations/0/variable_blocks/0",
+        "/oracle/operations/0/query_signature": "/common_specification/oracle/operations/0/query_signature",
+        "/oracle/operations/0/response_signature": "/common_specification/oracle/operations/0/response_signature",
+        "/oracle/operations/0/derivative_reference_object": "/common_specification/oracle/operations/0/derivative_reference_object",
+        "/oracle/operations/0/derivative_order": "/common_specification/oracle/operations/0/derivative_order",
+        "/oracle/operations/0/order_convention": "/common_specification/oracle/operations/0/order_convention",
+        "/oracle/operations/0/feedback_quality/code": "/common_specification/oracle/operations/0/feedback_quality/code",
+        "/oracle/operations/0/feedback_quality/description": "/common_specification/oracle/operations/0/feedback_quality/description",
+        "/oracle/operations/0/domain_ref": "/common_specification/oracle/operations/0/domain_ref",
+        "/oracle/operations/0/coupling": "/common_specification/oracle/operations/0/coupling",
+        "/oracle/operations/0/index_control": "/common_specification/oracle/operations/0/index_control",
+        "/oracle/operations/0/access_schedule": "/common_specification/oracle/operations/0/access_schedule",
+        "/oracle/operations/0/accuracy_argument": "/common_specification/oracle/operations/0/accuracy_argument",
+        "/oracle/operations/0/cost_rule_ref": "/common_specification/oracle/operations/0/cost_rule_ref",
+        "/oracle/operations/0/query_latex": "/common_specification/oracle/operations/0/query_latex",
+        "/oracle/operations/0/response_latex": "/common_specification/oracle/operations/0/response_latex",
+        "/oracle/public_inputs/0": "/common_specification/oracle/public_inputs/0",
+        "/oracle/public_inputs/1": "/common_specification/oracle/public_inputs/1",
+        "/oracle/public_inputs/2": "/common_specification/oracle/public_inputs/2",
+        "/oracle/public_inputs/3": "/common_specification/oracle/public_inputs/3",
+        "/oracle/public_inputs/4": "/common_specification/oracle/public_inputs/4",
+        "/oracle/hidden_objects/0": "/common_specification/oracle/hidden_objects/0",
+        "/oracle/hidden_objects/1": "/common_specification/oracle/hidden_objects/1",
+        "/oracle/auxiliary_interfaces/0": "/common_specification/oracle/auxiliary_interfaces/0",
+        "/oracle/protocol_ref": "/common_specification/oracle/protocol_ref",
+        "/oracle/query_domain_description": "/common_specification/oracle/query_domain_description",
+        "/oracle/code": "/common_specification/oracle/code",
+        "/oracle/description_paragraphs/0": "/common_specification/oracle/description_paragraphs/0",
+        "/oracle/description_paragraphs/1": "/common_specification/oracle/description_paragraphs/1",
+        "/oracle/description_paragraphs/2": "/common_specification/oracle/description_paragraphs/2",
+        "/oracle/description_paragraphs/3": "/common_specification/oracle/description_paragraphs/3",
+        "/oracle/description_paragraphs/4": "/common_specification/oracle/description_paragraphs/4",
+        "/oracle/description_paragraphs/5": "/common_specification/oracle/description_paragraphs/5",
+        "/output/object_type": "/common_specification/output/object_type",
+        "/output/domain_ref": "/common_specification/output/domain_ref",
+        "/output/feasibility": "/common_specification/output/feasibility",
+        "/output/allowed_postprocessing": "/common_specification/output/allowed_postprocessing",
+        "/output/certificate_requirement": "/common_specification/output/certificate_requirement",
+        "/output/code": "/common_specification/output/code",
+        "/output/description_paragraphs/0": "/common_specification/output/description_paragraphs/0",
+        "/metric/base_expression": "/common_specification/metric/base_expression",
+        "/metric/normalization": "/common_specification/metric/normalization",
+        "/metric/reference_object": "/common_specification/metric/reference_object",
+        "/metric/nonnegativity": "/common_specification/metric/nonnegativity",
+        "/metric/finiteness_conditions": "/common_specification/metric/finiteness_conditions",
+        "/metric/comparator_ref": "/common_specification/metric/comparator_ref",
+        "/metric/code": "/common_specification/metric/code",
+        "/metric/description_paragraphs/0": "/common_specification/metric/description_paragraphs/0",
+        "/resource/components/0/code": "/common_specification/resource/components/0/code",
+        "/resource/components/0/unit": "/common_specification/resource/components/0/unit",
+        "/resource/components/0/description": "/common_specification/resource/components/0/description",
+        "/resource/components/1/code": "/common_specification/resource/components/1/code",
+        "/resource/components/1/unit": "/common_specification/resource/components/1/unit",
+        "/resource/components/1/description": "/common_specification/resource/components/1/description",
+        "/resource/components/2/code": "/common_specification/resource/components/2/code",
+        "/resource/components/2/unit": "/common_specification/resource/components/2/unit",
+        "/resource/components/2/description": "/common_specification/resource/components/2/description",
+        "/resource/components/3/code": "/common_specification/resource/components/3/code",
+        "/resource/components/3/unit": "/common_specification/resource/components/3/unit",
+        "/resource/components/3/description": "/common_specification/resource/components/3/description",
+        "/resource/budget_semantics": "/common_specification/resource/budget_semantics",
+        "/resource/cost_rules/0/id": "/common_specification/resource/cost_rules/0/id",
+        "/resource/cost_rules/0/operation_refs/0": "/common_specification/resource/cost_rules/0/operation_refs/0",
+        "/resource/cost_rules/0/cost/rounds": "/common_specification/resource/cost_rules/0/cost/rounds",
+        "/resource/cost_rules/0/cost/native_feedback": "/common_specification/resource/cost_rules/0/cost/native_feedback",
+        "/resource/scalarization": "/common_specification/resource/scalarization",
+        "/resource/setup_cost": "/common_specification/resource/setup_cost",
+        "/resource/online_cost": "/common_specification/resource/online_cost",
+        "/resource/amortization_scope": "/common_specification/resource/amortization_scope",
+        "/resource/precision_model": "/common_specification/resource/precision_model",
+        "/resource/code": "/common_specification/resource/code",
+        "/resource/description_paragraphs/0": "/common_specification/resource/description_paragraphs/0",
+        "/resource/description_paragraphs/1": "/common_specification/resource/description_paragraphs/1",
+        "/resource/description_paragraphs/2": "/common_specification/resource/description_paragraphs/2",
+        "/resource/description_paragraphs/3": "/common_specification/resource/description_paragraphs/3"
+      },
+      "merge_review": "mechanical_merge_only_not_mathematical_equivalence"
+    }
+  ],
+  "relations_source_pointer": "/relations",
+  "matching_policy": {
+    "candidate_retrieval": [
+      "legacy_alias",
+      "declared_facets",
+      "text"
+    ],
+    "accepted_relations": [
+      "exact_match",
+      "same_setting_new_view",
+      "candidate_is_special_case",
+      "candidate_is_generalization",
+      "partial_overlap",
+      "distinct",
+      "undetermined"
+    ],
+    "identity_decision": "requires_explicit_axis_correspondences_and_review",
+    "hash_semantics": "file_integrity_only_not_mathematical_equivalence"
+  }
+}

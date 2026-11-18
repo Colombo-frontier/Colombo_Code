@@ -1,0 +1,249 @@
+# Gaussian best-arm identification: fixed budget and static-allocation exponent comparison
+
+**Setting ID.** `ON_FB_GAUSS_S`
+
+Online learning and bandits
+
+The algorithm samples Gaussian arms under a fixed budget and recommends the best arm without knowing the instance's optimal static allocation. The comparison is between the asymptotic error exponent and the instance-informed static-allocation benchmark, with one algorithm sequence required to work on every instance.
+
+**Status.** Bounds missing
+
+**TASK tags.** formulation: Best arm fixed budget; solution concept: Minimize uniform relative asymptotic difficulty; task family: Online bandit
+
+**MODEL tags.** stochastic model: Gaussian known variance; structure: Finite actions; structure: Unique best
+
+**ORACLE tags.** feedback quality: Source-declared exact feedback (may be a random reward); interface family: Selected reward; operation: Sample selected arm; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+**ALGORITHMS tags.** randomization: Private randomness allowed
+
+**OUTPUT tags.** certificate: No additional output certificate required; object: Terminal arm recommendation
+
+**METRIC tags.** criterion: Relative error exponent
+
+**GUARANTEE tags.** randomness: Algorithm private seed; randomness: Oracle samples
+
+**RESOURCE tags.** accounting: Joint coordinates retained; measure: Native feedback; measure: Rounds; measure: Samples
+
+## 1. Setting specification
+
+### Task
+
+The algorithm samples Gaussian arms under a fixed budget and recommends the best arm without knowing the instance's optimal static allocation. The comparison is between the asymptotic error exponent and the instance-informed static-allocation benchmark, with one algorithm sequence required to work on every instance.
+
+### Admissible model
+
+The Gaussian means $\mu$ are unknown. Variance is known and equals one; no common bounded interval is imposed on the means.
+
+The algorithm family is $\mathcal{A}=(\mathcal{A}_T)_{T\ge1}$, with each $\mathcal{A}_T$ given the budget $T$. Consistency requires $p_{\mu,T}\to0$ for every admissible mean vector $\mu$.
+
+The asymptotic static-oracle benchmark is $H_{\mathrm{so}}(\mu)$. Its optimal allocation may depend on the true means, which remain hidden from the learner. The natural exponential-family definition uses reverse divergence $\operatorname{KL}(\nu_{\lambda_i}\|\nu_{\mu_i})$; for unit-variance Gaussians it equals half the squared mean difference.
+
+The model requires $K\ge2$, with algorithm budgets $T\ge1$. The registered nontrivial impossibility bound additionally requires $K\ge3$, which remains explicit in its region.
+
+The set $\Delta_K^\circ$ is the probability simplex with strictly positive coordinates. In the alternative set $\operatorname{Alt}(\mu)$, the original best arm may tie with another arm or cease to be optimal.
+
+### Oracle interface
+
+Sampling Gaussian arms with known variance:
+
+$$
+t\in[T],\quad a_t\in[K]\ \longmapsto\ Y_t=\mu_{a_t}+Z_t,\qquad Z_t\overset{\mathrm{i.i.d.}}\sim\mathcal{N}(0,1)
+$$
+
+Each call draws an independent fresh sample. The noise $Z_t$ is independent of the pre-selection history and private algorithmic randomness.
+
+Optimal static sampling proportions, μ, and gaps are not supplied.
+
+Recommend after using the budget. There is no stopping-time optimization or cumulative-regret objective.
+
+Public inputs are arm count $K$, the current algorithm $\mathcal A_T$'s budget $T$, and the promise of unit Gaussian variance.
+
+### Output
+
+After at most $T$ samples, return a recommended arm $\widehat{b}_T\in[K]$. Any postprocessing of the observed history is allowed. The arm need not have been sampled, and no additional certificate is required.
+
+### Loss or accuracy criterion
+
+$$
+p_{\mu,T}(\mathcal{A}_T)=\mathbb{P}_\mu(\widehat{b}_T\ne b(\mu)),\quad H_{\mathrm{so}}(\mu)^{-1}=\sup_{w\in\Delta_K^\circ}\inf_{\lambda\in\mathrm{Alt}(\mu)}\frac12\sum_i w_i(\lambda_i-\mu_i)^2
+$$
+
+### Resource accounting
+
+An algorithm with budget $T$ takes exactly $T$ samples. This comparison studies its error exponent relative to instance difficulty as $T\to\infty$.
+
+The algorithm family must satisfy the guarantee uniformly instancewise. Polynomial time and knowledge of a gap are not assumed.
+
+For error probability $p=0$, define $T/\log(1/p)=0$; for $p=1$, define it as $+\infty$.
+
+Error probability already includes algorithm randomness and sample noise. No additional unspecified expectation is applied outside the criterion.
+
+Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound.
+
+### Algorithm views and success guarantees
+
+All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication.
+
+Choose one fixed-budget algorithm family $\{\mathcal{A}_T\}_{T\ge1}$, then take the worst case over fixed unknown Gaussian means with a unique best arm. For each instance first let $T\to\infty$, and compare its error exponent with the static-allocation benchmark. This is neither finite-$T$ error probability nor a fixed-confidence sample count.
+
+**Budget convention.** Each $A_T$ takes exactly $T$ fresh samples. Analyze relative error-exponent difficulty as $T\to\infty$.
+
+## 2. Notation and parameters
+
+$K$: The finite number of arms. **Domain:** $K\in\mathbb N,\ K\ge2$.
+
+The arm set is $[K]=\{1,\ldots,K\}$.
+
+$T$: The exact fixed sample budget used before the final recommendation. **Domain:** $T\in\mathbb N,\ T\ge1$.
+
+Each pull gives one fresh sample, for a total of $N=T$ samples. Stopping is not data-dependent.
+
+$[K]$: Index set of K arms or experts **Domain:** A finite set.
+
+$[K]=\{1,\ldots,K\}$.
+
+$\mu$: Fixed unknown Gaussian mean vector. **Domain:** $\mu\in\mathbb R^K$, with a unique largest coordinate.
+
+Arm rewards follow $\mathcal N(\mu_i,1)$.
+
+$b(\mu)$: The unique arm with the highest mean. **Domain:** $b(\mu)\in[K]$.
+
+$b(\mu)=\arg\max_i\mu_i$.
+
+$\mathcal A=(\mathcal A_T)_{T\ge1}$: Family of causal learning algorithms indexed by the public budget **Domain:** Family of fixed-budget algorithms.
+
+Each $\mathcal A_T$ recommends an arm after exactly T fresh samples.
+
+$\mathcal C_{\mathrm{cons}}$: An algorithm family consistent on every fixed admissible instance. **Domain:** The collection of algorithm families.
+
+For every mean vector $\mu$ with a unique best arm, $p_{\mu,T}(\mathcal A_T)\to0$.
+
+$p_{\mu,T}(\mathcal A_T)$: The recommendation error probability on instance μ. **Domain:** $[0,1]$.
+
+$\Pr_\mu(\widehat b_T\ne b(\mu))$.
+
+$\Delta_K^\circ,w$: Simplex of strictly positive static sampling proportions and its elements **Domain:** $w_i>0,\ \sum_iw_i=1$.
+
+$\operatorname{Alt}(\mu),\lambda$: Alternative mean set and its elements **Domain:** $\lambda\in\mathbb R^K$.
+
+$\operatorname{Alt}(\mu)=\{\lambda:\exists j\ne b(\mu),\lambda_j\ge\lambda_{b(\mu)}\}$.
+
+$H_{\mathrm{so}}(\mu)$: The static-allocation difficulty benchmark when the true instance is known. **Domain:** Positive real number that is not an input to the learner.
+
+$H_{\mathrm{so}}(\mu)^{-1}=\sup_{w\in\Delta_K^\circ}\inf_{\lambda\in\operatorname{Alt}(\mu)}\frac12\sum_iw_i(\lambda_i-\mu_i)^2$.
+
+$\rho_K^*$: Optimal worst-instance asymptotic competitive ratio against static allocation for consistent algorithm families **Domain:** Nonnegative extended real value.
+
+$$
+\inf_{\mathcal A\in\mathcal C_{\mathrm{cons}}}\sup_\mu\limsup_{T\to\infty}T/[H_{\mathrm{so}}(\mu)\log(1/p_{\mu,T}(\mathcal A_T))]
+$$.
+
+$\operatorname{KL}(\mathcal N(a,1)\|\mathcal N(b,1))$: Relative entropy between unit-variance Gaussian distributions **Domain:** $a,b\in\mathbb R$.
+
+The quantity equals $(a-b)^2/2$; the source's static-oracle definition uses divergence directed from the alternative distribution to the true one.
+
+$t$: Interaction-time index **Domain:** $t\in\{1,\ldots,T\}$.
+
+$\mathbb E$: Mean operator **Domain:** Expectation over the specified random variables.
+
+Expectation includes learner randomness and the explicitly specified reward or sample randomness. Conditional expectations retain their stated history conditioning.
+
+$\log,\log_2$: Natural and binary logarithms **Domain:** Function on the positive real axis.
+
+$\log x=\ln x$, $\log_2x=\log x/\log2$.
+
+$c,C$: Positive constant in the bound without an assigned numerical value **Domain:** Positive real number.
+
+Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.
+
+$O,\Omega,\widetilde O,\widetilde\Omega$: Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression. **Domain:** Asymptotic comparison notation.
+
+The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.
+
+$N$: Cumulative observations counted according to the declared feedback type. **Domain:** Nonnegative integer or integer-valued stopping time.
+
+The quantity $N=T$ counts cumulative native scalar feedback under a one-point or one-arm protocol.
+
+## 3. Complexity bracket
+
+### Compared quantities
+
+#### Q1 - uniform static oracle relative difficulty
+
+$$
+\begin{aligned} \rho_K^*&=\inf_{\mathcal A\in\mathcal C_{\rm cons}}\sup_{\mu\in\mathcal M_K}\limsup_{T\to\infty}\frac{T}{H_{\rm so}(\mu)\log(1/p_{\mu,T}(\mathcal A_T))},\\ p_{\mu,T}(\mathcal A_T)&=\mathbb P_{\mu,\mathcal A_T}(\widehat b_T\ne b(\mu)),\\ \mathcal C_{\rm cons}&=\{(\mathcal A_T)_{T\ge1}:\ \forall\mu\in\mathcal M_K,\ p_{\mu,T}(\mathcal A_T)\to0\},\\ \mathcal M_K&=\{\mu\in\mathbb R^K:\ b(\mu)\text{ is unique}\}.\end{aligned}
+$$
+
+**Scope.** Compare only this specification and the listed parameter regions.
+
+**Optimization direction.** minimize
+
+### R1 - ASYMPTOTIC
+
+**Region.** K≥3 fixed, T→∞, unique-best μ
+
+**Quantity.** Q1
+
+**Resource.** Native sequential interaction rounds or samples; additional resources remain attached to each bound.
+
+**Status.** Upper bound missing
+
+**Lower bound.** B1
+
+$$
+1+\sum _{j=3}^K(1+\sqrt{j-1})^{-2}
+$$
+
+**Upper bound.** No admitted bound for this comparison
+
+**Gap or comparison.** The currently registered one-sided lower bound rules out a universal exact static-oracle exponent benchmark.
+
+**Comparison argument.** Only individually audited compatible claims enter. No upper matching this exact relative-difficulty quantity was audited.
+
+## 4. Bounds and supporting evidence
+
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+**Conditions.** Fix $K\ge3$, assume a unique best arm, unknown means, and known unit Gaussian variance, and consider $T\to\infty$.; The lower bound covers consistent policies. Preserve the order of quantifiers and limits in $\inf_{\mathcal A}\sup_\mu\limsup_{T\to\infty}$. Do not interchange the worst-instance operation and asymptotic limit or extend the claim to arbitrary inconsistent fixed-budget policies.
+
+**Dimension conditions.** Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.
+
+**Oracle mapping.** Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.
+
+**Guarantee mapping.** Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.
+
+**Output mapping.** Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.
+
+**Resource mapping.** Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free.
+
+### B1 - Goldberger Gaussian tilted alternatives / change of measure
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**Witness or lower-bound scope.** The stated restricted randomized class
+
+$$
+\begin{aligned}[c]\rho_K^*&\ge1+\sum_{j=3}^K(1+\sqrt{j-1})^{-2}>1+\frac{\log K}{8},\\ H_{\rm so}(\mu)^{-1}&=\sup_{w\in\Delta_K^\circ}\inf_{\lambda\in\operatorname{Alt}(\mu)}\sum_{i=1}^K w_i\operatorname{KL}\bigl(N(\lambda_i,1)\,\|\,N(\mu_i,1)\bigr).\end{aligned}
+$$
+
+**Sources.** [1](https://arxiv.org/pdf/2607.11635v1)
+
+**Simultaneous resource costs.** All coordinates refer to this one witness or necessary constraint.
+
+**samples.** T exactly
+
+**Constants.** Universal constants independent of the parameters explicitly tracked in this claim
+
+**Logarithmic factors.** None.
+
+**Source location.** [1](https://arxiv.org/pdf/2607.11635v1) theorem: Theorem 2; definition of relative difficulty; section: 2.2 and 3; pdf pages: 5; 6
+
+Gaussian variance is one, and algorithms are restricted to consistent fixed-budget policies. The source orders the limit and worst-instance operations as $$\inf_{\mathcal A}\sup_\mu\limsup_{T\to\infty}\frac{T}{H_{\mathrm{so}}(\mu)\log(1/p_{\mu,T})}\ge1+\sum_{j=3}^K(1+\sqrt{j-1})^{-2}.$$. Static-oracle complexity uses reverse KL and is distinct from the fixed-confidence characteristic time.
+
+## References
+
+[1] Motti Goldberger. Fundamental Limitations of Fixed-Budget Best-Arm Identification. 2026. 2607.11635v1.
+
+https://arxiv.org/pdf/2607.11635v1

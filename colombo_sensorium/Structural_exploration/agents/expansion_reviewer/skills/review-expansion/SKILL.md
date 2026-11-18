@@ -1,0 +1,23 @@
+---
+name: review-expansion
+description: "Independently review an Atlas-derived candidate's scope, complete mathematical contract, well-posedness, research value, scoped tags, and equivalence to supplied pending candidates."
+---
+
+# Independently Review an Expansion
+
+1. Read `standards/expansion.md`, `standards/eight_axes.md`, `standards/labels.md`, and `schema_read(expansion_review)`. Read the assigned frozen artifacts and all supplied pending candidate references. Do not use the producer's private memory or an earlier unverified approval as evidence.
+2. Verify provenance and scope: actual seed snapshots, selected opportunity, source/target tasks, permitted operators/axes, fixed constraints, and mutation steps. Check that a necessary dependent adjustment has not concealed a second unauthorized research direction. Distinguish definitions deliberately proposed here from literature-derived facts.
+3. Read every axis. Check domains, objects, variable blocks, norms, public inputs, native returns, output constraints, loss formula, quantifier order, and unit costs. Check that all statement and tag bindings refer to actual declarations. Report protocol defects as repairs; do not interpret malformed JSON as a mathematical problem.
+4. Independently test the well-posedness arguments. Seek a simple admissible instance; check parameter compatibility, finite target/solution promises, and output feasibility. Examine whether the public information directly reveals the answer. Require coherent oracle promises and selection rights, not an efficient physical implementation of an idealized oracle. Do not demand a new complexity theorem merely to establish a valid research contract.
+5. For multilevel transfers, inspect both layers' functions, variables, assumptions, solution-selection rule, and information interfaces. Verify that inner solving, exact optimal reactions, inverse operations, or reduced derivatives have not appeared as free hidden-instance access. For noisy transfers, check conditional dependence, sample reuse, precision control, and exact-sample versus exact-population distinctions.
+6. Evaluate the stated value in the approved priority mode. A meaningful missing classical node can be useful even when optimal rates are known. A plausible gap-oriented direction needs an explicit mechanism or comparison to investigate, not an unsupported claim that no paper solves it. Do not lower the standard to fill a quota.
+7. Compare the complete candidate with every supplied pending peer. Explain a decisive contractual difference, or give the actual normalization preserving objects, query permissions, error/cost guarantees, and resource units. Changes limited to algorithm/guarantee views or an already parameterized regime ordinarily share a profile. Oracle simulation, containment, and matching rates alone do not establish equality. Return unresolved when the materials do not settle a credible comparison.
+8. Verify that human and machine tags derive from the same facts. In particular, inspect task parents, each layer's Exact/Noisy information, model geometry/smoothness placement, and all eight-axis registrations. Missing registrations require repair, not a change to the underlying setting.
+9. Issue one clear verdict with scoped issues and precise next actions. Exclude a duplicate while preserving the reference to its canonical pending peer. Defer incomplete core contracts without declaring a problem in the literature. Approve a sound candidate for whole-Atlas matching, not as a final new-setting decision.
+10. Freeze the review and hand off its reference. Subsequent identity and profile reviewers independently assess their assigned objects; your verdict neither adopts bounds nor authorizes a write.
+
+## Parameter scope and later closure obligations
+
+Preserve the full authorized parameter domain and explain joint variables, fixed structural parameters, uniform constants and any diagnostic slice in the existing candidate model/view fields. Do not replace the full request by a convenient accuracy-versus-dimension slice or hide a new oracle solve/cost. Endpoint or zero-query cases are guarded regimes, not new primary status codes. A designed complete contract can pass specification review with missing bounds; it is not an optimality or complete-literature certificate.
+
+Later research must create joint-analysis v2, assess compatible/replacement/resource-projection routes, and publish proved closed regions natively or keep publication pending. Seed/neighbor labels and historical proofs grant no current approval. Use standards/joint_parameter_standard.md for a concrete scope question, without adding profile-only analysis fields to the candidate or doing the final profile review in this stage.

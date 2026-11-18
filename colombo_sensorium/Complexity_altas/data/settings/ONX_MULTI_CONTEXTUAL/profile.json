@@ -1,0 +1,748 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ONX_MULTI_CONTEXTUAL",
+  "title": "Multitask linear contextual bandits with a shared low-rank representation",
+  "summary": "Multiple linear bandit tasks share an unknown low-dimensional representation. All task actions must be submitted together before the batch of scalar rewards is revealed. Performance is the sum of cumulative pseudo-regret across tasks. Each task’s predictable action set may change over time.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "pseudo_regret"
+    },
+    {
+      "facet": "structure",
+      "value": "shared_low_rank"
+    },
+    {
+      "facet": "feedback",
+      "value": "batched_task_rewards"
+    },
+    {
+      "facet": "guarantee",
+      "value": "high_probability"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation_code": "onx_multi_contextual",
+      "formulation": "Multiple linear bandit tasks share an unknown low-dimensional representation. All task actions must be submitted together before the batch of scalar rewards is revealed. Performance is the sum of cumulative pseudo-regret across tasks. Each task’s predictable action set may change over time.",
+      "formulation_latex": "R_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).",
+      "solution_goal": "Minimize performance as defined by the metric, guarantee, and native resource.",
+      "protocol_ref": "ONX_MULTI_CONTEXTUAL_pro_3bab662a5e",
+      "description_paragraphs": [
+        "Multiple linear bandit tasks share an unknown low-dimensional representation. All task actions must be submitted together before the batch of scalar rewards is revealed. Performance is the sum of cumulative pseudo-regret across tasks. Each task’s predictable action set may change over time."
+      ]
+    },
+    "model": {
+      "instance": "There are $M$ parallel tasks, each with $T$ rounds and one action per task per round. The parameter matrix and shared representation satisfy $$\\Theta=[\\theta_1,\\ldots,\\theta_M],\\qquad \\operatorname{rank}(\\Theta)\\le r,\\qquad \\|\\theta_m\\|_2\\le1.$$. Current action sets $\\mathcal A_{t,m}\\subseteq B_2^d(1)$ may depend on past history and are revealed before the full action batch. No task-diversity or covariance-eigenvalue lower bound is imposed.",
+      "assumptions": [
+        {
+          "subject_id": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+          "property_code": "explicit_model_clause",
+          "variable_blocks": [
+            "ONX_MULTI_CONTEXTUAL_var_7106cc02bf"
+          ],
+          "norm_ref": "ONX_MULTI_CONTEXTUAL_nor_be509bad68",
+          "scope": "All admissible values of the listed variables and round indices",
+          "description": "There are $M$ parallel tasks, each lasting $T$ rounds, with one action per task per round. The parameter matrix and shared representation satisfy:"
+        },
+        {
+          "subject_id": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+          "property_code": "explicit_model_clause",
+          "variable_blocks": [
+            "ONX_MULTI_CONTEXTUAL_var_7106cc02bf"
+          ],
+          "norm_ref": "ONX_MULTI_CONTEXTUAL_nor_be509bad68",
+          "scope": "All admissible values of the listed variables and round indices",
+          "description": "$$\\Theta=[\\theta_1,\\ldots,\\theta_M],\\qquad \\operatorname{rank}(\\Theta)\\le r,\\qquad \\|\\theta_m\\|_2\\le1.$$"
+        },
+        {
+          "subject_id": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+          "property_code": "explicit_model_clause",
+          "variable_blocks": [
+            "ONX_MULTI_CONTEXTUAL_var_7106cc02bf"
+          ],
+          "norm_ref": "ONX_MULTI_CONTEXTUAL_nor_be509bad68",
+          "scope": "All admissible values of the listed variables and round indices",
+          "description": "The current action set $\\mathcal A_{t,m}\\subseteq B_2^d(1)$ may depend on past history and is revealed before the action batch is chosen. No task-diversity or covariance-eigenvalue lower bound is imposed."
+        }
+      ],
+      "structured_source_contract": {
+        "parameters": "rank([theta_1,...,theta_M])<=r; ||theta_m||_2<=1",
+        "actions": "arbitrary predictable A_(t,m) subset unit Euclidean ball, revealed before batch actions",
+        "tasks": "M tasks concurrently, one action per task per round",
+        "diversity": "no task-diversity or covariance lower-bound assumption imposed"
+      },
+      "information_registry_ref": "ONX_MULTI_CONTEXTUAL_INFORMATION",
+      "existence": "Use the model's concrete compactness, continuity, unique-optimum, or controllability promises; add none implicitly.",
+      "description_paragraphs": [
+        "There are $M$ parallel tasks, each lasting $T$ rounds, with one action per task per round. The parameter matrix and shared representation satisfy:",
+        "$$\n\\Theta=[\\theta_1,\\ldots,\\theta_M],\\qquad \\operatorname{rank}(\\Theta)\\le r,\\qquad \\|\\theta_m\\|_2\\le1.\n$$",
+        "The current action set $\\mathcal{A}_{t,m}\\subseteq B_2^d(1)$ may depend on past history and is revealed before the action batch is chosen. No task-diversity or covariance-eigenvalue lower bound is imposed."
+      ],
+      "parameter_domain_description": "M: $M\\in\\mathbb N,\\ M\\ge1$ (public); T: $T\\in\\mathbb N,\\ T\\ge1$ (public); d: $d\\in\\mathbb N,\\ d\\ge1$ (public); \\delta_{\\mathrm{conf}}: $0<\\delta_{\\mathrm{conf}}<1$ (public); r: $r\\in\\mathbb N,\\ 1\\le r\\le\\min\\{d,M\\}$ (public)"
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "ONX_MULTI_CONTEXTUAL_ora_6f0f6f3180",
+          "operation_code": "batched_task_rewards",
+          "target_object": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+          "query_signature": "Submit all $M$ actions simultaneously, then receive all rewards together. No action may use an earlier response from the same batch. $$Y_{t,m}=\\langle x_{t,m},\\theta_m\\rangle+\\eta_{t,m}.$$ Conditional on the past and chosen actions, noise has mean zero and is $1$-sub-Gaussian. Centralized causal learning is allowed. Inputs $M,d,r,T,\\delta_{\\mathrm{conf}}$ and current action sets are public; the shared representation $B$ and individual $w_m$ are hidden. Received feedback may be stored and reused computationally. No unrevealed historical information or extra queries to exhausted samples are available; any within-round full-function or common-sample access must be explicit.",
+          "response_signature": {
+            "feedback": "batch of M scalar rewards <x_(t,m),theta_m>+eta_(t,m)",
+            "noise": "conditionally zero-mean 1-sub-Gaussian given history and current selected actions"
+          },
+          "domain_ref": "ONX_MULTI_CONTEXTUAL_dom_6488c80ee2",
+          "feedback_quality": {
+            "feedback": "batch of M scalar rewards <x_(t,m),theta_m>+eta_(t,m)",
+            "noise": "conditionally zero-mean 1-sub-Gaussian given history and current selected actions"
+          },
+          "access_schedule_ref": "ONX_MULTI_CONTEXTUAL_pro_3bab662a5e",
+          "cost_rule_ref": "ONX_MULTI_CONTEXTUAL_res_dcee84d9d6",
+          "display_label_zh": "Rewards for tasks in a simultaneous batch"
+        }
+      ],
+      "public_inputs": [
+        "M",
+        "d",
+        "r",
+        "T",
+        "delta_conf",
+        "current action sets"
+      ],
+      "hidden_objects": [
+        "B",
+        "w_m"
+      ],
+      "auxiliary_interfaces": {
+        "feedback": "batch of M scalar rewards <x_(t,m),theta_m>+eta_(t,m)",
+        "noise": "conditionally zero-mean 1-sub-Gaussian given history and current selected actions"
+      },
+      "protocol_ref": "ONX_MULTI_CONTEXTUAL_pro_3bab662a5e",
+      "description_paragraphs": [
+        "Submit all $M$ actions simultaneously, then receive all rewards simultaneously. Later actions in a batch cannot use earlier rewards from that batch.",
+        "$$\nY_{t,m}=\\langle x_{t,m},\\theta_m\\rangle+\\eta_{t,m}.\n$$",
+        "Given past history and the current action, noise has conditional mean zero and is $1$-sub-Gaussian.",
+        "A centralized causal learner is permitted. The parameters $M,d,r,T,\\delta_{\\mathrm{conf}}$ and current action sets are public; the shared representation $B$ and individual $w_m$ are hidden.",
+        "Received feedback may be stored and reused in computation. Unrevealed information cannot be requested from past rounds, and consumed random samples cannot receive additional queries. Current-round exceptions are limited to the explicitly supplied full-function access or same-sample two-point interface."
+      ]
+    },
+    "output": {
+      "object_type": "online_trajectory",
+      "feasibility": "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required.",
+      "allowed_postprocessing": "Previously executed online actions cannot be changed.",
+      "certificate_requirement": "No function value, optimality certificate, or final recommendation is required unless explicitly listed for this axis.",
+      "description_paragraphs": [
+        "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "$$R_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).$$",
+      "base_expression_latex": "R_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).",
+      "normalization": "Sum over all M tasks and T rounds per task, without dividing by M or T.",
+      "comparator_ref": "ONX_MULTI_CONTEXTUAL_com_53f5fb1f93",
+      "finiteness_conditions": "Actions and parameters in every task have norm at most one, so total pseudo-regret lies in [0,2MT].",
+      "description_paragraphs": [
+        "$$\nR_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal{A}_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).\n$$"
+      ],
+      "nonnegativity": true
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "$T$ sequential rounds, or $T$ rounds per task"
+        },
+        {
+          "code": "native_feedback",
+          "unit": "as_specified",
+          "description": "$$N=MT.$$ Here $T$ is the number of rounds per task, and $N$ is the total number of scalar reward observations across tasks. Exploration, initialization, and system identification all consume the stated online budget. Oracle calls, arithmetic, communication rounds and bits, and memory remain distinct coordinates of the resource vector; arithmetic and bit complexity are not certified as optimal."
+        }
+      ],
+      "cost_rules": [
+        {
+          "id": "ONX_MULTI_CONTEXTUAL_res_dcee84d9d6",
+          "operation_refs": [
+            "ONX_MULTI_CONTEXTUAL_ora_6f0f6f3180"
+          ],
+          "cost": {
+            "N": "M T",
+            "computation": "statistical theorem assumes exact nonconvex optimizations; polynomial-time implementation not certified"
+          }
+        }
+      ],
+      "scalarization": "Compare only at the specified joint budget and with the same native performance measure.",
+      "setup_cost": "All initialization, exploration, and identification calls are included in the budget.",
+      "precision_model": "Exact real-arithmetic model; bit complexity is unspecified",
+      "description_paragraphs": [
+        "$$\nN=MT.\n$$",
+        "The quantity $T$ is rounds per task; $N$ is total scalar rewards across all tasks.",
+        "Exploration, initialization, and system identification all consume the stated online budget. Queries, arithmetic, communication rounds or bits, and memory remain joint resources. No arithmetic or bit-complexity optimality is asserted."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "Private randomness is allowed and independent of the fixed instance and future external randomness.",
+        "adaptivity": "Strictly follows the per-round and within-batch protocol of the oracle",
+        "restrictions": [
+          "The statistical upper bound permits exact solution of nonconvex low-rank least-squares and optimistic-maximization problems. A polynomial-time implementation is not thereby certified.",
+          "Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits."
+        ],
+        "internal_computation": "Unrestricted except for explicit polynomial-time or protocol constraints",
+        "parallelism": "Follows the simultaneous-query, task-batch, and communication timing specified by the oracle",
+        "description_paragraphs": [
+          "The statistical upper bound permits exact solution of nonconvex low-rank least-squares and optimistic-maximization problems. A polynomial-time implementation is not thereby certified.",
+          "Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "The source guarantee controls $R_T$ with probability at least $1-\\delta_{\\mathrm{conf}}$, uniformly over the shared parameters and predictable action sets. This is a high-probability pseudo-regret guarantee, not regret computed from realized observation noise.",
+          "aggregation_order": [
+            "The source guarantee controls $R_T$ with probability at least $1-\\delta_{\\mathrm{conf}}$, uniformly over the shared parameters and predictable action sets. This is a high-probability pseudo-regret guarantee, not regret computed from realized observation noise."
+          ],
+          "quantifier_order": "One admissible algorithm using only public information must handle every prescribed instance; adaptation to unknown budgets must be performed by that same algorithm.",
+          "randomness_sources": [
+            "Private randomness of the algorithm",
+            "Observation or environment randomness explicitly allowed by the oracle."
+          ],
+          "runtime_guarantee": "The resource budget is fixed. Expected error is not automatically converted to high probability or a random-runtime bound.",
+          "description_paragraphs": [
+            "The source guarantee controls $R_T$ with probability at least $1-\\delta_{\\mathrm{conf}}$, uniformly over the shared parameters and predictable action sets. This is a high-probability pseudo-regret guarantee, not regret computed from realized observation noise."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "precision_model": "Exact real-arithmetic model; bit complexity is unspecified",
+        "scalarization": "Compare only at the specified joint budget and with the same native performance measure."
+      },
+      "alias_ids": [
+        "ONX_MULTI_CONTEXTUAL"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ONX_MULTI_CONTEXTUAL_obj_57f43b71b2",
+        "type": "online_environment",
+        "definition": "There are $M$ parallel tasks, each with $T$ rounds and one action per task per round. The parameter matrix and shared representation satisfy $$\\Theta=[\\theta_1,\\ldots,\\theta_M],\\qquad \\operatorname{rank}(\\Theta)\\le r,\\qquad \\|\\theta_m\\|_2\\le1.$$. Current action sets $\\mathcal A_{t,m}\\subseteq B_2^d(1)$ may depend on past history and are revealed before the full action batch. No task-diversity or covariance-eigenvalue lower bound is imposed."
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ONX_MULTI_CONTEXTUAL_var_7106cc02bf",
+        "space": "Submit all task actions $a_{t,m}\\in\\mathcal A_{t,m}\\subseteq B_2^d(1)$ simultaneously.",
+        "dimension": "Dimension d per task; Md per batch"
+      }
+    ],
+    "domains": [
+      {
+        "id": "ONX_MULTI_CONTEXTUAL_dom_6488c80ee2",
+        "definition": "There are $M$ parallel tasks, each with $T$ rounds and one action per task per round. The parameter matrix and shared representation satisfy $$\\Theta=[\\theta_1,\\ldots,\\theta_M],\\qquad \\operatorname{rank}(\\Theta)\\le r,\\qquad \\|\\theta_m\\|_2\\le1.$$. Current action sets $\\mathcal A_{t,m}\\subseteq B_2^d(1)$ may depend on past history and are revealed before the full action batch. No task-diversity or covariance-eigenvalue lower bound is imposed."
+      }
+    ],
+    "norms": [
+      {
+        "id": "ONX_MULTI_CONTEXTUAL_nor_be509bad68",
+        "definition": {
+          "parameters": "rank([theta_1,...,theta_M])<=r; ||theta_m||_2<=1",
+          "actions": "arbitrary predictable A_(t,m) subset unit Euclidean ball, revealed before batch actions",
+          "tasks": "M tasks concurrently, one action per task per round",
+          "diversity": "no task-diversity or covariance lower-bound assumption imposed"
+        }
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ONX_MULTI_CONTEXTUAL_pro_3bab662a5e",
+        "steps": [
+          "Submit all $M$ actions simultaneously, then receive all rewards simultaneously. Later actions in a batch cannot use earlier rewards from that batch.",
+          "$$Y_{t,m}=\\langle x_{t,m},\\theta_m\\rangle+\\eta_{t,m}.$$",
+          "Given past history and the current action, noise has conditional mean zero and is $1$-sub-Gaussian.",
+          "A centralized causal learner is permitted. The parameters $M,d,r,T,\\delta_{\\mathrm{conf}}$ and current action sets are public; the shared representation $B$ and individual $w_m$ are hidden.",
+          "Received feedback may be stored and reused in computation. Unrevealed information cannot be requested from past rounds, and consumed random samples cannot receive additional queries. Current-round exceptions are limited to the explicitly supplied full-function access or same-sample two-point interface."
+        ],
+        "adversary_information": "Follow the model and oracle timing. Current private random realizations are not visible to the environment.",
+        "loss_bearing_points": "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required.",
+        "past_requery": "History may be stored. New information from old samples or past rounds is unavailable unless the native interface explicitly permits it."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ONX_MULTI_CONTEXTUAL_com_53f5fb1f93",
+        "definition": "$$R_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).$$"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ONX_MULTI_CONTEXTUAL_p_f1bac165c7",
+      "symbol": "M",
+      "meaning": "Number of parallel tasks",
+      "domain": "$M\\in\\mathbb N,\\ M\\ge1$",
+      "kind": "independent",
+      "public": true,
+      "definition": "Submit one action per task each round. Rewards for the batch arrive together after all actions are submitted.",
+      "dependencies": [],
+      "constant_dependencies": []
+    },
+    {
+      "id": "ONX_MULTI_CONTEXTUAL_p_1610f7c272",
+      "symbol": "T",
+      "meaning": "Interaction rounds per task.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The total scalar reward count across tasks is $N=MT$. Regret is summed across tasks and is not divided by M.",
+      "dependencies": [],
+      "constant_dependencies": []
+    },
+    {
+      "id": "ONX_MULTI_CONTEXTUAL_p_6e898943e7",
+      "symbol": "d",
+      "meaning": "The ambient dimension of actions or feature vectors.",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "public": true,
+      "definition": "Vectors belong to $\\mathbb R^d$; dimension is still denoted d when a non-Euclidean norm is used.",
+      "dependencies": [],
+      "constant_dependencies": []
+    },
+    {
+      "id": "ONX_MULTI_CONTEXTUAL_p_23f704c160",
+      "symbol": "\\delta_{\\mathrm{conf}}",
+      "meaning": "The allowed statistical failure probability.",
+      "domain": "$0<\\delta_{\\mathrm{conf}}<1$",
+      "kind": "independent",
+      "public": true,
+      "definition": "Used only for statistical correctness or high-probability performance, and distinct from the privacy relaxation parameter.",
+      "dependencies": [],
+      "constant_dependencies": []
+    },
+    {
+      "id": "ONX_MULTI_CONTEXTUAL_p_680b03d963",
+      "symbol": "r",
+      "meaning": "The shared-representation rank bound.",
+      "domain": "$r\\in\\mathbb N,\\ 1\\le r\\le\\min\\{d,M\\}$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\operatorname{rank}(\\Theta)\\le r$.",
+      "dependencies": [],
+      "constant_dependencies": []
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "M",
+      "meaning": "Number of parallel tasks",
+      "domain": "$M\\in\\mathbb N,\\ M\\ge1$",
+      "definition": "Submit one action per task each round. Rewards for the batch arrive together after all actions are submitted.",
+      "parameter_ref": "ONX_MULTI_CONTEXTUAL_p_f1bac165c7"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Interaction rounds per task.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The total scalar reward count across tasks is $N=MT$. Regret is summed across tasks and is not divided by M.",
+      "parameter_ref": "ONX_MULTI_CONTEXTUAL_p_1610f7c272"
+    },
+    {
+      "symbol_latex": "d",
+      "meaning": "The ambient dimension of actions or feature vectors.",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "definition": "Vectors belong to $\\mathbb R^d$; dimension is still denoted d when a non-Euclidean norm is used.",
+      "parameter_ref": "ONX_MULTI_CONTEXTUAL_p_6e898943e7"
+    },
+    {
+      "symbol_latex": "\\delta_{\\mathrm{conf}}",
+      "meaning": "The allowed statistical failure probability.",
+      "domain": "$0<\\delta_{\\mathrm{conf}}<1$",
+      "definition": "Used only for statistical correctness or high-probability performance, and distinct from the privacy relaxation parameter.",
+      "parameter_ref": "ONX_MULTI_CONTEXTUAL_p_23f704c160"
+    },
+    {
+      "symbol_latex": "r",
+      "meaning": "The shared-representation rank bound.",
+      "domain": "$r\\in\\mathbb N,\\ 1\\le r\\le\\min\\{d,M\\}$",
+      "definition": "$\\operatorname{rank}(\\Theta)\\le r$.",
+      "parameter_ref": "ONX_MULTI_CONTEXTUAL_p_680b03d963"
+    },
+    {
+      "symbol_latex": "\\Theta",
+      "meaning": "Fixed unknown task-parameter matrix",
+      "domain": "$\\Theta=[\\theta_1,\\ldots,\\theta_M]\\in\\mathbb R^{d\\times M}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "B,W",
+      "meaning": "The hidden shared representation basis and task-coefficient matrix.",
+      "domain": "$B\\in\\mathbb R^{d\\times r},\\ W=[w_1,\\ldots,w_M]\\in\\mathbb R^{r\\times M}$",
+      "definition": "$\\Theta=BW$. One may choose $B^{\\mathsf T}B=I_r$. The quantity B is not a public scalar radius.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\theta_m,w_m",
+      "meaning": "Task m’s reward parameter and coefficients in the low-dimensional representation.",
+      "domain": "$\\theta_m=Bw_m$",
+      "definition": "$\\|\\theta_m\\|_2\\le1$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A_{t,m}",
+      "meaning": "Action set for task $m$, revealed before the current action",
+      "domain": "$\\mathcal A_{t,m}\\subseteq B_2^d(1)$",
+      "definition": "Actions may use prior batches, but not rewards still unavailable from the current batch.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_{t,m},Y_{t,m}",
+      "meaning": "Task action in the current round and the scalar reward subsequently observed",
+      "domain": "$x_{t,m}\\in\\mathcal A_{t,m},\\ Y_{t,m}\\in\\mathbb R$",
+      "definition": "$Y_{t,m}=\\langle x_{t,m},\\theta_m\\rangle+\\eta_{t,m}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\eta_{t,m}",
+      "meaning": "Observation noise in task rewards.",
+      "domain": "Real random variable",
+      "definition": "Conditionally on the history and the entire action batch, the noise has mean zero and is $1$-sub-Gaussian.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "m",
+      "meaning": "Task index",
+      "domain": "$m\\in[M]$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_T",
+      "meaning": "Cumulative pseudoregret evaluated using the mean functions",
+      "domain": "Nonnegative real-valued random variable",
+      "definition": "$R_T=\\sum_{t=1}^T\\sum_{m=1}^M[\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle]$ Realized observation noise is excluded from the loss difference. Probability or expectation aggregation is specified separately by the guarantee.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation includes learner randomness and the explicitly specified reward or sample randomness. Conditional expectations retain their stated history conditioning.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "B_2^d(r)",
+      "meaning": "Closed Euclidean ball of radius r",
+      "domain": "$r\\ge0$",
+      "definition": "$B_2^d(r)=\\{x\\in\\mathbb R^d:\\|x\\|_2\\le r\\}$. The symbol r is a placeholder radius, instantiated as R or 1 in the relevant specification.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Cumulative observations counted according to the declared feedback type.",
+      "domain": "Nonnegative integer or integer-valued stopping time",
+      "definition": "The quantity $N=MT$ is the total number of scalar rewards across all tasks.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ONX_MULTI_CONTEXTUAL__main__q1",
+      "kind": "native_performance",
+      "expression": "The source guarantee controls $R_T$ with probability at least $1-\\delta_{\\mathrm{conf}}$, uniformly over the shared parameters and predictable action sets. This is a high-probability pseudo-regret guarantee, not regret computed from realized observation noise.",
+      "expression_latex": "R_T=\\sum_{t=1}^{T}\\sum_{m=1}^{M}\\left(\\max_{x\\in\\mathcal A_{t,m}}\\langle x,\\theta_m\\rangle-\\langle x_{t,m},\\theta_m\\rangle\\right).",
+      "optimization_direction": "minimize",
+      "units": "The setting’s native loss, regret, or error scale.",
+      "budget_variables": [
+        "ONX_MULTI_CONTEXTUAL_p_1610f7c272"
+      ],
+      "comparison_scale": "native_metric",
+      "analysis_scope": "Compare only within this setting and the explicit regime, retaining multiple objectives and time normalization.",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+      "expression": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+      "mode": "native_metric",
+      "resource_projection_id": "resource_6a63cfee9f"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ONX_MULTI_CONTEXTUAL__main__r1",
+      "specification_ref": "ONX_MULTI_CONTEXTUAL",
+      "name": "SUPPORTED",
+      "predicate_text": "Use source Assumptions 1–2 and the exact internal-optimization interfaces, with a high-probability guarantee.",
+      "kind": "theorem_window",
+      "parameter_refs": [],
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "Source Assumptions 1–2 and exact internal-optimization access; high-probability guarantee."
+      },
+      "endpoint_notes": "Unspecified numerical thresholds remain symbolic. Fixed-parameter dependence does not imply dimension-uniform constants."
+    },
+    {
+      "id": "ONX_MULTI_CONTEXTUAL__main__r2",
+      "specification_ref": "ONX_MULTI_CONTEXTUAL",
+      "name": "The bound’s native applicability window.",
+      "predicate_text": "Assumptions 1-2 of the source hold, and the result holds with probability at least $1-\\delta_{\\mathrm{conf}}$. Exact low-rank least squares and optimistic maximization are permitted; a polynomial-time implementation is not certified. Here $T$ is the number of rounds per task, $M$ the number of tasks, and $r$ the shared rank. The fixed-unit-ball variant does not justify replacing the first term by $Mr\\sqrt T$.",
+      "kind": "source_window"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ONX_MULTI_CONTEXTUAL__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\widetilde{O}\\!\\left(M\\sqrt{drT}+d\\sqrt{rMT}\\right)",
+      "quantity_ref": "ONX_MULTI_CONTEXTUAL__main__q1",
+      "region_refs": [
+        "ONX_MULTI_CONTEXTUAL__main__r2"
+      ],
+      "method": "Multitask optimistic confidence-set algorithm with a shared representation",
+      "algorithm_or_hard_family": "Multitask optimistic confidence-set algorithm with a shared representation",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "source_refs": [
+        "ONX_SRC_MULTICTX2021"
+      ],
+      "evidence_refs": [
+        "ONX_MULTI_CONTEXTUAL__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ONX_MULTI_CONTEXTUAL__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The result assumes the source's Assumptions 1–2 and holds with probability at least $1-\\delta_{\\mathrm{conf}}$. Exact low-rank least squares and optimistic maximization are permitted; this does not certify a polynomial-time implementation.",
+          "The horizon $T$ is per task, $M$ is the number of tasks, and $r$ is the shared rank. A fixed-unit-ball result does not justify replacing the first term by $Mr\\sqrt T$."
+        ],
+        "condition_prose_zh": [
+          "The result assumes the source's Assumptions 1–2 and holds with probability at least $1-\\delta_{\\mathrm{conf}}$. Exact low-rank least squares and optimistic maximization are permitted; this does not certify a polynomial-time implementation.",
+          "The horizon $T$ is per task, $M$ is the number of tasks, and $r$ is the shared rank. A fixed-unit-ball result does not justify replacing the first term by $Mr\\sqrt T$."
+        ],
+        "oracle_mapping": "Retain the specified feedback type, sample coupling, public information, and environment permissions.",
+        "source_guards_original": [
+          "Assumptions 1–2",
+          "probability >=1-delta_conf",
+          "exact optimizers required"
+        ]
+      },
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "SUPPORTED",
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "Source Assumptions 1–2 and exact internal-optimization access; high-probability guarantee."
+      },
+      "predicate_text": "Use source Assumptions 1–2 and the exact internal-optimization interfaces, with a high-probability guarantee.",
+      "parameter_refs": [],
+      "source_region_ref": "ONX_MULTI_CONTEXTUAL__main__r1",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "ONX_MULTI_CONTEXTUAL__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ONX_MULTI_CONTEXTUAL__main__q1",
+      "resource_projection_id": "resource_6a63cfee9f",
+      "regime_id": "ONX_MULTI_CONTEXTUAL__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "ONX_MULTI_CONTEXTUAL__main__b1"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "ONX_MULTI_CONTEXTUAL__main__c1",
+        "quantity_ref": "ONX_MULTI_CONTEXTUAL__main__q1",
+        "comparison_mode": "native_metric",
+        "resource_projection": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression": "\\widetilde O\\!\\left(M\\sqrt{drT}+d\\sqrt{rMT}\\right)",
+            "display_latex": "\\widetilde O\\!\\left(M\\sqrt{drT}+d\\sqrt{rMT}\\right)",
+            "claim_refs": [
+              "ONX_MULTI_CONTEXTUAL__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "\\widetilde{O}\\!\\left(M\\sqrt{drT}+d\\sqrt{rMT}\\right)"
+          },
+          "lower": {
+            "expression": "",
+            "display_latex": "",
+            "claim_refs": [],
+            "included": false,
+            "expression_latex": ""
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "ONX_MULTI_CONTEXTUAL__main__b1": [
+            {
+              "region_ref": "ONX_MULTI_CONTEXTUAL__main__r2",
+              "predicate_text": "Assumptions 1-2 of the source hold, and the result holds with probability at least $1-\\delta_{\\mathrm{conf}}$. Exact low-rank least squares and optimistic maximization are permitted; a polynomial-time implementation is not certified. Here $T$ is the number of rounds per task, $M$ the number of tasks, and $r$ the shared rank. The fixed-unit-ball variant does not justify replacing the first term by $Mr\\sqrt T$."
+            }
+          ]
+        },
+        "envelope_certificate": "",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Fixed native online budget, with computational, communication, and privacy resources retained separately."
+      },
+      "comparison_key": {
+        "setting_id": "ONX_MULTI_CONTEXTUAL",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ONX_MULTI_CONTEXTUAL__main__q1",
+        "resource_projection_id": "resource_6a63cfee9f",
+        "regime_id": "ONX_MULTI_CONTEXTUAL__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ONX_MULTI_CONTEXTUAL__main__e1",
+      "source_ref": "ONX_SRC_MULTICTX2021",
+      "locator": "Theorem 1, PDF p.5 Eq.(13)",
+      "supports": "Supports the stated results and explicit reductions: $\\widetilde{O}\\!\\left(M\\sqrt{drT}+d\\sqrt{rMT}\\right)$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": []
+    }
+  ],
+  "references": [
+    {
+      "id": "ONX_SRC_MULTICTX2021",
+      "authors": [
+        "Jiachen Hu",
+        "Xiaoyu Chen",
+        "Chi Jin",
+        "Lihong Li",
+        "Liwei Wang"
+      ],
+      "title": "Near-Optimal Representation Learning for Linear Bandits and Linear RL",
+      "year": 2021,
+      "version": "ICML 2021, PMLR 139",
+      "url": "https://proceedings.mlr.press/v139/hu21a/hu21a.pdf",
+      "publication_status": "published_conference_or_journal_pdf"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "ONX_MULTI_CONTEXTUAL",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "lower"
+    ],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "missing_lower": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ONX_MULTI_CONTEXTUAL__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "9e61b86944576337fb7ec3abe2f6935b777c37ab57892ae2dfe503e464b44c39",
+    "source_order": 128,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

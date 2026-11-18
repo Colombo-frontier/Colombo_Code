@@ -1,0 +1,985 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "CV_S_NCC_STOCH_LOWER",
+  "title": "Nonconvex-concave minimax optimization: randomized zero-respecting algorithms and Moreau stationarity",
+  "summary": "Solve $\\min_{x\\in X}\\Phi(x)$, where $\\Phi(x)=\\max_{y\\in Y}f(x,y)$.",
+  "primary_domain": "minimax",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "minimax"
+    },
+    {
+      "facet": "goal",
+      "value": "moreau_gradient"
+    },
+    {
+      "facet": "structure",
+      "value": "nonconvex_concave"
+    },
+    {
+      "facet": "feedback",
+      "value": "value_fresh_gradient"
+    },
+    {
+      "facet": "geometry",
+      "value": "bounded_dual"
+    },
+    {
+      "facet": "algorithm",
+      "value": "random_zero_respecting"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "minimax"
+      ],
+      "formulation_code": "nonconvex_concave_minimize_value",
+      "formulation": "\\Phi(x)=\\max_{y\\in Y}f(x,y),\\ \\phi=\\Phi+\\iota_X",
+      "solution_goal": "moreau_envelope_gradient",
+      "protocol_ref": null,
+      "code": "nonconvex_concave_minimize_value",
+      "description_paragraphs": [
+        "Solve $\\min_{x\\in X}\\Phi(x)$, where $\\Phi(x)=\\max_{y\\in Y}f(x,y)$."
+      ]
+    },
+    "model": {
+      "instance": "\\Phi(x)=\\max_{y\\in Y}f(x,y),\\ \\phi=\\Phi+\\iota_X",
+      "assumptions": [
+        {
+          "subject_id": "CV_S_NCC_STOCH_LOWER_obj_50a4fca219",
+          "property_code": "joint_gradient_lipschitz",
+          "variable_blocks": [
+            "CV_S_NCC_STOCH_LOWER_var_3998a5b63e",
+            "CV_S_NCC_STOCH_LOWER_var_ecb2fdd9b2"
+          ],
+          "norm_ref": "CV_S_NCC_STOCH_LOWER_nor_dace72fcea",
+          "parameter_refs": [
+            "CV_S_NCC_STOCH_LOWER_p_6490ff790f"
+          ],
+          "scope": "All point pairs in the declared function domain. Blockwise constants are uniform in the remaining fixed variables.",
+          "description": "On the declared function domain, $\\|\\nabla f(z)-\\nabla f(w)\\|\\le\\beta\\|z-w\\|$. The vector $\\nabla f$ includes both blocks $x,y$."
+        },
+        {
+          "subject_id": "CV_S_NCC_STOCH_LOWER_obj_50a4fca219",
+          "property_code": "concave_in_block",
+          "variable_blocks": [
+            "CV_S_NCC_STOCH_LOWER_var_ecb2fdd9b2"
+          ],
+          "norm_ref": "CV_S_NCC_STOCH_LOWER_nor_dace72fcea",
+          "parameter_refs": [],
+          "scope": "All point pairs in the declared function domain. Blockwise constants are uniform in the remaining fixed variables.",
+          "description": "For every fixed $x\\in X$, the function $y\\mapsto f(x,y)$ is concave on $Y$. No positive strong-concavity modulus is assumed."
+        },
+        {
+          "subject_id": "CV_S_NCC_STOCH_LOWER_obj_f6e4fd5ed0",
+          "property_code": "value_initial_gap",
+          "variable_blocks": [
+            "CV_S_NCC_STOCH_LOWER_var_3998a5b63e"
+          ],
+          "norm_ref": "CV_S_NCC_STOCH_LOWER_nor_dace72fcea",
+          "parameter_refs": [
+            "CV_S_NCC_STOCH_LOWER_p_321ee4d0e4"
+          ],
+          "scope": "Public initial point; the objective-gap or distance term refers to the same solution or value function explicitly specified in this entry",
+          "description": "\\Phi(x_0)-\\inf_X\\Phi\\le\\Delta"
+        },
+        {
+          "subject_id": "CV_S_NCC_STOCH_LOWER_obj_50a4fca219",
+          "property_code": "dual_diameter",
+          "variable_blocks": [
+            "CV_S_NCC_STOCH_LOWER_var_ecb2fdd9b2"
+          ],
+          "norm_ref": "CV_S_NCC_STOCH_LOWER_nor_dace72fcea",
+          "parameter_refs": [
+            "CV_S_NCC_STOCH_LOWER_p_963e112cdc"
+          ],
+          "scope": "All point pairs in the declared function domain. Blockwise constants are uniform in the remaining fixed variables.",
+          "description": "\\operatorname{diam}(Y)\\le D_y"
+        },
+        {
+          "subject_id": "CV_S_NCC_STOCH_LOWER_obj_50a4fca219",
+          "property_code": "no_convexity_promise_in_block",
+          "variable_blocks": [
+            "CV_S_NCC_STOCH_LOWER_var_3998a5b63e"
+          ],
+          "norm_ref": "CV_S_NCC_STOCH_LOWER_nor_dace72fcea",
+          "parameter_refs": [],
+          "scope": "The entire declared scope.",
+          "description": "Neither $x\\mapsto f(x,y)$ nor the optimal-value function $\\Phi$ is additionally assumed convex."
+        }
+      ],
+      "parameter_domain_description": "$\\Delta$: positive real; $D_y$: positive real; $\\beta$: positive real; $d$: integer at least 2; $\\varepsilon$: positive real; $\\sigma$: nonnegative real. Derived quantities are defined in the parameter table. Each region states any additional accuracy and dimension conditions.",
+      "code": "model_declared",
+      "description_paragraphs": [
+        "The set $X$ is known, nonempty, closed, and convex. The set $Y$ is known, nonempty, compact, and convex, with $\\operatorname{diam}(Y)\\le D_y$.",
+        "The function $f$ is jointly $\\beta$-smooth on $X\\times Y$. For every $x$, $f(x,\\cdot)$ is concave. Convexity in the $x$ direction and a positive strong-concavity modulus are not required.",
+        "The public feasible initial point $(x_0,y_0)$ satisfies $\\Phi(x_0)-\\inf_{x\\in X}\\Phi(x)\\le\\Delta<\\infty$, where $\\Phi(x)=\\max_{y\\in Y}f(x,y)$."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "CV_S_NCC_STOCH_LOWER_ora_dc0f1d1670",
+          "operation_code": "stochastic_value_joint_gradient",
+          "target_object": "CV_S_NCC_STOCH_LOWER_obj_50a4fca219",
+          "variable_blocks": [
+            "CV_S_NCC_STOCH_LOWER_var_3998a5b63e",
+            "CV_S_NCC_STOCH_LOWER_var_ecb2fdd9b2"
+          ],
+          "query_signature": "(x,y)\\in X\\times Y",
+          "response_signature": "(f(x,y),G_x(x,y;\\xi),G_y(x,y;\\xi))",
+          "derivative_reference_object": "CV_S_NCC_STOCH_LOWER_obj_50a4fca219",
+          "derivative_order": 1,
+          "order_convention": "Derivative order refers to the scalar payoff $f$. The joint gradient has two blocks; the response signature specifies whether a Hessian or complete derivative jet is supplied.",
+          "feedback_quality": {
+            "code": "exact value plus gradient variance≤sigma²",
+            "description": "The explicit inequalities specify conditional means, joint variance, and whether paired-sample reuse is allowed."
+          },
+          "domain_ref": "CV_S_NCC_STOCH_LOWER_dom_5ae3ceb911",
+          "coupling": "Each call uses a fresh sample. The same random sample cannot be reused at a second point, and mean-square Lipschitz regularity of stochastic gradients is not implicit.",
+          "index_control": "none",
+          "access_schedule": "offline adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "CV_S_NCC_STOCH_LOWER_res_439686df5a"
+        },
+        {
+          "id": "CV_S_NCC_STOCH_LOWER_ora_7dcebf52f5",
+          "operation_code": "projection",
+          "target_object": "CV_S_NCC_STOCH_LOWER_obj_f85e24f920",
+          "variable_blocks": [],
+          "query_signature": "u\\in\\mathbb R^{d_x+d_y}",
+          "response_signature": "\\Pi_K(u)",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "This operation is charged according to its explicit input and output, not renamed according to a scalar function's derivative order.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact responses from the same hidden object fixed before interaction"
+          },
+          "domain_ref": "CV_S_NCC_STOCH_LOWER_dom_294b241e52",
+          "coupling": "Deterministic exact responses with repeated queries allowed; stochastic sample-reuse permissions are irrelevant.",
+          "index_control": "none",
+          "access_schedule": "offline adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "CV_S_NCC_STOCH_LOWER_res_81be02e0d0"
+        }
+      ],
+      "public_inputs": [
+        "Public inputs include block dimensions $d_x,d_y$ and $\\Delta$, $D_y$, $\\beta$, $\\varepsilon$, and $\\sigma$, together with the stated initial points and feasible-set information. Analytic representations of hidden functions, operators, and matrices are not supplied."
+      ],
+      "hidden_objects": [
+        "CV_S_NCC_STOCH_LOWER_obj_50a4fca219"
+      ],
+      "auxiliary_interfaces": [
+        "exact projection onto the known set is available; count retained separately and uncharged in the query projection"
+      ],
+      "protocol_ref": null,
+      "query_domain_description": "Require $X\\times Y$, with $X$ closed and convex and $Y$ nonempty, compact, and convex.",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "Public inputs include block dimensions $d_x,d_y$ and $\\Delta$, $D_y$, $\\beta$, $\\varepsilon$, and $\\sigma$, together with the stated initial points and feasible-set information. Analytic representations of hidden functions, operators, and matrices are not supplied.",
+        "$$\n(x,y)\\longmapsto(f(x,y),G_x,G_y)\n$$",
+        "Queries satisfy $(x,y)\\in X\\times Y$. Function values are exact; gradients use fresh samples.",
+        "Let $\\mathcal H_t$ denote the full history before query t. Conditional on $\\mathcal H_t,z_t$, the response $G_t\\in\\mathbb R^{d_x+d_y}$ satisfies $\\mathbb E[G_t\\mid\\mathcal H_t,z_t]=\\nabla f(z_t)$ and $\\mathbb E[\\|G_t-\\nabla f(z_t)\\|_2^2\\mid\\mathcal H_t,z_t]\\le\\sigma^2$. Each call uses an independent fresh sample.",
+        "No reusable sample identifier or cross-point sample reuse is available. No mean-square smoothness of sample gradients or operators is additionally assumed. Blocks within a full vector may be correlated.",
+        "Exact Euclidean projection onto the known set is allowed. Its calls are recorded separately and excluded from the primary query count."
+      ]
+    },
+    "output": {
+      "object_type": "primal_point",
+      "domain_ref": "CV_S_NCC_STOCH_LOWER_dom_70bb817a52",
+      "feasibility": "Return only the primal block $\\widehat x\\in X$. An optimal inner point is not required.",
+      "allowed_postprocessing": "arbitrary measurable postprocessing; unqueried output permitted unless restriction says otherwise",
+      "certificate_requirement": "none",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "Return one primal point $\\widehat x\\in X$. No dual point is required.",
+        "Unqueried outputs are allowed, subject to the stated support rule."
+      ]
+    },
+    "metric": {
+      "base_expression": "\\|\\nabla\\phi_{1/(2\\beta)}(\\widehat x)\\|_2",
+      "normalization": "exactly as displayed; no square/norm interchange",
+      "reference_object": "CV_S_NCC_STOCH_LOWER_obj_50a4fca219",
+      "nonnegativity": true,
+      "finiteness_conditions": "compact domain and continuous data, or the specific coercivity/existence promise stated in MODEL",
+      "comparator_ref": null,
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "$$\n\\|\\nabla\\phi_{1/(2\\beta)}(\\widehat{x})\\|_2\n$$",
+        "Let $\\phi(x)=\\Phi(x)+\\iota_X(x)$, where $\\iota_X$ equals $0$ on $X$ and $+\\infty$ elsewhere; define $\\phi_{1/(2\\beta)}(c)=\\min_u\\{\\phi(u)+\\beta\\|u-c\\|_2^2\\}$. The envelope is differentiable. Its gradient is the evaluation criterion, not a free oracle."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "N_bundle",
+          "unit": "calls",
+          "description": "Bundled calls returning an exact function value and a fresh joint-gradient sample.",
+          "display_symbol": "N_{\\rm first}"
+        },
+        {
+          "code": "N_projection",
+          "unit": "calls",
+          "description": "Number of exact Euclidean projections onto the known feasible domain, recorded separately from primary information queries",
+          "display_symbol": "N_{\\rm projection}"
+        }
+      ],
+      "budget_semantics": "fixed worst-case query cap",
+      "cost_rules": [
+        {
+          "id": "CV_S_NCC_STOCH_LOWER_res_439686df5a",
+          "operation_refs": [
+            "CV_S_NCC_STOCH_LOWER_ora_dc0f1d1670"
+          ],
+          "cost": {
+            "N_bundle": 1
+          }
+        },
+        {
+          "id": "CV_S_NCC_STOCH_LOWER_res_81be02e0d0",
+          "operation_refs": [
+            "CV_S_NCC_STOCH_LOWER_ora_7dcebf52f5"
+          ],
+          "cost": {
+            "N_projection": 1
+          }
+        }
+      ],
+      "scalarization": "only the explicitly selected query component is optimized; all auxiliary costs retained",
+      "setup_cost": "none beyond stated public inputs",
+      "online_cost": "offline; not applicable",
+      "amortization_scope": "one instance, one requested accuracy",
+      "precision_model": "exact real responses; arithmetic and bit costs uncharged; no finite-bit conclusion",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "Each bundled value-and-joint-gradient call counts once in $N_{\\rm first}$. Projection counts are recorded separately.",
+        "Use a fixed worst-case budget: calls never exceed the prespecified $N$ on any instance or random execution path. Earlier stopping within the budget is permitted.",
+        "Count all information calls for one instance and one requested accuracy, including initialization. Exact-real arithmetic, storage, and solving known models from public inputs and returned data are uncharged. This query-complexity quantity does not certify arithmetic or bit complexity."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "allowed",
+        "adaptivity": "arbitrary measurable adaptive queries and outputs",
+        "restrictions": [
+          "Queries, projections, and outputs obey the pathwise zero-support restrictions of source Definition 2.6"
+        ],
+        "internal_computation": "exact real arithmetic and arbitrary measurable transcript-based internal computation uncharged; no bound on arithmetic or bits is inferred",
+        "parallelism": "sequential; parallel rounds not identified with calls",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "Randomized adaptive zero-respecting algorithms are allowed. Feasible queries and outputs may use only coordinates previously exposed by the corresponding gradient blocks. Projection may not bypass the support restriction in Definition 2.6 of the source."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "\\exists\\mathcal A\\ \\forall I:\\quad \\mathbb E[\\|\\nabla\\phi_{1/(2\\beta)}(\\widehat x)\\|_2]\\le\\varepsilon",
+          "aggregation_order": [
+            "instancewise expectation/probability of the complete metric; suprema inside metric remain inside expectation"
+          ],
+          "quantifier_order": "choose a single algorithm from public inputs, then all compatible hidden instances and legal oracle rules",
+          "randomness_sources": [
+            "Private random seed of the algorithm",
+            "Fresh-sample stochastic response specified in this profile"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "fixed target accuracy; not an anytime guarantee",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "Choose one algorithm, then require the guarantee for every admissible instance and stochastic-feedback mechanism.",
+            "$$\n\\mathbb{E}\\!\\left[\\|\\nabla\\phi_{1/(2\\beta)}(\\widehat{x})\\|_2\\right]\\le\\varepsilon.\n$$",
+            "Expectation is outside the complete error expression; internal maxima or suprema are not moved outside it."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "fixed worst-case query cap",
+        "precision_model": "exact real responses; arithmetic and bit costs uncharged; no finite-bit conclusion",
+        "scalarization": "only the explicitly selected query component is optimized; all auxiliary costs retained"
+      },
+      "alias_ids": [
+        "CV_S_NCC_STOCH_LOWER"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "CV_S_NCC_STOCH_LOWER_obj_50a4fca219",
+        "type": "scalar_payoff",
+        "definition": "The unknown real payoff is $f:X\\times Y\\to\\mathbb R$, with primal variable $x\\in X\\subset\\mathbb R^{d_x}$ and dual variable $y\\in Y\\subset\\mathbb R^{d_y}$.",
+        "depends_on": [],
+        "role_code": "payoff"
+      },
+      {
+        "id": "CV_S_NCC_STOCH_LOWER_obj_f6e4fd5ed0",
+        "type": "reduced_value",
+        "definition": "The derived value function is $\\Phi(x)=\\sup_{y\\in Y}f(x,y)$. No direct gradient or maximizing-solution oracle is supplied.",
+        "depends_on": [
+          "CV_S_NCC_STOCH_LOWER_obj_50a4fca219"
+        ],
+        "role_code": "reduced_objective"
+      },
+      {
+        "id": "CV_S_NCC_STOCH_LOWER_obj_f85e24f920",
+        "type": "known_domain",
+        "definition": "The feasible set is explicitly public. Exact projections and linear algebra use known geometry and reveal no hidden-function information.",
+        "depends_on": [],
+        "role_code": "known_geometry"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "CV_S_NCC_STOCH_LOWER_var_3998a5b63e",
+        "dimension": "d_x",
+        "space": "finite-dimensional real Euclidean space"
+      },
+      {
+        "id": "CV_S_NCC_STOCH_LOWER_var_ecb2fdd9b2",
+        "dimension": "d_y",
+        "space": "finite-dimensional real Euclidean space"
+      }
+    ],
+    "domains": [
+      {
+        "id": "CV_S_NCC_STOCH_LOWER_dom_5ae3ceb911",
+        "definition": "X×Y with X closed convex and Y compact convex; queries feasible",
+        "roles": [
+          "function_definition",
+          "query",
+          "optimization"
+        ]
+      },
+      {
+        "id": "CV_S_NCC_STOCH_LOWER_dom_70bb817a52",
+        "definition": "closed convex X; source upper commonly full primal space",
+        "roles": [
+          "output"
+        ]
+      },
+      {
+        "id": "CV_S_NCC_STOCH_LOWER_dom_294b241e52",
+        "definition": "R^{d_x+d_y}; product-space projection input, with d=d_x+d_y",
+        "roles": [
+          "query"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "CV_S_NCC_STOCH_LOWER_nor_dace72fcea",
+        "definition": "The Euclidean norm and inner product are $\\|v\\|_2=(\\sum_jv_j^2)^{1/2}$ and $\\langle u,v\\rangle=\\sum_j u_jv_j$. On the joint space use $\\|(x,y)\\|_2=(\\|x\\|_2^2+\\|y\\|_2^2)^{1/2}$."
+      }
+    ],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "CV_S_NCC_STOCH_LOWER_p_321ee4d0e4",
+      "symbol": "\\Delta",
+      "meaning": "A public bound on the initial reduced-objective value above its infimum. Attainment of the infimum is not required.",
+      "kind": "independent",
+      "domain": "Positive real number",
+      "public": true,
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "CV_S_NCC_STOCH_LOWER_p_963e112cdc",
+      "symbol": "D_y",
+      "meaning": "Euclidean diameter bound for the dual feasible domain",
+      "kind": "independent",
+      "domain": "Positive real number",
+      "public": true,
+      "definition": "$\\operatorname{diam}(Y)=\\sup_{u,v\\in Y}\\|u-v\\|_2\\le D_y$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "CV_S_NCC_STOCH_LOWER_p_6490ff790f",
+      "symbol": "\\beta",
+      "meaning": "Euclidean Lipschitz upper bound for the population payoff's complete joint gradient.",
+      "kind": "independent",
+      "domain": "Positive real number",
+      "public": true,
+      "definition": "$\\|\\nabla f(z)-\\nabla f(w)\\|_2\\le\\beta\\|z-w\\|_2$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "CV_S_NCC_STOCH_LOWER_p_cffd0f6f5a",
+      "symbol": "d",
+      "meaning": "The joint Euclidean dimension is $d=d_x+d_y$. Within its stated window, the lower bound may choose finite block dimensions.",
+      "kind": "independent",
+      "domain": "Integer at least $2$",
+      "public": true,
+      "definition": "$d=d_x+d_y$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "CV_S_NCC_STOCH_LOWER_p_72ad5d4f38",
+      "symbol": "\\varepsilon",
+      "meaning": "The Euclidean-norm tolerance for the reduced objective’s Moreau-envelope gradient.",
+      "kind": "independent",
+      "domain": "Positive real number",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "CV_S_NCC_STOCH_LOWER_p_8f9a602ec6",
+      "symbol": "\\sigma",
+      "meaning": "Standard-deviation upper bound for noise in the full stochastic response, controlling the joint squared norm rather than summing independent block budgets.",
+      "kind": "independent",
+      "domain": "A nonnegative real.",
+      "public": true,
+      "definition": "$\\mathbb E[\\|G_t-\\mathbb E[G_t\\mid\\mathcal H_t,z_t]\\|_2^2\\mid\\mathcal H_t,z_t]\\le\\sigma^2$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "\\Delta",
+      "meaning": "A public bound on the initial reduced-objective value above its infimum. Attainment of the infimum is not required.",
+      "domain": "Positive real number",
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "parameter_ref": "CV_S_NCC_STOCH_LOWER_p_321ee4d0e4"
+    },
+    {
+      "symbol_latex": "D_y",
+      "meaning": "Euclidean diameter bound for the dual feasible domain",
+      "domain": "Positive real number",
+      "definition": "$\\operatorname{diam}(Y)=\\sup_{u,v\\in Y}\\|u-v\\|_2\\le D_y$",
+      "parameter_ref": "CV_S_NCC_STOCH_LOWER_p_963e112cdc"
+    },
+    {
+      "symbol_latex": "\\beta",
+      "meaning": "Euclidean Lipschitz upper bound for the population payoff's complete joint gradient.",
+      "domain": "Positive real number",
+      "definition": "$\\|\\nabla f(z)-\\nabla f(w)\\|_2\\le\\beta\\|z-w\\|_2$",
+      "parameter_ref": "CV_S_NCC_STOCH_LOWER_p_6490ff790f"
+    },
+    {
+      "symbol_latex": "d",
+      "meaning": "The joint Euclidean dimension is $d=d_x+d_y$. Within its stated window, the lower bound may choose finite block dimensions.",
+      "domain": "Integer at least $2$",
+      "definition": "$d=d_x+d_y$",
+      "parameter_ref": "CV_S_NCC_STOCH_LOWER_p_cffd0f6f5a"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "The Euclidean-norm tolerance for the reduced objective’s Moreau-envelope gradient.",
+      "domain": "Positive real number",
+      "definition": null,
+      "parameter_ref": "CV_S_NCC_STOCH_LOWER_p_72ad5d4f38"
+    },
+    {
+      "symbol_latex": "\\sigma",
+      "meaning": "Standard-deviation upper bound for noise in the full stochastic response, controlling the joint squared norm rather than summing independent block budgets.",
+      "domain": "A nonnegative real.",
+      "definition": "$\\mathbb E[\\|G_t-\\mathbb E[G_t\\mid\\mathcal H_t,z_t]\\|_2^2\\mid\\mathcal H_t,z_t]\\le\\sigma^2$",
+      "parameter_ref": "CV_S_NCC_STOCH_LOWER_p_8f9a602ec6"
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_2,\\langle\\cdot,\\cdot\\rangle",
+      "meaning": "Euclidean norm and inner product; the product-space norm is the square root of the sum of the squared block norms.",
+      "domain": "The specified finite-dimensional real vector space.",
+      "definition": "$\\|v\\|_2=\\sqrt{\\langle v,v\\rangle}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "d_x,d_y",
+      "meaning": "Positive integer primal and dual block dimensions; joint dimension $d=d_x+d_y$",
+      "domain": "Positive integer",
+      "definition": "$d=d_x+d_y$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f",
+      "meaning": "Unknown real-valued payoff, with primal and dual input blocks.",
+      "domain": "$f:(x,y)\\mapsto f(x,y)\\in\\mathbb R$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x,y,z",
+      "meaning": "Primal variable, dual variable, and joint point",
+      "domain": "$x\\in\\mathbb R^{d_x},\\ y\\in\\mathbb R^{d_y},\\ z=(x,y)\\in\\mathbb R^{d_x+d_y}$",
+      "definition": "$z=(x,y)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla f,\\nabla_x f,\\nabla_y f",
+      "meaning": "Complete joint gradient and its two blocks",
+      "domain": "$\\nabla_x f\\in\\mathbb R^{d_x},\\ \\nabla_y f\\in\\mathbb R^{d_y}$",
+      "definition": "$\\nabla f=(\\nabla_x f,\\nabla_y f)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Phi",
+      "meaning": "Reduced objective after global dual maximization; neither its value nor gradient is an additional free interface",
+      "domain": "Real-valued function on the primal-variable space",
+      "definition": "$\\Phi(x)=\\max_{y\\in Y}f(x,y)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "X,Y",
+      "meaning": "The primal domain is known, nonempty, closed, and convex; the dual domain is known, nonempty, compact, and convex, with $\\operatorname{diam}(Y)\\le D_y$.",
+      "domain": "$X\\subset\\mathbb R^{d_x},\\ Y\\subset\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_0,y_0",
+      "meaning": "The public initial primal and dual variables.",
+      "domain": "The respective feasible domains. Both equal zero when the origins are explicitly fixed.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat x",
+      "meaning": "The point or variable blocks ultimately returned by the algorithm, corresponding to the hatted variables in the error formula.",
+      "domain": "A feasible primal point in $\\mathbb R^{d_x}$.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "G_f(z;\\xi),G_t",
+      "meaning": "Random sample of the full joint gradient and the response from sample $t$",
+      "domain": "$\\mathbb R^{d_x+d_y}$. The two blocks may be internally correlated.",
+      "definition": "$G_f=(G_x,G_y)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "G_x,G_y",
+      "meaning": "The primal and dual blocks in one complete joint-gradient sample.",
+      "domain": "$G_x\\in\\mathbb R^{d_x},\\ G_y\\in\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\xi,\\mathcal H_t,z_t",
+      "meaning": "Current fresh-sample seed, complete pre-query history, and query point.",
+      "domain": "The seed space, history-generated $\\sigma$-algebra, and declared query domain.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E,\\Pr",
+      "meaning": "Expectation and probability over the explicitly allowed algorithm and sample randomness, with the hidden instance fixed.",
+      "domain": "Operations on the corresponding probability space",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_{\\rm first}",
+      "meaning": "Bundled calls returning an exact function value and a fresh joint-gradient sample.",
+      "domain": "Nonnegative integer count; expected work is its expectation.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_{\\rm projection}",
+      "meaning": "Number of exact Euclidean projections onto the known feasible domain, recorded separately from primary information queries",
+      "domain": "Nonnegative integer count; expected work is its expectation.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "A uniform cap on principal information calls for every admissible instance and execution path.",
+      "domain": "Nonnegative integer",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^\\star",
+      "meaning": "The infimum principal query budget among algorithms satisfying every stated instancewise output guarantee.",
+      "domain": "Nonnegative extended real value; by convention, positive infinity if no successful algorithm or no uniform finite budget exists",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A,I",
+      "meaning": "An algorithm selected from public inputs, a hidden admissible object fixed before interaction, and an oracle law satisfying the declared conditional means, variances, and independence protocol.",
+      "domain": "The specified algorithm and model classes.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\omega",
+      "meaning": "A complete realization of algorithmic and sample randomness.",
+      "domain": "Corresponding sample space",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta,\\widetilde O",
+      "meaning": "Asymptotic upper and lower bounds, constant-factor matching, and upper bounds hiding the stated logarithmic factors, within the corresponding regions.",
+      "domain": "Nonnegative complexity function; subscript p permits additional dependence only on fixed p",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c_1",
+      "meaning": "A small universal constant in the source accuracy window, with no numerical value specified.",
+      "domain": "Fixed positive constant in the source theorem; its numerical value is unspecified and it is not a new instance parameter.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\phi,\\iota_X",
+      "meaning": "Reduced objective with primal feasibility constraints and the set indicator function.",
+      "domain": "An extended-real-valued function.",
+      "definition": "$\\phi=\\Phi+\\iota_X,\\quad\\iota_X(x)=0\\ (x\\in X),\\ +\\infty\\ (x\\notin X)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\phi_{1/(2\\beta)}",
+      "meaning": "The Moreau envelope of the constrained reduced objective; error measures its true gradient.",
+      "domain": "A differentiable real-valued function on $\\mathbb R^{d_x}$.",
+      "definition": "$\\phi_{1/(2\\beta)}(c)=\\min_u\\{\\phi(u)+\\beta\\|u-c\\|_2^2\\}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathfrak A_\\varepsilon",
+      "meaning": "Algorithms using the allowed interfaces, algorithm restrictions, and output domain, and satisfying the displayed complete error guarantee for every fixed admissible instance",
+      "domain": "The algorithm class is defined at fixed public parameters and target tolerance $\\varepsilon$.",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "CV_S_NCC_STOCH_LOWER__main__q1",
+      "kind": "target_accuracy_cost",
+      "expression": "N^\\star(\\varepsilon)=\\inf_{\\mathcal A\\in\\mathfrak A_\\varepsilon}\\sup_I \\sup_\\omega N_{\\rm first}(\\mathcal A,I,\\omega)",
+      "optimization_direction": "minimize",
+      "units": "N_bundle",
+      "budget_variables": [],
+      "tolerance_variables": [
+        "CV_S_NCC_STOCH_LOWER_p_72ad5d4f38"
+      ],
+      "analysis_scope": "Take the worst case over admissible finite-dimensional instances. Theorems with dimension conditions apply only within those windows and do not establish fixed-dimensional saturation rates.",
+      "tracked_parameters": [
+        "CV_S_NCC_STOCH_LOWER_p_72ad5d4f38",
+        "CV_S_NCC_STOCH_LOWER_p_6490ff790f",
+        "CV_S_NCC_STOCH_LOWER_p_963e112cdc",
+        "CV_S_NCC_STOCH_LOWER_p_321ee4d0e4",
+        "CV_S_NCC_STOCH_LOWER_p_8f9a602ec6"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "N^\\star(\\varepsilon)=\\inf_{\\mathcal A\\in\\mathfrak A_\\varepsilon}\\sup_I \\sup_\\omega N_{\\rm first}(\\mathcal A,I,\\omega)",
+      "display_notation_note": "One call is charged for the full response specified by the interface. The algorithm class obeys the declared randomization, adaptivity, and output rules and must satisfy the complete error guarantee on every fixed admissible instance. The call cap is uniform over instances and execution paths.",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Number of joint responses explicitly allowed by this profile",
+      "expression": "N_bundle",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_c35880153f"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "CV_S_NCC_STOCH_LOWER__main__r1",
+      "specification_ref": "CV_S_NCC_STOCH_LOWER",
+      "name": "The source theorem’s applicability window.",
+      "predicate_text": "$0<\\varepsilon\\le c_1\\min\\{\\sqrt{\\beta\\Delta},\\beta D_y\\}$",
+      "predicate": {
+        "predicate": {
+          "name": "ncc_accuracy_window",
+          "args": [
+            {
+              "parameter": "CV_S_NCC_STOCH_LOWER_p_72ad5d4f38"
+            },
+            {
+              "parameter": "CV_S_NCC_STOCH_LOWER_p_6490ff790f"
+            },
+            {
+              "parameter": "CV_S_NCC_STOCH_LOWER_p_321ee4d0e4"
+            },
+            {
+              "parameter": "CV_S_NCC_STOCH_LOWER_p_963e112cdc"
+            }
+          ],
+          "description": "source universal c1 not numerically fixed; source upper also requires a public finite tildeDx"
+        }
+      },
+      "parameter_refs": [
+        "CV_S_NCC_STOCH_LOWER_p_cffd0f6f5a",
+        "CV_S_NCC_STOCH_LOWER_p_72ad5d4f38",
+        "CV_S_NCC_STOCH_LOWER_p_6490ff790f",
+        "CV_S_NCC_STOCH_LOWER_p_963e112cdc",
+        "CV_S_NCC_STOCH_LOWER_p_321ee4d0e4",
+        "CV_S_NCC_STOCH_LOWER_p_8f9a602ec6"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Use the open or closed endpoints in each predicate. A universal constant without a numerical value yields an unknown numerical applicability result."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "CV_S_NCC_STOCH_LOWER__main__b1",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\Omega(\\beta^2D_y\\Delta\\varepsilon^{-3}+\\beta^3D_y^2\\Delta\\sigma^2\\varepsilon^{-6})",
+      "quantity_ref": "CV_S_NCC_STOCH_LOWER__main__q1",
+      "region_refs": [
+        "CV_S_NCC_STOCH_LOWER__main__r1"
+      ],
+      "method": "deterministic dual lattice plus masked stochastic chain",
+      "algorithm_or_hard_family": "deterministic dual lattice plus masked stochastic chain",
+      "algorithm_class_scope": "The deterministic or randomized zero-respecting class specified in this profile",
+      "resource_costs": {
+        "N": "\\Omega(\\beta^2D_y\\Delta\\varepsilon^{-3}+\\beta^3D_y^2\\Delta\\sigma^2\\varepsilon^{-6})"
+      },
+      "parameter_choice": "specified by the cited theorem; unknown thresholds not assigned numerical values",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "CV_SRC_ncc_lower_2609_14233"
+      ],
+      "evidence_refs": [
+        "CV_S_NCC_STOCH_LOWER__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "CV_S_NCC_STOCH_LOWER__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Every condition in the eight-axis specification and associated regime must hold jointly. Sufficient constants from different theorems are not assumed identical."
+        ],
+        "dimension_conditions": "The upper bound holds in every admissible finite dimension. The lower bound applies only in its separately stated dimension window.",
+        "guarantee_mapping": "The error criterion, sources of randomness, and expectation/probability quantifiers match this specification. Any conversion is explained separately below.",
+        "oracle_mapping": "Use only primitive operations recorded under ORACLE. Unknown inner solutions and reduced gradients are not supplied for free.",
+        "output_mapping": "Outputs belong to the declared space and are evaluated by this profile's METRIC. Different gaps, norms, and squared norms are not interchanged.",
+        "resource_mapping": "All resource costs come from one algorithm or one hard construction. Initialization and nested calls are included."
+      },
+      "hidden_constants": "Use the source theorem’s universal constants except where derivative order or structural budgets are explicitly fixed. Unspecified sufficient thresholds remain symbolic.",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "lower_scope_type": "restricted_randomized",
+      "lower_scope_type_note": "The lower bound covers randomized methods satisfying the zero-respecting condition on every path. It does not extend to arbitrary randomized queries.",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "The source theorem’s applicability window.",
+      "predicate": {
+        "predicate": {
+          "name": "ncc_accuracy_window",
+          "args": [
+            {
+              "parameter": "CV_S_NCC_STOCH_LOWER_p_72ad5d4f38"
+            },
+            {
+              "parameter": "CV_S_NCC_STOCH_LOWER_p_6490ff790f"
+            },
+            {
+              "parameter": "CV_S_NCC_STOCH_LOWER_p_321ee4d0e4"
+            },
+            {
+              "parameter": "CV_S_NCC_STOCH_LOWER_p_963e112cdc"
+            }
+          ],
+          "description": "source universal c1 not numerically fixed; source upper also requires a public finite tildeDx"
+        }
+      },
+      "predicate_text": "$0<\\varepsilon\\le c_1\\min\\{\\sqrt{\\beta\\Delta},\\beta D_y\\}$",
+      "parameter_refs": [
+        "CV_S_NCC_STOCH_LOWER_p_cffd0f6f5a",
+        "CV_S_NCC_STOCH_LOWER_p_72ad5d4f38",
+        "CV_S_NCC_STOCH_LOWER_p_6490ff790f",
+        "CV_S_NCC_STOCH_LOWER_p_963e112cdc",
+        "CV_S_NCC_STOCH_LOWER_p_321ee4d0e4",
+        "CV_S_NCC_STOCH_LOWER_p_8f9a602ec6"
+      ],
+      "source_region_ref": "CV_S_NCC_STOCH_LOWER__main__r1",
+      "status": {
+        "code": "missing_upper",
+        "label": "Upper bound missing",
+        "missing_sides": [
+          "upper"
+        ]
+      },
+      "comparison_id": "CV_S_NCC_STOCH_LOWER__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "CV_S_NCC_STOCH_LOWER__main__q1",
+      "resource_projection_id": "resource_c35880153f",
+      "regime_id": "CV_S_NCC_STOCH_LOWER__main__r1",
+      "bracket": {
+        "upper_refs": [],
+        "lower_refs": [
+          "CV_S_NCC_STOCH_LOWER__main__b1"
+        ],
+        "comparison_ref": "CV_S_NCC_STOCH_LOWER__main__c1",
+        "quantity_ref": "CV_S_NCC_STOCH_LOWER__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_bundle",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": null,
+          "lower": {
+            "expression": "\\Omega(\\beta^2D_y\\Delta\\varepsilon^{-3}+\\beta^3D_y^2\\Delta\\sigma^2\\varepsilon^{-6})",
+            "claim_refs": [
+              "CV_S_NCC_STOCH_LOWER__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "\\Omega(\\beta^2D_y\\Delta\\varepsilon^{-3}+\\beta^3D_y^2\\Delta\\sigma^2\\varepsilon^{-6})"
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "CV_S_NCC_STOCH_LOWER__main__b1": [
+            {
+              "region_ref": "CV_S_NCC_STOCH_LOWER__main__r1",
+              "predicate_text": "$0<\\varepsilon\\le c_1\\min\\{\\sqrt{\\beta\\Delta},\\beta D_y\\}$"
+            }
+          ]
+        },
+        "envelope_certificate": "The retained upper belongs to a different algorithm/guarantee/initialization specification.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Number of joint responses explicitly allowed by this profile"
+      },
+      "comparison_key": {
+        "setting_id": "CV_S_NCC_STOCH_LOWER",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "CV_S_NCC_STOCH_LOWER__main__q1",
+        "resource_projection_id": "resource_c35880153f",
+        "regime_id": "CV_S_NCC_STOCH_LOWER__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "CV_S_NCC_STOCH_LOWER__main__e1",
+      "source_ref": "CV_SRC_ncc_lower_2609_14233",
+      "locator": {
+        "theorem": "Theorem5.5",
+        "section": "Section5",
+        "pdf_pages": [
+          20
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "NCC_LO_STOCH_LOWER",
+      "notes": [
+        "The support condition in source Definition 2.6 holds on every random execution path, including the output. Its randomized zero-respecting lower bound does not extend automatically to arbitrary randomized algorithms."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "CV_SRC_ncc_lower_2609_14233",
+      "authors": [
+        "Qilong Wu",
+        "Zhihao Gu",
+        "Junchi Yang"
+      ],
+      "title": "Lower Bounds for Nonconvex-Concave Minimax Optimization",
+      "year": 2026,
+      "version": "arXiv:2609.14233v1, 2026-09-13",
+      "url": "https://arxiv.org/pdf/2609.14233v1",
+      "publication_status": "preprint"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "CV_S_NCC_STOCH_LOWER",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "upper"
+    ],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "missing_upper": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "CV_S_NCC_STOCH_LOWER__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "702613fad83f8d1d6cce439e25be4628418790164e1c27e383d8945db67c15fd",
+    "source_order": 20,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

@@ -1,0 +1,973 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "MX_S_rayleigh",
+  "title": "Leading-eigenvalue approximation without a spectral gap: relative Rayleigh error.",
+  "summary": "Find a unit vector $\\widehat{v}$ such that $\\widehat{v}^{\\mathsf T}A\\widehat{v}$ approximates $\\lambda_1(A)$.",
+  "primary_domain": "matrix_computation",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "matrix_computation"
+    },
+    {
+      "facet": "goal",
+      "value": "relative_rayleigh_error"
+    },
+    {
+      "facet": "structure",
+      "value": "psd_gap_free"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_right_matvec"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_adaptive"
+    },
+    {
+      "facet": "guarantee",
+      "value": "fixed_probability"
+    },
+    {
+      "facet": "resource",
+      "value": "matvec_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "matrix_computation"
+      ],
+      "formulation_code": "dominant_eigenpair",
+      "formulation": "\\max_{\\|v\\|_2=1}v^TAv",
+      "solution_goal": "relative_rayleigh_gap",
+      "protocol_ref": null,
+      "code": "dominant_eigenpair",
+      "formulation_latex": "\\max_{\\|v\\|_2=1}v^{\\mathsf T}Av",
+      "description_zh": "Find a unit vector $\\widehat v$ such that $\\widehat v^{\\mathsf T}A\\widehat v$ approximates $\\lambda_1(A)$.",
+      "description_paragraphs": [
+        "Find a unit vector $\\widehat{v}$ such that $\\widehat{v}^{\\mathsf T}A\\widehat{v}$ approximates $\\lambda_1(A)$."
+      ]
+    },
+    "model": {
+      "instance": "An unknown nonzero real symmetric positive semidefinite matrix $A\\in\\mathbb R^{d\\times d}$, with $\\lambda_{\\max}(A)>0$. No eigengap or simple-eigenvalue assumption is imposed.",
+      "assumptions": [
+        {
+          "subject_id": "MX_S_rayleigh_obj_c6e29aa8be",
+          "property_code": "positive_semidefinite",
+          "variable_blocks": [],
+          "norm_ref": "MX_S_rayleigh_nor_429e6d47f0",
+          "parameter_refs": [
+            "MX_S_rayleigh_p_1d1d52d4bc"
+          ],
+          "scope": "Entire fixed input instance",
+          "description": "A is nonzero and positive semidefinite"
+        }
+      ],
+      "parameter_domain_description": "$d\\ge1$ and $\\varepsilon>0$; nontrivial accuracy and lower-bound regimes are stated separately.",
+      "code": "model_declared",
+      "description_zh": "Assume $A=A^{\\mathsf T}\\succeq0$, $A\\in\\mathbb R^{d\\times d}$, and $\\lambda_1(A)>0$. The largest eigenvalue may have multiplicity greater than one.",
+      "description_paragraphs": [
+        "Assume $A=A^{\\mathsf T}\\succeq0$, $A\\in\\mathbb{R}^{d\\times d}$, and $\\lambda_1(A)>0$; the largest eigenvalue may have multiplicity greater than one."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "MX_S_rayleigh_ora_462f9405d6",
+          "operation_code": "matrix_right_matvec",
+          "target_object": "MX_S_rayleigh_obj_c6e29aa8be",
+          "variable_blocks": [
+            "MX_S_rayleigh_var_83c97e94ab"
+          ],
+          "query_signature": "Input an arbitrary vector $v\\in\\mathbb R^d$.",
+          "response_signature": "Return exact Av ∈ R^d.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "Native linear action of the specified matrix; no derivative order of an unregistered scalar function is implied.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact real vector responses, with no observation noise or rounding."
+          },
+          "domain_ref": "MX_S_rayleigh_dom_9c9c3c21a7",
+          "coupling": "Every query accesses the same fixed matrix; repeated queries are allowed.",
+          "index_control": "The algorithm selects vectors and an available channel; block width is charged by column.",
+          "access_schedule": "offline adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "MX_S_rayleigh_res_ebee2e8474"
+        }
+      ],
+      "public_inputs": [
+        "d,ε"
+      ],
+      "hidden_objects": [
+        "MX_S_rayleigh_obj_c6e29aa8be"
+      ],
+      "auxiliary_interfaces": [],
+      "protocol_ref": null,
+      "query_domain_description": "Right products map R^d to R^d, with only the listed right-product channel available. A q-column block costs q calls. Entries, inverse actions, shifted solves, and matrix-function actions are not free additional feedback.",
+      "code": "oracle_declared",
+      "description_zh": "The dimension $d$ and tolerance $\\varepsilon$ are public; $A$ is hidden. A query $v\\in\\mathbb R^d$ returns exact $Av$. Query vectors have unrestricted norm and may be adaptive or repeated.",
+      "description_paragraphs": [
+        "The data $d,\\varepsilon$ are public and $A$ is hidden. Any query $v\\in\\mathbb{R}^d$ returns exact $Av$. Queries have no norm restriction and may be adaptive or repeated."
+      ]
+    },
+    "output": {
+      "object_type": "vector",
+      "domain_ref": "MX_S_rayleigh_dom_3308b42649",
+      "feasibility": "unit sphere S^{d-1}",
+      "allowed_postprocessing": "Arbitrary admissible postprocessing; the output need not have appeared as a query vector.",
+      "certificate_requirement": "Only the true-loss guarantee is required; no computable certificate is requested.",
+      "code": "output_declared",
+      "description_zh": "Return a unit vector $\\widehat v\\in\\mathbb R^d$. It need not have been queried, and no additional estimate or certificate of the largest eigenvalue is required.",
+      "description_paragraphs": [
+        "Return a unit vector $\\widehat v\\in\\mathbb R^d$. It need not have been queried. No separate largest-eigenvalue estimate or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "\\ell(\\widehat v)=1-\\frac{\\widehat v^{\\mathsf T}A\\widehat v}{\\lambda_1(A)}",
+      "normalization": "Rayleigh-objective gap normalized by positive $\\lambda_{\\max}(A)$, not an eigenvector angle.",
+      "reference_object": "MX_S_rayleigh_obj_c6e29aa8be",
+      "nonnegativity": true,
+      "finiteness_conditions": "The specified dimension is finite, and the model and spectral assumptions hold.",
+      "comparator_ref": "MX_S_rayleigh_com_dc1150dc64",
+      "code": "metric_declared",
+      "goal_latex": "\\Pr[\\lambda_{\\max}(A)-\\widehat v^TA\\widehat v\\le\\varepsilon\\lambda_{\\max}(A)]\\ge\\tfrac23",
+      "description_zh": "The base loss is $\\ell(\\widehat v)=(\\lambda_1(A)-\\widehat v^{\\mathsf T}A\\widehat v)/\\lambda_1(A)$ and success requires $\\ell\\le\\varepsilon$. Its denominator is positive under the nonzero positive-semidefinite promise.",
+      "base_expression_latex": "\\ell(\\widehat v)=1-\\frac{\\widehat v^{\\mathsf T}A\\widehat v}{\\lambda_1(A)}",
+      "description_paragraphs": [
+        "The base loss is $\\ell(\\widehat{v})=(\\lambda_1(A)-\\widehat{v}^{\\mathsf T}A\\widehat{v})/\\lambda_1(A)$ and success requires $\\ell\\le\\varepsilon$. Its denominator is positive under the nonzero positive-semidefinite promise."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "N_right",
+          "unit": "vector product",
+          "description": "One right product Av with a single vector"
+        }
+      ],
+      "budget_semantics": "A fixed worst-case budget respected for every input and private seed.",
+      "cost_rules": [
+        {
+          "id": "MX_S_rayleigh_res_ebee2e8474",
+          "operation_refs": [
+            "MX_S_rayleigh_ora_462f9405d6"
+          ],
+          "cost": {
+            "N_right": 1
+          }
+        }
+      ],
+      "scalarization": "The resource is $Q=N_{\\mathrm{right}}$. No separate left-product channel is present. Each block-query column is charged.",
+      "setup_cost": "Reading public parameters and explicitly public $b,x_0,h$, mask, or tree incurs no matrix-vector call. Information about hidden $A$ comes only from native responses.",
+      "online_cost": "not_applicable",
+      "amortization_scope": "One output for one instance",
+      "precision_model": "Inputs, queries, and responses are exact reals. Query vectors have no bit-length restriction. Internal arithmetic, storage, and precision are outside the query budget, so this is not a finite-word implementation guarantee.",
+      "code": "resource_declared",
+      "description_zh": "Count right single-vector products $N=N_{\\mathrm{r}}$; a block of width $q$ costs $q$ calls.\n\nThe cap holds for every fixed input and private seed. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. The unit is one single-vector oracle call.",
+      "description_paragraphs": [
+        "Count right products with single vectors only: $N=N_{\\mathrm r}$. A block of width $q$ costs $q$ calls.",
+        "The budget bounds calls for every fixed input and every private seed. Reading public inputs, exact real arithmetic, storage, and postprocessing are free. One call applies the interface to one vector."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "An independent private random seed is allowed",
+        "adaptivity": "Arbitrary measurable adaptivity",
+        "restrictions": [],
+        "internal_computation": "Arbitrary measurable internal computation on public data and the transcript is free in matrix–vector query units. No Krylov or linear-span restriction applies.",
+        "parallelism": "A q-column block still costs q vector products. Round count differs from call count.",
+        "code": "algorithms_declared",
+        "description_zh": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+        "description_paragraphs": [
+          "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "There exists one algorithm whose output loss is at most epsilon with probability at least 2/3 for every admissible fixed instance, under a fixed worst-case query budget.",
+          "aggregation_order": [
+            "probability over private seed",
+            "for every fixed instance"
+          ],
+          "quantifier_order": "exists algorithm; for every fixed input; Pr_seed(success)>=2/3",
+          "randomness_sources": [
+            "algorithm_private_seed"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "fixed output time",
+          "code": "guarantee_declared",
+          "description_zh": "The algorithm is selected using only public inputs. For every admissible input fixed before its private seed is generated, the success event has probability at least $2/3$ over that private randomness.",
+          "description_paragraphs": [
+            "The algorithm is selected using only public inputs. For every admissible input fixed before its private seed is generated, the success event has probability at least $2/3$ over that private randomness."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "A fixed worst-case budget respected for every input and private seed.",
+        "precision_model": "Inputs, queries, and responses are exact reals. Query vectors have no bit-length restriction. Internal arithmetic, storage, and precision are outside the query budget, so this is not a finite-word implementation guarantee.",
+        "scalarization": "The resource is $Q=N_{\\mathrm{right}}$. No separate left-product channel is present. Each block-query column is charged."
+      },
+      "alias_ids": [
+        "MX_S_rayleigh"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "MX_S_rayleigh_obj_c6e29aa8be",
+        "type": "matrix",
+        "definition": "The unknown matrix is nonzero real symmetric positive semidefinite, $A\\in\\mathbb R^{d\\times d}$. No eigengap is promised.",
+        "depends_on": [],
+        "role_code": "matrix"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "MX_S_rayleigh_var_83c97e94ab",
+        "dimension": "d",
+        "space": "R^d, the right-product query space"
+      }
+    ],
+    "domains": [
+      {
+        "id": "MX_S_rayleigh_dom_9c9c3c21a7",
+        "definition": "$\\mathbb R^d$, the complete right-query space without a norm restriction",
+        "roles": [
+          "query"
+        ]
+      },
+      {
+        "id": "MX_S_rayleigh_dom_3308b42649",
+        "definition": "unit sphere S^{d-1}",
+        "roles": [
+          "output"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "MX_S_rayleigh_nor_429e6d47f0",
+        "definition": "Use the Euclidean vector norm $\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}$ and the matrix operator norm $\\|M\\|_{\\rm op}=\\max_{\\|z\\|_2=1}\\|Mz\\|_2$."
+      }
+    ],
+    "protocols": [],
+    "comparators": [
+      {
+        "id": "MX_S_rayleigh_com_dc1150dc64",
+        "definition": "lambda_max(A), the maximum Rayleigh quotient over unit vectors"
+      }
+    ],
+    "local_symbols": [
+      {
+        "symbol": "d",
+        "meaning": "The order of the square input matrix and the dimension of each query vector.",
+        "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+        "definition": "A\\in\\mathbb R^{d\\times d}"
+      },
+      {
+        "symbol": "\\varepsilon",
+        "meaning": "Rayleigh-quotient loss tolerance relative to the largest eigenvalue.",
+        "domain": "$\\varepsilon>0$",
+        "definition": "\\lambda_1(A)-\\widehat v^{\\mathsf T}A\\widehat v\\le\\varepsilon\\lambda_1(A)"
+      },
+      {
+        "symbol": "d_0",
+        "meaning": "Sufficient dimension threshold for the gap-free leading-eigenvalue lower bound of BH",
+        "domain": "The quantity $d_0\\in\\mathbb N$ is a fixed universal constant.",
+        "definition": "d\\ge d_0"
+      },
+      {
+        "symbol": "A",
+        "meaning": "A hidden nonzero real symmetric PSD matrix.",
+        "domain": "$\\mathbb R^{d\\times d}$",
+        "definition": null
+      },
+      {
+        "symbol": "\\lambda_i(A)",
+        "meaning": "Eigenvalues of a real symmetric or Hermitian matrix in nonincreasing order.",
+        "domain": "$1\\le i\\le d$",
+        "definition": "\\lambda_1(A)\\ge\\cdots\\ge\\lambda_d(A)"
+      },
+      {
+        "symbol": "\\widehat v",
+        "meaning": "Unit vector returned by the algorithm",
+        "domain": "$\\mathbb R^d$",
+        "definition": "\\|\\widehat v\\|_2=1"
+      },
+      {
+        "symbol": "\\ell(\\widehat v)",
+        "meaning": "Rayleigh loss relative to the largest eigenvalue.",
+        "domain": "A nonnegative real.",
+        "definition": "\\ell(\\widehat v)=(\\lambda_1(A)-\\widehat v^{\\mathsf T}A\\widehat v)/\\lambda_1(A)"
+      },
+      {
+        "symbol": "\\|z\\|_2",
+        "meaning": "Euclidean norm of a vector",
+        "domain": "Finite-dimensional real or complex vector",
+        "definition": "\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}"
+      },
+      {
+        "symbol": "\\|M\\|_{\\mathrm{op}}",
+        "meaning": "The matrix operator norm induced by the Euclidean norm.",
+        "domain": "Any compatible matrix",
+        "definition": "\\|M\\|_{\\mathrm{op}}=\\max_{\\|z\\|_2=1}\\|Mz\\|_2=\\sigma_1(M)"
+      },
+      {
+        "symbol": "c,C",
+        "meaning": "Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value.",
+        "domain": "Independent of the dimension, accuracy, and probability parameters tracked by this bound.",
+        "definition": null
+      },
+      {
+        "symbol": "\\log",
+        "meaning": "Natural logarithm",
+        "domain": "Positive real argument",
+        "definition": "\\log x=\\ln x"
+      },
+      {
+        "symbol": "O,\\Omega,\\Theta",
+        "meaning": "Upper, lower, and two-sided bounds up to constants in the same applicable regime",
+        "domain": "Hidden constants have only the parameter dependence explicitly permitted by the associated bound.",
+        "definition": null
+      },
+      {
+        "symbol": "N,N_{\\mathrm r}",
+        "meaning": "Single-vector query budget for exact right products Av. A block is charged by its column count.",
+        "domain": "$\\mathbb N_0$",
+        "definition": "N=N_{\\mathrm r}"
+      },
+      {
+        "symbol": "N^\\star",
+        "meaning": "Minimum worst-case query budget attaining this profile's success guarantee",
+        "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+        "definition": "\\inf_{\\mathcal A\\ \\mathrm{satisfying\\ the\\ guarantee}}\\sup_{I,\\omega}N_{\\mathcal A}(I,\\omega)"
+      },
+      {
+        "symbol": "\\mathcal A,I,\\omega",
+        "meaning": "The algorithm, fixed admissible input, and private algorithmic seed.",
+        "domain": "Quantifiers for worst-case input and execution cost. Success probability is taken over ω.",
+        "definition": null
+      },
+      {
+        "symbol": "\\varepsilon_0",
+        "meaning": "Sufficient small-error threshold in the BH gap-free leading-eigenvalue lower bound.",
+        "domain": "Fixed universal positive constant",
+        "definition": null
+      },
+      {
+        "symbol": "s",
+        "meaning": "Order of the hard BH subblock",
+        "domain": "Auxiliary integer in the proof",
+        "definition": "s\\asymp\\min\\{d,c/\\sqrt\\varepsilon\\}"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "MX_S_rayleigh_p_e596b0d193",
+      "symbol": "d_0",
+      "meaning": "Sufficient dimension threshold for the gap-free leading-eigenvalue lower bound of BH",
+      "kind": "proof_constant",
+      "domain": "The quantity $d_0\\in\\mathbb N$ is a fixed universal constant.",
+      "public": true,
+      "definition": "$d\\ge d_0$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_rayleigh_p_1d1d52d4bc",
+      "symbol": "d",
+      "meaning": "The order of the square input matrix and the dimension of each query vector.",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "public": true,
+      "definition": "$A\\in\\mathbb R^{d\\times d}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_d"
+    },
+    {
+      "id": "MX_S_rayleigh_p_6b3c93367f",
+      "symbol": "\\varepsilon",
+      "meaning": "Rayleigh-quotient loss tolerance relative to the largest eigenvalue.",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": true,
+      "definition": "$\\lambda_1(A)-\\widehat v^{\\mathsf T}A\\widehat v\\le\\varepsilon\\lambda_1(A)$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_eps"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "The order of the square input matrix and the dimension of each query vector.",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "definition": "$A\\in\\mathbb R^{d\\times d}$",
+      "parameter_ref": "MX_S_rayleigh_p_1d1d52d4bc"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Rayleigh-quotient loss tolerance relative to the largest eigenvalue.",
+      "domain": "$\\varepsilon>0$",
+      "definition": "$\\lambda_1(A)-\\widehat v^{\\mathsf T}A\\widehat v\\le\\varepsilon\\lambda_1(A)$",
+      "parameter_ref": "MX_S_rayleigh_p_6b3c93367f"
+    },
+    {
+      "symbol_latex": "d_0",
+      "meaning": "Sufficient dimension threshold for the gap-free leading-eigenvalue lower bound of BH",
+      "domain": "The quantity $d_0\\in\\mathbb N$ is a fixed universal constant.",
+      "definition": "$d\\ge d_0$",
+      "parameter_ref": "MX_S_rayleigh_p_e596b0d193"
+    },
+    {
+      "symbol_latex": "A",
+      "meaning": "A hidden nonzero real symmetric PSD matrix.",
+      "domain": "$\\mathbb R^{d\\times d}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\lambda_i(A)",
+      "meaning": "Eigenvalues of a real symmetric or Hermitian matrix in nonincreasing order.",
+      "domain": "$1\\le i\\le d$",
+      "definition": "$\\lambda_1(A)\\ge\\cdots\\ge\\lambda_d(A)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat v",
+      "meaning": "Unit vector returned by the algorithm",
+      "domain": "$\\mathbb R^d$",
+      "definition": "$\\|\\widehat v\\|_2=1$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\ell(\\widehat v)",
+      "meaning": "Rayleigh loss relative to the largest eigenvalue.",
+      "domain": "A nonnegative real.",
+      "definition": "$\\ell(\\widehat v)=(\\lambda_1(A)-\\widehat v^{\\mathsf T}A\\widehat v)/\\lambda_1(A)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|z\\|_2",
+      "meaning": "Euclidean norm of a vector",
+      "domain": "Finite-dimensional real or complex vector",
+      "definition": "$\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|M\\|_{\\mathrm{op}}",
+      "meaning": "The matrix operator norm induced by the Euclidean norm.",
+      "domain": "Any compatible matrix",
+      "definition": "$\\|M\\|_{\\mathrm{op}}=\\max_{\\|z\\|_2=1}\\|Mz\\|_2=\\sigma_1(M)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value.",
+      "domain": "Independent of the dimension, accuracy, and probability parameters tracked by this bound.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log",
+      "meaning": "Natural logarithm",
+      "domain": "Positive real argument",
+      "definition": "$\\log x=\\ln x$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta",
+      "meaning": "Upper, lower, and two-sided bounds up to constants in the same applicable regime",
+      "domain": "Hidden constants have only the parameter dependence explicitly permitted by the associated bound.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,N_{\\mathrm r}",
+      "meaning": "Single-vector query budget for exact right products Av. A block is charged by its column count.",
+      "domain": "$\\mathbb N_0$",
+      "definition": "$N=N_{\\mathrm r}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^\\star",
+      "meaning": "Minimum worst-case query budget attaining this profile's success guarantee",
+      "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+      "definition": "The quantity is $N^\\star=\\inf_{\\mathcal A}\\sup_{I,\\omega}N_{\\mathcal A}(I,\\omega)$, where the infimum ranges over admissible algorithms satisfying this profile's success guarantee.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A,I,\\omega",
+      "meaning": "The algorithm, fixed admissible input, and private algorithmic seed.",
+      "domain": "Quantifiers for worst-case input and execution cost. Success probability is taken over ω.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\varepsilon_0",
+      "meaning": "Sufficient small-error threshold in the BH gap-free leading-eigenvalue lower bound.",
+      "domain": "Fixed universal positive constant",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "s",
+      "meaning": "Order of the hard BH subblock",
+      "domain": "Auxiliary integer in the proof",
+      "definition": "$s\\asymp\\min\\{d,c/\\sqrt\\varepsilon\\}$",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "MX_S_rayleigh__main__q1",
+      "kind": "target_accuracy_cost",
+      "expression": "N^*(\\varepsilon;d)",
+      "optimization_direction": "minimize",
+      "units": "matvec calls",
+      "budget_variables": [
+        "N"
+      ],
+      "tolerance_variables": [
+        "MX_S_rayleigh_p_6b3c93367f"
+      ],
+      "analysis_scope": "Within the cited complete specification, select an algorithm before taking the worst case over all fixed inputs. Information permissions remain unchanged.",
+      "tracked_parameters": [
+        "MX_S_rayleigh_p_1d1d52d4bc",
+        "MX_S_rayleigh_p_6b3c93367f"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "N^\\star(\\varepsilon;d)",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Number of right matrix-vector product queries.",
+      "expression": "N_right",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_b185f53633"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "MX_S_rayleigh__main__r1",
+      "specification_ref": "MX_S_rayleigh",
+      "name": "Sufficiently small error and finite-dimensional regime",
+      "predicate_text": "Require $d\\ge d_0$ and $0<\\varepsilon\\le\\varepsilon_0$. The quantities $d_0$ and $\\varepsilon_0$ are the universal dimension and accuracy constants sufficient for the source result.",
+      "predicate": {
+        "predicate": {
+          "name": "rayleigh",
+          "args": [
+            "MX_S_rayleigh_p_1d1d52d4bc",
+            "MX_S_rayleigh_p_6b3c93367f",
+            "MX_S_rayleigh_p_e596b0d193"
+          ],
+          "description": "Require d ≥ d0 and 0 < ε ≤ ε0, where d0 and ε0 are sufficient universal constants."
+        }
+      },
+      "parameter_refs": [
+        "MX_S_rayleigh_p_1d1d52d4bc",
+        "MX_S_rayleigh_p_6b3c93367f",
+        "MX_S_rayleigh_p_e596b0d193"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Universal constants and dimension thresholds without numerical values remain symbolic; the three-valued decision is unknown."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "MX_S_rayleigh__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\le C\\varepsilon^{-1/2}\\log(2d/\\varepsilon)",
+      "quantity_ref": "MX_S_rayleigh__main__q1",
+      "region_refs": [
+        "MX_S_rayleigh__main__r1"
+      ],
+      "method": "Upper bound for Lanczos with random initialization",
+      "algorithm_or_hard_family": "Upper bound for Lanczos with random initialization",
+      "algorithm_class_scope": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+      "resource_costs": {
+        "N_right": " C\\varepsilon^{-1/2}\\log(2d/\\varepsilon)"
+      },
+      "parameter_choice": "Determined by public parameters and the source algorithm; one algorithm jointly attains the listed costs",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_BH"
+      ],
+      "evidence_refs": [
+        "MX_S_rayleigh__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_rayleigh__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "",
+        "guarantee_mapping": "Every fixed nonzero PSD input has success probability at least $2/3$, over the private seed only. The reconstruction baseline is deterministic.",
+        "oracle_mapping": "Only exact Av is available, for arbitrary real d-dimensional vectors. Each vector costs one N_right call. Every response comes from the same fixed nonzero PSD matrix.",
+        "output_mapping": "Return a unit vector v_hat satisfying (λ_max − v_hatᵀ A v_hat)/λ_max ≤ ε. The target is not replaced by angular error or a prescribed-gap objective.",
+        "resource_mapping": "Count only right multiplication by a single vector, $N=N_{\\mathrm r}$. A block product of width $q$ costs $q$ calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.",
+        "output_metric_mapping": "Return a unit vector $\\widehat v\\in\\mathbb R^d$, possibly unqueried, without an eigenvalue estimate or certificate. The base loss is $\\ell(\\widehat v)=(\\lambda_1(A)-\\widehat v^{\\mathsf T}A\\widehat v)/\\lambda_1(A)$ and success requires $\\ell\\le\\varepsilon$. Its denominator is positive because the matrix is nonzero and positive semidefinite."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": null,
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "MX_S_rayleigh__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\ge c\\min\\{d,\\varepsilon^{-1/2}\\}",
+      "quantity_ref": "MX_S_rayleigh__main__q1",
+      "region_refs": [
+        "MX_S_rayleigh__main__r1"
+      ],
+      "method": "General randomized adaptive-query lower bound from a Wishart-eigenvalue hard family",
+      "algorithm_or_hard_family": "General randomized adaptive-query lower bound from a Wishart-eigenvalue hard family",
+      "algorithm_class_scope": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+      "resource_costs": {
+        "N": "N\\ge c\\min\\{d,\\varepsilon^{-1/2}\\}"
+      },
+      "parameter_choice": "Use the cited hard-input construction with the dimension, accuracy, and success-probability conditions attached to this bound.",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_BH"
+      ],
+      "evidence_refs": [
+        "MX_S_rayleigh__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_rayleigh__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "",
+        "guarantee_mapping": "Every fixed nonzero PSD input has success probability at least $2/3$, over the private seed only. The reconstruction baseline is deterministic.",
+        "oracle_mapping": "Only exact Av is available, for arbitrary real d-dimensional vectors. Each vector costs one N_right call. Every response comes from the same fixed nonzero PSD matrix.",
+        "output_mapping": "Return a unit vector v_hat satisfying (λ_max − v_hatᵀ A v_hat)/λ_max ≤ ε. The target is not replaced by angular error or a prescribed-gap objective.",
+        "resource_mapping": "Count only right multiplication by a single vector, $N=N_{\\mathrm r}$. A block product of width $q$ costs $q$ calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.",
+        "output_metric_mapping": "Return a unit vector $\\widehat v\\in\\mathbb R^d$, possibly unqueried, without an eigenvalue estimate or certificate. The base loss is $\\ell(\\widehat v)=(\\lambda_1(A)-\\widehat v^{\\mathsf T}A\\widehat v)/\\lambda_1(A)$ and success requires $\\ell\\le\\varepsilon$. Its denominator is positive because the matrix is nonzero and positive semidefinite."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": "Choose $s\\approx\\min\\{d,c/\\sqrt{\\varepsilon}\\}$. A constant number of repetitions and one Rayleigh evaluation per output normalize the success probability.",
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "MX_S_rayleigh__main__b3",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\le d",
+      "quantity_ref": "MX_S_rayleigh__main__q1",
+      "region_refs": [
+        "MX_S_rayleigh__main__r1"
+      ],
+      "method": "Deterministic reconstruction using the standard basis, followed by free exact solution of the target task",
+      "algorithm_or_hard_family": "Deterministic reconstruction using the standard basis, followed by free exact solution of the target task",
+      "algorithm_class_scope": "Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.",
+      "resource_costs": {
+        "N_right": "d"
+      },
+      "parameter_choice": "Query standard basis vectors on the smaller matrix dimension, then perform the allowed exact postprocessing.",
+      "joint_budget_constraints": [],
+      "source_refs": [],
+      "evidence_refs": [
+        "MX_S_rayleigh__main__e3"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_rayleigh__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "",
+        "guarantee_mapping": "Every fixed nonzero PSD input has success probability at least $2/3$, over the private seed only. The reconstruction baseline is deterministic.",
+        "oracle_mapping": "Only exact Av is available, for arbitrary real d-dimensional vectors. Each vector costs one N_right call. Every response comes from the same fixed nonzero PSD matrix.",
+        "output_mapping": "Return a unit vector v_hat satisfying (λ_max − v_hatᵀ A v_hat)/λ_max ≤ ε. The target is not replaced by angular error or a prescribed-gap objective.",
+        "resource_mapping": "Count only right multiplication by a single vector, $N=N_{\\mathrm r}$. A block product of width $q$ costs $q$ calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.",
+        "output_metric_mapping": "Return a unit vector $\\widehat v\\in\\mathbb R^d$, possibly unqueried, without an eigenvalue estimate or certificate. The base loss is $\\ell(\\widehat v)=(\\lambda_1(A)-\\widehat v^{\\mathsf T}A\\widehat v)/\\lambda_1(A)$ and success requires $\\ell\\le\\varepsilon$. Its denominator is positive because the matrix is nonzero and positive semidefinite."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": "Standard-basis queries reveal every matrix column.",
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "SIX_PROOF_59e516316a0d"
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Sufficiently small error and finite-dimensional regime",
+      "predicate": {
+        "predicate": {
+          "name": "rayleigh",
+          "args": [
+            "MX_S_rayleigh_p_1d1d52d4bc",
+            "MX_S_rayleigh_p_6b3c93367f",
+            "MX_S_rayleigh_p_e596b0d193"
+          ],
+          "description": "Require d ≥ d0 and 0 < ε ≤ ε0, where d0 and ε0 are sufficient universal constants."
+        }
+      },
+      "predicate_text": "Require $d\\ge d_0$ and $0<\\varepsilon\\le\\varepsilon_0$. The quantities $d_0$ and $\\varepsilon_0$ are the universal dimension and accuracy constants sufficient for the source result.",
+      "parameter_refs": [
+        "MX_S_rayleigh_p_1d1d52d4bc",
+        "MX_S_rayleigh_p_6b3c93367f",
+        "MX_S_rayleigh_p_e596b0d193"
+      ],
+      "source_region_ref": "MX_S_rayleigh__main__r1",
+      "status": {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap",
+        "missing_sides": []
+      },
+      "comparison_id": "MX_S_rayleigh__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_rayleigh__main__q1",
+      "resource_projection_id": "resource_b185f53633",
+      "regime_id": "MX_S_rayleigh__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "MX_S_rayleigh__main__b1",
+          "MX_S_rayleigh__main__b3"
+        ],
+        "lower_refs": [
+          "MX_S_rayleigh__main__b2"
+        ],
+        "comparison_ref": "MX_S_rayleigh__main__c1",
+        "quantity_ref": "MX_S_rayleigh__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_right",
+        "ratio_or_gap": "$O(\\log(2d/\\varepsilon))$",
+        "envelopes": {
+          "upper": {
+            "expression": "O(\\min\\{d,\\varepsilon^{-1/2}\\log(2d/\\varepsilon)\\})",
+            "claim_refs": [
+              "MX_S_rayleigh__main__b1",
+              "MX_S_rayleigh__main__b3"
+            ],
+            "included": true,
+            "expression_latex": "O(\\min\\{d,\\varepsilon^{-1/2}\\log(2d/\\varepsilon)\\})"
+          },
+          "lower": {
+            "expression": "\\Omega(\\min\\{d,\\varepsilon^{-1/2}\\})",
+            "claim_refs": [
+              "MX_S_rayleigh__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "\\Omega(\\min\\{d,\\varepsilon^{-1/2}\\})"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "MX_S_rayleigh__main__b1",
+            "when_region_refs": [
+              "MX_S_rayleigh__main__r1"
+            ],
+            "meaning": "Use this algorithm only on its own applicability region; scalar envelopes take minimum over applicable branches."
+          },
+          {
+            "claim_ref": "MX_S_rayleigh__main__b3",
+            "when_region_refs": [
+              "MX_S_rayleigh__main__r1"
+            ],
+            "meaning": "Use this algorithm only on its own applicability region; scalar envelopes take minimum over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "MX_S_rayleigh__main__b1": [
+            {
+              "region_ref": "MX_S_rayleigh__main__r1",
+              "predicate_text": "Require $d\\ge d_0$ and $0<\\varepsilon\\le\\varepsilon_0$. The quantities $d_0$ and $\\varepsilon_0$ are the universal dimension and accuracy constants sufficient for the source result."
+            }
+          ],
+          "MX_S_rayleigh__main__b3": [
+            {
+              "region_ref": "MX_S_rayleigh__main__r1",
+              "predicate_text": "Require $d\\ge d_0$ and $0<\\varepsilon\\le\\varepsilon_0$. The quantities $d_0$ and $\\varepsilon_0$ are the universal dimension and accuracy constants sufficient for the source result."
+            }
+          ],
+          "MX_S_rayleigh__main__b2": [
+            {
+              "region_ref": "MX_S_rayleigh__main__r1",
+              "predicate_text": "Require $d\\ge d_0$ and $0<\\varepsilon\\le\\varepsilon_0$. The quantities $d_0$ and $\\varepsilon_0$ are the universal dimension and accuracy constants sufficient for the source result."
+            }
+          ]
+        },
+        "envelope_certificate": "Only this envelope is certified. Simchowitz and Bakshi–Narayanan provide finer log-dimension dependence in specific rank-one spectral windows; it is not transferred universally.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Number of right matrix-vector product queries."
+      },
+      "comparison_key": {
+        "setting_id": "MX_S_rayleigh",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_rayleigh__main__q1",
+        "resource_projection_id": "resource_b185f53633",
+        "regime_id": "MX_S_rayleigh__main__r1"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "proof_id": "SIX_PROOF_59e516316a0d",
+      "title": "Deterministic reconstruction using the standard basis, followed by free exact solution of the target task",
+      "body": "Recover the $d$ columns of $A$ using standard basis queries. Exact internal eigendecomposition returns a unit vector for its largest eigenvalue, giving zero relative Rayleigh loss. No positive spectral gap is needed.",
+      "scope": "All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "MX_S_rayleigh__main__e1",
+      "source_ref": "MX_SRC_BH",
+      "locator": {
+        "theorem": "Theorem 2; Corollary 4",
+        "section": "§2.1",
+        "pdf_pages": [
+          5,
+          6
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "The lower bound covers arbitrary randomized adaptive matrix–vector queries on hard matrices of size s ≤ d at accuracy 1/(20s²). Fixed success probabilities can be converted at constant cost by independent repetition, followed by Rayleigh-value queries and selection of the best candidate.",
+      "notes": [
+        "The lower bound covers arbitrary randomized adaptive matrix–vector queries on hard matrices of size s ≤ d at accuracy 1/(20s²). Fixed success probabilities can be converted at constant cost by independent repetition, followed by Rayleigh-value queries and selection of the best candidate."
+      ]
+    },
+    {
+      "id": "MX_S_rayleigh__main__e2",
+      "source_ref": "MX_SRC_BH",
+      "locator": {
+        "theorem": "Table 1 and Introduction",
+        "section": "§1",
+        "pdf_pages": [
+          1,
+          2
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "The registered Lanczos upper bound is O(epsilon^(−1/2) log d). The source cites Kuczynski–Wozniakowski and Musco–Musco.",
+      "notes": [
+        "The registered Lanczos upper bound is O(epsilon^(−1/2) log d). The source cites Kuczynski–Wozniakowski and Musco–Musco."
+      ]
+    },
+    {
+      "id": "MX_S_rayleigh__main__e3",
+      "kind": "local_argument",
+      "proof_refs": [
+        "SIX_PROOF_59e516316a0d"
+      ],
+      "location": "Deterministic reconstruction using the standard basis, followed by free exact solution of the target task"
+    }
+  ],
+  "references": [
+    {
+      "id": "MX_SRC_BH",
+      "authors": [
+        "Mark Braverman",
+        "Elad Hazan",
+        "Max Simchowitz",
+        "Blake Woodworth"
+      ],
+      "title": "The Gradient Complexity of Linear Regression",
+      "year": 2020,
+      "version": "COLT 2020 PMLR 125 PDF, 21 pages",
+      "url": "https://proceedings.mlr.press/v125/braverman20a/braverman20a.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "MX_S_rayleigh",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap present"
+      }
+    ],
+    "gap_classes": [
+      "logarithmic_gap"
+    ],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "logarithmic_gap": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "MX_S_rayleigh__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "7186e87facec9db44907f2d55ac3478aa8faa77f49cfcbb541153be4032b5f69",
+    "source_order": 43,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

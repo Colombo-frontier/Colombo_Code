@@ -1,0 +1,1105 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "SO_ZO_B04_rand_expected",
+  "title": "Nonconvex optimization with known convex constraints: Goldstein normal-cone residual",
+  "summary": "Find a feasible point in the known closed convex set $X$ with a sufficiently small Goldstein normal-cone residual.",
+  "primary_domain": "single_objective",
+  "oracle_order_collection": "zo",
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "single_objective"
+    },
+    {
+      "facet": "oracle_order",
+      "value": "zero"
+    },
+    {
+      "facet": "goal",
+      "value": "goldstein_normal_cone_stationarity"
+    },
+    {
+      "facet": "feedback",
+      "value": "reusable_sample_value"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expected_loss"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_worst_case"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "solution_goal": "goldstein_normal_cone_stationarity",
+      "code": "single_objective_optimization",
+      "description_paragraphs": [
+        "Find a feasible point in the known closed convex set $X$ with a sufficiently small Goldstein normal-cone residual."
+      ],
+      "navigation_domains": [
+        "single_objective"
+      ],
+      "formulation_code": "SO.goldstein_normal_cone_stationarity"
+    },
+    "model": {
+      "properties": {
+        "convexity": "not_assumed",
+        "regularity": [
+          "sample_lipschitz_second_moment"
+        ],
+        "structure": [],
+        "growth": [
+          "constrained_initial_gap"
+        ]
+      },
+      "domain_roles": {
+        "function": "The sample functions and population objective f are defined on all of R^d and satisfy the stated moment budgets.",
+        "optimization": "Known closed convex set X; B05 additionally requires compactness and diameter at most D.",
+        "query": "$\\mathbb{R}^d$",
+        "output": "$X$",
+        "localization": "Known $x_0\\in X$ and $f(x_0)-\\inf_X f\\le\\Delta$."
+      },
+      "code": "admissible_model_class",
+      "description_paragraphs": [
+        "$f(x)=\\mathbb{E}[F(x;Z)]$. The sample value at a reference point is integrable. Sample functions satisfy $|F(x;Z)-F(y;Z)|\\le G(Z)\\|x-y\\|_2$ and $\\mathbb{E}[G(Z)^2]\\le L^2$ throughout $\\mathbb{R}^d$; samplewise convexity is not required.",
+        "$X\\subseteq\\mathbb{R}^d$ is a known nonempty closed convex set. The given initial point $x_0\\in X$ satisfies $f(x_0)-\\inf_{x\\in X}f(x)\\le\\Delta<\\infty$."
+      ],
+      "geometry_refs": [
+        "SO_ZO_B04_rand_expected_dom_5a33a1a132",
+        "SO_ZO_B04_rand_expected_dom_f2e3e7d5e3",
+        "SO_ZO_B04_rand_expected_dom_9a1be5c15c",
+        "SO_ZO_B04_rand_expected_dom_38566e54d6",
+        "SO_ZO_B04_rand_expected_dom_386cb8cda5"
+      ]
+    },
+    "oracle": {
+      "public_inputs": [
+        "SO_ZO_B04_rand_expected_p_bb728db2b9",
+        "SO_ZO_B04_rand_expected_p_1e85890527",
+        "\\Delta",
+        "\\rho",
+        "\\varepsilon",
+        "SO_ZO_B04_rand_expected_p_85985a5d9a",
+        "SO_ZO_B04_rand_expected_obj_a4c2f12f78"
+      ],
+      "domain": "$\\mathbb{R}^d$",
+      "variant": null,
+      "code": "reusable_sample_value",
+      "description_paragraphs": [
+        "A new sample handle corresponds to an independent draw of the hidden sample $Z$. Given its handle and $x\\in \\mathbb{R}^d$, the interface returns the exact sample value $F(x;Z)$. The algorithm observes only handles and numerical values, not the underlying sample data or the complete sample function.",
+        "Sample handles may be retained for arbitrarily many paid evaluations. Responses using the same handle come from the same function, and distinct handles are independent.",
+        "Projection onto the intersection of $X$ and any known local Euclidean ball is free. Function perturbations may query outside $X$.",
+        "The public inputs are $d$, $L$, $\\Delta$, $\\rho$, $\\varepsilon$, $X$, $x_0$, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface."
+      ]
+    },
+    "output": {
+      "domain": "$X$",
+      "code": "output_space",
+      "description_paragraphs": [
+        "Return $\\widehat{x}\\in X$. The output may be an unqueried point, a random choice among previous points, or an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output."
+      ]
+    },
+    "metric": {
+      "native_metric_wording": "$\\ell(I,x)=\\min_{g\\in\\partial_\\rho f(x)}\\operatorname{dist}(-g,N_X(x))$, where $N_X(x)=\\{v:\\langle v,y-x\\rangle\\le0\\ \\forall y\\in X\\}$; the criterion is evaluated only at $x\\in X$. The target tolerance is $\\varepsilon$.",
+      "formula_latex": "\\min_{g\\in\\partial_\\rho f(\\widehat{x})}\\operatorname{dist}(-g,N_X(\\widehat{x}))",
+      "threshold_latex": "\\varepsilon",
+      "code": "goldstein_normal_cone_stationarity",
+      "description_paragraphs": [
+        "$\\ell(I,x)=\\min_{g\\in\\partial_\\rho f(x)}\\operatorname{dist}(-g,N_X(x))$, where $N_X(x)=\\{v:\\langle v,y-x\\rangle\\le0\\ \\forall y\\in X\\}$; the criterion is evaluated only at $x\\in X$. The target tolerance is $\\varepsilon$.",
+        "$\\partial_\\rho f(x)=\\operatorname{conv}\\bigcup_{\\|y-x\\|_2\\le\\rho}\\partial f(y)$, where $\\partial f$ is the Clarke subdifferential of the function on the ambient space."
+      ],
+      "base_expression": "\\min_{g\\in\\partial_\\rho f(\\widehat{x})}\\operatorname{dist}(-g,N_X(\\widehat{x}))"
+    },
+    "resource": {
+      "unit": "One scalar sample-function value; two points using the same handle cost two calls",
+      "budget_mode": "fixed_worst_case",
+      "accounting": {
+        "atomic_unit": "One scalar sample-function value; two points using the same handle cost two calls",
+        "budget_mode": "fixed_worst_case",
+        "arithmetic_precision": "exact_real_unpriced_unless_specified",
+        "free_operations": "Only the public operations explicitly stated in this specification are free. Operations accessing the unknown instance provide no free information."
+      },
+      "code": "oracle_resource",
+      "description_paragraphs": [
+        "One scalar sample-function value costs $1$ call; two points with the same sample handle or Markov state cost $2$ calls. Batches, initialization and repeated visits are charged per value. An empty handle supplies no free instance information.",
+        "Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "randomized_allowed",
+        "adaptivity": "sequential_adaptive",
+        "restrictions": [],
+        "code": "randomized_allowed",
+        "description_paragraphs": [
+          "Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.",
+          "Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "quantifiers": "one_algorithm_for_all_admissible_instances",
+          "probability_space": "The algorithm's private seed and all randomness in the stated oracle or environment, after the instance and feedback law are fixed.",
+          "formula_latex": "\\exists\\mathcal{A}\\ \\forall I\\in\\mathcal{I}:\\ \\mathbb{E}[\\min_{g\\in\\partial_\\rho f(\\widehat{x})}\\operatorname{dist}(-g,N_X(\\widehat{x}))]\\le \\varepsilon",
+          "code": "expected_loss",
+          "description_paragraphs": [
+            "After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. Require $\\mathbb{E}[\\ell(I,\\widehat{x})]\\le \\varepsilon$, fixing the instance before averaging over algorithmic and feedback randomness.",
+            "Oracle cost uses a deterministic worst-case budget: $N\\le T$ on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "SO_ZO_B04_rand_expected"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "SO_ZO_B04_rand_expected_obj_a4c2f12f78",
+        "information": "public",
+        "description": "x_0",
+        "knowledge": "declared_public_input"
+      }
+    ],
+    "variable_blocks": [],
+    "domains": [
+      {
+        "id": "SO_ZO_B04_rand_expected_dom_5a33a1a132",
+        "roles": [
+          "function"
+        ],
+        "description": "The sample functions and population objective f are defined on all of R^d and satisfy the stated moment budgets."
+      },
+      {
+        "id": "SO_ZO_B04_rand_expected_dom_f2e3e7d5e3",
+        "roles": [
+          "optimization"
+        ],
+        "description": "Known closed convex set X; B05 additionally requires compactness and diameter at most D."
+      },
+      {
+        "id": "SO_ZO_B04_rand_expected_dom_9a1be5c15c",
+        "roles": [
+          "query"
+        ],
+        "description": "$\\mathbb{R}^d$"
+      },
+      {
+        "id": "SO_ZO_B04_rand_expected_dom_38566e54d6",
+        "roles": [
+          "output"
+        ],
+        "description": "$X$"
+      },
+      {
+        "id": "SO_ZO_B04_rand_expected_dom_386cb8cda5",
+        "roles": [
+          "localization"
+        ],
+        "description": "Known $x_0\\in X$ and $f(x_0)-\\inf_X f\\le\\Delta$."
+      }
+    ],
+    "norms": [],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "SO_ZO_B04_rand_expected_p_bb728db2b9",
+      "symbol": "d",
+      "meaning": "Dimension of the variable space",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "d"
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected_p_1e85890527",
+      "symbol": "L",
+      "meaning": "Moment budget of the sample Lipschitz coefficient",
+      "kind": "independent",
+      "domain": "$L>0$",
+      "public": true,
+      "definition": "$\\mathbb{E}[G(Z)^2]\\le L^2$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "L"
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected_p_861035511f",
+      "symbol": "\\Delta",
+      "meaning": "Known upper bound on the initial objective gap",
+      "kind": "independent",
+      "domain": "$\\Delta\\ge0$",
+      "public": false,
+      "definition": "$f(x_0)-\\inf_{x\\in X}f(x)\\le\\Delta$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "Delta"
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected_p_60e948e139",
+      "symbol": "\\rho",
+      "meaning": "Goldstein subdifferential neighborhood radius",
+      "kind": "independent",
+      "domain": "$\\rho>0$",
+      "public": false,
+      "definition": "It measures the neighborhood defining stationarity, not the radius of a query or feasible ball.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "rho"
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected_p_5c322c6737",
+      "symbol": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "epsilon"
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected_p_85985a5d9a",
+      "symbol": "X",
+      "meaning": "Fully known feasible or search domain",
+      "kind": "public_structure",
+      "domain": "$X\\subseteq\\mathbb{R}^d$; nonempty, closed and convex",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "X"
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected_p_1952a0a41e",
+      "symbol": "B_{\\mathrm{raw}}",
+      "meaning": "Untruncated scale for the Goldstein lower bound",
+      "kind": "derived",
+      "domain": "$B_{\\mathrm{raw}}\\ge0$",
+      "public": false,
+      "definition": "$B_{\\mathrm{raw}}=\\Delta\\varepsilon/\\rho$",
+      "dependencies": [
+        "SO_ZO_B04_rand_expected_p_861035511f",
+        "SO_ZO_B04_rand_expected_p_5c322c6737",
+        "SO_ZO_B04_rand_expected_p_60e948e139"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "B_raw"
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected_p_5eba1a86d3",
+      "symbol": "B_G",
+      "meaning": "Truncated hard-instance scale for the Goldstein lower bound",
+      "kind": "derived",
+      "domain": "$B_G\\ge0$",
+      "public": false,
+      "definition": "$B_G=\\min\\{\\Delta\\varepsilon/\\rho,L^2\\}$",
+      "dependencies": [
+        "SO_ZO_B04_rand_expected_p_861035511f",
+        "SO_ZO_B04_rand_expected_p_5c322c6737",
+        "SO_ZO_B04_rand_expected_p_60e948e139",
+        "SO_ZO_B04_rand_expected_p_1e85890527"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "B_G"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "Dimension of the variable space",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_B04_rand_expected_p_bb728db2b9"
+    },
+    {
+      "symbol_latex": "L",
+      "meaning": "Moment budget of the sample Lipschitz coefficient",
+      "domain": "$L>0$",
+      "definition": "$\\mathbb{E}[G(Z)^2]\\le L^2$",
+      "parameter_ref": "SO_ZO_B04_rand_expected_p_1e85890527"
+    },
+    {
+      "symbol_latex": "\\Delta",
+      "meaning": "Known upper bound on the initial objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "definition": "$f(x_0)-\\inf_{x\\in X}f(x)\\le\\Delta$",
+      "parameter_ref": "SO_ZO_B04_rand_expected_p_861035511f"
+    },
+    {
+      "symbol_latex": "\\rho",
+      "meaning": "Goldstein subdifferential neighborhood radius",
+      "domain": "$\\rho>0$",
+      "definition": "It measures the neighborhood defining stationarity, not the radius of a query or feasible ball.",
+      "parameter_ref": "SO_ZO_B04_rand_expected_p_60e948e139"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "domain": "$\\varepsilon>0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_B04_rand_expected_p_5c322c6737"
+    },
+    {
+      "symbol_latex": "X",
+      "meaning": "Fully known feasible or search domain",
+      "domain": "$X\\subseteq\\mathbb{R}^d$; nonempty, closed and convex",
+      "definition": "",
+      "parameter_ref": "SO_ZO_B04_rand_expected_p_85985a5d9a"
+    },
+    {
+      "symbol_latex": "B_{\\mathrm{raw}}",
+      "meaning": "Untruncated scale for the Goldstein lower bound",
+      "domain": "$B_{\\mathrm{raw}}\\ge0$",
+      "definition": "$B_{\\mathrm{raw}}=\\Delta\\varepsilon/\\rho$",
+      "parameter_ref": "SO_ZO_B04_rand_expected_p_1952a0a41e"
+    },
+    {
+      "symbol_latex": "B_G",
+      "meaning": "Truncated hard-instance scale for the Goldstein lower bound",
+      "domain": "$B_G\\ge0$",
+      "definition": "$B_G=\\min\\{\\Delta\\varepsilon/\\rho,L^2\\}$",
+      "parameter_ref": "SO_ZO_B04_rand_expected_p_5eba1a86d3"
+    },
+    {
+      "symbol_latex": "x,y,u",
+      "meaning": "Function arguments and dummy variables in the formulas",
+      "domain": "$x,y,u\\in\\mathbb{R}^d$; spherical domains are embedded in $\\mathbb{R}^{d+1}$",
+      "definition": "Admissible ranges are specified separately by the task, model and oracle in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat{x}",
+      "meaning": "Final algorithm output",
+      "domain": "$X$",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "I",
+      "meaning": "Complete problem instance",
+      "domain": "$I\\in\\mathcal{I}$",
+      "definition": "Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{I}",
+      "meaning": "Admissible instance class determined by the eight specification fields in this profile",
+      "domain": "Instances satisfying the public parameter bounds",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{A}",
+      "meaning": "Algorithm or strategy",
+      "domain": "Measurable adaptive strategies allowed in this profile",
+      "definition": "The algorithm is selected before the hidden instance.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\ell",
+      "meaning": "Base loss or residual",
+      "domain": "$\\ell:\\mathcal{I}\\times\\mathcal{X}_{\\mathrm{out}}\\to[0,+\\infty]$",
+      "definition": "The exact formula appears in this profile's performance-criterion section.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb{E},\\Pr",
+      "meaning": "Expectation and probability",
+      "domain": "Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee",
+      "definition": "Fix the instance first; aggregate cost and error separately.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\inf,\\sup",
+      "meaning": "Infimum and supremum",
+      "domain": "Evaluated only over the variable sets explicitly specified in the formula",
+      "definition": "In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_2,\\langle\\cdot,\\cdot\\rangle",
+      "meaning": "Euclidean norm and inner product",
+      "domain": "$\\|x\\|_2=\\sqrt{\\langle x,x\\rangle}$",
+      "definition": "$\\langle x,y\\rangle=x^\\top y$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "B_p(c,R)",
+      "meaning": "Closed norm ball",
+      "domain": "$p\\in[1,\\infty],\\ R\\ge0$",
+      "definition": "$B_p(c,R)=\\{x:\\|x-c\\|_p\\le R\\}$; $B_2$ denotes the Euclidean ball.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,T",
+      "meaning": "Actual call count and declared budget",
+      "domain": "$N,T\\in\\mathbb{N}_0$",
+      "definition": "A fixed budget bounds every execution path; the Markov specification uses an expected budget.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta,\\widetilde{O}",
+      "meaning": "Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms",
+      "domain": "Within the joint parameter window specified for each complexity regime",
+      "definition": "Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C,c_\\alpha,C_\\alpha",
+      "meaning": "Positive constant in a proof or asymptotic bound",
+      "domain": "$0<c,C,c_\\alpha,C_\\alpha<\\infty$",
+      "definition": "Unsubscripted constants have the dependencies stated in the bound; constants subscripted by $\\alpha$ may depend only on the fixed smoothness order.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_+,e",
+      "meaning": "Natural logarithm, truncated logarithm, and Euler's number",
+      "domain": "$z>0$",
+      "definition": "$\\log_+(z)=\\max\\{0,\\log z\\}$; $e=\\exp(1)$, and $\\log_2$ denotes the base-two logarithm.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,f_*",
+      "meaning": "Population objective and its optimal value",
+      "domain": "$f:\\mathcal{X}_{\\mathrm{fun}}\\to\\mathbb{R}$",
+      "definition": "$f_*=\\inf_{x\\in X}f(x)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\partial f(x)",
+      "meaning": "Clarke subdifferential",
+      "domain": "A nonempty compact convex subset at $x$ for a locally Lipschitz function, contained in $\\mathbb{R}^d$",
+      "definition": "Defined as the closed convex hull of gradient limits along differentiability points approaching $x$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\partial_\\rho f(x)",
+      "meaning": "Goldstein neighborhood subdifferential",
+      "domain": "$\\rho>0$",
+      "definition": "$\\partial_\\rho f(x)=\\operatorname{conv}\\bigcup_{\\|y-x\\|_2\\le\\rho}\\partial f(y)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\operatorname{conv},\\operatorname{dist}",
+      "meaning": "Convex hull and Euclidean distance",
+      "domain": "Set operations",
+      "definition": "$\\operatorname{dist}(v,S)=\\inf_{s\\in S}\\|v-s\\|_2$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_X(x)",
+      "meaning": "Normal cone from convex analysis",
+      "domain": "$x\\in X$",
+      "definition": "$N_X(x)=\\{v\\in\\mathbb{R}^d:\\langle v,y-x\\rangle\\le0\\ \\forall y\\in X\\}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "Z,F(\\cdot;Z)",
+      "meaning": "Hidden sample and its associated sample function",
+      "domain": "Samples lie in an admissible probability space; each sample function is real-valued on the declared domain",
+      "definition": "The population objective is the expectation under the sample distribution or stationary distribution.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "G(Z)",
+      "meaning": "Random sample Lipschitz coefficient",
+      "domain": "$G(Z)\\ge0$",
+      "definition": "The model's difference inequality holds for each sample, with the moment budget fixed as specified here.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{X}_{\\mathrm{fun}},\\mathcal{X}_{\\mathrm{out}},\\mathcal{X}",
+      "meaning": "Function domain, admissible output domain and optimization domain",
+      "domain": "Each is the Euclidean space or subset explicitly specified in this profile",
+      "definition": "$\\mathcal{X}_{\\mathrm{out}}=X$ and $\\mathcal{X}=X$; the function domain is the region on which the model imposes regularity.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^*",
+      "meaning": "Optimal worst-case oracle complexity satisfying the complete guarantee",
+      "domain": "$N^*\\in[0,+\\infty]$",
+      "definition": "Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_0",
+      "meaning": "Public initial point",
+      "domain": "$x_0\\in\\mathbb{R}^d$",
+      "definition": "Belongs to the feasible domain required by the model.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "key": "calls",
+      "kind": "target_accuracy_cost",
+      "projection": "declared_atomic_resource",
+      "label": "One scalar sample-function value; two points using the same handle cost two calls",
+      "units": "One scalar sample-function value; two points using the same handle cost two calls",
+      "id": "SO_ZO_B04_rand_expected__main__q1",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [
+        "SO_ZO_B04_rand_expected_p_bb728db2b9",
+        "SO_ZO_B04_rand_expected_p_1e85890527",
+        "SO_ZO_B04_rand_expected_p_861035511f",
+        "SO_ZO_B04_rand_expected_p_60e948e139",
+        "SO_ZO_B04_rand_expected_p_5c322c6737"
+      ],
+      "fixed_parameters": [],
+      "analysis_scope": "declared_joint_parameter_window",
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": "minimax_oracle_calls",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "expression_latex": "C^\\star_{v,\\pi}(\\varepsilon;\\theta)=\\inf\\{B\\ge0:\\exists\\mathcal A\\in\\mathfrak A_v,\\ C_\\pi(\\mathcal A,I)\\le B\\ \\text{and}\\ G_v(\\mathcal A,I;\\varepsilon)\\ \\forall I\\}",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "One scalar sample-function value; two points using the same handle cost two calls",
+      "expression": "declared_atomic_resource",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_e2f71ff354"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "SO_ZO_B04_rand_expected__main__r1",
+      "specification_ref": "SO_ZO_B04_rand_expected",
+      "name": "Parameter regime B04.R1",
+      "universe_ref": null,
+      "predicate": {
+        "op": "source_condition",
+        "text": "$B_G=\\min\\{\\Delta\\varepsilon/\\rho,L^2\\}$, $\\varepsilon^2\\le cB_G$ and $d\\ge C(B_G/\\varepsilon^2)\\log(2+B_GL^2/\\varepsilon^4)$. Also require $\\Delta\\varepsilon/\\rho\\le L^2$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$B_G=\\min\\{\\Delta\\varepsilon/\\rho,L^2\\}$, $\\varepsilon^2\\le cB_G$ and $d\\ge C(B_G/\\varepsilon^2)\\log(2+B_GL^2/\\varepsilon^4)$. Also require $\\Delta\\varepsilon/\\rho\\le L^2$.",
+      "kind": "parameter_region"
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected__main__r2",
+      "specification_ref": "SO_ZO_B04_rand_expected",
+      "name": "Parameter regime B04.R2",
+      "universe_ref": null,
+      "predicate": {
+        "op": "source_condition",
+        "text": "$B_G=\\min\\{\\Delta\\varepsilon/\\rho,L^2\\}$, $\\varepsilon^2\\le cB_G$ and $d\\ge C(B_G/\\varepsilon^2)\\log(2+B_GL^2/\\varepsilon^4)$. Also require $\\Delta\\varepsilon/\\rho>L^2$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$B_G=\\min\\{\\Delta\\varepsilon/\\rho,L^2\\}$, $\\varepsilon^2\\le cB_G$ and $d\\ge C(B_G/\\varepsilon^2)\\log(2+B_GL^2/\\varepsilon^4)$. Also require $\\Delta\\varepsilon/\\rho>L^2$.",
+      "kind": "parameter_region"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "SO_ZO_B04_rand_expected__main__b1",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "\\widetilde{O}(d\\Delta L^2/(\\rho\\varepsilon^3))",
+      "quantity_ref": "SO_ZO_B04_rand_expected__main__q1",
+      "quantity_refs": [
+        "SO_ZO_B04_rand_expected__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Local projection and constrained nonconvex reductions",
+      "source_refs": [
+        "SO_SRC_750f5b396ee38a17"
+      ],
+      "evidence_refs": [
+        "SO_ZO_B04_rand_expected__main__e1",
+        "SO_ZO_B04_rand_expected__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_B04_rand_expected__main__c1",
+        "SO_ZO_B04_rand_expected__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "Choose smoothing radius $h=\\min\\{\\rho/2,\\Delta/(2L)\\}$; logarithmic factors arise from local bisection and projection."
+        ],
+        "oracle_mapping": "Preserve sample handles and their reuse limits. Each queried point returns one sample value; sample data and sample gradients are not available for free.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected__main__b2",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "\\Omega(dL^2B_G/\\varepsilon^4)",
+      "quantity_ref": "SO_ZO_B04_rand_expected__main__q1",
+      "quantity_refs": [
+        "SO_ZO_B04_rand_expected__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Reduction through a constrained subclass of full-space objectives",
+      "source_refs": [
+        "SO_SRC_12e2b72bb6c9ca16",
+        "SO_SRC_d9fca0007b8c6fb6",
+        "SO_SRC_8a782b9d2423e793",
+        "SO_SRC_0f3cbdcc1e5906a7"
+      ],
+      "evidence_refs": [
+        "SO_ZO_B04_rand_expected__main__e3",
+        "SO_ZO_B04_rand_expected__main__e4",
+        "SO_ZO_B04_rand_expected__main__e5"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_B04_rand_expected__main__c1",
+        "SO_ZO_B04_rand_expected__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "This lower bound concerns the class of arbitrary known sets X; a prescribed compact X requires separate verification."
+        ],
+        "oracle_mapping": "Preserve sample handles and their reuse limits. Each queried point returns one sample value; sample data and sample gradients are not available for free.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_NONCONVEX_LOWER_TRANSFER"
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Parameter regime B04.R1",
+      "predicate": {
+        "op": "source_condition",
+        "text": "$B_G=\\min\\{\\Delta\\varepsilon/\\rho,L^2\\}$, $\\varepsilon^2\\le cB_G$ and $d\\ge C(B_G/\\varepsilon^2)\\log(2+B_GL^2/\\varepsilon^4)$. Also require $\\Delta\\varepsilon/\\rho\\le L^2$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$B_G=\\min\\{\\Delta\\varepsilon/\\rho,L^2\\}$, $\\varepsilon^2\\le cB_G$ and $d\\ge C(B_G/\\varepsilon^2)\\log(2+B_GL^2/\\varepsilon^4)$. Also require $\\Delta\\varepsilon/\\rho\\le L^2$.",
+      "parameter_refs": [
+        "SO_ZO_B04_rand_expected_p_bb728db2b9",
+        "SO_ZO_B04_rand_expected_p_1e85890527",
+        "SO_ZO_B04_rand_expected_p_861035511f",
+        "SO_ZO_B04_rand_expected_p_60e948e139",
+        "SO_ZO_B04_rand_expected_p_5c322c6737",
+        "SO_ZO_B04_rand_expected_p_85985a5d9a",
+        "SO_ZO_B04_rand_expected_p_1952a0a41e",
+        "SO_ZO_B04_rand_expected_p_5eba1a86d3"
+      ],
+      "source_region_ref": "SO_ZO_B04_rand_expected__main__r1",
+      "status": {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_B04_rand_expected__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_B04_rand_expected__main__q1",
+      "resource_projection_id": "resource_e2f71ff354",
+      "regime_id": "SO_ZO_B04_rand_expected__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_B04_rand_expected__main__b1"
+        ],
+        "lower_refs": [
+          "SO_ZO_B04_rand_expected__main__b2"
+        ],
+        "comparison_ref": "SO_ZO_B04_rand_expected__main__c1",
+        "quantity_ref": "SO_ZO_B04_rand_expected__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$\\operatorname{polylog}(d,L/\\varepsilon,\\Delta/(\\rho\\varepsilon))$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "\\widetilde{O}(d\\Delta L^2/(\\rho\\varepsilon^3))",
+            "claim_refs": [
+              "SO_ZO_B04_rand_expected__main__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega(d\\Delta L^2/(\\rho\\varepsilon^3))",
+            "claim_refs": [
+              "SO_ZO_B04_rand_expected__main__b2"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_ZO_B04_rand_expected__main__b1": [
+            {
+              "region_ref": null,
+              "predicate_text": "Choose smoothing radius $h=\\min\\{\\rho/2,\\Delta/(2L)\\}$; logarithmic factors arise from local bisection and projection."
+            }
+          ],
+          "SO_ZO_B04_rand_expected__main__b2": [
+            {
+              "region_ref": null,
+              "predicate_text": "This lower bound concerns the class of arbitrary known sets X; a prescribed compact X requires separate verification."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "One scalar sample-function value; two points using the same handle cost two calls",
+        "tracked_parameters": [
+          "SO_ZO_B04_rand_expected_p_bb728db2b9",
+          "SO_ZO_B04_rand_expected_p_1e85890527",
+          "SO_ZO_B04_rand_expected_p_861035511f",
+          "SO_ZO_B04_rand_expected_p_60e948e139",
+          "SO_ZO_B04_rand_expected_p_5c322c6737"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_B04_rand_expected",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_B04_rand_expected__main__q1",
+        "resource_projection_id": "resource_e2f71ff354",
+        "regime_id": "SO_ZO_B04_rand_expected__main__r1"
+      }
+    },
+    {
+      "label": "Parameter regime B04.R2",
+      "predicate": {
+        "op": "source_condition",
+        "text": "$B_G=\\min\\{\\Delta\\varepsilon/\\rho,L^2\\}$, $\\varepsilon^2\\le cB_G$ and $d\\ge C(B_G/\\varepsilon^2)\\log(2+B_GL^2/\\varepsilon^4)$. Also require $\\Delta\\varepsilon/\\rho>L^2$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$B_G=\\min\\{\\Delta\\varepsilon/\\rho,L^2\\}$, $\\varepsilon^2\\le cB_G$ and $d\\ge C(B_G/\\varepsilon^2)\\log(2+B_GL^2/\\varepsilon^4)$. Also require $\\Delta\\varepsilon/\\rho>L^2$.",
+      "parameter_refs": [
+        "SO_ZO_B04_rand_expected_p_bb728db2b9",
+        "SO_ZO_B04_rand_expected_p_1e85890527",
+        "SO_ZO_B04_rand_expected_p_861035511f",
+        "SO_ZO_B04_rand_expected_p_60e948e139",
+        "SO_ZO_B04_rand_expected_p_5c322c6737",
+        "SO_ZO_B04_rand_expected_p_85985a5d9a",
+        "SO_ZO_B04_rand_expected_p_1952a0a41e",
+        "SO_ZO_B04_rand_expected_p_5eba1a86d3"
+      ],
+      "source_region_ref": "SO_ZO_B04_rand_expected__main__r2",
+      "status": {
+        "code": "polynomial_gap",
+        "label": "Polynomial gap",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_B04_rand_expected__main__c2",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_B04_rand_expected__main__q1",
+      "resource_projection_id": "resource_e2f71ff354",
+      "regime_id": "SO_ZO_B04_rand_expected__main__r2",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_B04_rand_expected__main__b1"
+        ],
+        "lower_refs": [
+          "SO_ZO_B04_rand_expected__main__b2"
+        ],
+        "comparison_ref": "SO_ZO_B04_rand_expected__main__c2",
+        "quantity_ref": "SO_ZO_B04_rand_expected__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$\\widetilde{O}(\\Delta\\varepsilon/(\\rho L^2))$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "\\widetilde{O}(d\\Delta L^2/(\\rho\\varepsilon^3))",
+            "claim_refs": [
+              "SO_ZO_B04_rand_expected__main__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega(dL^4/\\varepsilon^4)",
+            "claim_refs": [
+              "SO_ZO_B04_rand_expected__main__b2"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_ZO_B04_rand_expected__main__b1": [
+            {
+              "region_ref": null,
+              "predicate_text": "Choose smoothing radius $h=\\min\\{\\rho/2,\\Delta/(2L)\\}$; logarithmic factors arise from local bisection and projection."
+            }
+          ],
+          "SO_ZO_B04_rand_expected__main__b2": [
+            {
+              "region_ref": null,
+              "predicate_text": "This lower bound concerns the class of arbitrary known sets X; a prescribed compact X requires separate verification."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "One scalar sample-function value; two points using the same handle cost two calls",
+        "tracked_parameters": [
+          "SO_ZO_B04_rand_expected_p_bb728db2b9",
+          "SO_ZO_B04_rand_expected_p_1e85890527",
+          "SO_ZO_B04_rand_expected_p_861035511f",
+          "SO_ZO_B04_rand_expected_p_60e948e139",
+          "SO_ZO_B04_rand_expected_p_5c322c6737"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_B04_rand_expected",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_B04_rand_expected__main__q1",
+        "resource_projection_id": "resource_e2f71ff354",
+        "regime_id": "SO_ZO_B04_rand_expected__main__r2"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "proof_id": "ZO_PROOF_NONCONVEX_LOWER_TRANSFER",
+      "title": "Oracle and subclass transfers for nonconvex lower bounds",
+      "body": "The registered lower bounds follow by exact simulation or class containment, with no added dimension factor.\n\nFor identical stochastic samples or identical finite-sum components, use the same exact-value hard function for every label. The oracle response is then exactly one source value, so the source's computational lower bound transfers one-for-one. When the target observes fresh additive Gaussian values, an exact-value algorithm can generate the independent Gaussian perturbations itself; an algorithm for that noisier interface would therefore contradict the stronger exact-value lower. The exact-value source cap $B=\\min\\{\\beta\\Delta,L^2\\}$ and its high-dimensional window remain in force. A smooth-only class may choose the proof-only budget $L=\\sqrt{\\beta\\Delta}$ inside the hard subclass; this does not add a public Lipschitz parameter.\n\nThe second-moment sample class is contained in each $r$-moment class for $1<r\\le2$, by $(\\mathbb EG^r)^{1/r}\\le(\\mathbb EG^2)^{1/2}$. Thus the source Goldstein statistical lower transfers to the larger heavy-tail class, but it does not establish a matching heavy-tail exponent. A composite class that includes $\\psi=0$ contains the corresponding noncomposite hard family. With $X=\\mathbb R^d$, the normal-cone residual is the unconstrained Goldstein residual. These embeddings support the registered composite and constrained-normal-cone lower bounds only where those model members are allowed; they do not automatically support a compact-set Frank--Wolfe-gap lower bound.\n\nA value-and-gradient incremental oracle can simulate a selected-component value by discarding the gradient. Dense26 Theorem 3.1 consequently transfers its $\\Omega(n+\\sqrt n\\,\\beta\\Delta/\\varepsilon^2)$ lower, with $n\\ge1024$ and the registered dimension window. The same stronger-oracle ordering transfers the Hessian-Lipschitz and higher-order-smooth first-order lower theorems to exact values. A second-order stationary output necessarily satisfies its first-order gradient requirement, so the first-order lower also limits that stronger task. If the theorem states that some sufficiently large finite dimension is hard, retain $\\sup_{d\\ge1}N^*(d,\\varepsilon)$ or its explicit hard-dimension bound; do not present it as a result for every fixed $d$.",
+      "scope": "Each bound keeps the source's fixed cap, output convention, accuracy window, and lower-bound algorithm class. Dimension-free supremum statements remain distinct from fixed-dimension statements.",
+      "limitations": [
+        "Local argument and specification transfer; cited external theorems remain primary dependencies."
+      ],
+      "source_refs": [
+        "SO_SRC_12e2b72bb6c9ca16",
+        "SO_SRC_d9fca0007b8c6fb6",
+        "SO_SRC_8a782b9d2423e793",
+        "SO_SRC_0f3cbdcc1e5906a7"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "SO_ZO_B04_rand_expected__main__e1",
+      "source_ref": "SO_SRC_750f5b396ee38a17",
+      "locator": {
+        "theorem": "Theorem 6.1; Theorem 4.1 provides a local projection implementation",
+        "pdf_pages": [
+          7
+        ],
+        "printed_pages": [
+          7
+        ]
+      },
+      "supports": [
+        "SO_ZO_B04_rand_expected__main__b1"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected__main__e2",
+      "source_ref": "SO_SRC_750f5b396ee38a17",
+      "locator": {
+        "theorem": "Theorem 6.1; Theorem 4.1 provides a local projection implementation",
+        "pdf_pages": [
+          5
+        ],
+        "printed_pages": [
+          5
+        ]
+      },
+      "supports": [
+        "SO_ZO_B04_rand_expected__main__b1"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected__main__e3",
+      "source_ref": "SO_SRC_12e2b72bb6c9ca16",
+      "locator": {
+        "theorem": "Theorem 10.3, with subclass $X=\\mathbb{R}^d$",
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_B04_rand_expected__main__b2"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected__main__e4",
+      "source_ref": "SO_SRC_12e2b72bb6c9ca16",
+      "locator": {
+        "theorem": "Theorem 10.3, with subclass $X=\\mathbb{R}^d$",
+        "pdf_pages": [
+          23
+        ],
+        "printed_pages": [
+          23
+        ]
+      },
+      "supports": [
+        "SO_ZO_B04_rand_expected__main__b2"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_B04_rand_expected__main__e5",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_NONCONVEX_LOWER_TRANSFER"
+      ],
+      "location": "Local arguments in this profile"
+    }
+  ],
+  "references": [
+    {
+      "id": "SO_SRC_750f5b396ee38a17",
+      "authors": "Gon Buzaglo and Guy Kornowski",
+      "title": "Optimal Algorithms for Nonsmooth Nonconvex Stochastic Optimization with Constraints",
+      "version": "arXiv:2610.13787v1, 2026-10-09",
+      "url": "https://arxiv.org/abs/2610.13787v1",
+      "publication_status": "preprint"
+    },
+    {
+      "id": "SO_SRC_12e2b72bb6c9ca16",
+      "authors": "Xia and Yuan",
+      "title": "On Global Joint Lower Bounds in Zeroth-Order Nonconvex Optimization",
+      "version": "arXiv:2610.19652v1, 2026-10-14",
+      "url": "https://arxiv.org/html/2610.19652v1",
+      "publication_status": "preprint"
+    },
+    {
+      "id": "SO_SRC_d9fca0007b8c6fb6",
+      "title": "Dense Weak Hiding: Closing Complexity Gaps in Nonconvex and PL Finite-Sum Optimization under Individual Smoothness",
+      "authors": "Peng, Tang and Jia",
+      "version": "arXiv:2609.00045v3, 2026-10-10",
+      "url": "https://arxiv.org/html/2609.00045v3",
+      "publication_status": "preprint",
+      "verification_basis": "source_archive_with_targeted_revision",
+      "source_native_id": "Dense26",
+      "source_collection": "zo",
+      "verified_full_text_url": "https://arxiv.org/pdf/2609.00045v3"
+    },
+    {
+      "id": "SO_SRC_8a782b9d2423e793",
+      "title": "Matching Lower Bounds for Randomized First-Order Methods in Hessian-Lipschitz Nonconvex Optimization",
+      "authors": "Zhang et al.",
+      "version": "arXiv:2610.00245v2, 2026-10-19",
+      "url": "https://arxiv.org/pdf/2610.00245v2",
+      "publication_status": "preprint",
+      "verification_basis": "source_archive_with_targeted_revision",
+      "source_native_id": "HL26",
+      "source_collection": "zo",
+      "verified_full_text_url": "https://arxiv.org/pdf/2610.00245v2"
+    },
+    {
+      "id": "SO_SRC_0f3cbdcc1e5906a7",
+      "title": "Matching Randomized First-Order Bounds for Higher-Order Smooth Nonconvex Optimization",
+      "authors": "Zhang et al.",
+      "version": "arXiv:2610.17074v1, 2026",
+      "url": "https://arxiv.org/html/2610.17074v1",
+      "publication_status": "preprint",
+      "verification_basis": "source_archive_with_targeted_revision",
+      "source_native_id": "HO26",
+      "source_collection": "zo",
+      "verified_full_text_url": "https://arxiv.org/pdf/2610.17074v1"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "SO_ZO_B04_rand_expected",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "polynomial_gap",
+        "label": "Polynomial gap present"
+      }
+    ],
+    "gap_classes": [
+      "polynomial_gap",
+      "logarithmic_gap"
+    ],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 2,
+    "status_counts": {
+      "logarithmic_gap": 1,
+      "polynomial_gap": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "SO_ZO_B04_rand_expected__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "SO_ZO_B04_rand_expected__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "8bede0ebdc1cf5059e8c1de7ea02fc41445ca221b88e8ec87bc9948825dd7ebc",
+    "source_order": 232,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

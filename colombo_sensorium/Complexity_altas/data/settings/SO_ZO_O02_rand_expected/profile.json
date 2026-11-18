@@ -1,0 +1,1290 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "SO_ZO_O02_rand_expected",
+  "title": "Exact comparison feedback for smooth strongly convex objectives",
+  "summary": "Minimize $f$ globally over $\\mathbb{R}^d$ and return a point with small objective gap.",
+  "primary_domain": "single_objective",
+  "oracle_order_collection": "zo",
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "single_objective"
+    },
+    {
+      "facet": "oracle_order",
+      "value": "zero"
+    },
+    {
+      "facet": "goal",
+      "value": "global_minimization"
+    },
+    {
+      "facet": "structure",
+      "value": "strongly_convex"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_comparison"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expected_loss"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_worst_case"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "solution_goal": "global_minimization",
+      "code": "single_objective_optimization",
+      "description_paragraphs": [
+        "Minimize $f$ globally over $\\mathbb{R}^d$ and return a point with small objective gap."
+      ],
+      "navigation_domains": [
+        "single_objective"
+      ],
+      "formulation_code": "SO.global_minimization"
+    },
+    "model": {
+      "properties": {
+        "convexity": "strongly_convex",
+        "regularity": [
+          "gradient_lipschitz"
+        ],
+        "structure": [],
+        "growth": [
+          "global_initial_gap"
+        ]
+      },
+      "domain_roles": {
+        "function": "All of R^d; regularity constraints are as stated in the model.",
+        "optimization": "All of R^d; stationarity tasks define Delta using the full-space infimum.",
+        "query": "$\\mathbb{R}^d$",
+        "output": "$\\mathbb{R}^d$",
+        "localization": "Known initial point x0 and global initial-gap bound Delta; no bounded localization of a minimizer is promised."
+      },
+      "code": "admissible_model_class",
+      "description_paragraphs": [
+        "$f:\\mathbb{R}^d\\to\\mathbb{R}$ is differentiable and satisfies $\\|\\nabla f(x)-\\nabla f(y)\\|_2\\le\\beta\\|x-y\\|_2$ for every $x,y\\in\\mathbb{R}^d$.",
+        "Strong convexity is defined in the Euclidean norm: $f((1-t)x+ty)\\le(1-t)f(x)+tf(y)-\\frac{\\mu}{2}t(1-t)\\|x-y\\|_2^2$ for $x,y$ and $t\\in[0,1]$ in the domain.",
+        "$f_*:=\\inf_{x\\in\\mathbb{R}^d}f(x)>-\\infty$, and the given initial point $x_0$ satisfies $f(x_0)-f_*\\le\\Delta$."
+      ],
+      "geometry_refs": [
+        "SO_ZO_O02_rand_expected_dom_ee4105a4ce",
+        "SO_ZO_O02_rand_expected_dom_84b722f474",
+        "SO_ZO_O02_rand_expected_dom_9a1be5c15c",
+        "SO_ZO_O02_rand_expected_dom_39707c6baa",
+        "SO_ZO_O02_rand_expected_dom_74eeb0bbae"
+      ]
+    },
+    "oracle": {
+      "public_inputs": [
+        "SO_ZO_O02_rand_expected_p_bb728db2b9",
+        "\\beta",
+        "\\mu",
+        "\\Delta",
+        "\\varepsilon",
+        "SO_ZO_O02_rand_expected_obj_a4c2f12f78"
+      ],
+      "domain": "$\\mathbb{R}^d$",
+      "variant": null,
+      "code": "exact_comparison",
+      "description_paragraphs": [
+        "Any finite point pair $(x,y)\\in\\mathbb{R}^d\\times\\mathbb{R}^d$ may be queried, returning $\\operatorname{sign}(f(x)-f(y))\\in\\{-1,0,1\\}$. Equal values produce zero. Neither the magnitude of the difference nor either function value is revealed.",
+        "The public inputs are $d$, $\\beta$, $\\mu$, $\\Delta$, $\\varepsilon$, $x_0$, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface."
+      ]
+    },
+    "output": {
+      "domain": "$\\mathbb{R}^d$",
+      "code": "output_space",
+      "description_paragraphs": [
+        "Return $\\widehat{x}\\in \\mathbb{R}^d$. The output may be an unqueried point, a random choice among previous points, or an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output."
+      ]
+    },
+    "metric": {
+      "native_metric_wording": "The base loss is $\\ell(I,x)=f(x)-f_*$, where $f_*=\\inf_{u\\in \\mathbb{R}^d}f(u)$. This nonnegative loss is evaluated at the output, with tolerance $\\varepsilon$.",
+      "formula_latex": "f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)",
+      "threshold_latex": "\\varepsilon",
+      "code": "global_minimization",
+      "description_paragraphs": [
+        "The base loss is $\\ell(I,x)=f(x)-f_*$, where $f_*=\\inf_{u\\in \\mathbb{R}^d}f(u)$. This nonnegative loss is evaluated at the output, with tolerance $\\varepsilon$."
+      ],
+      "base_expression": "f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)"
+    },
+    "resource": {
+      "unit": "One binary comparison reply",
+      "budget_mode": "fixed_worst_case",
+      "accounting": {
+        "atomic_unit": "One binary comparison reply",
+        "budget_mode": "fixed_worst_case",
+        "arithmetic_precision": "exact_real_unpriced_unless_specified",
+        "free_operations": "Only the public operations explicitly stated in this specification are free. Operations accessing the unknown instance provide no free information."
+      },
+      "code": "oracle_resource",
+      "description_paragraphs": [
+        "One point-pair comparison costs $1$ call. Every repeated comparison and every comparison in a line search is charged. The budget $T$ counts scalar comparison replies.",
+        "Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "randomized_allowed",
+        "adaptivity": "sequential_adaptive",
+        "restrictions": [],
+        "code": "randomized_allowed",
+        "description_paragraphs": [
+          "Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.",
+          "Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "quantifiers": "one_algorithm_for_all_admissible_instances",
+          "probability_space": "The algorithm's private seed; the instance is fixed and determines each oracle response uniquely.",
+          "formula_latex": "\\exists\\mathcal{A}\\ \\forall I\\in\\mathcal{I}:\\ \\mathbb{E}[f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)]\\le \\varepsilon",
+          "code": "expected_loss",
+          "description_paragraphs": [
+            "After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. Require $\\mathbb{E}[\\ell(I,\\widehat{x})]\\le \\varepsilon$, fixing the instance before averaging over algorithmic and feedback randomness.",
+            "Oracle cost uses a deterministic worst-case budget: $N\\le T$ on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "SO_ZO_O02_rand_expected"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "SO_ZO_O02_rand_expected_obj_a4c2f12f78",
+        "information": "public",
+        "description": "x_0",
+        "knowledge": "declared_public_input"
+      }
+    ],
+    "variable_blocks": [],
+    "domains": [
+      {
+        "id": "SO_ZO_O02_rand_expected_dom_ee4105a4ce",
+        "roles": [
+          "function"
+        ],
+        "description": "All of R^d; regularity constraints are as stated in the model."
+      },
+      {
+        "id": "SO_ZO_O02_rand_expected_dom_84b722f474",
+        "roles": [
+          "optimization"
+        ],
+        "description": "All of R^d; stationarity tasks define Delta using the full-space infimum."
+      },
+      {
+        "id": "SO_ZO_O02_rand_expected_dom_9a1be5c15c",
+        "roles": [
+          "query"
+        ],
+        "description": "$\\mathbb{R}^d$"
+      },
+      {
+        "id": "SO_ZO_O02_rand_expected_dom_39707c6baa",
+        "roles": [
+          "output"
+        ],
+        "description": "$\\mathbb{R}^d$"
+      },
+      {
+        "id": "SO_ZO_O02_rand_expected_dom_74eeb0bbae",
+        "roles": [
+          "localization"
+        ],
+        "description": "Known initial point x0 and global initial-gap bound Delta; no bounded localization of a minimizer is promised."
+      }
+    ],
+    "norms": [],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "SO_ZO_O02_rand_expected_p_bb728db2b9",
+      "symbol": "d",
+      "meaning": "Dimension of the variable space",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "d"
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected_p_1c5476f952",
+      "symbol": "\\beta",
+      "meaning": "Public upper bound on the gradient Lipschitz constant",
+      "kind": "independent",
+      "domain": "$\\beta>0$",
+      "public": false,
+      "definition": "The object, norm and domain are fixed by the specific inequalities in this profile's model.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "beta"
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected_p_7ce7a5991a",
+      "symbol": "\\mu",
+      "meaning": "Public lower bound on the strong-convexity modulus",
+      "kind": "independent",
+      "domain": "$\\mu>0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "mu"
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected_p_108e7b71c7",
+      "symbol": "\\Delta",
+      "meaning": "Known upper bound on the initial objective gap",
+      "kind": "independent",
+      "domain": "$\\Delta\\ge0$",
+      "public": false,
+      "definition": "$f(x_0)-\\inf_{x\\in\\mathbb{R}^d}f(x)\\le\\Delta$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "Delta"
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected_p_5c322c6737",
+      "symbol": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "epsilon"
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected_p_f80bfb74b8",
+      "symbol": "\\kappa",
+      "meaning": "Ratio of the known smoothness and strong-convexity bounds",
+      "kind": "derived",
+      "domain": "$\\kappa\\ge1$",
+      "public": false,
+      "definition": "$\\kappa=\\beta/\\mu$",
+      "dependencies": [
+        "SO_ZO_O02_rand_expected_p_1c5476f952",
+        "SO_ZO_O02_rand_expected_p_7ce7a5991a"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "kappa"
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected_p_199c701ba1",
+      "symbol": "Q_\\Delta",
+      "meaning": "Normalized ratio of the initial objective gap to the target accuracy",
+      "kind": "derived",
+      "domain": "$Q_\\Delta\\ge0$",
+      "public": false,
+      "definition": "$Q_\\Delta=\\Delta/\\varepsilon$",
+      "dependencies": [
+        "SO_ZO_O02_rand_expected_p_108e7b71c7",
+        "SO_ZO_O02_rand_expected_p_5c322c6737"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "Q_Delta"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "Dimension of the variable space",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_O02_rand_expected_p_bb728db2b9"
+    },
+    {
+      "symbol_latex": "\\beta",
+      "meaning": "Public upper bound on the gradient Lipschitz constant",
+      "domain": "$\\beta>0$",
+      "definition": "The object, norm and domain are fixed by the specific inequalities in this profile's model.",
+      "parameter_ref": "SO_ZO_O02_rand_expected_p_1c5476f952"
+    },
+    {
+      "symbol_latex": "\\mu",
+      "meaning": "Public lower bound on the strong-convexity modulus",
+      "domain": "$\\mu>0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_O02_rand_expected_p_7ce7a5991a"
+    },
+    {
+      "symbol_latex": "\\Delta",
+      "meaning": "Known upper bound on the initial objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "definition": "$f(x_0)-\\inf_{x\\in\\mathbb{R}^d}f(x)\\le\\Delta$",
+      "parameter_ref": "SO_ZO_O02_rand_expected_p_108e7b71c7"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "domain": "$\\varepsilon>0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_O02_rand_expected_p_5c322c6737"
+    },
+    {
+      "symbol_latex": "\\kappa",
+      "meaning": "Ratio of the known smoothness and strong-convexity bounds",
+      "domain": "$\\kappa\\ge1$",
+      "definition": "$\\kappa=\\beta/\\mu$",
+      "parameter_ref": "SO_ZO_O02_rand_expected_p_f80bfb74b8"
+    },
+    {
+      "symbol_latex": "Q_\\Delta",
+      "meaning": "Normalized ratio of the initial objective gap to the target accuracy",
+      "domain": "$Q_\\Delta\\ge0$",
+      "definition": "$Q_\\Delta=\\Delta/\\varepsilon$",
+      "parameter_ref": "SO_ZO_O02_rand_expected_p_199c701ba1"
+    },
+    {
+      "symbol_latex": "x,y,u",
+      "meaning": "Function arguments and dummy variables in the formulas",
+      "domain": "$x,y,u\\in\\mathbb{R}^d$; spherical domains are embedded in $\\mathbb{R}^{d+1}$",
+      "definition": "Admissible ranges are specified separately by the task, model and oracle in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat{x}",
+      "meaning": "Final algorithm output",
+      "domain": "$\\mathbb{R}^d$",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "I",
+      "meaning": "Complete problem instance",
+      "domain": "$I\\in\\mathcal{I}$",
+      "definition": "Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{I}",
+      "meaning": "Admissible instance class determined by the eight specification fields in this profile",
+      "domain": "Instances satisfying the public parameter bounds",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{A}",
+      "meaning": "Algorithm or strategy",
+      "domain": "Measurable adaptive strategies allowed in this profile",
+      "definition": "The algorithm is selected before the hidden instance.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\ell",
+      "meaning": "Base loss or residual",
+      "domain": "$\\ell:\\mathcal{I}\\times\\mathcal{X}_{\\mathrm{out}}\\to[0,+\\infty]$",
+      "definition": "The exact formula appears in this profile's performance-criterion section.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb{E},\\Pr",
+      "meaning": "Expectation and probability",
+      "domain": "Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee",
+      "definition": "Fix the instance first; aggregate cost and error separately.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\inf,\\sup",
+      "meaning": "Infimum and supremum",
+      "domain": "Evaluated only over the variable sets explicitly specified in the formula",
+      "definition": "In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_2,\\langle\\cdot,\\cdot\\rangle",
+      "meaning": "Euclidean norm and inner product",
+      "domain": "$\\|x\\|_2=\\sqrt{\\langle x,x\\rangle}$",
+      "definition": "$\\langle x,y\\rangle=x^\\top y$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "B_p(c,R)",
+      "meaning": "Closed norm ball",
+      "domain": "$p\\in[1,\\infty],\\ R\\ge0$",
+      "definition": "$B_p(c,R)=\\{x:\\|x-c\\|_p\\le R\\}$; $B_2$ denotes the Euclidean ball.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,T",
+      "meaning": "Actual call count and declared budget",
+      "domain": "$N,T\\in\\mathbb{N}_0$",
+      "definition": "A fixed budget bounds every execution path; the Markov specification uses an expected budget.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta,\\widetilde{O}",
+      "meaning": "Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms",
+      "domain": "Within the joint parameter window specified for each complexity regime",
+      "definition": "Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C,c_\\alpha,C_\\alpha",
+      "meaning": "Positive constant in a proof or asymptotic bound",
+      "domain": "$0<c,C,c_\\alpha,C_\\alpha<\\infty$",
+      "definition": "Unsubscripted constants have the dependencies stated in the bound; constants subscripted by $\\alpha$ may depend only on the fixed smoothness order.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_+,e",
+      "meaning": "Natural logarithm, truncated logarithm, and Euler's number",
+      "domain": "$z>0$",
+      "definition": "$\\log_+(z)=\\max\\{0,\\log z\\}$; $e=\\exp(1)$, and $\\log_2$ denotes the base-two logarithm.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,f_*",
+      "meaning": "Population objective and its optimal value",
+      "domain": "$f:\\mathcal{X}_{\\mathrm{fun}}\\to\\mathbb{R}$",
+      "definition": "$f_*=\\inf_{x\\in \\mathbb{R}^d}f(x)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla f,\\nabla^2f,D^jf",
+      "meaning": "Gradient, Hessian, and higher Fréchet derivatives",
+      "domain": "$\\nabla f\\in\\mathbb{R}^d,\\ \\nabla^2f\\in\\mathbb{R}^{d\\times d}$; $D^jf$ is a $j$-linear form",
+      "definition": "Used only at derivative orders and on regions where the model guarantees its existence.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_{\\mathrm{op}}",
+      "meaning": "Euclidean induced matrix or tensor operator norm",
+      "domain": "Take the supremum over Euclidean unit input vectors of the corresponding order.",
+      "definition": "$\\|T\\|_{\\mathrm{op}}=\\sup_{\\|u_1\\|_2,\\ldots,\\|u_j\\|_2\\le1}|T[u_1,\\ldots,u_j]|$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{X}_{\\mathrm{fun}},\\mathcal{X}_{\\mathrm{out}},\\mathcal{X}",
+      "meaning": "Function domain, admissible output domain and optimization domain",
+      "domain": "Each is the Euclidean space or subset explicitly specified in this profile",
+      "definition": "$\\mathcal{X}_{\\mathrm{out}}=\\mathbb{R}^d$ and $\\mathcal{X}=\\mathbb{R}^d$; the function domain is the region on which the model imposes regularity.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^*",
+      "meaning": "Optimal worst-case oracle complexity satisfying the complete guarantee",
+      "domain": "$N^*\\in[0,+\\infty]$",
+      "definition": "Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_{\\mathrm{hard}}",
+      "meaning": "Localization radius chosen by the lower-bound proof",
+      "domain": "$R_{\\mathrm{hard}}>0$",
+      "definition": "It ensures that the hard subclass meets the known initial-gap bound without providing additional algorithmic information. Its choice is stated separately for each bound.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_0",
+      "meaning": "Public initial point",
+      "domain": "$x_0\\in\\mathbb{R}^d$",
+      "definition": "Belongs to the feasible domain required by the model.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "key": "calls",
+      "kind": "target_accuracy_cost",
+      "projection": "declared_atomic_resource",
+      "label": "One binary comparison reply",
+      "units": "One binary comparison reply",
+      "id": "SO_ZO_O02_rand_expected__main__q1",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [
+        "SO_ZO_O02_rand_expected_p_bb728db2b9",
+        "SO_ZO_O02_rand_expected_p_1c5476f952",
+        "SO_ZO_O02_rand_expected_p_7ce7a5991a",
+        "SO_ZO_O02_rand_expected_p_108e7b71c7",
+        "SO_ZO_O02_rand_expected_p_5c322c6737"
+      ],
+      "fixed_parameters": [],
+      "analysis_scope": "declared_joint_parameter_window",
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": "minimax_oracle_calls",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "expression_latex": "C^\\star_{v,\\pi}(\\varepsilon;\\theta)=\\inf\\{B\\ge0:\\exists\\mathcal A\\in\\mathfrak A_v,\\ C_\\pi(\\mathcal A,I)\\le B\\ \\text{and}\\ G_v(\\mathcal A,I;\\varepsilon)\\ \\forall I\\}",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    },
+    {
+      "key": "calls",
+      "kind": "target_accuracy_cost",
+      "projection": "declared_atomic_resource",
+      "label": "One binary comparison reply",
+      "units": "One binary comparison reply",
+      "id": "SO_ZO_O02_rand_expected__main__q2",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": null,
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "expression_latex": "C^\\star_{v,\\pi}(\\varepsilon;\\theta)=\\inf\\{B\\ge0:\\exists\\mathcal A\\in\\mathfrak A_v,\\ C_\\pi(\\mathcal A,I)\\le B\\ \\text{and}\\ G_v(\\mathcal A,I;\\varepsilon)\\ \\forall I\\}",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "One binary comparison reply",
+      "expression": "declared_atomic_resource",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_f5e6aa0923"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "SO_ZO_O02_rand_expected__main__r1",
+      "specification_ref": "SO_ZO_O02_rand_expected",
+      "name": "Parameter regime O02.R1",
+      "universe_ref": null,
+      "predicate": {
+        "op": "source_condition",
+        "text": "$\\kappa\\ge2$, $\\Delta/\\varepsilon\\ge128^2$, $\\Delta/\\varepsilon\\ge\\min\\{\\kappa,d^2\\}$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$\\kappa\\ge2$, $\\Delta/\\varepsilon\\ge128^2$, $\\Delta/\\varepsilon\\ge\\min\\{\\kappa,d^2\\}$.",
+      "kind": "parameter_region"
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__r2",
+      "specification_ref": "SO_ZO_O02_rand_expected",
+      "name": "Parameter regime O02.R2",
+      "universe_ref": null,
+      "predicate": {
+        "op": "source_condition",
+        "text": "$\\kappa\\ge2$, $128^2\\le\\Delta/\\varepsilon<\\min\\{\\kappa,d^2\\}$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$\\kappa\\ge2$, $128^2\\le\\Delta/\\varepsilon<\\min\\{\\kappa,d^2\\}$.",
+      "kind": "parameter_region"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "SO_ZO_O02_rand_expected__main__b1",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "\\widetilde{O}\\!\\left(d\\sqrt\\kappa\\log(\\Delta/\\varepsilon)\\right)",
+      "quantity_ref": "SO_ZO_O02_rand_expected__main__q1",
+      "quantity_refs": [
+        "SO_ZO_O02_rand_expected__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Comparison-based coordinate acceleration or localization",
+      "source_refs": [
+        "SO_SRC_23112687415b649f"
+      ],
+      "evidence_refs": [
+        "SO_ZO_O02_rand_expected__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_O02_rand_expected__main__c1",
+        "SO_ZO_O02_rand_expected__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "Set each coordinate to $\\beta _i\\le \\beta$; the original expression is $\\widetilde{O}((\\sum_i\\sqrt{\\beta _i})/\\sqrt\\mu\\log(\\Delta/\\varepsilon))$. Line-search precision introduces an additional logarithm."
+        ],
+        "oracle_mapping": "Each pairwise ordering response costs one call. Bounds transfer between value and comparison interfaces only through the stated direction of simulation.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__b2",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "\\Omega\\!\\left(d\\log(\\Delta/\\varepsilon)\\right)",
+      "quantity_ref": "SO_ZO_O02_rand_expected__main__q1",
+      "quantity_refs": [
+        "SO_ZO_O02_rand_expected__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Comparison-information packing and the exact-value subclass",
+      "source_refs": [
+        "SO_SRC_72bcc2188cedd4f4"
+      ],
+      "evidence_refs": [
+        "SO_ZO_O02_rand_expected__main__e2",
+        "SO_ZO_O02_rand_expected__main__e3"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_O02_rand_expected__main__c1",
+        "SO_ZO_O02_rand_expected__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "Use shifted spherical quadratics with a known Hessian and center radius $\\sqrt{2\\Delta/\\mu}$. One reply has at most three possible symbols; $\\varepsilon\\le c\\Delta$."
+        ],
+        "oracle_mapping": "Each pairwise ordering response costs one call. Bounds transfer between value and comparison interfaces only through the stated direction of simulation.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_COMPARE_ENTROPY"
+      ]
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__b3",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "\\Omega\\!\\left(d\\min\\{d,\\sqrt\\kappa,\\sqrt{\\Delta/\\varepsilon}\\}\\right)",
+      "quantity_ref": "SO_ZO_O02_rand_expected__main__q2",
+      "quantity_refs": [
+        "SO_ZO_O02_rand_expected__main__q2"
+      ],
+      "region_refs": [],
+      "method": "Comparison-information packing and the exact-value subclass",
+      "source_refs": [
+        "SO_SRC_9557f7498abe575b",
+        "SO_SRC_12e2b72bb6c9ca16"
+      ],
+      "evidence_refs": [
+        "SO_ZO_O02_rand_expected__main__e4",
+        "SO_ZO_O02_rand_expected__main__e5",
+        "SO_ZO_O02_rand_expected__main__e6"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [],
+      "applicability": {
+        "conditions": [
+          "$\\varepsilon\\le c\\Delta$. The hard construction sets $R_{\\mathrm{hard}}=\\sqrt{2\\Delta/\\beta}$ to satisfy the initial-gap bound. This radius is chosen in the proof and is not an additional public input."
+        ],
+        "oracle_mapping": "Each pairwise ordering response costs one call. Bounds transfer between value and comparison interfaces only through the stated direction of simulation.",
+        "guarantee_mapping": "The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_COMPARE_TRANSFER"
+      ]
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__b4",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "O(d^2\\log(d\\kappa Q_\\Delta))",
+      "quantity_ref": "SO_ZO_O02_rand_expected__main__q1",
+      "quantity_refs": [
+        "SO_ZO_O02_rand_expected__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Comparison-based coordinate acceleration or localization",
+      "source_refs": [
+        "SO_SRC_25cbefe670f1e510"
+      ],
+      "evidence_refs": [
+        "SO_ZO_O02_rand_expected__main__e7",
+        "SO_ZO_O02_rand_expected__main__e8"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_O02_rand_expected__main__c1",
+        "SO_ZO_O02_rand_expected__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\kappa \\ge 1$ and $Q\\Delta =\\Delta /\\varepsilon \\ge 16$; $global \\mu -SC,\\beta -smooth,$ with initial $gap\\le \\Delta$."
+        ],
+        "oracle_mapping": "Each pairwise ordering response costs one call. Bounds transfer between value and comparison interfaces only through the stated direction of simulation.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_COMPARE_SC_UPPER"
+      ]
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__b5",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "\\Omega(d\\min\\{d,\\sqrt\\kappa,\\sqrt{Q_\\Delta}\\})",
+      "quantity_ref": "SO_ZO_O02_rand_expected__main__q1",
+      "quantity_refs": [
+        "SO_ZO_O02_rand_expected__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Comparison-information packing and the exact-value subclass",
+      "source_refs": [
+        "SO_SRC_9557f7498abe575b",
+        "SO_SRC_12e2b72bb6c9ca16"
+      ],
+      "evidence_refs": [
+        "SO_ZO_O02_rand_expected__main__e9",
+        "SO_ZO_O02_rand_expected__main__e10"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_O02_rand_expected__main__c1",
+        "SO_ZO_O02_rand_expected__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\kappa \\ge 2$; $Q\\Delta \\ge 48$."
+        ],
+        "oracle_mapping": "Each pairwise ordering response costs one call. Bounds transfer between value and comparison interfaces only through the stated direction of simulation.",
+        "guarantee_mapping": "The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_COMPARE_TRANSFER"
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Parameter regime O02.R1",
+      "predicate": {
+        "op": "source_condition",
+        "text": "$\\kappa\\ge2$, $\\Delta/\\varepsilon\\ge128^2$, $\\Delta/\\varepsilon\\ge\\min\\{\\kappa,d^2\\}$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$\\kappa\\ge2$, $\\Delta/\\varepsilon\\ge128^2$, $\\Delta/\\varepsilon\\ge\\min\\{\\kappa,d^2\\}$.",
+      "parameter_refs": [
+        "SO_ZO_O02_rand_expected_p_bb728db2b9",
+        "SO_ZO_O02_rand_expected_p_1c5476f952",
+        "SO_ZO_O02_rand_expected_p_7ce7a5991a",
+        "SO_ZO_O02_rand_expected_p_108e7b71c7",
+        "SO_ZO_O02_rand_expected_p_5c322c6737",
+        "SO_ZO_O02_rand_expected_p_f80bfb74b8",
+        "SO_ZO_O02_rand_expected_p_199c701ba1"
+      ],
+      "source_region_ref": "SO_ZO_O02_rand_expected__main__r1",
+      "status": {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_O02_rand_expected__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_O02_rand_expected__main__q1",
+      "resource_projection_id": "resource_f5e6aa0923",
+      "regime_id": "SO_ZO_O02_rand_expected__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_O02_rand_expected__main__b1",
+          "SO_ZO_O02_rand_expected__main__b4"
+        ],
+        "lower_refs": [
+          "SO_ZO_O02_rand_expected__main__b2",
+          "SO_ZO_O02_rand_expected__main__b5"
+        ],
+        "comparison_ref": "SO_ZO_O02_rand_expected__main__c1",
+        "quantity_ref": "SO_ZO_O02_rand_expected__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$\\operatorname{polylog}(d,\\kappa ,Q\\Delta )$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "\\min\\{\\widetilde{O}(d\\sqrt\\kappa\\log Q_\\Delta),O(d^2\\log(d\\kappa Q_\\Delta))\\}",
+            "claim_refs": [
+              "SO_ZO_O02_rand_expected__main__b1",
+              "SO_ZO_O02_rand_expected__main__b4"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega(d\\max\\{\\min(d,\\sqrt\\kappa),\\log Q_\\Delta\\})",
+            "claim_refs": [
+              "SO_ZO_O02_rand_expected__main__b2",
+              "SO_ZO_O02_rand_expected__main__b5"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_ZO_O02_rand_expected__main__b1": [
+            {
+              "region_ref": null,
+              "predicate_text": "Set each coordinate to $\\beta _i\\le \\beta$; the original expression is $\\widetilde{O}((\\sum_i\\sqrt{\\beta _i})/\\sqrt\\mu\\log(\\Delta/\\varepsilon))$. Line-search precision introduces an additional logarithm."
+            }
+          ],
+          "SO_ZO_O02_rand_expected__main__b4": [
+            {
+              "region_ref": null,
+              "predicate_text": "$\\kappa \\ge 1$ and $Q\\Delta =\\Delta /\\varepsilon \\ge 16$; $global \\mu -SC,\\beta -smooth,$ with initial $gap\\le \\Delta$."
+            }
+          ],
+          "SO_ZO_O02_rand_expected__main__b2": [
+            {
+              "region_ref": null,
+              "predicate_text": "Use shifted spherical quadratics with a known Hessian and center radius $\\sqrt{2\\Delta/\\mu}$. One reply has at most three possible symbols; $\\varepsilon\\le c\\Delta$."
+            }
+          ],
+          "SO_ZO_O02_rand_expected__main__b5": [
+            {
+              "region_ref": null,
+              "predicate_text": "$\\kappa \\ge 2$; $Q\\Delta \\ge 48$."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "One binary comparison reply",
+        "tracked_parameters": [
+          "SO_ZO_O02_rand_expected_p_bb728db2b9",
+          "SO_ZO_O02_rand_expected_p_1c5476f952",
+          "SO_ZO_O02_rand_expected_p_7ce7a5991a",
+          "SO_ZO_O02_rand_expected_p_108e7b71c7",
+          "SO_ZO_O02_rand_expected_p_5c322c6737"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_O02_rand_expected",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_O02_rand_expected__main__q1",
+        "resource_projection_id": "resource_f5e6aa0923",
+        "regime_id": "SO_ZO_O02_rand_expected__main__r1"
+      }
+    },
+    {
+      "label": "Parameter regime O02.R2",
+      "predicate": {
+        "op": "source_condition",
+        "text": "$\\kappa\\ge2$, $128^2\\le\\Delta/\\varepsilon<\\min\\{\\kappa,d^2\\}$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$\\kappa\\ge2$, $128^2\\le\\Delta/\\varepsilon<\\min\\{\\kappa,d^2\\}$.",
+      "parameter_refs": [
+        "SO_ZO_O02_rand_expected_p_bb728db2b9",
+        "SO_ZO_O02_rand_expected_p_1c5476f952",
+        "SO_ZO_O02_rand_expected_p_7ce7a5991a",
+        "SO_ZO_O02_rand_expected_p_108e7b71c7",
+        "SO_ZO_O02_rand_expected_p_5c322c6737",
+        "SO_ZO_O02_rand_expected_p_f80bfb74b8",
+        "SO_ZO_O02_rand_expected_p_199c701ba1"
+      ],
+      "source_region_ref": "SO_ZO_O02_rand_expected__main__r2",
+      "status": {
+        "code": "polynomial_gap",
+        "label": "Polynomial gap",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_O02_rand_expected__main__c2",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_O02_rand_expected__main__q1",
+      "resource_projection_id": "resource_f5e6aa0923",
+      "regime_id": "SO_ZO_O02_rand_expected__main__r2",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_O02_rand_expected__main__b1",
+          "SO_ZO_O02_rand_expected__main__b4"
+        ],
+        "lower_refs": [
+          "SO_ZO_O02_rand_expected__main__b2",
+          "SO_ZO_O02_rand_expected__main__b5"
+        ],
+        "comparison_ref": "SO_ZO_O02_rand_expected__main__c2",
+        "quantity_ref": "SO_ZO_O02_rand_expected__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$\\widetilde{O}(\\min\\{d,\\sqrt\\kappa\\}/\\sqrt{Q_\\Delta})$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "\\min\\{\\widetilde{O}(d\\sqrt\\kappa\\log Q_\\Delta),O(d^2\\log(d\\kappa Q_\\Delta))\\}",
+            "claim_refs": [
+              "SO_ZO_O02_rand_expected__main__b1",
+              "SO_ZO_O02_rand_expected__main__b4"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega(d\\sqrt{Q_\\Delta})",
+            "claim_refs": [
+              "SO_ZO_O02_rand_expected__main__b2",
+              "SO_ZO_O02_rand_expected__main__b5"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_ZO_O02_rand_expected__main__b1": [
+            {
+              "region_ref": null,
+              "predicate_text": "Set each coordinate to $\\beta _i\\le \\beta$; the original expression is $\\widetilde{O}((\\sum_i\\sqrt{\\beta _i})/\\sqrt\\mu\\log(\\Delta/\\varepsilon))$. Line-search precision introduces an additional logarithm."
+            }
+          ],
+          "SO_ZO_O02_rand_expected__main__b4": [
+            {
+              "region_ref": null,
+              "predicate_text": "$\\kappa \\ge 1$ and $Q\\Delta =\\Delta /\\varepsilon \\ge 16$; $global \\mu -SC,\\beta -smooth,$ with initial $gap\\le \\Delta$."
+            }
+          ],
+          "SO_ZO_O02_rand_expected__main__b2": [
+            {
+              "region_ref": null,
+              "predicate_text": "Use shifted spherical quadratics with a known Hessian and center radius $\\sqrt{2\\Delta/\\mu}$. One reply has at most three possible symbols; $\\varepsilon\\le c\\Delta$."
+            }
+          ],
+          "SO_ZO_O02_rand_expected__main__b5": [
+            {
+              "region_ref": null,
+              "predicate_text": "$\\kappa \\ge 2$; $Q\\Delta \\ge 48$."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "One binary comparison reply",
+        "tracked_parameters": [
+          "SO_ZO_O02_rand_expected_p_bb728db2b9",
+          "SO_ZO_O02_rand_expected_p_1c5476f952",
+          "SO_ZO_O02_rand_expected_p_7ce7a5991a",
+          "SO_ZO_O02_rand_expected_p_108e7b71c7",
+          "SO_ZO_O02_rand_expected_p_5c322c6737"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_O02_rand_expected",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_O02_rand_expected__main__q1",
+        "resource_projection_id": "resource_f5e6aa0923",
+        "regime_id": "SO_ZO_O02_rand_expected__main__r2"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "proof_id": "ZO_PROOF_COMPARE_ENTROPY",
+      "title": "Finite feedback entropy gives a precision lower bound",
+      "body": "At sufficiently small $\\varepsilon/\\Delta$, at least $\\Omega(d\\log(\\Delta/\\varepsilon))$ comparisons are necessary, including an expected-error guarantee.\n\nUse shifted isotropic quadratics $f_\\theta(x)=\\mu\\|x-\\theta\\|^2/2$ with centers in a ball of radius $\\sqrt{2\\Delta/\\mu}$ about the initial point. They are $\\mu$-strongly convex and $\\beta$-smooth for any public $\\beta\\ge\\mu$. Pack the center ball at separation greater than twice the success radius $\\sqrt{6\\varepsilon/\\mu}$. Standard volume comparison gives a packing of logarithmic size at least $c d\\log(\\Delta/\\varepsilon)$ on a sufficiently small fixed accuracy window.\n\nEach exact comparison has at most three outcomes and thus conveys at most $\\log3$ nats, even for adaptive query points and after conditioning on the independent random seed. Fano's inequality requires a constant fraction of the packing entropy to identify the center with probability $2/3$. A target expected gap at most $\\varepsilon$ implies this success level at error $3\\varepsilon$ by Markov, and the separated success balls decode the center. This proves the bound without imposing a spatial restriction on queries.",
+      "scope": "Exact comparison feedback, arbitrary adaptive randomized queries, and a public initial-gap budget in the strongly convex model.",
+      "limitations": [
+        "Local argument and specification transfer; cited external theorems remain primary dependencies."
+      ],
+      "source_refs": [
+        "SO_SRC_72bcc2188cedd4f4"
+      ]
+    },
+    {
+      "proof_id": "ZO_PROOF_COMPARE_TRANSFER",
+      "title": "Exact-value lower bounds transferred to comparison feedback",
+      "body": "Two exact scalar values simulate one comparison. Therefore a fixed-success exact-value lower bound $L$ gives a comparison lower bound $L/2$. Expected-error targets require a separate constant-factor accuracy conversion.\n\nAt each adaptive comparison request $(x,y)$, query both exact values and return their order, including the declared tie convention. The same seed and transcript generate the same next query and output, using at most twice the comparison budget. Hence a comparison algorithm contradicts a value lower theorem only when all source model and guarantee conditions match.\n\nFor smooth convex objectives, apply the dimension/accuracy branch of Dorn et al., Theorem 2.1, at $Q\\ge32$, and its logarithmic strongly convex subclass at $Q\\ge128^2$; maximize only on their common window. For a strongly convex model with initial gap $\\Delta$, choose a hard-instance radius $R_h=\\sqrt{2\\Delta/\\beta}$. Smoothness at the global minimizer gives the required initial gap. If the target guarantee is expected error $\\varepsilon$, Markov supplies success $2/3$ at error $3\\varepsilon$; then the source scale is $Q_h=2\\Delta/(3\\varepsilon)$ and must be at least 32. No new public radius is added to the target specification.\n\nFor nonconvex gradient stationarity, use the exact-value hard subclass with a proof-only Lipschitz budget satisfying $L^2\\ge\\beta\\Delta$. The source cap $B=\\min\\{\\beta\\Delta,L^2\\}$ becomes $\\beta\\Delta$. Retain its small-gradient window and dimension requirement $d\\ge C(\\beta\\Delta/\\varepsilon^2)\\log(2+\\beta\\Delta/\\varepsilon^2)$. The same two-value simulation then gives the registered comparison lower bound.",
+      "scope": "The comparison oracle returns only the exact order of two function values. Query/output domains, model budgets, and guarantees are preserved.",
+      "limitations": [
+        "Local argument and specification transfer; cited external theorems remain primary dependencies."
+      ],
+      "source_refs": [
+        "SO_SRC_9557f7498abe575b",
+        "SO_SRC_12e2b72bb6c9ca16"
+      ]
+    },
+    {
+      "proof_id": "ZO_PROOF_COMPARE_SC_UPPER",
+      "title": "Using a public strong-convexity radius in a convex comparison method",
+      "body": "A deterministic comparison upper is $O(d^2\\log(d\\kappa\\Delta/\\varepsilon))$ in the stated nontrivial window.\n\nStrong convexity gives $\\|x_0-x_*\\|^2\\le2\\Delta/\\mu$. Translate $x_0$ to zero and apply Zhang and Li's convex comparison theorem with public radius $R_{\\rm loc}=\\sqrt{2\\Delta/\\mu}$. Its scale is $\\beta R_{\\rm loc}^2/\\varepsilon=2\\kappa\\Delta/\\varepsilon$. Substitution yields the displayed count. The algorithm uses comparisons only and its pointwise objective-error guarantee also implies expected error. It is a separate upper branch, to be compared with other admissible accelerated comparison algorithms rather than substituted into their formulas.",
+      "scope": "Global convexity and smoothness, strong convexity $\\mu$, initial gap $\\Delta$, and exact comparisons.",
+      "limitations": [
+        "Local argument and specification transfer; cited external theorems remain primary dependencies."
+      ],
+      "source_refs": [
+        "SO_SRC_25cbefe670f1e510"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "SO_ZO_O02_rand_expected__main__e1",
+      "source_ref": "SO_SRC_23112687415b649f",
+      "locator": {
+        "theorem": "Theorem 4.1 and the subsequent oracle-call accounting",
+        "pdf_pages": [
+          7
+        ],
+        "printed_pages": [
+          7
+        ]
+      },
+      "supports": [
+        "SO_ZO_O02_rand_expected__main__b1"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__e2",
+      "source_ref": "SO_SRC_72bcc2188cedd4f4",
+      "locator": {
+        "theorem": "Theorem 1 and its finite-information packing argument, PDF page 3"
+      },
+      "supports": [
+        "SO_ZO_O02_rand_expected__main__b2"
+      ],
+      "notes": [],
+      "proof_refs": [
+        "ZO_PROOF_COMPARE_ENTROPY"
+      ],
+      "note": "The primary citation supplies the stated ingredient; the local specialization is given in the linked proof module."
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__e3",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_COMPARE_ENTROPY"
+      ],
+      "location": "Local arguments in this profile"
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__e4",
+      "source_ref": "SO_SRC_9557f7498abe575b",
+      "locator": {
+        "theorem": "Corollary 2.4",
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_O02_rand_expected__main__b3"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__e5",
+      "source_ref": "SO_SRC_9557f7498abe575b",
+      "locator": {
+        "theorem": "Corollary 2.4",
+        "pdf_pages": [
+          4
+        ],
+        "printed_pages": [
+          4
+        ]
+      },
+      "supports": [
+        "SO_ZO_O02_rand_expected__main__b3"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__e6",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_COMPARE_TRANSFER"
+      ],
+      "location": "Local arguments in this profile"
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__e7",
+      "source_ref": "SO_SRC_25cbefe670f1e510",
+      "locator": {
+        "theorem": "Version 1, Theorem 3; strong convexity converts the initial-gap bound to a localization radius",
+        "pdf_pages": [
+          9
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_O02_rand_expected__main__b4"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__e8",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_COMPARE_SC_UPPER"
+      ],
+      "location": "Local arguments in this profile"
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__e9",
+      "source_ref": "SO_SRC_9557f7498abe575b",
+      "locator": {
+        "theorem": "Corollary 2.4, with $R=\\sqrt{2\\Delta/\\beta}$",
+        "pdf_pages": [
+          4
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_O02_rand_expected__main__b5"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_O02_rand_expected__main__e10",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_COMPARE_TRANSFER"
+      ],
+      "location": "Local arguments in this profile"
+    }
+  ],
+  "references": [
+    {
+      "id": "SO_SRC_9557f7498abe575b",
+      "authors": "Dorn, Dvinskikh, Loginov, Osmanov, Shestakov, Tupitsa and Gasnikov",
+      "title": "Lower Bounds For Gradient-Free Convex Optimization And Convex-Concave Saddle-Point Problems",
+      "version": "arXiv:2610.00345v1",
+      "url": "https://arxiv.org/html/2610.00345v1",
+      "publication_status": "preprint"
+    },
+    {
+      "id": "SO_SRC_72bcc2188cedd4f4",
+      "authors": "Jamieson, Nowak and Recht",
+      "title": "Query Complexity of Derivative-Free Optimization",
+      "version": "NeurIPS 2012",
+      "url": "https://papers.nips.cc/paper_files/paper/2012/file/e6d8545daa42d5ced125a4bf747b3688-Paper.pdf",
+      "publication_status": "published"
+    },
+    {
+      "id": "SO_SRC_23112687415b649f",
+      "authors": "Lobanov, Gasnikov and Krasnov",
+      "title": "Acceleration Exists! Optimization Problems When Oracle Can Only Compare Objective Function Values",
+      "version": "NeurIPS 2024, pp. 21428--21460",
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/26289c647c6828e862e271ca3c490486-Paper-Conference.pdf",
+      "publication_status": "published"
+    },
+    {
+      "id": "SO_SRC_25cbefe670f1e510",
+      "authors": "Zhang and Li",
+      "title": "Comparisons Are All You Need for Optimizing Smooth Functions",
+      "version": "arXiv:2405.11454v1, 2024; the specified early version",
+      "url": "https://arxiv.org/html/2405.11454v1",
+      "publication_status": "preprint"
+    },
+    {
+      "id": "SO_SRC_12e2b72bb6c9ca16",
+      "title": "On Global Joint Lower Bounds in Zeroth-Order Nonconvex Optimization",
+      "authors": "Xia and Yuan",
+      "version": "arXiv:2610.19652v1, 2026-10-14",
+      "url": "https://arxiv.org/html/2610.19652v1",
+      "publication_status": "preprint",
+      "verification_basis": "source_archive_with_targeted_revision",
+      "source_native_id": "XY26",
+      "source_collection": "zo",
+      "verified_full_text_url": "https://arxiv.org/pdf/2610.19652v1"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "SO_ZO_O02_rand_expected",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "polynomial_gap",
+        "label": "Polynomial gap present"
+      }
+    ],
+    "gap_classes": [
+      "polynomial_gap",
+      "logarithmic_gap"
+    ],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 2,
+    "status_counts": {
+      "logarithmic_gap": 1,
+      "polynomial_gap": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "SO_ZO_O02_rand_expected__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "SO_ZO_O02_rand_expected__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "8ddc032f2100732a7e65cdbb8089cb420cb6ab89c20a1eb2a303f454bfc8d121",
+    "source_order": 214,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

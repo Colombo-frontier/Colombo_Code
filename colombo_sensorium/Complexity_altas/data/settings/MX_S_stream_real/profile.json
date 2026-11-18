@@ -1,0 +1,854 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "MX_S_stream_real",
+  "title": "One-pass low-rank approximation from row streams, with real-register memory.",
+  "summary": "After one pass over the rows of $A\\in\\mathbb{R}^{m\\times n}$, return a rank-$k$ orthogonal right projection.",
+  "primary_domain": "matrix_computation",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "matrix_computation"
+    },
+    {
+      "facet": "goal",
+      "value": "relative_squared_projection_residual"
+    },
+    {
+      "facet": "structure",
+      "value": "arbitrary_real_matrix"
+    },
+    {
+      "facet": "feedback",
+      "value": "row_stream"
+    },
+    {
+      "facet": "algorithm",
+      "value": "one_pass_randomized"
+    },
+    {
+      "facet": "guarantee",
+      "value": "fixed_probability"
+    },
+    {
+      "facet": "resource",
+      "value": "real_register_memory"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "matrix_computation"
+      ],
+      "formulation_code": "row_streaming_lowrank",
+      "formulation": "\\min_{P=P^T=P^2,\\,\\operatorname{rank}P=k}\\|A-AP\\|_F^2",
+      "solution_goal": "relative_frobenius_squared_projection",
+      "protocol_ref": "MX_S_stream_real_pro_c16db6230f",
+      "code": "row_streaming_lowrank",
+      "formulation_latex": "\\min_{P=P^{\\mathsf T}=P^2,\\,\\operatorname{rank}(P)=k}\\|A(I_n-P)\\|_{\\mathrm F}^2",
+      "description_zh": "After one pass over the rows of $A\\in\\mathbb R^{m\\times n}$, return a right orthogonal projection of rank $k$.",
+      "description_paragraphs": [
+        "After one pass over the rows of $A\\in\\mathbb{R}^{m\\times n}$, return a rank-$k$ orthogonal right projection."
+      ]
+    },
+    "model": {
+      "instance": "The complete data and row order of an arbitrary real matrix $A\\in\\mathbb R^{m\\times n}$ are fixed in advance. Each n-dimensional row arrives once.",
+      "assumptions": [
+        {
+          "subject_id": "MX_S_stream_real_obj_691b70b600",
+          "property_code": "row_stream",
+          "variable_blocks": [],
+          "norm_ref": "MX_S_stream_real_nor_0b14a2026d",
+          "parameter_refs": [
+            "MX_S_stream_real_p_35c061cc2e",
+            "MX_S_stream_real_p_a20059fb21",
+            "MX_S_stream_real_p_12a952329f"
+          ],
+          "scope": "Entire fixed input instance",
+          "description": "Fixed input order; the entire data sequence is chosen before play begins."
+        }
+      ],
+      "parameter_domain_description": "Require m,n ≥ 1, 1 ≤ k < min(m,n), ε > 0, and one pass. Low input rank is not assumed.",
+      "code": "model_declared",
+      "description_zh": "The input $A$ is an arbitrary real matrix with a row order fixed in advance. Assume $m,n\\ge1$, $1\\le k<\\min\\{m,n\\}$, and $\\varepsilon>0$.",
+      "description_paragraphs": [
+        "The input $A$ is an arbitrary real matrix with a row order fixed in advance. Assume $m,n\\ge1$, $1\\le k<\\min\\{m,n\\}$, and $\\varepsilon>0$."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "MX_S_stream_real_ora_119320aafd",
+          "operation_code": "matrix_stream_update",
+          "target_object": "MX_S_stream_real_obj_691b70b600",
+          "variable_blocks": [],
+          "query_signature": "Receive arrival i in the fixed order; the algorithm does not submit a numerical query vector.",
+          "response_signature": "The full current row a_iᵀ contains n exact input entries. It arrives once and cannot be reread.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "Native matrix access; no scalar derivative order is assigned.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact real-valued row entries"
+          },
+          "domain_ref": "MX_S_stream_real_dom_0d795d1f6f",
+          "coupling": "The complete input and row order are fixed before the private seed is drawn. Future data do not adapt to algorithm state.",
+          "index_control": "Rows cannot be selected, reordered, or revisited; only the stored state can be updated.",
+          "access_schedule": "one pass, fixed row order, no past requery",
+          "accuracy_argument": null,
+          "cost_rule_ref": "MX_S_stream_real_res_f6747430d3"
+        }
+      ],
+      "public_inputs": [
+        "m,n,k,ε"
+      ],
+      "hidden_objects": [
+        "MX_S_stream_real_obj_691b70b600"
+      ],
+      "auxiliary_interfaces": [],
+      "protocol_ref": "MX_S_stream_real_pro_c16db6230f",
+      "query_domain_description": "There is no selectable query vector. The next row is received passively, with no Av or Aᵀu channel.",
+      "code": "oracle_declared",
+      "description_zh": "The quantity $m,n,k,\\varepsilon$ is public. Each call returns only the next complete row. Consumed rows are unavailable again, and the algorithm cannot query $Av$ or reread the input after the stream ends.",
+      "description_paragraphs": [
+        "The quantity $m,n,k,\\varepsilon$ is public. Each call returns only the next complete row. Consumed rows are unavailable again, and the algorithm cannot query $Av$ or reread the input after the stream ends."
+      ]
+    },
+    "output": {
+      "object_type": "orthogonal_projector_or_basis",
+      "domain_ref": "MX_S_stream_real_dom_4cfbe064e9",
+      "feasibility": "Return a basis or finite description of a right rank-$k$ subspace, defining a rank-$k$ orthogonal projection $P\\in\\mathbb R^{n\\times n}$. The product $AP$ need not be output.",
+      "allowed_postprocessing": "Decode the output only from the final state and public parameters. Do not reread the input or recover discarded rows from an output medium.",
+      "certificate_requirement": "Only the true-loss guarantee is required; no computable certificate is requested.",
+      "code": "output_declared",
+      "description_zh": "After the stream ends, use only the retained final state to output $P=P^{\\mathsf T}=P^2\\in\\mathbb R^{n\\times n}$ and $\\operatorname{rank}(P)=k$. An orthonormal-basis representation is acceptable. Outputting $AP$ is not required.",
+      "description_paragraphs": [
+        "After the stream, use only retained state to output $P=P^{\\mathsf T}=P^2\\in\\mathbb{R}^{n\\times n}$ with $\\operatorname{rank}(P)=k$; an orthonormal-basis representation is allowed. Returning $AP$ is unnecessary."
+      ]
+    },
+    "metric": {
+      "base_expression": "\\|A(I_n-P)\\|_{\\mathrm F}^2\\le(1+\\varepsilon)\\|A-A_k\\|_{\\mathrm F}^2",
+      "normalization": "If both numerator and denominator are zero, the loss is zero. A zero denominator with nonzero numerator gives +∞. Otherwise use the stated ratio.",
+      "reference_object": "MX_S_stream_real_obj_691b70b600",
+      "nonnegativity": true,
+      "finiteness_conditions": "The specified dimension is finite, and the model and spectral assumptions hold.",
+      "comparator_ref": "MX_S_stream_real_com_c4029c606a",
+      "code": "metric_declared",
+      "goal_latex": "\\Pr[\\|A-A\\widehat P\\|_F^2\\le(1+\\varepsilon)\\|A-A_k\\|_F^2]\\ge\\tfrac23",
+      "description_zh": "Let $A_k$ be any best rank-$k$ Frobenius approximation. Success requires $\\|A(I_n-P)\\|_{\\mathrm F}^2\\le(1+\\varepsilon)\\|A-A_k\\|_{\\mathrm F}^2$; the residual is explicitly squared. When the optimal residual is zero, the row space must be recovered exactly.",
+      "base_expression_latex": "\\|A(I_n-P)\\|_{\\mathrm F}^2\\le(1+\\varepsilon)\\|A-A_k\\|_{\\mathrm F}^2",
+      "description_paragraphs": [
+        "Let $A_k$ be any best rank-$k$ Frobenius approximation. Success requires $\\|A(I_n-P)\\|_{\\mathrm{F}}^2\\le(1+\\varepsilon)\\|A-A_k\\|_{\\mathrm{F}}^2$; the residual is explicitly squared. When the optimal residual is zero, the row space must be recovered exactly."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "memory_registers",
+          "unit": "exact real register",
+          "description": "Peak number of simultaneously stored real numbers"
+        },
+        {
+          "code": "passes",
+          "unit": "complete pass",
+          "description": "One pass only"
+        },
+        {
+          "code": "arithmetic",
+          "unit": "real arithmetic operation",
+          "description": "Real arithmetic operations in the implementation; the current memory quantity does not charge them."
+        },
+        {
+          "code": "stream_rows",
+          "unit": "row arrival",
+          "description": "Each row can be read only once"
+        }
+      ],
+      "budget_semantics": "One pass; peak memory is bounded for every input and random seed.",
+      "cost_rules": [
+        {
+          "id": "MX_S_stream_real_res_f6747430d3",
+          "operation_refs": [
+            "MX_S_stream_real_ora_119320aafd"
+          ],
+          "cost": {
+            "stream_rows": 1
+          }
+        }
+      ],
+      "scalarization": "Record one pass, peak real-register memory, total arithmetic work, and $m$ stream rows separately.",
+      "setup_cost": "An external stream supplies rows sequentially. All information retained across rows counts as working state, and the output is decoded only from the final state.",
+      "online_cost": "One pass, with input rows arriving sequentially",
+      "amortization_scope": "Entire one-pass input stream",
+      "precision_model": "Inputs and internal registers are exact real numbers; no finite-precision error guarantee is supplied.",
+      "code": "resource_declared",
+      "description_zh": "The resource is the maximum number $S_{\\mathbb R}$ of simultaneously retained exact-real registers. One pass is fixed by the protocol, arithmetic is uncharged, and register bit precision is unspecified.\n\nThe cap holds for every input and random seed. Decode the final output from charged state without undeclared external storage.",
+      "description_paragraphs": [
+        "The native resource is the maximum number $S_{\\mathbb R}$ of simultaneously retained exact real registers. One pass is fixed by the protocol, and arithmetic is free. No bit width per register is specified.",
+        "The cost limit holds for every input and private seed. The final output must be decoded from the charged state, without an unregistered external cache."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "Private randomization is allowed.",
+        "adaptivity": "The state may depend on past inputs; the input order cannot be chosen.",
+        "restrictions": [
+          "one_pass",
+          "no_past_requery"
+        ],
+        "internal_computation": "Use the exact-real numerical linear algebra model. Count simultaneously stored real registers and record the verified algorithm's arithmetic cost separately. Arbitrary uncomputable encodings cannot compress the entire input at no cost.",
+        "parallelism": "Sequential row arrivals, with no free parallel copies.",
+        "code": "algorithms_declared",
+        "description_zh": "Randomized single-pass streaming algorithms are permitted. State consists of exact-real registers updated by ordinary arithmetic and comparisons. Uncharged arbitrary encodings that compress the entire real input stream into one register are excluded. Apart from the single-pass and register-memory constraints, internal arithmetic time is unrestricted.",
+        "description_paragraphs": [
+          "Randomized single-pass streaming algorithms are permitted. State consists of exact-real registers updated by ordinary arithmetic and comparisons. Uncharged arbitrary encodings that compress the entire real input stream into one register are excluded. Apart from the single-pass and register-memory constraints, internal arithmetic time is unrestricted."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "For every row stream fixed in advance, the squared residual is at most (1+epsilon) times the optimal squared residual with probability at least 2/3. Zero optimal residual requires exact recovery.",
+          "aggregation_order": [
+            "probability over private seed",
+            "for every fixed instance"
+          ],
+          "quantifier_order": "exists algorithm; for every fixed input; Pr_seed(success)>=2/3",
+          "randomness_sources": [
+            "algorithm_private_seed"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "fixed output time",
+          "code": "guarantee_declared",
+          "description_zh": "The algorithm is selected using only public inputs. For every admissible input fixed before its private seed is generated, the success event has probability at least $2/3$ over that private randomness.",
+          "description_paragraphs": [
+            "The algorithm is selected using only public inputs. For every admissible input fixed before its private seed is generated, the success event has probability at least $2/3$ over that private randomness."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "One pass; peak memory is bounded for every input and random seed.",
+        "precision_model": "Inputs and internal registers are exact real numbers; no finite-precision error guarantee is supplied.",
+        "scalarization": "Record one pass, peak real-register memory, total arithmetic work, and $m$ stream rows separately."
+      },
+      "alias_ids": [
+        "MX_S_stream_real"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "MX_S_stream_real_obj_691b70b600",
+        "type": "matrix",
+        "definition": "The complete data and row order of an arbitrary real matrix $A\\in\\mathbb R^{m\\times n}$ are fixed in advance. Each n-dimensional row arrives once.",
+        "depends_on": [],
+        "role_code": "matrix"
+      }
+    ],
+    "variable_blocks": [],
+    "domains": [
+      {
+        "id": "MX_S_stream_real_dom_0d795d1f6f",
+        "definition": "Rows arrive at fixed events i = 1,…,m, each revealing one n-dimensional row. There are no algorithm-selected query vectors.",
+        "roles": [
+          "query"
+        ]
+      },
+      {
+        "id": "MX_S_stream_real_dom_4cfbe064e9",
+        "definition": "Return a basis or finite description of a right rank-$k$ subspace, defining a rank-$k$ orthogonal projection $P\\in\\mathbb R^{n\\times n}$. The product $AP$ need not be output.",
+        "roles": [
+          "output"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "MX_S_stream_real_nor_0b14a2026d",
+        "definition": "Euclidean vector norm $\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}$ and matrix operator norm $\\|M\\|_{\\rm op}=\\max_{\\|z\\|_2=1}\\|Mz\\|_2$; define $\\|M\\|_F=(\\sum_{ij}|M_{ij}|^2)^{1/2}$."
+      }
+    ],
+    "protocols": [
+      {
+        "id": "MX_S_stream_real_pro_c16db6230f",
+        "steps": [
+          "The input provider fixes the complete matrix A and row order before the private seed is drawn.",
+          "Reveal the rows of A sequentially. The algorithm updates its state after reading each row.",
+          "Previous input rows are discarded and cannot be requested again.",
+          "Final output is an encoding of a rank-$k$ subspace."
+        ],
+        "adversary_information": "oblivious fixed input; does not see private seed",
+        "loss_bearing_points": "Evaluate the full-matrix projection error only at termination. There is no roundwise online regret.",
+        "queries_per_round": "The complete current row, once.",
+        "past_requery": false
+      }
+    ],
+    "comparators": [
+      {
+        "id": "MX_S_stream_real_com_c4029c606a",
+        "definition": "Squared Frobenius residual of the best rank-k approximation A_k"
+      }
+    ],
+    "local_symbols": [
+      {
+        "symbol": "m",
+        "meaning": "Number of rows of the input matrix",
+        "domain": "$m\\in\\mathbb N,\\ m\\ge1$",
+        "definition": "A\\in\\mathbb R^{m\\times n}"
+      },
+      {
+        "symbol": "n",
+        "meaning": "Number of columns of the input matrix",
+        "domain": "$n\\in\\mathbb N,\\ n\\ge1$",
+        "definition": "A\\in\\mathbb R^{m\\times n}"
+      },
+      {
+        "symbol": "k",
+        "meaning": "The exact rank of the orthogonal right projection returned after the stream.",
+        "domain": "$k\\in\\mathbb N,\\ 1\\le k<\\min\\{m,n\\}$",
+        "definition": "\\operatorname{rank}(P)=k"
+      },
+      {
+        "symbol": "\\varepsilon",
+        "meaning": "Additional relative factor over the optimal squared Frobenius residual",
+        "domain": "$\\varepsilon>0$",
+        "definition": "\\|A(I_n-P)\\|_F^2\\le(1+\\varepsilon)\\|A-A_k\\|_F^2"
+      },
+      {
+        "symbol": "A",
+        "meaning": "The input matrix arriving in a precommitted row order.",
+        "domain": "$\\mathbb R^{m\\times n}$",
+        "definition": null
+      },
+      {
+        "symbol": "P",
+        "meaning": "Right orthogonal projector returned after the stream ends",
+        "domain": "$\\mathbb R^{n\\times n}$",
+        "definition": "P=P^{\\mathsf T}=P^2,\\quad\\operatorname{rank}(P)=k"
+      },
+      {
+        "symbol": "I_n",
+        "meaning": "The order-n identity matrix.",
+        "domain": "$\\mathbb R^{n\\times n}$",
+        "definition": null
+      },
+      {
+        "symbol": "A_k",
+        "meaning": "Best Frobenius approximation of rank at most $k$",
+        "domain": "$\\mathbb R^{m\\times n}$",
+        "definition": "A_k\\in\\arg\\min_{\\operatorname{rank}(B)\\le k}\\|A-B\\|_F"
+      },
+      {
+        "symbol": "\\|M\\|_{\\mathrm F}",
+        "meaning": "The Frobenius norm.",
+        "domain": "An arbitrary real or complex matrix.",
+        "definition": "\\|M\\|_{\\mathrm F}=(\\sum_{ij}|M_{ij}|^2)^{1/2}=(\\sum_i\\sigma_i(M)^2)^{1/2}"
+      },
+      {
+        "symbol": "c,C",
+        "meaning": "Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value.",
+        "domain": "Independent of the dimension, accuracy, and probability parameters tracked by this bound.",
+        "definition": null
+      },
+      {
+        "symbol": "O,\\Omega,\\Theta",
+        "meaning": "Upper, lower, and two-sided bounds up to constants in the same applicable regime",
+        "domain": "Hidden constants have only the parameter dependence explicitly permitted by the associated bound.",
+        "definition": null
+      },
+      {
+        "symbol": "S_{\\mathbb R}",
+        "meaning": "Maximum number of exact real registers retained simultaneously during execution",
+        "domain": "$\\mathbb N_0$",
+        "definition": null
+      },
+      {
+        "symbol": "M^\\star_{\\mathrm{real}}",
+        "meaning": "Minimum worst-case number of real registers needed for the one-pass output guarantee",
+        "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+        "definition": null
+      },
+      {
+        "symbol": "\\ell",
+        "meaning": "Number of rows in the Frequent Directions sketch",
+        "domain": "$\\mathbb N$",
+        "definition": "\\ell=\\lceil k+k/\\varepsilon\\rceil\\le n"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "MX_S_stream_real_p_d812b5336c",
+      "symbol": "\\varepsilon",
+      "meaning": "Additional relative factor over the optimal squared Frobenius residual",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": true,
+      "definition": "$\\|A(I_n-P)\\|_F^2\\le(1+\\varepsilon)\\|A-A_k\\|_F^2$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_eps"
+    },
+    {
+      "id": "MX_S_stream_real_p_12a952329f",
+      "symbol": "k",
+      "meaning": "The exact rank of the orthogonal right projection returned after the stream.",
+      "kind": "independent",
+      "domain": "$k\\in\\mathbb N,\\ 1\\le k<\\min\\{m,n\\}$",
+      "public": true,
+      "definition": "$\\operatorname{rank}(P)=k$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_k"
+    },
+    {
+      "id": "MX_S_stream_real_p_35c061cc2e",
+      "symbol": "m",
+      "meaning": "Number of rows of the input matrix",
+      "kind": "independent",
+      "domain": "$m\\in\\mathbb N,\\ m\\ge1$",
+      "public": true,
+      "definition": "$A\\in\\mathbb R^{m\\times n}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_m"
+    },
+    {
+      "id": "MX_S_stream_real_p_a20059fb21",
+      "symbol": "n",
+      "meaning": "Number of columns of the input matrix",
+      "kind": "independent",
+      "domain": "$n\\in\\mathbb N,\\ n\\ge1$",
+      "public": true,
+      "definition": "$A\\in\\mathbb R^{m\\times n}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_n"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "m",
+      "meaning": "Number of rows of the input matrix",
+      "domain": "$m\\in\\mathbb N,\\ m\\ge1$",
+      "definition": "$A\\in\\mathbb R^{m\\times n}$",
+      "parameter_ref": "MX_S_stream_real_p_35c061cc2e"
+    },
+    {
+      "symbol_latex": "n",
+      "meaning": "Number of columns of the input matrix",
+      "domain": "$n\\in\\mathbb N,\\ n\\ge1$",
+      "definition": "$A\\in\\mathbb R^{m\\times n}$",
+      "parameter_ref": "MX_S_stream_real_p_a20059fb21"
+    },
+    {
+      "symbol_latex": "k",
+      "meaning": "The exact rank of the orthogonal right projection returned after the stream.",
+      "domain": "$k\\in\\mathbb N,\\ 1\\le k<\\min\\{m,n\\}$",
+      "definition": "$\\operatorname{rank}(P)=k$",
+      "parameter_ref": "MX_S_stream_real_p_12a952329f"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Additional relative factor over the optimal squared Frobenius residual",
+      "domain": "$\\varepsilon>0$",
+      "definition": "$\\|A(I_n-P)\\|_F^2\\le(1+\\varepsilon)\\|A-A_k\\|_F^2$",
+      "parameter_ref": "MX_S_stream_real_p_d812b5336c"
+    },
+    {
+      "symbol_latex": "A",
+      "meaning": "The input matrix arriving in a precommitted row order.",
+      "domain": "$\\mathbb R^{m\\times n}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "P",
+      "meaning": "Right orthogonal projector returned after the stream ends",
+      "domain": "$\\mathbb R^{n\\times n}$",
+      "definition": "$P=P^{\\mathsf T}=P^2,\\quad\\operatorname{rank}(P)=k$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "I_n",
+      "meaning": "The order-n identity matrix.",
+      "domain": "$\\mathbb R^{n\\times n}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "A_k",
+      "meaning": "Best Frobenius approximation of rank at most $k$",
+      "domain": "$\\mathbb R^{m\\times n}$",
+      "definition": "$A_k\\in\\arg\\min_{\\operatorname{rank}(B)\\le k}\\|A-B\\|_F$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|M\\|_{\\mathrm F}",
+      "meaning": "The Frobenius norm.",
+      "domain": "An arbitrary real or complex matrix.",
+      "definition": "$\\|M\\|_{\\mathrm F}=(\\sum_{ij}|M_{ij}|^2)^{1/2}=(\\sum_i\\sigma_i(M)^2)^{1/2}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value.",
+      "domain": "Independent of the dimension, accuracy, and probability parameters tracked by this bound.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta",
+      "meaning": "Upper, lower, and two-sided bounds up to constants in the same applicable regime",
+      "domain": "Hidden constants have only the parameter dependence explicitly permitted by the associated bound.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "S_{\\mathbb R}",
+      "meaning": "Maximum number of exact real registers retained simultaneously during execution",
+      "domain": "$\\mathbb N_0$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "M^\\star_{\\mathrm{real}}",
+      "meaning": "Minimum worst-case number of real registers needed for the one-pass output guarantee",
+      "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\ell",
+      "meaning": "Number of rows in the Frequent Directions sketch",
+      "domain": "$\\mathbb N$",
+      "definition": "$\\ell=\\lceil k+k/\\varepsilon\\rceil\\le n$",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "MX_S_stream_real__main__q1",
+      "kind": "memory_complexity",
+      "expression": "M^*_{\\rm real}(m,n,k,\\varepsilon)",
+      "optimization_direction": "minimize",
+      "units": "exact real registers",
+      "budget_variables": [],
+      "tolerance_variables": [
+        "MX_S_stream_real_p_d812b5336c"
+      ],
+      "analysis_scope": "Within the cited complete specification, select an algorithm before taking the worst case over all fixed inputs. Information permissions remain unchanged.",
+      "tracked_parameters": [
+        "MX_S_stream_real_p_35c061cc2e",
+        "MX_S_stream_real_p_a20059fb21",
+        "MX_S_stream_real_p_12a952329f",
+        "MX_S_stream_real_p_d812b5336c"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "M^\\star_{\\mathrm{real}}(m,n,k,\\varepsilon)",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Number of real-valued registers",
+      "expression": "memory_registers",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_de3d51c23d"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "MX_S_stream_real__main__r1",
+      "specification_ref": "MX_S_stream_real",
+      "name": "Frequent Directions sketch-size window",
+      "predicate_text": "Assume $1\\le k<\\min\\{m,n\\}$, $0<\\varepsilon<1$, and $\\lceil k+k/\\varepsilon\\rceil\\le n$.",
+      "predicate": {
+        "predicate": {
+          "name": "stream_real",
+          "args": [
+            "MX_S_stream_real_p_35c061cc2e",
+            "MX_S_stream_real_p_a20059fb21",
+            "MX_S_stream_real_p_12a952329f",
+            "MX_S_stream_real_p_d812b5336c"
+          ],
+          "description": "1≤k<min(m,n), 0<ε<1, ceil(k+k/ε)≤n"
+        }
+      },
+      "parameter_refs": [
+        "MX_S_stream_real_p_35c061cc2e",
+        "MX_S_stream_real_p_a20059fb21",
+        "MX_S_stream_real_p_12a952329f",
+        "MX_S_stream_real_p_d812b5336c"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Universal constants and dimension thresholds without numerical values remain symbolic; the three-valued decision is unknown."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "MX_S_stream_real__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "achievable_resource_point",
+      "formula_latex": "S_{\\mathbb{R}}\\le Cn\\left\\lceil k+\\frac{k}{\\varepsilon}\\right\\rceil",
+      "quantity_ref": "MX_S_stream_real__main__q1",
+      "region_refs": [
+        "MX_S_stream_real__main__r1"
+      ],
+      "method": "Deterministic one-pass Frequent Directions sketch",
+      "algorithm_or_hard_family": "Deterministic one-pass Frequent Directions sketch",
+      "algorithm_class_scope": "Randomized single-pass streaming algorithms are permitted. State consists of exact-real registers updated by ordinary arithmetic and comparisons. Uncharged arbitrary encodings that compress the entire real input stream into one register are excluded. Apart from the single-pass and register-memory constraints, internal arithmetic time is unrestricted.",
+      "resource_costs": {
+        "memory_registers": "O(n ceil(k+k/eps))",
+        "passes": "1",
+        "arithmetic": "O(m n ceil(k+k/eps))",
+        "stream_rows": "m"
+      },
+      "parameter_choice": "Determined by public parameters and the source algorithm; one algorithm jointly attains the listed costs",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_FD"
+      ],
+      "evidence_refs": [
+        "MX_S_stream_real__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_stream_real__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The same choice of $\\ell$ simultaneously attains the space, time, and one-pass requirements."
+        ],
+        "dimension_conditions": "",
+        "guarantee_mapping": "The verified Frequent Directions upper bound is deterministic and holds for every fixed real-valued row stream, so it meets the required success probability of at least $2/3$.",
+        "oracle_mapping": "A single-pass row-arrival interface with row order fixed in advance. Each step reveals only the current complete row; no Av, A^T u, selectable-row query, or rereading is available.",
+        "output_mapping": "Return only a right rank-k subspace or basis satisfying ||A-A P_hat||_F² <= (1+epsilon)||A-A_k||_F²; neither the complete product A P_hat nor an unsquared residual is the output target.",
+        "resource_mapping": "The native resource is peak exact-real registers $S_{\\mathbb R}$. One pass is a fixed protocol and arithmetic is free; register bit lengths are unspecified. The cap holds for every input and seed. Final output decodes only from charged state, without unrecorded external storage.",
+        "output_metric_mapping": "After the stream ends, use only the retained state to return $P=P^{\\mathsf T}=P^2\\in\\mathbb R^{n\\times n}$ with $\\operatorname{rank}(P)=k$; an orthonormal-basis representation is allowed. Returning $AP$ is unnecessary. Let $A_k$ be any best rank-$k$ Frobenius approximation. Success requires $\\|A(I_n-P)\\|_{\\mathrm F}^2\\le(1+\\varepsilon)\\|A-A_k\\|_{\\mathrm F}^2$, explicitly using squared residual. A zero optimal residual requires exact row-space recovery."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": null,
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Frequent Directions sketch-size window",
+      "predicate": {
+        "predicate": {
+          "name": "stream_real",
+          "args": [
+            "MX_S_stream_real_p_35c061cc2e",
+            "MX_S_stream_real_p_a20059fb21",
+            "MX_S_stream_real_p_12a952329f",
+            "MX_S_stream_real_p_d812b5336c"
+          ],
+          "description": "1≤k<min(m,n), 0<ε<1, ceil(k+k/ε)≤n"
+        }
+      },
+      "predicate_text": "Assume $1\\le k<\\min\\{m,n\\}$, $0<\\varepsilon<1$, and $\\lceil k+k/\\varepsilon\\rceil\\le n$.",
+      "parameter_refs": [
+        "MX_S_stream_real_p_35c061cc2e",
+        "MX_S_stream_real_p_a20059fb21",
+        "MX_S_stream_real_p_12a952329f",
+        "MX_S_stream_real_p_d812b5336c"
+      ],
+      "source_region_ref": "MX_S_stream_real__main__r1",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "MX_S_stream_real__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_stream_real__main__q1",
+      "resource_projection_id": "resource_de3d51c23d",
+      "regime_id": "MX_S_stream_real__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "MX_S_stream_real__main__b1"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "MX_S_stream_real__main__c1",
+        "quantity_ref": "MX_S_stream_real__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "memory_registers",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression": "O(nk/\\varepsilon)",
+            "claim_refs": [
+              "MX_S_stream_real__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "O(nk/\\varepsilon)"
+          },
+          "lower": null
+        },
+        "dispatch": [
+          {
+            "claim_ref": "MX_S_stream_real__main__b1",
+            "when_region_refs": [
+              "MX_S_stream_real__main__r1"
+            ],
+            "meaning": "Use this algorithm only on its own applicability region; scalar envelopes take minimum over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "MX_S_stream_real__main__b1": [
+            {
+              "region_ref": "MX_S_stream_real__main__r1",
+              "predicate_text": "Assume $1\\le k<\\min\\{m,n\\}$, $0<\\varepsilon<1$, and $\\lceil k+k/\\varepsilon\\rceil\\le n$."
+            }
+          ]
+        },
+        "envelope_certificate": "Only feasible joint resource points are asserted. No unconditional real-register lower bound is claimed.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Number of real-valued registers"
+      },
+      "comparison_key": {
+        "setting_id": "MX_S_stream_real",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_stream_real__main__q1",
+        "resource_projection_id": "resource_de3d51c23d",
+        "regime_id": "MX_S_stream_real__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "MX_S_stream_real__main__e1",
+      "source_ref": "MX_SRC_FD",
+      "locator": {
+        "theorem": "Theorems 1.2 and 1.5",
+        "section": "§1.4",
+        "pdf_pages": [
+          4
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Store O(n ell) floating-point numbers; accuracy is interpreted through an exact-arithmetic analysis. Set ell=ceil(k+k/epsilon). The output is a rank-k projection, not a higher-rank bicriteria approximation.",
+      "notes": [
+        "Store O(n ell) floating-point numbers; accuracy is interpreted through an exact-arithmetic analysis. Set ell=ceil(k+k/epsilon). The output is a rank-k projection, not a higher-rank bicriteria approximation."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "MX_SRC_FD",
+      "authors": [
+        "Mina Ghashami",
+        "Edo Liberty",
+        "Jeff M. Phillips",
+        "David P. Woodruff"
+      ],
+      "title": "Frequent Directions: Simple and Deterministic Matrix Sketching",
+      "year": 2016,
+      "version": "arXiv:1501.01711; SIAM Journal on Computing publication",
+      "url": "https://arxiv.org/pdf/1501.01711",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [
+    {
+      "id": "MX_REL_stream_lowrank",
+      "source_ref": "MX_S_stream_real",
+      "target_ref": "MX_S_lowrank",
+      "relation_kind": "related_task_different_interface",
+      "conditions": [
+        "p=2 with squared error; offline matrix–vector access, one-pass streams, and memory resources are distinct specifications."
+      ],
+      "instance_map": "Retain the underlying input matrix A.",
+      "output_map": "Retain the same rank-k right projection.",
+      "error_map": "squared factor1+ε corresponds norm factor√(1+ε)",
+      "oracle_simulation": "Storing all of $A$ permits matrix-vector simulation but uses $mn$ real registers. This is not a constant-memory equivalence with the oracle model.",
+      "cost_map": {
+        "expression": null,
+        "components": {
+          "storage_to_simulate_matvec": "mn real registers",
+          "pass": "1"
+        }
+      },
+      "evidence_refs": [
+        "MX_S_stream_real__main__e1"
+      ]
+    }
+  ],
+  "aliases": [
+    {
+      "legacy_id": "MX_S_stream_real",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "lower"
+    ],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "missing_lower": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "MX_S_stream_real__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "5217659107de50aba827d75ed4441bd286cafb1cc1a0d89fe76b3016690cec55",
+    "source_order": 54,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

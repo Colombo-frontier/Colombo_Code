@@ -1,0 +1,3455 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "SO_FO_C06_SC_FG",
+  "title": "Smooth convex composite minimization: strong convexity of the complete objective; function values, gradients, and an exact proximal map",
+  "summary": "Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.",
+  "primary_domain": "single_objective",
+  "oracle_order_collection": "fo",
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "single_objective"
+    },
+    {
+      "facet": "oracle_order",
+      "value": "first"
+    },
+    {
+      "facet": "goal",
+      "value": "global_minimization"
+    },
+    {
+      "facet": "structure",
+      "value": "strongly_convex"
+    },
+    {
+      "facet": "feedback",
+      "value": "FG_plus_exact_prox"
+    },
+    {
+      "facet": "algorithm",
+      "value": "deterministic"
+    },
+    {
+      "facet": "guarantee",
+      "value": "deterministic"
+    },
+    {
+      "facet": "resource",
+      "value": "oracle_calls"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expected_loss"
+    }
+  ],
+  "common_specification": {
+    "metric": {
+      "kind": "objective_gap",
+      "formula_latex": "F(\\widehat{x})-F^\\star=(f+h)(\\widehat{x})-\\inf(f+h)",
+      "nonnegative": true,
+      "tolerance_parameter": "SO_FO_C06_SC_FG_p_95775a4b65",
+      "code": "performance_measure",
+      "description_paragraphs": [
+        "$$F(\\widehat{x})-F^\\star=(f+h)(\\widehat{x})-\\inf(f+h)$$",
+        "$F^\\star=\\inf_{x\\in \\operatorname{dom}h}F(x)$. The existence, compactness, or initial-suboptimality assumptions ensure that the optimal value in this comparison is finite."
+      ],
+      "base_expression": "F(\\widehat{x})-F^\\star=(f+h)(\\widehat{x})-\\inf(f+h)"
+    },
+    "output": {
+      "object_type": "point",
+      "domain_ref": "SO_FO_C06_SC_FG_dom_5fe6836fe9",
+      "feasible_required": true,
+      "may_be_unqueried": true,
+      "certificate": "The output need not include a function value; an internal accuracy certificate is allowed.",
+      "code": "solution_output",
+      "description_paragraphs": [
+        "Return a point $\\widehat x\\in\\operatorname{dom}h$.",
+        "The output may be unqueried or constructed from the query history, provided it is feasible. No additional function value or accuracy certificate is required."
+      ]
+    },
+    "model": {
+      "parameter_domain_latex": "\\beta>0,\\quad d\\in\\mathbb N_{\\ge1},\\quad \\varepsilon>0,\\quad \\Delta>0,\\quad \\mu>0",
+      "convexity": {
+        "code": "strongly_convex",
+        "parameter_ref": "SO_FO_C06_SC_FG_p_daf3a45a8f"
+      },
+      "structure": [
+        "composite",
+        "exact_proximal_oracle"
+      ],
+      "code": "instance_class",
+      "geometry_refs": [
+        "SO_FO_C06_SC_FG_dom_d68c4bb9a8",
+        "SO_FO_C06_SC_FG_dom_5fe6836fe9"
+      ],
+      "geometry": [
+        {
+          "id": "SO_FO_C06_SC_FG_dom_d68c4bb9a8",
+          "roles": [
+            "ambient_space",
+            "objective_domain"
+          ],
+          "kind": "full_space",
+          "norm": "2",
+          "radius_parameter": null,
+          "definition_latex": "\\mathbb R^d"
+        },
+        {
+          "id": "SO_FO_C06_SC_FG_dom_5fe6836fe9",
+          "roles": [
+            "feasible_set"
+          ],
+          "kind": "other_declared",
+          "norm": "2",
+          "radius_parameter": null,
+          "definition_latex": "\\operatorname{dom}h=\\{x:h(x)<+\\infty\\}"
+        }
+      ],
+      "regularity": [
+        {
+          "code": "smooth",
+          "parameter_ref": "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "norm": "2",
+          "domain_ref": "SO_FO_C06_SC_FG_dom_d68c4bb9a8"
+        }
+      ],
+      "description_paragraphs": [
+        "$F=f+h$, where $f$ is globally convex and $\\beta$-smooth, and $h$ is a proper closed convex extended-real-valued function. The complete objective $F$ is $\\mu$-strongly convex and satisfies $F(x_0)-F^\\star\\le\\Delta$. Values $\\mu>\\beta$ are allowed because strong convexity may come from $h$.",
+        "Unless another geometry is specified, vectors use the Euclidean norm $\\|\\cdot\\|_2$, and matrices and higher derivatives use the corresponding operator norm. The assumptions hold uniformly throughout the declared domain.",
+        "Here $\\beta$-smoothness means $\\|\\nabla f(u)-\\nabla f(v)\\|_2\\le\\beta\\|u-v\\|_2$ for all $u,v$ in the declared model domain.",
+        "Strong convexity applies to the complete objective: $F(v)\\ge F(u)+\\langle g,v-u\\rangle+\\frac\\mu2\\|v-u\\|_2^2$ for $u,v\\in\\operatorname{dom}h$ and $g\\in\\partial F(u)$.",
+        "Admissible parameter domain:\n\n$$\\beta>0,\\quad d\\in\\mathbb{N}_{\\ge1},\\quad \\varepsilon>0,\\quad \\Delta>0,\\quad \\mu>0$$"
+      ]
+    },
+    "resource": {
+      "kind": "oracle_calls",
+      "budget_mode": "worst_case",
+      "unit_cost": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+      "free_operations": [
+        "exact_real_arithmetic",
+        "public_geometry_operations",
+        "certificate_computation"
+      ],
+      "bit_precision_counted": false,
+      "code": "resource_convention",
+      "description_paragraphs": [
+        "First retain the joint budget $(N_G,N_P)$ achieved by one algorithm. A primitive first-order response for $f$ and an exact proximal response for $h$ each increment the corresponding coordinate by one. The scalar comparison explicitly uses $T=N_G+N_P$.",
+        "Cost is bounded uniformly on every execution path. All calls used for initialization, repetition, batching, or candidate verification are counted.",
+        "Real arithmetic, precision, and storage applied to already available information are uncharged. Public geometric operations are limited to those explicitly granted by the oracle. Query complexity alone does not imply arithmetic, memory, or communication complexity."
+      ]
+    },
+    "oracle": {
+      "query_type": "FG_plus_exact_prox",
+      "feedback": {
+        "kind": "value_gradient_prox",
+        "accuracy": "exact",
+        "formula_latex": "(f(x),\\nabla f(x));\\ \\operatorname{prox}_{\\eta h}(v),\\ \\eta>0"
+      },
+      "query_domain_ref": "SO_FO_C06_SC_FG_dom_d68c4bb9a8",
+      "public_inputs": [
+        {
+          "object_ref": "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "knowledge": "known_value",
+          "detail": "Dimension; a public positive integer whose dependence is tracked jointly"
+        },
+        {
+          "object_ref": "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "knowledge": "known_upper_bound",
+          "detail": "Public upper bound on the gradient Lipschitz or smoothness constant"
+        },
+        {
+          "object_ref": "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "knowledge": "known_lower_bound",
+          "detail": "Public lower bound on the strong-convexity modulus; the relevant norm is part of the specification"
+        },
+        {
+          "object_ref": "SO_FO_C06_SC_FG_p_9d93d24214",
+          "knowledge": "known_upper_bound",
+          "detail": "Public upper bound on initial suboptimality, rather than its exact value"
+        },
+        {
+          "object_ref": "SO_FO_C06_SC_FG_dom_d68c4bb9a8",
+          "knowledge": "computable_access",
+          "detail": "The domain and geometry are public. Internal projection, centroid, and linear-certificate computations are uncharged; polynomial arithmetic time is not automatically asserted."
+        },
+        {
+          "object_ref": "SO_FO_C06_SC_FG_p_95775a4b65",
+          "knowledge": "known_value",
+          "detail": "Target accuracy or confidence supplied before interaction"
+        },
+        {
+          "object_ref": "SO_FO_C06_SC_FG_obj_25b054878d",
+          "knowledge": "known_value",
+          "detail": "Public initial point."
+        }
+      ],
+      "hidden_objects": [
+        {
+          "id": "SO_FO_C06_SC_FG_obj_fcefa0c37e",
+          "description": "Unknown instance function, accessible only through the declared oracle."
+        },
+        {
+          "id": "SO_FO_C06_SC_FG_obj_97cffbfbd0",
+          "description": "The unknown function $h$ is accessible only through its exact proximal map. Its formula and function values are not public unless stated explicitly."
+        }
+      ],
+      "coupling": "A fixed exact function generates every response. All feedback must be consistent with that instance; the legal oracle chooses the returned subgradient.",
+      "auxiliary_interfaces": [
+        "exact_h_prox"
+      ],
+      "code": "mixed",
+      "description_paragraphs": [
+        "Public numerical inputs: $d,\\ \\varepsilon,\\ x_0$.",
+        "Public upper bounds: $\\beta,\\ \\Delta$.",
+        "Public lower bounds: $\\mu$.",
+        "The unknown object is the objective $f$. Access to the composite term $h$, including public information and proximal operations, is specified by the interface below.",
+        "Query points lie in $\\mathbb{R}^d$; feedback consists of function values, gradients, and exact proximal access:",
+        "$$(f(x),\\nabla f(x));\\ \\operatorname{prox}_{\\eta h}(v),\\ \\eta>0$$",
+        "All responses are consistent with one fixed function instance. Exact values and derivatives agree across repeated queries at the same point.",
+        "Independent queries to $\\operatorname{prox}_{\\eta h}(v)$ are allowed for $v\\in\\mathbb R^d$ and $\\eta>0$. Their cost is specified separately by the resource convention."
+      ]
+    },
+    "task": {
+      "goal": "global_minimization",
+      "formulation_latex": "\\min_{x\\in \\operatorname{dom}h}F(x)",
+      "code": "single_objective_optimization",
+      "description_paragraphs": [
+        "Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.",
+        "$$\\min_{x\\in \\operatorname{dom}h}F(x)$$",
+        "The complete objective is $F=f+h$. The properties and information interfaces of the two terms are specified separately."
+      ],
+      "navigation_domains": [
+        "single_objective"
+      ],
+      "formulation_code": "SO.global_minimization",
+      "formulation": "\\min_{x\\in \\operatorname{dom}h}F(x)"
+    }
+  },
+  "views": [
+    {
+      "view_id": "deterministic__deterministic",
+      "label": "Deterministic / Pointwise guarantee",
+      "algorithms": {
+        "randomization": "deterministic",
+        "adaptivity": "adaptive",
+        "query_precision": "exact_real_free",
+        "internal_computation_restrictions": [],
+        "code": "algorithm_class",
+        "description_paragraphs": [
+          "The algorithm uses no private random numbers. Query and stopping decisions may depend adaptively on the observed feedback.",
+          "No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.",
+          "Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "mode": "deterministic",
+          "formula_latex": "\\exists A\\ \\forall I,\\mathcal{O}:\\ \\ell(I,\\widehat{x})\\le\\varepsilon",
+          "failure_probability": null,
+          "randomness_sources": [],
+          "uniformity": "Worst case over individual instances; no replacement by average error under an input distribution.",
+          "code": "accuracy_guarantee",
+          "description_paragraphs": [
+            "Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:",
+            "$$\\exists A\\ \\forall I,\\mathcal{O}:\\ \\ell(I,\\widehat{x})\\le\\varepsilon$$",
+            "The error guarantee holds for every instance; it is not averaged over an input distribution."
+          ]
+        }
+      ],
+      "specification_overrides": {
+        "model": {
+          "parameter_domain_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r10"
+        }
+      },
+      "budget": {},
+      "alias_ids": [
+        "SO_FO_C06_SC_D_FG"
+      ],
+      "display_qualifications": []
+    },
+    {
+      "view_id": "randomized__expected_loss",
+      "label": "Randomized / Expected loss",
+      "algorithms": {
+        "randomization": "randomized_allowed",
+        "adaptivity": "adaptive",
+        "query_precision": "exact_real_free",
+        "internal_computation_restrictions": [],
+        "code": "algorithm_class",
+        "description_paragraphs": [
+          "Private randomization is allowed. Queries, stopping decisions, and postprocessing may adapt to observed feedback.",
+          "No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.",
+          "Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "mode": "expected_loss",
+          "formula_latex": "\\exists A\\ \\forall I,\\mathcal{O}:\\ \\mathbb{E}_A[\\ell(I,\\widehat{x})]\\le\\varepsilon",
+          "failure_probability": null,
+          "randomness_sources": [
+            "algorithm_private_randomness"
+          ],
+          "uniformity": "Worst case over individual instances; no replacement by average error under an input distribution.",
+          "code": "accuracy_guarantee",
+          "description_paragraphs": [
+            "Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:",
+            "$$\\exists A\\ \\forall I,\\mathcal{O}:\\ \\mathbb{E}_A[\\ell(I,\\widehat{x})]\\le\\varepsilon$$",
+            "The probability space includes the algorithm's private randomness. The instance and its admissible oracle law are fixed before randomness is averaged."
+          ]
+        }
+      ],
+      "specification_overrides": {
+        "model": {
+          "parameter_domain_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r9"
+        }
+      },
+      "budget": {},
+      "alias_ids": [
+        "SO_FO_C06_SC_R_FG"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "SO_FO_C06_SC_FG_obj_fcefa0c37e",
+        "description": "Unknown instance function, accessible only through the declared oracle."
+      },
+      {
+        "id": "SO_FO_C06_SC_FG_obj_97cffbfbd0",
+        "description": "The unknown function $h$ is accessible only through its exact proximal map. Its formula and function values are not public unless stated explicitly."
+      },
+      {
+        "id": "SO_FO_C06_SC_FG_obj_25b054878d",
+        "information": "public",
+        "description": "Public initial point.",
+        "knowledge": "known_value"
+      }
+    ],
+    "variable_blocks": [],
+    "domains": [
+      {
+        "id": "SO_FO_C06_SC_FG_dom_d68c4bb9a8",
+        "roles": [
+          "ambient_space",
+          "objective_domain"
+        ],
+        "kind": "full_space",
+        "norm": "2",
+        "radius_parameter": null,
+        "definition_latex": "\\mathbb R^d"
+      },
+      {
+        "id": "SO_FO_C06_SC_FG_dom_5fe6836fe9",
+        "roles": [
+          "feasible_set"
+        ],
+        "kind": "other_declared",
+        "norm": "2",
+        "radius_parameter": null,
+        "definition_latex": "\\operatorname{dom}h=\\{x:h(x)<+\\infty\\}"
+      }
+    ],
+    "norms": [],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+      "symbol": "d",
+      "meaning": "Dimension; a public positive integer whose dependence is tracked jointly",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb{N}_{\\ge1}$",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "d"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG_p_06dfc1092c",
+      "symbol": "\\beta",
+      "meaning": "Public upper bound on the gradient Lipschitz or smoothness constant",
+      "kind": "independent",
+      "domain": "$\\beta>0$",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "beta"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG_p_daf3a45a8f",
+      "symbol": "\\mu",
+      "meaning": "Lower bound on the strong-convexity modulus of the objective specified by the model",
+      "kind": "independent",
+      "domain": "$\\mu>0$",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "mu"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG_p_e65970dd2a",
+      "symbol": "R",
+      "meaning": "Upper bound on the distance from the public initial point to a minimizer",
+      "kind": "independent",
+      "domain": "$R>0$",
+      "public": false,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "R"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG_p_9d93d24214",
+      "symbol": "\\Delta",
+      "meaning": "Public upper bound on initial suboptimality, rather than its exact value",
+      "kind": "independent",
+      "domain": "$\\Delta>0$",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "Delta"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG_p_95775a4b65",
+      "symbol": "\\varepsilon",
+      "meaning": "Target tolerance for the underlying error defined by the accuracy measure",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "eps"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG_p_cc004bf74e",
+      "symbol": "c",
+      "meaning": "Sufficiently small universal positive constant, not specified numerically and potentially different between theorems.",
+      "kind": "proof_constant",
+      "domain": "$0<c<1$",
+      "public": false,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "c"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+      "symbol": "C",
+      "meaning": "Sufficiently large universal positive constant, not specified numerically and potentially different between theorems.",
+      "kind": "proof_constant",
+      "domain": "$C>1$",
+      "public": false,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "C"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG_p_79206c406e",
+      "symbol": "\\kappa",
+      "meaning": "Smooth-part constant divided by the strong-convexity modulus of the complete objective; the ratio may be less than one",
+      "kind": "derived",
+      "domain": "$\\text{uniquely determined by the public parameters}$",
+      "public": false,
+      "definition": "$$\\kappa=\\frac{\\beta}{\\mu}$$",
+      "dependencies": [
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "kappa"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG_p_a82a341a08",
+      "symbol": "H_\\varepsilon",
+      "meaning": "Query scale for strongly convex objectives with a large condition number",
+      "kind": "derived",
+      "domain": "$\\text{uniquely determined by the public parameters}$",
+      "public": false,
+      "definition": "$$H_\\varepsilon=\\sqrt{\\kappa}\\,\\log(\\frac{\\Delta}{\\varepsilon})$$",
+      "dependencies": [
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "Heps"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "x,\\widehat{x}",
+      "meaning": "Query points and final output; their permitted spaces are specified separately by the oracle and output contracts",
+      "domain": "$\\widehat{x}\\in \\operatorname{dom}h$",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,h,F",
+      "meaning": "Smooth or Lipschitz term, convex proximal term, and complete objective",
+      "domain": "",
+      "definition": "$$F=f+h$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla f",
+      "meaning": "Full gradient of the differentiable objective or smooth term with respect to the decision variable",
+      "domain": "",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_0",
+      "meaning": "Public initial point satisfying the stated initial-distance or initial-suboptimality condition",
+      "domain": "",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "F^\\star",
+      "meaning": "Optimal value of the complete task; the oracle need not return it",
+      "domain": "",
+      "definition": "$$F^\\star=\\inf_{x\\in \\operatorname{dom}h}F(x)$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb{R}^d",
+      "meaning": "Real vector space with $d$ coordinates",
+      "domain": "",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_2,\\langle\\cdot,\\cdot\\rangle",
+      "meaning": "Euclidean norm and inner product",
+      "domain": "",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\partial F(x)",
+      "meaning": "Ambient subdifferential of the corresponding convex function",
+      "domain": "",
+      "definition": "$$\\partial F(x)=\\{g:F(u)\\ge F(x)+\\langle g,u-x\\rangle\\ \\forall u\\in\\operatorname{dom}F\\}$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\operatorname{prox}_{\\eta h}",
+      "meaning": "Proximal map of $h$, either public or obtained through the declared interface",
+      "domain": "$\\eta>0,\\ v\\in\\mathbb{R}^d$",
+      "definition": "$$\\operatorname{prox}_{\\eta h}(v)=\\arg\\min_u\\{h(u)+\\|u-v\\|_2^2/(2\\eta)\\}$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\operatorname{dom}h",
+      "meaning": "Effective domain of $h$",
+      "domain": "",
+      "definition": "$$\\operatorname{dom}h=\\{x:h(x)<+\\infty\\}$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "d",
+      "meaning": "Dimension; a public positive integer whose dependence is tracked jointly",
+      "domain": "$d\\in\\mathbb{N}_{\\ge1}$",
+      "definition": "",
+      "parameter_ref": "SO_FO_C06_SC_FG_p_4ba6dbf2bb"
+    },
+    {
+      "symbol_latex": "\\beta",
+      "meaning": "Public upper bound on the gradient Lipschitz or smoothness constant",
+      "domain": "$\\beta>0$",
+      "definition": "",
+      "parameter_ref": "SO_FO_C06_SC_FG_p_06dfc1092c"
+    },
+    {
+      "symbol_latex": "\\mu",
+      "meaning": "Lower bound on the strong-convexity modulus of the objective specified by the model",
+      "domain": "$\\mu>0$",
+      "definition": "",
+      "parameter_ref": "SO_FO_C06_SC_FG_p_daf3a45a8f"
+    },
+    {
+      "symbol_latex": "R",
+      "meaning": "Upper bound on the distance from the public initial point to a minimizer",
+      "domain": "$R>0$",
+      "definition": "",
+      "parameter_ref": "SO_FO_C06_SC_FG_p_e65970dd2a"
+    },
+    {
+      "symbol_latex": "\\Delta",
+      "meaning": "Public upper bound on initial suboptimality, rather than its exact value",
+      "domain": "$\\Delta>0$",
+      "definition": "",
+      "parameter_ref": "SO_FO_C06_SC_FG_p_9d93d24214"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Target tolerance for the underlying error defined by the accuracy measure",
+      "domain": "$\\varepsilon>0$",
+      "definition": "",
+      "parameter_ref": "SO_FO_C06_SC_FG_p_95775a4b65"
+    },
+    {
+      "symbol_latex": "c",
+      "meaning": "Sufficiently small universal positive constant, not specified numerically and potentially different between theorems.",
+      "domain": "$0<c<1$",
+      "definition": "",
+      "parameter_ref": "SO_FO_C06_SC_FG_p_cc004bf74e"
+    },
+    {
+      "symbol_latex": "C",
+      "meaning": "Sufficiently large universal positive constant, not specified numerically and potentially different between theorems.",
+      "domain": "$C>1$",
+      "definition": "",
+      "parameter_ref": "SO_FO_C06_SC_FG_p_60a4fa0ec6"
+    },
+    {
+      "symbol_latex": "\\kappa",
+      "meaning": "Smooth-part constant divided by the strong-convexity modulus of the complete objective; the ratio may be less than one",
+      "domain": "",
+      "definition": "$$\\kappa=\\frac{\\beta}{\\mu}$$",
+      "parameter_ref": "SO_FO_C06_SC_FG_p_79206c406e"
+    },
+    {
+      "symbol_latex": "H_\\varepsilon",
+      "meaning": "Query scale for strongly convex objectives with a large condition number",
+      "domain": "",
+      "definition": "$$H_\\varepsilon=\\sqrt{\\kappa}\\,\\log(\\frac{\\Delta}{\\varepsilon})$$",
+      "parameter_ref": "SO_FO_C06_SC_FG_p_a82a341a08"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Total budget for the declared resource projection; for a risk curve, the budget is fixed in advance",
+      "domain": "$T\\in\\mathbb{N}_{\\ge0}$",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_G,N_P",
+      "meaning": "Primitive first-order calls for $f$ and exact proximal calls for $h$",
+      "domain": "$N_G,N_P\\in\\mathbb{N}_{\\ge0}$",
+      "definition": "$$T=N_G+N_P$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\ell",
+      "meaning": "The underlying loss or error defined by the accuracy measure; its expected, probabilistic, or worst-case aggregation is specified by the success contract",
+      "domain": "",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "I,\\mathcal{O},A",
+      "meaning": "Admissible instance, a response rule consistent with that instance, and an algorithm; the algorithm is selected before the unknown instance",
+      "domain": "",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta,\\widetilde{O},\\widetilde\\Omega",
+      "meaning": "Notation for asymptotic upper and lower bounds, constant-factor matching rates, and explicitly permitted logarithmic factors. Hidden-constant dependence is specified in each regime.",
+      "domain": "",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log",
+      "meaning": "Natural logarithm; changing to another fixed base affects only a constant",
+      "domain": "",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb{E}",
+      "meaning": "Expectation over the declared randomness after fixing the instance and admissible response law",
+      "domain": "",
+      "definition": "",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "key": "calls",
+      "kind": "target_accuracy_cost",
+      "projection": "declared_atomic_resource",
+      "label": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+      "units": "oracle_calls",
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65"
+      ],
+      "fixed_parameters": [],
+      "analysis_scope": "declared_joint_parameter_window",
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": null,
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "expression_latex": "C^\\star_{v,\\pi}(\\varepsilon;\\theta)=\\inf\\{B\\ge0:\\exists\\mathcal A\\in\\mathfrak A_v,\\ C_\\pi(\\mathcal A,I)\\le B\\ \\text{and}\\ G_v(\\mathcal A,I;\\varepsilon)\\ \\forall I\\}",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    },
+    {
+      "key": "calls",
+      "kind": "target_accuracy_cost",
+      "projection": "declared_atomic_resource",
+      "label": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+      "units": "oracle_calls",
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65"
+      ],
+      "fixed_parameters": [],
+      "analysis_scope": "declared_joint_parameter_window",
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": null,
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "expression_latex": "C^\\star_{v,\\pi}(\\varepsilon;\\theta)=\\inf\\{B\\ge0:\\exists\\mathcal A\\in\\mathfrak A_v,\\ C_\\pi(\\mathcal A,I)\\le B\\ \\text{and}\\ G_v(\\mathcal A,I;\\varepsilon)\\ \\forall I\\}",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+      "expression": "declared_atomic_resource",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_49f0cd017c"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__r1",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Declared target parameter domain",
+      "universe_ref": null,
+      "predicate": {
+        "all": [
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_06dfc1092c"
+            },
+            "right": 0
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_4ba6dbf2bb"
+            },
+            "right": 1
+          },
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_95775a4b65"
+            },
+            "right": 0
+          }
+        ]
+      },
+      "predicate_text": "$\\beta>0,\\quad d\\in\\mathbb{N}_{\\ge1},\\quad \\varepsilon>0$",
+      "kind": "target_domain"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__r2",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Nontrivial accuracy under strong convexity of the complete objective",
+      "universe_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r1",
+      "predicate": {
+        "cmp": "le",
+        "left": {
+          "ref": "SO_FO_C06_SC_FG_p_95775a4b65"
+        },
+        "right": {
+          "op": "mul",
+          "args": [
+            {
+              "ref": "SO_FO_C06_SC_FG_p_cc004bf74e"
+            },
+            {
+              "ref": "SO_FO_C06_SC_FG_p_9d93d24214"
+            }
+          ]
+        }
+      },
+      "predicate_text": "$0<\\varepsilon\\le c\\Delta,\\quad\\mu,\\beta>0$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__r3",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Strong convexity with $\\kappa\\ge4$",
+      "universe_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r1",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 4
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__r4",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Sufficient dimension for the randomized strongly convex lower bound",
+      "universe_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r1",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r3"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_4ba6dbf2bb"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_C06_SC_FG_p_60a4fa0ec6"
+                },
+                {
+                  "op": "pow",
+                  "args": [
+                    {
+                      "ref": "SO_FO_C06_SC_FG_p_a82a341a08"
+                    },
+                    2
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge4,\\quad d\\ge C\\kappa\\log^2(\\Delta/\\varepsilon),\\quad\\varepsilon\\le c\\Delta$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__r5",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Sufficient dimension for the deterministic strongly convex lower bound",
+      "universe_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r1",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r3"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_4ba6dbf2bb"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_C06_SC_FG_p_60a4fa0ec6"
+                },
+                {
+                  "ref": "SO_FO_C06_SC_FG_p_a82a341a08"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge4,\\quad d\\ge C\\sqrt\\kappa\\log(\\Delta/\\varepsilon),\\quad\\varepsilon\\le c\\Delta$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__r6",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Strong convexity with $1\\le\\kappa\\le4$",
+      "universe_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r1",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 1
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 4
+          }
+        ]
+      },
+      "predicate_text": "$1\\le\\kappa\\le4,\\quad\\varepsilon\\le c\\Delta$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__r7",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Complete-objective curvature at least the smooth-part constant",
+      "universe_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r1",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_daf3a45a8f"
+            },
+            "right": {
+              "ref": "SO_FO_C06_SC_FG_p_06dfc1092c"
+            }
+          }
+        ]
+      },
+      "predicate_text": "$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__r8",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Zero-query strongly convex regime",
+      "universe_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r1",
+      "predicate": {
+        "cmp": "ge",
+        "left": {
+          "ref": "SO_FO_C06_SC_FG_p_95775a4b65"
+        },
+        "right": {
+          "ref": "SO_FO_C06_SC_FG_p_9d93d24214"
+        }
+      },
+      "predicate_text": "$\\varepsilon\\ge\\Delta$",
+      "kind": "degenerate_case"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__r9",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Restart applies for $\\kappa\\ge1$",
+      "universe_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r1",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 1
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__r10",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Admissible parameter domain of the complete specification",
+      "universe_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r1",
+      "predicate": {
+        "all": [
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_9d93d24214"
+            },
+            "right": 0
+          },
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_daf3a45a8f"
+            },
+            "right": 0
+          }
+        ]
+      },
+      "predicate_text": "$\\beta>0,\\quad d\\in\\mathbb{N}_{\\ge1},\\quad \\varepsilon>0,\\quad \\Delta>0,\\quad \\mu>0$",
+      "kind": "target_domain"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__r1",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Declared target parameter domain",
+      "universe_ref": null,
+      "predicate": {
+        "all": [
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_06dfc1092c"
+            },
+            "right": 0
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_4ba6dbf2bb"
+            },
+            "right": 1
+          },
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_95775a4b65"
+            },
+            "right": 0
+          }
+        ]
+      },
+      "predicate_text": "$\\beta>0,\\quad d\\in\\mathbb{N}_{\\ge1},\\quad \\varepsilon>0$",
+      "kind": "target_domain"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__r2",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Nontrivial accuracy under strong convexity of the complete objective",
+      "universe_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r1",
+      "predicate": {
+        "cmp": "le",
+        "left": {
+          "ref": "SO_FO_C06_SC_FG_p_95775a4b65"
+        },
+        "right": {
+          "op": "mul",
+          "args": [
+            {
+              "ref": "SO_FO_C06_SC_FG_p_cc004bf74e"
+            },
+            {
+              "ref": "SO_FO_C06_SC_FG_p_9d93d24214"
+            }
+          ]
+        }
+      },
+      "predicate_text": "$0<\\varepsilon\\le c\\Delta,\\quad\\mu,\\beta>0$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__r3",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Strong convexity with $\\kappa\\ge4$",
+      "universe_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r1",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 4
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__r4",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Sufficient dimension for the randomized strongly convex lower bound",
+      "universe_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r1",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r3"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_4ba6dbf2bb"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_C06_SC_FG_p_60a4fa0ec6"
+                },
+                {
+                  "op": "pow",
+                  "args": [
+                    {
+                      "ref": "SO_FO_C06_SC_FG_p_a82a341a08"
+                    },
+                    2
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge4,\\quad d\\ge C\\kappa\\log^2(\\Delta/\\varepsilon),\\quad\\varepsilon\\le c\\Delta$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__r5",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Strong convexity with $1\\le\\kappa\\le4$",
+      "universe_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r1",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 1
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 4
+          }
+        ]
+      },
+      "predicate_text": "$1\\le\\kappa\\le4,\\quad\\varepsilon\\le c\\Delta$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__r6",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Complete-objective curvature at least the smooth-part constant",
+      "universe_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r1",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_daf3a45a8f"
+            },
+            "right": {
+              "ref": "SO_FO_C06_SC_FG_p_06dfc1092c"
+            }
+          }
+        ]
+      },
+      "predicate_text": "$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__r7",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Zero-query strongly convex regime",
+      "universe_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r1",
+      "predicate": {
+        "cmp": "ge",
+        "left": {
+          "ref": "SO_FO_C06_SC_FG_p_95775a4b65"
+        },
+        "right": {
+          "ref": "SO_FO_C06_SC_FG_p_9d93d24214"
+        }
+      },
+      "predicate_text": "$\\varepsilon\\ge\\Delta$",
+      "kind": "degenerate_case"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__r8",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Restart applies for $\\kappa\\ge1$",
+      "universe_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r1",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 1
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__r9",
+      "specification_ref": "SO_FO_C06_SC_FG",
+      "name": "Admissible parameter domain of the complete specification",
+      "universe_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r1",
+      "predicate": {
+        "all": [
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_9d93d24214"
+            },
+            "right": 0
+          },
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_daf3a45a8f"
+            },
+            "right": 0
+          }
+        ]
+      },
+      "predicate_text": "$\\beta>0,\\quad d\\in\\mathbb{N}_{\\ge1},\\quad \\varepsilon>0,\\quad \\Delta>0,\\quad \\mu>0$",
+      "kind": "target_domain"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__b1",
+      "direction": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "C\\sqrt\\kappa\\log(\\Delta/\\varepsilon)",
+      "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__r9"
+      ],
+      "method": "Restarted accelerated gradient / proximal gradient",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__e1",
+        "SO_FO_C06_SC_FG__deterministic__deterministic__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c1",
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c2",
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c3",
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c4"
+      ],
+      "applicability": {
+        "conditions": "$$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.",
+        "guarantee_mapping": "A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+      },
+      "witness_type": "deterministic",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ]
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__b2",
+      "direction": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "C[1+d\\log(2+\\kappa\\Delta/\\varepsilon)]",
+      "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__r2"
+      ],
+      "method": "Strong-convexity localization and cutting planes",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__e3",
+        "SO_FO_C06_SC_FG__deterministic__deterministic__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c1"
+      ],
+      "applicability": {
+        "conditions": "$$0<\\varepsilon\\le c\\Delta,\\quad\\mu,\\beta>0$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.",
+        "guarantee_mapping": "A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$0<\\varepsilon\\le c\\Delta,\\quad\\mu,\\beta>0$"
+      },
+      "witness_type": "deterministic",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ]
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__b3",
+      "direction": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "C[1+\\log(\\Delta/\\varepsilon)/\\log(1+\\mu/\\beta)]",
+      "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__r7"
+      ],
+      "method": "Proximal contraction at small condition numbers",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c5"
+      ],
+      "applicability": {
+        "conditions": "$$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.",
+        "guarantee_mapping": "A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$"
+      },
+      "witness_type": "deterministic",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ]
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__b4",
+      "direction": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "c\\min\\{d,H_\\varepsilon\\}",
+      "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__r3"
+      ],
+      "method": "Deterministic quadratic-chain reduction under strong convexity",
+      "source_refs": [
+        "SO_SRC_c729895b420a5000"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__e4"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c1",
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c3"
+      ],
+      "applicability": {
+        "conditions": "$$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.",
+        "guarantee_mapping": "The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$"
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__b5",
+      "direction": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "c\\min\\{\\sqrt d,H_\\varepsilon\\}",
+      "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__r3"
+      ],
+      "method": "Random-matrix hard-instance reduction under strong convexity",
+      "source_refs": [
+        "SO_SRC_da45f3a56f11d157"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__e5"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c2"
+      ],
+      "applicability": {
+        "conditions": "$$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.",
+        "guarantee_mapping": "The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$"
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__b6",
+      "direction": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "c\\log(\\Delta/\\varepsilon)",
+      "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__r9"
+      ],
+      "method": "One-dimensional strongly convex localization hard instances",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__e6"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c1",
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c4"
+      ],
+      "applicability": {
+        "conditions": "$$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.",
+        "guarantee_mapping": "The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_NESTED_FG",
+        "FO_COMPOSITE_CERTIFICATE"
+      ]
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__b7",
+      "direction": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "c[1+\\log(\\Delta/\\varepsilon)/\\log(1+\\mu/\\beta)]",
+      "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__r7"
+      ],
+      "method": "Indistinguishability at small proximal condition numbers",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__e6"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c5"
+      ],
+      "applicability": {
+        "conditions": "$$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.",
+        "guarantee_mapping": "The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$"
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_NESTED_FG",
+        "FO_COMPOSITE_CERTIFICATE"
+      ]
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__b8",
+      "direction": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "0",
+      "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__r8"
+      ],
+      "method": "Return the public initial point",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c6"
+      ],
+      "applicability": {
+        "conditions": "$$\\varepsilon\\ge\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.",
+        "guarantee_mapping": "A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\varepsilon\\ge\\Delta$"
+      },
+      "witness_type": "deterministic",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ]
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__b1",
+      "direction": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "C\\sqrt\\kappa\\log(\\Delta/\\varepsilon)",
+      "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__r8"
+      ],
+      "method": "Restarted accelerated gradient / proximal gradient",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__e1",
+        "SO_FO_C06_SC_FG__randomized__expected_loss__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c1",
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c2",
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c3"
+      ],
+      "applicability": {
+        "conditions": "$$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.",
+        "guarantee_mapping": "A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+      },
+      "witness_type": "deterministic",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ]
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__b2",
+      "direction": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "C[1+d\\log(2+\\kappa\\Delta/\\varepsilon)]",
+      "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__r2"
+      ],
+      "method": "Strong-convexity localization and cutting planes",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__e3",
+        "SO_FO_C06_SC_FG__randomized__expected_loss__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c1"
+      ],
+      "applicability": {
+        "conditions": "$$0<\\varepsilon\\le c\\Delta,\\quad\\mu,\\beta>0$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.",
+        "guarantee_mapping": "A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$0<\\varepsilon\\le c\\Delta,\\quad\\mu,\\beta>0$"
+      },
+      "witness_type": "deterministic",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ]
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__b3",
+      "direction": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "C[1+\\log(\\Delta/\\varepsilon)/\\log(1+\\mu/\\beta)]",
+      "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__r6"
+      ],
+      "method": "Proximal contraction at small condition numbers",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c4"
+      ],
+      "applicability": {
+        "conditions": "$$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.",
+        "guarantee_mapping": "A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$"
+      },
+      "witness_type": "deterministic",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ]
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__b4",
+      "direction": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "c\\min\\{\\sqrt d,H_\\varepsilon\\}",
+      "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__r3"
+      ],
+      "method": "Random-matrix hard-instance reduction under strong convexity",
+      "source_refs": [
+        "SO_SRC_da45f3a56f11d157"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__e4"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c1",
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c2"
+      ],
+      "applicability": {
+        "conditions": "$$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.",
+        "guarantee_mapping": "The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$"
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__b5",
+      "direction": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "c\\log(\\Delta/\\varepsilon)",
+      "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__r8"
+      ],
+      "method": "One-dimensional strongly convex localization hard instances",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__e5"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c1",
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c3"
+      ],
+      "applicability": {
+        "conditions": "$$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.",
+        "guarantee_mapping": "The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_NESTED_FG",
+        "FO_COMPOSITE_CERTIFICATE"
+      ]
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__b6",
+      "direction": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "c[1+\\log(\\Delta/\\varepsilon)/\\log(1+\\mu/\\beta)]",
+      "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__r6"
+      ],
+      "method": "Indistinguishability at small proximal condition numbers",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__e5"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c4"
+      ],
+      "applicability": {
+        "conditions": "$$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.",
+        "guarantee_mapping": "The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$"
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_NESTED_FG",
+        "FO_COMPOSITE_CERTIFICATE"
+      ]
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__b7",
+      "direction": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "0",
+      "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "quantity_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__q1"
+      ],
+      "region_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__r7"
+      ],
+      "method": "Return the public initial point",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "evidence_refs": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c5"
+      ],
+      "applicability": {
+        "conditions": "$$\\varepsilon\\ge\\Delta$$",
+        "oracle_mapping": "Applicable interfaces: function values, gradients, and an exact proximal map, gradients and an exact proximal map. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.",
+        "guarantee_mapping": "A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.",
+        "resource_mapping": "Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.",
+        "output_mapping": "The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.",
+        "dimension_conditions": "$\\varepsilon\\ge\\Delta$"
+      },
+      "witness_type": "deterministic",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Strong convexity with $\\kappa\\ge4$",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 4
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$",
+      "parameter_refs": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_e65970dd2a",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65",
+        "SO_FO_C06_SC_FG_p_cc004bf74e",
+        "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_a82a341a08"
+      ],
+      "source_region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r3",
+      "status": {
+        "code": "other_quantified_gap",
+        "label": "Other quantified gap",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_FO_C06_SC_FG__deterministic__deterministic__c1",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "resource_projection_id": "resource_49f0cd017c",
+      "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r3",
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b1",
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b2"
+        ],
+        "lower_refs": [
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b4",
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b6"
+        ],
+        "comparison_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__c1",
+        "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$\\frac{C\\min\\{H_\\varepsilon,1+d\\log(2+\\kappa\\Delta/\\varepsilon)\\}}{c\\max\\{\\min\\{d,H_\\varepsilon\\},\\log(\\Delta/\\varepsilon)\\}}$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "C\\min\\{H_\\varepsilon,1+d\\log(2+\\kappa\\Delta/\\varepsilon)\\}",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b1",
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b2"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "c\\max\\{\\min\\{d,H_\\varepsilon\\},\\log(\\Delta/\\varepsilon)\\}",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b4",
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b6"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b1": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r9",
+              "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ],
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b2": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r2",
+              "predicate_text": "$0<\\varepsilon\\le c\\Delta,\\quad\\mu,\\beta>0$"
+            }
+          ],
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b6": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r9",
+              "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ]
+        },
+        "envelope_certificate": "The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $\\frac{C\\min\\{H_\\varepsilon,1+d\\log(2+\\kappa\\Delta/\\varepsilon)\\}}{c\\max\\{\\min\\{d,H_\\varepsilon\\},\\log(\\Delta/\\varepsilon)\\}}$",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+        "tracked_parameters": [
+          "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "SO_FO_C06_SC_FG_p_9d93d24214",
+          "SO_FO_C06_SC_FG_p_95775a4b65"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_FO_C06_SC_FG",
+        "view_id": "deterministic__deterministic",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "resource_projection_id": "resource_49f0cd017c",
+        "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r3"
+      }
+    },
+    {
+      "label": "Sufficient dimension for the randomized strongly convex lower bound",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r3"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_4ba6dbf2bb"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_C06_SC_FG_p_60a4fa0ec6"
+                },
+                {
+                  "op": "pow",
+                  "args": [
+                    {
+                      "ref": "SO_FO_C06_SC_FG_p_a82a341a08"
+                    },
+                    2
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge4,\\quad d\\ge C\\kappa\\log^2(\\Delta/\\varepsilon),\\quad\\varepsilon\\le c\\Delta$",
+      "parameter_refs": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_e65970dd2a",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65",
+        "SO_FO_C06_SC_FG_p_cc004bf74e",
+        "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_a82a341a08"
+      ],
+      "source_region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r4",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_FO_C06_SC_FG__deterministic__deterministic__c2",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "resource_projection_id": "resource_49f0cd017c",
+      "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r4",
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b1"
+        ],
+        "lower_refs": [
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b5"
+        ],
+        "comparison_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__c2",
+        "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$C$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "CH_\\varepsilon",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "cH_\\varepsilon",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b5"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b1": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r9",
+              "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ],
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b5": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r3",
+              "predicate_text": "$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+        "tracked_parameters": [
+          "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "SO_FO_C06_SC_FG_p_9d93d24214",
+          "SO_FO_C06_SC_FG_p_95775a4b65"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_FO_C06_SC_FG",
+        "view_id": "deterministic__deterministic",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "resource_projection_id": "resource_49f0cd017c",
+        "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r4"
+      }
+    },
+    {
+      "label": "Sufficient dimension for the deterministic strongly convex lower bound",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r3"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_4ba6dbf2bb"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_C06_SC_FG_p_60a4fa0ec6"
+                },
+                {
+                  "ref": "SO_FO_C06_SC_FG_p_a82a341a08"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge4,\\quad d\\ge C\\sqrt\\kappa\\log(\\Delta/\\varepsilon),\\quad\\varepsilon\\le c\\Delta$",
+      "parameter_refs": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_e65970dd2a",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65",
+        "SO_FO_C06_SC_FG_p_cc004bf74e",
+        "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_a82a341a08"
+      ],
+      "source_region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r5",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_FO_C06_SC_FG__deterministic__deterministic__c3",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "resource_projection_id": "resource_49f0cd017c",
+      "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r5",
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b1"
+        ],
+        "lower_refs": [
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b4"
+        ],
+        "comparison_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__c3",
+        "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$C$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "CH_\\varepsilon",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "cH_\\varepsilon",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b4"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b1": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r9",
+              "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ],
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b4": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r3",
+              "predicate_text": "$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+        "tracked_parameters": [
+          "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "SO_FO_C06_SC_FG_p_9d93d24214",
+          "SO_FO_C06_SC_FG_p_95775a4b65"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_FO_C06_SC_FG",
+        "view_id": "deterministic__deterministic",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "resource_projection_id": "resource_49f0cd017c",
+        "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r5"
+      }
+    },
+    {
+      "label": "Strong convexity with $1\\le\\kappa\\le4$",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 1
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 4
+          }
+        ]
+      },
+      "predicate_text": "$1\\le\\kappa\\le4,\\quad\\varepsilon\\le c\\Delta$",
+      "parameter_refs": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_e65970dd2a",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65",
+        "SO_FO_C06_SC_FG_p_cc004bf74e",
+        "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_a82a341a08"
+      ],
+      "source_region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r6",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_FO_C06_SC_FG__deterministic__deterministic__c4",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "resource_projection_id": "resource_49f0cd017c",
+      "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r6",
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b1"
+        ],
+        "lower_refs": [
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b6"
+        ],
+        "comparison_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__c4",
+        "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$C$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "C\\log(\\Delta/\\varepsilon)",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "c\\log(\\Delta/\\varepsilon)",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b6"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b1": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r9",
+              "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ],
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b6": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r9",
+              "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+        "tracked_parameters": [
+          "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "SO_FO_C06_SC_FG_p_9d93d24214",
+          "SO_FO_C06_SC_FG_p_95775a4b65"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_FO_C06_SC_FG",
+        "view_id": "deterministic__deterministic",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "resource_projection_id": "resource_49f0cd017c",
+        "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r6"
+      }
+    },
+    {
+      "label": "Complete-objective curvature at least the smooth-part constant",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_daf3a45a8f"
+            },
+            "right": {
+              "ref": "SO_FO_C06_SC_FG_p_06dfc1092c"
+            }
+          }
+        ]
+      },
+      "predicate_text": "$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$",
+      "parameter_refs": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_e65970dd2a",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65",
+        "SO_FO_C06_SC_FG_p_cc004bf74e",
+        "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_a82a341a08"
+      ],
+      "source_region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r7",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_FO_C06_SC_FG__deterministic__deterministic__c5",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "resource_projection_id": "resource_49f0cd017c",
+      "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r7",
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b3"
+        ],
+        "lower_refs": [
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b7"
+        ],
+        "comparison_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__c5",
+        "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$C$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "C[1+\\log(\\Delta/\\varepsilon)/\\log(1+\\mu/\\beta)]",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b3"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "c[1+\\log(\\Delta/\\varepsilon)/\\log(1+\\mu/\\beta)]",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b7"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {},
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+        "tracked_parameters": [
+          "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "SO_FO_C06_SC_FG_p_9d93d24214",
+          "SO_FO_C06_SC_FG_p_95775a4b65"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_FO_C06_SC_FG",
+        "view_id": "deterministic__deterministic",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "resource_projection_id": "resource_49f0cd017c",
+        "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r7"
+      }
+    },
+    {
+      "label": "Zero-query strongly convex regime",
+      "predicate": {
+        "cmp": "ge",
+        "left": {
+          "ref": "SO_FO_C06_SC_FG_p_95775a4b65"
+        },
+        "right": {
+          "ref": "SO_FO_C06_SC_FG_p_9d93d24214"
+        }
+      },
+      "predicate_text": "$\\varepsilon\\ge\\Delta$",
+      "parameter_refs": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_e65970dd2a",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65",
+        "SO_FO_C06_SC_FG_p_cc004bf74e",
+        "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_a82a341a08"
+      ],
+      "source_region_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__r8",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_FO_C06_SC_FG__deterministic__deterministic__c6",
+      "view_id": "deterministic__deterministic",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+      "resource_projection_id": "resource_49f0cd017c",
+      "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r8",
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_C06_SC_FG__deterministic__deterministic__b8"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__c6",
+        "quantity_ref": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "0",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__deterministic__deterministic__b8"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "0",
+            "expression_latex": "0",
+            "claim_refs": [],
+            "included": true,
+            "basis": "nonnegativity"
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {},
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+        "tracked_parameters": [
+          "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "SO_FO_C06_SC_FG_p_9d93d24214",
+          "SO_FO_C06_SC_FG_p_95775a4b65"
+        ],
+        "fixed_parameters": [],
+        "lower_certificate": {
+          "type": "nonnegativity",
+          "expression_latex": "0",
+          "algorithm_scope": "all_algorithms",
+          "argument": "The compared minimax cost or nonnegative risk is at least zero by its definition. Together with the admitted zero upper bound, this proves exact equality."
+        }
+      },
+      "comparison_key": {
+        "setting_id": "SO_FO_C06_SC_FG",
+        "view_id": "deterministic__deterministic",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_C06_SC_FG__deterministic__deterministic__q1",
+        "resource_projection_id": "resource_49f0cd017c",
+        "regime_id": "SO_FO_C06_SC_FG__deterministic__deterministic__r8"
+      }
+    },
+    {
+      "label": "Strong convexity with $\\kappa\\ge4$",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 4
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$",
+      "parameter_refs": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_e65970dd2a",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65",
+        "SO_FO_C06_SC_FG_p_cc004bf74e",
+        "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_a82a341a08"
+      ],
+      "source_region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r3",
+      "status": {
+        "code": "other_quantified_gap",
+        "label": "Other quantified gap",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_FO_C06_SC_FG__randomized__expected_loss__c1",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "resource_projection_id": "resource_49f0cd017c",
+      "regime_id": "SO_FO_C06_SC_FG__randomized__expected_loss__r3",
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b1",
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b2"
+        ],
+        "lower_refs": [
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b4",
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b5"
+        ],
+        "comparison_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__c1",
+        "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$\\frac{C\\min\\{H_\\varepsilon,1+d\\log(2+\\kappa\\Delta/\\varepsilon)\\}}{c\\max\\{\\min\\{\\sqrt d,H_\\varepsilon\\},\\log(\\Delta/\\varepsilon)\\}}$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "C\\min\\{H_\\varepsilon,1+d\\log(2+\\kappa\\Delta/\\varepsilon)\\}",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__randomized__expected_loss__b1",
+              "SO_FO_C06_SC_FG__randomized__expected_loss__b2"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "c\\max\\{\\min\\{\\sqrt d,H_\\varepsilon\\},\\log(\\Delta/\\varepsilon)\\}",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__randomized__expected_loss__b4",
+              "SO_FO_C06_SC_FG__randomized__expected_loss__b5"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b1": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r8",
+              "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ],
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b2": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r2",
+              "predicate_text": "$0<\\varepsilon\\le c\\Delta,\\quad\\mu,\\beta>0$"
+            }
+          ],
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b5": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r8",
+              "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ]
+        },
+        "envelope_certificate": "The comparison uses the same model, query domain, output requirement, success guarantee, and resource convention. The upper envelope minimizes over applicable algorithms; the lower envelope maximizes over applicable hard instances. A finite sum of lower bounds is used only up to a constant factor. Rate comparison: Both bounds and their validity regions are retained for this contract. An intersection of upper bounds alone does not establish a minimax transition. Ratio: $\\frac{C\\min\\{H_\\varepsilon,1+d\\log(2+\\kappa\\Delta/\\varepsilon)\\}}{c\\max\\{\\min\\{\\sqrt d,H_\\varepsilon\\},\\log(\\Delta/\\varepsilon)\\}}$",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+        "tracked_parameters": [
+          "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "SO_FO_C06_SC_FG_p_9d93d24214",
+          "SO_FO_C06_SC_FG_p_95775a4b65"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_FO_C06_SC_FG",
+        "view_id": "randomized__expected_loss",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+        "resource_projection_id": "resource_49f0cd017c",
+        "regime_id": "SO_FO_C06_SC_FG__randomized__expected_loss__r3"
+      }
+    },
+    {
+      "label": "Sufficient dimension for the randomized strongly convex lower bound",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r3"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_4ba6dbf2bb"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_C06_SC_FG_p_60a4fa0ec6"
+                },
+                {
+                  "op": "pow",
+                  "args": [
+                    {
+                      "ref": "SO_FO_C06_SC_FG_p_a82a341a08"
+                    },
+                    2
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "$\\kappa\\ge4,\\quad d\\ge C\\kappa\\log^2(\\Delta/\\varepsilon),\\quad\\varepsilon\\le c\\Delta$",
+      "parameter_refs": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_e65970dd2a",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65",
+        "SO_FO_C06_SC_FG_p_cc004bf74e",
+        "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_a82a341a08"
+      ],
+      "source_region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r4",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_FO_C06_SC_FG__randomized__expected_loss__c2",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "resource_projection_id": "resource_49f0cd017c",
+      "regime_id": "SO_FO_C06_SC_FG__randomized__expected_loss__r4",
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b1"
+        ],
+        "lower_refs": [
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b4"
+        ],
+        "comparison_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__c2",
+        "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$C$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "CH_\\varepsilon",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__randomized__expected_loss__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "cH_\\varepsilon",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__randomized__expected_loss__b4"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b1": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r8",
+              "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ],
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b4": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r3",
+              "predicate_text": "$\\kappa\\ge4,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+        "tracked_parameters": [
+          "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "SO_FO_C06_SC_FG_p_9d93d24214",
+          "SO_FO_C06_SC_FG_p_95775a4b65"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_FO_C06_SC_FG",
+        "view_id": "randomized__expected_loss",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+        "resource_projection_id": "resource_49f0cd017c",
+        "regime_id": "SO_FO_C06_SC_FG__randomized__expected_loss__r4"
+      }
+    },
+    {
+      "label": "Strong convexity with $1\\le\\kappa\\le4$",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 1
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_79206c406e"
+            },
+            "right": 4
+          }
+        ]
+      },
+      "predicate_text": "$1\\le\\kappa\\le4,\\quad\\varepsilon\\le c\\Delta$",
+      "parameter_refs": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_e65970dd2a",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65",
+        "SO_FO_C06_SC_FG_p_cc004bf74e",
+        "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_a82a341a08"
+      ],
+      "source_region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r5",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_FO_C06_SC_FG__randomized__expected_loss__c3",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "resource_projection_id": "resource_49f0cd017c",
+      "regime_id": "SO_FO_C06_SC_FG__randomized__expected_loss__r5",
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b1"
+        ],
+        "lower_refs": [
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b5"
+        ],
+        "comparison_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__c3",
+        "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$C$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "C\\log(\\Delta/\\varepsilon)",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__randomized__expected_loss__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "c\\log(\\Delta/\\varepsilon)",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__randomized__expected_loss__b5"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b1": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r8",
+              "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ],
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b5": [
+            {
+              "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r8",
+              "predicate_text": "$\\kappa\\ge1,\\quad\\varepsilon\\le c\\Delta$"
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+        "tracked_parameters": [
+          "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "SO_FO_C06_SC_FG_p_9d93d24214",
+          "SO_FO_C06_SC_FG_p_95775a4b65"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_FO_C06_SC_FG",
+        "view_id": "randomized__expected_loss",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+        "resource_projection_id": "resource_49f0cd017c",
+        "regime_id": "SO_FO_C06_SC_FG__randomized__expected_loss__r5"
+      }
+    },
+    {
+      "label": "Complete-objective curvature at least the smooth-part constant",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r2"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_C06_SC_FG_p_daf3a45a8f"
+            },
+            "right": {
+              "ref": "SO_FO_C06_SC_FG_p_06dfc1092c"
+            }
+          }
+        ]
+      },
+      "predicate_text": "$\\mu\\ge\\beta>0,\\quad\\varepsilon\\le c\\Delta$",
+      "parameter_refs": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_e65970dd2a",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65",
+        "SO_FO_C06_SC_FG_p_cc004bf74e",
+        "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_a82a341a08"
+      ],
+      "source_region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r6",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_FO_C06_SC_FG__randomized__expected_loss__c4",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "resource_projection_id": "resource_49f0cd017c",
+      "regime_id": "SO_FO_C06_SC_FG__randomized__expected_loss__r6",
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b3"
+        ],
+        "lower_refs": [
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b6"
+        ],
+        "comparison_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__c4",
+        "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$C$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "C[1+\\log(\\Delta/\\varepsilon)/\\log(1+\\mu/\\beta)]",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__randomized__expected_loss__b3"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "c[1+\\log(\\Delta/\\varepsilon)/\\log(1+\\mu/\\beta)]",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__randomized__expected_loss__b6"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {},
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+        "tracked_parameters": [
+          "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "SO_FO_C06_SC_FG_p_9d93d24214",
+          "SO_FO_C06_SC_FG_p_95775a4b65"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_FO_C06_SC_FG",
+        "view_id": "randomized__expected_loss",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+        "resource_projection_id": "resource_49f0cd017c",
+        "regime_id": "SO_FO_C06_SC_FG__randomized__expected_loss__r6"
+      }
+    },
+    {
+      "label": "Zero-query strongly convex regime",
+      "predicate": {
+        "cmp": "ge",
+        "left": {
+          "ref": "SO_FO_C06_SC_FG_p_95775a4b65"
+        },
+        "right": {
+          "ref": "SO_FO_C06_SC_FG_p_9d93d24214"
+        }
+      },
+      "predicate_text": "$\\varepsilon\\ge\\Delta$",
+      "parameter_refs": [
+        "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+        "SO_FO_C06_SC_FG_p_06dfc1092c",
+        "SO_FO_C06_SC_FG_p_daf3a45a8f",
+        "SO_FO_C06_SC_FG_p_e65970dd2a",
+        "SO_FO_C06_SC_FG_p_9d93d24214",
+        "SO_FO_C06_SC_FG_p_95775a4b65",
+        "SO_FO_C06_SC_FG_p_cc004bf74e",
+        "SO_FO_C06_SC_FG_p_60a4fa0ec6",
+        "SO_FO_C06_SC_FG_p_79206c406e",
+        "SO_FO_C06_SC_FG_p_a82a341a08"
+      ],
+      "source_region_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__r7",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_FO_C06_SC_FG__randomized__expected_loss__c5",
+      "view_id": "randomized__expected_loss",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+      "resource_projection_id": "resource_49f0cd017c",
+      "regime_id": "SO_FO_C06_SC_FG__randomized__expected_loss__r7",
+      "bracket": {
+        "upper_refs": [
+          "SO_FO_C06_SC_FG__randomized__expected_loss__b7"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__c5",
+        "quantity_ref": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "0",
+            "claim_refs": [
+              "SO_FO_C06_SC_FG__randomized__expected_loss__b7"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "0",
+            "expression_latex": "0",
+            "claim_refs": [],
+            "included": true,
+            "basis": "nonnegativity"
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {},
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Each gradient/value-gradient call for $f$ and each proximal call for $h$ costs one; $T=N_G+N_P$.",
+        "tracked_parameters": [
+          "SO_FO_C06_SC_FG_p_4ba6dbf2bb",
+          "SO_FO_C06_SC_FG_p_06dfc1092c",
+          "SO_FO_C06_SC_FG_p_daf3a45a8f",
+          "SO_FO_C06_SC_FG_p_9d93d24214",
+          "SO_FO_C06_SC_FG_p_95775a4b65"
+        ],
+        "fixed_parameters": [],
+        "lower_certificate": {
+          "type": "nonnegativity",
+          "expression_latex": "0",
+          "algorithm_scope": "all_algorithms",
+          "argument": "The compared minimax cost or nonnegative risk is at least zero by its definition. Together with the admitted zero upper bound, this proves exact equality."
+        }
+      },
+      "comparison_key": {
+        "setting_id": "SO_FO_C06_SC_FG",
+        "view_id": "randomized__expected_loss",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_C06_SC_FG__randomized__expected_loss__q1",
+        "resource_projection_id": "resource_49f0cd017c",
+        "regime_id": "SO_FO_C06_SC_FG__randomized__expected_loss__r7"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "proof_id": "FO_COMPOSITE_CERTIFICATE",
+      "title": "Gradient-plus-proximal certificates",
+      "body": "Let $F=f+h$, with convex $\\beta$-smooth $f$ and proper closed convex $h$. Define\n$y=\\operatorname{prox}_{h/\\beta}(x-\\nabla f(x)/\\beta)$, $g=\\beta(x-y)$.\nProximal optimality gives $g-\\nabla f(x)\\in\\partial h(y)$. Adding its subgradient inequality to the convex smooth bound for $f$ yields\n$$\nF(y)-F(z)\\le\\langle g,x-z\\rangle-\\|g\\|^2/(2\\beta)\n\\quad(z\\in\\operatorname{dom}h).\n$$\nFor $x,x^\\star\\in B(x_0,R)$, this gives $\\|g\\|\\le4\\beta R$ and a valid separating halfspace. Apply the centroid certificate and output the weighted combination of proximal points $y_i$, rather than the centers $x_i$. One gradient and one proximal call are used per round. Values of $f$ and $h$ are unnecessary.\n\nFor complete-objective strong convexity and initial gap $\\Delta$, use radius $\\sqrt{2\\Delta/\\mu}$. FISTA's convex error theorem plus this radius halves the gap in $O(\\max\\{1,\\sqrt{\\beta/\\mu}\\})$ iterations, giving the restarted bound.\n\nCompleting the square in the displayed inequality also gives\n$$\nF(y)-F^\\star\\le(\\beta/2)\\|x-x^\\star\\|^2\n\\le(\\beta/\\mu)(F(x)-F^\\star).\n$$\nFor $\\mu\\ge2\\beta$, one step therefore contracts by $\\beta/\\mu$; for $\\beta\\le\\mu\\le2\\beta$, use a constant-length accelerated restart. Together the budget is\n$O(1+\\log(\\Delta/\\epsilon)/\\log(1+\\mu/\\beta))$.\nThe nested value-gradient construction with public quadratic $h$ gives the matching unknown-gradient lower bound. It does not imply a proximal-call lower bound.",
+      "scope": "Unknown smooth gradient and exact proximal map of the specified convex term.",
+      "limitations": "The convex combination uses proximal points. No lower bound on proximal-call count is inferred.",
+      "algorithm_scope": "Deterministic upper witness; separate randomized gradient lower transfer.",
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507"
+      ]
+    },
+    {
+      "proof_id": "FO_CERTIFICATE",
+      "title": "Subgradient certificates and centroid cuts",
+      "body": "Let $Q\\subset\\mathbb R^d$ be public, compact, convex, and full dimensional, with diameter at most $D$ in the stated norm. Suppose all returned subgradients have dual norm at most $L$. Query $g_i\\in\\partial f(x_i)$ at the centroid of the current body and retain $\\langle g_i,x_i-x\\rangle\\ge0$. The centroid halfspace theorem bounds the retained volume by $(1-e^{-1})^T\\operatorname{vol}(Q)$.\n\nThe computable certificate is\n$$\n\\Gamma_T=\\min_{\\lambda\\in\\Delta_T}\\max_{x\\in Q}\\sum_i\\lambda_i\\langle g_i,x_i-x\\rangle\n=\\max_{x\\in Q}\\min_i\\langle g_i,x_i-x\\rangle.\n$$\nThe equality is convex minimax. Subgradient inequalities and convexity imply\n$f(\\sum_i\\lambda_ix_i)-\\min_Qf\\le\\Gamma_T$.\nIf $\\Gamma_T>\\epsilon$, choose $z\\in Q$ with all cut margins greater than $\\epsilon$. The copy $(1-a)z+aQ$, where $a=\\epsilon/[2(\\epsilon+LD)]$, survives every cut. Its volume is $a^d\\operatorname{vol}(Q)$, contradicting centroid shrinkage once $T>C d\\log(2+LD/\\epsilon)$. If the body loses volume earlier, the same positive-volume argument already certifies the error. No function values or inscribed-ball estimate are required.\n\nFor $Q=RB_p^d$ and $\\ell_q$-Lipschitz objectives, use $D=2Rd^{(1/q-1/p)_+}$. Returning the center has error at most $LRd^{(1/q-1/p)_+}$, giving the coarse zero-query regime. Exact centroid, minimax, and public geometric calculations are uncharged internal operations.\n\nFor a deterministic selector with total movement at most $W(T)$ on nested convex sets, instead impose deep cuts of margin $2LW(T)/T$. If all $T$ sets are nonempty, every move has length at least $2W(T)/T$, contradicting the movement bound. At the first empty intersection, minimax gives error at most $2LW(T)/T$. Substitution of the cited stable-movement theorem yields the recorded nondual upper bound. Its deterministic information scope is distinct from the scope of randomized implementations.",
+      "scope": "One full subgradient is sufficient. Public compact convex geometry and exact internal geometric computation are available.",
+      "limitations": "The stable-selector branch imports its movement theorem and does not claim efficient deterministic arithmetic time.",
+      "algorithm_scope": "Deterministic upper-bound witness; valid as an upper bound for randomized views.",
+      "source_refs": [
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ]
+    },
+    {
+      "proof_id": "FO_DESCENT_ENDPOINTS",
+      "title": "Descent, PL contraction, and zero-query endpoints",
+      "body": "Global $\\beta$-smoothness and boundedness below imply\n$$\nf(x-\\nabla f(x)/\\beta)\\le f(x)-\\|\\nabla f(x)\\|^2/(2\\beta).\n$$\nThus $\\|\\nabla f(x_0)\\|^2\\le2\\beta\\Delta$. Summing the decrease and returning the queried point with least gradient norm gives $O(1+\\beta\\Delta/\\epsilon^2)$ calls; values are unnecessary. If the initial gradient bound already meets the tolerance, output $x_0$ without querying.\n\nA globally $\\beta$-Lipschitz gradient gives Hessian norm at most $\\beta$, so the second-order zero-query regime additionally requires permitted negative curvature at least $\\beta$.\n\nFor a global $\\mu$-PL objective,\n$\\mathrm{gap}_{t+1}\\le(1-1/\\kappa)\\mathrm{gap}_t$.\nThis proves the exact ceiling formula for $1<\\kappa$. At $\\kappa=1$, one step is exact, and opposite translated quadratics exclude zero calls at nontrivial accuracy. At $\\epsilon\\ge\\Delta$, the initial point suffices.\n\nIn one dimension, PL excludes nonoptimal stationary points. The minimizer set is an interval. Integrating\n$|f'|\\ge\\sqrt{2\\mu(f-f^\\star)}$\nalong the decreasing side shows that a minimizer lies within $\\sqrt{2\\Delta/\\mu}$ of $x_0$. Derivative-sign bisection and smoothness therefore give $O(\\log(2+\\kappa\\Delta/\\epsilon))$ calls.\n\nClarke subgradients of a globally $L$-Lipschitz function have norm at most $L$, so Goldstein residuals are at most $L$, also at radius zero. For a $\\rho$-weakly convex function, proximal optimality gives\n$\\|\\nabla f_{1/(2\\rho)}(x_0)\\|\\le L$; the proximal objective inequality gives its square at most $4\\rho\\Delta$.\nFor a smooth composite objective, proximal-gradient descent gives\n$F(y)\\le F(x)-\\|\\mathcal G_\\beta(x)\\|^2/(2\\beta)$,\nso $\\|\\mathcal G_\\beta(x_0)\\|^2\\le2\\beta\\Delta$.\nThese bounds certify the corresponding zero-query outputs; the output contract does not require computing the residual.",
+      "scope": "The exact smooth, PL, Clarke, Moreau, or composite residual specified in the associated bound.",
+      "limitations": "Each endpoint uses its own residual and model; the metrics are not interchangeable.",
+      "algorithm_scope": "Deterministic upper witnesses and elementary indistinguishability lower bounds."
+    },
+    {
+      "proof_id": "FO_NESTED_FG",
+      "title": "A one-dimensional lower bound with exact values and gradients",
+      "body": "Fix $1<\\kappa=\\beta/\\mu$. Choose a fixed smooth $\\psi$, equal to $-x$ on $[-1/2,1/2]$ and zero outside $[-1,1]$, and let $C_\\psi=\\max\\{1,\\|\\psi''\\|_\\infty\\}$. Set\n$$\n\\beta_0=(\\beta+\\mu)/2,\\quad a={\\kappa-1\\over8C_\\psi(\\kappa+1)},\\quad\n\\eta=a/4,\\quad \\rho_0={(1-\\eta)\\over a}\\sqrt{\\Delta/\\beta}.\n$$\nFor independent uniform signs $b_i$, define $u_0=0$,\n$u_i=u_{i-1}+b_i a\\rho_{i-1}$, $\\rho_i=\\eta\\rho_{i-1}$, and\n$$\nf_b(x)=\\beta_0x^2/2+\n\\beta_0\\sum_{i=1}^N b_i a\\rho_{i-1}^2\n\\psi((x-u_{i-1})/\\rho_{i-1}).\n$$\nThe two child intervals $I_i=[u_i-\\rho_i,u_i+\\rho_i]$ are disjoint and lie inside the central half of the parent. Second derivatives of successive bumps have disjoint shell supports. Thus $\\mu\\le f_b''\\le\\beta$, and $f_b''\\ge7\\beta/16$. Within $I_i$, the partial sum through level $i$ is a quadratic centered at $u_i$. The final minimizer is $u_N$, with $|u_N|\\le\\sqrt{\\Delta/\\beta}$ and initial gap at most $\\Delta/2$.\n\nA stronger oracle reveals the next bit when the query lies in the current unresolved interval, continuing only while it lies in the selected child. Unrevealed bumps vanish near the query, so the revealed prefix computes the exact value and derivative. Conditional on history, a fixed point belongs to at most one child; one query reveals at most $\\sum_{j\\ge1}2^{-(j-1)}=2$ new bits in expectation.\n\nTreat the final output as one more such query. If $|\\widehat x-u_N|<\\rho_N$, all $N$ bits are revealed. Its probability is at most $2(T+1)/N$. Otherwise the loss is at least\n$c\\beta\\rho_N^2=c'\\Delta\\eta^{2(N-1)}$.\nChoose $N$ at the accuracy scale and use opposite translations to exclude zero calls. For expected error and constant-probability accuracy,\n$$\nT\\ge c\\left[1+{\\log(\\Delta/\\epsilon)\\over\n\\log(C\\kappa/(\\kappa-1))}\\right].\n$$\nQueries may be arbitrary, randomized, adaptive, and unbounded.\n\nFixing $\\kappa=2$, $\\Delta=c\\beta R^2$, gives the initial-distance logarithmic bound. The gradient version uses\n$|f_b'(x)|\\ge(7\\beta/16)|x-u_N|$.\nAdd a public quadratic to embed in higher dimension. For composite minimization, apply the construction on total curvature interval $[\\mu,\\mu+\\beta]$, with public $h(x)=\\mu x^2/2$; the unknown remainder is convex and $\\beta$-smooth, and every proximal response for $h$ is independent of the hidden bits.",
+      "scope": "Exact values and gradients; unbounded real-line queries, with higher-dimensional embeddings.",
+      "limitations": "Curvature, initialization, and nontrivial-accuracy restrictions remain explicit; the composite transfer lower-bounds unknown-gradient calls.",
+      "algorithm_scope": "Lower bounds against arbitrary randomized adaptive algorithms, including unqueried output."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__e1",
+      "source_ref": "SO_SRC_baa21f0901a2c507",
+      "locator": {
+        "theorem": "Theorem 4.4, printed p. 195, and Lemma 2.3",
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__b1"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__e2",
+      "kind": "local_argument",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ],
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "location": "Gradient-plus-proximal certificates; Subgradient certificates and centroid cuts; Descent, PL contraction, and zero-query endpoints"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__e3",
+      "kind": "local_argument",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ],
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "location": "Gradient-plus-proximal certificates; Subgradient certificates and centroid cuts; Descent, PL contraction, and zero-query endpoints"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__e4",
+      "source_ref": "SO_SRC_c729895b420a5000",
+      "locator": {
+        "theorem": "Theorem 2.3 and Appendix B.2, applied to the subclass $h=0$",
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__b4"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__e5",
+      "source_ref": "SO_SRC_da45f3a56f11d157",
+      "locator": {
+        "theorem": "Theorem 1 and equation (7), with $h=0$ so that the proximal map returns its input",
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__b5"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__deterministic__deterministic__e6",
+      "kind": "local_argument",
+      "proof_refs": [
+        "FO_NESTED_FG",
+        "FO_COMPOSITE_CERTIFICATE"
+      ],
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507"
+      ],
+      "location": "A one-dimensional lower bound with exact values and gradients; Gradient-plus-proximal certificates"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__e1",
+      "source_ref": "SO_SRC_baa21f0901a2c507",
+      "locator": {
+        "theorem": "Theorem 4.4, printed p. 195, and Lemma 2.3",
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__b1"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__e2",
+      "kind": "local_argument",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ],
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "location": "Gradient-plus-proximal certificates; Subgradient certificates and centroid cuts; Descent, PL contraction, and zero-query endpoints"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__e3",
+      "kind": "local_argument",
+      "proof_refs": [
+        "FO_COMPOSITE_CERTIFICATE",
+        "FO_CERTIFICATE",
+        "FO_DESCENT_ENDPOINTS"
+      ],
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507",
+        "SO_SRC_a6e5b4d495f30052",
+        "SO_SRC_c314bae252a3b929",
+        "SO_SRC_88e665bbd463b203"
+      ],
+      "location": "Gradient-plus-proximal certificates; Subgradient certificates and centroid cuts; Descent, PL contraction, and zero-query endpoints"
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__e4",
+      "source_ref": "SO_SRC_da45f3a56f11d157",
+      "locator": {
+        "theorem": "Theorem 1 and equation (7), with $h=0$ so that the proximal map returns its input",
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__b4"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_FO_C06_SC_FG__randomized__expected_loss__e5",
+      "kind": "local_argument",
+      "proof_refs": [
+        "FO_NESTED_FG",
+        "FO_COMPOSITE_CERTIFICATE"
+      ],
+      "source_refs": [
+        "SO_SRC_baa21f0901a2c507"
+      ],
+      "location": "A one-dimensional lower bound with exact values and gradients; Gradient-plus-proximal certificates"
+    }
+  ],
+  "references": [
+    {
+      "id": "SO_SRC_baa21f0901a2c507",
+      "authors": "Amir Beck; Marc Teboulle",
+      "title": "A Fast Iterative Shrinkage-Thresholding Algorithm for Linear Inverse Problems",
+      "version": "2009",
+      "url": "https://www.tau.ac.il/~becka/FISTA.pdf",
+      "publication_status": "unknown"
+    },
+    {
+      "id": "SO_SRC_da45f3a56f11d157",
+      "authors": "Ohad Shamir",
+      "title": "A Simple Complexity Lower Bound for Solving Ax=b",
+      "version": "2026-09-09; preprintv1",
+      "url": "https://arxiv.org/pdf/2609.10874",
+      "publication_status": "preprint"
+    },
+    {
+      "id": "SO_SRC_c729895b420a5000",
+      "authors": "Yoel Drori",
+      "title": "Exact oracle complexity for function-value suboptimality under weighted initial conditions",
+      "version": "2026-10-16; preprintv2",
+      "url": "https://arxiv.org/pdf/2609.33360v2",
+      "publication_status": "preprint"
+    },
+    {
+      "id": "SO_SRC_a6e5b4d495f30052",
+      "title": "Convex Optimization: Algorithms and Complexity",
+      "authors": "Sébastien Bubeck",
+      "version": "2015",
+      "url": "https://arxiv.org/pdf/1405.4980",
+      "publication_status": "published",
+      "verification_basis": "source_archive_with_targeted_revision",
+      "source_native_id": "src-B15",
+      "source_collection": "fo"
+    },
+    {
+      "id": "SO_SRC_c314bae252a3b929",
+      "title": "Accuracy Certificates for Computational Problems with Convex Structure",
+      "authors": "Arkadi Nemirovski; Shmuel Onn; Uriel G. Rothblum",
+      "version": "2010",
+      "url": "https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf",
+      "publication_status": "published",
+      "verification_basis": "source_archive_with_targeted_revision",
+      "source_native_id": "src-NOR10",
+      "source_collection": "fo"
+    },
+    {
+      "id": "SO_SRC_88e665bbd463b203",
+      "title": "Stable Movement for Nondual Lipschitz Convex Optimization: Efficiency and Nearly Optimal Oracle Rates",
+      "authors": "David Martínez-Rubio; Cristóbal Guzmán",
+      "version": "2026-09-17; preprintv1",
+      "url": "https://arxiv.org/pdf/2609.20701",
+      "publication_status": "preprint",
+      "verification_basis": "source_archive_with_targeted_revision",
+      "source_native_id": "src-MG26",
+      "source_collection": "fo"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "SO_FO_C06_SC_D_FG",
+      "view_id": "deterministic__deterministic"
+    },
+    {
+      "legacy_id": "SO_FO_C06_SC_R_FG",
+      "view_id": "randomized__expected_loss"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "other_quantified_gap",
+        "label": "Other quantified gap present"
+      }
+    ],
+    "gap_classes": [
+      "other_quantified_gap"
+    ],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 11,
+    "status_counts": {
+      "other_quantified_gap": 2,
+      "optimal": 9
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c1"
+      ],
+      "view_ids": [
+        "deterministic__deterministic"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c2",
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c2"
+      ],
+      "view_ids": [
+        "deterministic__deterministic",
+        "randomized__expected_loss"
+      ]
+    },
+    {
+      "row_id": "row_3",
+      "comparison_ids": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c3"
+      ],
+      "view_ids": [
+        "deterministic__deterministic"
+      ]
+    },
+    {
+      "row_id": "row_4",
+      "comparison_ids": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c4",
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c3"
+      ],
+      "view_ids": [
+        "deterministic__deterministic",
+        "randomized__expected_loss"
+      ]
+    },
+    {
+      "row_id": "row_5",
+      "comparison_ids": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c5",
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c4"
+      ],
+      "view_ids": [
+        "deterministic__deterministic",
+        "randomized__expected_loss"
+      ]
+    },
+    {
+      "row_id": "row_6",
+      "comparison_ids": [
+        "SO_FO_C06_SC_FG__deterministic__deterministic__c6",
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c5"
+      ],
+      "view_ids": [
+        "deterministic__deterministic",
+        "randomized__expected_loss"
+      ]
+    },
+    {
+      "row_id": "row_7",
+      "comparison_ids": [
+        "SO_FO_C06_SC_FG__randomized__expected_loss__c1"
+      ],
+      "view_ids": [
+        "randomized__expected_loss"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "6e92bfebb95237feda4ba3971fcda19464c0ffe47c088ff348ab51544027818e",
+    "source_order": 257,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

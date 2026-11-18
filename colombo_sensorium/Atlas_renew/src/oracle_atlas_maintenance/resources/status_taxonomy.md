@@ -1,0 +1,7 @@
+Native status contract
+
+The complete versioned status_taxonomy.json below is binding for new proposals and independent review. Preserve the ten canonical comparison codes. Unknown inherited codes must be explicitly corrected with the affected comparison, summary and supporting finding; do not silently translate an alias. Endpoint costs, exact one call, zero queries and saturation are attributes of a precisely guarded comparison, never new primary status codes. Preserve their mathematical proofs and regions.
+
+Recompute the complete native summary from current comparisons, including counts, missing-side union, actual quantified gap classes, badges and special statuses. A locally optimal comparison does not make the entire profile fully_optimal; that summary badge applies only when every registered comparison is optimal, and only in documented_comparison_domain. A finite maintenance check does not establish global optimality or absence of stronger literature. Distinguish a registered envelope gap from evidence coverage and outstanding synthesis work.
+
+When recording status.attributes.exact_cost=0, use code optimal and ratio_applicable=false. Do not write a positive ratio or 0/0; the exact zero cost and its sufficient/necessary guarded domain remain scientific claims for review. The validator does not parse arbitrary TeX to prove zero or optimality. Passing this contract never substitutes for actual source reading, full frozen-object reads, prepared hashes, six independent joint checks or the native five-file transaction.

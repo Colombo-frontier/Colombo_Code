@@ -1,0 +1,7 @@
+# Native status contract
+
+The complete versioned `status_taxonomy.json` is binding for authors and independent reviewers. Use its ten canonical comparison codes and exact aggregate rules. Unknown inherited codes require an explicit reviewed correction; never guess an alias. Exact zero/one costs and saturation are attributes of a proved guarded comparison, not extra main codes. Zero cost requires `optimal` with `ratio_applicable=false`, without a positive ratio or 0/0.
+
+Only top-level `comparisons[].status` carries a comparison's main status. `summary_status` aggregates the registered comparisons under `documented_comparison_domain`; `fully_optimal` does not assert exhaustive literature or the whole parameter domain. Do not add status fields at `regimes[]`, `comparisons[].regimes[]`, or `comparisons[].bracket`. Separate `joint_analysis` workflow/domain statuses remain legal. Optional `gap_causes` uses the six registered reasons and establishes neither optimality nor an open problem.
+
+`canonical_summary(profile)` explicitly returns corrected draft metadata for inspection. Publication validation never invokes it silently: `validate_status_taxonomy(profile)` preserves input and rejects path-specific violations. Neither function parses arbitrary mathematics, supplies proof/source-reading credit, or inherits scientific approval. Independent review must still verify the guards, sources, envelopes and exact five-file content.

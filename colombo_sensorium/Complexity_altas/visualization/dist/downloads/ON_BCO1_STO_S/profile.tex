@@ -1,0 +1,362 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Stochastic convex bandits: one-point observations with independent Gaussian noise.\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{ON\_\allowbreak{}BCO1\_\allowbreak{}STO\_\allowbreak{}S}
+
+Online learning and bandits
+
+A fixed unknown convex function is defined on the unit Euclidean ball. Each round reveals one value with independent Gaussian noise at the point where loss is incurred. The objective is cumulative true function loss. The unknown additive offset is not supplied as free information.
+
+\textbf{Status.} Polynomial gap present
+
+\textbf{TASK tags.} formulation: Stochastic one point bandit convex pseudo regret; solution concept: Minimize expected cumulative pseudo regret; task family: Online bandit
+
+\textbf{MODEL tags.} convexity: Convex; convexity: Convex in action; smoothness: Lipschitz in action; stochastic model: Additive gaussian noise
+
+\textbf{ORACLE tags.} derivative order: Order 0; feedback quality: Noisy function value; interface family: One point value; operation: Evaluate loss at action; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} randomization: Private randomness allowed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Action trajectory
+
+\textbf{METRIC tags.} criterion: Pseudo regret
+
+\textbf{GUARANTEE tags.} mode: Expectation; randomness: Algorithm private seed; randomness: Oracle samples
+
+\textbf{RESOURCE tags.} measure: Membership calls; measure: Native feedback; measure: Projections; measure: Rounds; measure: Sampling calls
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+A fixed unknown convex function is defined on the unit Euclidean ball. Each round reveals one value with independent Gaussian noise at the point where loss is incurred. The objective is cumulative true function loss. The unknown additive offset is not supplied as free information.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The fixed unknown convex objective \AtlasInlineMath{f} is continuous and 1-Lipschitz on the unit ball. Differentiability and Lipschitz gradients are not required. An unknown additive constant leaves regret unchanged but affects absolute observed values.
+
+Scalar observation noise \AtlasInlineMath{Z_t} is i.i.d. N(0,1) and independent of the history before action selection.
+
+The unique action and query point is \AtlasInlineMath{x_t}: loss is incurred where the single observation is taken.
+
+Require \AtlasInlineMath{d,T\ge1}, with actual queries satisfying \AtlasInlineMath{x_t\in B_2^d(1)}.
+
+Function values need not lie in [0,1]. The 1-Lipschitz condition controls only their variation within the ball.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+One-point function value with fresh noise:
+
+
+\AtlasMath{t,\ x_t\in B_2^d(1)\ \longmapsto\ Y_t\mid\mathcal{H}_{t-1},x_t\sim\mathcal{N}(f(x_t),1)}
+
+
+Each round returns only one number, with no exact f value or gradient.
+
+Repeating a point consumes another round and produces independent noise. A same-noise difference pair is not free.
+
+If the upper-bound algorithm first calibrates \AtlasInlineMath{f(0)}, those calls consume budget \AtlasInlineMath{T}. The value cannot be treated as known.
+
+Public inputs are \AtlasInlineMath{d,T}, the unit-ball domain, Lipschitz bound one, and independent Gaussian scalar noise of variance one. The value \AtlasInlineMath{f(0)} is hidden.
+
+\needspace{4\baselineskip}\subsection{Output}
+The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+\AtlasMath{Y_t=f(x_t)+Z_t,\quad Z_t\overset{\mathrm{i.i.d.}}\sim\mathcal{N}(0,1),\quad R_T=\sum_t\left(f(x_t)-\min_{u\in B_2^d(1)}f(u)\right)}
+
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+\AtlasInlineMath{T} rounds provide \AtlasInlineMath{T} noisy function values; all calibration and exploration samples are included in \AtlasInlineMath{T}.
+
+Any causal randomized policy is allowed. One-point smoothing and stochastic Newton upper bounds must both respect the actual query budget.
+
+The 2024 Newton upper bound calibrates the unknown additive offset and uses the public ball geometry. Membership tests, sampling, and matrix operations are recorded separately from loss queries.
+
+Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication.
+
+
+\AtlasMath{\inf_{\mathcal{A}}\sup_{f\,\mathrm{convex},\ \mathrm{Lip}_2(f)\le1}\mathbb{E}_{\mathcal{A},Z}[R_T]}
+
+
+Choose one algorithm using public inputs before taking the worst case over all admissible instances. Expectation covers the algorithm's private randomness and the observation randomness specified by the model. Comparator choice and the order of summation, minimization, and expectation follow the displayed formula.
+
+\textbf{Budget convention.} There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{C_0}: Sufficiently large universal regime constant used in both the lower-bound and calibration arguments \textbf{Domain:} Take \AtlasInlineMath{C_0\ge16} as a fixed constant satisfying the source window.
+
+Only regions such as \AtlasInlineMath{d\ge C_0} and \AtlasInlineMath{T\ge C_0d^2} are specified; the source gives no replacement numerical threshold.
+
+\AtlasInlineMath{T}: Online rounds within the fixed evaluation horizon. \textbf{Domain:} \AtlasInlineMath{T\in\mathbb N,\ T\ge1}.
+
+The information protocol fixes feedback count per round. The horizon \AtlasInlineMath{T} is not an independent cumulative scalar-query count.
+
+\AtlasInlineMath{d}: The ambient dimension of actions or feature vectors. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb N,\ d\ge1}.
+
+Vectors belong to \AtlasInlineMath{\mathbb R^d}; dimension is still denoted d when a non-Euclidean norm is used.
+
+\AtlasInlineMath{f}: The fixed unknown convex objective. \textbf{Domain:} \AtlasInlineMath{f:B_2^d(1)\to\mathbb R}.
+
+The function is continuous and one-Lipschitz on the ball; \AtlasInlineMath{f(0)} is hidden.
+
+\AtlasInlineMath{x_t}: The only query point that incurs loss. \textbf{Domain:} \AtlasInlineMath{x_t\in B_2^d(1)}.
+
+\AtlasInlineMath{Z_t,Y_t}: Independent noise and the observed function value. \textbf{Domain:} \AtlasInlineMath{Z_t\sim\mathcal N(0,1),\ Y_t\in\mathbb R}.
+
+\AtlasInlineMath{Y_t=f(x_t)+Z_t}.
+
+\AtlasInlineMath{n_0,\widehat f_0}: Charged calibration rounds and estimation of the function value at the origin \textbf{Domain:} Algorithmic initialization quantity.
+
+Assume \AtlasInlineMath{n_0=\lceil2\log(4T)\rceil}; \AtlasInlineMath{\widehat f_0} is the mean of these \AtlasInlineMath{n_0} observations at the origin.
+
+\AtlasInlineMath{\delta_{\mathrm{sm}},u_t}: The spherical smoothing radius and random direction. \textbf{Domain:} \AtlasInlineMath{0<\delta_{\mathrm{sm}}\le1/2,\ u_t\in\mathbb S^{d-1}}.
+
+The smoothing branch uses \AtlasInlineMath{\delta_{\mathrm{sm}}\asymp\sqrt d\,T^{-1/4}} and directions uniform on the Euclidean unit sphere.
+
+\AtlasInlineMath{g_t}: Stochastic gradient estimate from spherical smoothing \textbf{Domain:} \AtlasInlineMath{g_t\in\mathbb R^d}.
+
+\AtlasInlineMath{g_t=(d/\delta_{\mathrm{sm}})(Y_t-\widehat f_0)u_t}.
+
+\AtlasInlineMath{\delta_{\mathrm{conf}}}: Internal failure probability for the Newton branch or calibration event \textbf{Domain:} Used only for the proof or algorithm tuning.
+
+The Newton branch uses \AtlasInlineMath{\delta_{\mathrm{conf}}=1/(2T)}, independently of the smoothing radius.
+
+\AtlasInlineMath{h,M}: The function and symmetric-domain geometric scales after specializing the Newton theorem. \textbf{Domain:} Used only in this argument.
+
+The expression is \AtlasInlineMath{h=(f-\widehat f_0+2)/4}; for the present symmetric ball, use \AtlasInlineMath{M=d^{-1/2}}.
+
+\AtlasInlineMath{R_T}: Cumulative pseudoregret evaluated using the mean functions \textbf{Domain:} Nonnegative real-valued random variable.
+
+\AtlasInlineMath{R_T=\sum_t[f(x_t)-\min_{u\in B_2^d(1)}f(u)]} Realized observation noise is excluded from the loss difference. Probability or expectation aggregation is specified separately by the guarantee.
+
+\AtlasInlineMath{\mathcal R_T^*}: Minimax expected regret under the current information protocol and parameter region. \textbf{Domain:} A nonnegative real.
+
+
+\AtlasMath{\begin{aligned}\mathcal R_T^*&=\inf_{\mathcal A}\sup_{f\in\mathcal I}\mathbb E_{\mathcal A,Z}[R_T],\\ R_T&=\sum_{t=1}^T\left(f(x_t)-\min_{u\in B_2^d(1)}f(u)\right).\end{aligned}}
+
+
+\AtlasInlineMath{\mathcal A}: Learning policies satisfying the specified information, computation, and privacy restrictions \textbf{Domain:} A measurable causal policy.
+
+Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.
+
+\AtlasInlineMath{t}: Interaction-time index \textbf{Domain:} \AtlasInlineMath{t\in\{1,\ldots,T\}}.
+
+\AtlasInlineMath{\mathbb E}: Mean operator \textbf{Domain:} Expectation over the specified random variables.
+
+Expectation includes learner randomness and the explicitly specified reward or sample randomness. Conditional expectations retain their stated history conditioning.
+
+\AtlasInlineMath{\log,\log_2}: Natural and binary logarithms \textbf{Domain:} Function on the positive real axis.
+
+\AtlasInlineMath{\log x=\ln x}, \AtlasInlineMath{\log_2x=\log x/\log2}.
+
+\AtlasInlineMath{c,C}: Positive constant in the bound without an assigned numerical value \textbf{Domain:} Positive real number.
+
+Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.
+
+\AtlasInlineMath{O,\Omega,\widetilde O,\widetilde\Omega}: Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression. \textbf{Domain:} Asymptotic comparison notation.
+
+The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.
+
+\AtlasInlineMath{B_2^d(r)}: Closed Euclidean ball of radius r \textbf{Domain:} \AtlasInlineMath{r\ge0}.
+
+\AtlasInlineMath{B_2^d(r)=\{x\in\mathbb R^d:\|x\|_2\le r\}}. The symbol r is a placeholder radius, instantiated as R or 1 in the relevant specification.
+
+\AtlasInlineMath{N}: Cumulative observations counted according to the declared feedback type. \textbf{Domain:} Nonnegative integer or integer-valued stopping time.
+
+The quantity \AtlasInlineMath{N=T} counts cumulative native scalar feedback under a one-point or one-arm protocol.
+
+\AtlasInlineMath{\mathcal I}: The complete environment class in the current minimax objective. \textbf{Domain:} Collection of function classes or reward-distribution classes.
+
+The objective f is fixed, real-valued, continuous, convex, and 1-Lipschitz on the unit Euclidean ball. Its additive level f(0) is arbitrary and hidden. Each query adds independent standard Gaussian noise.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - minimax cumulative pseudo regret}
+\AtlasMath{\begin{aligned}\mathcal R_T^*&=\inf_{\mathcal A}\sup_{f\in\mathcal I}\mathbb E_{\mathcal A,Z}[R_T],\\ R_T&=\sum_{t=1}^T\left(f(x_t)-\min_{u\in B_2^d(1)}f(u)\right).\end{aligned}}
+\textbf{Scope.} Compare only this specification and the listed parameter regions.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsection{R1 - INTERMEDIATE}
+\textbf{Region.} \AtlasInlineMath{d\ge C_0, C0d^2\le T\le d^{10/3}}
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Native sequential interaction rounds or samples; additional resources remain attached to each bound.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B3
+
+\AtlasMath{c \sqrt{d}T^{3/4}}
+\textbf{Upper bound.} B1
+
+\AtlasMath{C \sqrt{d} T^{3/4}}
+\textbf{Gap or comparison.} Controlled by universal constants after an explicit reduction calibrates the unknown function level.
+
+\textbf{Comparison argument.} Only individually audited compatible claims enter. Proof-constant window; C\_0 is not assigned an invented numerical threshold.
+
+\needspace{4\baselineskip}\subsection{R2 - LONG}
+\textbf{Region.} \AtlasInlineMath{d\ge C_0; T\ge \max{C0d^2,d^{10/3}}}
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Native sequential interaction rounds or samples; additional resources remain attached to each bound.
+
+\textbf{Status.} Polynomial gap
+
+\textbf{Lower bound.} B3
+
+\AtlasMath{c d^{4/3}sqrtT}
+\textbf{Upper bound.} B1, B2
+
+\textbackslash{}min\{C \textbackslash{}sqrt\{d\}T\textasciicircum{}\{3/4\}, C d\textasciicircum{}\{3/2\}sqrtT polylog(Td)\}
+
+\textbf{Gap or comparison.} The ratio is at most O(d\textasciicircum{}(1/6) polylog(Td)); a tighter ratio is available near the crossover of the first upper bound.
+
+\textbf{Comparison argument.} Only individually audited compatible claims enter. Verified envelope gap; no assertion that this gap itself is an open problem proven by this audit.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Conditions.} Require \AtlasInlineMath{d\ge C_0} and \AtlasInlineMath{T\ge C_0d^2}, where \AtlasInlineMath{C_0} is a sufficiently large universal constant. The fixed convex function is defined on the unit ball and has Lipschitz constant at most one. One-point observations contain independent standard Gaussian noise.
+
+\textbf{Dimension conditions.} Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.
+
+\textbf{Oracle mapping.} Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.
+
+\textbf{Guarantee mapping.} Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.
+
+\textbf{Output mapping.} Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.
+
+\textbf{Resource mapping.} Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free.
+
+\needspace{4\baselineskip}\subsection{B1 - One-point smoothing + projected OGD, with initial level calibration}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\mathcal{R}_T^*\le C\sqrt d\,T^{3/4}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2406.06506v1}{[1]} \href{https://www.lamda.nju.edu.cn/lusy/pdf/zhang2018adaptive.pdf}{[3]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{rounds.} T including calibration
+
+\textbf{native feedback.} T one-point observations
+
+\textbf{projections.}
+
+\AtlasMath{\le T}
+\textbf{Constants.} Universal constants independent of the parameters explicitly tracked in this claim
+
+\textbf{Logarithmic factors.} None.
+
+\textbf{Derivation.} First use \AtlasInlineMath{n_0=\lceil2\log(4T)\rceil} charged rounds at the origin to estimate \AtlasInlineMath{f(0)} by \AtlasInlineMath{\widehat f_0}. With probability at least \AtlasInlineMath{1-1/(2T)}, the estimation error is at most one, so \AtlasInlineMath{|f(x)-\widehat f_0|\le2} throughout the unit ball. With smoothing radius \AtlasInlineMath{\delta_{\mathrm{sm}}}, choose a center in the contracted ball and query the center plus \AtlasInlineMath{\delta_{\mathrm{sm}} u_t}, where \AtlasInlineMath{u_t} is a random unit direction. The loss is incurred at this query point. The estimator \AtlasInlineMath{g_t=(d/\delta_{\mathrm{sm}})(Y_t-\widehat f_0)u_t} has conditional second moment at most \AtlasInlineMath{5d^2/\delta_{\mathrm{sm}}^2}. Smoothing and contraction cost \AtlasInlineMath{O(\delta_{\mathrm{sm}} T)}, and the online gradient term is \AtlasInlineMath{O(d\sqrt T/\delta_{\mathrm{sm}})}. Choose \AtlasInlineMath{\delta_{\mathrm{sm}}\asymp\sqrt d\,T^{-1/4}\le1/2}. Under \AtlasInlineMath{T\ge C_0d^2}, the initialization cost \AtlasInlineMath{O(\log T)} and the failure-event contribution are absorbed. Each round uses one charged function value; the baseline is not obtained for free.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2406.06506v1}{[1]} theorem: Theorem 2; stochastic algorithm analysis; pdf pages: 1; 2
+
+The source assumes convex losses taking values in \AtlasInlineMath{[0,1]} and conditionally sub-Gaussian noise. The unit ball is symmetric, giving \AtlasInlineMath{M=d^{-1/2}} and upper bound \AtlasInlineMath{O(d^{3/2}\sqrt T\,\operatorname{polylog}(Td/\delta))}. Calibrate the unknown additive level through charged initialization before applying the theorem.
+
+\textbf{Source location.} \href{https://www.lamda.nju.edu.cn/lusy/pdf/zhang2018adaptive.pdf}{[3]} theorem: Theorem 1; pdf pages: 4
+
+Projected online gradient descent has dynamic regret at most \AtlasInlineMath{7D^2/(4\eta)+DP/\eta+\eta TL^2/2}, with its step size tuned using the public path budget.
+
+\needspace{4\baselineskip}\subsection{B2 - Online Newton stochastic algorithm on symmetric ball}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\mathcal{R}_T^*\le C d^{3/2}\sqrt T\,\operatorname{polylog}(Td)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2406.06506v1}{[1]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{rounds.} T including calibration
+
+\textbf{native feedback.} T
+
+\textbf{membership calls.} algorithm dependent; polynomial implementation available
+
+\textbf{sampling calls.} initialization plus algorithm dependent
+
+\textbf{Constants.} Universal constants independent of the parameters explicitly tracked in this claim
+
+\textbf{Logarithmic factors.} Suppress polylogarithmic factors in \AtlasInlineMath{T}, \AtlasInlineMath{d}, and \AtlasInlineMath{1/\delta_{\mathrm{conf}}}, with \AtlasInlineMath{\delta_{\mathrm{conf}}=1/(2T)}. The theorem overview does not specify a single logarithmic exponent.
+
+\textbf{Derivation.} Use the same charged initialization to estimate \AtlasInlineMath{\widehat f_0}. On successful calibration, \AtlasInlineMath{h=(f-\widehat f_0+2)/4} lies in \AtlasInlineMath{[0,1]}, and subsequent independent noise is \AtlasInlineMath{1/4}-sub-Gaussian after scaling. In the source Theorem 2 use symmetric-ball parameter \AtlasInlineMath{M=d^{-1/2}} and failure probability \AtlasInlineMath{1/(2T)}, rescale regret by four, and add initialization and failure costs. Public ball geometry supports the required sampling and membership tests. Retain the source polylogarithmic order without claiming optimal runtime.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2406.06506v1}{[1]} theorem: Theorem 2; stochastic algorithm analysis; pdf pages: 1; 2
+
+The source assumes convex losses taking values in \AtlasInlineMath{[0,1]} and conditionally sub-Gaussian noise. The unit ball is symmetric, giving \AtlasInlineMath{M=d^{-1/2}} and upper bound \AtlasInlineMath{O(d^{3/2}\sqrt T\,\operatorname{polylog}(Td/\delta))}. Calibrate the unknown additive level through charged initialization before applying the theorem.
+
+\needspace{4\baselineskip}\subsection{B3 - Hidden-curvature Gaussian hard functions, latest v3}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\mathcal{R}_T^*\ge c\min\{\sqrt d\,T^{3/4},\ d^{4/3}\sqrt T\}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2607.18652v3}{[2]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{rounds.} T
+
+\textbf{native feedback.} T
+
+\textbf{Constants.} Universal constants independent of the parameters explicitly tracked in this claim
+
+\textbf{Logarithmic factors.} None.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2607.18652v3}{[2]} theorem: Theorem 1.2; pdf pages: 2; 3; 4
+
+Use the lower bound in the cited source version. A fixed convex function on the unit ball has Lipschitz constant at most one, and evaluations receive independent standard Gaussian noise. Under \AtlasInlineMath{d\ge C} and \AtlasInlineMath{T\ge Cd^2}, the lower bound is \AtlasInlineMath{c\min\{\sqrt d\,T^{3/4},d^{4/3}\sqrt T\}}.
+
+\needspace{7\baselineskip}\section{References}
+[1] Hidde Fokkema; Dirk van der Hoeven; Tor Lattimore; Jack J. Mayo. Online Newton Method for Bandit Convex Optimisation. 2024. arXiv:2406.06506v1, 2024-06-10.
+
+\url{https://arxiv.org/pdf/2406.06506v1}
+
+[2] Nived Rajaraman; Yanjun Han. The Price of Hidden Curvature: Improved Lower Bounds for Bandit Convex Optimization. 2026. 2607.18652v3.
+
+\url{https://arxiv.org/pdf/2607.18652v3}
+
+[3] Lijun Zhang; Shiyin Lu; Zhi-Hua Zhou. Adaptive Online Learning in Dynamic Environments. 2018. NeurIPS 2018 main paper.
+
+\url{https://www.lamda.nju.edu.cn/lusy/pdf/zhang2018adaptive.pdf}
+
+\end{document}

@@ -1,0 +1,255 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Trace estimation for general symmetric matrices with Schatten-normalized error\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{MX\_\allowbreak{}S\_\allowbreak{}trace\_\allowbreak{}general}
+
+Matrix computation
+
+Estimate the trace \AtlasInlineMath{\tau=\operatorname{tr}(A)} of a symmetric matrix.
+
+\textbf{Status.} Fully optimal
+
+\textbf{TASK tags.} formulation: Matrix trace; solution concept: Schatten scaled additive error; task family: Matrix computation
+
+\textbf{MODEL tags.} spectral structure: Symmetric indefinite allowed
+
+\textbf{ORACLE tags.} feedback quality: Exact; interface family: Exact right matvec; operation: Matrix right matvec; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; randomization: Private randomness allowed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Scalar
+
+\textbf{METRIC tags.} criterion: Schatten normalized trace error
+
+\textbf{GUARANTEE tags.} confidence: Confidence parameter explicitly declared; randomness: Algorithm private seed
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget; measure: N right
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Estimate the trace \AtlasInlineMath{\tau=\operatorname{tr}(A)} of a symmetric matrix.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+Assume \AtlasInlineMath{A=A^{\mathsf T}\in\mathbb{R}^{d\times d}}, allowing indefinite or zero matrices; the norm order is \AtlasInlineMath{1\le p\le2}.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+The information \AtlasInlineMath{d,p,\varepsilon,\delta} is public and \AtlasInlineMath{A} is hidden. Query \AtlasInlineMath{v\in\mathbb{R}^d} returns exact \AtlasInlineMath{Av}. Repeated adaptive queries are allowed.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return a scalar \AtlasInlineMath{\widehat\tau\in\mathbb{R}}; no additional certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The success event is \AtlasInlineMath{|\widehat\tau-\operatorname{tr}(A)|\le\varepsilon\|A\|_{S_p}}, where \AtlasInlineMath{\|A\|_{S_p}=(\sum_i\sigma_i(A)^p)^{1/p}}. When \AtlasInlineMath{A=0}, the output must be zero. A general matrix can have zero trace and nonzero norm.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Count right products with single vectors only: \AtlasInlineMath{N=N_{\mathrm r}}. A block of width \AtlasInlineMath{q} costs \AtlasInlineMath{q} calls.
+
+The budget bounds calls for every fixed input and every private seed. Reading public inputs, exact real arithmetic, storage, and postprocessing are free. One call applies the interface to one vector.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.
+
+The algorithm is selected using public inputs only. For every admissible input fixed before generation of the private seed, success probability over private randomness is at least \AtlasInlineMath{1-\delta}.
+
+\textbf{Budget convention.} A fixed worst-case budget respected for every input and private seed.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{d}: The order of the square input matrix and the dimension of each query vector. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb N,\ d\ge1}.
+
+\AtlasInlineMath{A\in\mathbb R^{d\times d}}
+
+\AtlasInlineMath{p}: The Schatten-norm order used to normalize trace error. \textbf{Domain:} \AtlasInlineMath{1\le p\le2}.
+
+\AtlasInlineMath{\|A\|_{S_p}=(\sum_{i=1}^d\sigma_i(A)^p)^{1/p}}
+
+\AtlasInlineMath{\varepsilon}: Absolute trace-estimation error as a fraction of the input Schatten norm \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{|\widehat\tau-\operatorname{tr}(A)|\le\varepsilon\|A\|_{S_p}}
+
+\AtlasInlineMath{\delta}: Allowed failure probability for each fixed admissible input \textbf{Domain:} \AtlasInlineMath{0<\delta<1/2}.
+
+Success probability is at least \AtlasInlineMath{1-\delta}.
+
+\AtlasInlineMath{C_0}: Sufficient-dimension constant for the Gaussian hard-instance embedding in DT Theorem 4.2. \textbf{Domain:} The quantity \AtlasInlineMath{C_0>0} is universal and fixed.
+
+\AtlasInlineMath{d\ge C_0(\sqrt{\log(1/\delta)}/\varepsilon)^p}
+
+\AtlasInlineMath{A}: A hidden real symmetric matrix, possibly indefinite or zero. \textbf{Domain:} \AtlasInlineMath{\mathbb R^{d\times d}}.
+
+\AtlasInlineMath{\tau,\widehat\tau}: True trace and output estimate \textbf{Domain:} \AtlasInlineMath{\mathbb R}.
+
+\AtlasInlineMath{\tau=\operatorname{tr}(A)=\sum_{i=1}^d A_{ii}}
+
+\AtlasInlineMath{\sigma_i(M)}: Singular values in nonincreasing order \textbf{Domain:} \AtlasInlineMath{1\le i\le\min\{\operatorname{rows}(M),\operatorname{cols}(M)\}}.
+
+\AtlasInlineMath{\sigma_1(M)\ge\cdots\ge\sigma_{\min\{\operatorname{rows}(M),\operatorname{cols}(M)\}}(M)\ge0}
+
+\AtlasInlineMath{\|A\|_{S_p}}: Schatten norm that sets the scale of the trace error \textbf{Domain:} A nonnegative real.
+
+\AtlasInlineMath{\|A\|_{S_p}=(\sum_{i=1}^d\sigma_i(A)^p)^{1/p}}
+
+\AtlasInlineMath{c}: Universal constant in the small-accuracy regime of DT, Theorem 4.2 \textbf{Domain:} Fixed positive number.
+
+\AtlasInlineMath{0<\varepsilon<c[\log(1/\delta)]^{1/2-1/p}}
+
+\AtlasInlineMath{C}: The universal multiplier in the upper bound. \textbf{Domain:} Fixed positive number.
+
+\AtlasInlineMath{\|z\|_2}: Euclidean norm of a vector \textbf{Domain:} Finite-dimensional real or complex vector.
+
+\AtlasInlineMath{\|z\|_2=(\sum_i|z_i|^2)^{1/2}}
+
+\AtlasInlineMath{\log}: Natural logarithm \textbf{Domain:} Positive real argument.
+
+\AtlasInlineMath{\log x=\ln x}
+
+\AtlasInlineMath{O,\Omega,\Theta}: Upper, lower, and two-sided bounds up to constants in the same applicable regime \textbf{Domain:} Hidden constants have only the parameter dependence explicitly permitted by the associated bound.
+
+\AtlasInlineMath{N,N_{\mathrm r}}: Single-vector query budget for exact right products Av. A block is charged by its column count. \textbf{Domain:} \AtlasInlineMath{\mathbb N_0}.
+
+\AtlasInlineMath{N=N_{\mathrm r}}
+
+\AtlasInlineMath{N^\star}: Minimum worst-case query budget attaining this profile's success guarantee \textbf{Domain:} \AtlasInlineMath{\mathbb N_0\cup\{+\infty\}}.
+
+The quantity is \AtlasInlineMath{N^\star=\inf_{\mathcal A}\sup_{I,\omega}N_{\mathcal A}(I,\omega)}, where the infimum ranges over admissible algorithms satisfying this profile's success guarantee.
+
+\AtlasInlineMath{\mathcal A,I,\omega}: The algorithm, fixed admissible input, and private algorithmic seed. \textbf{Domain:} Quantifiers for worst-case input and execution cost. Success probability is taken over $\omega$.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\AtlasMath{N^\star(\varepsilon,\delta;d,p)}
+\textbf{Scope.} Within the cited complete specification, select an algorithm before taking the worst case over all fixed inputs. Information permissions remain unchanged.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsection{R1 - Regime with matching Schatten-normalized bounds}
+\textbf{Region.} Assume \AtlasInlineMath{1\le p\le2}, \AtlasInlineMath{0<\delta<1/4}, \AtlasInlineMath{0<\varepsilon<c[\log(1/\delta)]^{1/2-1/p}}, and \AtlasInlineMath{d\ge C_0(\sqrt{\log(1/\delta)}/\varepsilon)^p}. The quantity \AtlasInlineMath{c,C_0>0} is the universal sufficient constant in the source.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Number of right matrix-vector product queries.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{\Omega((\sqrt{\log(1/\delta)}/\varepsilon)^p)}
+\textbf{Upper bound.} B1, B3
+
+\AtlasMath{O((\sqrt{\log(1/\delta)}/\varepsilon)^p)}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\textbf{Comparison argument.} The window ensures that the $\log(1/\delta )$ term does not dominate. Removing this window would invalidate a claim of full-parameter matching.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} Only exact Av is available, with arbitrary randomized adaptive real-vector queries. A is one fixed general real symmetric matrix, and each vector costs one call.
+
+\textbf{Guarantee mapping.} For each fixed A, success probability is at least 1 - $\delta$. The lower bound retains its accuracy, confidence, and sufficient-dimension region.
+
+\textbf{Output mapping.} Return a real scalar t\_hat with error at most epsilon ||A||\_\{S\_p\}, for 1<=p<=2. Error is not normalized by the possibly zero trace.
+
+\textbf{Resource mapping.} Count only right multiplication by a single vector, \AtlasInlineMath{N=N_{\mathrm r}}. A block product of width \AtlasInlineMath{q} costs \AtlasInlineMath{q} calls. The worst-case cap holds for every input and random seed; it is not an expected call count. Reading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. This budget does not certify running time or bit complexity.
+
+\needspace{4\baselineskip}\subsection{B1 - Randomized trace estimation with Schatten-norm error}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{N\le C[(\sqrt{\log(1/\delta)}/\varepsilon)^p+\log(1/\delta)]}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2209.15219v1}{[1]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{N right.}
+
+\AtlasMath{C[(\sqrt{\log(1/\delta)}/\varepsilon)^p+\log(1/\delta)]}
+\textbf{Constants.} Universal constants, with only the parameter dependence permitted by this bound’s region and expression.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2209.15219v1}{[1]} theorem: Theorem B.1; section: Appendix B; pdf pages: 18
+
+Static Schatten-\AtlasInlineMath{p} Hutch++ upper bound; non-PSD inputs use an additive norm scale.
+
+\needspace{4\baselineskip}\subsection{B2 - Unrestricted randomized adaptive queries; Gaussian posterior information lower bound.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{N\ge c(\sqrt{\log(1/\delta)}/\varepsilon)^p}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2209.15219v1}{[1]}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d\ge C_0\bigl(\sqrt{\log(1/\delta)}/\varepsilon\bigr)^p}. The quantity \AtlasInlineMath{C_0>0} is the sufficient dimension constant in the source lower bound.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{N.}
+
+\AtlasMath{N\ge c(\sqrt{\log(1/\delta)}/\varepsilon)^p}
+\textbf{Constants.} Universal constants, with only the parameter dependence permitted by this bound’s region and expression.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2209.15219v1}{[1]} theorem: Theorem 4.2; section: §4.2; Appendix C.2; pdf pages: 10; 25
+
+The Wigner posterior trace is Gaussian. Retain the source's choice of \AtlasInlineMath{n} and the check \AtlasInlineMath{n\ge\log(1/\delta)}. Zero padding embeds the instance in larger dimensions.
+
+\needspace{4\baselineskip}\subsection{B3 - Deterministic reconstruction using the standard basis, followed by free exact solution of the target task}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{N\le d}
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{N right.} d
+
+\textbf{Constants.} Universal constants, with only the parameter dependence permitted by this bound’s region and expression.
+
+\textbf{Derivation.} Standard-basis queries reveal every matrix column.
+
+\textbf{Local argument.} A1
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Deterministic reconstruction using the standard basis, followed by free exact solution of the target task}
+\textbf{Scope.} All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force.
+
+Query all \AtlasInlineMath{d} standard basis vectors, fixed before any response if nonadaptivity is required. These responses recover all columns. Summing their diagonal entries returns the exact trace. The argument applies to the stated matrix class, including zero trace, and uses \AtlasInlineMath{d} right queries with deterministic success.
+
+\needspace{7\baselineskip}\section{References}
+[1] David P. Woodruff; Fred Zhang; Qiuyi (Richard) Zhang. Optimal Query Complexities for Dynamic Trace Estimation. 2022. arXiv:2209.15219v1; 2022-09-30.
+
+\url{https://arxiv.org/pdf/2209.15219v1}
+
+\end{document}

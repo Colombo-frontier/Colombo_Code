@@ -1,0 +1,419 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Stochastic linear bandits on a Euclidean ball with independent scalar Gaussian noise.\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{ON\_\allowbreak{}LINSTO\_\allowbreak{}S}
+
+Online learning and bandits
+
+The learner chooses actions in the Euclidean unit ball and observes their inner products with a fixed unknown parameter plus independent standard Gaussian noise. The target is cumulative mean reward relative to the best fixed action. Reducing action magnitude does not reduce the noise variance.
+
+\textbf{Status.} Fully optimal
+
+\textbf{TASK tags.} formulation: Stochastic linear bandit; solution concept: Minimize expected cumulative pseudo regret; task family: Online bandit
+
+\textbf{MODEL tags.} geometry: Parameter ball; stochastic model: Additive scalar noise; structure: Linear
+
+\textbf{ORACLE tags.} feedback quality: Gaussian additive noise; interface family: Selected reward; operation: Observe scalar linear loss; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} randomization: Private randomness allowed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Action trajectory
+
+\textbf{METRIC tags.} criterion: Pseudo regret
+
+\textbf{GUARANTEE tags.} mode: Expectation; randomness: Algorithm private seed; randomness: Oracle samples
+
+\textbf{RESOURCE tags.} accounting: Joint coordinates retained; measure: Matrix updates; measure: Native feedback; measure: Optimistic solves; measure: Rounds
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+The learner chooses actions in the Euclidean unit ball and observes their inner products with a fixed unknown parameter plus independent standard Gaussian noise. The target is cumulative mean reward relative to the best fixed action. Reducing action magnitude does not reduce the noise variance.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The hidden reward parameter \AtlasInlineMath{\theta} is fixed before interaction and satisfies \AtlasInlineMath{\|\theta\|_2\le1}.
+
+Scalar observation noise is i.i.d. \AtlasInlineMath{Z_t\sim N(0,1)} and independent of the pre-action history. The observation variance remains one even when \AtlasInlineMath{x_t=0}. This specification uses additive scalar noise.
+
+The actual action is also the sole observation point and satisfies \AtlasInlineMath{\|x_t\|_2\le1}.
+
+Require \AtlasInlineMath{d,T\ge1}. Both actions and the unknown parameter lie in the unit Euclidean ball.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Linear rewards with independent scalar noise:
+
+
+\AtlasMath{t,\ x_t\in B_2^d(1)\ \longmapsto\ Y_t\mid\mathcal{H}_{t-1},x_t\sim\mathcal{N}(\langle x_t,\theta\rangle,1)}
+
+
+Choose action \AtlasInlineMath{x_t}, then draw fresh noise \AtlasInlineMath{Z_t} and return one scalar observation.
+
+Neither \AtlasInlineMath{\theta}, a gradient, nor projections onto other directions in the same round are returned.
+
+The same x may be measured again in another round, with fresh noise and a new charge.
+
+Public inputs are \AtlasInlineMath{d,T}, action domain \AtlasInlineMath{B_2^d(1)}, parameter-norm bound one, and known scalar noise \AtlasInlineMath{\mathcal N(0,1)}.
+
+\needspace{4\baselineskip}\subsection{Output}
+The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+\AtlasMath{Y_t=\langle x_t,\theta\rangle+Z_t,\quad Z_t\overset{\mathrm{i.i.d.}}\sim\mathcal{N}(0,1),\qquad R_T=\sum_t(\|\theta\|_2-\langle x_t,\theta\rangle)}
+
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+\AtlasInlineMath{T} rounds provide \AtlasInlineMath{T} scalar noisy linear observations.
+
+Any causal randomized policy is allowed. OFUL is one verified upper-bound method.
+
+OFUL maintains a \AtlasInlineMath{d\times d} design matrix and confidence set and solves an optimistic decision problem. Matrix updates and optimistic optimization are not one bandit call.
+
+Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication.
+
+
+\AtlasMath{\inf_{\mathcal{A}}\sup_{\|\theta\|_2\le1}\mathbb{E}_{\mathcal{A},Z}[R_T]}
+
+
+Choose one algorithm using public inputs before taking the worst case over all admissible instances. Expectation covers the algorithm's private randomness and the observation randomness specified by the model. Comparator choice and the order of summation, minimization, and expectation follow the displayed formula.
+
+\textbf{Budget convention.} There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{T}: Online rounds within the fixed evaluation horizon. \textbf{Domain:} \AtlasInlineMath{T\in\mathbb N,\ T\ge1}.
+
+The information protocol fixes feedback count per round. The horizon \AtlasInlineMath{T} is not an independent cumulative scalar-query count.
+
+\AtlasInlineMath{d}: The ambient dimension of actions or feature vectors. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb N,\ d\ge1}.
+
+Vectors belong to \AtlasInlineMath{\mathbb R^d}; dimension is still denoted d when a non-Euclidean norm is used.
+
+\AtlasInlineMath{\theta}: Fixed hidden linear-reward parameter \textbf{Domain:} \AtlasInlineMath{\theta\in B_2^d(1)}.
+
+\AtlasInlineMath{x_t}: Current action and sole observation point \textbf{Domain:} \AtlasInlineMath{x_t\in B_2^d(1)}.
+
+\AtlasInlineMath{Z_t}: Independent scalar observation noise. \textbf{Domain:} \AtlasInlineMath{Z_t\overset{\mathrm{i.i.d.}}\sim\mathcal N(0,1)}.
+
+Noise variance does not scale with the action norm; the zero action also has observation variance one.
+
+\AtlasInlineMath{Y_t}: Scalar reward observed in the current round \textbf{Domain:} \AtlasInlineMath{Y_t\in\mathbb R}.
+
+\AtlasInlineMath{Y_t=\langle x_t,\theta\rangle+Z_t}.
+
+\AtlasInlineMath{\lambda,S,L,R_{\mathrm{noise}},\delta}: Source notation in the earlier OFUL branch \textbf{Domain:} Used only to specialize this upper bound.
+
+These denote the ridge parameter, parameter-norm bound, action-norm bound, sub-Gaussian noise scale, and failure probability, respectively. Set the first four to one and impose \AtlasInlineMath{\delta=1/T}.
+
+\AtlasInlineMath{A,\|\theta\|_A,\sigma}: Ellipsoidal parameter, dual-reward scale, and noise scale in the E2TC derivation \textbf{Domain:} Used only to specialize this upper bound.
+
+For the current unit ball, use \AtlasInlineMath{A=I_d}, so \AtlasInlineMath{\|\theta\|_A=\|\theta\|_2}, and set \AtlasInlineMath{\sigma=1}.
+
+\AtlasInlineMath{D,a,e_1}: Actual dimension, signal amplitude, and first coordinate unit vector in the low-dimensional lower bound \textbf{Domain:} Used only in the lower-bound proof.
+
+Set \AtlasInlineMath{D=d}, \AtlasInlineMath{a=1/(4\sqrt T)}, and hard parameters \AtlasInlineMath{\theta=\pm ae_1}.
+
+\AtlasInlineMath{R_T}: Cumulative pseudoregret evaluated using the mean functions \textbf{Domain:} Nonnegative real-valued random variable.
+
+\AtlasInlineMath{R_T=\sum_t(\|\theta\|_2-\langle x_t,\theta\rangle)} Realized observation noise is excluded from the loss difference. Probability or expectation aggregation is specified separately by the guarantee.
+
+\AtlasInlineMath{\mathcal R_T^*}: Minimax expected regret under the current information protocol and parameter region. \textbf{Domain:} A nonnegative real.
+
+
+\AtlasMath{\begin{aligned}\mathcal R_T^*&=\inf_{\mathcal A}\sup_{\|\theta\|_2\le1}\mathbb E_{\mathcal A,Z}[R_T],\\ R_T&=\sum_{t=1}^T(\|\theta\|_2-\langle x_t,\theta\rangle).\end{aligned}}
+
+
+\AtlasInlineMath{\mathcal A}: Learning policies satisfying the specified information, computation, and privacy restrictions \textbf{Domain:} A measurable causal policy.
+
+Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.
+
+\AtlasInlineMath{t}: Interaction-time index \textbf{Domain:} \AtlasInlineMath{t\in\{1,\ldots,T\}}.
+
+\AtlasInlineMath{\mathbb E}: Mean operator \textbf{Domain:} Expectation over the specified random variables.
+
+Expectation includes learner randomness and the explicitly specified reward or sample randomness. Conditional expectations retain their stated history conditioning.
+
+\AtlasInlineMath{\log,\log_2}: Natural and binary logarithms \textbf{Domain:} Function on the positive real axis.
+
+\AtlasInlineMath{\log x=\ln x}, \AtlasInlineMath{\log_2x=\log x/\log2}.
+
+\AtlasInlineMath{c,C}: Positive constant in the bound without an assigned numerical value \textbf{Domain:} Positive real number.
+
+Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.
+
+\AtlasInlineMath{O,\Omega,\widetilde O,\widetilde\Omega}: Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression. \textbf{Domain:} Asymptotic comparison notation.
+
+The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.
+
+\AtlasInlineMath{B_2^d(r)}: Closed Euclidean ball of radius r \textbf{Domain:} \AtlasInlineMath{r\ge0}.
+
+\AtlasInlineMath{B_2^d(r)=\{x\in\mathbb R^d:\|x\|_2\le r\}}. The symbol r is a placeholder radius, instantiated as R or 1 in the relevant specification.
+
+\AtlasInlineMath{N}: Cumulative observations counted according to the declared feedback type. \textbf{Domain:} Nonnegative integer or integer-valued stopping time.
+
+The quantity \AtlasInlineMath{N=T} counts cumulative native scalar feedback under a one-point or one-arm protocol.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - minimax cumulative pseudo regret}
+\AtlasMath{\begin{aligned}\mathcal R_T^*&=\inf_{\mathcal A}\sup_{\|\theta\|_2\le1}\mathbb E_{\mathcal A,Z}[R_T],\\ R_T&=\sum_{t=1}^T(\|\theta\|_2-\langle x_t,\theta\rangle).\end{aligned}}
+\textbf{Scope.} Compare only this specification and the listed parameter regions.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsection{R1 - MAIN}
+\textbf{Region.} \AtlasInlineMath{T\ge d^2; d\ge 1; T\ge 2}
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Native sequential interaction rounds or samples; additional resources remain attached to each bound.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2, B4
+
+\AtlasMath{\Omega(d\sqrt T)}
+\textbf{Upper bound.} B3
+
+\AtlasMath{O(d\sqrt T)}
+\textbf{Gap or comparison.} E2TC at COLT 2025 removes the logarithmic factor in earlier bounds; retain its original applicability region.
+
+\textbf{Comparison argument.} Only individually audited compatible claims enter. Baseline bracket; no claim that remaining logarithm is necessary or that all action geometries share this rate.
+
+\needspace{4\baselineskip}\subsection{R2 - ALL\_D\_T}
+\textbf{Region.} All integers \AtlasInlineMath{d,T\ge1}, with noise variance fixed to \AtlasInlineMath{1}
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Fixed native online budget, with computational, communication, and privacy resources retained separately.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B4
+
+\AtlasMath{\Omega(\min\{T,d\sqrt T\})}
+\textbf{Upper bound.} B3
+
+\AtlasMath{O(\min\{T,d\sqrt T\})}
+\textbf{Gap or comparison.} Constant ratio; dimension \AtlasInlineMath{d=1} is included.
+
+\needspace{4\baselineskip}\subsection{R3 - SAT}
+\textbf{Region.} \AtlasInlineMath{1\le T\le d^{2}}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Fixed native online budget, with computational, communication, and privacy resources retained separately.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B4
+
+\AtlasMath{\Omega(T)}
+\textbf{Upper bound.} B3
+
+\AtlasMath{O(T)}
+\textbf{Gap or comparison.} Constant ratio
+
+\needspace{4\baselineskip}\subsection{R4 - LONG}
+\textbf{Region.} \AtlasInlineMath{T\ge d^{2}}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Fixed native online budget, with computational, communication, and privacy resources retained separately.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B4
+
+\AtlasMath{\Omega(d\sqrt T)}
+\textbf{Upper bound.} B3
+
+\AtlasMath{O(d\sqrt T)}
+\textbf{Gap or comparison.} Constant ratio
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+\needspace{4\baselineskip}\subsection{B1 - OFUL}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{\mathcal{R}_T^*\le C d\sqrt T\log(2T)}
+\textbf{Sources.} \href{https://proceedings.neurips.cc/paper/2011/file/e1d5be1c7f2f456670de3d53c7b54f4a-Paper.pdf}{[3]}
+
+\textbf{Conditions.} This bound requires \AtlasInlineMath{d\ge1}, \AtlasInlineMath{T\ge2}, and \AtlasInlineMath{T\ge d^2}, with actions in the unit Euclidean ball, parameter norm at most one, and unit Gaussian scalar observation noise.
+
+\textbf{Dimension conditions.} Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.
+
+\textbf{Oracle correspondence.} Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.
+
+\textbf{Guarantee conversion.} Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.
+
+\textbf{Output rule.} Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.
+
+\textbf{Resource conversion.} Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{rounds.} T
+
+\textbf{native feedback.} T scalar observations
+
+\textbf{optimistic solves.}
+
+\AtlasMath{\le T}
+\textbf{matrix updates.} $\le T$ rank-one $d\times d$ updates
+
+\textbf{Constants.} Universal constants independent of the parameters explicitly tracked in this claim
+
+\textbf{Logarithmic factors.} This simplified expression retains one log(2T) factor. The source gives a sharper determinant and logarithmic expression.
+
+\textbf{Derivation.} In Theorem 3 set \AtlasInlineMath{\lambda=S=L=R_{\mathrm{noise}}=1} and \AtlasInlineMath{\delta=1/T}. Although Gaussian observations are unbounded, the mean reward difference per round is at most two. Adding the failure-event contribution, at most \AtlasInlineMath{2T\delta}, to the high-probability regret bound gives the expected bound.
+
+\textbf{Source location.} \href{https://proceedings.neurips.cc/paper/2011/file/e1d5be1c7f2f456670de3d53c7b54f4a-Paper.pdf}{[3]} theorem: Theorem 3; pdf pages: 5
+
+Use OFUL's high-probability bound under \AtlasInlineMath{\lambda=S=L=R_{\mathrm{noise}}=1} and \AtlasInlineMath{\delta=1/T}. Mean gaps per round are at most two, so failure contributes at most \AtlasInlineMath{2T\delta} to expected regret. Optimistic optimization remains a required algorithmic operation.
+
+\needspace{4\baselineskip}\subsection{B2 - Gaussian scalar-noise hypercube family in Theorem24.2}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\mathcal{R}_T^*\ge\frac{d\sqrt T}{16\sqrt3}}
+\textbf{Sources.} \href{https://tor-lattimore.com/downloads/book/book.pdf}{[2]}
+
+\textbf{Conditions.} This bound requires \AtlasInlineMath{d\ge1}, \AtlasInlineMath{T\ge2}, and \AtlasInlineMath{T\ge d^2}, with actions in the unit Euclidean ball, parameter norm at most one, and unit Gaussian scalar observation noise.
+
+\textbf{Dimension conditions.} Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.
+
+\textbf{Oracle correspondence.} Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.
+
+\textbf{Guarantee conversion.} Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.
+
+\textbf{Output rule.} Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.
+
+\textbf{Resource conversion.} Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{rounds.} T
+
+\textbf{native feedback.} T
+
+\textbf{Constants.} Universal constants independent of the parameters explicitly tracked in this claim
+
+\textbf{Logarithmic factors.} None.
+
+\textbf{Source location.} \href{https://tor-lattimore.com/downloads/book/book.pdf}{[2]} theorem: Theorem 24.2; pdf pages: 299; 300; printed pages: 290; 291
+
+Actions lie in the unit ball and feedback has independent standard Gaussian scalar noise. Hard parameters satisfy \AtlasInlineMath{\|\theta\|_2^2=d^2/(48T)} and yield lower bound \AtlasInlineMath{d\sqrt T/(16\sqrt3)}; \AtlasInlineMath{T\ge d^2} ensures they lie in the unit ball.
+
+\needspace{4\baselineskip}\subsection{B3 - E2TC: explore, test, then commit}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{C\min\{T,d\sqrt T\}}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v291/zhang25b.html}{[1]}
+
+\textbf{Conditions.} Assume integer \AtlasInlineMath{d,T\ge1}, actions in the unit Euclidean ball, \AtlasInlineMath{\|\theta\|_2\le1}, and independent standard Gaussian scalar noise.
+
+\textbf{Oracle correspondence.} Preserve this setting's feedback type, within-round coupling, and historical information
+
+\textbf{Guarantee conversion.} The accompanying argument states the native guarantee and necessary conversion.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{rounds.} T
+
+\textbf{native feedback.} Use the native per-round protocol specified by the contract.
+
+\textbf{Constants.} Dependence is allowed only on parameters declared fixed in the applicability conditions.
+
+\textbf{Logarithmic factors.} The displayed expression uses no notation that suppresses logarithmic factors.
+
+\textbf{Derivation.} Corollary 8 gives \AtlasInlineMath{O(\min\{\sigma d\sqrt T+d\|\theta\|_A,\ T\|\theta\|_A\})}. Set \AtlasInlineMath{A=I}, \AtlasInlineMath{\sigma=1}, and \AtlasInlineMath{\|\theta\|_2\le1} and use \AtlasInlineMath{d\le d\sqrt T} to obtain the stated worst-case upper bound.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v291/zhang25b.html}{[1]} theorem: Corollary 8, Theorem 7
+
+Corollary 8 gives \AtlasInlineMath{O(\min\{\sigma d\sqrt T+d\|\theta\|_A,\ T\|\theta\|_A\})}. Set \AtlasInlineMath{A=I}, \AtlasInlineMath{\sigma=1}, and \AtlasInlineMath{\|\theta\|_2\le1} and use \AtlasInlineMath{d\le d\sqrt T} to obtain the stated worst-case upper bound.
+
+\needspace{4\baselineskip}\subsection{B4 - Local spherical hard instances; dimensions d = 1,2 use two Gaussian sign hypotheses.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{c\min\{T,d\sqrt T\}}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v291/zhang25b.html}{[1]}
+
+\textbf{Conditions.} The bound requires integer \AtlasInlineMath{d,T\ge 1} and the same standard-Gaussian unit-ball model.
+
+\textbf{Oracle correspondence.} Preserve this setting's feedback type, within-round coupling, and historical information
+
+\textbf{Guarantee conversion.} The accompanying argument states the native guarantee and necessary conversion.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{rounds.} T
+
+\textbf{native feedback.} Use the native per-round protocol specified by the contract.
+
+\textbf{Constants.} Dependence is allowed only on parameters declared fixed in the applicability conditions.
+
+\textbf{Logarithmic factors.} The displayed expression uses no notation that suppresses logarithmic factors.
+
+\textbf{Derivation.} The source lower bound writes ambient dimension as \AtlasInlineMath{d+2}. If actual dimension is denoted \AtlasInlineMath{D}, then \AtlasInlineMath{D\ge3} implies \AtlasInlineMath{D-2\ge D/3}, so relabeling preserves the order. For \AtlasInlineMath{D=1,2}, embed the two parameters \AtlasInlineMath{\theta=\pm ae_1} with \AtlasInlineMath{a=1/(4\sqrt T)}. Under any policy the KL divergence between transcript laws is at most \AtlasInlineMath{2a^2T=1/8}. Pinsker's inequality gives constant sign-error probability and cumulative regret \AtlasInlineMath{\Omega(\sqrt T)}. Since \AtlasInlineMath{\min\{T,D\sqrt T\}\le2\sqrt T}, the required order also holds in these small dimensions.
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v291/zhang25b.html}{[1]} theorem: Theorem 1 and the accompanying two-hypothesis argument in low dimension
+
+The source lower bound writes ambient dimension as \AtlasInlineMath{d+2}. If actual dimension is denoted \AtlasInlineMath{D}, then \AtlasInlineMath{D\ge3} implies \AtlasInlineMath{D-2\ge D/3}, so relabeling preserves the order. For \AtlasInlineMath{D=1,2}, embed the two parameters \AtlasInlineMath{\theta=\pm ae_1} with \AtlasInlineMath{a=1/(4\sqrt T)}. Under any policy the KL divergence between transcript laws is at most \AtlasInlineMath{2a^2T=1/8}. Pinsker's inequality gives constant sign-error probability and cumulative regret \AtlasInlineMath{\Omega(\sqrt T)}. Since \AtlasInlineMath{\min\{T,D\sqrt T\}\le2\sqrt T}, the required order also holds in these small dimensions.
+
+\needspace{7\baselineskip}\section{References}
+[1] Raymond Zhang; Hédi Hadiji; Richard Combes. Linear Bandits on Ellipsoids: Minimax Optimal Algorithms. 2025. COLT2025, PMLR291:6016-6040.
+
+\url{https://proceedings.mlr.press/v291/zhang25b.html}
+
+[2] Tor Lattimore; Csaba Szepesvári. Bandit Algorithms. 2020. online book PDF accessed 2026-10-31; printed/PDF pages recorded separately.
+
+\url{https://tor-lattimore.com/downloads/book/book.pdf}
+
+[3] Yasin Abbasi-Yadkori; Dávid Pál; Csaba Szepesvári. Improved Algorithms for Linear Stochastic Bandits. 2011. NeurIPS 24:2312-2320.
+
+\url{https://proceedings.neurips.cc/paper/2011/file/e1d5be1c7f2f456670de3d53c7b54f4a-Paper.pdf}
+
+\end{document}

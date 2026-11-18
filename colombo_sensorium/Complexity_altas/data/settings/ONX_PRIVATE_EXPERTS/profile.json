@@ -1,0 +1,1117 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ONX_PRIVATE_EXPERTS",
+  "title": "Online experts: pure differential privacy for the entire action sequence",
+  "summary": "After incurring the selected expert's loss, the learner observes the full loss vector; the entire loss stream is fixed in advance. Privacy protects one round's complete loss vector, and the released object is the full action sequence. All causal randomized strategies satisfying the specified privacy condition are allowed.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "external_regret"
+    },
+    {
+      "facet": "structure",
+      "value": "finite_actions"
+    },
+    {
+      "facet": "feedback",
+      "value": "full_loss_vector"
+    },
+    {
+      "facet": "algorithm",
+      "value": "privacy_constraint"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    }
+  ],
+  "common_specification": {
+    "metric": {
+      "base_expression": "$$R_T=\\sum_{t=1}^T\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i),\\qquad L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).$$ This is cumulative external regret, not divided by $T$. Privacy separately constrains the specified released record.",
+      "base_expression_latex": "R_T=\\sum_{t=1}^T\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i),\\qquad L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).",
+      "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+      "comparator_ref": "ONX_PRIVATE_EXPERTS_com_5a1d1d8e87",
+      "finiteness_conditions": "Both cumulative losses lie in [0,T], so their difference on each execution path lies in [-T,T].",
+      "description_paragraphs": [
+        "Performance is expected cumulative external regret, with $R_T=\\sum_{t=1}^{T}\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i)$. The worst case ranges over fixed loss streams; expectation is over algorithmic randomness."
+      ],
+      "nonnegativity": false
+    },
+    "output": {
+      "object_type": "online_trajectory",
+      "feasibility": "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required.",
+      "allowed_postprocessing": "Previously executed online actions cannot be changed.",
+      "certificate_requirement": "No function value, optimality certificate, or final recommendation is required unless explicitly listed for this axis.",
+      "description_paragraphs": [
+        "The released record is the entire action sequence $I_{1:T}$. Neighboring input streams differ in one complete loss vector. Past actions cannot be changed by terminal postprocessing."
+      ]
+    },
+    "model": {
+      "existence": "Use the model's concrete compactness, continuity, unique-optimum, or controllability promises; add none implicitly.",
+      "instance": "The complete loss sequence for $K\\ge2$ experts is fixed before interaction, with $\\ell_t:[K]\\to[0,1]$ each round. Choose $I_t$ before seeing the full current loss vector, without observation noise. Define $$L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i).$$. Neither the best-expert cumulative loss $L_\\star$ nor future losses are known.",
+      "assumptions": [
+        {
+          "subject_id": "ONX_PRIVATE_EXPERTS_obj_e3fc5c42bb",
+          "property_code": "explicit_model_clause",
+          "variable_blocks": [
+            "ONX_PRIVATE_EXPERTS_var_7e21e1a905"
+          ],
+          "norm_ref": "ONX_PRIVATE_EXPERTS_nor_ed34ee46d6",
+          "scope": "All admissible values of the listed variables and round indices",
+          "description": "The full loss sequence for $K\\ge2$ experts is fixed before interaction, with $\\ell_t:[K]\\to[0,1]$ each round. The learner selects expert $I_t$ before the entire current loss vector is revealed; feedback has no observation noise."
+        },
+        {
+          "subject_id": "ONX_PRIVATE_EXPERTS_obj_e3fc5c42bb",
+          "property_code": "explicit_model_clause",
+          "variable_blocks": [
+            "ONX_PRIVATE_EXPERTS_var_7e21e1a905"
+          ],
+          "norm_ref": "ONX_PRIVATE_EXPERTS_nor_ed34ee46d6",
+          "scope": "All admissible values of the listed variables and round indices",
+          "description": "$$L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i).$$"
+        },
+        {
+          "subject_id": "ONX_PRIVATE_EXPERTS_obj_e3fc5c42bb",
+          "property_code": "explicit_model_clause",
+          "variable_blocks": [
+            "ONX_PRIVATE_EXPERTS_var_7e21e1a905"
+          ],
+          "norm_ref": "ONX_PRIVATE_EXPERTS_nor_ed34ee46d6",
+          "scope": "All admissible values of the listed variables and round indices",
+          "description": "The learner knows neither the best fixed expert's eventual cumulative loss $L_\\star$ nor future losses."
+        }
+      ],
+      "structured_source_contract": {
+        "experts": "K>=2 experts",
+        "losses": "l_t:[K]->[0,1] fixed before interaction",
+        "feedback": "whole l_t revealed after selected expert I_t",
+        "privacy_adjacency": "replace one entire loss vector in length-T input stream",
+        "privacy_output": "joint action sequence I_1:T",
+        "small_loss": "L_star=min_i sum_t l_t(i); learner does not know L_star"
+      },
+      "description_paragraphs": [
+        "There are $K\\ge2$ experts. The entire sequence of loss vectors $\\ell_t\\in[0,1]^K$, $t=1,\\ldots,T$, is fixed before interaction. The hindsight loss $L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i)$ is unknown."
+      ]
+    },
+    "resource": {
+      "precision_model": "Exact real-arithmetic model; bit complexity is unspecified",
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "$T$ sequential rounds, or $T$ rounds per task"
+        },
+        {
+          "code": "native_feedback",
+          "unit": "as_specified",
+          "description": "There are $N=T$ full-vector feedback events, revealing $KT$ loss coordinates in total. Privacy applies to the complete released sequence, rather than separately granting the same budget each round. Exploration, initialization, and system identification count toward the online budget. Calls, arithmetic, communication rounds or bits, and memory remain distinct resources; arithmetic and bit optimality are not asserted."
+        }
+      ],
+      "setup_cost": "All initialization, exploration, and identification calls are included in the budget.",
+      "scalarization": "Compare only at the specified joint budget and with the same native performance measure.",
+      "description_paragraphs": [
+        "There are $N=T$ complete-vector feedback events, reading $KT$ loss coordinates in total. The privacy budget applies to the entire release sequence, rather than allocating an identical full budget to each round.",
+        "Exploration, initialization, and system identification all consume the stated online budget. Queries, arithmetic, communication rounds or bits, and memory remain joint resources. No arithmetic or bit-complexity optimality is asserted."
+      ]
+    },
+    "oracle": {
+      "auxiliary_interfaces": {
+        "feedback": "full loss vector after action; no observation noise"
+      },
+      "hidden_objects": [
+        "L_star",
+        "future losses"
+      ],
+      "description_paragraphs": [
+        "At round t, choose an expert $I_t\\in[K]$ before observing the complete current loss vector $\\ell_t$. Feedback is exact. Observed loss vectors may be stored and reused; future loss vectors are unavailable.",
+        "The horizon T and number of experts K are public. Privacy parameters are supplied according to the selected algorithm view."
+      ]
+    },
+    "task": {
+      "formulation_latex": "R_T=\\sum_{t=1}^T\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i),\\qquad L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).",
+      "solution_goal": "Minimize performance as defined by the metric, guarantee, and native resource.",
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation": "After incurring the selected expert's loss, the learner observes the full loss vector; the entire loss stream is fixed in advance. Privacy protects one round's complete loss vector, and the released object is the full action sequence. All causal randomized strategies satisfying the specified privacy condition are allowed.",
+      "description_paragraphs": [
+        "After incurring the selected expert's loss, the learner observes the full loss vector; the entire loss stream is fixed in advance. Privacy protects one round's complete loss vector, and the released object is the full action sequence. All causal randomized strategies satisfying the specified privacy condition are allowed."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "pure_differential_privacy",
+      "label": "Pure differential privacy",
+      "algorithms": {
+        "randomization": "Private randomness is allowed and independent of the fixed instance and future external randomness.",
+        "adaptivity": "Strictly follows the per-round and within-batch protocol of the oracle",
+        "restrictions": [
+          "Adjacent input streams differ in the entire loss vector of one round. The released object is the full action sequence $I_{1:T}$. For any adjacent fixed streams $\\mathsf D,\\mathsf D^{\\prime}$ and measurable event $E$, require:",
+          "$$\\Pr(\\mathcal A(\\mathsf D)\\in E)\\le e^{\\epsilon_{\\mathrm{priv}}}\\Pr(\\mathcal A(\\mathsf D^{\\prime})\\in E).$$",
+          "Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits."
+        ],
+        "internal_computation": "Unrestricted except for explicit polynomial-time or protocol constraints",
+        "parallelism": "Follows the simultaneous-query, task-batch, and communication timing specified by the oracle",
+        "description_paragraphs": [
+          "Adjacent input streams differ in the entire loss vector of one round. The released object is the full action sequence $I_{1:T}$. For any adjacent fixed streams $\\mathsf D,\\mathsf D^{\\prime}$ and measurable event $E$, require:",
+          "$$\n\\Pr(\\mathcal{A}(\\mathsf D)\\in E)\\le e^{\\epsilon_{\\mathrm{priv}}}\\Pr(\\mathcal{A}(\\mathsf D^{\\prime})\\in E).\n$$",
+          "Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "$$\\inf_{\\mathcal A\\ \\text{private}}\\ \\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\ \\mathbb E_{\\mathcal A}\\!\\left[\\sum_{t=1}^{T}\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i)\\right].$$ The target is expected external regret, with the worst case over fixed loss streams and expectation only over algorithmic randomness.",
+          "aggregation_order": [
+            "$$\\inf_{\\mathcal A\\ \\text{private}}\\ \\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\ \\mathbb E_{\\mathcal A}\\!\\left[\\sum_{t=1}^{T}\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i)\\right].$$",
+            "The target is expected external regret, worst-case over fixed loss streams; expectation includes only algorithmic randomness."
+          ],
+          "quantifier_order": "One admissible algorithm using only public information must handle every prescribed instance; adaptation to unknown budgets must be performed by that same algorithm.",
+          "randomness_sources": [
+            "Private randomness of the algorithm",
+            "Observation or environment randomness explicitly allowed by the oracle."
+          ],
+          "runtime_guarantee": "The resource budget is fixed. Expected error is not automatically converted to high probability or a random-runtime bound.",
+          "description_paragraphs": [
+            "$$\n\\inf_{\\mathcal{A}\\ \\text{\\text{private}}}\\ \\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\ \\mathbb{E}_{\\mathcal{A}}\\!\\left[\\sum_{t=1}^{T}\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i)\\right].\n$$",
+            "The target is expected external regret, worst-case over fixed loss streams; expectation includes only algorithmic randomness."
+          ]
+        }
+      ],
+      "specification_overrides": {
+        "task": {
+          "formulation_code": "onx_privexp_oblivious_pure",
+          "protocol_ref": "ONX_PRIVATE_EXPERTS_pro_f369b48286"
+        },
+        "model": {
+          "information_registry_ref": "ONX_PRIVEXP_OBLIVIOUS_PURE_INFORMATION",
+          "parameter_domain_description": "$K$: $K\\in\\mathbb N,\\ K\\ge2$ (public); $T$: $T\\in\\mathbb N,\\ T\\ge1$ (public); $\\epsilon_{\\rm priv}$: $\\epsilon_{\\mathrm{priv}}>0$ (public); $L_\\star$: $0\\le L_\\star\\le T$ (hidden or used only in the analysis)."
+        },
+        "oracle": {
+          "operations": [
+            {
+              "id": "ONX_PRIVATE_EXPERTS_ora_8e299a471a",
+              "operation_code": "full_loss_vector",
+              "target_object": "ONX_PRIVATE_EXPERTS_obj_e3fc5c42bb",
+              "query_signature": "Causal policies must satisfy the stated pure-privacy requirement. Inputs $K,T,\\epsilon_{\\mathrm{priv}}$ are public. Past feedback may be stored and reused computationally; additional historical or sample queries require an explicitly declared interface.",
+              "response_signature": {
+                "feedback": "full loss vector after action; no observation noise"
+              },
+              "domain_ref": "ONX_PRIVATE_EXPERTS_dom_ad874f86c0",
+              "feedback_quality": {
+                "feedback": "full loss vector after action; no observation noise"
+              },
+              "access_schedule_ref": "ONX_PRIVATE_EXPERTS_pro_f369b48286",
+              "cost_rule_ref": "ONX_PRIVATE_EXPERTS_res_200c307b09",
+              "display_label_zh": "The complete loss vector."
+            }
+          ],
+          "public_inputs": [
+            "K",
+            "T",
+            "eps_priv"
+          ],
+          "protocol_ref": "ONX_PRIVATE_EXPERTS_pro_f369b48286"
+        },
+        "resource": {
+          "cost_rules": [
+            {
+              "id": "ONX_PRIVATE_EXPERTS_res_200c307b09",
+              "operation_refs": [
+                "ONX_PRIVATE_EXPERTS_ora_8e299a471a"
+              ],
+              "cost": {
+                "N": "T full-vector feedback events",
+                "privacy_budget": "eps_priv across entire transcript, not per round"
+              }
+            }
+          ]
+        }
+      },
+      "budget": {
+        "precision_model": "Exact real-arithmetic model; bit complexity is unspecified",
+        "scalarization": "Compare only at the specified joint budget and with the same native performance measure."
+      },
+      "alias_ids": [
+        "ONX_PRIVEXP_OBLIVIOUS_PURE"
+      ],
+      "specification_qualifications": {
+        "view": [
+          "The public privacy budget is $\\epsilon_{\\rm priv}$. For every neighboring pair of fixed streams $\\mathsf D,\\mathsf D^{\\prime}$ and measurable E, $\\Pr(\\mathcal A(\\mathsf D)\\in E)\\le e^{\\epsilon_{\\rm priv}}\\Pr(\\mathcal A(\\mathsf D^{\\prime})\\in E)$."
+        ]
+      },
+      "display_qualifications": [
+        "**View qualification.** The public privacy budget is $\\epsilon_{\\rm priv}$. For every neighboring pair of fixed streams $\\mathsf D,\\mathsf D^{\\prime}$ and measurable E, $\\Pr(\\mathcal A(\\mathsf D)\\in E)\\le e^{\\epsilon_{\\rm priv}}\\Pr(\\mathcal A(\\mathsf D^{\\prime})\\in E)$."
+      ]
+    },
+    {
+      "view_id": "approximate_differential_privacy",
+      "label": "Approximate differential privacy",
+      "algorithms": {
+        "randomization": "Private randomness is allowed and independent of the fixed instance and future external randomness.",
+        "adaptivity": "Strictly follows the per-round and within-batch protocol of the oracle",
+        "restrictions": [
+          "Adjacent input streams differ in the entire loss vector of one round. The released object is the full action sequence $I_{1:T}$. For any adjacent fixed streams $\\mathsf D,\\mathsf D^{\\prime}$ and measurable event $E$, require:",
+          "$$\\Pr(\\mathcal A(\\mathsf D)\\in E)\\le e^{\\epsilon_{\\mathrm{priv}}}\\Pr(\\mathcal A(\\mathsf D^{\\prime})\\in E)+\\delta_{\\mathrm{priv}}.$$",
+          "Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits."
+        ],
+        "internal_computation": "Unrestricted except for explicit polynomial-time or protocol constraints",
+        "parallelism": "Follows the simultaneous-query, task-batch, and communication timing specified by the oracle",
+        "description_paragraphs": [
+          "Adjacent input streams differ in the entire loss vector of one round. The released object is the full action sequence $I_{1:T}$. For any adjacent fixed streams $\\mathsf D,\\mathsf D^{\\prime}$ and measurable event $E$, require:",
+          "$$\n\\Pr(\\mathcal{A}(\\mathsf D)\\in E)\\le e^{\\epsilon_{\\mathrm{priv}}}\\Pr(\\mathcal{A}(\\mathsf D^{\\prime})\\in E)+\\delta_{\\mathrm{priv}}.\n$$",
+          "Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "$$\\inf_{\\mathcal A\\ \\text{private}}\\ \\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\ \\mathbb E_{\\mathcal A}\\!\\left[\\sum_{t=1}^{T}\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i)\\right].$$ The target is expected external regret, with the worst case over fixed loss streams and expectation only over algorithmic randomness.",
+          "aggregation_order": [
+            "$$\\inf_{\\mathcal A\\ \\text{private}}\\ \\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\ \\mathbb E_{\\mathcal A}\\!\\left[\\sum_{t=1}^{T}\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i)\\right].$$",
+            "The target is expected external regret, worst-case over fixed loss streams; expectation includes only algorithmic randomness."
+          ],
+          "quantifier_order": "One admissible algorithm using only public information must handle every prescribed instance; adaptation to unknown budgets must be performed by that same algorithm.",
+          "randomness_sources": [
+            "Private randomness of the algorithm",
+            "Observation or environment randomness explicitly allowed by the oracle."
+          ],
+          "runtime_guarantee": "The resource budget is fixed. Expected error is not automatically converted to high probability or a random-runtime bound.",
+          "description_paragraphs": [
+            "$$\n\\inf_{\\mathcal{A}\\ \\text{\\text{private}}}\\ \\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\ \\mathbb{E}_{\\mathcal{A}}\\!\\left[\\sum_{t=1}^{T}\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i)\\right].\n$$",
+            "The target is expected external regret, worst-case over fixed loss streams; expectation includes only algorithmic randomness."
+          ]
+        }
+      ],
+      "specification_overrides": {
+        "task": {
+          "formulation_code": "onx_privexp_oblivious_approx",
+          "protocol_ref": "ONX_PRIVATE_EXPERTS_pro_906960bcc4"
+        },
+        "model": {
+          "information_registry_ref": "ONX_PRIVEXP_OBLIVIOUS_APPROX_INFORMATION",
+          "parameter_domain_description": "K: $K\\in\\mathbb N,\\ K\\ge2$ (public); T: $T\\in\\mathbb N,\\ T\\ge1$ (public); \\delta_{\\mathrm{priv}}: $0\\le\\delta_{\\mathrm{priv}}<1$ (public); \\epsilon_{\\mathrm{priv}}: $\\epsilon_{\\mathrm{priv}}>0$ (public); L_\\star: $0\\le L_\\star\\le T$ (hidden or used only in analysis)"
+        },
+        "oracle": {
+          "operations": [
+            {
+              "id": "ONX_PRIVATE_EXPERTS_ora_8d4176d9f1",
+              "operation_code": "full_loss_vector",
+              "target_object": "ONX_PRIVATE_EXPERTS_obj_e3fc5c42bb",
+              "query_signature": "Causal policies must satisfy the stated privacy requirement. The parameters $K,T,\\epsilon_{\\mathrm{priv}},\\delta_{\\mathrm{priv}}$ are public. Received feedback may be stored and processed repeatedly. The policy cannot request previously undisclosed information from past rounds or make additional queries to an exhausted sample. Access to the current full function or two evaluations of the same sample is available only when explicitly specified.",
+              "response_signature": {
+                "feedback": "full loss vector after action; no observation noise"
+              },
+              "domain_ref": "ONX_PRIVATE_EXPERTS_dom_ad874f86c0",
+              "feedback_quality": {
+                "feedback": "full loss vector after action; no observation noise"
+              },
+              "access_schedule_ref": "ONX_PRIVATE_EXPERTS_pro_906960bcc4",
+              "cost_rule_ref": "ONX_PRIVATE_EXPERTS_res_edd52032ac",
+              "display_label_zh": "The complete loss vector."
+            }
+          ],
+          "public_inputs": [
+            "K",
+            "T",
+            "eps_priv",
+            "delta_priv"
+          ],
+          "protocol_ref": "ONX_PRIVATE_EXPERTS_pro_906960bcc4"
+        },
+        "resource": {
+          "cost_rules": [
+            {
+              "id": "ONX_PRIVATE_EXPERTS_res_edd52032ac",
+              "operation_refs": [
+                "ONX_PRIVATE_EXPERTS_ora_8d4176d9f1"
+              ],
+              "cost": {
+                "N": "T full-vector feedback events",
+                "privacy_budget": "eps_priv across entire transcript, not per round"
+              }
+            }
+          ]
+        }
+      },
+      "budget": {
+        "precision_model": "Exact real-arithmetic model; bit complexity is unspecified",
+        "scalarization": "Compare only at the specified joint budget and with the same native performance measure."
+      },
+      "alias_ids": [
+        "ONX_PRIVEXP_OBLIVIOUS_APPROX"
+      ],
+      "specification_qualifications": {
+        "view": [
+          "The public budgets are $\\epsilon_{\\rm priv},\\delta_{\\rm priv}$. For every neighboring pair of fixed streams and measurable E, $\\Pr(\\mathcal A(\\mathsf D)\\in E)\\le e^{\\epsilon_{\\rm priv}}\\Pr(\\mathcal A(\\mathsf D^{\\prime})\\in E)+\\delta_{\\rm priv}$."
+        ]
+      },
+      "display_qualifications": [
+        "**View qualification.** The public budgets are $\\epsilon_{\\rm priv},\\delta_{\\rm priv}$. For every neighboring pair of fixed streams and measurable E, $\\Pr(\\mathcal A(\\mathsf D)\\in E)\\le e^{\\epsilon_{\\rm priv}}\\Pr(\\mathcal A(\\mathsf D^{\\prime})\\in E)+\\delta_{\\rm priv}$."
+      ]
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ONX_PRIVATE_EXPERTS_obj_e3fc5c42bb",
+        "type": "online_environment",
+        "definition": "The complete loss sequence for $K\\ge2$ experts is fixed before interaction, with $\\ell_t:[K]\\to[0,1]$ each round. Choose $I_t$ before seeing the full current loss vector, without observation noise. Define $$L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i).$$. Neither the best-expert cumulative loss $L_\\star$ nor future losses are known."
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ONX_PRIVATE_EXPERTS_var_7e21e1a905",
+        "space": "$I_t\\in[K]$; one expert is actually selected in the current round.",
+        "dimension": "A discrete expert index."
+      }
+    ],
+    "domains": [
+      {
+        "id": "ONX_PRIVATE_EXPERTS_dom_ad874f86c0",
+        "definition": "The complete loss sequence for $K\\ge2$ experts is fixed before interaction, with $\\ell_t:[K]\\to[0,1]$ each round. Choose $I_t$ before seeing the full current loss vector, without observation noise. Define $$L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i).$$. Neither the best-expert cumulative loss $L_\\star$ nor future losses are known."
+      }
+    ],
+    "norms": [
+      {
+        "id": "ONX_PRIVATE_EXPERTS_nor_ed34ee46d6",
+        "definition": {
+          "experts": "K>=2 experts",
+          "losses": "l_t:[K]->[0,1] fixed before interaction",
+          "feedback": "whole l_t revealed after selected expert I_t",
+          "privacy_adjacency": "replace one entire loss vector in length-T input stream",
+          "privacy_output": "joint action sequence I_1:T",
+          "small_loss": "L_star=min_i sum_t l_t(i); learner does not know L_star"
+        }
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ONX_PRIVATE_EXPERTS_pro_f369b48286",
+        "steps": [
+          "Causal strategies satisfying the stated pure-privacy requirement are allowed. The quantity $K,T,\\epsilon_{\\mathrm{priv}}$ is public.",
+          "Received feedback may be stored and reused in computation. Unrevealed information cannot be requested from past rounds, and consumed random samples cannot receive additional queries. Current-round exceptions are limited to the explicitly supplied full-function access or same-sample two-point interface."
+        ],
+        "adversary_information": "Follow the model and oracle timing. Current private random realizations are not visible to the environment.",
+        "loss_bearing_points": "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required.",
+        "past_requery": "History may be stored. New information from old samples or past rounds is unavailable unless the native interface explicitly permits it."
+      },
+      {
+        "id": "ONX_PRIVATE_EXPERTS_pro_906960bcc4",
+        "steps": [
+          "Causal strategies satisfying the stated privacy requirement are allowed. The quantity $K,T,\\epsilon_{\\mathrm{priv}},\\delta_{\\mathrm{priv}}$ is public.",
+          "Received feedback may be stored and reused in computation. Unrevealed information cannot be requested from past rounds, and consumed random samples cannot receive additional queries. Current-round exceptions are limited to the explicitly supplied full-function access or same-sample two-point interface."
+        ],
+        "adversary_information": "Follow the model and oracle timing. Current private random realizations are not visible to the environment.",
+        "loss_bearing_points": "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required.",
+        "past_requery": "History may be stored. New information from old samples or past rounds is unavailable unless the native interface explicitly permits it."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ONX_PRIVATE_EXPERTS_com_5a1d1d8e87",
+        "definition": "$$R_T=\\sum_{t=1}^T\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i),\\qquad L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).$$ This is cumulative external regret, not divided by $T$. Privacy separately constrains the specified released record."
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ONX_PRIVATE_EXPERTS_p_33799e5e0a",
+      "symbol": "K",
+      "meaning": "Number of experts",
+      "kind": "independent",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "public": true,
+      "definition": "The expert set is $[K]$.",
+      "dependencies": [],
+      "constant_dependencies": []
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS_p_0c093224ff",
+      "symbol": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "dependencies": [],
+      "constant_dependencies": []
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS_p_e9a6206170",
+      "symbol": "\\epsilon_{\\mathrm{priv}}",
+      "meaning": "The multiplicative differential-privacy parameter.",
+      "domain": "$\\epsilon_{\\mathrm{priv}}>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "Use the factor $e^{\\epsilon_{\\mathrm{priv}}}$ when comparing probabilities of output events under adjacent data inputs.",
+      "dependencies": [],
+      "constant_dependencies": []
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS_p_f5dd759d29",
+      "symbol": "L_\\star",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "meaning": "Cumulative loss of the best fixed expert in hindsight",
+      "domain": "$0\\le L_\\star\\le T$",
+      "definition": "$L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i)$ is an instance-dependent analytical quantity and is not supplied to the algorithm.",
+      "public": false,
+      "kind": "derived"
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS_p_9f27ce45c8",
+      "symbol": "\\delta_{\\mathrm{priv}}",
+      "meaning": "Additive allowance in approximate differential privacy",
+      "domain": "$0\\le\\delta_{\\mathrm{priv}}<1$",
+      "kind": "independent",
+      "public": true,
+      "definition": "Additive allowance in the output-event probability inequality for adjacent inputs; not statistical confidence.",
+      "dependencies": [],
+      "constant_dependencies": []
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "K",
+      "meaning": "Number of experts",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "definition": "The expert set is $[K]$.",
+      "parameter_ref": "ONX_PRIVATE_EXPERTS_p_33799e5e0a"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "parameter_ref": "ONX_PRIVATE_EXPERTS_p_0c093224ff"
+    },
+    {
+      "symbol_latex": "\\epsilon_{\\mathrm{priv}}",
+      "meaning": "The multiplicative differential-privacy parameter.",
+      "domain": "$\\epsilon_{\\mathrm{priv}}>0$",
+      "definition": "Use the factor $e^{\\epsilon_{\\mathrm{priv}}}$ when comparing probabilities of output events under adjacent data inputs.",
+      "parameter_ref": "ONX_PRIVATE_EXPERTS_p_e9a6206170"
+    },
+    {
+      "symbol_latex": "L_\\star",
+      "meaning": "Cumulative loss of the best fixed expert in hindsight",
+      "domain": "$0\\le L_\\star\\le T$",
+      "definition": "$L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i)$ is an instance-dependent analytical quantity and is not supplied to the algorithm.",
+      "parameter_ref": "ONX_PRIVATE_EXPERTS_p_f5dd759d29"
+    },
+    {
+      "symbol_latex": "\\ell_t",
+      "meaning": "Hidden loss vector at round t",
+      "domain": "$\\ell_t\\in[0,1]^K$",
+      "definition": "The entire sequence is fixed before interaction; only coordinates allowed by the protocol become visible after acting.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "I_t",
+      "meaning": "Arm or expert that actually incurs loss in round $t$",
+      "domain": "$I_t\\in[K]$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "[K]",
+      "meaning": "Index set of K arms or experts",
+      "domain": "A finite set.",
+      "definition": "$[K]=\\{1,\\ldots,K\\}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "i",
+      "meaning": "The fixed comparator expert’s index.",
+      "domain": "$i\\in[K]$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathsf D,\\mathsf D^{\\prime}",
+      "meaning": "Neighboring input streams differ in one round's complete loss vector.",
+      "domain": "A fixed sequence of loss vectors.",
+      "definition": "Privacy adjacency changes one complete round, rather than one loss coordinate.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "E",
+      "meaning": "A measurable event of action sequences in the pure-DP definition.",
+      "domain": "A measurable subset of action-sequence space.",
+      "definition": "Require $\\Pr(\\mathcal A(\\mathsf D)\\in E)\\le e^{\\epsilon_{\\mathrm{priv}}}\\Pr(\\mathcal A(\\mathsf D^{\\prime})\\in E)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_T",
+      "meaning": "Cumulative loss difference relative to the comparator specified in this profile",
+      "domain": "Real-valued random variable",
+      "definition": "$R_T=\\sum_t\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_t\\ell_t(i)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation includes the learner's private randomness and, when allowed, the environment strategy's randomness. A fixed loss sequence introduces no additional observation noise.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Cumulative observations counted according to the declared feedback type.",
+      "domain": "Nonnegative integer or integer-valued stopping time",
+      "definition": "The quantity $N=T$ counts complete loss-vector feedback events; the corresponding scalar-coordinate count is KT.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\delta_{\\mathrm{priv}}",
+      "meaning": "Additive allowance in approximate differential privacy",
+      "domain": "$0\\le\\delta_{\\mathrm{priv}}<1$",
+      "definition": "Additive allowance in the output-event probability inequality for adjacent inputs; not statistical confidence.",
+      "parameter_ref": "ONX_PRIVATE_EXPERTS_p_9f27ce45c8"
+    },
+    {
+      "symbol_latex": "E",
+      "meaning": "Measurable event in the action-sequence space used in the definition of approximate differential privacy",
+      "domain": "A measurable subset of action-sequence space.",
+      "definition": "Comparisons of event probabilities on adjacent inputs permit the additive term $\\delta_{\\mathrm{priv}}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\iota_2",
+      "meaning": "Additive privacy cost in the small-loss upper bound",
+      "domain": "Nonnegative quantity in this upper bound",
+      "definition": "$\\iota_2=O((\\log^{3/2}K\\sqrt{\\log\\min\\{1/\\delta_{\\mathrm{priv}},K\\}}+\\log K\\log T)/\\epsilon_{\\mathrm{priv}})$ This term remains even on zero-loss instances.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__q1",
+      "kind": "native_performance",
+      "expression": "$$\\inf_{\\mathcal A\\ \\text{private}}\\ \\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\ \\mathbb E_{\\mathcal A}\\!\\left[\\sum_{t=1}^{T}\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i)\\right].$$ The target is expected external regret, with the worst case over fixed loss streams and expectation only over algorithmic randomness.",
+      "expression_latex": "R_T=\\sum_{t=1}^T\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i),\\qquad L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).",
+      "optimization_direction": "minimize",
+      "units": "The setting’s native loss, regret, or error scale.",
+      "budget_variables": [
+        "ONX_PRIVATE_EXPERTS_p_0c093224ff"
+      ],
+      "comparison_scale": "native_metric",
+      "analysis_scope": "Compare only within this setting and the explicit regime, retaining multiple objectives and time normalization.",
+      "view_id": "pure_differential_privacy",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__q1",
+      "kind": "native_performance",
+      "expression": "$$\\inf_{\\mathcal A\\ \\text{private}}\\ \\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\ \\mathbb E_{\\mathcal A}\\!\\left[\\sum_{t=1}^{T}\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^{T}\\ell_t(i)\\right].$$ The target is expected external regret, with the worst case over fixed loss streams and expectation only over algorithmic randomness.",
+      "expression_latex": "R_T=\\sum_{t=1}^T\\ell_t(I_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i),\\qquad L_\\star=\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).",
+      "optimization_direction": "minimize",
+      "units": "The setting’s native loss, regret, or error scale.",
+      "budget_variables": [
+        "ONX_PRIVATE_EXPERTS_p_0c093224ff"
+      ],
+      "comparison_scale": "native_metric",
+      "analysis_scope": "Compare only within this setting and the explicit regime, retaining multiple objectives and time normalization.",
+      "view_id": "approximate_differential_privacy",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+      "expression": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+      "mode": "native_metric",
+      "resource_projection_id": "resource_6a63cfee9f"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__r1",
+      "specification_ref": "ONX_PRIVATE_EXPERTS",
+      "name": "SUPPORTED",
+      "predicate_text": "Assume $0<\\epsilon_{\\rm priv}\\le 1$; L_star is hidden. Retain the additional small-loss and zero-loss terms.",
+      "kind": "theorem_window",
+      "parameter_refs": [],
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "Assume $0<\\epsilon_{\\mathrm{priv}}\\le1$. The comparator loss $L_\\star$ is hidden. Retain the additional small-loss and zero-loss terms."
+      },
+      "endpoint_notes": "Unspecified numerical thresholds remain symbolic. Fixed-parameter dependence does not imply dimension-uniform constants."
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__r2",
+      "specification_ref": "ONX_PRIVATE_EXPERTS",
+      "name": "The bound’s native applicability window.",
+      "predicate_text": "Assume $0<\\epsilon_{\\mathrm{priv}}\\le1$. Losses are fixed before interaction and $L_\\star=\\min_i\\sum_t\\ell_t(i)$ is unknown. This is a small-loss upper bound; when $L_\\star$ and $T$ have the same order, it is not asserted to be the best worst-case bound.",
+      "kind": "source_window"
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__r1",
+      "specification_ref": "ONX_PRIVATE_EXPERTS",
+      "name": "SUPPORTED",
+      "predicate_text": "Assume $0<\\epsilon_{\\rm priv}\\le 1$ and $0<\\delta_{\\rm priv}\\le 1/2$; L_star is unknown.",
+      "kind": "theorem_window",
+      "parameter_refs": [],
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "0<epsilon_priv<=1 and 0<delta_priv<=1/2; L_star is unknown."
+      },
+      "endpoint_notes": "Unspecified numerical thresholds remain symbolic. Fixed-parameter dependence does not imply dimension-uniform constants."
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__r2",
+      "specification_ref": "ONX_PRIVATE_EXPERTS",
+      "name": "The bound’s native applicability window.",
+      "predicate_text": "Require $0<\\epsilon_{\\mathrm{priv}}\\le1$ and $0<\\delta_{\\mathrm{priv}}\\le1/2$. The quantity $L_\\star$ is the unknown cumulative loss of the best expert; $\\iota_2$ is the additive privacy term defined in the displayed expression. This term remains necessary in the stated bound even when $L_\\star=0$.",
+      "kind": "source_window"
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__r3",
+      "specification_ref": "ONX_PRIVATE_EXPERTS",
+      "name": "The bound’s native applicability window.",
+      "predicate_text": "Losses are fixed before interaction, and L2P must satisfy the parameter, rounding, and probability choices in Theorem 3.2 of the source. Exact $\\delta_{\\mathrm{priv}}$ dependence has not been independently reconciled with all these conditions; retain this as a source-reported asymptotic statement. It is an upper bound from one construction. The restricted-mechanism lower bound in the same paper does not cover all private policies and cannot establish unrestricted minimax optimality.",
+      "kind": "source_window"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\begin{aligned}[c]&O\\!\\left((\\sqrt{\\log K\\log T}+\\log K)\\sqrt{\\frac{L_\\star}{\\epsilon_{\\mathrm{priv}}}}\\right)\\\\ &\\quad+\\bigl(1+\\log(1+L_\\star)\\bigr)\\,O\\!\\left(\\frac{\\log^2K+\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}\\right).\\end{aligned}",
+      "quantity_ref": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__q1",
+      "region_refs": [
+        "ONX_PRIVATE_EXPERTS__pure_differential_privacy__r2"
+      ],
+      "method": "A pure-DP expert algorithm adaptive to small loss.",
+      "algorithm_or_hard_family": "A pure-DP expert algorithm adaptive to small loss.",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "source_refs": [
+        "ONX_SRC_PRIVEXPERT2026"
+      ],
+      "evidence_refs": [
+        "ONX_PRIVATE_EXPERTS__pure_differential_privacy__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ONX_PRIVATE_EXPERTS__pure_differential_privacy__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Assume $0<\\epsilon_{\\mathrm{priv}}\\le1$. Losses are fixed before interaction, and $L_\\star=\\min_i\\sum_t\\ell_t(i)$ is unknown.",
+          "This is a small-loss upper bound. When $L_\\star$ and $T$ have the same order, it is not necessarily the best worst-case bound."
+        ],
+        "condition_prose_zh": [
+          "Assume $0<\\epsilon_{\\mathrm{priv}}\\le1$. Losses are fixed before interaction, and $L_\\star=\\min_i\\sum_t\\ell_t(i)$ is unknown.",
+          "This is a small-loss upper bound. When $L_\\star$ and $T$ have the same order, it is not necessarily the best worst-case bound."
+        ],
+        "oracle_mapping": "Retain the specified feedback type, sample coupling, public information, and environment permissions.",
+        "source_guards_original": [
+          "0<eps_priv<=1",
+          "L_star unknown",
+          "oblivious losses"
+        ]
+      },
+      "witness_type": "randomized",
+      "view_id": "pure_differential_privacy",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\begin{aligned}[c]&O\\!\\Bigg(\\sqrt{\\frac{L_\\star\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}}\\\\ &\\qquad+\\log K\\min\\!\\left\\{\\frac{(L_\\star\\log(1/\\delta_{\\mathrm{priv}}))^{1/3}}{\\epsilon_{\\mathrm{priv}}^{2/3}},\\sqrt{\\frac{L_\\star}{\\epsilon_{\\mathrm{priv}}}}\\right\\}\\Bigg)\\\\ &\\quad+\\bigl(1+\\log(1+L_\\star)\\bigr)\\iota_2,\\\\ &\\iota_2=O\\!\\left(\\frac{\\log^{3/2}K\\sqrt{\\log\\min\\{1/\\delta_{\\mathrm{priv}},K\\}}+\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}\\right).\\end{aligned}",
+      "quantity_ref": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__q1",
+      "region_refs": [
+        "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__r2"
+      ],
+      "method": "An approximate-DP expert algorithm adaptive to small loss.",
+      "algorithm_or_hard_family": "An approximate-DP expert algorithm adaptive to small loss.",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "source_refs": [
+        "ONX_SRC_PRIVEXPERT2026"
+      ],
+      "evidence_refs": [
+        "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Require $0<\\epsilon_{\\mathrm{priv}}\\le1$ and $0<\\delta_{\\mathrm{priv}}\\le1/2$.",
+          "The quantity $L_\\star$ is the unknown cumulative loss of the best expert, and $\\iota_2$ is the additive privacy term defined in the displayed expression. This term must be retained even when $L_\\star=0$."
+        ],
+        "condition_prose_zh": [
+          "Require $0<\\epsilon_{\\mathrm{priv}}\\le1$ and $0<\\delta_{\\mathrm{priv}}\\le1/2$.",
+          "The quantity $L_\\star$ is the unknown cumulative loss of the best expert, and $\\iota_2$ is the additive privacy term defined in the displayed expression. This term must be retained even when $L_\\star=0$."
+        ],
+        "oracle_mapping": "Retain the specified feedback type, sample coupling, public information, and environment permissions.",
+        "source_guards_original": [
+          "0<eps_priv<=1",
+          "0<delta_priv<=1/2",
+          "iota_2=O(log(K)^(3/2) sqrt(log(min{1/delta_priv,K}))/eps_priv + log K log T/eps_priv)"
+        ]
+      },
+      "witness_type": "randomized",
+      "view_id": "approximate_differential_privacy",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__b2",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\widetilde{O}\\!\\left(\\sqrt{T\\log K}+\\frac{T^{1/3}\\log K}{\\epsilon_{\\mathrm{priv}}^{2/3}}\\right)",
+      "quantity_ref": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__q1",
+      "region_refs": [
+        "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__r3"
+      ],
+      "method": "Lazy-to-Private; parameter correspondence remains unverified.",
+      "algorithm_or_hard_family": "Lazy-to-Private; parameter correspondence remains unverified.",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "source_refs": [
+        "ONX_SRC_PRIVATE_LAZY2024"
+      ],
+      "evidence_refs": [
+        "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__e1"
+      ],
+      "included_in_bracket": false,
+      "eligible_for_bracket": false,
+      "selected_in_regimes": [],
+      "applicability": {
+        "conditions": [
+          "Losses are fixed before interaction and obey the L2P parameter, rounding, and probability-tuning conditions in source Theorem 3.2.",
+          "The exact $\\delta_{\\mathrm{priv}}$ dependence and the stated conditions have not been independently reconciled in this review; retain the asymptotic statement as reported by the source.",
+          "This upper bound comes from one construction. The same paper's lower bound for restricted mechanisms does not cover all private strategies and cannot establish minimax closure for the general class."
+        ],
+        "condition_prose_zh": [
+          "Losses are fixed before interaction and obey the L2P parameter, rounding, and probability-tuning conditions in source Theorem 3.2.",
+          "The exact $\\delta_{\\mathrm{priv}}$ dependence and the stated conditions have not been independently reconciled in this review; retain the asymptotic statement as reported by the source.",
+          "This upper bound comes from one construction. The same paper's lower bound for restricted mechanisms does not cover all private strategies and cannot establish minimax closure for the general class."
+        ],
+        "oracle_mapping": "Retain the specified feedback type, sample coupling, public information, and environment permissions.",
+        "source_guards_original": [
+          "source L2P parameter/rounding conditions in Theorem 3.2",
+          "oblivious losses"
+        ]
+      },
+      "witness_type": "not_certified",
+      "view_id": "approximate_differential_privacy",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "SUPPORTED",
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "Assume $0<\\epsilon_{\\mathrm{priv}}\\le1$. The comparator loss $L_\\star$ is hidden. Retain the additional small-loss and zero-loss terms."
+      },
+      "predicate_text": "Assume $0<\\epsilon_{\\rm priv}\\le 1$; L_star is hidden. Retain the additional small-loss and zero-loss terms.",
+      "parameter_refs": [],
+      "source_region_ref": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__r1",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__c1",
+      "view_id": "pure_differential_privacy",
+      "guarantee_id": "g1",
+      "quantity_id": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__q1",
+      "resource_projection_id": "resource_6a63cfee9f",
+      "regime_id": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__r1",
+      "bracket": {
+        "upper_refs": [
+          "ONX_PRIVATE_EXPERTS__pure_differential_privacy__b1"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__c1",
+        "quantity_ref": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__q1",
+        "comparison_mode": "native_metric",
+        "resource_projection": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression": "\\begin{aligned}&O\\!\\left((\\sqrt{\\log K\\log T}+\\log K)\\sqrt{\\frac{L_\\star}{\\epsilon_{\\mathrm{priv}}}}\\right)\\\\ &\\quad+\\bigl(1+\\log(1+L_\\star)\\bigr)\\,O\\!\\left(\\frac{\\log^2K+\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}\\right).\\end{aligned}",
+            "display_latex": "\\begin{aligned}&O\\!\\left((\\sqrt{\\log K\\log T}+\\log K)\\sqrt{\\frac{L_\\star}{\\epsilon_{\\mathrm{priv}}}}\\right)\\\\ &\\quad+\\bigl(1+\\log(1+L_\\star)\\bigr)\\,O\\!\\left(\\frac{\\log^2K+\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}\\right).\\end{aligned}",
+            "claim_refs": [
+              "ONX_PRIVATE_EXPERTS__pure_differential_privacy__b1"
+            ],
+            "included": true,
+            "expression_latex": "\\begin{aligned}[c]&O\\!\\left((\\sqrt{\\log K\\log T}+\\log K)\\sqrt{\\frac{L_\\star}{\\epsilon_{\\mathrm{priv}}}}\\right)\\\\ &\\quad+\\bigl(1+\\log(1+L_\\star)\\bigr)\\,O\\!\\left(\\frac{\\log^2K+\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}\\right).\\end{aligned}"
+          },
+          "lower": {
+            "expression": "",
+            "display_latex": "",
+            "claim_refs": [],
+            "included": false,
+            "expression_latex": ""
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "ONX_PRIVATE_EXPERTS__pure_differential_privacy__b1": [
+            {
+              "region_ref": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__r2",
+              "predicate_text": "Assume $0<\\epsilon_{\\mathrm{priv}}\\le1$. Losses are fixed before interaction and $L_\\star=\\min_i\\sum_t\\ell_t(i)$ is unknown. This is a small-loss upper bound; when $L_\\star$ and $T$ have the same order, it is not asserted to be the best worst-case bound."
+            }
+          ]
+        },
+        "envelope_certificate": "",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Fixed native online budget, with computational, communication, and privacy resources retained separately."
+      },
+      "comparison_key": {
+        "setting_id": "ONX_PRIVATE_EXPERTS",
+        "view_id": "pure_differential_privacy",
+        "guarantee_id": "g1",
+        "quantity_id": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__q1",
+        "resource_projection_id": "resource_6a63cfee9f",
+        "regime_id": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__r1"
+      }
+    },
+    {
+      "label": "SUPPORTED",
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "0<epsilon_priv<=1 and 0<delta_priv<=1/2; L_star is unknown."
+      },
+      "predicate_text": "Assume $0<\\epsilon_{\\rm priv}\\le 1$ and $0<\\delta_{\\rm priv}\\le 1/2$; L_star is unknown.",
+      "parameter_refs": [],
+      "source_region_ref": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__r1",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__c1",
+      "view_id": "approximate_differential_privacy",
+      "guarantee_id": "g1",
+      "quantity_id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__q1",
+      "resource_projection_id": "resource_6a63cfee9f",
+      "regime_id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__r1",
+      "bracket": {
+        "upper_refs": [
+          "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__b1"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__c1",
+        "quantity_ref": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__q1",
+        "comparison_mode": "native_metric",
+        "resource_projection": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression": "\\begin{aligned}&O\\!\\Bigg(\\sqrt{\\frac{L_\\star\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}}\\\\ &\\qquad+\\log K\\min\\!\\left\\{\\frac{(L_\\star\\log(1/\\delta_{\\mathrm{priv}}))^{1/3}}{\\epsilon_{\\mathrm{priv}}^{2/3}},\\sqrt{\\frac{L_\\star}{\\epsilon_{\\mathrm{priv}}}}\\right\\}\\Bigg)\\\\ &\\quad+\\bigl(1+\\log(1+L_\\star)\\bigr)\\iota_2,\\\\ &\\iota_2=O\\!\\left(\\frac{\\log^{3/2}K\\sqrt{\\log\\min\\{1/\\delta_{\\mathrm{priv}},K\\}}+\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}\\right).\\end{aligned}",
+            "display_latex": "\\begin{aligned}&O\\!\\Bigg(\\sqrt{\\frac{L_\\star\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}}\\\\ &\\qquad+\\log K\\min\\!\\left\\{\\frac{(L_\\star\\log(1/\\delta_{\\mathrm{priv}}))^{1/3}}{\\epsilon_{\\mathrm{priv}}^{2/3}},\\sqrt{\\frac{L_\\star}{\\epsilon_{\\mathrm{priv}}}}\\right\\}\\Bigg)\\\\ &\\quad+\\bigl(1+\\log(1+L_\\star)\\bigr)\\iota_2,\\\\ &\\iota_2=O\\!\\left(\\frac{\\log^{3/2}K\\sqrt{\\log\\min\\{1/\\delta_{\\mathrm{priv}},K\\}}+\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}\\right).\\end{aligned}",
+            "claim_refs": [
+              "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__b1"
+            ],
+            "included": true,
+            "expression_latex": "\\begin{aligned}[c]&O\\!\\Bigg(\\sqrt{\\frac{L_\\star\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}}\\\\ &\\qquad+\\log K\\min\\!\\left\\{\\frac{(L_\\star\\log(1/\\delta_{\\mathrm{priv}}))^{1/3}}{\\epsilon_{\\mathrm{priv}}^{2/3}},\\sqrt{\\frac{L_\\star}{\\epsilon_{\\mathrm{priv}}}}\\right\\}\\Bigg)\\\\ &\\quad+\\bigl(1+\\log(1+L_\\star)\\bigr)\\iota_2,\\\\ &\\iota_2=O\\!\\left(\\frac{\\log^{3/2}K\\sqrt{\\log\\min\\{1/\\delta_{\\mathrm{priv}},K\\}}+\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}\\right).\\end{aligned}"
+          },
+          "lower": {
+            "expression": "",
+            "display_latex": "",
+            "claim_refs": [],
+            "included": false,
+            "expression_latex": ""
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__b1": [
+            {
+              "region_ref": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__r2",
+              "predicate_text": "Require $0<\\epsilon_{\\mathrm{priv}}\\le1$ and $0<\\delta_{\\mathrm{priv}}\\le1/2$. The quantity $L_\\star$ is the unknown cumulative loss of the best expert; $\\iota_2$ is the additive privacy term defined in the displayed expression. This term remains necessary in the stated bound even when $L_\\star=0$."
+            }
+          ]
+        },
+        "envelope_certificate": "",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Fixed native online budget, with computational, communication, and privacy resources retained separately."
+      },
+      "comparison_key": {
+        "setting_id": "ONX_PRIVATE_EXPERTS",
+        "view_id": "approximate_differential_privacy",
+        "guarantee_id": "g1",
+        "quantity_id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__q1",
+        "resource_projection_id": "resource_6a63cfee9f",
+        "regime_id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ONX_PRIVATE_EXPERTS__pure_differential_privacy__e1",
+      "source_ref": "ONX_SRC_PRIVEXPERT2026",
+      "locator": "Theorem 1.1, PDF p.2",
+      "supports": "Supports the stated results and explicit reductions: $\\begin{aligned}[c]&O\\!\\left((\\sqrt{\\log K\\log T}+\\log K)\\sqrt{\\frac{L_\\star}{\\epsilon_{\\mathrm{priv}}}}\\right)\\\\ &\\quad+\\bigl(1+\\log(1+L_\\star)\\bigr)\\,O\\!\\left(\\frac{\\log^2K+\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}\\right).\\end{aligned}$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": []
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__e1",
+      "source_ref": "ONX_SRC_PRIVATE_LAZY2024",
+      "locator": "Theorem 3.10 pp.8–9",
+      "supports": "The source supports $\\widetilde{O}\\!\\left(\\sqrt{T\\log K}+\\frac{T^{1/3}\\log K}{\\epsilon_{\\mathrm{priv}}^{2/3}}\\right)$ and the stated reductions. Applicability is restricted by the model, feedback, region, and quantifiers of each atomic claim.",
+      "notes": []
+    },
+    {
+      "id": "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__e2",
+      "source_ref": "ONX_SRC_PRIVEXPERT2026",
+      "locator": "Theorem 1.2, PDF p.2",
+      "supports": "Supports the stated results and explicit reductions: $\\begin{aligned}[c]&O\\!\\Bigg(\\sqrt{\\frac{L_\\star\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}}\\\\ &\\qquad+\\log K\\min\\!\\left\\{\\frac{(L_\\star\\log(1/\\delta_{\\mathrm{priv}}))^{1/3}}{\\epsilon_{\\mathrm{priv}}^{2/3}},\\sqrt{\\frac{L_\\star}{\\epsilon_{\\mathrm{priv}}}}\\right\\}\\Bigg)\\\\ &\\quad+\\bigl(1+\\log(1+L_\\star)\\bigr)\\iota_2,\\\\ &\\iota_2=O\\!\\left(\\frac{\\log^{3/2}K\\sqrt{\\log\\min\\{1/\\delta_{\\mathrm{priv}},K\\}}+\\log K\\log T}{\\epsilon_{\\mathrm{priv}}}\\right).\\end{aligned}$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": []
+    }
+  ],
+  "references": [
+    {
+      "id": "ONX_SRC_PRIVEXPERT2026",
+      "authors": [
+        "Bo Li",
+        "Peng Ye"
+      ],
+      "title": "Private Online Prediction from Experts with Small Losses",
+      "year": 2026,
+      "version": "2610.29575v2",
+      "url": "https://arxiv.org/pdf/2610.29575v2",
+      "publication_status": "preprint_version_inspected"
+    },
+    {
+      "id": "ONX_SRC_PRIVATE_LAZY2024",
+      "authors": [
+        "Hilal Asi",
+        "Tomer Koren",
+        "Daogao Liu",
+        "Kunal Talwar"
+      ],
+      "title": "Private Online Learning via Lazy Algorithms",
+      "year": 2024,
+      "version": "NeurIPS 2024 publisher PDF",
+      "url": "https://papers.nips.cc/paper_files/paper/2024/file/cb775ebc750e0454a470fc99c5accc85-Paper-Conference.pdf",
+      "publication_status": "published_conference_or_journal_pdf"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "ONX_PRIVEXP_OBLIVIOUS_PURE",
+      "view_id": "pure_differential_privacy"
+    },
+    {
+      "legacy_id": "ONX_PRIVEXP_OBLIVIOUS_APPROX",
+      "view_id": "approximate_differential_privacy"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "lower"
+    ],
+    "special_statuses": [],
+    "comparison_count": 2,
+    "status_counts": {
+      "missing_lower": 2
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ONX_PRIVATE_EXPERTS__pure_differential_privacy__c1"
+      ],
+      "view_ids": [
+        "pure_differential_privacy"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "ONX_PRIVATE_EXPERTS__approximate_differential_privacy__c1"
+      ],
+      "view_ids": [
+        "approximate_differential_privacy"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "625478474e7126aefbc578e0c854e0c8113d8506aa69c3b95bc26b24c3abff00",
+    "source_order": 135,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

@@ -1,0 +1,295 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Bandits with expert advice: pre-action advice and post-action single-arm feedback.\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{ON\_\allowbreak{}CTX\_\allowbreak{}ADVICE\_\allowbreak{}S}
+
+Online learning and bandits
+
+Each round reveals all experts' distributions over arms before the learner selects an arm and observes only its loss. The target is the best fixed advice expert, whose cumulative benchmark is expected loss under its advice distributions.
+
+\textbf{Status.} Logarithmic gap present
+
+\textbf{TASK tags.} formulation: Bandit expert advice regret; solution concept: Minimize expected cumulative expert advice regret; task family: Online bandit
+
+\textbf{MODEL tags.} stochastic model: Loss range; structure: Expert probabilities; structure: Finite actions
+
+\textbf{ORACLE tags.} feedback quality: Source-declared exact feedback (may be a random reward); interface family: Selected reward; operation: Observe expert advice then selected arm; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} randomization: Private randomness allowed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Action trajectory
+
+\textbf{METRIC tags.} criterion: External regret
+
+\textbf{GUARANTEE tags.} mode: Expectation; randomness: Algorithm private seed
+
+\textbf{RESOURCE tags.} measure: Advice entries; measure: Native feedback; measure: Rounds
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Each round reveals all experts' distributions over arms before the learner selects an arm and observes only its loss. The target is the best fixed advice expert, whose cumulative benchmark is expected loss under its advice distributions.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+Expert i’s current advice distribution \AtlasInlineMath{q_{t,i}} lies in the K-dimensional probability simplex. All M advice distributions are visible before the arm is selected.
+
+The hidden loss vector \AtlasInlineMath{\ell_t} lies in [0,1]\textasciicircum{}K and is not visible before acting.
+
+The comparator is the best fixed expert in hindsight, \AtlasInlineMath{i}, whose cumulative loss is the expected loss of its advice distribution, \AtlasInlineMath{\sum_t\langle q_{t,i},\ell_t\rangle}. Experts do not receive separately sampled reward trajectories.
+
+This specification requires \AtlasInlineMath{K\ge2}, \AtlasInlineMath{M\ge K}, and \AtlasInlineMath{T\ge1}, with actions in \AtlasInlineMath{[K]}.
+
+Advice is supplied through a dense M-by-K numerical interface; future advice remains hidden.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Full advice is revealed first, followed by the selected-arm loss.
+
+
+\AtlasMath{(q_{t,1},\ldots,q_{t,M})\ \longrightarrow\ a_t\in[K]\ \longmapsto\ Y_t=\ell_t(a_t)}
+
+
+All current advice is visible before selecting an arm. Selection of an expert before advice is not required.
+
+After acting, only the selected arm's loss is returned, not the full \AtlasInlineMath{\ell}\_t or the true loss of every expert.
+
+Expert advice and losses are fixed in advance; there is no additional observation noise.
+
+Public inputs are \AtlasInlineMath{K,T,M}. All \AtlasInlineMath{M} current recommendation vectors are revealed before arm selection; future recommendations are not supplied.
+
+\needspace{4\baselineskip}\subsection{Output}
+The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+\AtlasMath{q_{t,i}\in\Delta_K,\quad R_T=\sum_t\ell_t(a_t)-\min_{i\in[M]}\sum_t\langle q_{t,i},\ell_t\rangle}
+
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Each round reveals M $\times$ K advice values and one loss scalar, for T selected-arm feedback observations.
+
+Any policy acting after recommendations are revealed is allowed. q-FTRL may maintain expert weights and sample an arm from their mixture.
+
+Dense advice itself contains MK numbers per round. Mixing, importance weighting, and FTRL subproblems are internal computation and are not hidden inside the bandit sample count.
+
+Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication.
+
+
+\AtlasMath{\inf_{\mathcal{A}}\sup_{(q_{t,i}),\ell_{1:T}}\mathbb{E}_{\mathcal{A}}[R_T]}
+
+
+Choose one algorithm using public inputs before taking the worst case over all admissible instances. Expectation covers the algorithm's private randomness and the observation randomness specified by the model. Comparator choice and the order of summation, minimization, and expectation follow the displayed formula.
+
+\textbf{Budget convention.} There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{K}: The finite number of arms. \textbf{Domain:} \AtlasInlineMath{K\in\mathbb N,\ K\ge2}.
+
+The arm set is \AtlasInlineMath{[K]=\{1,\ldots,K\}}.
+
+\AtlasInlineMath{M}: Number of advice experts \textbf{Domain:} \AtlasInlineMath{M\in\mathbb N,\ M\ge K}.
+
+Before acting each round, observe M experts' advice distributions over K arms.
+
+\AtlasInlineMath{T}: Online rounds within the fixed evaluation horizon. \textbf{Domain:} \AtlasInlineMath{T\in\mathbb N,\ T\ge1}.
+
+The information protocol fixes feedback count per round. The horizon \AtlasInlineMath{T} is not an independent cumulative scalar-query count.
+
+\AtlasInlineMath{\ell_t}: Hidden loss vector at round t \textbf{Domain:} \AtlasInlineMath{\ell_t\in[0,1]^K}.
+
+The entire sequence is fixed before interaction; only coordinates allowed by the protocol become visible after acting.
+
+\AtlasInlineMath{a_t}: Arm or expert that actually incurs loss in round \AtlasInlineMath{t} \textbf{Domain:} \AtlasInlineMath{a_t\in[K]}.
+
+\AtlasInlineMath{[K]}: Index set of K arms or experts \textbf{Domain:} A finite set.
+
+\AtlasInlineMath{[K]=\{1,\ldots,K\}}.
+
+\AtlasInlineMath{q_{t,i}}: Expert i’s current advice distribution. \textbf{Domain:} \AtlasInlineMath{q_{t,i}\in\Delta_K}.
+
+Coordinate a is the probability of recommending arm a. All current advice is visible before acting.
+
+\AtlasInlineMath{\Delta_K}: Probability simplex over \AtlasInlineMath{K} arms \textbf{Domain:} \AtlasInlineMath{\Delta_K\subset\mathbb R^K}.
+
+\AtlasInlineMath{\{q\in[0,1]^K:\sum_aq_a=1\}}.
+
+\AtlasInlineMath{i,[M]}: Index and index set of the fixed advice experts \textbf{Domain:} \AtlasInlineMath{i\in[M]=\{1,\ldots,M\}}.
+
+The comparator loss is \AtlasInlineMath{\sum_t\langle q_{t,i},\ell_t\rangle}.
+
+\AtlasInlineMath{e}: Base of the natural logarithm in the explicit upper-bound constant \textbf{Domain:} Constant.
+
+\AtlasInlineMath{e=\exp(1)}.
+
+\AtlasInlineMath{R_T}: Cumulative loss difference relative to the comparator specified in this profile \textbf{Domain:} Real-valued random variable.
+
+\AtlasInlineMath{R_T=\sum_t\ell_t(a_t)-\min_{i\in[M]}\sum_t\langle q_{t,i},\ell_t\rangle}.
+
+\AtlasInlineMath{\mathcal R_T^*}: Minimax expected regret under the current information protocol and parameter region. \textbf{Domain:} A nonnegative real.
+
+
+\AtlasMath{\begin{aligned}\mathcal R_T^*&=\inf_{\mathcal A}\sup_{(q,\ell)\in\mathcal I}\mathbb E_{\mathcal A}[R_T],\\ R_T&=\sum_{t=1}^T\ell_t(a_t)-\min_{i\in[M]}\sum_{t=1}^T\langle q_{t,i},\ell_t\rangle,\\ q_{t,i}&\in\Delta_K,\qquad\ell_t\in[0,1]^K.\end{aligned}}
+
+
+\AtlasInlineMath{\mathcal A}: Learning policies satisfying the specified information, computation, and privacy restrictions \textbf{Domain:} A measurable causal policy.
+
+Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.
+
+\AtlasInlineMath{t}: Interaction-time index \textbf{Domain:} \AtlasInlineMath{t\in\{1,\ldots,T\}}.
+
+\AtlasInlineMath{\mathbb E}: Mean operator \textbf{Domain:} Expectation over the specified random variables.
+
+Expectation includes the learner's private randomness and, when allowed, the environment strategy's randomness. A fixed loss sequence introduces no additional observation noise.
+
+\AtlasInlineMath{\log,\log_2}: Natural and binary logarithms \textbf{Domain:} Function on the positive real axis.
+
+\AtlasInlineMath{\log x=\ln x}, \AtlasInlineMath{\log_2x=\log x/\log2}.
+
+\AtlasInlineMath{c,C}: Positive constant in the bound without an assigned numerical value \textbf{Domain:} Positive real number.
+
+Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.
+
+\AtlasInlineMath{O,\Omega,\widetilde O,\widetilde\Omega}: Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression. \textbf{Domain:} Asymptotic comparison notation.
+
+The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.
+
+\AtlasInlineMath{N}: Cumulative observations counted according to the declared feedback type. \textbf{Domain:} Nonnegative integer or integer-valued stopping time.
+
+The quantity \AtlasInlineMath{N=T} counts cumulative native scalar feedback under a one-point or one-arm protocol.
+
+\AtlasInlineMath{\mathcal I}: The complete environment class in the current minimax objective. \textbf{Domain:} Collection of function classes or reward-distribution classes.
+
+The loss and advice arrays \AtlasInlineMath{(\ell_{1:T},q_{1:T,1:M})} are fixed before interaction, with \AtlasInlineMath{\ell_t\in[0,1]^K} and \AtlasInlineMath{q_{t,i}\in\Delta_K}. All current advice is revealed before the action in each round.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - minimax cumulative expert advice regret}
+\AtlasMath{\begin{aligned}\mathcal R_T^*&=\inf_{\mathcal A}\sup_{(q,\ell)\in\mathcal I}\mathbb E_{\mathcal A}[R_T],\\ R_T&=\sum_{t=1}^T\ell_t(a_t)-\min_{i\in[M]}\sum_{t=1}^T\langle q_{t,i},\ell_t\rangle,\\ q_{t,i}&\in\Delta_K,\qquad\ell_t\in[0,1]^K.\end{aligned}}
+\textbf{Scope.} Compare only this specification and the listed parameter regions.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsection{R1 - MAIN}
+\textbf{Region.} \AtlasInlineMath{M\ge K\ge 2; T\ge K}
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Native sequential interaction rounds or samples; additional resources remain attached to each bound.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{0.04\sqrt{KT}}
+\textbf{Upper bound.} B1
+
+\AtlasMath{2sqrt[eKT(2+ln(M/K))]}
+\textbf{Gap or comparison.} O(sqrt[1+ln(M/K)])
+
+\textbf{Comparison argument.} Only individually audited compatible claims enter. Certified baseline polylog bracket, not exact expert-count dependence. Restricted feedback Th5.1 is expressly excluded.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Conditions.} Assume \AtlasInlineMath{M\ge K\ge2} and \AtlasInlineMath{T\ge K}. Every expert's current recommendation is public before arm selection. After selecting an arm, only that arm's loss is observed.
+
+\textbf{Dimension conditions.} Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.
+
+\textbf{Oracle mapping.} Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.
+
+\textbf{Guarantee mapping.} Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.
+
+\textbf{Output mapping.} Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.
+
+\textbf{Resource mapping.} Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free.
+
+\needspace{4\baselineskip}\subsection{B1 - Tsallis regularization tuned to K,M}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{\mathcal{R}_T^*\le2\sqrt{eKT\bigl(2+\log(M/K)\bigr)}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2406.16802v1}{[1]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{rounds.} T
+
+\textbf{native feedback.} T selected losses
+
+\textbf{advice entries.} MKT
+
+\textbf{Constants.} Universal constants independent of the parameters explicitly tracked in this claim
+
+\textbf{Logarithmic factors.} None.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2406.16802v1}{[1]} theorem: Theorem 3.1; pdf pages: 4
+
+The source upper bound is \AtlasInlineMath{2\sqrt{e(K\wedge M)T(2+\log(M/(K\wedge M)))}}. This setting reveals all expert advice before the action, so it can simulate the feedback required by the proved algorithm.
+
+\needspace{4\baselineskip}\subsection{B2 - K constant deterministic arm experts plus duplicate experts}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\mathcal{R}_T^*\ge0.04\sqrt{KT}}
+\textbf{Sources.} \href{https://jmlr.org/papers/volume11/audibert10a/audibert10a.pdf}{[2]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{rounds.} T
+
+\textbf{native feedback.} T
+
+\textbf{Constants.} Universal constants independent of the parameters explicitly tracked in this claim
+
+\textbf{Logarithmic factors.} None.
+
+\textbf{Derivation.} Let the first \AtlasInlineMath{K} experts always recommend distinct fixed arms, and let all remaining experts duplicate those recommendations. Revealed advice carries no loss information, and the best-expert comparator becomes the best fixed arm. The finite-armed bandit lower bound therefore applies directly.
+
+\textbf{Source location.} \href{https://jmlr.org/papers/volume11/audibert10a/audibert10a.pdf}{[2]} theorem: Theorem 30 and proof; section: Appendix B; pdf pages: 28; 29; 30; printed pages: 2812; 2813; 2814
+
+Use only the K-armed bandit branch with source sampling budget \AtlasInlineMath{m_{\mathrm{src}}=T}. In context-block reductions each block uses its own length. Bernoulli hard instances and Yao's principle give the randomized-learner lower bound.
+
+\needspace{7\baselineskip}\section{References}
+[1] Nicolò Cesa-Bianchi; Khaled Eldowa; Emmanuel Esposito; Julia Olkhovskaya. Improved Regret Bounds for Bandits with Expert Advice. 2024. arXiv:2406.16802v1, 2024-06-24; subsequent JAIR 83 article 6, July 2025.
+
+\url{https://arxiv.org/pdf/2406.16802v1}
+
+[2] Jean-Yves Audibert; Sébastien Bubeck. Regret Bounds and Minimax Policies under Partial Monitoring. 2010. JMLR 11:2785-2836.
+
+\url{https://jmlr.org/papers/volume11/audibert10a/audibert10a.pdf}
+
+\end{document}

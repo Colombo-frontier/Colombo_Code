@@ -1,0 +1,531 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Quadratic objective with known Hessian: independent value noise on a ball; finite-variance noise class\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}ZO\_\allowbreak{}N04a\_\allowbreak{}variance\_\allowbreak{}class}
+
+Single-objective optimization
+
+Estimate the minimizer of a quadratic objective from noisy values queried in a bounded ball, measuring the global quadratic objective gap at the output.
+
+\textbf{Status.} Bounds missing
+
+\textbf{TASK tags.} formulation: Global minimization; solution concept: Global minimization; task family: Single objective
+
+\textbf{MODEL tags.} convexity: Convex; smoothness: Quadratic smoothness; structure: Quadratic objective
+
+\textbf{ORACLE tags.} access order: Zeroth-order interface; interface family: Independent noisy value; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required
+
+\textbf{METRIC tags.} criterion: Quadratic energy loss
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; mode: Expectation
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Estimate the minimizer of a quadratic objective from noisy values queried in a bounded ball, measuring the global quadratic objective gap at the output.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+\AtlasInlineMath{f(x)=\frac12(x-x_*)^\top A(x-x_*)}, where \AtlasInlineMath{A\in\mathbb{R}^{d\times d}} is symmetric positive semidefinite and the center \AtlasInlineMath{x_*\in B_2(0,R)} is unknown. The function is defined throughout the ambient space and has minimum value zero.
+
+The matrix \AtlasInlineMath{A} may be singular; only the component of the center in \AtlasInlineMath{\operatorname{range}(A)} must then be estimated. Whether the matrix, spectrum and center are known is fixed by the Oracle interface.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+A query at \AtlasInlineMath{x_t\in B_2(0,R)} returns one scalar \AtlasInlineMath{Y_t=f(x_t)+\xi_t}.
+
+\AtlasInlineMath{\xi_t} is i.i.d. centered noise with \AtlasInlineMath{\mathbb{E}\xi_t^2\le\sigma_v^2}, independent of the algorithmic seed and preceding observations. Its distribution is unknown; the algorithm must cover every noise law satisfying the stated bound.
+
+Every observation is charged independently. No same-sample coupling, sample handle, or noiseless function value is supplied.
+
+The entire matrix \AtlasInlineMath{A} is public. The algorithm may therefore depend on its rank, eigenvalues, and eigenspaces; the center \AtlasInlineMath{x_*} is hidden.
+
+The public inputs are \AtlasInlineMath{d}, \AtlasInlineMath{R}, \AtlasInlineMath{\sigma_v}, \AtlasInlineMath{\varepsilon}, \AtlasInlineMath{T}, \AtlasInlineMath{A}, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return \AtlasInlineMath{\widehat{x}\in B_2(0,R)}. The output may be an unqueried point, a random choice among previous points, or an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The base loss is \AtlasInlineMath{\ell(I,x)=\frac12(x-x_*)^\top A(x-x_*)=\frac12\|x-x_*\|_A^2}; it remains finite and nonnegative even when \AtlasInlineMath{A} is singular.
+
+For fixed known matrix \AtlasInlineMath{A} and budget \AtlasInlineMath{T}, \AtlasInlineMath{r_T(A)=\inf_{\mathcal{A}_A:N\le T}\sup_{\|x_*\|_2\le R}\mathbb{E}[\ell(I,\widehat{x})]}. The variance-class model takes an additional supremum over admissible noise laws after the supremum over centers; the Gaussian model fixes the noise law.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Each scalar function value or noisy observation costs \AtlasInlineMath{1} call. Every location in a multipoint finite difference, every initialization query, and every reference observation is charged.
+
+Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.
+
+Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately.
+
+After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. Require \AtlasInlineMath{\mathbb{E}[\ell(I,\widehat{x})]\le \varepsilon}, fixing the instance before averaging over algorithmic and feedback randomness.
+
+Oracle cost uses a deterministic worst-case budget: \AtlasInlineMath{N\le T} on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{d}: Dimension of the variable space \textbf{Domain:} \AtlasInlineMath{d\in\mathbb{N},\ d\ge1}.
+
+\AtlasInlineMath{R}: Radius of the unknown-center localization ball and of the query/output ball \textbf{Domain:} \AtlasInlineMath{R>0}.
+
+\AtlasInlineMath{x_*,x_t,\widehat{x}\in B_2(0,R)}
+
+\AtlasInlineMath{\sigma_v}: Upper bound on scalar observation-noise scale \textbf{Domain:} \AtlasInlineMath{\sigma_v\ge0}.
+
+\AtlasInlineMath{\mathbb{E}\xi^2\le\sigma_v^2}; conditional-variance assumptions are interpreted with respect to the specified interaction history.
+
+\AtlasInlineMath{\varepsilon}: Error target; norm and squared-norm criteria use different thresholds \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{T}: Known query budget or argument of the risk curve \textbf{Domain:} \AtlasInlineMath{T\in\mathbb{N}_0}.
+
+Use \AtlasInlineMath{N\le T} in the fixed-budget specification and \AtlasInlineMath{\mathbb{E}[N]\le T} in the expected-budget specification.
+
+\AtlasInlineMath{A}: Hessian of the quadratic objective \textbf{Domain:} \AtlasInlineMath{A=A^\top\succeq0,\ A\in\mathbb{R}^{d\times d}}.
+
+\AtlasInlineMath{r}: Hessian rank \textbf{Domain:} \AtlasInlineMath{r\in\{0,\ldots,d\}}.
+
+\AtlasInlineMath{r=\operatorname{rank}(A)}
+
+\AtlasInlineMath{\lambda_i}: Positive Hessian eigenvalues, with a trailing-zero convention \textbf{Domain:} \AtlasInlineMath{\lambda_1\ge\cdots\ge\lambda_r>0}.
+
+\AtlasInlineMath{\lambda_{r+1}=0}; the positive spectrum is empty when \AtlasInlineMath{r=0}.
+
+\AtlasInlineMath{S_k}: Sum of inverse square roots of the leading positive eigenvalues \textbf{Domain:} \AtlasInlineMath{k\in\{0,\ldots,r\}}.
+
+\AtlasInlineMath{S_k=\sum_{i=1}^k\lambda_i^{-1/2}}, \AtlasInlineMath{S_0=0}.
+
+\AtlasInlineMath{J_k}: Sum of the \AtlasInlineMath{-3/2} powers of the leading positive eigenvalues \textbf{Domain:} \AtlasInlineMath{k\in\{0,\ldots,r\}}.
+
+\AtlasInlineMath{J_k=\sum_{i=1}^k\lambda_i^{-3/2}}, \AtlasInlineMath{J_0=0}.
+
+\AtlasInlineMath{x,y,u}: Function arguments and dummy variables in the formulas \textbf{Domain:} \AtlasInlineMath{x,y,u\in\mathbb{R}^d}; spherical domains are embedded in \AtlasInlineMath{\mathbb{R}^{d+1}}.
+
+Admissible ranges are specified separately by the task, model and oracle in this profile.
+
+\AtlasInlineMath{\widehat{x}}: Final algorithm output \textbf{Domain:} \AtlasInlineMath{B_2(0,R)}.
+
+\AtlasInlineMath{I}: Complete problem instance \textbf{Domain:} \AtlasInlineMath{I\in\mathcal{I}}.
+
+Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.
+
+\AtlasInlineMath{\mathcal{I}}: Admissible instance class determined by the eight specification fields in this profile \textbf{Domain:} Instances satisfying the public parameter bounds.
+
+\AtlasInlineMath{\mathcal{A}}: Algorithm or strategy \textbf{Domain:} Measurable adaptive strategies allowed in this profile.
+
+The algorithm is selected before the hidden instance.
+
+\AtlasInlineMath{\ell}: Base loss or residual \textbf{Domain:} \AtlasInlineMath{\ell:\mathcal{I}\times\mathcal{X}_{\mathrm{out}}\to[0,+\infty]}.
+
+The exact formula appears in this profile's performance-criterion section.
+
+\AtlasInlineMath{\mathbb{E},\Pr}: Expectation and probability \textbf{Domain:} Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee.
+
+Fix the instance first; aggregate cost and error separately.
+
+\AtlasInlineMath{\inf,\sup}: Infimum and supremum \textbf{Domain:} Evaluated only over the variable sets explicitly specified in the formula.
+
+In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.
+
+\AtlasInlineMath{\|\cdot\|_2,\langle\cdot,\cdot\rangle}: Euclidean norm and inner product \textbf{Domain:} \AtlasInlineMath{\|x\|_2=\sqrt{\langle x,x\rangle}}.
+
+\AtlasInlineMath{\langle x,y\rangle=x^\top y}
+
+\AtlasInlineMath{B_p(c,R)}: Closed norm ball \textbf{Domain:} \AtlasInlineMath{p\in[1,\infty],\ R\ge0}.
+
+\AtlasInlineMath{B_p(c,R)=\{x:\|x-c\|_p\le R\}}; \AtlasInlineMath{B_2} denotes the Euclidean ball.
+
+\AtlasInlineMath{N,T}: Actual call count and declared budget \textbf{Domain:} \AtlasInlineMath{N,T\in\mathbb{N}_0}.
+
+A fixed budget bounds every execution path; the Markov specification uses an expected budget.
+
+\AtlasInlineMath{O,\Omega,\Theta,\widetilde{O}}: Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms \textbf{Domain:} Within the joint parameter window specified for each complexity regime.
+
+Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.
+
+\AtlasInlineMath{c,C,c_\alpha,C_\alpha}: Positive constant in a proof or asymptotic bound \textbf{Domain:} \AtlasInlineMath{0<c,C,c_\alpha,C_\alpha<\infty}.
+
+Unsubscripted constants have the dependencies stated in the bound; constants subscripted by \AtlasInlineMath{\alpha} may depend only on the fixed smoothness order.
+
+\AtlasInlineMath{\log,\log_+,e}: Natural logarithm, truncated logarithm, and Euler's number \textbf{Domain:} \AtlasInlineMath{z>0}.
+
+\AtlasInlineMath{\log_+(z)=\max\{0,\log z\}}; \AtlasInlineMath{e=\exp(1)}, and \AtlasInlineMath{\log_2} denotes the base-two logarithm.
+
+\AtlasInlineMath{r_T(A)}: Optimal risk with a known matrix \textbf{Domain:} \AtlasInlineMath{r_T(A)\ge0}.
+
+For a fixed matrix, take the infimum over algorithms and the supremum over centers in the ball and admissible noise laws.
+
+\AtlasInlineMath{r_T(\mathcal{A};A)}: Worst-center risk of a universal algorithm for a fixed hidden matrix \textbf{Domain:} \AtlasInlineMath{r_T(\mathcal{A};A)\ge0}.
+
+Defined using the quantifier order of this profile's performance criterion; the matrix itself is not available for public parameter tuning.
+
+\AtlasInlineMath{\|v\|_A}: Seminorm induced by a positive-semidefinite quadratic form \textbf{Domain:} \AtlasInlineMath{v\in\mathbb{R}^d}.
+
+\AtlasInlineMath{\|v\|_A=\sqrt{v^\top Av}}
+
+\AtlasInlineMath{f,f_*}: Population objective and its optimal value \textbf{Domain:} \AtlasInlineMath{f:\mathcal{X}_{\mathrm{fun}}\to\mathbb{R}}.
+
+\AtlasInlineMath{f_*=\inf_{x\in \mathbb{R}^d}f(x)}.
+
+\AtlasInlineMath{Y_t,\xi_t,t}: Scalar-observation number, noise, and call index \textbf{Domain:} \AtlasInlineMath{Y_t,\xi_t\in\mathbb{R},\ t\in\mathbb{N}}.
+
+Noise independence, distribution class and scale are fixed by this profile's oracle.
+
+\AtlasInlineMath{\mathcal{F}_{t-1}}: The history before the current query \textbf{Domain:} The \AtlasInlineMath{\sigma}-algebra generated by the algorithm's seed and previous feedback.
+
+The current query may depend on this history.
+
+\AtlasInlineMath{\mathcal{X}_{\mathrm{fun}},\mathcal{X}_{\mathrm{out}},\mathcal{X}}: Function domain, admissible output domain and optimization domain \textbf{Domain:} Each is the Euclidean space or subset explicitly specified in this profile.
+
+\AtlasInlineMath{\mathcal{X}_{\mathrm{out}}=B_2(0,R)} and \AtlasInlineMath{\mathcal{X}=\mathbb{R}^d}; the function domain is the region on which the model imposes regularity.
+
+\AtlasInlineMath{N^*}: Optimal worst-case oracle complexity satisfying the complete guarantee \textbf{Domain:} \AtlasInlineMath{N^*\in[0,+\infty]}.
+
+Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.
+
+\AtlasInlineMath{x_*}: A global minimizer or quadratic center whose existence is promised by the model \textbf{Domain:} Belongs to the localization domain specified here; used only under the stated existence promise.
+
+The full-space minimizer is unique in the strongly convex class. The center of a positive semidefinite quadratic model need not be unique.
+
+\AtlasInlineMath{I_d,\preceq}: Identity matrix and positive-semidefinite order \textbf{Domain:} \AtlasInlineMath{I_d\in\mathbb{R}^{d\times d}}; the order applies to real symmetric matrices of the same size.
+
+\AtlasInlineMath{A\preceq B} means that \AtlasInlineMath{v^\top(B-A)v\ge0} for every \AtlasInlineMath{v\in\mathbb{R}^d}.
+
+\AtlasInlineMath{\mathfrak R_T}: Alias used in the source for the optimal worst-case expected quadratic risk \textbf{Domain:} \AtlasInlineMath{\mathfrak R_T\ge0}.
+
+In the known-matrix model the quantity is \AtlasInlineMath{r_T(A)}. The hidden-matrix lower bound inherits the same fixed-matrix risk; the matrix and algorithm quantifiers cannot be interchanged.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - fixed budget risk}
+\AtlasMath{R^\star_{v,\pi}(B;\theta)=\inf_{\mathcal A\in\mathfrak A_v:\ C_\pi(\mathcal A,I)\le B\ \forall I}\sup_I\mathbb E[\ell(I,\mathcal A)]}
+\textbf{Definition.} Error risk at a fixed declared budget
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q2 - fixed budget risk}
+\AtlasMath{R^\star_{v,\pi}(B;\theta)=\inf_{\mathcal A\in\mathfrak A_v:\ C_\pi(\mathcal A,I)\le B\ \forall I}\sup_I\mathbb E[\ell(I,\mathcal A)]}
+\textbf{Definition.} Error risk at a fixed declared budget
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q3 - target accuracy cost}
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one paid scalar function value
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsection{R1 - Parameter regime N04a.R1}
+\textbf{Region.} Fix \AtlasInlineMath{d,A\ne0,R,\sigma_v>0} and the positive spectrum, then take \AtlasInlineMath{T\to\infty}. The Gaussian model fixes the noise law; the variance-class model takes the worst case over admissible noise laws.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Error risk at a fixed declared budget
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B3
+
+\AtlasMath{\liminf_{T\to\infty}T\mathfrak R_T\ge\sigma_v^2S_r^2/(2R^2)}
+\textbf{Upper bound.} B1
+
+\AtlasMath{\limsup_{T\to\infty}T r_T\le\sigma_v^2S_r^2/(2R^2)}
+\textbf{Gap or comparison.} \AtlasInlineMath{1\quad\text{(leading asymptotic constant for a fixed spectrum)}}
+
+\needspace{4\baselineskip}\subsection{R2 - Parameter regime N04a.R2}
+\textbf{Region.} \AtlasInlineMath{T\ge4r}. Order the positive eigenvalues nonincreasingly and set \AtlasInlineMath{k=\max\{j\in\{0,\ldots,r\}:T\ge\sigma_v^2S_jJ_j/R^4\}}, with \AtlasInlineMath{S_0=J_0=0}. Retain the Gaussian or finite-variance noise assumption of the specified view.
+
+\textbf{Quantity.} Q2
+
+\textbf{Resource.} Error risk at a fixed declared budget
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B4
+
+\AtlasMath{\Omega(\sigma_v^2S_k^2/(R^2T)+R^2\lambda_{k+1})}
+\textbf{Upper bound.} B2
+
+\AtlasMath{O(\sigma_v^2S_k^2/(R^2T)+R^2\lambda_{k+1})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\needspace{4\baselineskip}\subsection{R3 - Parameter regime N04a.R3}
+\textbf{Region.} \AtlasInlineMath{A=0}; the noise bound is arbitrary and \AtlasInlineMath{\varepsilon\ge0}.
+
+\textbf{Quantity.} Q3
+
+\textbf{Resource.} one paid scalar function value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B7
+
+\AtlasMath{0}
+\textbf{Upper bound.} B6
+
+\AtlasMath{0}
+\needspace{4\baselineskip}\subsection{R4 - Parameter regime N04a.R4}
+\textbf{Region.} The matrix \AtlasInlineMath{A\ne0} is public, with \AtlasInlineMath{\sigma_v=0} and \AtlasInlineMath{0<\varepsilon<\lambda_1R^2/2}.
+
+\textbf{Quantity.} Q3
+
+\textbf{Resource.} one paid scalar function value
+
+\textbf{Status.} Lower bound missing
+
+\textbf{Lower bound.} No admitted bound for this comparison
+
+\textbf{Upper bound.} B5
+
+\AtlasMath{r+1}
+\needspace{4\baselineskip}\subsection{R5 - Parameter regime N04a.R\_zero\_accuracy}
+\textbf{Region.} The matrix \AtlasInlineMath{A\ne0} is public, with \AtlasInlineMath{\varepsilon\ge\lambda_1R^2/2}.
+
+\textbf{Quantity.} Q3
+
+\textbf{Resource.} one paid scalar function value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B7
+
+\AtlasMath{0}
+\textbf{Upper bound.} B6
+
+\AtlasMath{0}
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} Scalar observations follow the independent-noise, conditional-noise, or mixed-error law specified here; every repeated observation is charged separately.
+
+\textbf{Guarantee mapping.} Fix the matrix and positive spectrum before taking the budget to infinity. The finite-spectrum budget theorem is used only within its stated threshold. A fixed-matrix asymptotic result does not imply uniformity over matrices.
+
+\textbf{Output mapping.} The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+\textbf{Resource mapping.} \AtlasInlineMath{T} is the number of scalar observations actually obtained. The source's observation index before the final decision is expressed in this unit.
+
+\needspace{4\baselineskip}\subsection{B1 - Spectral-direction finite differences and constrained linear estimation}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{\limsup_{T\to\infty}T r_T\le\sigma_v^2 S_r^2/(2R^2)}
+\textbf{Sources.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]}
+
+\textbf{Conditions.} Fix \AtlasInlineMath{d,A\ne0,R,\sigma_v>0} and its positive spectrum. The matrix is known and \AtlasInlineMath{T\to\infty}. The upper bound covers every independent centered noise law with variance at most \AtlasInlineMath{\sigma_v^2}.
+
+\textbf{Local argument.} A1
+
+\textbf{Source location.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]} theorem: Known-Hessian quadratic model; Theorems 2.3-2.4 and Appendix C, used as context for the displayed independent argument
+
+\textbf{Source location.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]} theorem: Known-Hessian quadratic model; Theorems 2.3-2.4 and Appendix C, used as context for the displayed independent argument
+
+\needspace{4\baselineskip}\subsection{B2 - Spectral-direction finite differences and constrained linear estimation}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O(\sigma_v^2 S_k^2/(R^2T)+R^2\lambda_{k+1})}
+\textbf{Sources.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{T\ge4r}, with \AtlasInlineMath{\lambda_1\ge\cdots\ge\lambda_r>0}. Set \AtlasInlineMath{\lambda_{r+1}=0}, where \AtlasInlineMath{k=\max\{j\in\{0,\ldots,r\}:T\ge\sigma_v^2S_jJ_j/R^4\}}.
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B3 - Fisher-information lower bound for quadratics with a fixed spectrum}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\liminf_{T\to\infty}T\mathfrak R_T\ge\sigma_v^2 S_r^2/(2R^2)}
+\textbf{Sources.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]}
+
+\textbf{Conditions.} Fix \AtlasInlineMath{d,A\ne0,R,\sigma_v>0} and its positive spectrum, with \AtlasInlineMath{T\to\infty}. Gaussian noise yields both the Gaussian-model lower bound and a worst-case lower bound over the full variance-bounded class.
+
+\textbf{Local argument.} A1
+
+\textbf{Source location.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]} theorem: Known-Hessian quadratic model; Theorems 2.3-2.4 and Appendix C, used as context for the displayed independent argument
+
+\textbf{Source location.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]} theorem: Known-Hessian quadratic model; Theorems 2.3-2.4 and Appendix C, used as context for the displayed independent argument
+
+\needspace{4\baselineskip}\subsection{B4 - Fisher-information lower bound for quadratics with a fixed spectrum}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(\sigma_v^2 S_k^2/(R^2T)+R^2\lambda_{k+1})}
+\textbf{Sources.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{T\ge4r}, with \AtlasInlineMath{\lambda_1\ge\cdots\ge\lambda_r>0}. Set \AtlasInlineMath{\lambda_{r+1}=0}, where \AtlasInlineMath{k=\max\{j\in\{0,\ldots,r\}:T\ge\sigma_v^2S_jJ_j/R^4\}}.
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B5 - Recovery of the linear coefficient when the Hessian is known}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{r+1}
+\textbf{Sources.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{A} is known and \AtlasInlineMath{\sigma_v=0}; \AtlasInlineMath{r=\operatorname{rank}(A)}.
+
+\textbf{Local argument.} A3
+
+\textbf{Source location.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]} theorem: Report quadratic audit section 1.2 and origin-plus-positive-eigenvector reconstruction
+
+\needspace{4\baselineskip}\subsection{B6 - Return the public initial point}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{A=0} or \AtlasInlineMath{\varepsilon\ge\lambda_1R^2/2}.
+
+\textbf{Local argument.} A4
+
+\needspace{4\baselineskip}\subsection{B7 - Nonnegative oracle cost}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{A=0} or \AtlasInlineMath{\varepsilon\ge\lambda_1R^2/2}.
+
+\textbf{Local argument.} A4
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Known-Hessian quadratic risk: the sharp fixed-spectrum constant}
+\textbf{Scope.} A fixed positive spectrum of a public positive semidefinite matrix; query/output ball of radius \AtlasInlineMath{R}; independent centered noise of variance at most \AtlasInlineMath{\sigma_v^2}. The lower bound uses Gaussian noise or a worst-case variance class containing it.
+
+Let \AtlasInlineMath{\lambda_1,\ldots,\lambda_r>0} be the positive eigenvalues and \AtlasInlineMath{S_r=\sum_i\lambda_i^{-1/2}}. For fixed \AtlasInlineMath{A,d,R,\sigma_v},
+
+\AtlasMath{\lim_{T\to\infty}T\mathfrak R_T=\frac{\sigma_v^2S_r^2}{2R^2}.}
+
+This is not a uniform statement for spectra that degenerate with \AtlasInlineMath{T}.
+
+In an eigenbasis write the unknown center coordinates as \AtlasInlineMath{\theta_i}. Allocate \AtlasInlineMath{t_i=\lceil(T-2r)\lambda_i^{-1/2}/(2S_r)\rceil} repetitions to each of \AtlasInlineMath{\pm Re_i}, for \AtlasInlineMath{T>2r}. The total is at most \AtlasInlineMath{T}. The estimator \AtlasInlineMath{\widehat\theta_i=-(\bar Y_i^+-\bar Y_i^-)/(2R\lambda_i)} is unbiased with variance at most \AtlasInlineMath{\sigma_v^2/(2R^2\lambda_i^2t_i)}. Its expected quadratic loss is at most \AtlasInlineMath{\sigma_v^2S_r^2/[2R^2(T-2r)]}. Projection onto the query/output ball in the \AtlasInlineMath{A} seminorm cannot increase this loss because the true center is feasible.
+
+For the lower bound use independent cosine-squared priors supported on \AtlasInlineMath{[-a/\sqrt r,a/\sqrt r]}, with \AtlasInlineMath{a<R}. Each coordinate has prior Fisher information \AtlasInlineMath{\pi^2r/a^2}. Under Gaussian value noise the score contribution in coordinate \AtlasInlineMath{i} is controlled by \AtlasInlineMath{\lambda_i^2 E_i/\sigma_v^2}, where \AtlasInlineMath{E_i=\mathbb E\sum_t(x_{t,i}-\theta_i)^2}. Adaptivity adds no extra Fisher term after conditioning on the past, and \AtlasInlineMath{\sum_iE_i\le T(R+a)^2}. Coordinate van Trees bounds followed by Cauchy--Schwarz give
+
+\AtlasMath{\mathfrak R_T\ge\frac{\sigma_v^2S_r^2}{2\{T(R+a)^2+\sigma_v^2\pi^2r a^{-2}\operatorname{tr}(A^{\dagger2})\}}.}
+
+Take \AtlasInlineMath{a} proportional to \AtlasInlineMath{T^{-1/4}}, truncated below \AtlasInlineMath{R/2}. The extra Fisher term is \AtlasInlineMath{o(T)} for a fixed positive spectrum, proving the lower constant. Giving \AtlasInlineMath{A} to an unknown-Hessian algorithm can only help, so this lower bound also applies in the corresponding unknown-Hessian model. It does not assert that an algorithm without \AtlasInlineMath{A} attains the same sharp constant.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\textbf{Sources.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]}
+
+\needspace{4\baselineskip}\subsection{A2 - A finite-budget spectral bracket with a product threshold}
+\textbf{Scope.} Known fixed positive spectrum sorted in decreasing order; \AtlasInlineMath{T\ge4r}; Gaussian noise for the lower bound or a worst-case variance class containing it.
+
+Define \AtlasInlineMath{S_j=\sum_{i\le j}\lambda_i^{-1/2}} and \AtlasInlineMath{J_j=\sum_{i\le j}\lambda_i^{-3/2}}, and let
+
+\AtlasMath{k=\max\{j\le r:T\ge\sigma_v^2S_jJ_j/R^4\},}
+
+with \AtlasInlineMath{k=0} if the set is empty and \AtlasInlineMath{\lambda_{r+1}=0}. Then
+
+\AtlasMath{\mathfrak R_T\asymp\frac{\sigma_v^2S_k^2}{R^2T}+R^2\lambda_{k+1}.}
+
+The threshold contains the product \AtlasInlineMath{S_jJ_j}.
+
+Scale \AtlasInlineMath{x=Rz} and observations by \AtlasInlineMath{\sigma_v}, reducing to \AtlasInlineMath{R=\sigma_v=1} with Hessian \AtlasInlineMath{R^2A/\sigma_v}. In normalized coordinates, estimate the leading \AtlasInlineMath{k} eigencoordinates using the allocation in the asymptotic lemma and set the rest to zero. The estimated-coordinate risk is \AtlasInlineMath{O(S_k^2/T)}; the omitted coordinates contribute at most \AtlasInlineMath{\lambda_{k+1}/2}. Projection in the quadratic seminorm preserves the upper bound. For \AtlasInlineMath{k=0}, return zero.
+
+For the lower bound on the leading coordinates, choose independent signs with squared coordinate amplitudes \AtlasInlineMath{a_i^2=\lambda_i^{-3/2}S_k/(2T)}. The product-threshold condition ensures \AtlasInlineMath{\sum_i a_i^2=S_kJ_k/(2T)\le1/2}, so all centers are feasible. Reveal the other signs for each coordinate test, or use data processing for their mixtures. Adjacent Gaussian transcript divergences are proportional to \AtlasInlineMath{\lambda_i^2a_i^2\mathbb E\sum_tx_{t,i}^2}. The total query-energy constraint \AtlasInlineMath{\sum_i\mathbb E\sum_tx_{t,i}^2\le T}, the two-point testing inequality, and Cauchy--Schwarz give risk at least a universal positive constant times \AtlasInlineMath{S_k^2/T}.
+
+If \AtlasInlineMath{k<r}, put \AtlasInlineMath{T'=S_{k+1}J_{k+1}>T}. Apply the same construction at the next integer budget above \AtlasInlineMath{T'} and use monotonicity of minimax risk in the budget. This yields a universal constant times \AtlasInlineMath{S_{k+1}/J_{k+1}\ge\lambda_{k+1}}, where the last inequality uses decreasing spectral order. The maximum of these two lower bounds is within a factor two of their sum. Scaling back gives the statement. The order of eigenvalues and the product threshold are essential; this displayed argument, not an assumed published erratum, supports the corrected formula.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\textbf{Sources.} \href{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}{[1]}
+
+\needspace{4\baselineskip}\subsection{A3 - Noiseless recovery with a public quadratic matrix}
+\textbf{Scope.} A public positive semidefinite matrix \AtlasInlineMath{A}, a center in \AtlasInlineMath{B_2(R)}, and exact values; \AtlasInlineMath{r=\operatorname{rank}(A)}.
+
+At most \AtlasInlineMath{r+1} values recover a global minimizer in the feasible ball.
+
+Write \AtlasInlineMath{f(x)=\tfrac12(x-x_*)^\top A(x-x_*)}. Query zero and \AtlasInlineMath{te_i} along each positive-eigenvalue direction, for any public \AtlasInlineMath{0<t\le R}. Then
+
+\AtlasMath{\theta_i=\frac{\lambda_it^2/2+f(0)-f(te_i)}{\lambda_it}.}
+
+The positive-eigenspace projection of \AtlasInlineMath{x_*} has norm at most \AtlasInlineMath{R} and is a minimizer; nullspace coordinates do not affect the objective. If \AtlasInlineMath{r=0}, zero is already optimal and needs no query.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{4\baselineskip}\subsection{A4 - Zero-query certificates}
+\textbf{Scope.} The stated sufficient accuracy regions only; no assertion that every certificate is sharp.
+
+A public feasible point whose objective gap is at most \AtlasInlineMath{G_0} solves every target \AtlasInlineMath{\varepsilon\ge G_0} with exactly zero calls.
+
+For a convex mean objective that is \AtlasInlineMath{L}-Lipschitz on a ball of radius \AtlasInlineMath{R}, the center has gap at most \AtlasInlineMath{LR}. A sample Lipschitz modulus \AtlasInlineMath{G} with \AtlasInlineMath{\mathbb E G^r\le L^r}, \AtlasInlineMath{r>1}, implies \AtlasInlineMath{\mathbb E G\le L}, so the same certificate applies to moment models. Integrability at one point ensures that the mean is defined.
+
+If a globally \AtlasInlineMath{\beta}-smooth objective has a global minimizer within distance \AtlasInlineMath{R} of the public initial point, its gradient vanishes at that minimizer and the smoothness inequality gives gap at most \AtlasInlineMath{\beta R^2/2}. In a declared norm, use the corresponding radius in that norm. For \AtlasInlineMath{B_p(R)} with Euclidean regularity this radius is \AtlasInlineMath{R} when \AtlasInlineMath{p\le2} and \AtlasInlineMath{R d^{1/2-1/p}} when \AtlasInlineMath{p\ge2}.
+
+For a known positive semidefinite quadratic matrix \AtlasInlineMath{A}, the center has gap at most \AtlasInlineMath{\lambda_{\max}(A)R^2/2}; if \AtlasInlineMath{A=0}, the loss is identically zero. A public initial-gap promise \AtlasInlineMath{\Delta} directly gives the certificate \AtlasInlineMath{G_0=\Delta}. For the Markov potential \AtlasInlineMath{r_0}, its companion initial iterate has gap at most \AtlasInlineMath{\mu r_0}. These are different certificates with different model assumptions; in particular, an unknown matrix with no public spectral bound does not acquire a uniform certificate.
+
+Call counts are nonnegative. Together with the stated algorithm, this proves exact zero complexity on each certified region. The upper/lower ratio is undefined, so it is stored as null rather than as \AtlasInlineMath{0/0}.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{7\baselineskip}\section{References}
+[1] Yu, Wang, Huang, Lei and Lee. Sample Complexity for Quadratic Bandits: Hessian Dependent Bounds and Optimal Algorithms. NeurIPS 2023.
+
+\url{https://proceedings.neurips.cc/paper_files/paper/2023/file/6e60a9023d2c63f7f0856910129ae753-Paper-Conference.pdf}
+
+\end{document}

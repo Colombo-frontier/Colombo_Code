@@ -1,0 +1,1054 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ON_NS_S",
+  "title": "Nonstationary finite-armed bandits with a known mean-variation budget",
+  "summary": "Arm reward distributions may change over time, but total mean variation has a known upper bound. The learner samples one arm per round and competes with that round's best mean arm. The variation budget constrains the environment and is not a comparator-path-length bound.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "dynamic_regret"
+    },
+    {
+      "facet": "structure",
+      "value": "finite_actions"
+    },
+    {
+      "facet": "structure",
+      "value": "nonstationary"
+    },
+    {
+      "facet": "feedback",
+      "value": "selected_reward"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    },
+    {
+      "facet": "information",
+      "value": "known_variation"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation_code": "nonstationary_dynamic_bandit_regret",
+      "formulation": "sum_t[max_i μ_ti−μ_t,a_t]",
+      "solution_goal": "minimize_expected_dynamic_regret",
+      "protocol_ref": "ON_NS_S_pro_c2b88e1bb8",
+      "code": "nonstationary_dynamic_bandit_regret",
+      "formulation_latex": "\\sum_{t=2}^T\\|\\mu_t-\\mu_{t-1}\\|_\\infty\\le V,\\qquad R_T=\\sum_t(\\max_i\\mu_{t,i}-\\mu_{t,a_t})",
+      "goal_latex": "\\inf_{\\mathcal A(K,T,V)}\\sup_{(\\nu_{t,i}):\\ \\mathrm{VarPath}(\\mu)\\le V}\\mathbb E_{\\mathcal A,\\nu}[R_T]",
+      "description_paragraphs": [
+        "Arm reward distributions may change over time, but total mean variation has a known upper bound. The learner samples one arm per round and competes with that round's best mean arm. The variation budget constrains the environment and is not a comparator-path-length bound."
+      ]
+    },
+    "model": {
+      "instance": "Before interaction, the environment fixes time-dependent reward distributions nu_{t,i} supported on [0,1], with means mu_{t,i}. Rewards are sampled independently across rounds. A public total mean-variation budget V satisfies sum_{t=2}^T ||mu_t-mu_{t-1}||_infinity <= V.",
+      "assumptions": [
+        {
+          "subject_id": "ON_NS_S_obj_a8fe3f3d99",
+          "property_code": "bounded_independent_rewards",
+          "variable_blocks": [],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_NS_S_p_585fcb7010",
+            "ON_NS_S_p_76dd32a562",
+            "ON_NS_S_p_e204a9d318"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "Every $\\nu_{t,i}$ is supported on $[0,1]$. Under the declared model of fresh rewards independent across rounds, the selected arm's observation has its specified current distribution."
+        },
+        {
+          "subject_id": "ON_NS_S_obj_4ab35013fd",
+          "property_code": "mean_variation",
+          "variable_blocks": [],
+          "norm_ref": "ON_NS_S_nor_a6499ef034",
+          "parameter_refs": [
+            "ON_NS_S_p_585fcb7010",
+            "ON_NS_S_p_76dd32a562",
+            "ON_NS_S_p_e204a9d318"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "The sum $\\sum_{t=2}^T\\|\\mu_t-\\mu_{t-1}\\|_\\infty$ has a public upper bound. It excludes the initial mean and is not sample-path variation."
+        }
+      ],
+      "parameter_domain_description": "$K$: $K\\in\\mathbb N,\\ K\\ge2$ (public); $T$: $T\\in\\mathbb N,\\ T\\ge1$ (public); $V$: $0\\le V\\le T-1$ (public).",
+      "code": "model_declared",
+      "interaction_timing": [
+        "The environment fixes all $\\nu_{t,i}$; $K,T,V$ are public.",
+        "The learner chooses $a_t$ from previous samples.",
+        "Obtain one fresh sample from $\\nu_{t,a_t}$.",
+        "The target is the cumulative gap between the current largest mean and the selected mean."
+      ],
+      "adversary_information": "Distributions or functions are fixed before interaction. A round’s fresh sample is drawn after the action and probes are chosen, independently of past history and the learner’s private randomness.",
+      "unresolved_applicability": [
+        "The classical upper and lower theorems match only within the stated V, K, and T window. The T^(2/3) rate is not extrapolated to every variation endpoint."
+      ],
+      "description_paragraphs": [
+        "Reward distributions $\\nu_{t,i}$ depend on time and are fixed before interaction. They are supported on $[0,1]$ and need not be identically distributed over time.",
+        "For the arm means $\\mu_t$, total variation sums infinity-norm differences of successive mean vectors from $t=2$. The initial mean vector is not charged.",
+        "The public total mean-variation budget $V$ is neither the variation of a realized observation path nor the number of best-arm switches.",
+        "Require $K\\ge2$, $T\\ge1$, and $0\\le V\\le T-1$, with actions in $[K]$.",
+        "The classical matching region has additional restrictions. The endpoint V = 0 and other boundaries have separate coverage records."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "ON_NS_S_ora_bb5f62e9d1",
+          "operation_code": "sample_selected_arm",
+          "target_object": "ON_NS_S_obj_a8fe3f3d99",
+          "variable_blocks": [
+            "ON_NS_S_var_5c6206093f"
+          ],
+          "query_signature": "Inputs: $t,\\ a_t\\in[K]$. Timing and visible information follow the specified protocol.",
+          "response_signature": "Return $Y_t\\mid\\mathcal H_{t-1},a_t\\sim\\nu_{t,a_t}$.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "order is relative to the current member f_t(x), f(x), or sample F(x;ξ_t) of the named indexed function family and only with respect to x; finite feedback interfaces have no derivative order",
+          "feedback_quality": {
+            "code": "independent_nonstationary_bounded_reward",
+            "description": "Only one [0,1]-valued sample from the currently selected arm is observed. The same arm's distribution may change next round and is not a fixed nu_i. The mean schedule is fixed in advance; the specification does not include learner-history-dependent environments."
+          },
+          "domain_ref": "ON_NS_S_dom_11673a929a",
+          "coupling": "Only one [0,1]-valued sample from the currently selected arm is observed. The same arm's distribution may change next round and is not a fixed nu_i. The mean schedule is fixed in advance; the specification does not include learner-history-dependent environments.",
+          "index_control": "The learner selects feasible actions and explicitly permitted probes. The environment controls the current loss, outcome, or fresh sample; the learner cannot select future rounds.",
+          "access_schedule": "Follow the interaction order in registry.protocols exactly. Current loss feedback follows the action; any pre-action context or advice phase is specified separately.",
+          "accuracy_argument": null,
+          "cost_rule_ref": "ON_NS_S_res_3fdfd1fe5e",
+          "query_latex": "t,\\ a_t\\in[K]",
+          "response_latex": "Y_t\\mid\\mathcal H_{t-1},a_t\\sim\\nu_{t,a_t}"
+        }
+      ],
+      "public_inputs": [
+        "K",
+        "T",
+        "The public total mean-variation bound V."
+      ],
+      "hidden_objects": [
+        "ON_NS_S_obj_a8fe3f3d99",
+        "ON_NS_S_obj_4ab35013fd"
+      ],
+      "auxiliary_interfaces": [
+        "No additional access to hidden losses, means, or gradients is available. Projection, sampling, and internal optimization over public domains may have separately recorded computation costs; they are not free loss oracles."
+      ],
+      "protocol_ref": "ON_NS_S_pro_c2b88e1bb8",
+      "query_domain_description": "[K]",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "Fresh reward from the currently selected arm:",
+        "$$\nt,\\ a_t\\in[K]\\ \\longmapsto\\ Y_t\\mid\\mathcal{H}_{t-1},a_t\\sim\\nu_{t,a_t}\n$$",
+        "Only one $[0,1]$-valued sample from the currently selected arm is observed.",
+        "An arm's distribution may change in the next round and cannot be treated as repeated sampling from a fixed distribution $\\nu_i$.",
+        "The native model fixes the mean schedule. This specification does not extend to environments adapting to learner history.",
+        "Public inputs: $K$, $T$, and the total mean-variation bound $V$."
+      ]
+    },
+    "output": {
+      "object_type": "action_trajectory",
+      "domain_ref": "ON_NS_S_dom_11673a929a",
+      "feasibility": "Every loss-bearing action must belong to the action domain. The final output retains the complete action trajectory.",
+      "allowed_postprocessing": "Any measurable computation on received feedback is allowed. No native observation may be added after the budget is exhausted or the algorithm stops.",
+      "certificate_requirement": "Only the stated statistical guarantee is required, not a certificate verifiable through the feedback interface.",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "sum_t[max_i μ_ti−μ_t,a_t]",
+      "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+      "reference_object": "ON_NS_S_obj_4ab35013fd",
+      "nonnegativity": true,
+      "finiteness_conditions": "The compared mean losses or rewards lie in $[0,1]$, so cumulative pseudo-regret lies in $[0,T]$.",
+      "comparator_ref": "ON_NS_S_com_a13c696011",
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "$$\n\\sum_{t=2}^T\\|\\mu_t-\\mu_{t-1}\\|_\\infty\\le V,\\qquad R_T=\\sum_t(\\max_i\\mu_{t,i}-\\mu_{t,a_t})\n$$"
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "Sequential online rounds; only information permitted by the protocol is visible in each round."
+        },
+        {
+          "code": "native_feedback",
+          "unit": "arm_pull",
+          "description": "A fixed number $T$ of arm pulls, with one reward sample per round."
+        }
+      ],
+      "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+      "cost_rules": [
+        {
+          "id": "ON_NS_S_res_3fdfd1fe5e",
+          "operation_refs": [
+            "ON_NS_S_ora_bb5f62e9d1"
+          ],
+          "cost": {
+            "rounds": 1,
+            "native_feedback": 1
+          }
+        }
+      ],
+      "scalarization": "At fixed T, compare the native cumulative quantity in the objective. Retain the full resource vector; internal optimization, projection, and sampling are not implicitly one loss query.",
+      "setup_cost": "Only declared public inputs may be read. Hidden losses, means, or samples cannot be accessed in advance or outside the $T$ rounds or $\\tau$ samples.",
+      "online_cost": "The base bandit strategy may restart using public V, with no extra reward queries from restarting itself. Epoch length, arm-weight maintenance, and sampling are internal computation. Adaptation to unknown V requires a separate information specification.",
+      "amortization_scope": "The algorithm runs on one environment. Charged feedback cannot be reused across independent instances.",
+      "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "A fixed number $T$ of arm pulls, with one reward sample per round.",
+        "The public V may be used to restart a base bandit policy. Restarts do not create additional reward queries.",
+        "Restart length, arm-weight maintenance, and sampling are internal computation. Adaptation to unknown V requires a different information specification.",
+        "Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "Private randomization is allowed. The seed is hidden from the environment and independent of the fixed instance and sample randomness.",
+        "adaptivity": "The action and every probe in a round may depend only on previous-round feedback, public inputs, any context or advice already revealed that round, and private randomness. They may not use unrevealed current losses or samples.",
+        "restrictions": [
+          "All measurable causal policies satisfying the declared information timing and feasible domain are allowed, without extra span, iteration-form, or polynomial-time restrictions."
+        ],
+        "internal_computation": "Arbitrary measurable exact-real computation is permitted; feedback complexity does not imply arithmetic or bit complexity. A base bandit policy may restart using public $V$, without additional reward queries. Restart lengths, arm weights, and sampling are internal computations. Adapting to unknown $V$ requires a different public-information contract.",
+        "parallelism": "Online rounds proceed sequentially. A two-point evaluation is a same-round feedback pair, not two independent rounds.",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "The native target is $\\inf_{\\mathcal A(K,T,V)}\\sup_{(\\nu_{t,i}):\\ \\mathrm{VarPath}(\\mu)\\le V}\\mathbb E_{\\mathcal A,\\nu}[R_T]$.",
+          "aggregation_order": [
+            "Take the infimum over algorithms knowing only public K, T, and supplied budgets.",
+            "Take the supremum over admissible time-varying distribution schedules fixed before interaction.",
+            "The comparator is the deterministic largest mean $\\mu_t^\\star$ in each round, without switching costs.",
+            "Expectation covers learner randomness and the selected reward samples. The objective is cumulative mean gap, not comparison with the best realized reward trajectory in hindsight."
+          ],
+          "quantifier_order": "One learning algorithm must apply to every instance in the declared class. It may use public inputs only, not hidden instance parameters.",
+          "randomness_sources": [
+            "Learner's private randomness",
+            "environment samples/noise"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "The T-round horizon is fixed and public. No anytime or simultaneous-all-T high-probability guarantee is implied.",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "$$\n\\inf_{\\mathcal{A}(K,T,V)}\\sup_{(\\nu_{t,i}):\\ \\mathrm{VarPath}(\\mu)\\le V}\\mathbb{E}_{\\mathcal{A},\\nu}[R_T]\n$$",
+            "Choose one algorithm using public inputs before taking the worst case over all admissible instances. Expectation covers the algorithm's private randomness and the observation randomness specified by the model. Comparator choice and the order of summation, minimization, and expectation follow the displayed formula."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+        "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+        "scalarization": "At fixed T, compare the native cumulative quantity in the objective. Retain the full resource vector; internal optimization, projection, and sampling are not implicitly one loss query."
+      },
+      "alias_ids": [
+        "ON_NS_S"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ON_NS_S_obj_a8fe3f3d99",
+        "type": "loss_environment",
+        "definition": "Before interaction, the environment fixes time-dependent reward distributions nu_{t,i} supported on [0,1], with means mu_{t,i}. Rewards are sampled independently across rounds. A public total mean-variation budget V satisfies sum_{t=2}^T ||mu_t-mu_{t-1}||_infinity <= V.",
+        "depends_on": [],
+        "role_code": "reward_distribution_family"
+      },
+      {
+        "id": "ON_NS_S_obj_4ab35013fd",
+        "type": "mean_vector_sequence",
+        "definition": "mu_{t,i}=E_{nu_{t,i}}Y; the entire deterministic mean schedule is fixed before interaction.",
+        "depends_on": [
+          "ON_NS_S_obj_a8fe3f3d99"
+        ],
+        "role_code": "reward_mean_sequence"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ON_NS_S_var_5c6206093f",
+        "dimension": "One discrete action index",
+        "space": "[K]"
+      }
+    ],
+    "domains": [
+      {
+        "id": "ON_NS_S_dom_11673a929a",
+        "definition": "[K]",
+        "roles": [
+          "action_domain",
+          "query_domain"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "ON_NS_S_nor_a6499ef034",
+        "definition": "The ℓ∞ norm measures consecutive differences of the K-dimensional mean vector. It is not a Euclidean norm on action indices."
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ON_NS_S_pro_c2b88e1bb8",
+        "steps": [
+          "The environment fixes all $\\nu_{t,i}$; $K,T,V$ are public.",
+          "The learner chooses $a_t$ from previous samples.",
+          "Obtain one fresh sample from $\\nu_{t,a_t}$.",
+          "The target is the cumulative gap between the current largest mean and the selected mean."
+        ],
+        "adversary_information": "Distributions or functions are fixed before interaction. A round’s fresh sample is drawn after the action and probes are chosen, independently of past history and the learner’s private randomness.",
+        "loss_bearing_points": "The selected arm incurs $\\mu_t^\\star-\\mu_{t,a_t}$. The dynamic comparator may change arms every round without switching cost.",
+        "queries_per_round": "A fixed number $T$ of arm pulls, with one reward sample per round.",
+        "past_requery": "The learner may not request new information from past rounds or previously used samples. Previously received feedback may be stored and processed. In stochastic models, an action may be repeated in a new round, using a fresh charged sample."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ON_NS_S_com_a13c696011",
+        "definition": "The dynamic oracle selects the largest mean each round. It is not a fixed best arm."
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ON_NS_S_p_585fcb7010",
+      "symbol": "K",
+      "meaning": "The finite number of arms.",
+      "kind": "independent",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "public": true,
+      "definition": "The arm set is $[K]=\\{1,\\ldots,K\\}$.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_NS_S_p_76dd32a562",
+      "symbol": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_NS_S_p_e204a9d318",
+      "symbol": "V",
+      "meaning": "Public budget on total mean variation",
+      "kind": "independent",
+      "domain": "$0\\le V\\le T-1$",
+      "public": true,
+      "definition": "$\\sum_{t=2}^T\\|\\mu_t-\\mu_{t-1}\\|_\\infty\\le V$. The initial mean is excluded; this is not sample-path variation.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "K",
+      "meaning": "The finite number of arms.",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "definition": "The arm set is $[K]=\\{1,\\ldots,K\\}$.",
+      "parameter_ref": "ON_NS_S_p_585fcb7010"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "parameter_ref": "ON_NS_S_p_76dd32a562"
+    },
+    {
+      "symbol_latex": "V",
+      "meaning": "Public budget on total mean variation",
+      "domain": "$0\\le V\\le T-1$",
+      "definition": "$\\sum_{t=2}^T\\|\\mu_t-\\mu_{t-1}\\|_\\infty\\le V$. The initial mean is excluded; this is not sample-path variation.",
+      "parameter_ref": "ON_NS_S_p_e204a9d318"
+    },
+    {
+      "symbol_latex": "[K]",
+      "meaning": "Index set of K arms or experts",
+      "domain": "A finite set.",
+      "definition": "$[K]=\\{1,\\ldots,K\\}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nu_{t,i},X_{t,i},\\mu_{t,i}",
+      "meaning": "Reward distributions, latent rewards, and their means.",
+      "domain": "$X_{t,i}\\in[0,1],\\ \\mu_{t,i}\\in[0,1]$",
+      "definition": "Assume $X_{t,i}\\sim\\nu_{t,i}$ and $\\mu_{t,i}=\\mathbb E X_{t,i}$; the distribution schedule is fixed in advance, with independence across rounds.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mu_t",
+      "meaning": "The arm-mean vector in round t.",
+      "domain": "$\\mu_t\\in[0,1]^K$",
+      "definition": "$\\mu_t=(\\mu_{t,1},\\ldots,\\mu_{t,K})$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "a_t",
+      "meaning": "Arm actually selected in the current round",
+      "domain": "$a_t\\in[K]$",
+      "definition": "Observe only $X_{t,a_t}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\operatorname{VarPath}(\\mu)",
+      "meaning": "Total variation of the actual consecutive mean vectors.",
+      "domain": "A nonnegative real.",
+      "definition": "$\\sum_{t=2}^T\\|\\mu_t-\\mu_{t-1}\\|_\\infty$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "H,I,V_I",
+      "meaning": "Restart-block length, a contiguous block of rounds, and mean variation within that block",
+      "domain": "Used only in the upper-bound derivation",
+      "definition": "Use $H\\asymp K^{1/3}(T/V)^{2/3}$, rounded and clipped to [1,T]; $V_I=\\sum_{t,t-1\\in I}\\|\\mu_t-\\mu_{t-1}\\|_\\infty$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_T",
+      "meaning": "Cumulative pseudoregret evaluated using the mean functions",
+      "domain": "Nonnegative real-valued random variable",
+      "definition": "The loss is $R_T=\\sum_t(\\max_i\\mu_{t,i}-\\mu_{t,a_t})$. Realized observation noise is excluded from this difference of means. The guarantee separately specifies probability or expectation.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal R_T^*",
+      "meaning": "Minimax expected regret under the current information protocol and parameter region.",
+      "domain": "A nonnegative real.",
+      "definition": "$$\n\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A(K,T,V)}\\sup_{\\nu\\in\\mathcal I_V}\\mathbb E_{\\mathcal A,\\nu}[R_T],\\\\ R_T&=\\sum_{t=1}^T(\\max_{i\\in[K]}\\mu_{t,i}-\\mu_{t,a_t}),\\\\ \\mathcal I_V&=\\left\\{\\nu\\in\\mathcal I:\\sum_{t=2}^T\\|\\mu_t-\\mu_{t-1}\\|_\\infty\\le V\\right\\}.\\end{aligned}\n$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation includes learner randomness and the explicitly specified reward or sample randomness. Conditional expectations retain their stated history conditioning.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Cumulative observations counted according to the declared feedback type.",
+      "domain": "Nonnegative integer or integer-valued stopping time",
+      "definition": "The quantity $N=T$ counts cumulative native scalar feedback under a one-point or one-arm protocol.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal I",
+      "meaning": "The complete environment class in the current minimax objective.",
+      "domain": "Collection of function classes or reward-distribution classes",
+      "definition": "Before interaction, the environment fixes a sequence of bounded reward distributions. Every arm’s rewards lie in [0,1], with independent fresh samples across rounds. The subclass $\\mathcal I_V$ additionally bounds total mean variation by V.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ON_NS_S__main__q1",
+      "kind": "minimax_cumulative_dynamic_regret",
+      "expression": "inf_{A knowing K,T,V} sup_{mean/law sequences with total mean variation≤V} E[Σ_t(max_iμ_ti−μ_t,a_t)].",
+      "optimization_direction": "minimize",
+      "units": "loss",
+      "budget_variables": [
+        "ON_NS_S_p_76dd32a562"
+      ],
+      "tolerance_variables": [],
+      "analysis_scope": "Compare only this specification and the listed parameter regions.",
+      "tracked_parameters": [
+        "ON_NS_S_p_585fcb7010",
+        "ON_NS_S_p_76dd32a562",
+        "ON_NS_S_p_e204a9d318"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A(K,T,V)}\\sup_{\\nu\\in\\mathcal I_V}\\mathbb E_{\\mathcal A,\\nu}[R_T],\\\\ R_T&=\\sum_{t=1}^T(\\max_{i\\in[K]}\\mu_{t,i}-\\mu_{t,a_t}),\\\\ \\mathcal I_V&=\\left\\{\\nu\\in\\mathcal I:\\sum_{t=2}^T\\|\\mu_t-\\mu_{t-1}\\|_\\infty\\le V\\right\\}.\\end{aligned}",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound.",
+      "expression": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_351fb610de"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ON_NS_S__main__r1",
+      "specification_ref": "ON_NS_S",
+      "name": "MAIN",
+      "predicate_text": "T≥K≥2; max{1/K,sqrt(K/T)}≤V≤T/K",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_NS_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "ON_NS_S_p_585fcb7010"
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_NS_S_p_e204a9d318"
+              },
+              "op": "ge",
+              "right": {
+                "op": "div",
+                "args": [
+                  1,
+                  {
+                    "parameter": "ON_NS_S_p_585fcb7010"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_NS_S_p_e204a9d318"
+              },
+              "op": "ge",
+              "right": {
+                "op": "sqrt",
+                "args": [
+                  {
+                    "op": "div",
+                    "args": [
+                      {
+                        "parameter": "ON_NS_S_p_585fcb7010"
+                      },
+                      {
+                        "parameter": "ON_NS_S_p_76dd32a562"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_NS_S_p_e204a9d318"
+              },
+              "op": "le",
+              "right": {
+                "op": "div",
+                "args": [
+                  {
+                    "parameter": "ON_NS_S_p_76dd32a562"
+                  },
+                  {
+                    "parameter": "ON_NS_S_p_585fcb7010"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "parameter_refs": [
+        "ON_NS_S_p_585fcb7010",
+        "ON_NS_S_p_76dd32a562",
+        "ON_NS_S_p_e204a9d318"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Proof constants are independent of all declared tracked parameters. Thresholds without numerical values remain symbolic."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ON_NS_S__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\le C(KV)^{1/3}T^{2/3}",
+      "quantity_ref": "ON_NS_S__main__q1",
+      "region_refs": [
+        "ON_NS_S__main__r1"
+      ],
+      "method": "Restart Tsallis-INF in blocks of length H",
+      "algorithm_or_hard_family": "Restart Tsallis-INF in blocks of length H",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": "H≈K^(1/3)(T/V)^(2/3), rounded and clipped; V public.",
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_INF",
+        "ON_SRC_NS"
+      ],
+      "evidence_refs": [
+        "ON_NS_S__main__e3",
+        "ON_NS_S__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_NS_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Require $T\\ge K\\ge2$ and $\\max\\{1/K,\\sqrt{K/T}\\}\\le V\\le T/K$. Total mean variation excludes the initial mean vector. The comparator is the best current arm in each round."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": "For each interval $I$ of length approximately $H$, dynamic regret is bounded by static regret plus $2|I|V_I$, where $V_I$ is within-interval mean variation. Restarting Tsallis-INF gives total static contribution $O(T\\sqrt{K/H}+\\sqrt{KH})$ and drift contribution at most $2HV$. Choose $H\\asymp K^{1/3}(T/V)^{2/3}$ and clip it to $[1,T]$. In this region, $V\\ge\\sqrt{K/T}$ makes the target term dominate the stationary term, while $V\\le T/K$ ensures $H\\ge K$. The result is $O((KV)^{1/3}T^{2/3})$.",
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_NS_S__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\mathcal{R}_T^*\\ge c(KV)^{1/3}T^{2/3}",
+      "quantity_ref": "ON_NS_S__main__q1",
+      "region_refs": [
+        "ON_NS_S__main__r1"
+      ],
+      "method": "Independent Bernoulli block environments",
+      "algorithm_or_hard_family": "Independent Bernoulli block environments",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_NS"
+      ],
+      "evidence_refs": [
+        "ON_NS_S__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_NS_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Require $T\\ge K\\ge2$ and $\\max\\{1/K,\\sqrt{K/T}\\}\\le V\\le T/K$. Total mean variation excludes the initial mean vector. The comparator is the best current arm in each round."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "MAIN",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_NS_S_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "ON_NS_S_p_585fcb7010"
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_NS_S_p_e204a9d318"
+              },
+              "op": "ge",
+              "right": {
+                "op": "div",
+                "args": [
+                  1,
+                  {
+                    "parameter": "ON_NS_S_p_585fcb7010"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_NS_S_p_e204a9d318"
+              },
+              "op": "ge",
+              "right": {
+                "op": "sqrt",
+                "args": [
+                  {
+                    "op": "div",
+                    "args": [
+                      {
+                        "parameter": "ON_NS_S_p_585fcb7010"
+                      },
+                      {
+                        "parameter": "ON_NS_S_p_76dd32a562"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_NS_S_p_e204a9d318"
+              },
+              "op": "le",
+              "right": {
+                "op": "div",
+                "args": [
+                  {
+                    "parameter": "ON_NS_S_p_76dd32a562"
+                  },
+                  {
+                    "parameter": "ON_NS_S_p_585fcb7010"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "predicate_text": "$T\\ge K\\ge 2; \\max{1/K,\\sqrt{K/T}}\\le V\\le T/K$",
+      "parameter_refs": [
+        "ON_NS_S_p_585fcb7010",
+        "ON_NS_S_p_76dd32a562",
+        "ON_NS_S_p_e204a9d318"
+      ],
+      "source_region_ref": "ON_NS_S__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_NS_S__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_NS_S__main__q1",
+      "resource_projection_id": "resource_351fb610de",
+      "regime_id": "ON_NS_S__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "ON_NS_S__main__b1"
+        ],
+        "lower_refs": [
+          "ON_NS_S__main__b2"
+        ],
+        "comparison_ref": "ON_NS_S__main__c1",
+        "quantity_ref": "ON_NS_S__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+        "ratio_or_gap": "Controlled by universal constants within the stated range of $V$",
+        "envelopes": {
+          "upper": {
+            "expression": "C(KV)^(1/3)T^(2/3)",
+            "claim_refs": [
+              "ON_NS_S__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "C(KV)^{1/3}T^{2/3}"
+          },
+          "lower": {
+            "expression": "c(KV)^(1/3)T^(2/3)",
+            "claim_refs": [
+              "ON_NS_S__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "c(KV)^{1/3}T^{2/3}"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_NS_S__main__b1",
+            "when_region_refs": [
+              "ON_NS_S__main__r1"
+            ],
+            "meaning": "Invoke each algorithm only in its applicability region; the scalar upper envelope minimizes over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "ON_NS_S__main__b1": [
+            {
+              "region_ref": "ON_NS_S__main__r1",
+              "predicate_text": "$T\\ge K\\ge 2; \\max{1/K,\\sqrt{K/T}}\\le V\\le T/K$"
+            }
+          ],
+          "ON_NS_S__main__b2": [
+            {
+              "region_ref": "ON_NS_S__main__r1",
+              "predicate_text": "$T\\ge K\\ge 2; \\max{1/K,\\sqrt{K/T}}\\le V\\le T/K$"
+            }
+          ]
+        },
+        "envelope_certificate": "Admit only individually checked claims compatible with this contract.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound."
+      },
+      "comparison_key": {
+        "setting_id": "ON_NS_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_NS_S__main__q1",
+        "resource_projection_id": "resource_351fb610de",
+        "regime_id": "ON_NS_S__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ON_NS_S__main__e1",
+      "source_ref": "ON_SRC_INF",
+      "locator": {
+        "theorem": "Theorem 1, IW case",
+        "section": "",
+        "pdf_pages": [
+          9
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Supports the stated results and explicit reductions: $\\mathcal{R}_T^*\\le C(KV)^{1/3}T^{2/3}$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "Tsallis-INF has adversarial bandit pseudo-regret at most $4\\sqrt{KT}+1$. For a deterministic loss sequence fixed before interaction, this equals expected realized external regret."
+      ]
+    },
+    {
+      "id": "ON_NS_S__main__e2",
+      "source_ref": "ON_SRC_NS",
+      "locator": {
+        "theorem": "Theorem 1",
+        "section": "",
+        "pdf_pages": [
+          9
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Source support for the listed results and necessary explicit transfers: $\\mathcal{R}_T^*\\ge c(KV)^{1/3}T^{2/3}$. Applicability is restricted separately by each atomic bound's model, feedback, regime, and quantifiers.",
+      "notes": [
+        "Bernoulli hard rewards yield $c(KV)^{1/3}T^{2/3}$ on window $V\\in[1/K,T/K]$. Variation excludes the initial mean vector, and the comparator is the best arm in each round."
+      ]
+    },
+    {
+      "id": "ON_NS_S__main__e3",
+      "source_ref": "ON_SRC_NS",
+      "locator": {
+        "theorem": "Theorem 2 and Remark 1",
+        "section": "",
+        "pdf_pages": [
+          11
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Supports the stated results and explicit reductions: $\\mathcal{R}_T^*\\le C(KV)^{1/3}T^{2/3}$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "Rexp3 gives $C(K\\log K\\,V)^{1/3}T^{2/3}$ on the window $V\\in[1/K,T/K]$. Replacing its base learner by INF removes $\\log K$. A direct restarted Tsallis-INF regret decomposition is included separately."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "ON_SRC_INF",
+      "authors": [
+        "Julian Zimmert",
+        "Yevgeny Seldin"
+      ],
+      "title": "Tsallis-INF: An Optimal Algorithm for Stochastic and Adversarial Bandits",
+      "year": 2021,
+      "version": "JMLR 22(28):1–49",
+      "url": "https://jmlr.org/papers/volume22/19-753/19-753.pdf",
+      "publication_status": "published"
+    },
+    {
+      "id": "ON_SRC_NS",
+      "authors": [
+        "Omar Besbes",
+        "Yonatan Gur",
+        "Assaf Zeevi"
+      ],
+      "title": "Optimal Exploration–Exploitation in a Multi-Armed-Bandit Problem with Non-Stationary Rewards",
+      "year": 2019,
+      "version": "arXiv:1405.3316v2, 2019-06-06; manuscript dated 2019-04-04; Stochastic Systems 2019",
+      "url": "https://arxiv.org/pdf/1405.3316v2",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [
+    {
+      "id": "ON_REL_STO_VZERO",
+      "source_ref": "ON_STO_S",
+      "target_ref": "ON_NS_S",
+      "relation_kind": "exact_subclass",
+      "conditions": [
+        "Require V = 0 and time-invariant reward distributions. Constant means alone would permit a larger distribution class."
+      ],
+      "instance_map": "constant law at every t",
+      "output_map": "identity",
+      "error_map": "dynamic mean benchmark equals fixed best mean",
+      "oracle_simulation": "identity selected-arm iid samples",
+      "cost_map": {
+        "expression": "T pulls unchanged",
+        "components": {}
+      },
+      "evidence_refs": [
+        "ON_NS_S__main__e2"
+      ]
+    }
+  ],
+  "aliases": [
+    {
+      "legacy_id": "ON_NS_S",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "optimal": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ON_NS_S__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "3b106e3af9bd0bb2739bade4d16f83be7a4788bdcf28b60159cf39a44f1ecd52",
+    "source_order": 75,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

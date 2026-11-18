@@ -1,0 +1,797 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "BL_SPEC_linear_equality",
+  "title": "Equality-constrained lower level: primitive gradients and the outer gradient mapping",
+  "summary": "Let $h(x,y)=Ax-By-b$, $y^*(x)=\\operatorname*{argmin}_{y:\\,h(x,y)=0}g(x,y)$, and $\\Phi(x)=f(x,y^*(x))$. Seek the following approximate stationarity criterion for $\\min_{x\\in X}\\Phi(x)$.",
+  "primary_domain": "bilevel",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "bilevel"
+    },
+    {
+      "facet": "goal",
+      "value": "gradient_mapping"
+    },
+    {
+      "facet": "structure",
+      "value": "lower_strong_convexity"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_gradient"
+    },
+    {
+      "facet": "algorithm",
+      "value": "deterministic"
+    },
+    {
+      "facet": "guarantee",
+      "value": "deterministic"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "bilevel"
+      ],
+      "detail": "min_{x in X} Phi(x) with h(x,y*)=0.",
+      "description_paragraphs": [
+        "Let $h(x,y)=Ax-By-b$, $y^*(x)=\\operatorname*{argmin}_{y:\\,h(x,y)=0}g(x,y)$, and $\\Phi(x)=f(x,y^*(x))$. Seek the following approximate stationarity criterion for $\\min_{x\\in X}\\Phi(x)$."
+      ]
+    },
+    "model": {
+      "objects": "Phi(x)=f(x,y*(x)); y* uniquely minimizes g(x,y) over the declared lower feasible set.",
+      "regularity": "f is jointly C_f-smooth and L_f-Lipschitz; g is jointly C_g-smooth and mu_y-strongly convex in y.",
+      "constraints": "Public A in R^{d_h x d_x}, B in R^{d_h x d_y}, b in R^{d_h}; h(x,y)=Ax-By-b. B has full row rank, with public lower singular-value bound beta_B>0 and public ||A||,||B|| bounds.",
+      "initialization": "Public x0,y0; Phi(x0)-inf Phi<=Delta, and a public lower-solution initial-distance bound R_y for cost constants/logarithms.",
+      "geometry": "Euclidean norms; constraint matrices/data are known, not hidden oracle outputs.",
+      "lower_feasible": "h(x,y)=0",
+      "outer_feasible": "Public nonempty compact convex X with exact projection Pi_X available and diameter bound D_X.",
+      "regularity_extra": "The full Hessian of g is S_g-Lipschitz on X x R^{d_y}. Public C_H bounds the inverse KKT matrix on the relevant solution graph; it is controlled by strong convexity and constraint conditioning.",
+      "description_paragraphs": [
+        "The function $f$ has $C_f$-Lipschitz joint gradient and is $L_f$-Lipschitz in value. The function $g$ has $C_g$-Lipschitz joint gradient and is $\\mu_y$-strongly convex in $y$. All norms are Euclidean or their induced operator norms.",
+        "Inputs $A\\in\\mathbb{R}^{d_h\\times d_x}$, $B\\in\\mathbb{R}^{d_h\\times d_y}$, and $b\\in\\mathbb{R}^{d_h}$ are public. The matrix $B$ has full row rank and smallest singular value at least the public $\\beta_B>0$. The initial point has upper-level gap at most $\\Delta$ and lower-level initial distance at most $R_y$.",
+        "The set $X$ is nonempty, compact, and convex with diameter at most $D_X$. The full Hessian of $g$ is $S_g$-Lipschitz on $X\\times\\mathbb{R}^{d_y}$. Along the solution graph, the inverse lower-level KKT matrix has the public uniform bound $C_H$."
+      ],
+      "outer_geometry": "The reduced objective may be nonconvex. Its differentiability or local Lipschitz regularity is specified by the model and accuracy measure."
+    },
+    "oracle": {
+      "operations": [
+        "Choose f or g at (x,y); receive exact full gradient."
+      ],
+      "query_domain": "x in X and y in R^{d_y}; the regularity promises and all legal queries use this fixed domain.",
+      "auxiliary": "Known affine constraint operations, exact affine projections, and Pi_X are available; no free y*(x), multiplier or Hessian.",
+      "description_paragraphs": [
+        "Choose $f$ or $g$ and obtain its exact full gradient at an admissible pair $(x,y)$, where $x\\in X$ and $y\\in\\mathbb R^{d_y}$.",
+        "Operations with the known linear constraints and their projections are free. The interface $\\Pi_X$ is also available, with its count recorded separately. Lower-level solutions, active sets, and hypergradients are not supplied by default."
+      ]
+    },
+    "output": {
+      "description_paragraphs": [
+        "Return an outer point $\\widehat{x}\\in X$, possibly unqueried. Neither an inner point nor a certificate is required."
+      ]
+    },
+    "metric": {
+      "description_paragraphs": [
+        "Define $\\mathcal{G}_\\tau(x)=\\tau^{-1}[x-\\Pi_X(x-\\tau\\nabla\\Phi(x))]$ and error $\\|\\mathcal{G}_\\tau(\\widehat{x})\\|$. The step size $0<\\tau\\le1/L_\\Phi$ is public and fixed; $L_\\Phi$ bounds reduced-gradient Lipschitz continuity."
+      ]
+    },
+    "resource": {
+      "vector": [
+        "N_grad_f",
+        "N_grad_g",
+        "N_proj_X"
+      ],
+      "projection": "First-order cost Q=N_grad_f+N_grad_g; projections are separately recorded and have zero cost only in this declared query model.",
+      "description_paragraphs": [
+        "Retain the primitive call counts at both levels and the outer projection count. The scalar gradient cost is $N=N_{\\nabla f}+N_{\\nabla g}$, with projections recorded separately. Every call in an approximate inner solve counts toward the fixed budget."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "description_paragraphs": [
+          "Algorithms are deterministic and may use arbitrary measurable adaptive queries, stopping, and postprocessing. Outputs may be unqueried, deterministically selected historical points, or admissible averages. No span or zero-respecting restriction applies. Queries are sequential; each response in a batch is charged. Internal arithmetic, linear algebra, and storage are free, with no separate work, memory, or communication budget."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "description_paragraphs": [
+            "The condition $\\|\\mathcal{G}_\\tau(\\widehat{x})\\|\\le\\varepsilon$ holds deterministically on each instance."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "BL_SPEC_linear_equality"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {},
+  "parameters": [
+    {
+      "id": "BL_SPEC_linear_equality_p_0d1c5067b5",
+      "symbol": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_a136776370",
+      "symbol": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_dc5f6d3bad",
+      "symbol": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_76d394164b",
+      "symbol": "d_h",
+      "meaning": "Number of lower-level linear constraints",
+      "domain": "The quantity $0\\le d_h\\le d_y$ is an integer; zero denotes no constraints.",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_0fb1ebe695",
+      "symbol": "L_f",
+      "meaning": "A joint-variable Lipschitz bound on upper-level function values.",
+      "domain": "$L_f\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_f266b87317",
+      "symbol": "C_f",
+      "meaning": "Joint Lipschitz bound for the full upper-level gradient",
+      "domain": "$C_f\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_4aa01d7d79",
+      "symbol": "C_g",
+      "meaning": "Joint Lipschitz bound for the full lower-level gradient",
+      "domain": "$C_g\\ge\\mu_y>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_183e94cd86",
+      "symbol": "\\mu_y",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "domain": "$\\mu_y>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_25c351f23c",
+      "symbol": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_b6cd508fbf",
+      "symbol": "R_y",
+      "meaning": "Public initial lower-level distance bound",
+      "domain": "$R_y\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\|y_0-y^*(x_0)\\|\\le R_y$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_68d3be5ef3",
+      "symbol": "\\beta_B",
+      "meaning": "A lower bound on the smallest singular value of the public constraint matrix B.",
+      "domain": "$\\beta_B>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_b027f9a419",
+      "symbol": "S_g",
+      "meaning": "Lipschitz upper bound for the complete lower-level Hessian on the declared query domain",
+      "domain": "$S_g\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_6d05eb3483",
+      "symbol": "C_H",
+      "meaning": "Uniform operator-norm bound on the inverse lower-level KKT matrix along the solution graph.",
+      "domain": "$C_H<\\infty$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_cf70aae397",
+      "symbol": "D_X",
+      "meaning": "Euclidean diameter bound for the public outer feasible set",
+      "domain": "$D_X<\\infty$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_299fe9c1a6",
+      "symbol": "\\tau",
+      "meaning": "The public fixed step size in the gradient mapping.",
+      "domain": "$0<\\tau\\le1/L_\\Phi$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_175bf94dca",
+      "symbol": "\\kappa_g",
+      "meaning": "Lower-level condition number",
+      "domain": "$\\kappa_g\\ge1$",
+      "kind": "derived",
+      "public": true,
+      "definition": "$\\kappa_g=C_g/\\mu_y$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_e3cd5bde11",
+      "symbol": "C_J",
+      "meaning": "Effective operator-norm bound for the Jacobian of the lower-level solution map",
+      "domain": "$C_J\\ge0$",
+      "kind": "derived",
+      "public": true,
+      "definition": "$C_J=C_H(C_g+\\|A\\|)$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_linear_equality_p_9d436b1c4f",
+      "symbol": "L_\\Phi",
+      "meaning": "An effective Lipschitz bound on the reduced gradient.",
+      "domain": "$L_\\Phi>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "Use $L_\\Phi=(C_f+L_fC_HS_g)(1+C_J)^2$ or any larger valid upper bound.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "x,y",
+      "meaning": "The upper- and lower-level variables.",
+      "domain": "$x\\in X,y\\in\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,g",
+      "meaning": "The original upper- and lower-level real-valued functions.",
+      "domain": "$f,g:\\mathbb R^{d_x}\\times\\mathbb R^{d_y}\\to\\mathbb R$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat x,x_0,y_0",
+      "meaning": "Output outer point, public outer initial point, and public lower-level initial point",
+      "domain": "Each lies in its corresponding variable space.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Phi",
+      "meaning": "The reduced objective.",
+      "domain": "Defined in the task specification",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "y^*",
+      "meaning": "Mapping to the unique lower-level global minimizer",
+      "domain": "Constraints specified under TASK",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla,\\|\\cdot\\|",
+      "meaning": "Euclidean gradient and vector norm; matrix and higher-derivative norms are the induced Euclidean operator norms",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E,\\Pr,\\inf,\\sup",
+      "meaning": "Expectation, probability, infimum, and supremum, with aggregation order and randomness specified by the guarantee.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal O,\\Omega,\\Theta,\\widetilde{\\mathcal O}",
+      "meaning": "Asymptotic upper, lower, matching-order, and declared-logarithm upper bounds; fixed parameters are specified in each evidence record",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive absolute constants or functions of fixed budgets, with dependencies specified by the corresponding result",
+      "domain": "$0<c,C<\\infty$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_0d1c5067b5"
+    },
+    {
+      "symbol_latex": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_a136776370"
+    },
+    {
+      "symbol_latex": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_dc5f6d3bad"
+    },
+    {
+      "symbol_latex": "d_h",
+      "meaning": "Number of lower-level linear constraints",
+      "domain": "The quantity $0\\le d_h\\le d_y$ is an integer; zero denotes no constraints.",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_76d394164b"
+    },
+    {
+      "symbol_latex": "L_f",
+      "meaning": "A joint-variable Lipschitz bound on upper-level function values.",
+      "domain": "$L_f\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_0fb1ebe695"
+    },
+    {
+      "symbol_latex": "C_f",
+      "meaning": "Joint Lipschitz bound for the full upper-level gradient",
+      "domain": "$C_f\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_f266b87317"
+    },
+    {
+      "symbol_latex": "C_g",
+      "meaning": "Joint Lipschitz bound for the full lower-level gradient",
+      "domain": "$C_g\\ge\\mu_y>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_4aa01d7d79"
+    },
+    {
+      "symbol_latex": "\\mu_y",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "domain": "$\\mu_y>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_183e94cd86"
+    },
+    {
+      "symbol_latex": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "parameter_ref": "BL_SPEC_linear_equality_p_25c351f23c"
+    },
+    {
+      "symbol_latex": "R_y",
+      "meaning": "Public initial lower-level distance bound",
+      "domain": "$R_y\\ge0$",
+      "definition": "$\\|y_0-y^*(x_0)\\|\\le R_y$",
+      "parameter_ref": "BL_SPEC_linear_equality_p_b6cd508fbf"
+    },
+    {
+      "symbol_latex": "\\beta_B",
+      "meaning": "A lower bound on the smallest singular value of the public constraint matrix B.",
+      "domain": "$\\beta_B>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_68d3be5ef3"
+    },
+    {
+      "symbol_latex": "S_g",
+      "meaning": "Lipschitz upper bound for the complete lower-level Hessian on the declared query domain",
+      "domain": "$S_g\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_b027f9a419"
+    },
+    {
+      "symbol_latex": "C_H",
+      "meaning": "Uniform operator-norm bound on the inverse lower-level KKT matrix along the solution graph.",
+      "domain": "$C_H<\\infty$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_6d05eb3483"
+    },
+    {
+      "symbol_latex": "D_X",
+      "meaning": "Euclidean diameter bound for the public outer feasible set",
+      "domain": "$D_X<\\infty$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_cf70aae397"
+    },
+    {
+      "symbol_latex": "\\tau",
+      "meaning": "The public fixed step size in the gradient mapping.",
+      "domain": "$0<\\tau\\le1/L_\\Phi$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_linear_equality_p_299fe9c1a6"
+    },
+    {
+      "symbol_latex": "\\kappa_g",
+      "meaning": "Lower-level condition number",
+      "domain": "$\\kappa_g\\ge1$",
+      "definition": "$\\kappa_g=C_g/\\mu_y$",
+      "parameter_ref": "BL_SPEC_linear_equality_p_175bf94dca"
+    },
+    {
+      "symbol_latex": "C_J",
+      "meaning": "Effective operator-norm bound for the Jacobian of the lower-level solution map",
+      "domain": "$C_J\\ge0$",
+      "definition": "$C_J=C_H(C_g+\\|A\\|)$",
+      "parameter_ref": "BL_SPEC_linear_equality_p_e3cd5bde11"
+    },
+    {
+      "symbol_latex": "L_\\Phi",
+      "meaning": "An effective Lipschitz bound on the reduced gradient.",
+      "domain": "$L_\\Phi>0$",
+      "definition": "Use $L_\\Phi=(C_f+L_fC_HS_g)(1+C_J)^2$ or any larger valid upper bound.",
+      "parameter_ref": "BL_SPEC_linear_equality_p_9d436b1c4f"
+    },
+    {
+      "symbol_latex": "A,B,b",
+      "meaning": "The public lower-level linear-constraint coefficients.",
+      "domain": "$A\\in\\mathbb R^{d_h\\times d_x},B\\in\\mathbb R^{d_h\\times d_y},b\\in\\mathbb R^{d_h}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "h",
+      "meaning": "Residual of the public linear constraints",
+      "domain": "",
+      "definition": "$h(x,y)=Ax-By-b$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "X,\\Pi_X",
+      "meaning": "Public outer feasible set and its Euclidean projection",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal G_\\tau",
+      "meaning": "Gradient mapping of the reduced objective",
+      "domain": "",
+      "definition": "$\\mathcal G_\\tau(x)=\\tau^{-1}[x-\\Pi_X(x-\\tau\\nabla\\Phi(x))]$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal K",
+      "meaning": "Lower-level KKT matrix along the solution graph",
+      "domain": "",
+      "definition": "$\\mathcal K=\\begin{bmatrix}g_{yy}&-B^\\top\\\\-B&0\\end{bmatrix}$, $\\|\\mathcal K^{-1}\\|\\le C_H$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,Q",
+      "meaning": "This is the total call budget under the stated resource projection. If only one symbol is used, the two names are aliases for that same budget.",
+      "domain": "RESOURCE specifies which operations are summed; no additional unit cost is introduced.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_{\\Pi_X}",
+      "meaning": "Number of public outer projection calls, recorded separately from gradient calls",
+      "domain": "Nonnegative integer",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "BL_SPEC_linear_equality__main__q1",
+      "kind": "target_accuracy_cost",
+      "expression": "Q^*(\\varepsilon)=\\inf_A\\sup_{I,\\mathcal O}N(A,I,\\mathcal O)",
+      "comparison_scale": "multiplicative_rate",
+      "units": "declared oracle responses",
+      "nonnegativity": true,
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": null,
+      "expression": null,
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_ac610b1356"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "BL_SPEC_linear_equality__main__r1",
+      "specification_ref": "BL_SPEC_linear_equality",
+      "name": "A fixed step size and nondegenerate model budgets.",
+      "predicate_text": "Assume $\\tau=1/L_\\Phi$ and sufficiently small $\\varepsilon$, with $L_\\Phi=(C_f+L_fC_HS_g)(1+C_J)^2>0$, $C_J=C_H(C_g+\\|A\\|)$, and $\\kappa_g=C_g/\\mu_y$. Constraint conditioning, compact-set diameter, and initialization budgets are fixed.",
+      "predicate": {
+        "kind": "symbolic_conjunction",
+        "text": "Assume $\\tau=1/L_\\Phi$ and sufficiently small $\\varepsilon$, with $L_\\Phi=(C_f+L_fC_HS_g)(1+C_J)^2>0$, $C_J=C_H(C_g+\\|A\\|)$, and $\\kappa_g=C_g/\\mu_y$. Constraint conditioning, compact-set diameter, and initialization budgets are fixed."
+      },
+      "parameter_refs": [],
+      "kind": "theorem_window",
+      "endpoint_notes": "Compare only within the explicit window. Fixed dimension and other parameter boundaries are not included automatically."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "BL_SPEC_linear_equality__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\widetilde{\\mathcal{O}}\\!\\left(\\sqrt{\\kappa_g}\\,[1+L_\\Phi\\Delta\\varepsilon^{-2}]\\right)",
+      "quantity_ref": "BL_SPEC_linear_equality__main__q1",
+      "region_refs": [
+        "BL_SPEC_linear_equality__main__r1"
+      ],
+      "method": "Finite-difference hypergradients, accelerated inner solves, and projected descent.",
+      "algorithm_or_hard_family": "Finite-difference hypergradients, accelerated inner solves, and projected descent.",
+      "algorithm_class_scope": "deterministic adaptive algorithm",
+      "source_refs": [
+        "BL_SRC_Kornowski2024"
+      ],
+      "evidence_refs": [
+        "BL_SPEC_linear_equality__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "BL_SPEC_linear_equality__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The scalar count includes only original gradients at the two levels; outer projections are separately counted as $O(1+L_\\Phi\\Delta\\varepsilon^{-2})$."
+        ],
+        "dimension_conditions": "The upper bound holds for every finite-dimensional instance in the declared model. Any dimension or fixed-budget dependence not displayed explicitly follows the accompanying evidence qualification."
+      },
+      "hidden_constants": "Unshown regularity, initialization, and noise budgets are fixed. Their joint parameter dependence is not certified as closed.",
+      "hidden_logs": [],
+      "derivation": "Implicit KKT differentiation gives an effective $L_\\Phi$. Projected descent needs $O(1+L_\\Phi\\Delta/\\varepsilon^2)$ surrogate evaluations, each implemented using $\\widetilde O(\\sqrt{\\kappa_g})$ exact primitive-gradient calls.",
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "A fixed step size and nondegenerate model budgets.",
+      "predicate": {
+        "kind": "symbolic_conjunction",
+        "text": "Assume $\\tau=1/L_\\Phi$ and sufficiently small $\\varepsilon$, with $L_\\Phi=(C_f+L_fC_HS_g)(1+C_J)^2>0$, $C_J=C_H(C_g+\\|A\\|)$, and $\\kappa_g=C_g/\\mu_y$. Constraint conditioning, compact-set diameter, and initialization budgets are fixed."
+      },
+      "predicate_text": "Assume $\\tau=1/L_\\Phi$ and sufficiently small $\\varepsilon$, with $L_\\Phi=(C_f+L_fC_HS_g)(1+C_J)^2>0$, $C_J=C_H(C_g+\\|A\\|)$, and $\\kappa_g=C_g/\\mu_y$. Constraint conditioning, compact-set diameter, and initialization budgets are fixed.",
+      "parameter_refs": [],
+      "source_region_ref": "BL_SPEC_linear_equality__main__r1",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "BL_SPEC_linear_equality__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "BL_SPEC_linear_equality__main__q1",
+      "resource_projection_id": "resource_ac610b1356",
+      "regime_id": "BL_SPEC_linear_equality__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "BL_SPEC_linear_equality__main__b1"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "BL_SPEC_linear_equality__main__c1",
+        "quantity_ref": "BL_SPEC_linear_equality__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": null,
+        "ratio_or_gap": "An upper bound is available in this window. No matching-specification lower bound is registered.",
+        "envelopes": {},
+        "dispatch": [],
+        "claim_guards": {
+          "BL_SPEC_linear_equality__main__b1": [
+            {
+              "region_ref": "BL_SPEC_linear_equality__main__r1",
+              "predicate_text": "Assume $\\tau=1/L_\\Phi$ and sufficiently small $\\varepsilon$, with $L_\\Phi=(C_f+L_fC_HS_g)(1+C_J)^2>0$, $C_J=C_H(C_g+\\|A\\|)$, and $\\kappa_g=C_g/\\mu_y$. Constraint conditioning, compact-set diameter, and initialization budgets are fixed."
+            }
+          ]
+        },
+        "envelope_certificate": "",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": null
+      },
+      "comparison_key": {
+        "setting_id": "BL_SPEC_linear_equality",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "BL_SPEC_linear_equality__main__q1",
+        "resource_projection_id": "resource_ac610b1356",
+        "regime_id": "BL_SPEC_linear_equality__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "BL_SPEC_linear_equality__main__e1",
+      "source_ref": "BL_SRC_Kornowski2024",
+      "locator": {
+        "theorem": "Theorem 3.1; Appendix B, Algorithm 5"
+      },
+      "supports": "A finite-difference KKT hypergradient surrogate with projected gradient descent, charging all primitive calls.",
+      "notes": [
+        "Combine $\\|D_xy^*\\|\\le C_J$ and $\\operatorname{Lip}(D_xy^*)\\le C_HS_g(1+C_J)^2$ to obtain $L_\\Phi$. This retains the $C_f$ term when $S_g=0$, avoiding degeneration of the source displayed formula at that endpoint.",
+        "Compute each hypergradient proxy to uniform error $O(\\varepsilon)$ and select the smallest computable approximate gradient mapping. This provides a deterministic output for each instance. Accelerated gradient descent solves the strongly convex inner problems to the required accuracy."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "BL_SRC_Kornowski2024",
+      "authors": [
+        "Guy Kornowski",
+        "Swati Padmanabhan",
+        "Kai Wang",
+        "Jimmy Zhang",
+        "Suvrit Sra"
+      ],
+      "title": "First-Order Methods for Linearly Constrained Bilevel Optimization",
+      "year": 2024,
+      "version": "NeurIPS2024 proceedings PDF",
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2024/file/ffd86e56e6403d63dd6face033060e5a-Paper-Conference.pdf",
+      "publication_status": "see_primary_source"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "BL_SPEC_linear_equality",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "lower"
+    ],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "missing_lower": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "BL_SPEC_linear_equality__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "d917521fb11014ff33e413b15b0a152ad295f6365eb11710e3637f6e3a723a12",
+    "source_order": 109,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

@@ -1,0 +1,339 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Nonconvex-strongly concave optimization with fresh-sample joint gradients\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{CV\_\allowbreak{}S\_\allowbreak{}NCSC\_\allowbreak{}FRESH}
+
+Minimax optimization
+
+
+\AtlasMath{\min_{x\in\mathbb{R}^{d_x}}\Phi(x),\qquad\Phi(x)=\max_{y\in\mathbb{R}^{d_y}}f(x,y).}
+
+
+\textbf{Status.} Logarithmic gap present
+
+\textbf{TASK tags.} formulation: Minimize value function; task family: Minimax
+
+\textbf{MODEL tags.} convexity: No convexity promise in block; convexity: Nonconvex strongly concave; convexity: Strong concavity in the declared block; initialization: Bounded dual residual; initialization: Dual initial residual; initialization: Initial suboptimality; smoothness: Lipschitz gradient
+
+\textbf{ORACLE tags.} feedback quality: Conditionally unbiased e noise 2 past query sigma 2; interface family: Fresh joint gradient; operation: Stochastic joint gradient; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared; query domain: Full space; scalar derivative order: Scalar-function first derivative
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; randomization: Private randomness allowed; restriction: Explicitly no additional algorithm restrictions; restriction: No additional span restriction explicitly imposed; restriction: No additional zero-respecting restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Primal point; postprocessing: Measurable postprocessing; postprocessing: Unqueried output explicitly allowed
+
+\textbf{METRIC tags.} criterion: Reduced-objective gradient norm
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; confidence: Fixed numerical success / failure probability; mode: Probability; quantifier: Algorithm before instance; randomness: Algorithm private seed; randomness: Oracle samples
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget; measure: N grad; precision: Bit precision not counted
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+
+\AtlasMath{\min_{x\in\mathbb{R}^{d_x}}\Phi(x),\qquad\Phi(x)=\max_{y\in\mathbb{R}^{d_y}}f(x,y).}
+
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+\AtlasInlineMath{f:\mathbb{R}^{d_x}\times\mathbb{R}^{d_y}\to\mathbb{R}}, with both blocks unconstrained and Euclidean norms throughout. The joint gradient satisfies \AtlasInlineMath{\|\nabla f(z)-\nabla f(w)\|_2\le \beta\|z-w\|_2}.
+
+For every \AtlasInlineMath{x}, \AtlasInlineMath{f(x,\cdot)} is uniformly \AtlasInlineMath{\mu_y}-strongly concave. Thus \AtlasInlineMath{y^\star(x)=\arg\max_y f(x,y)} is unique and \AtlasInlineMath{\Phi(x)=f(x,y^\star(x))} is differentiable. Neither \AtlasInlineMath{f(\cdot,y)} nor \AtlasInlineMath{\Phi} is assumed convex.
+
+Assume \AtlasInlineMath{\inf_x\Phi(x)>-\infty}, with an initial point satisfying \AtlasInlineMath{\Phi(x_0)-\inf_x\Phi(x)\le\Delta}.
+
+The public initial point is \AtlasInlineMath{(x_0,y_0)=(0,0)}, with public dual-residual bound \AtlasInlineMath{\|\nabla_yf(0,0)\|_2\le G}.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Public inputs include block dimensions \AtlasInlineMath{d_x,d_y} and \AtlasInlineMath{\Delta}, \AtlasInlineMath{G}, \AtlasInlineMath{\beta}, \AtlasInlineMath{\varepsilon}, \AtlasInlineMath{\mu_y}, and \AtlasInlineMath{\sigma}, together with the stated initial points and feasible-set information. Analytic representations of hidden functions, operators, and matrices are not supplied.
+
+
+\AtlasMath{(x,y)\in\mathbb{R}^{d_x+d_y}\longmapsto G_f(x,y;\xi)=(G_x,G_y)}
+
+
+Let \AtlasInlineMath{\mathcal H_t} denote the full history before query t. Conditional on \AtlasInlineMath{\mathcal H_t,z_t}, the response \AtlasInlineMath{G_t\in\mathbb R^{d_x+d_y}} satisfies \AtlasInlineMath{\mathbb E[G_t\mid\mathcal H_t,z_t]=\nabla f(z_t)} and \AtlasInlineMath{\mathbb E[\|G_t-\nabla f(z_t)\|_2^2\mid\mathcal H_t,z_t]\le\sigma^2}. Each call uses an independent fresh sample.
+
+No reusable sample identifier or cross-point sample reuse is available. No mean-square smoothness of sample gradients or operators is additionally assumed. Blocks within a full vector may be correlated.
+
+The interface does not directly supply \AtlasInlineMath{y^\star(x)}, \AtlasInlineMath{\Phi(x)}, or \AtlasInlineMath{\nabla\Phi(x)}. Every primitive gradient used for inner optimization is charged.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return a single \AtlasInlineMath{\widehat x\in\mathbb R^{d_x}}. No dual point is required.
+
+The output may be any measurable postprocessing of the history, including an unqueried point, average, or convex combination. It must satisfy the stated domain and feasibility requirements; no additional function value or computable certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+\AtlasMath{\|\nabla\Phi(\widehat{x})\|_2}
+
+
+The identity \AtlasInlineMath{\nabla\Phi(x)=\nabla_xf(x,y^\star(x))} specifies the evaluation target and does not supply an additional Oracle interface.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+One full joint-gradient sample costs one \AtlasInlineMath{N_{\rm grad}} call. Both blocks are returned together and do not count as two calls.
+
+Use a fixed worst-case budget: calls never exceed the prespecified \AtlasInlineMath{N} on any instance or random execution path. Earlier stopping within the budget is permitted.
+
+Count all information calls for one instance and one requested accuracy, including initialization. Exact-real arithmetic, storage, and solving known models from public inputs and returned data are uncharged. This query-complexity quantity does not certify arithmetic or bit complexity.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Arbitrary measurable sequential adaptive randomized algorithms are allowed. The private seed is independent of the hidden instance. Queries, stopping, and output may use the full history, without additional span, zero-respecting, communication, or memory restrictions.
+
+A single algorithm is chosen from the public input and must satisfy the guarantee for every fixed admissible instance.
+
+
+\AtlasMath{\Pr\!\left(\|\nabla\Phi(\widehat{x})\|_2\le\varepsilon\right)\ge\frac23.}
+
+
+Probability includes only algorithm randomness and explicitly permitted stochastic feedback. The guarantee is not averaged over an instance distribution.
+
+\textbf{Budget convention.} fixed worst-case query cap
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{A_{\mathrm{det}}}: Deterministic primal-progress scale \textbf{Domain:} A nonnegative real.
+
+\AtlasInlineMath{A_{\mathrm{det}}=\sqrt\kappa\,\beta\Delta/\varepsilon^2}
+
+\AtlasInlineMath{B_{\mathrm{noise},1}}: The statistical sampling scale across outer progress. \textbf{Domain:} A nonnegative real.
+
+\AtlasInlineMath{B_{\mathrm{noise},1}=\kappa\beta\Delta\sigma^2/\varepsilon^4}
+
+\AtlasInlineMath{B_{\mathrm{noise},2}}: The final statistical-refinement scale. \textbf{Domain:} A nonnegative real.
+
+\AtlasInlineMath{B_{\mathrm{noise},2}=\kappa^2\sigma^2/\varepsilon^2}
+
+\AtlasInlineMath{C_0}: Universal sufficient constant in the nontrivial accuracy regime; no numerical value is specified. \textbf{Domain:} Positive proof constant with no specified numerical value.
+
+\AtlasInlineMath{C_{\mathrm{up}}}: The universal numerical constant in the source upper bound. \textbf{Domain:} Positive proof constant with no specified numerical value.
+
+\AtlasInlineMath{\Delta}: A public bound on the initial reduced-objective value above its infimum. Attainment of the infimum is not required. \textbf{Domain:} Positive real number.
+
+\AtlasInlineMath{\Phi(0)-\inf_x\Phi(x)\le\Delta}
+
+\AtlasInlineMath{G}: Euclidean norm bound on the dual gradient at the public initial point \textbf{Domain:} A nonnegative real.
+
+\AtlasInlineMath{\|\nabla_yf(x_0,y_0)\|_2\le G}
+
+\AtlasInlineMath{I_G}: Logarithmic scale needed for dual initialization \textbf{Domain:} A nonnegative real.
+
+\AtlasInlineMath{I_G=\sqrt\kappa\log_+\!\left(\frac{G}{\varepsilon\sqrt\kappa}\right)}
+
+\AtlasInlineMath{\Lambda}: Dimensionless logarithmic overhead independent of \AtlasInlineMath{G} \textbf{Domain:} Positive real number.
+
+\AtlasInlineMath{\Lambda=1+\log(2+\kappa)+\log(2+\beta\Delta/\varepsilon^2)+\log(2+\kappa^2\sigma^2/\varepsilon^2)}
+
+\AtlasInlineMath{\beta}: Euclidean Lipschitz upper bound for the population payoff's complete joint gradient. \textbf{Domain:} Positive real number.
+
+\AtlasInlineMath{\|\nabla f(z)-\nabla f(w)\|_2\le\beta\|z-w\|_2}
+
+\AtlasInlineMath{c}: Universal positive constant in the source lower bound \textbf{Domain:} Positive proof constant with no specified numerical value.
+
+\AtlasInlineMath{d}: The joint Euclidean dimension is \AtlasInlineMath{d=d_x+d_y}. Within its stated window, the lower bound may choose finite block dimensions. \textbf{Domain:} Integer at least \AtlasInlineMath{2}.
+
+\AtlasInlineMath{\varepsilon}: Euclidean norm tolerance for the true reduced gradient; the mean-square contract targets its square \AtlasInlineMath{\varepsilon^2}. \textbf{Domain:} Positive real number.
+
+\AtlasInlineMath{\kappa}: Ratio of the population smoothness upper bound, or mean-square average smoothness for finite sums, to the dual strong-concavity lower bound \textbf{Domain:} \AtlasInlineMath{\kappa\ge1}.
+
+\AtlasInlineMath{\kappa=\beta/\mu_y}
+
+\AtlasInlineMath{\kappa_0}: Universal sufficient condition-number threshold in the lower-bound theorem; its numerical value is unspecified. \textbf{Domain:} Positive proof constant with no specified numerical value.
+
+\AtlasInlineMath{\mu_y}: A uniform strong-convexity lower bound for -f(x,·) at every fixed x; equivalently, the dual strong-concavity modulus of f. \textbf{Domain:} \AtlasInlineMath{0<\mu_y\le\beta}.
+
+\AtlasInlineMath{f(x,v)\le f(x,y)+\langle\nabla_yf(x,y),v-y\rangle-\frac{\mu_y}{2}\|v-y\|_2^2}
+
+\AtlasInlineMath{\sigma}: Standard-deviation upper bound for noise in the full stochastic response, controlling the joint squared norm rather than summing independent block budgets. \textbf{Domain:} Positive real number.
+
+\AtlasInlineMath{\mathbb E[\|G_t-\mathbb E[G_t\mid\mathcal H_t,z_t]\|_2^2\mid\mathcal H_t,z_t]\le\sigma^2}
+
+\AtlasInlineMath{\|\cdot\|_2,\langle\cdot,\cdot\rangle}: Euclidean norm and inner product; the product-space norm is the square root of the sum of the squared block norms. \textbf{Domain:} The specified finite-dimensional real vector space.
+
+\AtlasInlineMath{\|v\|_2=\sqrt{\langle v,v\rangle}}
+
+\AtlasInlineMath{d_x,d_y}: Positive integer primal and dual block dimensions; joint dimension \AtlasInlineMath{d=d_x+d_y} \textbf{Domain:} Positive integer.
+
+\AtlasInlineMath{f}: Unknown real-valued payoff, with primal and dual input blocks. \textbf{Domain:} \AtlasInlineMath{f:(x,y)\mapsto f(x,y)\in\mathbb R}.
+
+\AtlasInlineMath{x,y,z}: Primal variable, dual variable, and joint point \textbf{Domain:} \AtlasInlineMath{x\in\mathbb R^{d_x},\ y\in\mathbb R^{d_y},\ z=(x,y)\in\mathbb R^{d_x+d_y}}.
+
+\AtlasInlineMath{z=(x,y)}
+
+\AtlasInlineMath{\nabla f,\nabla_x f,\nabla_y f}: Complete joint gradient and its two blocks \textbf{Domain:} \AtlasInlineMath{\nabla_x f\in\mathbb R^{d_x},\ \nabla_y f\in\mathbb R^{d_y}}.
+
+\AtlasInlineMath{\nabla f=(\nabla_x f,\nabla_y f)}
+
+\AtlasInlineMath{\Phi}: Reduced objective after global dual maximization; neither its value nor gradient is an additional free interface \textbf{Domain:} Real-valued function on the primal-variable space.
+
+\AtlasInlineMath{\Phi(x)=\max_{y\in \mathbb R^{d_y}}f(x,y)}
+
+\AtlasInlineMath{y^\star(x)}: The unique global dual maximizer at fixed primal x. \textbf{Domain:} \AtlasInlineMath{y^\star(x)\in\mathbb R^{d_y}}.
+
+\AtlasInlineMath{y^\star(x)=\arg\max_{y\in\mathbb R^{d_y}}f(x,y)}
+
+\AtlasInlineMath{x_0,y_0}: The public initial primal and dual variables. \textbf{Domain:} The respective feasible domains. Both equal zero when the origins are explicitly fixed.
+
+\AtlasInlineMath{\widehat x}: The point or variable blocks ultimately returned by the algorithm, corresponding to the hatted variables in the error formula. \textbf{Domain:} A feasible primal point in \AtlasInlineMath{\mathbb R^{d_x}}.
+
+\AtlasInlineMath{G_f(z;\xi),G_t}: Random sample of the full joint gradient and the response from sample \AtlasInlineMath{t} \textbf{Domain:} \AtlasInlineMath{\mathbb R^{d_x+d_y}}. The two blocks may be internally correlated.
+
+\AtlasInlineMath{G_f=(G_x,G_y)}
+
+\AtlasInlineMath{G_x,G_y}: The primal and dual blocks in one complete joint-gradient sample. \textbf{Domain:} \AtlasInlineMath{G_x\in\mathbb R^{d_x},\ G_y\in\mathbb R^{d_y}}.
+
+\AtlasInlineMath{\xi,\mathcal H_t,z_t}: Current fresh-sample seed, complete pre-query history, and query point. \textbf{Domain:} The seed space, history-generated \AtlasInlineMath{\sigma}-algebra, and declared query domain.
+
+\AtlasInlineMath{\mathbb E,\Pr}: Expectation and probability over the explicitly allowed algorithm and sample randomness, with the hidden instance fixed. \textbf{Domain:} Operations on the corresponding probability space.
+
+\AtlasInlineMath{N_{\rm grad}}: Number of full joint-gradient queries using fresh samples \textbf{Domain:} Nonnegative integer count; expected work is its expectation.
+
+\AtlasInlineMath{N}: A uniform cap on principal information calls for every admissible instance and execution path. \textbf{Domain:} Nonnegative integer.
+
+\AtlasInlineMath{N^\star}: The infimum principal query budget among algorithms satisfying every stated instancewise output guarantee. \textbf{Domain:} Nonnegative extended real value; by convention, positive infinity if no successful algorithm or no uniform finite budget exists.
+
+\AtlasInlineMath{\mathcal A,I}: An algorithm selected from public inputs, a hidden admissible object fixed before interaction, and an oracle law satisfying the declared conditional means, variances, and independence protocol. \textbf{Domain:} The specified algorithm and model classes.
+
+\AtlasInlineMath{\omega}: A complete realization of algorithmic and sample randomness. \textbf{Domain:} Corresponding sample space.
+
+\AtlasInlineMath{\log,\ln,\log_+}: Natural logarithm and its nonnegative truncation \textbf{Domain:} Arguments of log and ln are positive; the argument of \AtlasInlineMath{\log_+} may be zero.
+
+\AtlasInlineMath{\log_+(t)=\log(\max\{1,t\})}
+
+\AtlasInlineMath{\mathfrak A_\varepsilon}: Algorithms using the allowed interfaces, algorithm restrictions, and output domain, and satisfying the displayed complete error guarantee for every fixed admissible instance \textbf{Domain:} The algorithm class is defined at fixed public parameters and target tolerance \AtlasInlineMath{\varepsilon}.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\AtlasMath{N^\star(\varepsilon)=\inf_{\mathcal A\in\mathfrak A_\varepsilon}\sup_I \sup_\omega N_{\rm grad}(\mathcal A,I,\omega)}
+\textbf{Scope.} Take the worst case over admissible finite-dimensional instances. Theorems with dimension conditions apply only within those windows and do not establish fixed-dimensional saturation rates.
+
+\textbf{Optimization direction.} minimize
+
+One call is charged for the full response specified by the interface. The algorithm class obeys the declared randomization, adaptivity, and output rules and must satisfy the complete error guarantee on every fixed admissible instance. The call cap is uniform over instances and execution paths.
+
+\needspace{4\baselineskip}\subsection{R1 - The nontrivial condition-number and accuracy region.}
+\textbf{Region.} Assume \AtlasInlineMath{\kappa\ge\kappa_0} and \AtlasInlineMath{\beta\Delta\ge C_0\varepsilon^2}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} The number of gradient-interface responses.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{c(A_{\mathrm{det}}+B_{\mathrm{noise},1}+B_{\mathrm{noise},2}+I_G)}
+\textbf{Upper bound.} B1
+
+\AtlasMath{C_{\mathrm{up}}\Lambda^{10}[A_{\mathrm{det}}+B_{\mathrm{noise},1}+B_{\mathrm{noise},2}+\sqrt\kappa\log(2+\kappa^2G^2/\varepsilon^2+\kappa^2\beta\Delta/\varepsilon^2)]}
+\textbf{Gap or comparison.} \AtlasInlineMath{U/L\le C\Lambda^{11}}
+
+\textbf{Comparison argument.} Combine four nonnegative lower bounds using max >= sum/4. The logarithm satisfies log(2+\AtlasInlineMath{\kappa}\textasciicircum{}3 u\textasciicircum{}2+\AtlasInlineMath{\kappa}\textasciicircum{}2 \AtlasInlineMath{\beta}\AtlasInlineMath{\Delta}/eps\textasciicircum{}2) <= C[log(2+\AtlasInlineMath{\kappa})+log(2+\AtlasInlineMath{\beta}\AtlasInlineMath{\Delta}/eps\textasciicircum{}2)+\AtlasInlineMath{\log_+}u]. Under \AtlasInlineMath{\beta}\AtlasInlineMath{\Delta}/eps\textasciicircum{}2 >= C0, the additional initialization logarithm is absorbed by A and D\_G.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} Use only primitive operations recorded under ORACLE. Unknown inner solutions and reduced gradients are not supplied for free.
+
+\textbf{Guarantee mapping.} The error criterion, sources of randomness, and expectation/probability quantifiers match this specification. Any conversion is explained separately below.
+
+\textbf{Output mapping.} Outputs belong to the declared space and are evaluated by this profile's METRIC. Different gaps, norms, and squared norms are not interchanged.
+
+\textbf{Resource mapping.} All resource costs come from one algorithm or one hard construction. Initialization and nested calls are included.
+
+\needspace{4\baselineskip}\subsection{B1 - coarse proximal progress plus one final refinement; global truncation fixes query budget}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\textbf{Algorithm-scope qualification.} Source Algorithm 1 selects a random outer index, and its subroutine also uses fresh samples and multilevel randomized corrections.
+
+\AtlasMath{C_{\mathrm{up}}\Lambda^{10}[A_{\mathrm{det}}+B_{\mathrm{noise},1}+B_{\mathrm{noise},2}+\sqrt\kappa\log(2+\kappa^2G^2/\varepsilon^2+\kappa^2\beta\Delta/\varepsilon^2)]}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2610.00229v2}{[1]}
+
+\textbf{Conditions.} The logarithmic terms involving \AtlasInlineMath{G} are additive before multiplication of the full expression by \AtlasInlineMath{\Lambda^{10}}. The noiseless branch is implemented by an actual deterministic solver.
+
+\textbf{Dimension conditions.} The upper bound holds in every admissible finite dimension. The lower bound applies only in its separately stated dimension window.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{N grad.}
+
+\AtlasMath{C_{\mathrm{up}}\Lambda^{10}[A_{\mathrm{det}}+B_{\mathrm{noise},1}+B_{\mathrm{noise},2}+\sqrt\kappa\log(2+\kappa^2G^2/\varepsilon^2+\kappa^2\beta\Delta/\varepsilon^2)]}
+\textbf{Constants.} Use the source theorem’s universal constants except where derivative order or structural budgets are explicitly fixed. Unspecified sufficient thresholds remain symbolic.
+
+\textbf{Logarithmic factors.} \AtlasInlineMath{\Lambda=1+\log(2+\kappa)+\log(2+\beta\Delta/\varepsilon^2)+\log(2+\kappa^2\sigma^2/\varepsilon^2)}. The exact-interface special case sets \AtlasInlineMath{\sigma=0}.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2610.00229v2}{[1]} Definitions3.1-3.3; Theorem3.4; Corollary3.5; Theorem3.6
+
+Localized fresh-gradient unrestricted randomized fixed-budget complexity and no-localization obstruction.
+
+Exact source uses a fixed Markov kernel, conditional unbiasedness/variance, all finite dimensions and no sample reuse. Source C1 is the upper constant, C is the statistical refinement scale; atlas typo merged them. New names C\_up and B\_noise,2 repair only notation. The unlocalized infinity theorem is dimension-uniform, not an assertion of unsolvability of every fixed finite instance.
+
+The fixed worst-case call budget, conditional feedback law, unrestricted query domain, and inner-initialization cost have been checked.
+
+\needspace{4\baselineskip}\subsection{B2 - separate primal chain, local testing and dual-localization hard families}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\textbf{Algorithm-scope qualification.} The verified source theorem allows arbitrary randomized adaptive algorithms. Domain, output, dimension, and fixed-budget conditions remain those of the specification and region.
+
+\AtlasMath{c(A_{\mathrm{det}}+B_{\mathrm{noise},1}+B_{\mathrm{noise},2}+I_G)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2610.00229v2}{[1]}
+
+\textbf{Conditions.} Every condition in the eight-axis specification and associated regime must hold jointly. Sufficient constants from different theorems are not assumed identical.
+
+\textbf{Dimension conditions.} The finite hard-instance dimension may grow with the candidate call budget. The same-order lower bound is not claimed in fixed small dimension.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{N.}
+
+\AtlasMath{c(A_{\mathrm{det}}+B_{\mathrm{noise},1}+B_{\mathrm{noise},2}+I_G)}
+\textbf{Constants.} Use the source theorem’s universal constants except where derivative order or structural budgets are explicitly fixed. Unspecified sufficient thresholds remain symbolic.
+
+\textbf{Logarithmic factors.} None.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2610.00229v2}{[1]} Definitions3.1-3.3; Theorem3.4; Corollary3.5; Theorem3.6
+
+Localized fresh-gradient unrestricted randomized fixed-budget complexity and no-localization obstruction.
+
+Exact source uses a fixed Markov kernel, conditional unbiasedness/variance, all finite dimensions and no sample reuse. Source C1 is the upper constant, C is the statistical refinement scale; atlas typo merged them. New names C\_up and B\_noise,2 repair only notation. The unlocalized infinity theorem is dimension-uniform, not an assertion of unsolvability of every fixed finite instance.
+
+The fixed worst-case call budget, conditional feedback law, unrestricted query domain, and inner-initialization cost have been checked.
+
+\needspace{7\baselineskip}\section{References}
+[1] Wendao Wu; Haihan Zhang; Chenheng Zhang; Yanyi Li; Chunyuan Zheng; Cong Fang; Haoxuan Li; Zhouchen Lin. Sharp Fresh-Gradient Complexity of Nonconvex--Strongly-Concave Minimax Optimization. 2026. arXiv:2610.00229v2, 2026-10-19.
+
+\url{https://arxiv.org/pdf/2610.00229v2}
+
+\end{document}

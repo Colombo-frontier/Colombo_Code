@@ -1,0 +1,1275 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "BL_SPEC_det_derivative",
+  "title": "Strongly convex lower levels: exact gradients and derivative–vector products.",
+  "summary": "Solve the bilevel problem $\\min_x\\Phi(x)$, where $\\Phi(x)=f(x,y^*(x))$ and $y^*(x)=\\operatorname*{argmin}_y g(x,y)$ is the unique global lower-level solution. The upper- and lower-level variables are $x\\in\\mathbb{R}^{d_x}$ and $y\\in\\mathbb{R}^{d_y}$. Seek approximate stationarity of the reduced objective under the declared criterion and guarantee; assumptions on $f$, $g$, and $\\Phi$ are specified separately.",
+  "primary_domain": "bilevel",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "bilevel"
+    },
+    {
+      "facet": "goal",
+      "value": "reduced_stationarity"
+    },
+    {
+      "facet": "structure",
+      "value": "lower_strong_convexity"
+    },
+    {
+      "facet": "feedback",
+      "value": "derivative_vector"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    },
+    {
+      "facet": "resource",
+      "value": "joint_budget"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "bilevel"
+      ],
+      "formulation_code": "BL.UNIQUE_REDUCED",
+      "formulation": "\\min_{x\\in\\mathbb R^{d_x}}\\Phi(x),\\quad\\Phi(x)=f(x,y^*(x)),\\quad y^*(x)=\\operatorname*{argmin}_{y\\in\\mathbb R^{d_y}}g(x,y)",
+      "solution_goal": "stationary_reduced_gradient",
+      "protocol_ref": null,
+      "code": "BL.UNIQUE_REDUCED",
+      "description_paragraphs": [
+        "Solve the bilevel problem $\\min_x\\Phi(x)$, where $\\Phi(x)=f(x,y^*(x))$ and $y^*(x)=\\operatorname*{argmin}_y g(x,y)$ is the unique global lower-level solution. The upper- and lower-level variables are $x\\in\\mathbb{R}^{d_x}$ and $y\\in\\mathbb{R}^{d_y}$. Seek approximate stationarity of the reduced objective under the declared criterion and guarantee; assumptions on $f$, $g$, and $\\Phi$ are specified separately."
+      ]
+    },
+    "model": {
+      "instance": "The instance is $(f,g,x_0,y_0,v_0)$, with fixed public budgets and arbitrary finite positive dimensions.",
+      "assumptions": [
+        {
+          "subject_id": "BL_SPEC_det_derivative_obj_0e522b8df2",
+          "property_code": "strong_convexity",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_1c76f8a554"
+          ],
+          "norm_ref": "BL_SPEC_det_derivative_nor_7f314934e6",
+          "parameter_refs": [
+            "BL_SPEC_det_derivative_p_efcabfd5ff"
+          ],
+          "scope": "global",
+          "description": "For every fixed upper-level point $x$, the function $g(x,·)$ is $\\mu$-strongly convex on all of $\\mathbb R^{d_y}$. Convexity in $x$ or joint convexity in $(x,y)$ is not assumed."
+        },
+        {
+          "subject_id": "BL_SPEC_det_derivative_obj_6d43e3abad",
+          "property_code": "gradient_lipschitz",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_8afdcb2af8",
+            "BL_SPEC_det_derivative_var_1c76f8a554"
+          ],
+          "norm_ref": "BL_SPEC_det_derivative_nor_7f314934e6",
+          "parameter_refs": [
+            "BL_SPEC_det_derivative_p_1cc24df773"
+          ],
+          "scope": "global",
+          "description": "The population full gradient $\\nabla f=(\\nabla_x f,\\nabla_y f)$ is globally $L$-Lipschitz in $(x,y)$. Convexity of $f$ is not required."
+        },
+        {
+          "subject_id": "BL_SPEC_det_derivative_obj_0e522b8df2",
+          "property_code": "gradient_lipschitz",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_8afdcb2af8",
+            "BL_SPEC_det_derivative_var_1c76f8a554"
+          ],
+          "norm_ref": "BL_SPEC_det_derivative_nor_7f314934e6",
+          "parameter_refs": [
+            "BL_SPEC_det_derivative_p_1cc24df773"
+          ],
+          "scope": "global",
+          "description": "The population full gradient $\\nabla g=(\\nabla_x g,\\nabla_y g)$ is globally $L$-Lipschitz in $(x,y)$."
+        },
+        {
+          "subject_id": "BL_SPEC_det_derivative_obj_a529775d08",
+          "property_code": "initial_gap",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_8afdcb2af8"
+          ],
+          "norm_ref": "BL_SPEC_det_derivative_nor_7f314934e6",
+          "parameter_refs": [
+            "BL_SPEC_det_derivative_p_25c351f23c"
+          ],
+          "scope": "initialization",
+          "description": "The objective $\\Phi$ has a finite lower bound. A point $x_0$ is given and satisfies $\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$. Convexity or existence of a global minimizer of $\\Phi$ is not required."
+        },
+        {
+          "subject_id": "BL_SPEC_det_derivative_obj_69f0ce3854",
+          "property_code": "initial_distance",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_8afdcb2af8",
+            "BL_SPEC_det_derivative_var_1c76f8a554"
+          ],
+          "norm_ref": "BL_SPEC_det_derivative_nor_7f314934e6",
+          "parameter_refs": [
+            "BL_SPEC_det_derivative_p_d1944ba8d6"
+          ],
+          "scope": "initialization",
+          "description": "The initial point $(x_0,y_0)$ and bound $\\|y_0-y^*(x_0)\\|\\le R_0$ are given. This is an initialization budget, not a requirement that the oracle return $y^*$."
+        },
+        {
+          "subject_id": "BL_SPEC_det_derivative_obj_6d43e3abad",
+          "property_code": "value_lipschitz",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_8afdcb2af8",
+            "BL_SPEC_det_derivative_var_1c76f8a554"
+          ],
+          "norm_ref": "BL_SPEC_det_derivative_nor_7f314934e6",
+          "parameter_refs": [
+            "BL_SPEC_det_derivative_p_f080454647"
+          ],
+          "scope": "global",
+          "description": "The function $f$ is jointly $M$-Lipschitz in the full variable $(x,y)$. This budget is recorded as $C_f=M$ and therefore bounds the full gradient. It is stronger than a bound only on $f_y$."
+        },
+        {
+          "subject_id": "BL_SPEC_det_derivative_obj_0e522b8df2",
+          "property_code": "hessian_or_cross_derivative_lipschitz",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_8afdcb2af8",
+            "BL_SPEC_det_derivative_var_1c76f8a554"
+          ],
+          "norm_ref": "BL_SPEC_det_derivative_nor_7f314934e6",
+          "parameter_refs": [
+            "BL_SPEC_det_derivative_p_4d6a751b71",
+            "BL_SPEC_det_derivative_p_f8aca8e3db"
+          ],
+          "scope": "global",
+          "description": "The function $g_{xy}$ is $\\tau$-Lipschitz in $(x,y)$, and $g_{yy}$ is $\\rho$-Lipschitz. These budgets are specified separately and are not combined into an unspecified common constant."
+        },
+        {
+          "subject_id": "BL_SPEC_det_derivative_obj_e7c66ec5f6",
+          "property_code": "initial_inverse_certificate",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_8afdcb2af8",
+            "BL_SPEC_det_derivative_var_1c76f8a554"
+          ],
+          "norm_ref": "BL_SPEC_det_derivative_nor_7f314934e6",
+          "parameter_refs": [
+            "BL_SPEC_det_derivative_p_918863dffd"
+          ],
+          "scope": "initialization",
+          "description": "AID initialization also supplies $v_0$ and fixes the public upper bound $D_0\\ge\\|y_0-y^*(x_0)\\|^2+\\|v_0-v^*(x_0)\\|^2$. It does not supply $v^*$ or a free inverse matrix."
+        }
+      ],
+      "parameter_domain_description": "Each regularity assumption applies to its stated variable blocks, full Euclidean query domain, and norm. Samplewise conditions apply only when explicitly declared.",
+      "code": "model_declared",
+      "outer_geometry": "The reduced objective may be nonconvex. Its differentiability or local Lipschitz regularity is specified by the model and accuracy measure.",
+      "public_fixed_budgets": [
+        {
+          "symbol": "tau",
+          "definition": "Global joint Lipschitz constant of $g_{xy}$; fixed, finite, and public.",
+          "quantification": "These budgets are uniform over the instance class and fixed before the accuracy is chosen. Unexpanded rate constants may depend on them."
+        },
+        {
+          "symbol": "D_0",
+          "definition": "Uniform upper bound on the sum of AID's initial squared lower-level distance and squared distance to the initial adjoint linear-system solution.",
+          "quantification": "Fixed and finite, with hidden constants allowed to depend on it. Calls needed to obtain the initial point are charged separately."
+        }
+      ],
+      "description_paragraphs": [
+        "For every fixed upper-level point $x$, $g(x,\\cdot)$ is $\\mu$-strongly convex on all of $\\mathbb{R}^{d_y}$. Convexity in $x$ or joint convexity in $(x,y)$ is not required.",
+        "The population full gradient $\\nabla f=(\\nabla_x f,\\nabla_y f)$ is globally $L$-Lipschitz in $(x,y)$. Convexity of $f$ is not required.",
+        "The population full gradient $\\nabla g=(\\nabla_x g,\\nabla_y g)$ is globally $L$-Lipschitz in $(x,y)$.",
+        "The objective $\\Phi$ has a finite lower bound. A point $x_0$ is given and satisfies $\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$. Convexity or existence of a global minimizer of $\\Phi$ is not required.",
+        "The initial point $(x_0,y_0)$ and bound $\\|y_0-y^*(x_0)\\|\\le R_0$ are given. This is an initialization budget, not a requirement that the oracle return $y^*$.",
+        "The function $f$ is jointly $M$-Lipschitz in the full variable $(x,y)$. This budget is recorded as $C_f=M$ and therefore bounds the full gradient. It is stronger than a bound only on $f_y$.",
+        "The function $g_{xy}$ is $\\tau$-Lipschitz in $(x,y)$, and $g_{yy}$ is $\\rho$-Lipschitz. These budgets are specified separately and are not combined into an unspecified common constant.",
+        "AID initialization also supplies $v_0$ and fixes the public upper bound $D_0\\ge\\|y_0-y^*(x_0)\\|^2+\\|v_0-v^*(x_0)\\|^2$. It does not supply $v^*$ or a free inverse matrix.",
+        "The adjoint solution is $v^*(x)=g_{yy}(x,y^*(x))^{-1}\\nabla_yf(x,y^*(x))$. It is a hidden mathematical object; the input supplies the initial value $v_0$ and error bound $D_0$."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "BL_SPEC_det_derivative_ora_17d58ed3ac",
+          "operation_code": "partial_gradient",
+          "target_object": "BL_SPEC_det_derivative_obj_6d43e3abad",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_8afdcb2af8",
+            "BL_SPEC_det_derivative_var_1c76f8a554"
+          ],
+          "query_signature": "(x,y,b),\\ b\\in\\{x,y\\}",
+          "response_signature": "\\nabla_bf(x,y)",
+          "derivative_reference_object": "BL_SPEC_det_derivative_obj_6d43e3abad",
+          "derivative_order": 1,
+          "order_convention": "derivative with respect to the explicitly listed primitive object/blocks; never order of Φ unless Φ is named",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Return an exact population partial derivative or derivative action on the specified vector."
+          },
+          "domain_ref": "BL_SPEC_det_derivative_dom_1a38e31707",
+          "coupling": "none",
+          "index_control": "none",
+          "access_schedule": "adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "BL_SPEC_det_derivative_res_999a824f5c"
+        },
+        {
+          "id": "BL_SPEC_det_derivative_ora_f8d8a7f2e6",
+          "operation_code": "partial_gradient",
+          "target_object": "BL_SPEC_det_derivative_obj_0e522b8df2",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_8afdcb2af8",
+            "BL_SPEC_det_derivative_var_1c76f8a554"
+          ],
+          "query_signature": "(x,y,b),\\ b\\in\\{x,y\\}",
+          "response_signature": "\\nabla_bg(x,y)",
+          "derivative_reference_object": "BL_SPEC_det_derivative_obj_0e522b8df2",
+          "derivative_order": 1,
+          "order_convention": "derivative with respect to the explicitly listed primitive object/blocks; never order of Φ unless Φ is named",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Return an exact population partial derivative or derivative action on the specified vector."
+          },
+          "domain_ref": "BL_SPEC_det_derivative_dom_1a38e31707",
+          "coupling": "none",
+          "index_control": "none",
+          "access_schedule": "adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "BL_SPEC_det_derivative_res_9d4c9bd3b2"
+        },
+        {
+          "id": "BL_SPEC_det_derivative_ora_9ee6f89f08",
+          "operation_code": "cross_derivative_vector_product",
+          "target_object": "BL_SPEC_det_derivative_obj_0e522b8df2",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_8afdcb2af8",
+            "BL_SPEC_det_derivative_var_1c76f8a554"
+          ],
+          "query_signature": "(x,y,v),\\ v\\in\\mathbb R^{d_y}",
+          "response_signature": "g_{xy}(x,y)v",
+          "derivative_reference_object": "BL_SPEC_det_derivative_obj_0e522b8df2",
+          "derivative_order": 2,
+          "order_convention": "derivative with respect to the explicitly listed primitive object/blocks; never order of Φ unless Φ is named",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Return an exact population partial derivative or derivative action on the specified vector."
+          },
+          "domain_ref": "BL_SPEC_det_derivative_dom_e76fd8b2ef",
+          "coupling": "none",
+          "index_control": "none",
+          "access_schedule": "adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "BL_SPEC_det_derivative_res_0000ee08ef"
+        },
+        {
+          "id": "BL_SPEC_det_derivative_ora_feb77dd477",
+          "operation_code": "hessian_vector_product",
+          "target_object": "BL_SPEC_det_derivative_obj_0e522b8df2",
+          "variable_blocks": [
+            "BL_SPEC_det_derivative_var_1c76f8a554"
+          ],
+          "query_signature": "(x,y,v),\\ v\\in\\mathbb R^{d_y}",
+          "response_signature": "g_{yy}(x,y)v",
+          "derivative_reference_object": "BL_SPEC_det_derivative_obj_0e522b8df2",
+          "derivative_order": 2,
+          "order_convention": "derivative with respect to the explicitly listed primitive object/blocks; never order of Φ unless Φ is named",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Return an exact population partial derivative or derivative action on the specified vector."
+          },
+          "domain_ref": "BL_SPEC_det_derivative_dom_e76fd8b2ef",
+          "coupling": "none",
+          "index_control": "none",
+          "access_schedule": "adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "BL_SPEC_det_derivative_res_7cda4b51de"
+        }
+      ],
+      "public_inputs": [
+        "Variable dimensions.",
+        "The quantitative regularity and noise budgets explicitly declared in this specification.",
+        "Initial point and initialization bound specified here",
+        "The target accuracy ε."
+      ],
+      "hidden_objects": [
+        "BL_SPEC_det_derivative_obj_6d43e3abad",
+        "BL_SPEC_det_derivative_obj_0e522b8df2",
+        "BL_SPEC_det_derivative_obj_69f0ce3854",
+        "BL_SPEC_det_derivative_obj_a529775d08"
+      ],
+      "auxiliary_interfaces": [],
+      "protocol_ref": null,
+      "query_domain_description": "Upper and lower points may be selected adaptively throughout their declared Euclidean spaces. Each operation specifies direction dimensions and control over samples or indices.",
+      "code": "oracle_declared",
+      "native_source_protocol": "Ji et al. (2021), PDF page 5, Definition 2, counts partial gradients separately. Every HVP in AID's internal conjugate-gradient iterations and every cross JVP is included in the four-dimensional resource vector.",
+      "description_paragraphs": [
+        "Public inputs include dimension, target accuracy, quantitative model budgets, and initial points. Functions, lower-level optimizers, and the reduced objective are hidden.",
+        "Upper-level partial gradient: $(x,y,b)\\mapsto\\nabla_b f(x,y)$, where $b\\in\\{x,y\\}$. Selecting the x-block returns a vector in $\\mathbb R^{d_x}$; selecting the y-block returns a vector in $\\mathbb R^{d_y}$. One call returns only the selected block.",
+        "The lower-level partial gradient is $(x,y,b)\\mapsto\\nabla_b g(x,y)$, with block selection and output space as specified above.",
+        "Cross-derivative–vector products take the form $(x,y,v)\\mapsto g_{xy}(x,y)v\\in\\mathbb R^{d_x}$, where $v\\in\\mathbb R^{d_y}$.",
+        "Hessian-vector product: $(x,y,v)\\mapsto g_{yy}(x,y)v\\in\\mathbb R^{d_y}$, where $v\\in\\mathbb R^{d_y}$.",
+        "All four response types are exact, and query points and directions may be adaptive. Every Hessian–vector product used by internal conjugate gradients is charged. Exact lower-level solutions and matrix inverses are not oracle primitives."
+      ]
+    },
+    "output": {
+      "object_type": "outer point x_hat",
+      "domain_ref": "BL_SPEC_det_derivative_dom_22d54b1300",
+      "feasibility": "x_hat∈R^{d_x}; inner solution not required as output",
+      "allowed_postprocessing": "arbitrary measurable output, including a uniformly chosen iterate",
+      "certificate_requirement": "accuracy in mathematical expectation/norm; no computed certificate required",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "Output one outer point $\\widehat{x}\\in\\mathbb{R}^{d_x}$. An inner solution, function value, or computable accuracy certificate is not required. Arbitrary admissible postprocessing and unqueried outputs are allowed."
+      ]
+    },
+    "metric": {
+      "base_expression": "\\|\\nabla\\Phi(\\widehat x)\\|_2^2",
+      "normalization": "The tolerance is on the gradient-norm scale. This contract requires $\\mathbb E\\|\\nabla\\Phi\\|^2\\le\\epsilon^2$.",
+      "reference_object": "BL_SPEC_det_derivative_obj_a529775d08",
+      "nonnegativity": "nonnegative",
+      "finiteness_conditions": "Guaranteed by the model and the associated differentiability result, not inferred from an oracle-order label alone.",
+      "comparator_ref": null,
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "The base error is $\\|\\nabla\\Phi(\\widehat{x})\\|_2^2$. The tolerance $\\varepsilon$ is always expressed on the gradient-norm scale. The mean-square requirement is equivalent to the RMS gradient being at most this tolerance.",
+        "In this unconstrained model with a strongly convex lower level, $\\nabla\\Phi(x)=\\nabla_x f(x,y^*)-g_{xy}(x,y^*)g_{yy}(x,y^*)^{-1}\\nabla_y f(x,y^*)$, where $g_{xy}=\\mathrm{D}_y\\nabla_x g$ and $g_{yy}=\\mathrm{D}_y\\nabla_y g$, and $y^*$ denotes $y^*(x)$. The identity defines the hypergradient without granting additional query access."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "N_grad_f",
+          "unit": "oracle responses",
+          "description": "partial/full primitive f gradients as operation declares"
+        },
+        {
+          "code": "N_grad_g",
+          "unit": "oracle responses",
+          "description": "partial/full primitive g gradients as operation declares"
+        },
+        {
+          "code": "N_JVP",
+          "unit": "oracle responses",
+          "description": "g_{xy} vector products"
+        },
+        {
+          "code": "N_HVP",
+          "unit": "oracle responses",
+          "description": "g_{yy} vector products"
+        }
+      ],
+      "budget_semantics": "fixed worst-case total number of calls on every execution",
+      "cost_rules": [
+        {
+          "id": "BL_SPEC_det_derivative_res_999a824f5c",
+          "operation_refs": [
+            "BL_SPEC_det_derivative_ora_17d58ed3ac"
+          ],
+          "cost": {
+            "N_grad_f": 1
+          }
+        },
+        {
+          "id": "BL_SPEC_det_derivative_res_9d4c9bd3b2",
+          "operation_refs": [
+            "BL_SPEC_det_derivative_ora_f8d8a7f2e6"
+          ],
+          "cost": {
+            "N_grad_g": 1
+          }
+        },
+        {
+          "id": "BL_SPEC_det_derivative_res_0000ee08ef",
+          "operation_refs": [
+            "BL_SPEC_det_derivative_ora_9ee6f89f08"
+          ],
+          "cost": {
+            "N_JVP": 1
+          }
+        },
+        {
+          "id": "BL_SPEC_det_derivative_res_7cda4b51de",
+          "operation_refs": [
+            "BL_SPEC_det_derivative_ora_feb77dd477"
+          ],
+          "cost": {
+            "N_HVP": 1
+          }
+        }
+      ],
+      "scalarization": "Retain the four-dimensional feasible resource vector (N_grad_f, N_grad_g, N_JVP, N_HVP). Each partial gradient, JVP, or HVP costs one unit in its own coordinate. Solving an entire internal linear system is not a single primitive call.",
+      "setup_cost": "Initialization oracle calls count toward the total. A finite initialization bound is an instance-class assumption, not free access to an inner solver.",
+      "online_cost": "all queries counted",
+      "amortization_scope": "one solve at prescribed ε",
+      "precision_model": "Exact real arithmetic is assumed; the stochastic oracle has the stated noise. Bit complexity, memory, and arithmetic cost are not tracked.",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "Retain joint budget $(N_{\\nabla f},N_{\\nabla g},N_J,N_H)$ for f partial gradients, g partial gradients, cross-derivative products, and Hessian-vector products. Each response increments its corresponding coordinate; two partial gradients cost two calls.",
+        "Initialization oracle calls count toward the total. A finite initialization bound is an instance-class assumption, not free access to an inner solver.",
+        "The budget is a fixed worst-case cap on every execution path; every actual response within a batch is counted.",
+        "Internal processing of available information is free. Comparisons use the explicitly specified scalarization or resource vector. Different resources without given weights cannot be assembled coordinatewise from separate algorithms."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "arbitrary private randomness",
+        "adaptivity": "arbitrary measurable functions of past responses",
+        "restrictions": [],
+        "internal_computation": "This model counts only oracle resources. Arithmetic, linear algebra, and storage applied to received responses are free. Any extra hidden-function gradient, HVP/JVP, value, or inner-solve response must be obtained through a declared, charged operation.",
+        "parallelism": "sequential adaptive calls; simultaneous batch calls count separately",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "Algorithms may use private randomness. Queries, stopping, and postprocessing may be arbitrary measurable functions of the transcript. The output may be unqueried, a random selection of a past point, or an admissible average. No linear-span or zero-respecting restriction is imposed. Queries are sequential; each actual response in a parallel batch is charged separately. Arithmetic, linear algebra, and storage using received data are uncharged. Internal operations, memory, and communication are not tracked by this quantity."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "\\mathbb E\\|\\nabla\\Phi(\\widehat x)\\|_2^2\\le\\varepsilon^2",
+          "aggregation_order": [
+            "For each fixed admissible instance, first take expectation over oracle noise and private algorithmic randomness. The resulting guarantee must hold for every admissible instance."
+          ],
+          "quantifier_order": "A single algorithm family, depending only on public budgets and the interaction history, must meet the target for every admissible function and oracle law. Minimax quantifiers are infimum over algorithms followed by supremum over instances; the algorithm is not selected separately for each hidden instance.",
+          "randomness_sources": [
+            "Private algorithmic randomness, including random selection of the output iterate"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "terminal-output guarantee",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "The algorithm depends only on public inputs and the query transcript. For every admissible instance require $\\mathbb E\\|\\nabla\\Phi(\\widehat x)\\|_2^2\\le\\varepsilon^2$. The oracle is exact, so expectation is over private algorithmic randomness, including any random output-index selection. The query cap must hold on every execution path."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "fixed worst-case total number of calls on every execution",
+        "precision_model": "Exact real arithmetic is assumed; the stochastic oracle has the stated noise. Bit complexity, memory, and arithmetic cost are not tracked.",
+        "scalarization": "Retain the four-dimensional feasible resource vector (N_grad_f, N_grad_g, N_JVP, N_HVP). Each partial gradient, JVP, or HVP costs one unit in its own coordinate. Solving an entire internal linear system is not a single primitive call."
+      },
+      "alias_ids": [
+        "BL_SPEC_det_derivative"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "BL_SPEC_det_derivative_obj_6d43e3abad",
+        "type": "function",
+        "definition": "f: R^dx × R^dy → R",
+        "depends_on": [
+          "BL_SPEC_det_derivative_var_8afdcb2af8",
+          "BL_SPEC_det_derivative_var_1c76f8a554"
+        ],
+        "role_code": "upper_objective"
+      },
+      {
+        "id": "BL_SPEC_det_derivative_obj_0e522b8df2",
+        "type": "function",
+        "definition": "g: R^dx × R^dy → R",
+        "depends_on": [
+          "BL_SPEC_det_derivative_var_8afdcb2af8",
+          "BL_SPEC_det_derivative_var_1c76f8a554"
+        ],
+        "role_code": "lower_objective"
+      },
+      {
+        "id": "BL_SPEC_det_derivative_obj_69f0ce3854",
+        "type": "solution_map",
+        "definition": "y*(x) is the unique minimizer of g(x,·) over R^{d_y}",
+        "depends_on": [
+          "BL_SPEC_det_derivative_obj_0e522b8df2"
+        ],
+        "role_code": "declared_auxiliary_object"
+      },
+      {
+        "id": "BL_SPEC_det_derivative_obj_a529775d08",
+        "type": "reduced_objective",
+        "definition": "Phi(x)=f(x,y*(x)), the reduced upper objective",
+        "depends_on": [
+          "BL_SPEC_det_derivative_obj_6d43e3abad",
+          "BL_SPEC_det_derivative_obj_69f0ce3854"
+        ],
+        "role_code": "reduced_objective"
+      },
+      {
+        "id": "BL_SPEC_det_derivative_obj_e7c66ec5f6",
+        "type": "solution_map",
+        "definition": "v*(x)=[g_{yy}(x,y*(x))]^{-1} f_y(x,y*(x))",
+        "depends_on": [
+          "BL_SPEC_det_derivative_obj_6d43e3abad",
+          "BL_SPEC_det_derivative_obj_0e522b8df2",
+          "BL_SPEC_det_derivative_obj_69f0ce3854"
+        ],
+        "role_code": "adjoint_solution"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "BL_SPEC_det_derivative_var_8afdcb2af8",
+        "dimension": "d_x",
+        "space": "R^{d_x}",
+        "role": "The upper-level decision variable, which is the only required final output."
+      },
+      {
+        "id": "BL_SPEC_det_derivative_var_1c76f8a554",
+        "dimension": "d_y",
+        "space": "R^{d_y}",
+        "role": "Lower-level decision variable; distinct from convexity of the outer objective"
+      }
+    ],
+    "domains": [
+      {
+        "id": "BL_SPEC_det_derivative_dom_22d54b1300",
+        "definition": "R^{d_x}",
+        "roles": [
+          "outer_query",
+          "output"
+        ]
+      },
+      {
+        "id": "BL_SPEC_det_derivative_dom_dc14aabc63",
+        "definition": "R^{d_y}",
+        "roles": [
+          "inner_query"
+        ]
+      },
+      {
+        "id": "BL_SPEC_det_derivative_dom_1a38e31707",
+        "definition": "R^{d_x}×R^{d_y}",
+        "roles": [
+          "oracle_query"
+        ]
+      },
+      {
+        "id": "BL_SPEC_det_derivative_dom_e76fd8b2ef",
+        "definition": "R^{d_x} × R^{d_y} × R^{d_y}",
+        "roles": [
+          "oracle_query",
+          "product_direction"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "BL_SPEC_det_derivative_nor_7f314934e6",
+        "definition": "Euclidean norm; induced operator/tensor norm for derivatives"
+      }
+    ],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "BL_SPEC_det_derivative_p_0d1c5067b5",
+      "symbol": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_det_derivative_p_a136776370",
+      "symbol": "d_x",
+      "meaning": "Upper-level dimension",
+      "kind": "independent",
+      "domain": "Positive integer",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_det_derivative_p_dc5f6d3bad",
+      "symbol": "d_y",
+      "meaning": "Lower-level dimension",
+      "kind": "independent",
+      "domain": "Positive integer",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_det_derivative_p_1cc24df773",
+      "symbol": "L",
+      "meaning": "Common joint-variable Lipschitz upper bound for the complete gradients at both levels",
+      "kind": "independent",
+      "domain": "$L\\ge\\mu>0$",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_det_derivative_p_f080454647",
+      "symbol": "C_f",
+      "meaning": "The upper function’s Lipschitz budget in the entire joint variable, denoted M in the source.",
+      "kind": "independent",
+      "domain": "$C_f=M\\ge0$",
+      "public": true,
+      "definition": "$\\|\\nabla f(x,y)\\|\\le M=C_f$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_det_derivative_p_efcabfd5ff",
+      "symbol": "\\mu",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "kind": "independent",
+      "domain": "$\\mu>0$",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_det_derivative_p_f8aca8e3db",
+      "symbol": "\\rho",
+      "meaning": "Joint Lipschitz upper bound for the lower-variable Hessian block $g_{yy}$.",
+      "kind": "independent",
+      "domain": "$\\rho\\ge0$",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_det_derivative_p_25c351f23c",
+      "symbol": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "kind": "independent",
+      "domain": "$\\Delta\\ge0$",
+      "public": true,
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_det_derivative_p_d1944ba8d6",
+      "symbol": "R_0",
+      "meaning": "Public initial lower-level distance bound",
+      "kind": "independent",
+      "domain": "$R_0\\ge0$",
+      "public": true,
+      "definition": "$\\|y_0-y^*(x_0)\\|\\le R_0$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_det_derivative_p_37583d6939",
+      "symbol": "\\kappa",
+      "meaning": "Lower-level condition number",
+      "kind": "derived",
+      "domain": "$\\kappa\\ge1$",
+      "public": true,
+      "definition": "$\\kappa=L/\\mu$",
+      "dependencies": [
+        "BL_SPEC_det_derivative_p_1cc24df773",
+        "BL_SPEC_det_derivative_p_efcabfd5ff"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_det_derivative_p_4d6a751b71",
+      "symbol": "\\tau",
+      "meaning": "Joint-variable Lipschitz upper bound for the lower cross-Hessian block.",
+      "domain": "$\\tau\\ge0$",
+      "definition": null,
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_det_derivative_p_918863dffd",
+      "symbol": "D_0",
+      "meaning": "Public bound on the sum of the squared initial lower-level distance and squared adjoint-solution distance",
+      "domain": "$D_0\\ge0$",
+      "definition": "$\\|y_0-y^*(x_0)\\|^2+\\|v_0-v^*(x_0)\\|^2\\le D_0$",
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "x,y",
+      "meaning": "The upper- and lower-level variables.",
+      "domain": "$x\\in\\mathbb R^{d_x},y\\in\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,g",
+      "meaning": "The original upper- and lower-level real-valued functions.",
+      "domain": "$f,g:\\mathbb R^{d_x}\\times\\mathbb R^{d_y}\\to\\mathbb R$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat x,x_0,y_0",
+      "meaning": "Output outer point, public outer initial point, and public lower-level initial point",
+      "domain": "Each lies in its corresponding variable space.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Phi",
+      "meaning": "The reduced objective.",
+      "domain": "Defined in the task specification",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "y^*",
+      "meaning": "Mapping to the unique lower-level global minimizer",
+      "domain": "Constraints specified under TASK",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla,\\|\\cdot\\|",
+      "meaning": "Euclidean gradient and vector norm; matrix and higher-derivative norms are the induced Euclidean operator norms",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E,\\Pr,\\inf,\\sup",
+      "meaning": "Expectation, probability, infimum, and supremum, with aggregation order and randomness specified by the guarantee.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal O,\\Omega,\\Theta,\\widetilde{\\mathcal O}",
+      "meaning": "Asymptotic upper, lower, matching-order, and declared-logarithm upper bounds; fixed parameters are specified in each evidence record",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive absolute constants or functions of fixed budgets, with dependencies specified by the corresponding result",
+      "domain": "$0<c,C<\\infty$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_det_derivative_p_0d1c5067b5"
+    },
+    {
+      "symbol_latex": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_det_derivative_p_a136776370"
+    },
+    {
+      "symbol_latex": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_det_derivative_p_dc5f6d3bad"
+    },
+    {
+      "symbol_latex": "L",
+      "meaning": "Common joint-variable Lipschitz upper bound for the complete gradients at both levels",
+      "domain": "$L\\ge\\mu>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_det_derivative_p_1cc24df773"
+    },
+    {
+      "symbol_latex": "C_f",
+      "meaning": "The upper function’s Lipschitz budget in the entire joint variable, denoted M in the source.",
+      "domain": "$C_f=M\\ge0$",
+      "definition": "$\\|\\nabla f(x,y)\\|\\le M=C_f$",
+      "parameter_ref": "BL_SPEC_det_derivative_p_f080454647"
+    },
+    {
+      "symbol_latex": "\\mu",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "domain": "$\\mu>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_det_derivative_p_efcabfd5ff"
+    },
+    {
+      "symbol_latex": "\\rho",
+      "meaning": "Joint Lipschitz upper bound for the lower-variable Hessian block $g_{yy}$.",
+      "domain": "$\\rho\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_det_derivative_p_f8aca8e3db"
+    },
+    {
+      "symbol_latex": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "parameter_ref": "BL_SPEC_det_derivative_p_25c351f23c"
+    },
+    {
+      "symbol_latex": "R_0",
+      "meaning": "Public initial lower-level distance bound",
+      "domain": "$R_0\\ge0$",
+      "definition": "$\\|y_0-y^*(x_0)\\|\\le R_0$",
+      "parameter_ref": "BL_SPEC_det_derivative_p_d1944ba8d6"
+    },
+    {
+      "symbol_latex": "\\kappa",
+      "meaning": "Lower-level condition number",
+      "domain": "$\\kappa\\ge1$",
+      "definition": "$\\kappa=L/\\mu$",
+      "parameter_ref": "BL_SPEC_det_derivative_p_37583d6939"
+    },
+    {
+      "symbol_latex": "\\tau",
+      "meaning": "Joint-variable Lipschitz upper bound for the lower cross-Hessian block.",
+      "domain": "$\\tau\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_det_derivative_p_4d6a751b71"
+    },
+    {
+      "symbol_latex": "D_0",
+      "meaning": "Public bound on the sum of the squared initial lower-level distance and squared adjoint-solution distance",
+      "domain": "$D_0\\ge0$",
+      "definition": "$\\|y_0-y^*(x_0)\\|^2+\\|v_0-v^*(x_0)\\|^2\\le D_0$",
+      "parameter_ref": "BL_SPEC_det_derivative_p_918863dffd"
+    },
+    {
+      "symbol_latex": "g_{xy},g_{yy}",
+      "meaning": "Mixed lower-level Hessian block and lower-variable Hessian block",
+      "domain": "$g_{xy}\\in\\mathbb R^{d_x\\times d_y},g_{yy}\\in\\mathbb R^{d_y\\times d_y}$",
+      "definition": "$g_{xy}=\\mathrm D_y\\nabla_xg,\\quad g_{yy}=\\mathrm D_y\\nabla_yg$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "v",
+      "meaning": "The algorithm-selected direction for a derivative–vector query.",
+      "domain": "$v\\in\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "M",
+      "meaning": "Lipschitz budget used in the source for the joint upper-level function value",
+      "domain": "$M=C_f$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "v_0",
+      "meaning": "Public initial vector for the adjoint linear system",
+      "domain": "$v_0\\in\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "v^*",
+      "meaning": "Solution of the adjoint linear system at the exact lower-level solution",
+      "domain": "$v^*(x)\\in\\mathbb R^{d_y}$",
+      "definition": "$v^*(x)=g_{yy}(x,y^*(x))^{-1}\\nabla_yf(x,y^*(x))$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "K,x_k,R",
+      "meaning": "The outer iteration count, kth outer point, and independent uniform output index.",
+      "domain": "$K\\ge1,\\ 0\\le k<K,\\ R\\sim\\operatorname{Unif}\\{0,\\ldots,K-1\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\eta_{\\rm src}",
+      "meaning": "Squared-gradient tolerance from the source, renamed to distinguish it from this profile's norm tolerance",
+      "domain": "$\\eta_{\\rm src}=\\varepsilon^2$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal C(\\varepsilon),\\mathbf N,b,\\preceq",
+      "meaning": "Set of joint budgets attaining the tolerance, call vector, four-dimensional integer budget, and coordinatewise inequalities.",
+      "domain": "$\\mathbf N,b\\in\\mathbb N_0^4$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathfrak A_{\\rm spec},\\mathfrak A_\\varepsilon,\\mathcal A,I,\\mathcal O,\\omega",
+      "meaning": "The admissible algorithm class, its accuracy-achieving subclass, algorithm, instance, oracle law, and execution randomness define the quantifiers for the joint attainable set.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_{\\nabla f}",
+      "meaning": "Upper-level primitive-gradient responses, full or partial as specified by the interface.",
+      "domain": "A nonnegative integer. The resource section specifies the runtime-cost guarantee.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_{\\nabla g}",
+      "meaning": "Lower-level primitive-gradient responses, full or partial as specified by the interface.",
+      "domain": "A nonnegative integer. The resource section specifies the runtime-cost guarantee.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_J",
+      "meaning": "The number of lower cross-derivative–vector responses.",
+      "domain": "A nonnegative integer. The resource section specifies the runtime-cost guarantee.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_H",
+      "meaning": "Number of lower-level Hessian-vector product responses",
+      "domain": "A nonnegative integer. The resource section specifies the runtime-cost guarantee.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "L_\\Phi",
+      "meaning": "Effective reduced-gradient Lipschitz upper bound implied by the regularity budgets, used to bound iterations.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "BL_SPEC_det_derivative__main__q1",
+      "kind": "achievable_resource_set",
+      "expression": "\\begin{gathered}\\mathcal C(\\varepsilon)=\\{b\\in\\mathbb N_0^4:\\ \\exists\\mathcal A\\in\\mathfrak A_\\varepsilon,\\ \\forall(I,\\mathcal O,\\omega),\\ \\mathbf N_{\\mathcal A}\\preceq b\\},\\\\\\mathfrak A_\\varepsilon=\\{\\mathcal A\\in\\mathfrak A_{\\rm spec}:\\ \\forall(I,\\mathcal O),\\ \\mathbb E\\|\\nabla\\Phi_I(\\hat x_{\\mathcal A})\\|^2\\le\\varepsilon^2\\}.\\\\\\mathbf N=(N_{\\nabla f},N_{\\nabla g},N_J,N_H).\\end{gathered}",
+      "optimization_direction": "minimize resources subject to accuracy",
+      "units": "joint resource vector",
+      "budget_variables": [
+        "N_grad_f",
+        "N_grad_g",
+        "N_JVP",
+        "N_HVP"
+      ],
+      "tolerance_variables": [
+        "BL_SPEC_det_derivative_p_0d1c5067b5"
+      ],
+      "analysis_scope": "worst admissible instance and arbitrary finite dimension unless model fixes dimensions",
+      "tracked_parameters": [
+        "BL_SPEC_det_derivative_p_0d1c5067b5",
+        "BL_SPEC_det_derivative_p_37583d6939"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multi_resource_feasibility",
+      "nonnegativity": true,
+      "expression_latex": "\\begin{gathered}\\mathcal C(\\varepsilon)=\\{b\\in\\mathbb N_0^4:\\ \\exists\\mathcal A\\in\\mathfrak A_\\varepsilon,\\ \\forall(I,\\mathcal O,\\omega),\\ \\mathbf N_{\\mathcal A}\\preceq b\\},\\\\\\mathfrak A_\\varepsilon=\\{\\mathcal A\\in\\mathfrak A_{\\rm spec}:\\ \\forall(I,\\mathcal O),\\ \\mathbb E\\|\\nabla\\Phi_I(\\hat x_{\\mathcal A})\\|^2\\le\\varepsilon^2\\}.\\\\\\mathbf N=(N_{\\nabla f},N_{\\nabla g},N_J,N_H).\\end{gathered}",
+      "comparison_note": "The previous expression contained an unprovided inner-solve template resource. The corrected four-component vector is canonical; the previous value is preserved only in specification_review.changed_fields.",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": null,
+      "expression": null,
+      "mode": "multi_resource_feasibility",
+      "resource_projection_id": "resource_15a410db11"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "BL_SPEC_det_derivative__main__r1",
+      "specification_ref": "BL_SPEC_det_derivative",
+      "name": "Accuracy regime with fixed regularity budgets",
+      "predicate_text": "All model budgets and initialization conditions apply, together with $\\varepsilon>0$. The displayed asymptotic rate assumes fixed structural budgets and $\\varepsilon\\downarrow0$.",
+      "predicate": {
+        "predicate": {
+          "name": "BL_SPEC_det_derivative_REG_small_r2",
+          "args": [],
+          "description": "All model budgets and initialization conditions apply, together with $\\varepsilon>0$. The displayed asymptotic rate assumes fixed structural budgets and $\\varepsilon\\downarrow0$."
+        }
+      },
+      "parameter_refs": [
+        "BL_SPEC_det_derivative_p_0d1c5067b5",
+        "BL_SPEC_det_derivative_p_a136776370",
+        "BL_SPEC_det_derivative_p_dc5f6d3bad",
+        "BL_SPEC_det_derivative_p_efcabfd5ff",
+        "BL_SPEC_det_derivative_p_1cc24df773",
+        "BL_SPEC_det_derivative_p_f080454647",
+        "BL_SPEC_det_derivative_p_f8aca8e3db",
+        "BL_SPEC_det_derivative_p_25c351f23c",
+        "BL_SPEC_det_derivative_p_d1944ba8d6",
+        "BL_SPEC_det_derivative_p_37583d6939"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Universal constants remain symbolic. Each bound is used within its own parameter window."
+    },
+    {
+      "id": "BL_SPEC_det_derivative__main__r2",
+      "specification_ref": "BL_SPEC_det_derivative",
+      "name": "The complete declared parameter domain.",
+      "predicate_text": "The tolerance satisfies $\\varepsilon>0$, together with every structural and parameter constraint in the model. A theorem's small-accuracy threshold does not define the underlying mathematical instance class.",
+      "predicate": {
+        "cmp": {
+          "left": {
+            "parameter": "BL_SPEC_det_derivative_p_0d1c5067b5"
+          },
+          "op": "gt",
+          "right": 0
+        }
+      },
+      "parameter_refs": [
+        "BL_SPEC_det_derivative_p_0d1c5067b5",
+        "BL_SPEC_det_derivative_p_a136776370",
+        "BL_SPEC_det_derivative_p_dc5f6d3bad",
+        "BL_SPEC_det_derivative_p_efcabfd5ff",
+        "BL_SPEC_det_derivative_p_1cc24df773",
+        "BL_SPEC_det_derivative_p_f080454647",
+        "BL_SPEC_det_derivative_p_f8aca8e3db",
+        "BL_SPEC_det_derivative_p_25c351f23c",
+        "BL_SPEC_det_derivative_p_d1944ba8d6",
+        "BL_SPEC_det_derivative_p_37583d6939"
+      ],
+      "kind": "mathematical",
+      "endpoint_notes": "Universal constants remain symbolic. Each bound is used within its own parameter window."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "BL_SPEC_det_derivative__main__b1",
+      "direction": "achievable",
+      "direction_when_defined": "upper",
+      "claim_semantics": "achievable_joint_resource_point",
+      "formula_latex": "\\begin{aligned}N_{\\nabla f}&=\\mathcal O(\\kappa^3\\varepsilon^{-2}),&N_{\\nabla g}&=\\widetilde{\\mathcal O}(\\kappa^4\\varepsilon^{-2}),\\\\N_J&=\\mathcal O(\\kappa^3\\varepsilon^{-2}),&N_H&=\\widetilde{\\mathcal O}(\\kappa^{7/2}\\varepsilon^{-2}).\\end{aligned}",
+      "quantity_ref": "BL_SPEC_det_derivative__main__q1",
+      "region_refs": [
+        "BL_SPEC_det_derivative__main__r1"
+      ],
+      "method": "AID-BiO",
+      "algorithm_or_hard_family": "AID-BiO",
+      "algorithm_class_scope": "{\"adaptivity\": \"arbitrary measurable functions of past responses\", \"internal_computation\": \"unlimited uncharged internal computation; oracle/sample complexity only\", \"parallelism\": \"sequential adaptive calls; simultaneous batch calls count separately\", \"randomization\": \"arbitrary private randomness\", \"restrictions\": []}",
+      "resource_costs": {
+        "N_grad_f": "O(κ³ε^-2)",
+        "N_grad_g": "\\widetilde O(\\kappa^4\\varepsilon^{-2})",
+        "N_JVP": "O(κ³ε^-2)",
+        "N_HVP": "\\widetilde O(\\kappa^{7/2}\\varepsilon^{-2})"
+      },
+      "parameter_choice": "as cited theorem; any reparameterization is recorded under derivation",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "BL_SRC_ji2021"
+      ],
+      "evidence_refs": [
+        "BL_SPEC_det_derivative__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "BL_SPEC_det_derivative__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "Valid in every finite dimension of the declared model. No additional dimension dependence is introduced beyond the formula.",
+        "guarantee_mapping": "The source uses $\\varepsilon$ for squared-gradient tolerance. Write it as $\\eta_{\\rm src}$ to avoid ambiguity and substitute $\\eta_{\\rm src}=\\varepsilon^2$ consistently. The target here is $\\mathbb E\\|\\nabla\\Phi(\\widehat x)\\|^2\\le\\varepsilon^2$.",
+        "oracle_mapping": "Exact partial gradients of f and g, $g_{xy}$ vector products, and $g_{yy}$ vector products are available. Partial gradients are charged according to the declared atomic operations. Every HVP in internal conjugate-gradient iterations is charged; no inner-solve primitive is provided.",
+        "output_mapping": "After the prescribed K iterations, draw $R\\in\\{0,\\ldots,K-1\\}$ independently and uniformly, and return $\\widehat x=x_R$. The bound on the average squared gradient becomes an expected squared-gradient bound for this output; the same guarantee is not claimed for the last iterate.",
+        "resource_mapping": "Charged resources are $N_{\\nabla f}$, $N_{\\nabla g}$, $N_J$, and $N_H$, with a fixed worst-case cap per execution. All four bounds hold simultaneously. There is no free inner-solve operation; its primitive queries count in the corresponding coordinates."
+      },
+      "hidden_constants": "In the accuracy asymptotics, hold regularity, initialization, and noise budgets fixed while allowing dimension to vary. Condition-number powers are reported as in the source theorem and do not certify joint optimality. The source inner-loop lengths contain condition-number logarithms, so the relevant resource coordinates retain soft-O notation.",
+      "hidden_logs": [
+        "With other budgets fixed and condition number tracked, lower-level gradient iterations and CG length may contain $\\log(2+\\kappa)$. For fixed $\\kappa$, every resource coordinate has accuracy dependence $\\mathcal O(\\varepsilon^{-2})$."
+      ],
+      "derivation": "Apply $\\eta_{\\rm src}=\\varepsilon^2$ simultaneously to all resource coordinates of the same source algorithm and return an independently uniformly selected outer iterate. This preserves the four-dimensional joint budget. The source average bound is $(64L_\\Phi\\Delta+5D_0)/K$. Choose positive integer K at least its numerator divided by $\\varepsilon^2$. The effective reduced-gradient Lipschitz bound $L_\\Phi$ is controlled by the model's regularity budgets.",
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Accuracy regime with fixed regularity budgets",
+      "predicate": {
+        "predicate": {
+          "name": "BL_SPEC_det_derivative_REG_small_r2",
+          "args": [],
+          "description": "All model budgets and initialization conditions apply, together with $\\varepsilon>0$. The displayed asymptotic rate assumes fixed structural budgets and $\\varepsilon\\downarrow0$."
+        }
+      },
+      "predicate_text": "All model budgets and initialization conditions apply, together with $\\varepsilon>0$. The displayed asymptotic rate assumes fixed structural budgets and $\\varepsilon\\downarrow0$.",
+      "parameter_refs": [
+        "BL_SPEC_det_derivative_p_0d1c5067b5",
+        "BL_SPEC_det_derivative_p_a136776370",
+        "BL_SPEC_det_derivative_p_dc5f6d3bad",
+        "BL_SPEC_det_derivative_p_efcabfd5ff",
+        "BL_SPEC_det_derivative_p_1cc24df773",
+        "BL_SPEC_det_derivative_p_f080454647",
+        "BL_SPEC_det_derivative_p_f8aca8e3db",
+        "BL_SPEC_det_derivative_p_25c351f23c",
+        "BL_SPEC_det_derivative_p_d1944ba8d6",
+        "BL_SPEC_det_derivative_p_37583d6939"
+      ],
+      "source_region_ref": "BL_SPEC_det_derivative__main__r1",
+      "status": {
+        "code": "joint_budget_unclosed",
+        "label": "Joint budget unresolved",
+        "missing_sides": [
+          "necessary_resource_constraint"
+        ]
+      },
+      "comparison_id": "BL_SPEC_det_derivative__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "BL_SPEC_det_derivative__main__q1",
+      "resource_projection_id": "resource_15a410db11",
+      "regime_id": "BL_SPEC_det_derivative__main__r1",
+      "bracket": {
+        "upper_refs": [],
+        "lower_refs": [],
+        "comparison_ref": "BL_SPEC_det_derivative__main__c1",
+        "quantity_ref": "BL_SPEC_det_derivative__main__q1",
+        "comparison_mode": "multi_resource_feasibility",
+        "resource_projection": null,
+        "ratio_or_gap": "All four coordinates belong to one algorithm’s joint budget. No comparable necessary-resource constraint is currently available, so an upper-to-lower ratio is undefined.",
+        "envelopes": {
+          "upper": null,
+          "lower": null
+        },
+        "dispatch": [],
+        "claim_guards": {},
+        "envelope_certificate": "Each included claim has verified statement and applicability; mathematics review is separately labeled. No numerical threshold inferred from asymptotics.",
+        "achievable_refs": [
+          "BL_SPEC_det_derivative__main__b1"
+        ],
+        "necessary_refs": [],
+        "resource_projection_description": null
+      },
+      "comparison_key": {
+        "setting_id": "BL_SPEC_det_derivative",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "BL_SPEC_det_derivative__main__q1",
+        "resource_projection_id": "resource_15a410db11",
+        "regime_id": "BL_SPEC_det_derivative__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "BL_SPEC_det_derivative__main__e1",
+      "source_ref": "BL_SRC_ji2021",
+      "locator": {
+        "theorem": "Theorem 1",
+        "section": "3–4.1",
+        "pdf_pages": [
+          5,
+          6
+        ],
+        "printed_pages": [],
+        "equations": [],
+        "supplement": "Appendix E, equations (21), (30), (31)"
+      },
+      "supports": "The source gives convergence of the average squared gradient and simultaneous call bounds for four primitive operations. After renaming its tolerance, use the squared-variable substitution in this profile.",
+      "notes": []
+    }
+  ],
+  "references": [
+    {
+      "id": "BL_SRC_ji2021",
+      "authors": [
+        "Kaiyi Ji",
+        "Junjie Yang",
+        "Yingbin Liang"
+      ],
+      "title": "Bilevel Optimization: Convergence Analysis and Enhanced Design",
+      "year": 2021,
+      "version": "PMLR 139, ICML 2021",
+      "url": "https://proceedings.mlr.press/v139/ji21c/ji21c.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "BL_SPEC_det_derivative",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "necessary_resource_constraint"
+    ],
+    "special_statuses": [
+      {
+        "code": "joint_budget_unclosed",
+        "label": "Joint budget unresolved"
+      }
+    ],
+    "comparison_count": 1,
+    "status_counts": {
+      "joint_budget_unclosed": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "BL_SPEC_det_derivative__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "281ebb1096925595f9ebc2799f7ba0c130d1125ac29660b93366f554471fd425",
+    "source_order": 27,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

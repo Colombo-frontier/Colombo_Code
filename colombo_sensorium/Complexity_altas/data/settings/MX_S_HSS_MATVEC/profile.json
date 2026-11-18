@@ -1,0 +1,733 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "MX_S_HSS_MATVEC",
+  "title": "Hierarchically semi-separable matrix approximation from two-sided matrix-vector products",
+  "summary": "Approximate an arbitrary real square matrix by a matrix with nested HSS bases, measured against the best HSS squared Frobenius residual.",
+  "primary_domain": "matrix_computation",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "matrix_computation"
+    },
+    {
+      "facet": "goal",
+      "value": "hss_frobenius_error"
+    },
+    {
+      "facet": "structure",
+      "value": "hss_nested_bases"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_two_sided_matvec"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_adaptive"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    },
+    {
+      "facet": "resource",
+      "value": "matvec_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "matrix_computation"
+      ],
+      "code": "hierarchically_semiseparable_approximation",
+      "formulation_code": "hierarchically_semiseparable_approximation",
+      "formulation": "\\min_{B\\in\\operatorname{HSS}(L,k)} \\|A-B\\|_F^2",
+      "solution_goal": "expected_relative_squared_frobenius_error",
+      "protocol_ref": null,
+      "description_paragraphs": [
+        "Return a quasi-optimal HSS approximation relative to the best HSS matrix on the same tree.",
+        "$$\n\\min_{B\\in\\operatorname{HSS}(L,k)} \\|A-B\\|_F^2\n$$"
+      ]
+    },
+    "model": {
+      "code": "model_declared",
+      "instance": "Arbitrary real $N\\times N$ input with public HSS comparison class.",
+      "assumptions": [],
+      "parameter_domain_description": "Public integers $L,k\\ge1$, $N=2^{L+1}k$, and target factor $\\gamma\\ge c_{\\mathrm{HSS}}L$ for a sufficiently large universal constant. The fixed binary partition has $2k$ indices per leaf.",
+      "description_paragraphs": [
+        "The hidden input $A$ is arbitrary. The comparison class uses a perfect binary tree with $2^L$ leaves of size $2k$.",
+        "An HSS matrix has a telescoping factorization $B^{(L+1)}=B$, $B^{(1)}=D^{(0)}$, and $B^{(\\ell+1)}=U^{(\\ell)}B^{(\\ell)}(V^{(\\ell)})^{\\mathsf T}+D^{(\\ell)}$ for $\\ell=1,\\dots,L$.",
+        "At level $\\ell$, $U^{(\\ell)}$ and $V^{(\\ell)}$ have $2^\\ell$ diagonal blocks of shape $2k\\times k$ with orthonormal columns. $D^{(\\ell)}$ has $2^\\ell$ arbitrary diagonal blocks of shape $2k\\times2k$. The base $D^{(0)}$ is arbitrary $2k\\times2k$."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "MX_S_HSS_MATVEC_ora_ba9bc15a30",
+          "operation_code": "matrix_right_matvec",
+          "target_object": "MX_S_HSS_MATVEC_obj_520812e23f",
+          "variable_blocks": [
+            "MX_S_HSS_MATVEC_var_83c97e94ab"
+          ],
+          "query_signature": "$v\\in\\mathbb R^N$",
+          "response_signature": "$Av\\in\\mathbb R^N$",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "Native linear action of the specified matrix; no derivative order of an unregistered scalar function is implied.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact real vector responses, with no observation noise or rounding."
+          },
+          "domain_ref": "MX_S_HSS_MATVEC_dom_query",
+          "coupling": "Both directions access the same fixed matrix.",
+          "index_control": "The algorithm selects direction and vector.",
+          "access_schedule": "Offline and adaptive.",
+          "accuracy_argument": null,
+          "cost_rule_ref": "MX_S_HSS_MATVEC_cost_0"
+        },
+        {
+          "id": "MX_S_HSS_MATVEC_ora_2c648b282d",
+          "operation_code": "matrix_left_matvec",
+          "target_object": "MX_S_HSS_MATVEC_obj_520812e23f",
+          "variable_blocks": [
+            "MX_S_HSS_MATVEC_var_83c97e94ab"
+          ],
+          "query_signature": "$u\\in\\mathbb R^N$",
+          "response_signature": "$A^{\\mathsf T}u\\in\\mathbb R^N$",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "Native linear action of the specified matrix; no derivative order of an unregistered scalar function is implied.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact real vector responses, with no observation noise or rounding."
+          },
+          "domain_ref": "MX_S_HSS_MATVEC_dom_query",
+          "coupling": "Both directions access the same fixed matrix.",
+          "index_control": "The algorithm selects direction and vector.",
+          "access_schedule": "Offline and adaptive.",
+          "accuracy_argument": null,
+          "cost_rule_ref": "MX_S_HSS_MATVEC_cost_1"
+        }
+      ],
+      "public_inputs": [
+        "N",
+        "L",
+        "k",
+        "gamma",
+        "partition tree"
+      ],
+      "hidden_objects": [
+        "MX_S_HSS_MATVEC_obj_520812e23f"
+      ],
+      "auxiliary_interfaces": [],
+      "protocol_ref": null,
+      "query_domain_description": "Either direction is available at any vector in $\\mathbb R^N$.",
+      "code": "oracle_declared",
+      "description_zh": "With $A$ hidden, query any $v,u\\in\\mathbb R^N$ to receive exact $Av$ or exact $A^{\\mathsf T}u$ in separate calls. No independent entry or submatrix access is supplied.",
+      "description_paragraphs": [
+        "With $A$ hidden, query any $v,u\\in\\mathbb R^N$ to receive exact $Av$ or exact $A^{\\mathsf T}u$ in separate calls. No independent entry or submatrix access is supplied."
+      ]
+    },
+    "output": {
+      "object_type": "hss_matrix",
+      "domain_ref": "MX_S_HSS_MATVEC_dom_output",
+      "feasibility": "Return $\\widehat B\\in\\operatorname{HSS}(L,k)$.",
+      "allowed_postprocessing": "Any measurable transcript-based postprocessing. Factors may encode the returned matrix.",
+      "certificate_requirement": "No separate certificate.",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "Return $\\widehat B\\in\\operatorname{HSS}(L,k)$, for instance by returning its valid telescoping factors."
+      ]
+    },
+    "metric": {
+      "code": "metric_declared",
+      "base_expression": "\\|A-\\widehat B\\|_F^2",
+      "nonnegativity": true,
+      "reference_object": "MX_S_HSS_MATVEC_obj_520812e23f",
+      "normalization": "Compare to the best squared Frobenius residual in the same HSS class. A zero benchmark requires zero error.",
+      "finiteness_conditions": "Finite matrices and the stated finite expected loss guarantee.",
+      "comparator_ref": "MX_S_HSS_MATVEC_com",
+      "description_paragraphs": [
+        "Use $\\|A-\\widehat B\\|_F^2$ against the minimum squared residual for HSS on the same tree."
+      ]
+    },
+    "resource": {
+      "code": "resource_declared",
+      "components": [
+        {
+          "code": "N_right",
+          "unit": "query",
+          "description": "One exact right product"
+        },
+        {
+          "code": "N_left",
+          "unit": "query",
+          "description": "One exact transpose product"
+        }
+      ],
+      "cost_rules": [
+        {
+          "id": "MX_S_HSS_MATVEC_cost_0",
+          "operation_refs": [
+            "MX_S_HSS_MATVEC_ora_ba9bc15a30"
+          ],
+          "cost": {
+            "N_right": 1
+          }
+        },
+        {
+          "id": "MX_S_HSS_MATVEC_cost_1",
+          "operation_refs": [
+            "MX_S_HSS_MATVEC_ora_2c648b282d"
+          ],
+          "cost": {
+            "N_left": 1
+          }
+        }
+      ],
+      "budget_semantics": "Fixed total cap over inputs and private seeds.",
+      "scalarization": "$N_{\\rm right}+N_{\\rm left}$.",
+      "setup_cost": "Public tree, arithmetic, and storage are uncharged.",
+      "online_cost": "not_applicable",
+      "amortization_scope": "One hidden input.",
+      "precision_model": "Exact real responses.",
+      "description_paragraphs": [
+        "Count $N_{\\rm right}+N_{\\rm left}$. Block queries are charged by column."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Randomized adaptive two-sided queries",
+      "algorithms": {
+        "randomization": "Private seed allowed and independent of the fixed matrix.",
+        "adaptivity": "Arbitrary measurable sequential queries depending on prior responses.",
+        "internal_computation": "Exact internal arithmetic, memory, and search are uncharged.",
+        "restrictions": [
+          "No extra restriction on span, computational complexity, or query directions."
+        ],
+        "parallelism": "A block product costs one query per column.",
+        "description_paragraphs": [
+          "The algorithm may use private randomness and the full transcript. The native response is a full vector. Internal computation is uncharged."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "\\mathbb{E}_{\\omega}\\|A-\\widehat B\\|_F^2\\le\\gamma\\min_{B\\in\\operatorname{HSS}(L,k)}\\|A-B\\|_F^2",
+          "quantifier_order": "Choose a single algorithm from public inputs; the expected squared residual guarantee holds for every fixed input A.",
+          "aggregation_order": [
+            "Expectation over the private seed for the fixed input; the optimal comparison residual uses the same A."
+          ],
+          "randomness_sources": [
+            "Algorithm private seed."
+          ],
+          "description_paragraphs": [
+            "The expected squared error is required separately for every admissible input.",
+            "$$\n\\mathbb{E}_{\\omega}\\|A-\\widehat B\\|_F^2\\le\\gamma\\min_{B\\in\\operatorname{HSS}(L,k)}\\|A-B\\|_F^2\n$$",
+            "If the minimum is zero, the returned matrix must equal the input almost surely."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "description": "Fixed total query cap for every input and private seed."
+      },
+      "alias_ids": [],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "MX_S_HSS_MATVEC_obj_520812e23f",
+        "type": "matrix",
+        "role_code": "hidden_input_matrix",
+        "definition": "Fixed arbitrary real $N\\times N$ matrix.",
+        "depends_on": []
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "MX_S_HSS_MATVEC_var_83c97e94ab",
+        "dimension": "N",
+        "space": "$\\mathbb R^N$"
+      },
+      {
+        "id": "MX_S_HSS_MATVEC_var_c8bd3b74e9",
+        "dimension": "d",
+        "space": "$\\mathbb R^d$, the left-query vector space"
+      }
+    ],
+    "domains": [
+      {
+        "id": "MX_S_HSS_MATVEC_dom_query",
+        "definition": "$\\mathbb R^N$",
+        "roles": [
+          "query"
+        ]
+      },
+      {
+        "id": "MX_S_HSS_MATVEC_dom_output",
+        "definition": "$\\operatorname{HSS}(L,k)$ on the public perfect binary tree.",
+        "roles": [
+          "output"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "MX_S_HSS_MATVEC_norm_F",
+        "definition": "Frobenius norm $\\|A\\|_F^2=\\sum_{ij}A_{ij}^2$."
+      }
+    ],
+    "protocols": [],
+    "comparators": [
+      {
+        "id": "MX_S_HSS_MATVEC_com",
+        "definition": "$\\min_{B\\in\\operatorname{HSS}(L,k)}\\|A-B\\|_F^2$."
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "MX_S_HSS_MATVEC_p_L",
+      "symbol": "L",
+      "meaning": "Number of HSS compression levels.",
+      "kind": "independent",
+      "domain": "$L\\in\\mathbb N_{\\ge1}$",
+      "public": true,
+      "definition": "$L\\in\\mathbb N_{\\ge1}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_HSS_MATVEC_p_k",
+      "symbol": "k",
+      "meaning": "Basis width in each block.",
+      "kind": "independent",
+      "domain": "$k\\in\\mathbb N_{\\ge1}$",
+      "public": true,
+      "definition": "$k\\in\\mathbb N_{\\ge1}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_HSS_MATVEC_p_N",
+      "symbol": "N",
+      "meaning": "Dimension of the square matrix.",
+      "kind": "independent",
+      "domain": "$N=2^{L+1}k$",
+      "public": true,
+      "definition": "$N=2^{L+1}k$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_HSS_MATVEC_p_gamma",
+      "symbol": "\\gamma",
+      "meaning": "Target factor on the expected squared residual.",
+      "kind": "independent",
+      "domain": "$\\gamma\\ge1$",
+      "public": true,
+      "definition": "$\\gamma\\ge1$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "L",
+      "meaning": "Number of HSS compression levels.",
+      "domain": "$L\\in\\mathbb N_{\\ge1}$",
+      "definition": "$L\\in\\mathbb N_{\\ge1}$",
+      "parameter_ref": "MX_S_HSS_MATVEC_p_L"
+    },
+    {
+      "symbol_latex": "k",
+      "meaning": "Basis width in each block.",
+      "domain": "$k\\in\\mathbb N_{\\ge1}$",
+      "definition": "$k\\in\\mathbb N_{\\ge1}$",
+      "parameter_ref": "MX_S_HSS_MATVEC_p_k"
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Dimension of the square matrix.",
+      "domain": "$N=2^{L+1}k$",
+      "definition": "$N=2^{L+1}k$",
+      "parameter_ref": "MX_S_HSS_MATVEC_p_N"
+    },
+    {
+      "symbol_latex": "\\gamma",
+      "meaning": "Target factor on the expected squared residual.",
+      "domain": "$\\gamma\\ge1$",
+      "definition": "$\\gamma\\ge1$",
+      "parameter_ref": "MX_S_HSS_MATVEC_p_gamma"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "MX_S_HSS_MATVEC__main__q1",
+      "kind": "target_accuracy_cost",
+      "expression": "Q^\\star(N,L,k,\\gamma)",
+      "optimization_direction": "minimize",
+      "units": "matrix-vector queries",
+      "budget_variables": [],
+      "tolerance_variables": [
+        "MX_S_HSS_MATVEC_p_gamma"
+      ],
+      "analysis_scope": "The minimum fixed total query cap of a randomized adaptive algorithm satisfying the guarantee on every input.",
+      "tracked_parameters": [
+        "MX_S_HSS_MATVEC_p_L",
+        "MX_S_HSS_MATVEC_p_k",
+        "MX_S_HSS_MATVEC_p_N",
+        "MX_S_HSS_MATVEC_p_gamma"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "Q^\\star(N,L,k,\\gamma)",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Sum of charged right and transpose matvecs.",
+      "expression": "N_right + N_left",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "MX_S_HSS_MATVEC_proj"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "MX_S_HSS_MATVEC__main__r1",
+      "specification_ref": "MX_S_HSS_MATVEC",
+      "name": "Perfect binary tree and quasi-optimal factor",
+      "predicate_text": "Public integers $L,k\\ge1$, $N=2^{L+1}k$, and target factor $\\gamma\\ge c_{\\mathrm{HSS}}L$ for a sufficiently large universal constant. The fixed binary partition has $2k$ indices per leaf.",
+      "predicate": {
+        "predicate": {
+          "name": "hss_balanced_factor_window",
+          "args": [
+            "MX_S_HSS_MATVEC_p_L",
+            "MX_S_HSS_MATVEC_p_k",
+            "MX_S_HSS_MATVEC_p_N",
+            "MX_S_HSS_MATVEC_p_gamma"
+          ],
+          "description": "Public integers $L,k\\ge1$, $N=2^{L+1}k$, and target factor $\\gamma\\ge c_{\\mathrm{HSS}}L$ for a sufficiently large universal constant. The fixed binary partition has $2k$ indices per leaf."
+        }
+      },
+      "parameter_refs": [
+        "MX_S_HSS_MATVEC_p_L",
+        "MX_S_HSS_MATVEC_p_k",
+        "MX_S_HSS_MATVEC_p_N",
+        "MX_S_HSS_MATVEC_p_gamma"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "The upper theorem uses a symbolic universal constant in the factor."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "MX_S_HSS_MATVEC_b_upper",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "O(kL)",
+      "quantity_ref": "MX_S_HSS_MATVEC__main__q1",
+      "region_refs": [
+        "MX_S_HSS_MATVEC__main__r1"
+      ],
+      "method": "Algorithm 4.1 with sketch size s=5k",
+      "algorithm_or_hard_family": "Algorithm 4.1 with sketch size s=5k",
+      "algorithm_class_scope": "Adaptive exact two-sided matvecs.",
+      "resource_costs": {
+        "sum_matvecs": "O(kL)"
+      },
+      "parameter_choice": "Use the displayed parameter window.",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_AMSEL_HSS_2025"
+      ],
+      "evidence_refs": [
+        "MX_S_HSS_MATVEC_e_u"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_HSS_MATVEC__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Public integers $L,k\\ge1$, $N=2^{L+1}k$, and target factor $\\gamma\\ge c_{\\mathrm{HSS}}L$ for a sufficiently large universal constant. The fixed binary partition has $2k$ indices per leaf."
+        ],
+        "oracle_mapping": "With $A$ hidden, query any $v,u\\in\\mathbb R^N$ to receive exact $Av$ or exact $A^{\\mathsf T}u$ in separate calls. No independent entry or submatrix access is supplied.",
+        "guarantee_mapping": "\\mathbb{E}_{\\omega}\\|A-\\widehat B\\|_F^2\\le\\gamma\\min_{B\\in\\operatorname{HSS}(L,k)}\\|A-B\\|_F^2",
+        "resource_mapping": "Sum of left and right single-vector responses.",
+        "output_mapping": "Return $\\widehat B\\in\\operatorname{HSS}(L,k)$."
+      },
+      "hidden_constants": "Universal.",
+      "hidden_logs": [],
+      "derivation": null,
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": []
+    },
+    {
+      "id": "MX_S_HSS_MATVEC_b_lower",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\Omega(k)",
+      "quantity_ref": "MX_S_HSS_MATVEC__main__q1",
+      "region_refs": [
+        "MX_S_HSS_MATVEC__main__r1"
+      ],
+      "method": "Exact recovery of an arbitrary Gaussian diagonal leaf",
+      "algorithm_or_hard_family": "Exact recovery of an arbitrary Gaussian diagonal leaf",
+      "algorithm_class_scope": "Adaptive exact two-sided matvecs.",
+      "resource_costs": {
+        "sum_matvecs": "\\Omega(k)"
+      },
+      "parameter_choice": "Use the displayed parameter window.",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_AMSEL_HSS_2025"
+      ],
+      "evidence_refs": [
+        "MX_S_HSS_MATVEC_e_l"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_HSS_MATVEC__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Public integers $L,k\\ge1$, $N=2^{L+1}k$, and target factor $\\gamma\\ge c_{\\mathrm{HSS}}L$ for a sufficiently large universal constant. The fixed binary partition has $2k$ indices per leaf."
+        ],
+        "oracle_mapping": "With $A$ hidden, query any $v,u\\in\\mathbb R^N$ to receive exact $Av$ or exact $A^{\\mathsf T}u$ in separate calls. No independent entry or submatrix access is supplied.",
+        "guarantee_mapping": "\\mathbb{E}_{\\omega}\\|A-\\widehat B\\|_F^2\\le\\gamma\\min_{B\\in\\operatorname{HSS}(L,k)}\\|A-B\\|_F^2",
+        "resource_mapping": "Sum of left and right single-vector responses.",
+        "output_mapping": "Return $\\widehat B\\in\\operatorname{HSS}(L,k)$."
+      },
+      "hidden_constants": "Universal.",
+      "hidden_logs": [],
+      "derivation": null,
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "MX_S_HSS_MATVEC_proof_leaf"
+      ],
+      "lower_algorithm_scope": "Every randomized adaptive algorithm with the stated exact response and fixed cap.",
+      "lower_scope_type": "all_admissible_algorithms"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Perfect binary tree and quasi-optimal factor",
+      "predicate": {
+        "predicate": {
+          "name": "hss_balanced_factor_window",
+          "args": [
+            "MX_S_HSS_MATVEC_p_L",
+            "MX_S_HSS_MATVEC_p_k",
+            "MX_S_HSS_MATVEC_p_N",
+            "MX_S_HSS_MATVEC_p_gamma"
+          ],
+          "description": "Public integers $L,k\\ge1$, $N=2^{L+1}k$, and target factor $\\gamma\\ge c_{\\mathrm{HSS}}L$ for a sufficiently large universal constant. The fixed binary partition has $2k$ indices per leaf."
+        }
+      },
+      "predicate_text": "Public integers $L,k\\ge1$, $N=2^{L+1}k$, and target factor $\\gamma\\ge c_{\\mathrm{HSS}}L$ for a sufficiently large universal constant. The fixed binary partition has $2k$ indices per leaf.",
+      "parameter_refs": [
+        "MX_S_HSS_MATVEC_p_L",
+        "MX_S_HSS_MATVEC_p_k",
+        "MX_S_HSS_MATVEC_p_N",
+        "MX_S_HSS_MATVEC_p_gamma"
+      ],
+      "source_region_ref": "MX_S_HSS_MATVEC__main__r1",
+      "status": {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap",
+        "missing_sides": []
+      },
+      "comparison_id": "MX_S_HSS_MATVEC__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_HSS_MATVEC__main__q1",
+      "resource_projection_id": "MX_S_HSS_MATVEC_proj",
+      "regime_id": "MX_S_HSS_MATVEC__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "MX_S_HSS_MATVEC_b_upper"
+        ],
+        "lower_refs": [
+          "MX_S_HSS_MATVEC_b_lower"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "comparison_ref": "MX_S_HSS_MATVEC__main__c1",
+        "quantity_ref": "MX_S_HSS_MATVEC__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_right + N_left",
+        "resource_projection_description": "Sum of charged right and transpose matvecs.",
+        "ratio_or_gap": "$O(L)=O(\\log(N/k))$",
+        "envelopes": {
+          "upper": {
+            "expression": "O(kL)",
+            "expression_latex": "O(kL)",
+            "claim_refs": [
+              "MX_S_HSS_MATVEC_b_upper"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "\\Omega(k)",
+            "expression_latex": "\\Omega(k)",
+            "claim_refs": [
+              "MX_S_HSS_MATVEC_b_lower"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "MX_S_HSS_MATVEC_b_upper",
+            "when_region_refs": [
+              "MX_S_HSS_MATVEC__main__r1"
+            ],
+            "meaning": "Use the greedy HSS algorithm with fresh sketches per level."
+          }
+        ],
+        "claim_guards": {
+          "MX_S_HSS_MATVEC_b_upper": [
+            {
+              "region_ref": "MX_S_HSS_MATVEC__main__r1",
+              "predicate_text": "Public integers $L,k\\ge1$, $N=2^{L+1}k$, and target factor $\\gamma\\ge c_{\\mathrm{HSS}}L$ for a sufficiently large universal constant. The fixed binary partition has $2k$ indices per leaf."
+            }
+          ],
+          "MX_S_HSS_MATVEC_b_lower": [
+            {
+              "region_ref": "MX_S_HSS_MATVEC__main__r1",
+              "predicate_text": "Public integers $L,k\\ge1$, $N=2^{L+1}k$, and target factor $\\gamma\\ge c_{\\mathrm{HSS}}L$ for a sufficiently large universal constant. The fixed binary partition has $2k$ indices per leaf."
+            }
+          ]
+        },
+        "envelope_certificate": "At most a logarithmic query gap in this window. A failure example for the greedy algorithm is not a lower bound against all algorithms."
+      },
+      "comparison_key": {
+        "setting_id": "MX_S_HSS_MATVEC",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_HSS_MATVEC__main__q1",
+        "resource_projection_id": "MX_S_HSS_MATVEC_proj",
+        "regime_id": "MX_S_HSS_MATVEC__main__r1"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "proof_id": "MX_S_HSS_MATVEC_proof_leaf",
+      "title": "Adaptive Gaussian leaf-block exact recovery",
+      "body": "Choose $A$ with only one nonzero diagonal leaf block of size $2k\\times2k$, with independent standard Gaussian entries. Such a matrix lies in $\\operatorname{HSS}(L,k)$ by using that block in $D^{(L)}$ and setting the other $D$ blocks to zero. The relative guarantee therefore requires exact recovery almost surely for every fixed $A$. Condition on the private seed. At each adaptive query, remove the known components in the spans of previous left and right queries. Conditional on the transcript, the unseen part of the leaf block on the two orthogonal complements is again a standard Gaussian matrix in transcript-measurable orthonormal coordinates. This follows inductively from orthogonal Gaussian conditioning: a fresh right or left query reveals one column or row of the current residual, and the remaining entries are independent. With fewer than $2k$ total queries both complements are nonzero, so the conditional law retains a continuous component and no transcript-measurable output can recover it exactly. Integrating over the seed and the Gaussian instance contradicts per-instance exact recovery.",
+      "scope": "This local proof uses the paper's HSS definition and covers every adaptive randomized exact two-sided query algorithm."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "MX_S_HSS_MATVEC_e_u",
+      "source_ref": "MX_SRC_AMSEL_HSS_2025",
+      "locator": {
+        "theorem": "Theorem 4.1 (arXiv PDF pp. 13–14)"
+      },
+      "supports": "Batching across levels by block nullification, fresh sketches, and the expected squared residual bound."
+    },
+    {
+      "id": "MX_S_HSS_MATVEC_e_l",
+      "source_ref": "MX_SRC_AMSEL_HSS_2025",
+      "locator": {
+        "theorem": "Definition 2.3 (arXiv v2), telescoping HSS factorization"
+      },
+      "supports": "Only the structural definition is used by the local leaf-block lower bound.",
+      "proof_refs": [
+        "MX_S_HSS_MATVEC_proof_leaf"
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "MX_SRC_AMSEL_HSS_2025",
+      "title": "Quasi-optimal hierarchically semi-separable matrix approximation",
+      "url": "https://arxiv.org/abs/2505.16937v2",
+      "authors": [
+        "Noah Amsel",
+        "Tyler Chen",
+        "Feyza Duman Keles",
+        "Diana Halikias",
+        "Cameron Musco",
+        "Christopher Musco",
+        "David Persson"
+      ],
+      "year": 2025,
+      "publication_status": "preprint"
+    }
+  ],
+  "relations": [
+    {
+      "target_setting_id": "MX_S_hodlr",
+      "relation": "different_output_class",
+      "notes": "HSS requires nested row and column bases; independent HODLR off-diagonal blocks use a different approximation benchmark."
+    }
+  ],
+  "aliases": [],
+  "review": {
+    "scientific_evidence": "Source-backed randomized upper bound and an exact-recovery lower bound derived from the source's leaf-block definition."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap present"
+      }
+    ],
+    "gap_classes": [
+      "logarithmic_gap"
+    ],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "logarithmic_gap": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "MX_S_HSS_MATVEC__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.1.0",
+    "source_snapshot": "scout-census-2024-2026",
+    "source_json_sha256": "a396ae0e6e2ea59df1f5209f06e249cf6756e6e8f4a6221bc1626078d61887f3",
+    "source_order": 420,
+    "transformations": [
+      "read_source",
+      "derive_adaptive_leaf_block_lower_bound"
+    ]
+  }
+}

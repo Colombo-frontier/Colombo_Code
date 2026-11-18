@@ -1,0 +1,712 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Smooth PL optimization with exact full-objective values\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}ZO\_\allowbreak{}E08}
+
+Single-objective optimization
+
+Minimize \AtlasInlineMath{f} globally over \AtlasInlineMath{\mathbb{R}^d} and return a point with small objective gap.
+
+\textbf{Status.} Other quantified gap present
+
+\textbf{TASK tags.} formulation: Global minimization; solution concept: Global minimization; task family: Single objective
+
+\textbf{MODEL tags.} convexity: Convexity not assumed; growth: Polyak lojasiewicz; smoothness: Lipschitz gradient; structure: No additional structure
+
+\textbf{ORACLE tags.} access order: Zeroth-order interface; interface family: Exact value; public information: Public inputs explicitly declared; query domain: Full space
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; randomization: Deterministic; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required
+
+\textbf{METRIC tags.} criterion: Objective gap
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; mode: Deterministic; mode: Probability
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Minimize \AtlasInlineMath{f} globally over \AtlasInlineMath{\mathbb{R}^d} and return a point with small objective gap.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+\AtlasInlineMath{f:\mathbb{R}^d\to\mathbb{R}} is differentiable and satisfies \AtlasInlineMath{\|\nabla f(x)-\nabla f(y)\|_2\le\beta\|x-y\|_2} for every \AtlasInlineMath{x,y\in\mathbb{R}^d}.
+
+\AtlasInlineMath{f_*:=\inf_{x\in\mathbb{R}^d}f(x)>-\infty}, and the given initial point \AtlasInlineMath{x_0} satisfies \AtlasInlineMath{f(x_0)-f_*\le\Delta}.
+
+The population objective satisfies the Polyak-Łojasiewicz condition \AtlasInlineMath{\|\nabla f(x)\|_2^2\ge2\mu(f(x)-f_*)} for every \AtlasInlineMath{x\in\mathbb{R}^d}; convexity is not required.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+At any finite query point \AtlasInlineMath{x} in \AtlasInlineMath{\mathbb{R}^d}, the oracle returns the single exact scalar \AtlasInlineMath{f(x)}. The reply is uniquely determined and contains no gradient, subgradient or derivative-vector product.
+
+The public inputs are \AtlasInlineMath{d}, \AtlasInlineMath{\beta}, \AtlasInlineMath{\mu}, \AtlasInlineMath{\Delta}, \AtlasInlineMath{x_0}, \AtlasInlineMath{\varepsilon}, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return \AtlasInlineMath{\widehat{x}\in \mathbb{R}^d}. The output may be an unqueried point, an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The base loss is \AtlasInlineMath{\ell(I,x)=f(x)-f_*}, where \AtlasInlineMath{f_*=\inf_{u\in \mathbb{R}^d}f(u)}. This nonnegative loss is evaluated at the output, with tolerance \AtlasInlineMath{\varepsilon}.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Each scalar function value or noisy observation costs \AtlasInlineMath{1} call. Every location in a multipoint finite difference, every initialization query, and every reference observation is charged.
+
+Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+\needspace{4\baselineskip}\subsubsection{Deterministic}
+Only deterministic strategies are allowed. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.
+
+Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately.
+
+After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. The requirement \AtlasInlineMath{\ell(I,\widehat{x})\le \varepsilon} holds deterministically for each instance.
+
+Oracle cost uses a deterministic worst-case budget: \AtlasInlineMath{N\le T} on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path.
+
+\needspace{4\baselineskip}\subsubsection{Randomized}
+Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.
+
+Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately.
+
+After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. The error requirement is \AtlasInlineMath{\Pr(\ell(I,\widehat{x})\le \varepsilon)\ge2/3}.
+
+Probability is over the algorithm's random seed only.
+
+Oracle cost uses a deterministic worst-case budget: \AtlasInlineMath{N\le T} on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path.
+
+\textbf{Output qualification.} Random selection among previously queried points is permitted, subject to the declared success guarantee.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{d}: Dimension of the variable space \textbf{Domain:} \AtlasInlineMath{d\in\mathbb{N},\ d\ge1}.
+
+\AtlasInlineMath{\beta}: Public upper bound on the gradient Lipschitz constant \textbf{Domain:} \AtlasInlineMath{\beta>0}.
+
+The object, norm and domain are fixed by the specific inequalities in this profile's model.
+
+\AtlasInlineMath{\mu}: PL constant \textbf{Domain:} \AtlasInlineMath{\mu>0}.
+
+\AtlasInlineMath{\|\nabla f(x)\|_2^2\ge2\mu(f(x)-f_*)}
+
+\AtlasInlineMath{\Delta}: Known upper bound on the initial objective gap \textbf{Domain:} \AtlasInlineMath{\Delta\ge0}.
+
+\AtlasInlineMath{f(x_0)-\inf_{x\in\mathbb{R}^d}f(x)\le\Delta}
+
+\AtlasInlineMath{x_0}: Known initial point \textbf{Domain:} \AtlasInlineMath{x_0\in\mathbb{R}^d}.
+
+\AtlasInlineMath{\varepsilon}: Error target; norm and squared-norm criteria use different thresholds \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{\kappa}: Ratio of the known smoothness and strong-convexity bounds \textbf{Domain:} \AtlasInlineMath{\kappa\ge1}.
+
+\AtlasInlineMath{\kappa=\beta/\mu}
+
+\AtlasInlineMath{c_\varepsilon}: Relative-accuracy constant in the finite-sum hard construction \textbf{Domain:} \AtlasInlineMath{c_\varepsilon>0}.
+
+Determined by the applicable theorem conditions; retain a symbolic threshold when no numerical value is supplied.
+
+\AtlasInlineMath{C_{\mathrm{dim}}}: Dimension constant in the finite-sum hard construction \textbf{Domain:} \AtlasInlineMath{C_{\mathrm{dim}}>0}.
+
+Determined by the applicable theorem conditions; retain a symbolic threshold when no numerical value is supplied.
+
+\AtlasInlineMath{Q_\Delta}: Normalized ratio of the initial objective gap to the target accuracy \textbf{Domain:} \AtlasInlineMath{Q_\Delta\ge0}.
+
+\AtlasInlineMath{Q_\Delta=2\Delta/\varepsilon}
+
+\AtlasInlineMath{x,y,u}: Function arguments and dummy variables in the formulas \textbf{Domain:} \AtlasInlineMath{x,y,u\in\mathbb{R}^d}; spherical domains are embedded in \AtlasInlineMath{\mathbb{R}^{d+1}}.
+
+Admissible ranges are specified separately by the task, model and oracle in this profile.
+
+\AtlasInlineMath{\widehat{x}}: Final algorithm output \textbf{Domain:} \AtlasInlineMath{\mathbb{R}^d}.
+
+\AtlasInlineMath{I}: Complete problem instance \textbf{Domain:} \AtlasInlineMath{I\in\mathcal{I}}.
+
+Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.
+
+\AtlasInlineMath{\mathcal{I}}: Admissible instance class determined by the eight specification fields in this profile \textbf{Domain:} Instances satisfying the public parameter bounds.
+
+\AtlasInlineMath{\mathcal{A}}: Algorithm or strategy \textbf{Domain:} Measurable adaptive strategies allowed in this profile.
+
+The algorithm is selected before the hidden instance.
+
+\AtlasInlineMath{\ell}: Base loss or residual \textbf{Domain:} \AtlasInlineMath{\ell:\mathcal{I}\times\mathcal{X}_{\mathrm{out}}\to[0,+\infty]}.
+
+The exact formula appears in this profile's performance-criterion section.
+
+\AtlasInlineMath{\mathbb{E},\Pr}: Expectation and probability \textbf{Domain:} Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee.
+
+Fix the instance first; aggregate cost and error separately.
+
+\AtlasInlineMath{\inf,\sup}: Infimum and supremum \textbf{Domain:} Evaluated only over the variable sets explicitly specified in the formula.
+
+In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.
+
+\AtlasInlineMath{\|\cdot\|_2,\langle\cdot,\cdot\rangle}: Euclidean norm and inner product \textbf{Domain:} \AtlasInlineMath{\|x\|_2=\sqrt{\langle x,x\rangle}}.
+
+\AtlasInlineMath{\langle x,y\rangle=x^\top y}
+
+\AtlasInlineMath{B_p(c,R)}: Closed norm ball \textbf{Domain:} \AtlasInlineMath{p\in[1,\infty],\ R\ge0}.
+
+\AtlasInlineMath{B_p(c,R)=\{x:\|x-c\|_p\le R\}}; \AtlasInlineMath{B_2} denotes the Euclidean ball.
+
+\AtlasInlineMath{N,T}: Actual call count and declared budget \textbf{Domain:} \AtlasInlineMath{N,T\in\mathbb{N}_0}.
+
+A fixed budget bounds every execution path; the Markov specification uses an expected budget.
+
+\AtlasInlineMath{O,\Omega,\Theta,\widetilde{O}}: Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms \textbf{Domain:} Within the joint parameter window specified for each complexity regime.
+
+Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.
+
+\AtlasInlineMath{c,C,c_\alpha,C_\alpha}: Positive constant in a proof or asymptotic bound \textbf{Domain:} \AtlasInlineMath{0<c,C,c_\alpha,C_\alpha<\infty}.
+
+Unsubscripted constants have the dependencies stated in the bound; constants subscripted by \AtlasInlineMath{\alpha} may depend only on the fixed smoothness order.
+
+\AtlasInlineMath{\log,\log_+,e}: Natural logarithm, truncated logarithm, and Euler's number \textbf{Domain:} \AtlasInlineMath{z>0}.
+
+\AtlasInlineMath{\log_+(z)=\max\{0,\log z\}}; \AtlasInlineMath{e=\exp(1)}, and \AtlasInlineMath{\log_2} denotes the base-two logarithm.
+
+\AtlasInlineMath{f,f_*}: Population objective and its optimal value \textbf{Domain:} \AtlasInlineMath{f:\mathcal{X}_{\mathrm{fun}}\to\mathbb{R}}.
+
+\AtlasInlineMath{f_*=\inf_{x\in \mathbb{R}^d}f(x)}.
+
+\AtlasInlineMath{\nabla f,\nabla^2f,D^jf}: Gradient, Hessian, and higher Fréchet derivatives \textbf{Domain:} \AtlasInlineMath{\nabla f\in\mathbb{R}^d,\ \nabla^2f\in\mathbb{R}^{d\times d}}; \AtlasInlineMath{D^jf} is a \AtlasInlineMath{j}-linear form.
+
+Used only at derivative orders and on regions where the model guarantees its existence.
+
+\AtlasInlineMath{\|\cdot\|_{\mathrm{op}}}: Euclidean induced matrix or tensor operator norm \textbf{Domain:} Take the supremum over Euclidean unit input vectors of the corresponding order.
+
+\AtlasInlineMath{\|T\|_{\mathrm{op}}=\sup_{\|u_1\|_2,\ldots,\|u_j\|_2\le1}|T[u_1,\ldots,u_j]|}
+
+\AtlasInlineMath{\mathcal{X}_{\mathrm{fun}},\mathcal{X}_{\mathrm{out}},\mathcal{X}}: Function domain, admissible output domain and optimization domain \textbf{Domain:} Each is the Euclidean space or subset explicitly specified in this profile.
+
+\AtlasInlineMath{\mathcal{X}_{\mathrm{out}}=\mathbb{R}^d} and \AtlasInlineMath{\mathcal{X}=\mathbb{R}^d}; the function domain is the region on which the model imposes regularity.
+
+\AtlasInlineMath{N^*}: Optimal worst-case oracle complexity satisfying the complete guarantee \textbf{Domain:} \AtlasInlineMath{N^*\in[0,+\infty]}.
+
+Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\textbf{View.} Deterministic
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one exact scalar function value
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q2 - target accuracy cost}
+\textbf{View.} Deterministic
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one exact scalar function value
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q3 - target accuracy cost}
+\textbf{View.} Randomized
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one exact scalar function value
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q4 - target accuracy cost}
+\textbf{View.} Randomized
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} one exact scalar function value
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsection{R1 - Parameter regime E08.R1}
+\textbf{Region.} \AtlasInlineMath{\kappa\ge3,\ 0<\varepsilon\le\min\{c_\varepsilon\Delta,\Delta/16\},\ d\ge C_{\rm dim}(1+\kappa\log(\Delta/\varepsilon))\log(2+\kappa\log(\Delta/\varepsilon))}.
+
+\textbf{Views.} Deterministic
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} one exact scalar function value
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B3, B4, B5
+
+\AtlasMath{\begin{cases}\Omega(\max\{\kappa\log(\Delta/\varepsilon),d\min(d,\sqrt\kappa,\sqrt{Q_\Delta})\}),&Q_\Delta<128^2,\\\Omega(\max\{\kappa\log(\Delta/\varepsilon),d\min(d,\sqrt\kappa,\sqrt{Q_\Delta}),d\log Q_\Delta\}),&Q_\Delta\ge128^2.\end{cases}}
+\textbf{Upper bound.} B1
+
+\AtlasMath{O(d\kappa\log(\Delta/\varepsilon))}
+\textbf{Gap or comparison.} 
+\AtlasMath{O\!\left(\frac{d\kappa\log(\Delta/\varepsilon)}{\max\{\kappa\log(\Delta/\varepsilon),\,d\min(d,\sqrt\kappa,\sqrt{Q_\Delta}),\,d\log Q_\Delta\ {\rm if}\ Q_\Delta\ge128^2\}}\right)}
+
+
+\needspace{4\baselineskip}\subsection{R2 - Parameter regime E08.NEW.zero\_region}
+\textbf{Region.} \AtlasInlineMath{\varepsilon\ge\Delta}.
+
+\textbf{Views.} Deterministic; Randomized
+
+\textbf{Quantity.} Q1; Q3
+
+\textbf{Resource.} one exact scalar function value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B7, B15
+
+\AtlasMath{0}
+\textbf{Upper bound.} B6, B14
+
+\AtlasMath{0}
+\needspace{4\baselineskip}\subsection{R3 - Parameter regime E08.NEW.kappa1\_small\_accuracy}
+\textbf{Region.} \AtlasInlineMath{\kappa=1,\ 0<\varepsilon\le\Delta/16}.
+
+\textbf{Views.} Deterministic; Randomized
+
+\textbf{Quantity.} Q1; Q3
+
+\textbf{Resource.} one exact scalar function value
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B3, B11
+
+\AtlasMath{\Omega(d\min\{d,\sqrt\kappa,\sqrt{Q_\Delta}\})}
+\textbf{Upper bound.} B8, B16
+
+\AtlasMath{d+1}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\needspace{4\baselineskip}\subsection{R4 - Parameter regime E08.R1}
+\textbf{Region.} \AtlasInlineMath{\kappa\ge3,\ 0<\varepsilon\le\min\{c_\varepsilon\Delta,\Delta/16\},\ d\ge C_{\rm dim}(1+\kappa\log(\Delta/\varepsilon))\log(2+\kappa\log(\Delta/\varepsilon))}.
+
+\textbf{Views.} Randomized
+
+\textbf{Quantity.} Q3
+
+\textbf{Resource.} one exact scalar function value
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B11, B12, B13
+
+\AtlasMath{\begin{cases}\Omega(\max\{\kappa\log(\Delta/\varepsilon),d\min(d,\sqrt\kappa,\sqrt{Q_\Delta})\}),&Q_\Delta<128^2,\\\Omega(\max\{\kappa\log(\Delta/\varepsilon),d\min(d,\sqrt\kappa,\sqrt{Q_\Delta}),d\log Q_\Delta\}),&Q_\Delta\ge128^2.\end{cases}}
+\textbf{Upper bound.} B9
+
+\AtlasMath{O(d\kappa\log(\Delta/\varepsilon))}
+\textbf{Gap or comparison.} 
+\AtlasMath{O\!\left(\frac{d\kappa\log(\Delta/\varepsilon)}{\max\{\kappa\log(\Delta/\varepsilon),\,d\min(d,\sqrt\kappa,\sqrt{Q_\Delta}),\,d\log Q_\Delta\ {\rm if}\ Q_\Delta\ge128^2\}}\right)}
+
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
+\textbf{Output mapping.} The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+\textbf{Resource mapping.} Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
+
+\needspace{4\baselineskip}\subsection{B1 - Finite-difference gradient descent}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{(d+1)\lceil\kappa\log(2\Delta/\varepsilon)\rceil}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v195/yue23a/yue23a.pdf}{[3]}
+
+\textbf{Conditions.} Take \AtlasInlineMath{h^2\le4\mu\varepsilon/(d\beta ^2)}. When \AtlasInlineMath{\kappa=1}, one step suffices; the simplified logarithmic expression is not used to classify optimality at this endpoint.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A1
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v195/yue23a/yue23a.pdf}{[3]} theorem: Finite-difference PL descent argument
+
+\needspace{4\baselineskip}\subsection{B2 - Strongly convex subclass or hidden finite-sum hard family}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(\kappa\log(\Delta/\varepsilon))}
+\textbf{Sources.} \href{https://arxiv.org/html/2609.00045v3}{[2]} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{\kappa\ge3} and \AtlasInlineMath{\varepsilon\le c\Delta}, in sufficiently large dimension. A full objective-value query to the hard finite sum can be simulated through component-value and gradient access, charging all required component calls.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A2
+
+\textbf{Source location.} \href{https://arxiv.org/html/2609.00045v3}{[2]} theorem: Theorem 3.3, with full-value simulation at fixed \AtlasInlineMath{n=1024}
+
+\textbf{Source location.} \href{https://arxiv.org/html/2609.00045v3}{[2]} theorem: Theorem 3.3, with full-value simulation at fixed \AtlasInlineMath{n=1024}; pdf pages: 5; printed pages: 5
+
+\needspace{4\baselineskip}\subsection{B3 - Strongly convex subclass or hidden finite-sum hard family}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d\min\{d,\sqrt\kappa,\sqrt{Q_\Delta}\})}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2609.00045v3}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{1\le\kappa,\ Q_\Delta=2\Delta/\varepsilon\ge32}
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A2
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Corollary2.4; pdf pages: 4; printed pages: 4
+
+\needspace{4\baselineskip}\subsection{B4 - Strongly convex subclass or hidden finite-sum hard family}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d\log Q_\Delta)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2609.00045v3}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{\kappa\ge2,\ Q_\Delta\ge128^2}
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A2
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem2.5; pdf pages: 4; printed pages: 4
+
+\needspace{4\baselineskip}\subsection{B5 - Strongly convex subclass or hidden finite-sum hard family}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(\kappa\log(\Delta/\varepsilon))}
+\textbf{Sources.} \href{https://arxiv.org/html/2609.00045v3}{[2]} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{\kappa\ge3,\ 0<\varepsilon\le c_\varepsilon\Delta,\ d\ge C_{\rm dim}(1+\kappa\log(\Delta/\varepsilon))\log(2+\kappa\log(\Delta/\varepsilon))}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A2
+
+\textbf{Source location.} \href{https://arxiv.org/html/2609.00045v3}{[2]} theorem: Theorem3.3; pdf pages: 5; printed pages: 5
+
+\textbf{Source location.} \href{https://arxiv.org/html/2609.00045v3}{[2]} theorem: Equations283-284; pdf pages: 47; printed pages: 47
+
+\textbf{Source location.} \href{https://arxiv.org/html/2609.00045v3}{[2]} theorem: IFO definition Eq313; pdf pages: 52; printed pages: 52
+
+\needspace{4\baselineskip}\subsection{B6 - Return the public initial point}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\Delta}.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A3
+
+\needspace{4\baselineskip}\subsection{B7 - Nonnegative oracle cost}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\Delta}.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A3
+
+\needspace{4\baselineskip}\subsection{B8 - Finite-difference gradient descent}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{d+1}
+\textbf{Conditions.} \AtlasInlineMath{\kappa=1,\varepsilon>0}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A1
+
+\needspace{4\baselineskip}\subsection{B9 - Finite-difference gradient descent}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{(d+1)\lceil\kappa\log(2\Delta/\varepsilon)\rceil}
+\textbf{Sources.} \href{https://proceedings.mlr.press/v195/yue23a/yue23a.pdf}{[3]}
+
+\textbf{Conditions.} Take \AtlasInlineMath{h^2\le4\mu\varepsilon/(d\beta ^2)}. When \AtlasInlineMath{\kappa=1}, one step suffices; the simplified logarithmic expression is not used to classify optimality at this endpoint.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A1
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v195/yue23a/yue23a.pdf}{[3]} theorem: Finite-difference PL descent argument
+
+\needspace{4\baselineskip}\subsection{B10 - Strongly convex subclass or hidden finite-sum hard family}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(\kappa\log(\Delta/\varepsilon))}
+\textbf{Sources.} \href{https://arxiv.org/html/2609.00045v3}{[2]} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{\kappa\ge3} and \AtlasInlineMath{\varepsilon\le c\Delta}, in sufficiently large dimension. A full objective-value query to the hard finite sum can be simulated through component-value and gradient access, charging all required component calls.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A2
+
+\textbf{Source location.} \href{https://arxiv.org/html/2609.00045v3}{[2]} theorem: Theorem 3.3, with full-value simulation at fixed \AtlasInlineMath{n=1024}
+
+\textbf{Source location.} \href{https://arxiv.org/html/2609.00045v3}{[2]} theorem: Theorem 3.3, with full-value simulation at fixed \AtlasInlineMath{n=1024}; pdf pages: 5; printed pages: 5
+
+\needspace{4\baselineskip}\subsection{B11 - Strongly convex subclass or hidden finite-sum hard family}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d\min\{d,\sqrt\kappa,\sqrt{Q_\Delta}\})}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2609.00045v3}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{1\le\kappa,\ Q_\Delta=2\Delta/\varepsilon\ge32}
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A2
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Corollary2.4; pdf pages: 4; printed pages: 4
+
+\needspace{4\baselineskip}\subsection{B12 - Strongly convex subclass or hidden finite-sum hard family}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(d\log Q_\Delta)}
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2609.00045v3}{[2]}
+
+\textbf{Conditions.} \AtlasInlineMath{\kappa\ge2,\ Q_\Delta\ge128^2}
+
+\textbf{Guarantee conversion.} The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+\textbf{Local argument.} A2
+
+\textbf{Source location.} \href{https://arxiv.org/html/2610.00345v1}{[1]} theorem: Theorem2.5; pdf pages: 4; printed pages: 4
+
+\needspace{4\baselineskip}\subsection{B13 - Strongly convex subclass or hidden finite-sum hard family}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(\kappa\log(\Delta/\varepsilon))}
+\textbf{Sources.} \href{https://arxiv.org/html/2609.00045v3}{[2]} \href{https://arxiv.org/html/2610.00345v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{\kappa\ge3,\ 0<\varepsilon\le c_\varepsilon\Delta,\ d\ge C_{\rm dim}(1+\kappa\log(\Delta/\varepsilon))\log(2+\kappa\log(\Delta/\varepsilon))}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A2
+
+\textbf{Source location.} \href{https://arxiv.org/html/2609.00045v3}{[2]} theorem: Theorem3.3; pdf pages: 5; printed pages: 5
+
+\textbf{Source location.} \href{https://arxiv.org/html/2609.00045v3}{[2]} theorem: Equations283-284; pdf pages: 47; printed pages: 47
+
+\textbf{Source location.} \href{https://arxiv.org/html/2609.00045v3}{[2]} theorem: IFO definition Eq313; pdf pages: 52; printed pages: 52
+
+\needspace{4\baselineskip}\subsection{B14 - Return the public initial point}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\Delta}.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A3
+
+\needspace{4\baselineskip}\subsection{B15 - Nonnegative oracle cost}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\Delta}.
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A3
+
+\needspace{4\baselineskip}\subsection{B16 - Finite-difference gradient descent}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{d+1}
+\textbf{Conditions.} \AtlasInlineMath{\kappa=1,\varepsilon>0}
+
+\textbf{Guarantee conversion.} Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+\textbf{Local argument.} A1
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Finite-difference descent for a smooth PL objective}
+\textbf{Scope.} Global \AtlasInlineMath{\beta}-smoothness and the \AtlasInlineMath{\mu}-PL inequality, initial gap at most \AtlasInlineMath{\Delta}, exact all-space values; convexity is unnecessary.
+
+For \AtlasInlineMath{\kappa=\beta/\mu\ge1}, a valid bound is \AtlasInlineMath{(d+1)\lceil\kappa\log(2\Delta/\varepsilon)\rceil} on the nontrivial accuracy range. At \AtlasInlineMath{\kappa=1}, \AtlasInlineMath{d+1} calls suffice for every positive target.
+
+Forward differences at a finite positive scale \AtlasInlineMath{h} have error \AtlasInlineMath{e} with \AtlasInlineMath{\|e\|^2\le d\beta^2h^2/4}. Smoothness of a step \AtlasInlineMath{x^+=x-(\nabla f(x)+e)/\beta} gives
+
+\AtlasMath{f(x^+)-f_*\le(1-\mu/\beta)[f(x)-f_*]+\|e\|^2/(2\beta).}
+
+Choose \AtlasInlineMath{h^2\le4\mu\varepsilon/(d\beta^2)}. The accumulated error floor is at most \AtlasInlineMath{\varepsilon/2}, and the displayed number of iterations makes the initial term at most \AtlasInlineMath{\varepsilon/2}. Each step uses \AtlasInlineMath{d+1} exact values. At \AtlasInlineMath{\mu=\beta}, the initial term vanishes after one step and the gap is at most \AtlasInlineMath{\|e\|^2/(2\beta)}; choose \AtlasInlineMath{h^2\le8\varepsilon/(\beta d)}. Return the initial point for \AtlasInlineMath{\varepsilon\ge\Delta}.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{4\baselineskip}\subsection{A2 - Strongly convex and finite-sum lower subclasses of the PL model}
+\textbf{Scope.} The PL model has public \AtlasInlineMath{\beta,\mu,\Delta,x_0} and no additional public localization radius. Every source dimension and accuracy restriction is retained.
+
+With the proof-only radius \AtlasInlineMath{R_\Delta=\sqrt{2\Delta/\beta}} and \AtlasInlineMath{Q_\Delta=2\Delta/\varepsilon}, the smooth strongly convex source lower gives \AtlasInlineMath{\Omega(d\min\{d,\sqrt\kappa,\sqrt{Q_\Delta}\})}. A separate high-dimensional finite-sum reduction gives \AtlasInlineMath{\Omega(\kappa\log(\Delta/\varepsilon))}.
+
+A globally \AtlasInlineMath{\mu}-strongly-convex, \AtlasInlineMath{\beta}-smooth function with minimizer in \AtlasInlineMath{B(x_0,R_\Delta)} satisfies \AtlasInlineMath{f(x_0)-f_*\le\Delta}. Minimizing its strong-convexity lower model over all points gives \AtlasInlineMath{\|\nabla f(x)\|^2\ge2\mu[f(x)-f_*]}. It therefore belongs to the target PL class without supplying the algorithm any additional public parameter. Apply Dorn et al., Corollary 2.4, for \AtlasInlineMath{Q_\Delta\ge32}. For \AtlasInlineMath{\kappa\ge2}, the \AtlasInlineMath{\beta/2}-strongly-convex subclass and Theorem 2.5 give \AtlasInlineMath{\Omega(d\log Q_\Delta)} when \AtlasInlineMath{Q_\Delta\ge128^2}.
+
+For the separate finite-sum lower, fix the source component count at \AtlasInlineMath{n=1024}. Exactly 1024 incremental value-and-gradient calls simulate one average value, discarding gradients. The individual-smoothness branch of Dense26 Theorem 3.3, divided by this fixed cost, is \AtlasInlineMath{\Omega(\kappa\ell)} for \AtlasInlineMath{\kappa\ge3}, \AtlasInlineMath{\ell=\log(\Delta/\varepsilon)}. On \AtlasInlineMath{3\le\kappa\le32}, the source denominator \AtlasInlineMath{1+\log(32/\kappa)} is uniformly bounded; on \AtlasInlineMath{\kappa\ge32}, its linear-\AtlasInlineMath{\kappa} branch gives the same rate. Source equations (283)-(284) give the sufficient dimension
+
+\AtlasMath{d\ge C_{\rm dim}(1+\kappa\ell)\log(2+\kappa\ell),\qquad\varepsilon\le c_\varepsilon\Delta.}
+
+The constants remain symbolic. Inactive-coordinate padding preserves PL, smoothness, gap, and the oracle simulation for every larger dimension. The source permits unqueried outputs and has failure lower \AtlasInlineMath{11/16}, sufficient to rule out success \AtlasInlineMath{2/3}. This is a lower bound from a stronger oracle; it does not multiply unrelated dimension and condition-number lower bounds.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\textbf{Sources.} \href{https://arxiv.org/html/2610.00345v1}{[1]} \href{https://arxiv.org/html/2609.00045v3}{[2]}
+
+\needspace{4\baselineskip}\subsection{A3 - Zero-query certificates}
+\textbf{Scope.} The stated sufficient accuracy regions only; no assertion that every certificate is sharp.
+
+A public feasible point whose objective gap is at most \AtlasInlineMath{G_0} solves every target \AtlasInlineMath{\varepsilon\ge G_0} with exactly zero calls.
+
+For a convex mean objective that is \AtlasInlineMath{L}-Lipschitz on a ball of radius \AtlasInlineMath{R}, the center has gap at most \AtlasInlineMath{LR}. A sample Lipschitz modulus \AtlasInlineMath{G} with \AtlasInlineMath{\mathbb E G^r\le L^r}, \AtlasInlineMath{r>1}, implies \AtlasInlineMath{\mathbb E G\le L}, so the same certificate applies to moment models. Integrability at one point ensures that the mean is defined.
+
+If a globally \AtlasInlineMath{\beta}-smooth objective has a global minimizer within distance \AtlasInlineMath{R} of the public initial point, its gradient vanishes at that minimizer and the smoothness inequality gives gap at most \AtlasInlineMath{\beta R^2/2}. In a declared norm, use the corresponding radius in that norm. For \AtlasInlineMath{B_p(R)} with Euclidean regularity this radius is \AtlasInlineMath{R} when \AtlasInlineMath{p\le2} and \AtlasInlineMath{R d^{1/2-1/p}} when \AtlasInlineMath{p\ge2}.
+
+For a known positive semidefinite quadratic matrix \AtlasInlineMath{A}, the center has gap at most \AtlasInlineMath{\lambda_{\max}(A)R^2/2}; if \AtlasInlineMath{A=0}, the loss is identically zero. A public initial-gap promise \AtlasInlineMath{\Delta} directly gives the certificate \AtlasInlineMath{G_0=\Delta}. For the Markov potential \AtlasInlineMath{r_0}, its companion initial iterate has gap at most \AtlasInlineMath{\mu r_0}. These are different certificates with different model assumptions; in particular, an unknown matrix with no public spectral bound does not acquire a uniform certificate.
+
+Call counts are nonnegative. Together with the stated algorithm, this proves exact zero complexity on each certified region. The upper/lower ratio is undefined, so it is stored as null rather than as \AtlasInlineMath{0/0}.
+
+\textbf{Limits of the argument.} Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+\needspace{7\baselineskip}\section{References}
+[1] Dorn, Dvinskikh, Loginov, Osmanov, Shestakov, Tupitsa and Gasnikov. Lower Bounds For Gradient-Free Convex Optimization And Convex-Concave Saddle-Point Problems. arXiv:2610.00345v1.
+
+\url{https://arxiv.org/html/2610.00345v1}
+
+[2] Peng, Tang and Jia. Dense Weak Hiding: Closing Complexity Gaps in Nonconvex and PL Finite-Sum Optimization under Individual Smoothness. arXiv:2609.00045v3, 2026-10-10.
+
+\url{https://arxiv.org/html/2609.00045v3}
+
+[3] Yue, Fang and Lin. On the Lower Bound of Minimizing Polyak-Lojasiewicz Functions. COLT 2023, PMLR 195:2948--2968.
+
+\url{https://proceedings.mlr.press/v195/yue23a/yue23a.pdf}
+
+\end{document}

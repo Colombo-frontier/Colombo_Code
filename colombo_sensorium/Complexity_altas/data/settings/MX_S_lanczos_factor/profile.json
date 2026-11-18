@@ -1,0 +1,979 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "MX_S_lanczos_factor",
+  "title": "Lanczos approximation of matrix functions: worst-case approximation factor",
+  "summary": "Compare the $t$-step Lanczos function approximation $y_t=V_t h(T_t)V_t^*b$ with the best approximation in $\\mathcal{K}_t(A,b)$, under $T_t=V_t^*AV_t$.",
+  "primary_domain": "matrix_computation",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "matrix_computation"
+    },
+    {
+      "facet": "goal",
+      "value": "worst_case_approximation_factor"
+    },
+    {
+      "facet": "structure",
+      "value": "hermitian_positive_stieltjes"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_complex_matvec"
+    },
+    {
+      "facet": "algorithm",
+      "value": "fixed_lanczos"
+    },
+    {
+      "facet": "guarantee",
+      "value": "deterministic"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_iteration_matvec"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "matrix_computation"
+      ],
+      "formulation_code": "matrix_function_action",
+      "formulation": "h(A)b\\text{ approximated by }f_t=\\|b\\|V_t h(T_t)e_1",
+      "solution_goal": "krylov_near_optimality_ratio",
+      "protocol_ref": null,
+      "code": "matrix_function_action",
+      "formulation_latex": "\\mathcal C=\\frac{\\|h(A)b-y_t\\|_{A^\\alpha}}{\\min_{y\\in\\mathcal K_t(A,b)}\\|h(A)b-y\\|_{A^\\alpha}}",
+      "description_zh": "Compare the $t$-step Lanczos function approximation $y_t=V_t h(T_t)V_t^*b$ with the best approximation in $\\mathcal K_t(A,b)$. Assume $T_t=V_t^*AV_t$.",
+      "description_paragraphs": [
+        "Compare the $t$-step Lanczos function approximation $y_t=V_t h(T_t)V_t^*b$ with the best approximation in $\\mathcal{K}_t(A,b)$, under $T_t=V_t^*AV_t$."
+      ]
+    },
+    "model": {
+      "instance": "The unknown matrix $A\\in\\mathbb C^{d\\times d}$ is Hermitian positive definite, satisfies $\\kappa(A)=\\kappa>1$, and has at least $t+1$ distinct eigenvalues. The vector $b\\ne0,\\alpha\\in\\mathbb R$ and function $h$ are public; either $h$ or $h(z)/z$ belongs to the specified Stieltjes class.",
+      "assumptions": [
+        {
+          "subject_id": "MX_S_lanczos_factor_obj_5dd8ca1f2d",
+          "property_code": "hermitian_positive_definite",
+          "variable_blocks": [],
+          "norm_ref": "MX_S_lanczos_factor_nor_a010b22fb7",
+          "parameter_refs": [
+            "MX_S_lanczos_factor_p_03be3e6afa",
+            "MX_S_lanczos_factor_p_18ed76cc39",
+            "MX_S_lanczos_factor_p_308189e3ca"
+          ],
+          "scope": "Entire fixed input instance",
+          "description": "The spectrum is positive, $\\operatorname{cond}(A)=\\kappa$, with at least $t+1$ distinct eigenvalues."
+        },
+        {
+          "subject_id": "MX_S_lanczos_factor_obj_136bef74e7",
+          "property_code": "stieltjes_extension",
+          "variable_blocks": [],
+          "norm_ref": "MX_S_lanczos_factor_nor_a010b22fb7",
+          "parameter_refs": [],
+          "scope": "Entire fixed input instance",
+          "description": "The function $h$ or $h(z)/z$ admits the representation $\\int_0^\\infty(z+s)^{-1}\\,d\\nu(s)$, with positive $\\nu$ and $\\int(1+s)^{-1}\\,d\\nu(s)<\\infty$."
+        }
+      ],
+      "parameter_domain_description": "Assume integers $t\\ge1$ and $d\\ge t+1$, actual condition number $\\kappa>1$, and arbitrary real $\\alpha$. The vector $b$ may cause early Krylov termination.",
+      "code": "model_declared",
+      "description_zh": "The matrix $A\\in\\mathbb C^{d\\times d}$ is Hermitian positive definite with actual condition number $\\kappa=\\lambda_{\\max}(A)/\\lambda_{\\min}(A)>1$ and at least $t+1$ distinct eigenvalues; $1\\le t<d$. Also $b\\ne0$ and $\\alpha\\in\\mathbb R$. The function class consists of $h$ or functions whose $z\\mapsto h(z)/z$ is Stieltjes: it admits the representation $\\int_0^\\infty(z+s)^{-1}\\,d\\nu(s)$ with positive measure $\\nu$ satisfying $\\int_0^\\infty(1+s)^{-1}\\,d\\nu(s)<\\infty$.",
+      "description_paragraphs": [
+        "The matrix $A\\in\\mathbb{C}^{d\\times d}$ is Hermitian positive definite with actual condition number $\\kappa=\\lambda_{\\max}(A)/\\lambda_{\\min}(A)>1$ and at least $t+1$ distinct eigenvalues; $1\\le t<d$. Also $b\\ne0$ and $\\alpha\\in\\mathbb{R}$. The function class consists of $h$ or functions whose $z\\mapsto h(z)/z$ is Stieltjes: it admits the representation $\\int_0^\\infty(z+s)^{-1}\\,d\\nu(s)$ with positive measure $\\nu$ satisfying $\\int_0^\\infty(1+s)^{-1}\\,d\\nu(s)<\\infty$."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "MX_S_lanczos_factor_ora_de2dfec74a",
+          "operation_code": "matrix_right_matvec",
+          "target_object": "MX_S_lanczos_factor_obj_5dd8ca1f2d",
+          "variable_blocks": [
+            "MX_S_lanczos_factor_var_7b5611b587"
+          ],
+          "query_signature": "Input any vector v in C^d",
+          "response_signature": "Returns the exact vector $Av\\in\\mathbb C^d$.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "Native linear action of the specified matrix; no derivative order of an unregistered scalar function is implied.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact complex vector responses, without observation noise or rounding"
+          },
+          "domain_ref": "MX_S_lanczos_factor_dom_73080e53e9",
+          "coupling": "One fixed Hermitian matrix; queries are determined by the exact Lanczos recurrence starting from b",
+          "index_control": "The algorithm selects vectors and an available channel; block width is charged by column.",
+          "access_schedule": "fixed exact single-start Lanczos recurrence",
+          "accuracy_argument": null,
+          "cost_rule_ref": "MX_S_lanczos_factor_res_fbc6552295"
+        }
+      ],
+      "public_inputs": [
+        "d,κ,t,α,h,b"
+      ],
+      "hidden_objects": [
+        "MX_S_lanczos_factor_obj_5dd8ca1f2d"
+      ],
+      "auxiliary_interfaces": [],
+      "protocol_ref": null,
+      "query_domain_description": "Right products map C^d to C^d, with only the stated channel available. A q-column block costs q queries. Entries, inverse actions, shifted solves, and matrix-function actions are not additional free feedback.",
+      "code": "oracle_declared",
+      "description_zh": "The data $d,t,\\kappa,\\alpha,h,b$ are public and $A$ is hidden. For any complex vector $v$, the interface returns exact $Av$. Internal complex arithmetic and scalar function evaluations are free.",
+      "description_paragraphs": [
+        "The data $d,t,\\kappa,\\alpha,h,b$ are public and $A$ is hidden. For any complex vector $v$, the interface returns exact $Av$. Internal complex arithmetic and scalar function evaluations are free."
+      ]
+    },
+    "output": {
+      "object_type": "vector",
+      "domain_ref": "MX_S_lanczos_factor_dom_eb03514204",
+      "feasibility": "C^d",
+      "allowed_postprocessing": "The output must be the fixed Lanczos-FA value. A different algorithm or Krylov approximation cannot be substituted.",
+      "certificate_requirement": "Only the true-loss guarantee is required; no computable certificate is requested.",
+      "code": "output_declared",
+      "description_zh": "Return the fixed algorithm's $y_t$. Substituting the best Krylov approximation would change the object being evaluated.",
+      "description_paragraphs": [
+        "Return the fixed algorithm's $y_t$. Substituting the best Krylov approximation would change the object being evaluated."
+      ]
+    },
+    "metric": {
+      "base_expression": "\\mathcal C=\\frac{\\|h(A)b-y_t\\|_{A^\\alpha}}{\\min_{y\\in\\mathcal K_t(A,b)}\\|h(A)b-y\\|_{A^\\alpha}}",
+      "normalization": "Use the source ratio conventions $0/0=1$ and $1/0=+\\infty$. The quantity is an approximation factor, not exact-zero query complexity.",
+      "reference_object": "MX_S_lanczos_factor_obj_5dd8ca1f2d",
+      "nonnegativity": true,
+      "finiteness_conditions": "The specified dimension is finite, and the model and spectral assumptions hold.",
+      "comparator_ref": "MX_S_lanczos_factor_com_86bd9d8cef",
+      "code": "metric_declared",
+      "goal_latex": "C_\\alpha(h,A,b,t)=\\frac{\\|h(A)b-f_t\\|_{A^\\alpha}}{\\min_{x\\in\\mathcal K_t(A,b)}\\|h(A)b-x\\|_{A^\\alpha}},\\quad0/0:=1,\\quad c/0:=+\\infty\\ (c>0)",
+      "description_zh": "Define $\\|z\\|_{A^\\alpha}=(z^*A^\\alpha z)^{1/2}$ and $\\mathcal K_t(A,b)=\\operatorname{span}\\{b,Ab,\\ldots,A^{t-1}b\\}$. The approximation factor is $\\mathcal C=\\|h(A)b-y_t\\|_{A^\\alpha}/\\min_{y\\in\\mathcal K_t(A,b)}\\|h(A)b-y\\|_{A^\\alpha}$, with conventions $0/0=1$ and positive numbers divided by zero equal $+\\infty$.",
+      "base_expression_latex": "\\mathcal C=\\frac{\\|h(A)b-y_t\\|_{A^\\alpha}}{\\min_{y\\in\\mathcal K_t(A,b)}\\|h(A)b-y\\|_{A^\\alpha}}",
+      "description_paragraphs": [
+        "Define the weighted norm $\\|z\\|_{A^\\alpha}=(z^*A^\\alpha z)^{1/2}$ and Krylov space $\\mathcal{K}_t(A,b)=\\operatorname{span}\\{b,Ab,\\ldots,A^{t-1}b\\}$. Compare the fixed Lanczos output with the best approximation in that space through the error ratio $$\n\\mathcal{C}=\\frac{\\|h(A)b-y_t\\|_{A^\\alpha}}{\\min_{y\\in\\mathcal{K}_t(A,b)}\\|h(A)b-y\\|_{A^\\alpha}}.\n$$. Use the conventions $0/0=1$ and positive numbers divided by zero equal $+\\infty$."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "N_right",
+          "unit": "vector product",
+          "description": "One right product Av with a single vector"
+        }
+      ],
+      "budget_semantics": "For fixed t, Lanczos uses at most t matrix actions and possibly fewer under early termination. The native comparison target is an error factor.",
+      "cost_rules": [
+        {
+          "id": "MX_S_lanczos_factor_res_fbc6552295",
+          "operation_refs": [
+            "MX_S_lanczos_factor_ora_de2dfec74a"
+          ],
+          "cost": {
+            "N_right": 1
+          }
+        }
+      ],
+      "scalarization": "Compare the approximation factor C of fixed Lanczos while retaining N_right. This is not minimum query complexity for an ε target.",
+      "setup_cost": "Reading public parameters and explicitly public $b,x_0,h$, mask, or tree incurs no matrix-vector call. Information about hidden $A$ comes only from native responses.",
+      "online_cost": "not_applicable",
+      "amortization_scope": "One output for one instance",
+      "precision_model": "The interface provides exact complex Hermitian matrix–vector products. Bit costs of real or complex arithmetic are outside this factor objective.",
+      "code": "resource_declared",
+      "description_zh": "The native comparison quantity is the dimensionless approximation factor $\\mathcal C$, not the minimum query count needed for a tolerance. The algorithm uses at most $t$ exact matrix–vector products. Internal arithmetic and scalar function evaluations are free.",
+      "description_paragraphs": [
+        "The quantity is the dimensionless approximation factor $\\mathcal{C}$, not the minimum query count for a target tolerance. The algorithm uses at most $t$ exact matrix-vector products. Internal arithmetic and scalar-function evaluations are uncharged."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "Randomization is forbidden; the algorithm is fixed to Lanczos-FA.",
+        "adaptivity": "Determined by the same exact Lanczos recurrence",
+        "restrictions": [
+          "fixed_algorithm:Lanczos-FA",
+          "single_start_Krylov_K_t(A,b)"
+        ],
+        "internal_computation": "Use exact single-start Lanczos with initial basis vector b/‖b‖₂. Evaluate the known small matrix function h(T_t) and return ‖b‖₂ V_t h(T_t)e₁. If an invariant subspace is reached early, return the exact result.",
+        "parallelism": "Strict single-start sequential Lanczos recurrence. Per-column charging of block calls does not authorize changing the fixed algorithm.",
+        "code": "algorithms_declared",
+        "description_zh": "The exact Lanczos function-approximation algorithm is fixed, without minimization over general algorithms. Equivalent orthonormal-basis implementations are allowed if they produce the same mathematical approximation.",
+        "description_paragraphs": [
+          "The exact Lanczos function-approximation algorithm is fixed, without minimization over general algorithms. Equivalent orthonormal-basis implementations are allowed if they produce the same mathematical approximation."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "The deterministic instancewise criterion compares fixed-Lanczos error with the smallest error in the same Krylov space $K_t$. For each admissible $A$, the lower bound selects suitable $h,b$; it is not a lower bound for every $h,b$.",
+          "aggregation_order": [
+            "supremum over fixed legal instances"
+          ],
+          "quantifier_order": "fixed algorithm Lanczos-FA; sup over A,h,b",
+          "randomness_sources": [],
+          "confidence_parameters": [],
+          "time_uniformity": "fixed integer t",
+          "code": "guarantee_declared",
+          "description_zh": "The upper bound holds deterministically for every admissible fixed input. The lower bound concerns worst-case inputs for the fixed algorithm. The supremum over admissible inputs gives the stated sharp factor, generally through arbitrarily close lower examples.",
+          "description_paragraphs": [
+            "The upper bound holds deterministically for every admissible fixed input. The lower bound concerns worst-case inputs for the fixed algorithm. The supremum over admissible inputs gives the stated sharp factor, generally through arbitrarily close lower examples."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "For fixed t, Lanczos uses at most t matrix actions and possibly fewer under early termination. The native comparison target is an error factor.",
+        "precision_model": "The interface provides exact complex Hermitian matrix–vector products. Bit costs of real or complex arithmetic are outside this factor objective.",
+        "scalarization": "Compare the approximation factor C of fixed Lanczos while retaining N_right. This is not minimum query complexity for an ε target."
+      },
+      "alias_ids": [
+        "MX_S_lanczos_factor"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "MX_S_lanczos_factor_obj_5dd8ca1f2d",
+        "type": "matrix",
+        "definition": "An unknown complex Hermitian positive definite $d\\times d$ matrix, with actual condition number $\\kappa>1$ and at least $t+1$ distinct eigenvalues.",
+        "depends_on": [],
+        "role_code": "matrix"
+      },
+      {
+        "id": "MX_S_lanczos_factor_obj_136bef74e7",
+        "type": "scalar_function",
+        "definition": "The function h is public. Either h(z) or h(z)/z has the representation $\\int_0^\\infty(z+s)^{-1}d\\nu(s)$, where ν is positive and $\\int_0^\\infty(1+s)^{-1}d\\nu(s)<\\infty$ holds.",
+        "depends_on": [],
+        "role_code": "declared_auxiliary_object"
+      },
+      {
+        "id": "MX_S_lanczos_factor_obj_83694724b2",
+        "type": "vector",
+        "definition": "Public nonzero vector $b\\in\\mathbb C^d$",
+        "depends_on": [],
+        "role_code": "declared_auxiliary_object"
+      },
+      {
+        "id": "MX_S_lanczos_factor_obj_c2e762837a",
+        "type": "linear_subspace",
+        "definition": "$\\mathcal K_t(A,b)=\\operatorname{span}\\{b,Ab,\\ldots,A^{t-1}b\\}$ is induced by the instance and is not a freely available additional oracle.",
+        "depends_on": [
+          "MX_S_lanczos_factor_obj_5dd8ca1f2d",
+          "MX_S_lanczos_factor_obj_83694724b2"
+        ],
+        "role_code": "declared_auxiliary_object"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "MX_S_lanczos_factor_var_7b5611b587",
+        "dimension": "d",
+        "space": "$\\mathbb C^d$, the right-query vector space"
+      }
+    ],
+    "domains": [
+      {
+        "id": "MX_S_lanczos_factor_dom_73080e53e9",
+        "definition": "The full right-product space C^d, with no norm restriction.",
+        "roles": [
+          "query"
+        ]
+      },
+      {
+        "id": "MX_S_lanczos_factor_dom_eb03514204",
+        "definition": "C^d",
+        "roles": [
+          "output"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "MX_S_lanczos_factor_nor_a010b22fb7",
+        "definition": "$\\|z\\|_{A^\\alpha}=(z^*A^\\alpha z)^{1/2}$, where A is the Hermitian positive-definite input matrix."
+      }
+    ],
+    "protocols": [],
+    "comparators": [
+      {
+        "id": "MX_S_lanczos_factor_com_86bd9d8cef",
+        "definition": "The vector in the same instance's $K_t(A,b)$ minimizing the $A^\\alpha$-norm error; not the optimal unrestricted algorithm."
+      }
+    ],
+    "local_symbols": [
+      {
+        "symbol": "d",
+        "meaning": "Order of the Hermitian input matrix",
+        "domain": "$d\\in\\mathbb N,\\ d\\ge t+1$",
+        "definition": "A\\in\\mathbb C^{d\\times d}"
+      },
+      {
+        "symbol": "t",
+        "meaning": "The step count of the exact Lanczos algorithm being evaluated.",
+        "domain": "$t\\in\\mathbb N,\\ 1\\le t<d$",
+        "definition": "\\mathcal K_t(A,b)=\\operatorname{span}\\{b,Ab,\\ldots,A^{t-1}b\\}"
+      },
+      {
+        "symbol": "\\kappa",
+        "meaning": "Actual spectral condition number of the positive definite input matrix",
+        "domain": "$\\kappa>1$",
+        "definition": "\\kappa=\\lambda_{\\max}(A)/\\lambda_{\\min}(A)"
+      },
+      {
+        "symbol": "\\alpha",
+        "meaning": "Matrix-power exponent in the error norm",
+        "domain": "$\\alpha\\in\\mathbb R$",
+        "definition": "\\|z\\|_{A^\\alpha}=(z^*A^\\alpha z)^{1/2}"
+      },
+      {
+        "symbol": "A",
+        "meaning": "The hidden matrix is Hermitian positive definite and has at least t + 1 distinct eigenvalues.",
+        "domain": "$\\mathbb C^{d\\times d}$",
+        "definition": null
+      },
+      {
+        "symbol": "b",
+        "meaning": "Public nonzero initial vector",
+        "domain": "$\\mathbb C^d\\setminus\\{0\\}$",
+        "definition": null
+      },
+      {
+        "symbol": "h",
+        "meaning": "A public function with $h$ or $z\\mapsto h(z)/z$ in the Stieltjes class.",
+        "domain": "Scalar function on the positive real axis",
+        "definition": null
+      },
+      {
+        "symbol": "\\nu,s",
+        "meaning": "Positive measure and integration variable in the Stieltjes representation.",
+        "domain": "$s\\ge0,\\ \\int_0^\\infty(1+s)^{-1}\\,d\\nu(s)<\\infty$",
+        "definition": "h(z)\\ \\text{or}\\ h(z)/z=\\int_0^\\infty(z+s)^{-1}\\,d\\nu(s)"
+      },
+      {
+        "symbol": "\\mathcal K_t(A,b)",
+        "meaning": "Order-t Krylov subspace",
+        "domain": "A linear subspace of $\\mathbb C^d$.",
+        "definition": "\\mathcal K_t(A,b)=\\operatorname{span}\\{b,Ab,\\ldots,A^{t-1}b\\}"
+      },
+      {
+        "symbol": "V_t,T_t",
+        "meaning": "Orthonormal basis matrix of the Krylov subspace and the compressed Hermitian matrix",
+        "domain": "Use the actual subspace dimension if exact termination occurs early.",
+        "definition": "V_t^*V_t=I,\\quad T_t=V_t^*AV_t"
+      },
+      {
+        "symbol": "y_t",
+        "meaning": "Function approximation by a fixed Lanczos algorithm.",
+        "domain": "$\\mathbb C^d$",
+        "definition": "y_t=V_t h(T_t)V_t^*b"
+      },
+      {
+        "symbol": "\\|z\\|_{A^\\alpha}",
+        "meaning": "Weighted vector norm defined by a power of the input matrix",
+        "domain": "A nonnegative real.",
+        "definition": "\\|z\\|_{A^\\alpha}=(z^*A^\\alpha z)^{1/2}"
+      },
+      {
+        "symbol": "\\mathcal C",
+        "meaning": "Ratio of fixed-Lanczos error to the best error in the same Krylov space.",
+        "domain": "$[0,\\infty]$, with the convention $0/0=1$.",
+        "definition": "\\mathcal C=\\frac{\\|h(A)b-y_t\\|_{A^\\alpha}}{\\min_{y\\in\\mathcal K_t(A,b)}\\|h(A)b-y\\|_{A^\\alpha}}"
+      },
+      {
+        "symbol": "E",
+        "meaning": "Exponent in the sharp approximation factor",
+        "domain": "$E\\ge1/2$",
+        "definition": "E=\\max\\{\\alpha,1-\\alpha\\}"
+      },
+      {
+        "symbol": "\\zeta",
+        "meaning": "An arbitrary relative slack approaching the supremal worst-case factor.",
+        "domain": "$0<\\zeta\\le1$",
+        "definition": null
+      },
+      {
+        "symbol": "N",
+        "meaning": "The exact matrix–vector product count of the fixed algorithm.",
+        "domain": "$\\mathbb N_0$",
+        "definition": "N\\le t"
+      },
+      {
+        "symbol": "(\\cdot)^*",
+        "meaning": "Conjugate transpose",
+        "domain": "Complex matrix or vector",
+        "definition": null
+      },
+      {
+        "symbol": "\\lambda_i(A)",
+        "meaning": "Eigenvalues of a real symmetric or Hermitian matrix in nonincreasing order.",
+        "domain": "$1\\le i\\le d$",
+        "definition": "\\lambda_1(A)\\ge\\cdots\\ge\\lambda_d(A)"
+      },
+      {
+        "symbol": "\\|z\\|_2",
+        "meaning": "Euclidean norm of a vector",
+        "domain": "Finite-dimensional real or complex vector",
+        "definition": "\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "MX_S_lanczos_factor_p_a38d5acae5",
+      "symbol": "\\alpha",
+      "meaning": "Matrix-power exponent in the error norm",
+      "kind": "independent",
+      "domain": "$\\alpha\\in\\mathbb R$",
+      "public": true,
+      "definition": "$\\|z\\|_{A^\\alpha}=(z^*A^\\alpha z)^{1/2}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_lanczos_factor_p_03be3e6afa",
+      "symbol": "d",
+      "meaning": "Order of the Hermitian input matrix",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge t+1$",
+      "public": true,
+      "definition": "$A\\in\\mathbb C^{d\\times d}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_d"
+    },
+    {
+      "id": "MX_S_lanczos_factor_p_18ed76cc39",
+      "symbol": "\\kappa",
+      "meaning": "Actual spectral condition number of the positive definite input matrix",
+      "kind": "independent",
+      "domain": "$\\kappa>1$",
+      "public": true,
+      "definition": "$\\kappa=\\lambda_{\\max}(A)/\\lambda_{\\min}(A)$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_kappa"
+    },
+    {
+      "id": "MX_S_lanczos_factor_p_308189e3ca",
+      "symbol": "t",
+      "meaning": "The step count of the exact Lanczos algorithm being evaluated.",
+      "kind": "independent",
+      "domain": "$t\\in\\mathbb N,\\ 1\\le t<d$",
+      "public": true,
+      "definition": "$\\mathcal K_t(A,b)=\\operatorname{span}\\{b,Ab,\\ldots,A^{t-1}b\\}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "Order of the Hermitian input matrix",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge t+1$",
+      "definition": "$A\\in\\mathbb C^{d\\times d}$",
+      "parameter_ref": "MX_S_lanczos_factor_p_03be3e6afa"
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "The step count of the exact Lanczos algorithm being evaluated.",
+      "domain": "$t\\in\\mathbb N,\\ 1\\le t<d$",
+      "definition": "$\\mathcal K_t(A,b)=\\operatorname{span}\\{b,Ab,\\ldots,A^{t-1}b\\}$",
+      "parameter_ref": "MX_S_lanczos_factor_p_308189e3ca"
+    },
+    {
+      "symbol_latex": "\\kappa",
+      "meaning": "Actual spectral condition number of the positive definite input matrix",
+      "domain": "$\\kappa>1$",
+      "definition": "$\\kappa=\\lambda_{\\max}(A)/\\lambda_{\\min}(A)$",
+      "parameter_ref": "MX_S_lanczos_factor_p_18ed76cc39"
+    },
+    {
+      "symbol_latex": "\\alpha",
+      "meaning": "Matrix-power exponent in the error norm",
+      "domain": "$\\alpha\\in\\mathbb R$",
+      "definition": "$\\|z\\|_{A^\\alpha}=(z^*A^\\alpha z)^{1/2}$",
+      "parameter_ref": "MX_S_lanczos_factor_p_a38d5acae5"
+    },
+    {
+      "symbol_latex": "A",
+      "meaning": "The hidden matrix is Hermitian positive definite and has at least t + 1 distinct eigenvalues.",
+      "domain": "$\\mathbb C^{d\\times d}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "b",
+      "meaning": "Public nonzero initial vector",
+      "domain": "$\\mathbb C^d\\setminus\\{0\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "h",
+      "meaning": "A public function with $h$ or $z\\mapsto h(z)/z$ in the Stieltjes class.",
+      "domain": "Scalar function on the positive real axis",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nu,s",
+      "meaning": "Positive measure and integration variable in the Stieltjes representation.",
+      "domain": "$s\\ge0,\\ \\int_0^\\infty(1+s)^{-1}\\,d\\nu(s)<\\infty$",
+      "definition": "Either $h(z)$ or $h(z)/z$ equals $\\int_0^\\infty(z+s)^{-1}\\,d\\nu(s)$; MODEL specifies the function class.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal K_t(A,b)",
+      "meaning": "Order-t Krylov subspace",
+      "domain": "A linear subspace of $\\mathbb C^d$.",
+      "definition": "$\\mathcal K_t(A,b)=\\operatorname{span}\\{b,Ab,\\ldots,A^{t-1}b\\}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "V_t,T_t",
+      "meaning": "Orthonormal basis matrix of the Krylov subspace and the compressed Hermitian matrix",
+      "domain": "Use the actual subspace dimension if exact termination occurs early.",
+      "definition": "$V_t^*V_t=I,\\quad T_t=V_t^*AV_t$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "y_t",
+      "meaning": "Function approximation by a fixed Lanczos algorithm.",
+      "domain": "$\\mathbb C^d$",
+      "definition": "$y_t=V_t h(T_t)V_t^*b$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|z\\|_{A^\\alpha}",
+      "meaning": "Weighted vector norm defined by a power of the input matrix",
+      "domain": "A nonnegative real.",
+      "definition": "$\\|z\\|_{A^\\alpha}=(z^*A^\\alpha z)^{1/2}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal C",
+      "meaning": "Ratio of fixed-Lanczos error to the best error in the same Krylov space.",
+      "domain": "$[0,\\infty]$, with the convention $0/0=1$.",
+      "definition": "$\\mathcal C=\\frac{\\|h(A)b-y_t\\|_{A^\\alpha}}{\\min_{y\\in\\mathcal K_t(A,b)}\\|h(A)b-y\\|_{A^\\alpha}}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "E",
+      "meaning": "Exponent in the sharp approximation factor",
+      "domain": "$E\\ge1/2$",
+      "definition": "$E=\\max\\{\\alpha,1-\\alpha\\}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\zeta",
+      "meaning": "An arbitrary relative slack approaching the supremal worst-case factor.",
+      "domain": "$0<\\zeta\\le1$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "The exact matrix–vector product count of the fixed algorithm.",
+      "domain": "$\\mathbb N_0$",
+      "definition": "$N\\le t$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "(\\cdot)^*",
+      "meaning": "Conjugate transpose",
+      "domain": "Complex matrix or vector",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\lambda_i(A)",
+      "meaning": "Eigenvalues of a real symmetric or Hermitian matrix in nonincreasing order.",
+      "domain": "$1\\le i\\le d$",
+      "definition": "$\\lambda_1(A)\\ge\\cdots\\ge\\lambda_d(A)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|z\\|_2",
+      "meaning": "Euclidean norm of a vector",
+      "domain": "Finite-dimensional real or complex vector",
+      "definition": "$\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}$",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "MX_S_lanczos_factor__main__q1",
+      "kind": "fixed_budget_risk",
+      "expression": "\\sup_{A,h,b}C(h,A,b,t,\\|\\cdot\\|_{A^\\alpha})",
+      "optimization_direction": "minimize",
+      "units": "dimensionless approximation factor",
+      "budget_variables": [
+        "MX_S_lanczos_factor_p_308189e3ca"
+      ],
+      "tolerance_variables": [],
+      "analysis_scope": "The algorithm is fixed to exact single-start Lanczos-FA. For the given d, κ, t, and α, take the supremum of the error approximation factor over all admissible A, h, and b. There is no infimum over algorithms and no conversion to minimum query complexity at a prescribed tolerance.",
+      "tracked_parameters": [
+        "MX_S_lanczos_factor_p_03be3e6afa",
+        "MX_S_lanczos_factor_p_18ed76cc39",
+        "MX_S_lanczos_factor_p_308189e3ca",
+        "MX_S_lanczos_factor_p_a38d5acae5"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "additive_gap",
+      "nonnegativity": true,
+      "expression_latex": "\\sup_{A,h,b}C\\!\\left(h,A,b,t,\\|\\cdot\\|_{A^\\alpha}\\right)",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Worst-case approximation factor of the fixed algorithm over admissible inputs.",
+      "expression": "sup fixed-algorithm approximation factor",
+      "mode": "worst_case_approximation_factor",
+      "resource_projection_id": "resource_f7a5aab13b"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "MX_S_lanczos_factor__main__r1",
+      "specification_ref": "MX_S_lanczos_factor",
+      "name": "Nondegenerate Lanczos approximation factor",
+      "predicate_text": "Assume $\\kappa>1$, integers $t\\ge1$ and $d\\ge t+1$, and $\\alpha\\in\\mathbb R$. The input matrix has at least $t+1$ distinct eigenvalues.",
+      "predicate": {
+        "predicate": {
+          "name": "lanczos_factor",
+          "args": [
+            "MX_S_lanczos_factor_p_03be3e6afa",
+            "MX_S_lanczos_factor_p_18ed76cc39",
+            "MX_S_lanczos_factor_p_308189e3ca",
+            "MX_S_lanczos_factor_p_a38d5acae5"
+          ],
+          "description": "kappa>1, t>=1, d>=t+1, at least t+1 distinct eigenvalues, and real alpha."
+        }
+      },
+      "parameter_refs": [
+        "MX_S_lanczos_factor_p_03be3e6afa",
+        "MX_S_lanczos_factor_p_18ed76cc39",
+        "MX_S_lanczos_factor_p_308189e3ca",
+        "MX_S_lanczos_factor_p_a38d5acae5"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Universal constants and dimension thresholds without numerical values remain symbolic; the three-valued decision is unknown."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "MX_S_lanczos_factor__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\mathcal{C}\\le \\frac{1}{2}(\\kappa^{E/2}+\\kappa^{-E/2}),\\quad E=\\max\\{\\alpha,1-\\alpha\\}",
+      "quantity_ref": "MX_S_lanczos_factor__main__q1",
+      "region_refs": [
+        "MX_S_lanczos_factor__main__r1"
+      ],
+      "method": "Per-input approximation-factor upper bound for the fixed exact Lanczos algorithm",
+      "algorithm_or_hard_family": "Per-input approximation-factor upper bound for the fixed exact Lanczos algorithm",
+      "algorithm_class_scope": "The exact Lanczos function-approximation algorithm is fixed, without minimization over general algorithms. Equivalent orthonormal-basis implementations are allowed if they produce the same mathematical approximation.",
+      "resource_costs": {
+        "N_right": "t",
+        "factor": "\\frac12(\\kappa^{E/2}+\\kappa^{-E/2}),\\quad E=\\max\\{\\alpha,1-\\alpha\\}"
+      },
+      "parameter_choice": "Determined by public parameters and the source algorithm; one algorithm jointly attains the listed costs",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_FA26"
+      ],
+      "evidence_refs": [
+        "MX_S_lanczos_factor__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_lanczos_factor__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "",
+        "guarantee_mapping": "Fully deterministic. The upper bound holds for every instance. For a suitable A, the lower bound provides h and b achieving any factor 1-eta; letting eta tend to zero gives a supremum, without claiming equality on every instance.",
+        "oracle_mapping": "Exact $Av$ access for a complex Hermitian positive definite matrix. Queries follow the fixed single-start Lanczos recurrence initialized at public $b$; they are not chosen by a general algorithm.",
+        "output_mapping": "The output must be the fixed Lanczos-FA value f_t. Compare its A^α-norm error with the minimum error in the same K_t(A,b), using the convention 0/0 = 1.",
+        "resource_mapping": "The native comparison quantity is the dimensionless approximation factor $\\mathcal C$, not the minimum query count needed for a tolerance. The algorithm uses at most $t$ exact matrix–vector products. Internal arithmetic and scalar function evaluations are free.",
+        "output_metric_mapping": "Return the fixed algorithm's output $y_t$; replacing it by the best Krylov approximation changes the object being evaluated and is not allowed. Define $\\|z\\|_{A^\\alpha}=(z^*A^\\alpha z)^{1/2}$ and $\\mathcal K_t(A,b)=\\operatorname{span}\\{b,Ab,\\ldots,A^{t-1}b\\}$. The approximation factor is $\\mathcal C=\\|h(A)b-y_t\\|_{A^\\alpha}/\\min_{y\\in\\mathcal K_t(A,b)}\\|h(A)b-y\\|_{A^\\alpha}$, with $0/0=1$ and positive numbers divided by zero equal $+\\infty$."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": null,
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "MX_S_lanczos_factor__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\sup\\mathcal{C}\\ge \\frac{1}{2}(\\kappa^{E/2}+\\kappa^{-E/2}),\\quad E=\\max\\{\\alpha,1-\\alpha\\}",
+      "quantity_ref": "MX_S_lanczos_factor__main__q1",
+      "region_refs": [
+        "MX_S_lanczos_factor__main__r1"
+      ],
+      "method": "A worst-case function and starting vector for fixed Lanczos.",
+      "algorithm_or_hard_family": "A worst-case function and starting vector for fixed Lanczos.",
+      "algorithm_class_scope": "The exact Lanczos function-approximation algorithm is fixed, without minimization over general algorithms. Equivalent orthonormal-basis implementations are allowed if they produce the same mathematical approximation.",
+      "resource_costs": {
+        "N_right": "t",
+        "factor": "\\frac12(\\kappa^{E/2}+\\kappa^{-E/2}),\\quad E=\\max\\{\\alpha,1-\\alpha\\}"
+      },
+      "parameter_choice": "Use the cited hard-input construction with the dimension, accuracy, and success-probability conditions attached to this bound.",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "MX_SRC_FA26"
+      ],
+      "evidence_refs": [
+        "MX_S_lanczos_factor__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_lanczos_factor__main__c1"
+      ],
+      "applicability": {
+        "conditions": [],
+        "dimension_conditions": "",
+        "guarantee_mapping": "Fully deterministic. The upper bound holds for every instance. For a suitable A, the lower bound provides h and b achieving any factor 1-eta; letting eta tend to zero gives a supremum, without claiming equality on every instance.",
+        "oracle_mapping": "Exact $Av$ access for a complex Hermitian positive definite matrix. Queries follow the fixed single-start Lanczos recurrence initialized at public $b$; they are not chosen by a general algorithm.",
+        "output_mapping": "The output must be the fixed Lanczos-FA value f_t. Compare its A^α-norm error with the minimum error in the same K_t(A,b), using the convention 0/0 = 1.",
+        "resource_mapping": "The native comparison quantity is the dimensionless approximation factor $\\mathcal C$, not the minimum query count needed for a tolerance. The algorithm uses at most $t$ exact matrix–vector products. Internal arithmetic and scalar function evaluations are free.",
+        "output_metric_mapping": "Return the fixed algorithm's output $y_t$; replacing it by the best Krylov approximation changes the object being evaluated and is not allowed. Define $\\|z\\|_{A^\\alpha}=(z^*A^\\alpha z)^{1/2}$ and $\\mathcal K_t(A,b)=\\operatorname{span}\\{b,Ab,\\ldots,A^{t-1}b\\}$. The approximation factor is $\\mathcal C=\\|h(A)b-y_t\\|_{A^\\alpha}/\\min_{y\\in\\mathcal K_t(A,b)}\\|h(A)b-y\\|_{A^\\alpha}$, with $0/0=1$ and positive numbers divided by zero equal $+\\infty$."
+      },
+      "hidden_constants": "Universal constants, with only the parameter dependence permitted by this bound’s region and expression.",
+      "hidden_logs": [],
+      "derivation": "For each $0<\\zeta\\le1$, Theorem 2 supplies an admissible input attaining the stated factor times $(1-\\zeta)$. Letting $\\zeta\\downarrow0$ gives the lower bound on the supremum approximation ratio. A finite instance need not attain the supremum exactly.",
+      "lower_scope_type": "restricted_deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Nondegenerate Lanczos approximation factor",
+      "predicate": {
+        "predicate": {
+          "name": "lanczos_factor",
+          "args": [
+            "MX_S_lanczos_factor_p_03be3e6afa",
+            "MX_S_lanczos_factor_p_18ed76cc39",
+            "MX_S_lanczos_factor_p_308189e3ca",
+            "MX_S_lanczos_factor_p_a38d5acae5"
+          ],
+          "description": "kappa>1, t>=1, d>=t+1, at least t+1 distinct eigenvalues, and real alpha."
+        }
+      },
+      "predicate_text": "Assume $\\kappa>1$, integers $t\\ge1$ and $d\\ge t+1$, and $\\alpha\\in\\mathbb{R}$. The input matrix has at least $t+1$ distinct eigenvalues.",
+      "parameter_refs": [
+        "MX_S_lanczos_factor_p_03be3e6afa",
+        "MX_S_lanczos_factor_p_18ed76cc39",
+        "MX_S_lanczos_factor_p_308189e3ca",
+        "MX_S_lanczos_factor_p_a38d5acae5"
+      ],
+      "source_region_ref": "MX_S_lanczos_factor__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "MX_S_lanczos_factor__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_lanczos_factor__main__q1",
+      "resource_projection_id": "resource_f7a5aab13b",
+      "regime_id": "MX_S_lanczos_factor__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "MX_S_lanczos_factor__main__b1"
+        ],
+        "lower_refs": [
+          "MX_S_lanczos_factor__main__b2"
+        ],
+        "comparison_ref": "MX_S_lanczos_factor__main__c1",
+        "quantity_ref": "MX_S_lanczos_factor__main__q1",
+        "comparison_mode": "worst_case_approximation_factor",
+        "resource_projection": "sup fixed-algorithm approximation factor",
+        "ratio_or_gap": "$0$",
+        "envelopes": {
+          "upper": {
+            "expression": "\\frac12(\\kappa^{E/2}+\\kappa^{-E/2}),\\quad E=\\max\\{\\alpha,1-\\alpha\\}",
+            "claim_refs": [
+              "MX_S_lanczos_factor__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "\\frac12(\\kappa^{E/2}+\\kappa^{-E/2}),\\quad E=\\max\\{\\alpha,1-\\alpha\\}"
+          },
+          "lower": {
+            "expression": "\\frac12(\\kappa^{E/2}+\\kappa^{-E/2}),\\quad E=\\max\\{\\alpha,1-\\alpha\\}",
+            "claim_refs": [
+              "MX_S_lanczos_factor__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "\\frac12(\\kappa^{E/2}+\\kappa^{-E/2}),\\quad E=\\max\\{\\alpha,1-\\alpha\\}"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "MX_S_lanczos_factor__main__b1",
+            "when_region_refs": [
+              "MX_S_lanczos_factor__main__r1"
+            ],
+            "meaning": "Use this algorithm only on its own applicability region; scalar envelopes take minimum over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "MX_S_lanczos_factor__main__b1": [
+            {
+              "region_ref": "MX_S_lanczos_factor__main__r1",
+              "predicate_text": "Assume $\\kappa>1$, integers $t\\ge1$ and $d\\ge t+1$, and $\\alpha\\in\\mathbb{R}$. The input matrix has at least $t+1$ distinct eigenvalues."
+            }
+          ],
+          "MX_S_lanczos_factor__main__b2": [
+            {
+              "region_ref": "MX_S_lanczos_factor__main__r1",
+              "predicate_text": "Assume $\\kappa>1$, integers $t\\ge1$ and $d\\ge t+1$, and $\\alpha\\in\\mathbb{R}$. The input matrix has at least $t+1$ distinct eigenvalues."
+            }
+          ]
+        },
+        "envelope_certificate": "For the fixed Lanczos algorithm, the instancewise upper factor is attained arbitrarily closely by worst-case inputs. The dimensionless approximation factor is sharp; this is not query optimality over general algorithms.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Worst-case approximation factor of the fixed algorithm over admissible inputs."
+      },
+      "comparison_key": {
+        "setting_id": "MX_S_lanczos_factor",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_lanczos_factor__main__q1",
+        "resource_projection_id": "resource_f7a5aab13b",
+        "regime_id": "MX_S_lanczos_factor__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "MX_S_lanczos_factor__main__e1",
+      "source_ref": "MX_SRC_FA26",
+      "locator": {
+        "theorem": "Theorems 1 and 2",
+        "section": "§1.2",
+        "pdf_pages": [
+          3,
+          4
+        ],
+        "printed_pages": [],
+        "equations": [
+          "(4)",
+          "(6)"
+        ]
+      },
+      "supports": "Let $S=\\{h:h\\text{ or }h/z\\text{ is Stieltjes}\\}$. For each $A$ with at least $t+1$ eigenvalues and condition number $\\kappa$, suitable $h,b$ attain any prescribed fraction $1-\\eta$ in the lower bound.",
+      "notes": [
+        "Let $S=\\{h:h\\text{ or }h/z\\text{ is Stieltjes}\\}$. For each $A$ with at least $t+1$ eigenvalues and condition number $\\kappa$, suitable $h,b$ attain any prescribed fraction $1-\\eta$ in the lower bound."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "MX_SRC_FA26",
+      "authors": [
+        "Tyler Chen",
+        "David Persson"
+      ],
+      "title": "Optimal near-optimality bounds for the Lanczos method for matrix functions",
+      "year": 2026,
+      "version": "arXiv:2608.07160v1; 2026-08-07",
+      "url": "https://arxiv.org/pdf/2608.07160v1",
+      "publication_status": "preprint"
+    }
+  ],
+  "relations": [
+    {
+      "id": "MX_REL_lanczos_function",
+      "source_ref": "MX_S_lanczos_factor",
+      "target_ref": "MX_S_function_action",
+      "relation_kind": "algorithm_restriction_and_metric_change",
+      "conditions": [
+        "Fixed Lanczos algorithm with h in an extended Stieltjes class; not a general-function minimax result"
+      ],
+      "instance_map": "Preserve $A,h,b$ and impose the source task's additional function-class and spectral assumptions.",
+      "output_map": "The output vector is unchanged.",
+      "error_map": "Best-in-subspace approximation error is the denominator of the ratio. A conversion to an epsilon ||b|| target requires a separate bound on that best error.",
+      "oracle_simulation": "The same matrix-product interface is used, but the fixed algorithm restricts the query sequence.",
+      "cost_map": {
+        "expression": null,
+        "components": {
+          "N_right": "A fixed t steps"
+        }
+      },
+      "evidence_refs": [
+        "MX_S_lanczos_factor__main__e1"
+      ]
+    }
+  ],
+  "aliases": [
+    {
+      "legacy_id": "MX_S_lanczos_factor",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "optimal": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "MX_S_lanczos_factor__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "bcd7e0d4af82930b135e13512f4bf908a67a3fcc3e7977dfdf25ce36c1963394",
+    "source_order": 49,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

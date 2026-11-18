@@ -1,0 +1,258 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Dynamic trace estimation with access to past matrices and pointwise-in-time correctness\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{MX\_\allowbreak{}S\_\allowbreak{}dynamic\_\allowbreak{}trace}
+
+Matrix computation
+
+For a fixed sequence \AtlasInlineMath{A_1,\ldots,A_T}, output estimates of \AtlasInlineMath{\tau_t=\operatorname{tr}(A_t)} sequentially. The interface for \AtlasInlineMath{A_{t+1}} becomes available only after output \AtlasInlineMath{\widehat\tau_t}.
+
+\textbf{Status.} Bounds missing
+
+\textbf{TASK tags.} task family: Matrix computation
+
+\textbf{MODEL tags.} spectral structure: Explicit matrix class; stochastic model: Schatten variation budget
+
+\textbf{ORACLE tags.} feedback quality: Exact; interface family: Past matrix matvec; operation: Past matrix matvec; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Causal protocol; randomization: Private randomness allowed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Online scalar sequence
+
+\textbf{METRIC tags.} criterion: Per time absolute trace
+
+\textbf{GUARANTEE tags.} randomness: Algorithm private seed; time uniformity: Fixed time or accuracy
+
+\textbf{RESOURCE tags.} measure: N
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+For a fixed sequence \AtlasInlineMath{A_1,\ldots,A_T}, output estimates of \AtlasInlineMath{\tau_t=\operatorname{tr}(A_t)} sequentially. The interface for \AtlasInlineMath{A_{t+1}} becomes available only after output \AtlasInlineMath{\widehat\tau_t}.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The matrices \AtlasInlineMath{A_t\in\mathbb{R}^{d\times d}} may be nonsymmetric and indefinite. The entire sequence is fixed before the algorithmic seed is drawn. Assume \AtlasInlineMath{1\le p\le2}, \AtlasInlineMath{\|A_t\|_{S_p}\le1}, \AtlasInlineMath{\|A_{t+1}-A_t\|_{S_p}\le\alpha}, and \AtlasInlineMath{0\le\alpha<1}.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Inputs \AtlasInlineMath{d,T,p,\alpha,\varepsilon,\delta} are public. At time \AtlasInlineMath{t} choose \AtlasInlineMath{j\le t} and any \AtlasInlineMath{v\in\mathbb{R}^d} to obtain exact \AtlasInlineMath{A_jv}. Future matrices are inaccessible, while past matrices remain accessible. A difference product requires subtraction of two charged native products.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return a scalar \AtlasInlineMath{\widehat\tau_t} at each time. Earlier outputs cannot be supplied retrospectively after the sequence ends. No additional certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The base loss indexed by \AtlasInlineMath{t} is \AtlasInlineMath{|\widehat\tau_t-\operatorname{tr}(A_t)|}, with threshold \AtlasInlineMath{\varepsilon}. This is an absolute error; norm normalization is already part of the model assumptions.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Record calls at every time and matrix and sum them to obtain \AtlasInlineMath{N}; one \AtlasInlineMath{(A_{t+1}-A_t)v} costs two calls. Compare the displayed algorithms under a fixed total budget. Expected cost is a separate quantity.
+
+Reading public inputs and performing exact internal arithmetic, storage, and postprocessing are free in this query model. The budget is not a running-time or bit-complexity claim.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Randomized adaptive online algorithms are allowed. The algorithm must output the current estimate before the next interface becomes available. Storage and exact internal arithmetic are unrestricted, with no Krylov or linear-span condition.
+
+Choose one algorithm, then require \AtlasInlineMath{\Pr(|\widehat\tau_t-\operatorname{tr}(A_t)|\le\varepsilon)\ge1-\delta} for every admissible fixed sequence and each fixed time \AtlasInlineMath{t}. Probability is over private randomness; simultaneous correctness at every time is not required.
+
+\textbf{Budget convention.} fixed worst-case joint budget; no expectation substituted
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{d}: The order of the square input matrix and the dimension of each query vector. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb N,\ d\ge1}.
+
+\AtlasInlineMath{A\in\mathbb R^{d\times d}}
+
+\AtlasInlineMath{T}: Total number of matrix interfaces revealed sequentially \textbf{Domain:} \AtlasInlineMath{T\in\mathbb N,\ T\ge1}.
+
+\AtlasInlineMath{(A_1,\ldots,A_T)}
+
+\AtlasInlineMath{p}: Schatten norm exponent shared by the input norm and variation budget. \textbf{Domain:} \AtlasInlineMath{1\le p\le2}.
+
+\AtlasInlineMath{\|M\|_{S_p}=(\sum_i\sigma_i(M)^p)^{1/p}}
+
+\AtlasInlineMath{\alpha}: Schatten-norm bound on differences between consecutive matrices \textbf{Domain:} \AtlasInlineMath{0\le\alpha<1}.
+
+\AtlasInlineMath{\|A_{t+1}-A_t\|_{S_p}\le\alpha}
+
+\AtlasInlineMath{\varepsilon}: The absolute trace-error tolerance at each time. \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{|\widehat\tau_t-\operatorname{tr}(A_t)|\le\varepsilon}
+
+\AtlasInlineMath{\delta}: Allowed failure probability at each fixed time \textbf{Domain:} \AtlasInlineMath{0<\delta<1}.
+
+\AtlasInlineMath{\forall t:\Pr(|\widehat\tau_t-\operatorname{tr}(A_t)|\le\varepsilon)\ge1-\delta}
+
+\AtlasInlineMath{A_t}: The \AtlasInlineMath{t}th arriving fixed hidden matrix, which may be nonsymmetric and indefinite \textbf{Domain:} \AtlasInlineMath{\mathbb R^{d\times d},\ 1\le t\le T}.
+
+\AtlasInlineMath{t,j}: Current time and index of the arrived matrix queried in this call. \textbf{Domain:} \AtlasInlineMath{1\le j\le t\le T}.
+
+\AtlasInlineMath{\tau_t,\widehat\tau_t}: The current true trace and its estimate, which must be output before the next interface opens. \textbf{Domain:} \AtlasInlineMath{\mathbb R}.
+
+\AtlasInlineMath{\tau_t=\operatorname{tr}(A_t)}
+
+\AtlasInlineMath{\sigma_i(M)}: Singular values in nonincreasing order \textbf{Domain:} \AtlasInlineMath{1\le i\le\min\{\operatorname{rows}(M),\operatorname{cols}(M)\}}.
+
+\AtlasInlineMath{\sigma_1(M)\ge\cdots\ge\sigma_{\min\{\operatorname{rows}(M),\operatorname{cols}(M)\}}(M)\ge0}
+
+\AtlasInlineMath{\|M\|_{S_p}}: The Schatten norm shared by input and difference matrices. \textbf{Domain:} A nonnegative real.
+
+\AtlasInlineMath{\|M\|_{S_p}=(\sum_i\sigma_i(M)^p)^{1/p}}
+
+\AtlasInlineMath{L_\alpha}: The positive logarithmic factor in the dynamic upper bound. \textbf{Domain:} \AtlasInlineMath{0<\alpha\le1/2}.
+
+\AtlasInlineMath{L_\alpha=\log(2/\alpha)}
+
+\AtlasInlineMath{H_{\alpha,\delta}}: Confidence logarithm in the dynamic upper bound \textbf{Domain:} \AtlasInlineMath{0<\alpha\le1/2,\ 0<\delta<1/2}.
+
+\AtlasInlineMath{H_{\alpha,\delta}=\log(2/(\alpha\delta))}
+
+\AtlasInlineMath{N}: Total single-vector query budget across all times and all historical matrices \textbf{Domain:} \AtlasInlineMath{\mathbb N_0}.
+
+\AtlasInlineMath{N^\star}: Minimum worst-case total query budget sufficient for the stated pointwise probability guarantee \textbf{Domain:} \AtlasInlineMath{\mathbb N_0\cup\{+\infty\}}.
+
+\AtlasInlineMath{c,C}: Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value. \textbf{Domain:} Independent of the dimension, accuracy, and probability parameters tracked by this bound.
+
+\AtlasInlineMath{\log}: Natural logarithm \textbf{Domain:} Positive real argument.
+
+\AtlasInlineMath{\log x=\ln x}
+
+\AtlasInlineMath{O,\Omega,\Theta}: Upper, lower, and two-sided bounds up to constants in the same applicable regime \textbf{Domain:} Hidden constants have only the parameter dependence explicitly permitted by the associated bound.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\AtlasMath{N^\star(\varepsilon,\delta;d,T,p,\alpha)}
+\textbf{Scope.} Take the worst total budget over complete admissible sequences fixed before the seed is generated. The success requirement applies separately at each fixed time.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsection{R1 - An upper bound for general Schatten variation budgets.}
+\textbf{Region.} Assume \AtlasInlineMath{1\le p\le2}, \AtlasInlineMath{0<\alpha\le1/2}, \AtlasInlineMath{\varepsilon>0}, and \AtlasInlineMath{0<\delta<1/2}. Every model matrix has Schatten norm at most one. Define \AtlasInlineMath{L_\alpha=\log(2/\alpha)} and \AtlasInlineMath{H_{\alpha,\delta}=\log(2/(\alpha\delta))}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Number of right matrix-vector product queries
+
+\textbf{Status.} Lower bound missing
+
+\textbf{Lower bound.} No admitted bound for this comparison
+
+\textbf{Upper bound.} B1
+
+\AtlasMath{N\le C\left[(T\alpha+1)L_\alpha^{1+p}\left(\frac{\sqrt{H_{\alpha,\delta}}}{\varepsilon}\right)^p+T H_{\alpha,\delta}\right]}
+\textbf{Comparison argument.} The upper bound applies on the general variation-budget window. The broader lower-bound claim in Theorem 5.3 cites Lemma 5.1 and Appendix D.1, which establish only a single-segment scaling reduction with \AtlasInlineMath{\alpha=1/(T-1)}. A matching bound over the full window requires a multisegment direct-sum argument and is not certified by this row.
+
+\needspace{4\baselineskip}\subsection{R2 - Refined upper bound in terms of the nuclear-norm variation budget}
+\textbf{Region.} Assume \AtlasInlineMath{p=1}, \AtlasInlineMath{0<\alpha\le1/2}, \AtlasInlineMath{\varepsilon>0}, and \AtlasInlineMath{0<\delta<1/2}. Use the same truncated logarithm \AtlasInlineMath{L_\alpha,H_{\alpha,\delta}}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Number of right matrix-vector product queries
+
+\textbf{Status.} Lower bound missing
+
+\textbf{Lower bound.} No admitted bound for this comparison
+
+\textbf{Upper bound.} B2
+
+\AtlasMath{N\le C\left[\frac{(T\alpha+1)L_\alpha^2\sqrt{H_{\alpha,\delta}}}{\varepsilon}+T\min\left\{1,\frac{\alpha}{\varepsilon}\right\}H_{\alpha,\delta}\right]}
+\textbf{Comparison argument.} Refined p=1 upper bound retaining min\{1,alpha/epsilon\}. Applicability of the full piecewise high-confidence lower bound still requires independent verification.
+
+\needspace{4\baselineskip}\subsection{R3 - Static endpoint with zero variation}
+\textbf{Region.} \AtlasInlineMath{\alpha=0}, \AtlasInlineMath{1\le p\le2}, \AtlasInlineMath{T\ge1}, \AtlasInlineMath{0<\delta<1/2}, \AtlasInlineMath{\varepsilon>0}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Number of right matrix-vector product queries
+
+\textbf{Status.} Lower bound missing
+
+\textbf{Lower bound.} No admitted bound for this comparison
+
+\textbf{Upper bound.} B3
+
+\AtlasMath{O\!\left(\min\{d,(\sqrt{\log(1/\delta)}/\varepsilon)^p+\log(1/\delta)\}\right)}
+\textbf{Comparison argument.} A valid achievable branch at the static endpoint. A relative-norm lower bound is not transferred without checking a construction with the required fixed norm.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+\needspace{4\baselineskip}\subsection{B1 - Randomized segmented binary-tree trace estimation; all previous matrices remain accessible, with a pointwise-in-time error guarantee}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{N\le C\left[(T\alpha+1)L_\alpha^{1+p}\left(\frac{\sqrt{H_{\alpha,\delta}}}{\varepsilon}\right)^p+T H_{\alpha,\delta}\right]}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2209.15219v1}{[1]}
+
+\textbf{Oracle correspondence.} A tree node is computed only after its right endpoint arrives. Each difference product costs two original-matrix calls.
+
+\textbf{Constants.} Fixed declared regularity and initialization budgets; no unlisted joint-parameter optimality is asserted.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2209.15219v1}{[1]} pdf pages: 3; 7; 8; 9; 10; 18; 19; theorem or section: Dynamic model; Theorems 3.1 and B.2; theorem: Dynamic model; Theorems 3.1 and B.2
+
+The DT dynamic model permits queries to all matrices that have arrived and guarantees absolute trace accuracy at each fixed time. Theorem 3.1 gives an upper bound for \AtlasInlineMath{p\in[1,2]}. At \AtlasInlineMath{p=1}, Theorem B.2 improves the second term to \AtlasInlineMath{T\min\{1,\alpha/\varepsilon\}H_{\alpha,\delta}}. A difference product costs two primitive calls.
+
+\needspace{4\baselineskip}\subsection{B2 - Randomized binary-tree estimation that skips sufficiently small increments, for nuclear norm p = 1.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{N\le C\left[\frac{(T\alpha+1)L_\alpha^2\sqrt{H_{\alpha,\delta}}}{\varepsilon}+T\min\left\{1,\frac{\alpha}{\varepsilon}\right\}H_{\alpha,\delta}\right]}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2209.15219v1}{[1]}
+
+\textbf{Resource conversion.} Count every primitive matrix product; a difference product costs two calls.
+
+\textbf{Constants.} Fixed declared regularity and initialization budgets; no unlisted joint-parameter optimality is asserted.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2209.15219v1}{[1]} pdf pages: 3; 7; 8; 9; 10; 18; 19; theorem or section: Dynamic model; Theorems 3.1 and B.2; theorem: Dynamic model; Theorems 3.1 and B.2
+
+The DT dynamic model permits queries to all matrices that have arrived and guarantees absolute trace accuracy at each fixed time. Theorem 3.1 gives an upper bound for \AtlasInlineMath{p\in[1,2]}. At \AtlasInlineMath{p=1}, Theorem B.2 improves the second term to \AtlasInlineMath{T\min\{1,\alpha/\varepsilon\}H_{\alpha,\delta}}. A difference product costs two primitive calls.
+
+\needspace{4\baselineskip}\subsection{B3 - One static Schatten-normalized trace estimate reused over time, or standard-basis reconstruction.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{N\le C\min\left\{d,\left(\frac{\sqrt{\log(1/\delta)}}{\varepsilon}\right)^p+\log(1/\delta)\right\}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2209.15219v1}{[1]}
+
+\textbf{Constants.} Positive universal constants, permitted to depend on any explicitly fixed auxiliary parameters.
+
+\textbf{Derivation.} When $\alpha$ = 0, every A\_t equals A\_1 exactly.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2209.15219v1}{[1]} theorem: Theorem B.1 plus $\alpha =0$ identity
+
+\needspace{7\baselineskip}\section{References}
+[1] David P. Woodruff; Fred Zhang; Qiuyi (Richard) Zhang. Optimal Query Complexities for Dynamic Trace Estimation. 2022. arXiv:2209.15219v1; 2022-09-30.
+
+\url{https://arxiv.org/pdf/2209.15219v1}
+
+\end{document}

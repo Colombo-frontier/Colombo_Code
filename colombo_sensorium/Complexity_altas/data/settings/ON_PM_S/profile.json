@@ -1,0 +1,1664 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ON_PM_S",
+  "title": "Finite partial monitoring: signal feedback and observability classes",
+  "summary": "After acting, the learner receives only the feedback specified by a public signal matrix; the true loss may remain hidden. The objective is to compete with the best fixed action. Local and global observability must be determined jointly from the loss and signal matrices.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "external_regret"
+    },
+    {
+      "facet": "structure",
+      "value": "finite_partial_monitoring"
+    },
+    {
+      "facet": "feedback",
+      "value": "partial_monitoring_signal"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation_code": "finite_partial_monitoring",
+      "formulation": "sum_t L(a_t,o_t)−min_a sum_tL(a,o_t)",
+      "solution_goal": "minimize_expected_cumulative_regret",
+      "protocol_ref": "ON_PM_S_pro_73c9dcd026",
+      "code": "finite_partial_monitoring",
+      "formulation_latex": "R_T=\\sum_tL(a_t,o_t)-\\min_{a\\in[K]}\\sum_tL(a,o_t),\\qquad Y_t=H(a_t,o_t)",
+      "goal_latex": "R_T^*(G)=\\inf_{\\mathcal A\\,\\mathrm{knowing}\\,G}\\sup_{o_{1:T}\\in[M]^T}\\mathbb E_{\\mathcal A}[R_T]",
+      "description_paragraphs": [
+        "After acting, the learner receives only the feedback specified by a public signal matrix; the true loss may remain hidden. The objective is to compete with the best fixed action. Local and global observability must be determined jointly from the loss and signal matrices."
+      ]
+    },
+    "model": {
+      "instance": "The finite game $G=(L,H)$ is fixed and public, with $L\\in[0,1]^{K\\times M}$ and signal map H on action/outcome pairs. The environment fixes hidden outcomes $o_{1:T}\\in[M]^T$ in advance. Only the signal is observed after acting. Duplicate and degenerate actions are excluded. Local and global observability are region-specific cases.",
+      "assumptions": [
+        {
+          "subject_id": "ON_PM_S_obj_3e2ceff024",
+          "property_code": "bounded_loss_matrix",
+          "variable_blocks": [
+            "ON_PM_S_var_5c6206093f",
+            "ON_PM_S_var_38242686a3"
+          ],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_PM_S_p_76dd32a562",
+            "ON_PM_S_p_239de64228",
+            "ON_PM_S_p_8975078e5b",
+            "ON_PM_S_p_44cfa4a3ce",
+            "ON_PM_S_p_2c24578e71"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "For every action $a$ and outcome $o$, $0\\le L(a,o)\\le1$."
+        },
+        {
+          "subject_id": "ON_PM_S_obj_cc85736307",
+          "property_code": "nondegenerate_game",
+          "variable_blocks": [],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_PM_S_p_76dd32a562",
+            "ON_PM_S_p_239de64228",
+            "ON_PM_S_p_8975078e5b",
+            "ON_PM_S_p_44cfa4a3ce",
+            "ON_PM_S_p_2c24578e71"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "Let $C_i=\\{p\\in\\Delta_M:\\ell_i^\\top p\\le\\ell_j^\\top p\\text{ for all }j\\}$. Duplicate actions with identical loss rows are excluded, as are degenerate actions whose nonempty cell $C_i$ is strictly contained in another cell $C_j$. Dominated actions with empty cells are permitted."
+        },
+        {
+          "subject_id": "ON_PM_S_obj_3ec4a30ead",
+          "property_code": "public_signal_map",
+          "variable_blocks": [
+            "ON_PM_S_var_5c6206093f",
+            "ON_PM_S_var_38242686a3"
+          ],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_PM_S_p_76dd32a562",
+            "ON_PM_S_p_239de64228",
+            "ON_PM_S_p_8975078e5b",
+            "ON_PM_S_p_44cfa4a3ce",
+            "ON_PM_S_p_2c24578e71"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "The complete signal matrix H is public, but each round reveals only H(a_t,o_t), generally insufficient to recover o_t or the incurred loss L(a_t,o_t)."
+        }
+      ],
+      "parameter_domain_description": "G: a finite matrix/map pair (public); K: $K\\in\\mathbb N,\\ K\\ge2$ (public); M: $M\\in\\mathbb N,\\ M\\ge2$ (public); T: $T\\in\\mathbb N,\\ T\\ge1$ (public); v: $v\\ge0$, finite on the relevant observability branch (public).",
+      "code": "model_declared",
+      "interaction_timing": [
+        "Full tables $L,H$ are public; the outcome sequence $o_{1:T}$ is fixed and hidden.",
+        "Select a_t from past signals.",
+        "Incur L(a_t,o_t).",
+        "After revealing only $H(a_t,o_t)$, proceed to the next round."
+      ],
+      "adversary_information": "The environment fixes the entire loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner’s private seed. This is an oblivious-adversary specification and does not automatically extend to history-dependent adaptive adversaries.",
+      "unresolved_applicability": [
+        "A fixed-game classification by the exponent of T does not certify joint optimality in game size or observability-estimator constants. Degenerate games are handled separately."
+      ],
+      "observability_definitions": {
+        "signal_matrix": "Each row of S_a corresponds to a distinct symbol of H(a,·), with (S_a)_{s,o}=1{H(a,o)=s}.",
+        "global": "Every difference of loss rows $\\ell_i-\\ell_j$ lies in the sum of the images of all $S_a^{\\mathsf T}$.",
+        "local": "For adjacent Pareto-optimal cells i and j sharing a face of dimension M-2, the row difference can be reconstructed from the image spaces of S_a^T for actions in that neighborhood.",
+        "scope": "Local and global conditions are used in different comparison regions. The fixed nondegenerate-game specification does not impose them simultaneously."
+      },
+      "description_paragraphs": [
+        "Entries of the public loss matrix $L$ lie in $[0,1]$. Knowing the matrix does not reveal the current hidden outcome column $o_t$.",
+        "The public signal map $H$ takes arbitrary finite symbols; signals need not equal numerical losses.",
+        "The hidden outcome sequence $o_{1:T}$ is oblivious and fixed before interaction.",
+        "The public finite game is $G=(L,H)$. Let $C_i$ be the outcome-distribution region where action $i$ is optimal. Duplicate loss rows and degenerate actions with nonempty $C_i$ strictly contained in another $C_j$ are excluded. Local/global observability defines comparison branches rather than simultaneous model assumptions.",
+        "Fix the game $G$ satisfying $K,M\\ge2$. Actions lie in $[K]$, outcomes in $[M]$, and signals in the finite range of the matrix $H$.",
+        "The game classification holds with only $T$ growing. It does not establish joint minimax optimality in $K,M$ and estimator constant $v$."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "ON_PM_S_ora_d48d543684",
+          "operation_code": "observe_action_outcome_signal",
+          "target_object": "ON_PM_S_obj_eb90dcc8f9",
+          "variable_blocks": [
+            "ON_PM_S_var_5c6206093f"
+          ],
+          "query_signature": "Inputs: $t,\\ a_t\\in[K]$. Timing and visible information follow the specified protocol.",
+          "response_signature": "Response: $Y_t=H(a_t,o_t)$.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "order is relative to the current member f_t(x), f(x), or sample F(x;ξ_t) of the named indexed function family and only with respect to x; finite feedback interfaces have no derivative order",
+          "feedback_quality": {
+            "code": "exact_feedback",
+            "description": "The outcome $o_t$ is fixed but hidden. The learner first selects $a_t$, incurs $L(a_t,o_t)$, and observes only $H(a_t,o_t)$. Neither the outcome nor the incurred loss is revealed unless recoverable from the signal and public tables. No signal from a second action in the same round is available."
+          },
+          "domain_ref": "ON_PM_S_dom_11673a929a",
+          "coupling": "The outcome $o_t$ is fixed but hidden. The learner first selects $a_t$, incurs $L(a_t,o_t)$, and observes only $H(a_t,o_t)$. Neither the outcome nor the incurred loss is revealed unless recoverable from the signal and public tables. No signal from a second action in the same round is available.",
+          "index_control": "The learner selects feasible actions and explicitly permitted probes. The environment controls the current loss, outcome, or fresh sample; the learner cannot select future rounds.",
+          "access_schedule": "Follow the interaction order in registry.protocols exactly. Current loss feedback follows the action; any pre-action context or advice phase is specified separately.",
+          "accuracy_argument": null,
+          "cost_rule_ref": "ON_PM_S_res_cf8e9499f9",
+          "query_latex": "t,\\ a_t\\in[K]",
+          "response_latex": "Y_t=H(a_t,o_t)"
+        }
+      ],
+      "public_inputs": [
+        "T",
+        "The complete fixed game G = (L,H)."
+      ],
+      "hidden_objects": [
+        "ON_PM_S_obj_eb90dcc8f9"
+      ],
+      "auxiliary_interfaces": [
+        "No additional access to hidden losses, means, or gradients is available. Projection, sampling, and internal optimization over public domains may have separately recorded computation costs; they are not free loss oracles."
+      ],
+      "protocol_ref": "ON_PM_S_pro_73c9dcd026",
+      "query_domain_description": "[K]",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "Action-outcome signal:",
+        "$$\nt,\\ a_t\\in[K]\\ \\longmapsto\\ Y_t=H(a_t,o_t)\n$$",
+        "The environment outcome $o_t$ is already fixed but hidden when the learner chooses action $a_t$.",
+        "The learner incurs $L(a_t,o_t)$ and observes only the signal $H(a_t,o_t)$.",
+        "The outcome $o_t$ and incurred loss are hidden unless inferable from the signal and public matrices.",
+        "No signal from a second action in the same round is supplied.",
+        "Public inputs: $T$ and the complete fixed game $G=(L,H)$."
+      ]
+    },
+    "output": {
+      "object_type": "action_trajectory",
+      "domain_ref": "ON_PM_S_dom_11673a929a",
+      "feasibility": "Every loss-bearing action must belong to the action domain. The final output retains the complete action trajectory.",
+      "allowed_postprocessing": "Any measurable computation on received feedback is allowed. No native observation may be added after the budget is exhausted or the algorithm stops.",
+      "certificate_requirement": "Only the stated statistical guarantee is required, not a certificate verifiable through the feedback interface.",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "sum_t L(a_t,o_t)−min_a sum_tL(a,o_t)",
+      "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+      "reference_object": "ON_PM_S_obj_3e2ceff024",
+      "nonnegativity": false,
+      "finiteness_conditions": "The entries of L lie in [0,1], so cumulative excess loss lies in [−T,T]. The fixed-game classification tracks only T.",
+      "comparator_ref": "ON_PM_S_com_7345b029c8",
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "$$\nR_T=\\sum_tL(a_t,o_t)-\\min_{a\\in[K]}\\sum_tL(a,o_t),\\qquad Y_t=H(a_t,o_t)\n$$"
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "Sequential online rounds; only information permitted by the protocol is visible in each round."
+        },
+        {
+          "code": "native_feedback",
+          "unit": "feedback_event",
+          "description": "One signal is observed per round, for T signal events. No fictitious gradient or function-value charges are introduced."
+        }
+      ],
+      "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+      "cost_rules": [
+        {
+          "id": "ON_PM_S_res_cf8e9499f9",
+          "operation_refs": [
+            "ON_PM_S_ora_d48d543684"
+          ],
+          "cost": {
+            "rounds": 1,
+            "native_feedback": 1
+          }
+        }
+      ],
+      "scalarization": "At fixed T, compare the native cumulative quantity in the objective. Retain the full resource vector; internal optimization, projection, and sampling are not implicitly one loss query.",
+      "setup_cost": "Only declared public inputs may be read. Hidden losses, means, or samples cannot be accessed in advance or outside the $T$ rounds or $\\tau$ samples.",
+      "online_cost": "All causal randomized strategies are allowed. Public-game preprocessing, cell and observability calculations, and internal policy optimization are charged separately; an information-theoretic existence upper bound does not automatically supply an efficient implementation.",
+      "amortization_scope": "The algorithm runs on one environment. Charged feedback cannot be reused across independent instances.",
+      "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "One signal is observed per round, for T signal events. No fictitious gradient or function-value charges are introduced.",
+        "All causal randomized strategies are allowed.",
+        "Public-game preprocessing, cell and observability calculations, and internal policy optimization have separate costs. An information-theoretic existence bound does not automatically give an efficient implementation.",
+        "Information calls, arithmetic, communication rounds, and memory are measured separately. Exact real internal computation is excluded from information complexity unless explicitly charged. This does not imply a bit-complexity bound."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "Private randomization is allowed. The seed is hidden from the environment and independent of the fixed instance and sample randomness.",
+        "adaptivity": "The action and every probe in a round may depend only on previous-round feedback, public inputs, any context or advice already revealed that round, and private randomness. They may not use unrevealed current losses or samples.",
+        "restrictions": [
+          "All measurable causal policies satisfying the declared information timing and feasible domain are allowed, without extra span, iteration-form, or polynomial-time restrictions."
+        ],
+        "internal_computation": "Arbitrary measurable exact-real computation and all causal randomized policies are permitted. Feedback complexity does not imply arithmetic or bit complexity. Public-game preprocessing, cell and observability calculations, and internal policy optimization are separate costs. An information-theoretic existence bound does not certify an efficient implementation.",
+        "parallelism": "Online rounds proceed sequentially. A two-point evaluation is a same-round feedback pair, not two independent rounds.",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "All measurable causal randomized policies respecting the stated timing are allowed. The private seed is independent of the fixed instance and future samples. Apart from explicit feedback, output, and budget requirements, there are no restrictions on linear spans, iteration form, internal arithmetic, memory, or communication."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "The native objective is $R_T^*(G)=\\inf_{\\mathcal A\\,\\mathrm{knowing}\\,G}\\sup_{o_{1:T}\\in[M]^T}\\mathbb E_{\\mathcal A}[R_T]$.",
+          "aggregation_order": [
+            "The game G=(L,H) is fixed and public. It is not part of the worst-case variables in this T-asymptotic comparison.",
+            "Take the infimum over causal learners knowing G, then the supremum over hidden outcome sequences o_1:T.",
+            "Expectation is over learner randomness only; comparison is with the best fixed action in hindsight."
+          ],
+          "quantifier_order": "One learning algorithm must apply to every instance in the declared class. It may use public inputs only, not hidden instance parameters.",
+          "randomness_sources": [
+            "Learner's private randomness"
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "The T-round horizon is fixed and public. No anytime or simultaneous-all-T high-probability guarantee is implied.",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "$$\nR_T^*(G)=\\inf_{\\mathcal{A}\\,\\mathrm{knowing}\\,G}\\sup_{o_{1:T}\\in[M]^T}\\mathbb{E}_{\\mathcal{A}}[R_T]\n$$",
+            "Choose one algorithm using public inputs before taking the worst case over all admissible instances. Expectation covers the algorithm's private randomness and the observation randomness specified by the model. Comparator choice and the order of summation, minimization, and expectation follow the displayed formula."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "There are T sequential interaction rounds. Native feedback count is determined by the per-round protocol and is not an independent budget to minimize.",
+        "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+        "scalarization": "At fixed T, compare the native cumulative quantity in the objective. Retain the full resource vector; internal optimization, projection, and sampling are not implicitly one loss query."
+      },
+      "alias_ids": [
+        "ON_PM_S"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ON_PM_S_obj_eb90dcc8f9",
+        "type": "loss_environment",
+        "definition": "The hidden outcome sequence o₁:T ∈ [M]^T is fixed before interaction.",
+        "depends_on": [],
+        "role_code": "hidden_outcome_sequence"
+      },
+      {
+        "id": "ON_PM_S_obj_3e2ceff024",
+        "type": "public_matrix",
+        "definition": "The matrix L ∈ [0,1]^{K×M} is public. Its entry L(a,o) is the loss for action a and outcome o.",
+        "depends_on": [],
+        "role_code": "loss_matrix"
+      },
+      {
+        "id": "ON_PM_S_obj_3ec4a30ead",
+        "type": "public_signal_map",
+        "definition": "The finite signal map H:[K]×[M]→Sigma is public; only H(a_t,o_t) is returned as feedback.",
+        "depends_on": [],
+        "role_code": "feedback_signal_map"
+      },
+      {
+        "id": "ON_PM_S_obj_cc85736307",
+        "type": "finite_game",
+        "definition": "The public game G=(L,H) is fixed; these tables determine its geometry and observability.",
+        "depends_on": [
+          "ON_PM_S_obj_3e2ceff024",
+          "ON_PM_S_obj_3ec4a30ead"
+        ],
+        "role_code": "partial_monitoring_game"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ON_PM_S_var_5c6206093f",
+        "dimension": "One discrete action index",
+        "space": "[K]"
+      },
+      {
+        "id": "ON_PM_S_var_38242686a3",
+        "dimension": "1 (discrete outcome index)",
+        "space": "The hidden outcome $o_t\\in[M]$ is chosen by the environment and is not a learner-controlled query variable."
+      }
+    ],
+    "domains": [
+      {
+        "id": "ON_PM_S_dom_11673a929a",
+        "definition": "[K]",
+        "roles": [
+          "action_domain",
+          "query_domain"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "ON_PM_S_nor_60596e4d87",
+        "definition": "The model specifies coordinate ranges of finite vectors. Discrete action labels have no derivative order. A placeholder norm imposes no additional geometric assumption."
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ON_PM_S_pro_73c9dcd026",
+        "steps": [
+          "Full tables $L,H$ are public; the outcome sequence $o_{1:T}$ is fixed and hidden.",
+          "Select a_t from past signals.",
+          "Incur L(a_t,o_t).",
+          "After revealing only $H(a_t,o_t)$, proceed to the next round."
+        ],
+        "adversary_information": "The environment fixes the entire loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner’s private seed. This is an oblivious-adversary specification and does not automatically extend to history-dependent adaptive adversaries.",
+        "loss_bearing_points": "Only a_t incurs L(a_t,o_t). Incurring a loss does not imply observing it.",
+        "queries_per_round": "One signal is observed per round, for T signal events. No fictitious gradient or function-value charges are introduced.",
+        "past_requery": "The learner may not request new information from past rounds or previously used samples. Previously received feedback may be stored and processed. In stochastic models, an action may be repeated in a new round, using a fresh charged sample."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ON_PM_S_com_7345b029c8",
+        "definition": "Fixed action $a$ that is optimal in hindsight for the game"
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ON_PM_S_p_44cfa4a3ce",
+      "symbol": "G",
+      "meaning": "Public fixed finite partial-monitoring game",
+      "kind": "independent",
+      "domain": "Finite matrix-map pairs",
+      "public": true,
+      "definition": "The game is $G=(L,H)$, where L is the loss matrix and H the signal map.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_PM_S_p_239de64228",
+      "symbol": "K",
+      "meaning": "The number of actions available to the learner.",
+      "kind": "independent",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "public": true,
+      "definition": "The action set is $[K]$.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_PM_S_p_8975078e5b",
+      "symbol": "M",
+      "meaning": "Number of possible environment outcomes",
+      "kind": "independent",
+      "domain": "$M\\in\\mathbb N,\\ M\\ge2$",
+      "public": true,
+      "definition": "Hidden outcome $o_t\\in[M]$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_PM_S_p_76dd32a562",
+      "symbol": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_PM_S_p_2c24578e71",
+      "symbol": "v",
+      "meaning": "Minimum uniform-norm bound needed to represent neighboring-action loss differences",
+      "kind": "derived",
+      "domain": "$v\\ge0$, finite on the corresponding observable branch.",
+      "public": true,
+      "definition": "For each neighboring action pair a,b choose $h_{ab}:[K]\\times\\Sigma_H\\to\\mathbb R$ so that $L(a,o)-L(b,o)=\\sum_{c=1}^K h_{ab}(c,H(c,o))$ holds for every outcome o. The value v is the smallest number satisfying $\\|h_{ab}\\|_\\infty\\le v$ simultaneously. The locally observable branch restricts the construction to local actions.",
+      "dependencies": [
+        "ON_PM_S_p_44cfa4a3ce"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "G",
+      "meaning": "Public fixed finite partial-monitoring game",
+      "domain": "Finite matrix-map pairs",
+      "definition": "The game is $G=(L,H)$, where L is the loss matrix and H the signal map.",
+      "parameter_ref": "ON_PM_S_p_44cfa4a3ce"
+    },
+    {
+      "symbol_latex": "K",
+      "meaning": "The number of actions available to the learner.",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "definition": "The action set is $[K]$.",
+      "parameter_ref": "ON_PM_S_p_239de64228"
+    },
+    {
+      "symbol_latex": "M",
+      "meaning": "Number of possible environment outcomes",
+      "domain": "$M\\in\\mathbb N,\\ M\\ge2$",
+      "definition": "Hidden outcome $o_t\\in[M]$",
+      "parameter_ref": "ON_PM_S_p_8975078e5b"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "parameter_ref": "ON_PM_S_p_76dd32a562"
+    },
+    {
+      "symbol_latex": "v",
+      "meaning": "Minimum uniform-norm bound needed to represent neighboring-action loss differences",
+      "domain": "$v\\ge0$, finite on the corresponding observable branch.",
+      "definition": "For each neighboring action pair a,b choose $h_{ab}:[K]\\times\\Sigma_H\\to\\mathbb R$ so that $L(a,o)-L(b,o)=\\sum_{c=1}^K h_{ab}(c,H(c,o))$ holds for every outcome o. The value v is the smallest number satisfying $\\|h_{ab}\\|_\\infty\\le v$ simultaneously. The locally observable branch restricts the construction to local actions.",
+      "parameter_ref": "ON_PM_S_p_2c24578e71"
+    },
+    {
+      "symbol_latex": "L",
+      "meaning": "Public loss matrix",
+      "domain": "$L\\in[0,1]^{K\\times M}$",
+      "definition": "$L(a,o)$ is the loss of action $a$ under the hidden outcome $o$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "H,\\Sigma_H",
+      "meaning": "Public signal map and its finite range",
+      "domain": "$H:[K]\\times[M]\\to\\Sigma_H$",
+      "definition": "After choosing $a_t$, observe only $H(a_t,o_t)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "o_t,a_t",
+      "meaning": "The hidden outcome and actual action.",
+      "domain": "$o_t\\in[M],\\ a_t\\in[K]$",
+      "definition": "The entire outcome sequence is fixed before interaction.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Delta_M",
+      "meaning": "The probability simplex of environment outcomes.",
+      "domain": "$\\Delta_M\\subset\\mathbb R^M$",
+      "definition": "$\\Delta_M=\\{p\\ge0:\\sum_op_o=1\\}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "C_a",
+      "meaning": "The region of outcome distributions for which action a is optimal.",
+      "domain": "$C_a\\subseteq\\Delta_M$",
+      "definition": "$C_a=\\{p:\\sum_oL(a,o)p_o\\le\\sum_oL(b,o)p_o\\ \\forall b\\}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "a,b",
+      "meaning": "Adjacent optimal actions in the observability definition",
+      "domain": "An action index.",
+      "definition": "Actions $a,b$ are adjacent if cells $C_a,C_b$ each have affine dimension $M-1$ and their intersection has dimension $M-2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "h_{ab}",
+      "meaning": "Signal function representing the loss difference between adjacent actions",
+      "domain": "$h_{ab}:[K]\\times\\Sigma_H\\to\\mathbb R$",
+      "definition": "Global observability requires $L(a,o)-L(b,o)=\\sum_ch_{ab}(c,H(c,o))$. For a nondegenerate game, local observability uses only signals from the neighboring actions $a,b$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c(G)",
+      "meaning": "Positive constant in the fixed-game lower bound",
+      "domain": "Positive real number in the nonzero-regret branch",
+      "definition": "Constants may depend on the entire public fixed game G. No universal lower-bound constant uniform in K, M, or v is asserted.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_T",
+      "meaning": "Cumulative loss difference relative to the comparator specified in this profile",
+      "domain": "Real-valued random variable",
+      "definition": "$R_T=\\sum_tL(a_t,o_t)-\\min_{a\\in[K]}\\sum_tL(a,o_t)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal R_T^*(G)",
+      "meaning": "Minimax expected regret under the current information protocol and parameter region.",
+      "domain": "A nonnegative real.",
+      "definition": "$$\n\\begin{aligned}\\mathcal R_T^*(G)&=\\inf_{\\mathcal A(G)}\\sup_{o_{1:T}\\in[M]^T}\\mathbb E_{\\mathcal A}[R_T(G)],\\\\ R_T(G)&=\\sum_{t=1}^T L(a_t,o_t)-\\min_{a\\in[K]}\\sum_{t=1}^T L(a,o_t),\\\\ G&=(L,H)\\quad\\text{fixed and public}.\\end{aligned}\n$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation includes the learner's private randomness and, when allowed, the environment strategy's randomness. A fixed loss sequence introduces no additional observation noise.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Cumulative observations counted according to the declared feedback type.",
+      "domain": "Nonnegative integer or integer-valued stopping time",
+      "definition": "The quantity $N=T$ counts observed signals; a signal need not be the numerical loss.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ON_PM_S__main__q1",
+      "kind": "cumulative_regret",
+      "expression": "For fixed public game G, R*_T(G)=inf_A sup_{o_1:T} E_A[ΣL(a_t,o_t)−min_aΣL(a,o_t)]",
+      "optimization_direction": "minimize",
+      "units": "loss",
+      "budget_variables": [
+        "ON_PM_S_p_76dd32a562"
+      ],
+      "tolerance_variables": [],
+      "analysis_scope": "Compare only this specification and the listed parameter regions.",
+      "tracked_parameters": [
+        "ON_PM_S_p_76dd32a562"
+      ],
+      "fixed_parameters": [
+        "ON_PM_S_p_44cfa4a3ce",
+        "ON_PM_S_p_239de64228",
+        "ON_PM_S_p_8975078e5b",
+        "ON_PM_S_p_2c24578e71"
+      ],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "source_kind_label": "minimax_cumulative_regret",
+      "expression_latex": "\\begin{aligned}\\mathcal R_T^*(G)&=\\inf_{\\mathcal A(G)}\\sup_{o_{1:T}\\in[M]^T}\\mathbb E_{\\mathcal A}[R_T(G)],\\\\ R_T(G)&=\\sum_{t=1}^T L(a_t,o_t)-\\min_{a\\in[K]}\\sum_{t=1}^T L(a,o_t),\\\\ G&=(L,H)\\quad\\text{fixed and public}.\\end{aligned}",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound.",
+      "expression": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_351fb610de"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ON_PM_S__main__r1",
+      "specification_ref": "ON_PM_S",
+      "name": "ZERO",
+      "predicate_text": "The game $G$ has no neighboring nondominated actions.",
+      "predicate": {
+        "predicate": {
+          "name": "declared_model_condition",
+          "args": [],
+          "description": "The game $G$ has no neighboring nondominated actions."
+        }
+      },
+      "parameter_refs": [
+        "ON_PM_S_p_76dd32a562",
+        "ON_PM_S_p_239de64228",
+        "ON_PM_S_p_8975078e5b",
+        "ON_PM_S_p_44cfa4a3ce",
+        "ON_PM_S_p_2c24578e71"
+      ],
+      "kind": "mathematical",
+      "endpoint_notes": "Proof constants are independent of all declared tracked parameters. Thresholds without numerical values remain symbolic."
+    },
+    {
+      "id": "ON_PM_S__main__r2",
+      "specification_ref": "ON_PM_S",
+      "name": "LOCAL",
+      "predicate_text": "The game G has neighboring actions and is locally observable.",
+      "predicate": {
+        "predicate": {
+          "name": "declared_model_condition",
+          "args": [],
+          "description": "The game G has neighboring actions and is locally observable."
+        }
+      },
+      "parameter_refs": [
+        "ON_PM_S_p_76dd32a562",
+        "ON_PM_S_p_239de64228",
+        "ON_PM_S_p_8975078e5b",
+        "ON_PM_S_p_44cfa4a3ce",
+        "ON_PM_S_p_2c24578e71"
+      ],
+      "kind": "mathematical",
+      "endpoint_notes": "Proof constants are independent of all declared tracked parameters. Thresholds without numerical values remain symbolic."
+    },
+    {
+      "id": "ON_PM_S__main__r3",
+      "specification_ref": "ON_PM_S",
+      "name": "GLOBAL",
+      "predicate_text": "The game $G$ is globally observable but not locally observable.",
+      "predicate": {
+        "predicate": {
+          "name": "declared_model_condition",
+          "args": [],
+          "description": "The game $G$ is globally observable but not locally observable."
+        }
+      },
+      "parameter_refs": [
+        "ON_PM_S_p_76dd32a562",
+        "ON_PM_S_p_239de64228",
+        "ON_PM_S_p_8975078e5b",
+        "ON_PM_S_p_44cfa4a3ce",
+        "ON_PM_S_p_2c24578e71"
+      ],
+      "kind": "mathematical",
+      "endpoint_notes": "Proof constants are independent of all declared tracked parameters. Thresholds without numerical values remain symbolic."
+    },
+    {
+      "id": "ON_PM_S__main__r4",
+      "specification_ref": "ON_PM_S",
+      "name": "HARD",
+      "predicate_text": "The game G is not globally observable.",
+      "predicate": {
+        "predicate": {
+          "name": "declared_model_condition",
+          "args": [],
+          "description": "The game G is not globally observable."
+        }
+      },
+      "parameter_refs": [
+        "ON_PM_S_p_76dd32a562",
+        "ON_PM_S_p_239de64228",
+        "ON_PM_S_p_8975078e5b",
+        "ON_PM_S_p_44cfa4a3ce",
+        "ON_PM_S_p_2c24578e71"
+      ],
+      "kind": "mathematical",
+      "endpoint_notes": "Proof constants are independent of all declared tracked parameters. Thresholds without numerical values remain symbolic."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ON_PM_S__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{R}_T^*(G)\\le0",
+      "quantity_ref": "ON_PM_S__main__q1",
+      "region_refs": [
+        "ON_PM_S__main__r1"
+      ],
+      "method": "Dominant action / arbitrary action",
+      "algorithm_or_hard_family": "Dominant action / arbitrary action",
+      "algorithm_class_scope": "A deterministic decision strategy suffices. Rewards or observations may still be random, with error quantifiers specified separately under GUARANTEE.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_PM19"
+      ],
+      "evidence_refs": [
+        "ON_PM_S__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_PM_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The fixed nondegenerate finite game has no adjacent nondominated actions; use the zero-regret branch of the classification theorem."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Constants may depend on the public fixed game G; only horizon T is tracked here.",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_PM_S__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\mathcal{R}_T^*(G)\\ge0",
+      "quantity_ref": "ON_PM_S__main__q1",
+      "region_refs": [
+        "ON_PM_S__main__r1"
+      ],
+      "method": "Nondegenerate-game classification hard outcome distributions",
+      "algorithm_or_hard_family": "Nondegenerate-game classification hard outcome distributions",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_PM14"
+      ],
+      "evidence_refs": [
+        "ON_PM_S__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_PM_S__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The fixed nondegenerate finite game has no adjacent nondominated actions; use the zero-regret branch of the classification theorem."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Each fixed game in a nonzero branch has its own positive lower-bound constant c(G). No positive constant uniform over all games is asserted.",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_PM_S__main__b3",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{R}_T^*(G)\\le K^{3/2}(M+1)\\sqrt{8T\\log K}",
+      "quantity_ref": "ON_PM_S__main__q1",
+      "region_refs": [
+        "ON_PM_S__main__r2"
+      ],
+      "method": "Classification-achieving partial-monitoring strategy",
+      "algorithm_or_hard_family": "Classification-achieving partial-monitoring strategy",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_PM19"
+      ],
+      "evidence_refs": [
+        "ON_PM_S__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_PM_S__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "A fixed nondegenerate finite game has adjacent nondominated actions and is locally observable. Lower-bound constants may depend on that fixed game."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Constants may depend on the public fixed game G; only horizon T is tracked here.",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_PM_S__main__b4",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\mathcal{R}_T^*(G)\\ge c(G)\\sqrt T",
+      "quantity_ref": "ON_PM_S__main__q1",
+      "region_refs": [
+        "ON_PM_S__main__r2"
+      ],
+      "method": "Nondegenerate-game classification hard outcome distributions",
+      "algorithm_or_hard_family": "Nondegenerate-game classification hard outcome distributions",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_PM14"
+      ],
+      "evidence_refs": [
+        "ON_PM_S__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_PM_S__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "A fixed nondegenerate finite game has adjacent nondominated actions and is locally observable. Lower-bound constants may depend on that fixed game."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Each fixed game in a nonzero branch has its own positive lower-bound constant c(G). No positive constant uniform over all games is asserted.",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_PM_S__main__b5",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{R}_T^*(G)\\le3(TKv)^{2/3}\\left(\\frac{\\log K}{2}\\right)^{1/3}",
+      "quantity_ref": "ON_PM_S__main__q1",
+      "region_refs": [
+        "ON_PM_S__main__r3"
+      ],
+      "method": "Classification-achieving partial-monitoring strategy",
+      "algorithm_or_hard_family": "Classification-achieving partial-monitoring strategy",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_PM19"
+      ],
+      "evidence_refs": [
+        "ON_PM_S__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_PM_S__main__c3"
+      ],
+      "applicability": {
+        "conditions": [
+          "A fixed nondegenerate finite game is globally observable but not locally observable. Lower-bound constants may depend on the fixed game."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Constants may depend on the public fixed game G; only horizon T is tracked here.",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_PM_S__main__b6",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\mathcal{R}_T^*(G)\\ge c(G)T^{2/3}",
+      "quantity_ref": "ON_PM_S__main__q1",
+      "region_refs": [
+        "ON_PM_S__main__r3"
+      ],
+      "method": "Nondegenerate-game classification hard outcome distributions",
+      "algorithm_or_hard_family": "Nondegenerate-game classification hard outcome distributions",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_PM14"
+      ],
+      "evidence_refs": [
+        "ON_PM_S__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_PM_S__main__c3"
+      ],
+      "applicability": {
+        "conditions": [
+          "A fixed nondegenerate finite game is globally observable but not locally observable. Lower-bound constants may depend on the fixed game."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Each fixed game in a nonzero branch has its own positive lower-bound constant c(G). No positive constant uniform over all games is asserted.",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_PM_S__main__b7",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{R}_T^*(G)\\le T",
+      "quantity_ref": "ON_PM_S__main__q1",
+      "region_refs": [
+        "ON_PM_S__main__r4"
+      ],
+      "method": "Dominant action / arbitrary action",
+      "algorithm_or_hard_family": "Dominant action / arbitrary action",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_PM19"
+      ],
+      "evidence_refs": [
+        "ON_PM_S__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_PM_S__main__c4"
+      ],
+      "applicability": {
+        "conditions": [
+          "The fixed nondegenerate finite game is not globally observable and belongs to the linear-regret branch."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Constants may depend on the public fixed game G; only horizon T is tracked here.",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ON_PM_S__main__b8",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\mathcal{R}_T^*(G)\\ge c(G)T",
+      "quantity_ref": "ON_PM_S__main__q1",
+      "region_refs": [
+        "ON_PM_S__main__r4"
+      ],
+      "method": "Nondegenerate-game classification hard outcome distributions",
+      "algorithm_or_hard_family": "Nondegenerate-game classification hard outcome distributions",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "resource_costs": {
+        "rounds": "T",
+        "native_feedback": "T"
+      },
+      "parameter_choice": null,
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_PM14"
+      ],
+      "evidence_refs": [
+        "ON_PM_S__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_PM_S__main__c4"
+      ],
+      "applicability": {
+        "conditions": [
+          "The fixed nondegenerate finite game is not globally observable and belongs to the linear-regret branch."
+        ],
+        "dimension_conditions": "Dimension, arm count, and horizon must satisfy the stated region. Large-dimension and asymptotic source conditions are retained.",
+        "guarantee_mapping": "Retain this setting's cumulative regret, error probability, stopping time, or error exponent, including the order of aggregation. Required conversions are stated in the bound's derivation.",
+        "oracle_mapping": "Preserve current-round feedback content, response timing, and sample coupling, without adding access to hidden objects.",
+        "output_mapping": "Use the actual action trajectory or terminal recommendation required by the specification. Post-hoc averaging is allowed only where an explicit derivation justifies that transfer.",
+        "resource_mapping": "Native queries and initialization use the declared resource units. No extra samples or revisits to past rounds are free."
+      },
+      "hidden_constants": "Each fixed game in a nonzero branch has its own positive lower-bound constant c(G). No positive constant uniform over all games is asserted.",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "ZERO",
+      "predicate": {
+        "predicate": {
+          "name": "declared_model_condition",
+          "args": [],
+          "description": "The game $G$ has no neighboring nondominated actions."
+        }
+      },
+      "predicate_text": "The game $G$ has no neighboring nondominated actions.",
+      "parameter_refs": [
+        "ON_PM_S_p_76dd32a562",
+        "ON_PM_S_p_239de64228",
+        "ON_PM_S_p_8975078e5b",
+        "ON_PM_S_p_44cfa4a3ce",
+        "ON_PM_S_p_2c24578e71"
+      ],
+      "source_region_ref": "ON_PM_S__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_PM_S__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_PM_S__main__q1",
+      "resource_projection_id": "resource_351fb610de",
+      "regime_id": "ON_PM_S__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "ON_PM_S__main__b1"
+        ],
+        "lower_refs": [
+          "ON_PM_S__main__b2"
+        ],
+        "comparison_ref": "ON_PM_S__main__c1",
+        "quantity_ref": "ON_PM_S__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression": "0",
+            "claim_refs": [
+              "ON_PM_S__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "0"
+          },
+          "lower": {
+            "expression": "0",
+            "claim_refs": [
+              "ON_PM_S__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "0"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_PM_S__main__b1",
+            "when_region_refs": [
+              "ON_PM_S__main__r1"
+            ],
+            "meaning": "Invoke each algorithm only in its applicability region; the scalar upper envelope minimizes over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "ON_PM_S__main__b1": [
+            {
+              "region_ref": "ON_PM_S__main__r1",
+              "predicate_text": "The game $G$ has no neighboring nondominated actions."
+            }
+          ],
+          "ON_PM_S__main__b2": [
+            {
+              "region_ref": "ON_PM_S__main__r1",
+              "predicate_text": "The game $G$ has no neighboring nondominated actions."
+            }
+          ]
+        },
+        "envelope_certificate": "Only individually audited compatible claims enter. A known uniformly dominant action can be used.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound."
+      },
+      "comparison_key": {
+        "setting_id": "ON_PM_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_PM_S__main__q1",
+        "resource_projection_id": "resource_351fb610de",
+        "regime_id": "ON_PM_S__main__r1"
+      }
+    },
+    {
+      "label": "LOCAL",
+      "predicate": {
+        "predicate": {
+          "name": "declared_model_condition",
+          "args": [],
+          "description": "The game G has neighboring actions and is locally observable."
+        }
+      },
+      "predicate_text": "The game G has neighboring actions and is locally observable.",
+      "parameter_refs": [
+        "ON_PM_S_p_76dd32a562",
+        "ON_PM_S_p_239de64228",
+        "ON_PM_S_p_8975078e5b",
+        "ON_PM_S_p_44cfa4a3ce",
+        "ON_PM_S_p_2c24578e71"
+      ],
+      "source_region_ref": "ON_PM_S__main__r2",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_PM_S__main__c2",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_PM_S__main__q1",
+      "resource_projection_id": "resource_351fb610de",
+      "regime_id": "ON_PM_S__main__r2",
+      "bracket": {
+        "upper_refs": [
+          "ON_PM_S__main__b3"
+        ],
+        "lower_refs": [
+          "ON_PM_S__main__b4"
+        ],
+        "comparison_ref": "ON_PM_S__main__c2",
+        "quantity_ref": "ON_PM_S__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+        "ratio_or_gap": "The powers of T agree for a fixed game.",
+        "envelopes": {
+          "upper": {
+            "expression": "K^(3/2)(M+1)sqrt(8T lnK)",
+            "claim_refs": [
+              "ON_PM_S__main__b3"
+            ],
+            "included": true,
+            "expression_latex": "K^{3/2}(M+1)\\sqrt{8T lnK}"
+          },
+          "lower": {
+            "expression": "c(G)sqrtT",
+            "claim_refs": [
+              "ON_PM_S__main__b4"
+            ],
+            "included": true,
+            "expression_latex": "c(G)sqrtT"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_PM_S__main__b3",
+            "when_region_refs": [
+              "ON_PM_S__main__r2"
+            ],
+            "meaning": "Invoke each algorithm only in its applicability region; the scalar upper envelope minimizes over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "ON_PM_S__main__b3": [
+            {
+              "region_ref": "ON_PM_S__main__r2",
+              "predicate_text": "The game G has neighboring actions and is locally observable."
+            }
+          ],
+          "ON_PM_S__main__b4": [
+            {
+              "region_ref": "ON_PM_S__main__r2",
+              "predicate_text": "The game G has neighboring actions and is locally observable."
+            }
+          ]
+        },
+        "envelope_certificate": "Only individually audited compatible claims enter. Nondegenerate local observability; K,M fixed.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound."
+      },
+      "comparison_key": {
+        "setting_id": "ON_PM_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_PM_S__main__q1",
+        "resource_projection_id": "resource_351fb610de",
+        "regime_id": "ON_PM_S__main__r2"
+      }
+    },
+    {
+      "label": "GLOBAL",
+      "predicate": {
+        "predicate": {
+          "name": "declared_model_condition",
+          "args": [],
+          "description": "The game $G$ is globally observable but not locally observable."
+        }
+      },
+      "predicate_text": "The game $G$ is globally observable but not locally observable.",
+      "parameter_refs": [
+        "ON_PM_S_p_76dd32a562",
+        "ON_PM_S_p_239de64228",
+        "ON_PM_S_p_8975078e5b",
+        "ON_PM_S_p_44cfa4a3ce",
+        "ON_PM_S_p_2c24578e71"
+      ],
+      "source_region_ref": "ON_PM_S__main__r3",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_PM_S__main__c3",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_PM_S__main__q1",
+      "resource_projection_id": "resource_351fb610de",
+      "regime_id": "ON_PM_S__main__r3",
+      "bracket": {
+        "upper_refs": [
+          "ON_PM_S__main__b5"
+        ],
+        "lower_refs": [
+          "ON_PM_S__main__b6"
+        ],
+        "comparison_ref": "ON_PM_S__main__c3",
+        "quantity_ref": "ON_PM_S__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+        "ratio_or_gap": "The powers of T agree for a fixed game.",
+        "envelopes": {
+          "upper": {
+            "expression": "3(TKv)^(2/3)(lnK/2)^(1/3)",
+            "claim_refs": [
+              "ON_PM_S__main__b5"
+            ],
+            "included": true,
+            "expression_latex": "3(TKv)^{2/3}(lnK/2)^{1/3}"
+          },
+          "lower": {
+            "expression": "c(G)T^(2/3)",
+            "claim_refs": [
+              "ON_PM_S__main__b6"
+            ],
+            "included": true,
+            "expression_latex": "c(G)T^{2/3}"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_PM_S__main__b5",
+            "when_region_refs": [
+              "ON_PM_S__main__r3"
+            ],
+            "meaning": "Invoke each algorithm only in its applicability region; the scalar upper envelope minimizes over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "ON_PM_S__main__b5": [
+            {
+              "region_ref": "ON_PM_S__main__r3",
+              "predicate_text": "The game $G$ is globally observable but not locally observable."
+            }
+          ],
+          "ON_PM_S__main__b6": [
+            {
+              "region_ref": "ON_PM_S__main__r3",
+              "predicate_text": "The game $G$ is globally observable but not locally observable."
+            }
+          ]
+        },
+        "envelope_certificate": "Only individually audited compatible claims enter. v is a public-game estimator norm; fixed G.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound."
+      },
+      "comparison_key": {
+        "setting_id": "ON_PM_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_PM_S__main__q1",
+        "resource_projection_id": "resource_351fb610de",
+        "regime_id": "ON_PM_S__main__r3"
+      }
+    },
+    {
+      "label": "HARD",
+      "predicate": {
+        "predicate": {
+          "name": "declared_model_condition",
+          "args": [],
+          "description": "The game G is not globally observable."
+        }
+      },
+      "predicate_text": "The game G is not globally observable.",
+      "parameter_refs": [
+        "ON_PM_S_p_76dd32a562",
+        "ON_PM_S_p_239de64228",
+        "ON_PM_S_p_8975078e5b",
+        "ON_PM_S_p_44cfa4a3ce",
+        "ON_PM_S_p_2c24578e71"
+      ],
+      "source_region_ref": "ON_PM_S__main__r4",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_PM_S__main__c4",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_PM_S__main__q1",
+      "resource_projection_id": "resource_351fb610de",
+      "regime_id": "ON_PM_S__main__r4",
+      "bracket": {
+        "upper_refs": [
+          "ON_PM_S__main__b7"
+        ],
+        "lower_refs": [
+          "ON_PM_S__main__b8"
+        ],
+        "comparison_ref": "ON_PM_S__main__c4",
+        "quantity_ref": "ON_PM_S__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "native sequential rounds / samples, with all auxiliary costs retained on claims",
+        "ratio_or_gap": "The powers of T agree for a fixed game.",
+        "envelopes": {
+          "upper": {
+            "expression": "T",
+            "claim_refs": [
+              "ON_PM_S__main__b7"
+            ],
+            "included": true,
+            "expression_latex": "T"
+          },
+          "lower": {
+            "expression": "c(G)T",
+            "claim_refs": [
+              "ON_PM_S__main__b8"
+            ],
+            "included": true,
+            "expression_latex": "c(G)T"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_PM_S__main__b7",
+            "when_region_refs": [
+              "ON_PM_S__main__r4"
+            ],
+            "meaning": "Invoke each algorithm only in its applicability region; the scalar upper envelope minimizes over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "ON_PM_S__main__b7": [
+            {
+              "region_ref": "ON_PM_S__main__r4",
+              "predicate_text": "The game G is not globally observable."
+            }
+          ],
+          "ON_PM_S__main__b8": [
+            {
+              "region_ref": "ON_PM_S__main__r4",
+              "predicate_text": "The game G is not globally observable."
+            }
+          ]
+        },
+        "envelope_certificate": "Only individually audited compatible claims enter. Trivial loss-range upper and indistinguishability lower.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Native sequential interaction rounds or samples; additional resources remain attached to each bound."
+      },
+      "comparison_key": {
+        "setting_id": "ON_PM_S",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_PM_S__main__q1",
+        "resource_projection_id": "resource_351fb610de",
+        "regime_id": "ON_PM_S__main__r4"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ON_PM_S__main__e1",
+      "source_ref": "ON_SRC_PM14",
+      "locator": {
+        "theorem": "Classification for games against adversarial opponents (unnumbered)",
+        "section": "",
+        "pdf_pages": [
+          8
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Supports the stated results and explicit reductions: $\\mathcal{R}_T^*(G)\\ge0$; $\\mathcal{R}_T^*(G)\\ge c(G)\\sqrt T$; $\\mathcal{R}_T^*(G)\\ge c(G)T^{2/3}$; $\\mathcal{R}_T^*(G)\\ge c(G)T$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "Nondegenerate finite games fall into four regret-rate classes according to their information structure: zero, $\\sqrt T$, $T^{2/3}$, and $T$. The lower-bound constructions cover randomized policies. Asymptotics hold for each fixed game, with constants that may depend on the game."
+      ]
+    },
+    {
+      "id": "ON_PM_S__main__e2",
+      "source_ref": "ON_SRC_PM19",
+      "locator": {
+        "theorem": "Theorems 9–12",
+        "section": "",
+        "pdf_pages": [
+          8,
+          9
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Supports the stated results and explicit reductions: $\\mathcal{R}_T^*(G)\\le0$; $\\mathcal{R}_T^*(G)\\le K^{3/2}(M+1)\\sqrt{8T\\log K}$; $\\mathcal{R}_T^*(G)\\le3(TKv)^{2/3}\\left(\\frac{\\log K}{2}\\right)^{1/3}$; $\\mathcal{R}_T^*(G)\\le T$. Each bound retains its own model, feedback, parameter region, and quantifiers.",
+      "notes": [
+        "This classifies a fixed game. The locally observable upper bound is $K^{3/2}(M+1)\\sqrt{8T\\log K}$ and globally observable upper bound $3(TKv)^{2/3}(\\log K/2)^{1/3}$. Source game-dependent constants remain fixed."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "ON_SRC_PM14",
+      "authors": [
+        "Gábor Bartók",
+        "Dean P. Foster",
+        "Dávid Pál",
+        "Alexander Rakhlin",
+        "Csaba Szepesvári"
+      ],
+      "title": "Partial Monitoring—Classification, Regret Bounds, and Algorithms",
+      "year": 2014,
+      "version": "author PDF dated 2014-05-16; MOR 39(4):967–997",
+      "url": "https://sites.ualberta.ca/~szepesva/papers/partial_monitoring-mor.pdf",
+      "publication_status": "published"
+    },
+    {
+      "id": "ON_SRC_PM19",
+      "authors": [
+        "Tor Lattimore",
+        "Csaba Szepesvári"
+      ],
+      "title": "An Information-Theoretic Approach to Minimax Regret in Partial Monitoring",
+      "year": 2019,
+      "version": "COLT / PMLR 99:2111–2139",
+      "url": "https://proceedings.mlr.press/v99/lattimore19a/lattimore19a.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "ON_PM_S",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 4,
+    "status_counts": {
+      "optimal": 4
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ON_PM_S__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "ON_PM_S__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_3",
+      "comparison_ids": [
+        "ON_PM_S__main__c3"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_4",
+      "comparison_ids": [
+        "ON_PM_S__main__c4"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "9e5d9dee5134bfe48d8f22cf1de2dc4c66fa870d023ffd50e06eb7f4f9b2d61c",
+    "source_order": 74,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

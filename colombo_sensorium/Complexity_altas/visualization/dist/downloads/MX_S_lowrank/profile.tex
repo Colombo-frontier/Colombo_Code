@@ -1,0 +1,561 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Low-rank approximation: Schatten residual and right projection.\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{MX\_\allowbreak{}S\_\allowbreak{}lowrank}
+
+Matrix computation
+
+Construct a rank-\AtlasInlineMath{k} orthogonal right projection \AtlasInlineMath{P} approximating the optimal rank-\AtlasInlineMath{k} residual.
+
+\textbf{Status.} Logarithmic gap present
+
+\textbf{TASK tags.} formulation: Matrix lowrank approximation; solution concept: Relative schatten residual; task family: Matrix computation
+
+\textbf{MODEL tags.} spectral structure: Arbitrary real matrix
+
+\textbf{ORACLE tags.} feedback quality: Exact; interface family: Exact two sided matvec; operation: Matrix left matvec; operation: Matrix right matvec; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; randomization: Private randomness allowed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Orthogonal projector
+
+\textbf{METRIC tags.} criterion: Relative schatten residual
+
+\textbf{GUARANTEE tags.} randomness: Algorithm private seed; time uniformity: Fixed time or accuracy
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget; measure: N left; measure: N right
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Construct a rank-\AtlasInlineMath{k} orthogonal right projection \AtlasInlineMath{P} approximating the optimal rank-\AtlasInlineMath{k} residual.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The matrix \AtlasInlineMath{A\in\mathbb{R}^{m\times n}} is arbitrary real, with \AtlasInlineMath{d_{\mathrm{min}}=\min\{m,n\}}, \AtlasInlineMath{1\le k<d_{\mathrm{min}}}, and \AtlasInlineMath{1\le p\le\infty}. No rank, singular-gap, or spectral-decay promise is imposed.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+The information \AtlasInlineMath{m,n,k,p,\varepsilon} is public and \AtlasInlineMath{A} is hidden. Exact \AtlasInlineMath{Av} is available for every \AtlasInlineMath{v\in\mathbb{R}^n}, and exact \AtlasInlineMath{A^{\mathsf T}u} for every \AtlasInlineMath{u\in\mathbb{R}^m}. The two directions are charged separately.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return \AtlasInlineMath{P\in\mathbb{R}^{n\times n}} satisfying \AtlasInlineMath{P=P^{\mathsf T}=P^2} and \AtlasInlineMath{\operatorname{rank}(P)=k}, or an orthonormal basis for that projector. Neither \AtlasInlineMath{AP} nor an error certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+For finite \AtlasInlineMath{p}, use \AtlasInlineMath{\|M\|_{S_p}=(\sum_i\sigma_i(M)^p)^{1/p}}; \AtlasInlineMath{p=\infty} gives the spectral norm. Define \AtlasInlineMath{\operatorname{OPT}_{p,k}=\min_{\operatorname{rank}(B)\le k}\|A-B\|_{S_p}}.
+
+Success means \AtlasInlineMath{\|A(I_n-P)\|_{S_p}\le(1+\varepsilon)\operatorname{OPT}_{p,k}}. Zero optimal residual requires exact recovery of the relevant row space. The unsquared criterion is retained.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Retain the joint budget \AtlasInlineMath{(N_{\mathrm{r}},N_{\mathrm{l}})}, whose coordinates count single-vector calls to \AtlasInlineMath{Av} and \AtlasInlineMath{A^{\mathsf T}u}, respectively. This setting explicitly uses the equal-weight scalarization \AtlasInlineMath{N=N_{\mathrm{r}}+N_{\mathrm{l}}}. Each column of a block is charged separately.
+
+The budget bounds calls for every fixed input and every private seed. Reading public inputs, exact real arithmetic, storage, and postprocessing are free. One call applies the interface to one vector.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.
+
+The algorithm is selected using only public inputs. For every admissible input fixed before its private seed is generated, the success event has probability at least \AtlasInlineMath{2/3} over that private randomness.
+
+\textbf{Budget convention.} A fixed worst-case budget respected for every input and private seed.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{m}: Number of rows of the input matrix \textbf{Domain:} \AtlasInlineMath{m\in\mathbb N,\ m\ge1}.
+
+\AtlasInlineMath{A\in\mathbb R^{m\times n}}
+
+\AtlasInlineMath{n}: Number of columns of the input matrix \textbf{Domain:} \AtlasInlineMath{n\in\mathbb N,\ n\ge1}.
+
+\AtlasInlineMath{A\in\mathbb R^{m\times n}}
+
+\AtlasInlineMath{d_{\mathrm{min}}}: Smaller dimension of the input matrix \textbf{Domain:} \AtlasInlineMath{d_{\min}=\min\{m,n\}\ge2}.
+
+\AtlasInlineMath{d_{\mathrm{min}}=\min\{m,n\}}
+
+\AtlasInlineMath{k}: The exact rank of the output orthogonal right projection. \textbf{Domain:} \AtlasInlineMath{k\in\mathbb N,\ 1\le k<d_{\mathrm{min}}}.
+
+\AtlasInlineMath{\operatorname{rank}(P)=k}
+
+\AtlasInlineMath{p}: The Schatten-norm order used in the residual. It may vary with other parameters in the uniform region. \textbf{Domain:} \AtlasInlineMath{1\le p\le\infty}.
+
+\AtlasInlineMath{\|M\|_{S_p}=(\sum_i\sigma_i(M)^p)^{1/p}\quad(p<\infty)}
+
+\AtlasInlineMath{\varepsilon}: The additional relative factor above the optimal Schatten residual. \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{\|A(I_n-P)\|_{S_p}\le(1+\varepsilon)\operatorname{OPT}_{p,k}}
+
+\AtlasInlineMath{\varepsilon_0}: Fixed accuracy threshold permitted by the uniform lower bound in LR26, Theorem 3.1 \textbf{Domain:} \AtlasInlineMath{0<\varepsilon_0\le1}, a universal constant.
+
+\AtlasInlineMath{0<\varepsilon\le\varepsilon_0}
+
+\AtlasInlineMath{\varepsilon_p}: The accuracy threshold permitted by LR26 after fixing p $\in$ [1,2). \textbf{Domain:} The threshold satisfies \AtlasInlineMath{0<\varepsilon_p\le1} and depends only on fixed \AtlasInlineMath{p}.
+
+\AtlasInlineMath{0<\varepsilon\le\varepsilon_p}
+
+\AtlasInlineMath{C_{\mathrm{bridge}}}: Universal bridge constant chosen when transferring a larger-p Schatten target to an operator-norm target \textbf{Domain:} The quantity \AtlasInlineMath{C_{\mathrm{bridge}}>0} is fixed in advance.
+
+\AtlasInlineMath{C_{\mathrm{bridge}}\log2\ge1,\quad e^{\varepsilon/C_{\mathrm{bridge}}}\le1+\varepsilon/4\quad(0<\varepsilon\le1)}
+
+\AtlasInlineMath{A}: The hidden arbitrary input matrix. \textbf{Domain:} \AtlasInlineMath{\mathbb R^{m\times n}}.
+
+\AtlasInlineMath{P}: Returned right orthogonal projection \textbf{Domain:} \AtlasInlineMath{\mathbb R^{n\times n}}.
+
+\AtlasInlineMath{P=P^{\mathsf T}=P^2,\quad\operatorname{rank}(P)=k}
+
+\AtlasInlineMath{I_n}: The order-n identity matrix. \textbf{Domain:} \AtlasInlineMath{\mathbb R^{n\times n}}.
+
+\AtlasInlineMath{\sigma_i(M)}: Singular values in nonincreasing order \textbf{Domain:} \AtlasInlineMath{1\le i\le\min\{\operatorname{rows}(M),\operatorname{cols}(M)\}}.
+
+\AtlasInlineMath{\sigma_1(M)\ge\cdots\ge\sigma_{\min\{\operatorname{rows}(M),\operatorname{cols}(M)\}}(M)\ge0}
+
+\AtlasInlineMath{\|M\|_{S_p}}: Schatten norm; for finite order, apply the \AtlasInlineMath{\ell_p} norm to singular values \textbf{Domain:} Arbitrary rectangular matrix.
+
+\AtlasInlineMath{\|M\|_{S_p}=(\sum_i\sigma_i(M)^p)^{1/p}\ (p<\infty),\quad\|M\|_{S_\infty}=\sigma_1(M)}
+
+\AtlasInlineMath{A_k}: Any best approximation of rank at most \AtlasInlineMath{k} obtained by truncating to the leading \AtlasInlineMath{k} singular directions \textbf{Domain:} \AtlasInlineMath{\mathbb R^{m\times n}}.
+
+\AtlasInlineMath{\operatorname{OPT}_{p,k}}: The best Schatten residual at rank at most k. \textbf{Domain:} A nonnegative real.
+
+\AtlasInlineMath{\operatorname{OPT}_{p,k}=\min_{\operatorname{rank}(B)\le k}\|A-B\|_{S_p}=\|A-A_k\|_{S_p}}
+
+\AtlasInlineMath{\Phi_{\mathrm{lr}}(p,\varepsilon)}: Polynomial core of the uniform low-rank complexity bound \textbf{Domain:} \AtlasInlineMath{2\le p<\infty}.
+
+\AtlasInlineMath{\Phi_{\mathrm{lr}}(p,\varepsilon)=\min\{p^{1/6}\varepsilon^{-1/3},\varepsilon^{-1/2}\}}
+
+\AtlasInlineMath{c_B}: A fixed universal witness constant within the range permitted by BCW Theorem 5.1. \textbf{Domain:} \AtlasInlineMath{c_B>0}.
+
+\AtlasInlineMath{p\le c_B\log(d_{\mathrm{min}})/\delta_B}
+
+\AtlasInlineMath{\alpha_B,\delta_B}: Fixed scaling and internal accuracy for invoking BCW in the uniform-p regime \textbf{Domain:} An internal algorithm parameter.
+
+\AtlasInlineMath{\alpha_B=\min\{1/2,c_B/(2C_{\mathrm{bridge}})\},\quad\delta_B=\alpha_B\varepsilon}
+
+\AtlasInlineMath{\beta_B,\delta_{\mathrm{low}}}: The scaling and internal precision used to apply BCW in the fixed \AtlasInlineMath{p<2} region. \textbf{Domain:} An internal algorithm parameter.
+
+
+\AtlasMath{\begin{aligned}
+\beta_B&=\min\{1/2,c_B\log2/4\},\\
+\delta_{\mathrm{low}}&=\beta_B\varepsilon.
+\end{aligned}}
+
+
+\AtlasInlineMath{\eta}: Internal accuracy used when invoking the spectral-norm block Krylov upper bound \textbf{Domain:} An internal algorithm parameter.
+
+\AtlasInlineMath{\eta=\varepsilon/4}
+
+\AtlasInlineMath{Q_p^\star}: Minimum worst-case total two-sided calls attaining the right-projection error guarantee for the specified p \textbf{Domain:} \AtlasInlineMath{\mathbb N_0\cup\{+\infty\}}.
+
+\AtlasInlineMath{c_p,C_p}: Positive constants may depend on \AtlasInlineMath{p} only in comparisons that fix \AtlasInlineMath{p\in[1,2)} in advance. \textbf{Domain:} Uniform in m, n, k, and $\varepsilon$.
+
+\AtlasInlineMath{\widetilde O,\widetilde\Omega,\widetilde\Theta}: Suppress only the logarithmic factors explicitly registered for this bound. \textbf{Domain:} Polynomial dependence on \AtlasInlineMath{p} is explicit in a regime uniform over \AtlasInlineMath{p}.
+
+\AtlasInlineMath{\|z\|_2}: Euclidean norm of a vector \textbf{Domain:} Finite-dimensional real or complex vector.
+
+\AtlasInlineMath{\|z\|_2=(\sum_i|z_i|^2)^{1/2}}
+
+\AtlasInlineMath{\|M\|_{\mathrm{op}}}: The matrix operator norm induced by the Euclidean norm. \textbf{Domain:} Any compatible matrix.
+
+\AtlasInlineMath{\|M\|_{\mathrm{op}}=\max_{\|z\|_2=1}\|Mz\|_2=\sigma_1(M)}
+
+\AtlasInlineMath{c,C}: Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value. \textbf{Domain:} Independent of the dimension, accuracy, and probability parameters tracked by this bound.
+
+\AtlasInlineMath{\log}: Natural logarithm \textbf{Domain:} Positive real argument.
+
+\AtlasInlineMath{\log x=\ln x}
+
+\AtlasInlineMath{O,\Omega,\Theta}: Upper, lower, and two-sided bounds up to constants in the same applicable regime \textbf{Domain:} Hidden constants have only the parameter dependence explicitly permitted by the associated bound.
+
+\AtlasInlineMath{N_{\mathrm r},N_{\mathrm l}}: Single-vector counts for right products Av and transpose products $A^{\mathsf T}u$. \textbf{Domain:} \AtlasInlineMath{\mathbb N_0^2}.
+
+\AtlasInlineMath{N}: The worst-case call budget with equal costs for both product channels. \textbf{Domain:} \AtlasInlineMath{\mathbb N_0}.
+
+\AtlasInlineMath{N=N_{\mathrm r}+N_{\mathrm l}}
+
+\AtlasInlineMath{N^\star}: Minimum worst-case query budget attaining this profile's success guarantee \textbf{Domain:} \AtlasInlineMath{\mathbb N_0\cup\{+\infty\}}.
+
+The quantity is \AtlasInlineMath{N^\star=\inf_{\mathcal A}\sup_{I,\omega}N_{\mathcal A}(I,\omega)}, where the infimum ranges over admissible algorithms satisfying this profile's success guarantee.
+
+\AtlasInlineMath{\mathcal A,I,\omega}: The algorithm, fixed admissible input, and private algorithmic seed. \textbf{Domain:} Quantifiers for worst-case input and execution cost. Success probability is taken over $\omega$.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\AtlasMath{Q_p^\star(m,n,k,\varepsilon)}
+\textbf{Scope.} Within the cited complete specification, select an algorithm before taking the worst case over all fixed inputs. Information permissions remain unchanged.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsubsection{Q2 - target accuracy cost}
+\AtlasMath{Q_p^\star(m,n,k,\varepsilon),\qquad p\ \mathrm{fixed}}
+\textbf{Scope.} Within the cited complete specification, select an algorithm before taking the worst case over all fixed inputs. Information permissions remain unchanged.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsection{R1 - A uniform comparison across finite norm orders.}
+\textbf{Region.} Assume \AtlasInlineMath{2\le p<\infty}, \AtlasInlineMath{0<\varepsilon\le\varepsilon_0}, and \AtlasInlineMath{1\le k<d_{\mathrm{min}}}. Hidden constants are uniform in \AtlasInlineMath{p} as it varies within this regime.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Sum of right and left matrix-vector product query counts.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B1
+
+\AtlasMath{\Omega(\min\{d_{\mathrm{min}},k\min\{p^{1/6}\varepsilon^{-1/3},\varepsilon^{-1/2}\}\})}
+\textbf{Upper bound.} B4, B5, B8
+
+\AtlasMath{\widetilde{O}(\min\{d_{\mathrm{min}},k\min\{p^{1/6}\varepsilon^{-1/3},\varepsilon^{-1/2}\}\})}
+\textbf{Gap or comparison.} The ratio is at most \AtlasInlineMath{O\!\left(\log\!\frac{2d_{\mathrm{min}}}{\varepsilon}\sqrt{\log(2d_{\mathrm{min}})}\right)}, hence also \AtlasInlineMath{O\!\left(\log^{3/2}\!\frac{2d_{\mathrm{min}}}{\varepsilon}\right)}. Universal constants are independent of every \AtlasInlineMath{p\ge2} varying in this region.
+
+\textbf{Comparison argument.} Compare the bound of each complete algorithm with reconstruction in \AtlasInlineMath{d_{\mathrm{min}}} queries, where \AtlasInlineMath{d_{\mathrm{min}}=\min\{m,n\}} corresponds to the source dimension notation \AtlasInlineMath{N}. Three cases cover the full declared region. If \AtlasInlineMath{p\varepsilon\le1}, then \AtlasInlineMath{\sqrt p\le p^{1/6}\varepsilon^{-1/3}}. If \AtlasInlineMath{1\le p\varepsilon\le C_{\mathrm{bridge}}\log d_{\mathrm{min}}}, both BCW terms are bounded by \AtlasInlineMath{\varepsilon^{-1/2}\operatorname{polylog}(d_{\mathrm{min}})}. If \AtlasInlineMath{p\ge C_{\mathrm{bridge}}\log(d_{\mathrm{min}})/\varepsilon}, the spectral-norm conversion applies. Constants depending on fixed \AtlasInlineMath{p} remain explicit; the \AtlasInlineMath{\sqrt p} term growing with \AtlasInlineMath{p} is retained. After rescaling BCW's internal tolerance, the first case incurs \AtlasInlineMath{\log(2d_{\mathrm{min}}/\varepsilon)}, the second adds at most \AtlasInlineMath{\sqrt{C_{\mathrm{bridge}}\log d_{\mathrm{min}}}}, and the third uses the single-logarithm spectral bound. With \AtlasInlineMath{\Phi_{\mathrm{lr}}(p,\varepsilon)=\min\{p^{1/6}\varepsilon^{-1/3},\varepsilon^{-1/2}\}}, this gives \AtlasInlineMath{Q_{\mathrm{upper}}\le\min\{d_{\mathrm{min}},Ck\Phi_{\mathrm{lr}}(p,\varepsilon)\log(2d_{\mathrm{min}}/\varepsilon)\sqrt{\log(2d_{\mathrm{min}})}\}}. The minimum includes only applicable branches. BCW's parameter window is enforced using \AtlasInlineMath{\delta_B=\alpha_B\varepsilon} with the stated rescaling constant; it cannot be dropped by silently changing hidden constants.
+
+\needspace{4\baselineskip}\subsection{R2 - The spectral-norm endpoint.}
+\textbf{Region.} \AtlasInlineMath{p=\infty}, \AtlasInlineMath{0<\varepsilon\le\varepsilon_0}, \AtlasInlineMath{1\le k<d_{\mathrm{min}}}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Sum of right and left matrix-vector product query counts.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{\Omega(\min\{d_{\mathrm{min}},k\varepsilon^{-1/2}\})}
+\textbf{Upper bound.} B6, B9
+
+\AtlasMath{\widetilde{O}(\min\{d_{\mathrm{min}},k\varepsilon^{-1/2}\})}
+\textbf{Gap or comparison.} The bound is \AtlasInlineMath{O\!\left(\log\!\frac{2d_{\mathrm{min}}}{\varepsilon}\right)} with universal constants.
+
+\textbf{Comparison argument.} The spectral block-Krylov method and full reconstruction in \AtlasInlineMath{d_{\mathrm{min}}} calls are separate complete algorithms. Comparing their minimum cost with \AtlasInlineMath{\Omega(\min\{d_{\mathrm{min}},k\varepsilon^{-1/2}\})} bounds the upper-to-lower ratio by \AtlasInlineMath{C\log(2d_{\mathrm{min}}/\varepsilon)}.
+
+\needspace{4\baselineskip}\subsection{R3 - Small norm order fixed in advance}
+\textbf{Region.} Fix \AtlasInlineMath{p\in[1,2)} first, then let \AtlasInlineMath{0<\varepsilon\le\varepsilon_p} and \AtlasInlineMath{1\le k<d_{\mathrm{min}}}. The threshold \AtlasInlineMath{\varepsilon_p} and hidden constants may depend on this fixed \AtlasInlineMath{p}.
+
+\textbf{Quantity.} Q2
+
+\textbf{Resource.} Sum of right and left matrix-vector product query counts.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B3
+
+\AtlasMath{\Omega(\min\{d_{\mathrm{min}},k\varepsilon^{-1/3}\})}
+\textbf{Upper bound.} B7, B10
+
+\AtlasMath{\widetilde{O}(\min\{d_{\mathrm{min}},k\varepsilon^{-1/3}\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O_p\!\left(\log\!\frac{2d_{\mathrm{min}}}{\varepsilon}\right)}. Fix exponent \AtlasInlineMath{p} in \AtlasInlineMath{[1,2)} beforehand; constants may depend on this fixed \AtlasInlineMath{p}.
+
+\textbf{Comparison argument.} Fix \AtlasInlineMath{1\le p<2} and run BCW at \AtlasInlineMath{\delta_{\mathrm{low}}=\beta_B\varepsilon}. Compare its \AtlasInlineMath{C_p k\varepsilon^{-1/3}\log(2d_{\mathrm{min}}/\varepsilon)} calls with reconstruction in \AtlasInlineMath{d_{\mathrm{min}}} queries, then compare their minimum with the lower bound on the same region. The ratio is \AtlasInlineMath{O_p(\log(2d_{\mathrm{min}}/\varepsilon))}.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} Exact \AtlasInlineMath{Av} and \AtlasInlineMath{A^{\mathsf T}u} are available for \AtlasInlineMath{v\in\mathbb R^n} and \AtlasInlineMath{u\in\mathbb R^m}. Each column is charged separately. Block width and Krylov rounds do not replace total calls.
+
+\textbf{Guarantee mapping.} Success probability is at least 2/3 for each fixed A. Retain the bound’s constant and accuracy windows for fixed and variable p.
+
+\textbf{Output mapping.} Output a right orthogonal projector \AtlasInlineMath{\widehat P} of rank \AtlasInlineMath{k} satisfying \AtlasInlineMath{\|A(I_n-\widehat P)\|_{S_p}\le(1+\varepsilon)\|A-A_k\|_{S_p}}. The input \AtlasInlineMath{A} need not have low rank. If the optimal tail is zero, success requires exactly zero residual.
+
+\textbf{Resource mapping.} Retain joint budget \AtlasInlineMath{(N_{\mathrm r},N_{\mathrm l})} for single-vector \AtlasInlineMath{Av} and \AtlasInlineMath{A^{\mathsf T}u} calls, with the explicit equal-weight scalarization \AtlasInlineMath{N=N_{\mathrm r}+N_{\mathrm l}}. Charge each block column separately. The budget is a worst-case cap for every input and private seed, not an expected count. Reading public inputs and internal exact-real arithmetic, storage, and postprocessing are uncharged; query complexity is not runtime or bit complexity.
+
+\needspace{4\baselineskip}\subsection{B1 - Lower bound for arbitrary randomized adaptive two-sided queries (Zhang et al., 2026)}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(\min\{d_{\mathrm{min}},k\min\{p^{1/6}\varepsilon^{-1/3},\varepsilon^{-1/2}\}\})}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]}
+
+\textbf{Conditions.}
+
+\AtlasMath{2\le p<\infty , 0<\varepsilon \le \varepsilon 0, 1\le k<d_{\mathrm{min}}}
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{Q.}
+
+\AtlasMath{\Omega(\min\{d_{\mathrm{min}},k\min\{p^{1/6}\varepsilon^{-1/3},\varepsilon^{-1/2}\}\})}
+\textbf{Constants.} The constant c and sufficient-accuracy threshold $\varepsilon _0$ are universal, uniformly in p and the other tracked parameters.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]} theorem: Theorem 3.1; Proposition 3.2; section: §3; §9; pdf pages: 4; 5; 24; equations: (4); (6); (7); (65)
+
+The complete model, fixed worst-case budget, and 2/3 success probability have been verified. The key zero-padding, left-to-right projection, posterior-factorization, and overlap arguments have been read; the high-order spectral-profile lemma has not been independently reproved.
+
+\needspace{4\baselineskip}\subsection{B2 - Lower bound for arbitrary randomized adaptive two-sided queries (Zhang et al., 2026)}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(\min\{d_{\mathrm{min}},k\varepsilon^{-1/2}\})}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]}
+
+\textbf{Conditions.}
+
+\AtlasMath{p=\infty , 0<\varepsilon \le \varepsilon 0, 1\le k<d_{\mathrm{min}}}
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{Q.}
+
+\AtlasMath{\Omega(\min\{d_{\mathrm{min}},k\varepsilon^{-1/2}\})}
+\textbf{Constants.} The constant c and sufficient-accuracy threshold $\varepsilon _0$ are universal, uniformly in p and the other tracked parameters.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]} theorem: Theorem 3.1; Proposition 3.2; section: §3; §9; pdf pages: 4; 5; 24; equations: (4); (6); (7); (65)
+
+The complete model, fixed worst-case budget, and 2/3 success probability have been verified. The key zero-padding, left-to-right projection, posterior-factorization, and overlap arguments have been read; the high-order spectral-profile lemma has not been independently reproved.
+
+\needspace{4\baselineskip}\subsection{B3 - Lower bound for arbitrary randomized adaptive two-sided queries (Zhang et al., 2026)}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{\Omega(\min\{d_{\mathrm{min}},k\varepsilon^{-1/3}\})}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]}
+
+\textbf{Conditions.} Fix p in [1,2) in advance; 0<epsilon<=epsilon\_p and 1<=k<d\_min.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{Q.}
+
+\AtlasMath{\Omega(\min\{d_{\mathrm{min}},k\varepsilon^{-1/3}\})}
+\textbf{Constants.} The constants \AtlasInlineMath{c_p} and sufficient-accuracy threshold \AtlasInlineMath{\epsilon_p} may depend on fixed \AtlasInlineMath{p\in[1,2)} and are uniform in the remaining parameters.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]} theorem: Theorem 3.1; Proposition 3.2; section: §3; §9; pdf pages: 4; 5; 24; equations: (4); (6); (7); (65)
+
+The complete model, fixed worst-case budget, and 2/3 success probability have been verified. The key zero-padding, left-to-right projection, posterior-factorization, and overlap arguments have been read; the high-order spectral-profile lemma has not been independently reproved.
+
+\needspace{4\baselineskip}\subsection{B4 - Randomized block Krylov with spectral-norm conversion. The full algorithm class is unrestricted.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{N\le Ck\log(2d_{\mathrm{min}}/\varepsilon)\left[p^{1/6}\varepsilon^{-1/3}+\sqrt{p}\right]}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]} \href{https://arxiv.org/pdf/2202.05120v4}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{2\le p\le C_{\mathrm{bridge}}\log(d_{\mathrm{min}})/\varepsilon}; \AtlasInlineMath{0<\varepsilon\le\varepsilon_0\le1}. The internal precision satisfies the BCW condition \AtlasInlineMath{p\le c_B\log(d_{\mathrm{min}})/\delta_B}.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{Q.} \AtlasInlineMath{Ck\log\!\frac{2d_{\mathrm{min}}}{\varepsilon}\left(p^{1/6}\varepsilon^{-1/3}+\sqrt p\right)}
+
+\textbf{Constants.} The constant \AtlasInlineMath{C} is uniform in \AtlasInlineMath{m,n,k,p,\epsilon}. The quantities \AtlasInlineMath{c_B,C_{\mathrm{bridge}},\alpha_B} are fixed universal proof constants.
+
+\textbf{Derivation.} Let \AtlasInlineMath{\alpha_B=\min\{1/2,c_B/(2C_{\mathrm{bridge}})\}} and run BCW with internal tolerance \AtlasInlineMath{\delta_B=\alpha_B\varepsilon}. If \AtlasInlineMath{p\varepsilon\le C_{\mathrm{bridge}}\log d_{\mathrm{min}}}, then \AtlasInlineMath{p\le c_B\log(d_{\mathrm{min}})/\delta_B}, while \AtlasInlineMath{\delta_B\le\varepsilon/2<1}. The source residual guarantee \AtlasInlineMath{(1+\delta_B)} therefore implies the target \AtlasInlineMath{(1+\varepsilon)} guarantee. Substituting \AtlasInlineMath{\delta_B} into the query bound gives \AtlasInlineMath{N\le Ck\log(2d_{\mathrm{min}}/\varepsilon)[p^{1/6}\varepsilon^{-1/3}+\sqrt p]}. Since \AtlasInlineMath{\alpha_B} is fixed in advance, the constants are uniform in varying p. When \AtlasInlineMath{m<n}, run the algorithm on \AtlasInlineMath{A^{\mathsf T}} and include at most k additional \AtlasInlineMath{A^{\mathsf T}U} calls to form the right projector. The resulting right subspace may be enlarged to rank k, which can only decrease the residual.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]} theorem: Theorem 3.1; Proposition 3.2; section: §3; §9; pdf pages: 4; 5; 24; equations: (4); (6); (7); (65)
+
+The complete model, fixed worst-case budget, and 2/3 success probability have been verified. The key zero-padding, left-to-right projection, posterior-factorization, and overlap arguments have been read; the high-order spectral-profile lemma has not been independently reproved.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2202.05120v4}{[1]} theorem: Theorem 5.1; section: §5; pdf pages: 16
+
+Retain both the \AtlasInlineMath{p^{1/6}} and \AtlasInlineMath{\sqrt p} terms of the inherited upper bound. The \AtlasInlineMath{\sqrt p} term cannot be dropped when \AtlasInlineMath{p} grows.
+
+\needspace{4\baselineskip}\subsection{B5 - Randomized block Krylov with spectral-norm conversion. The full algorithm class is unrestricted.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{N\le Ck\varepsilon^{-1/2}\log(2d_{\mathrm{min}}/\varepsilon)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]} \href{https://arxiv.org/pdf/1504.05477v4}{[3]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{Q.} \AtlasInlineMath{Ck\varepsilon^{-1/2}\log\!\frac{2d_{\mathrm{min}}}{\varepsilon}}
+
+\textbf{Constants.} Spectral-norm algorithm constants are universal. The transfer to larger p uses only the fixed C\_bridge.
+
+\textbf{Logarithmic factors.} The only logarithmic factor is the explicit \AtlasInlineMath{\log(2d_{\mathrm{min}}/\varepsilon)}. No unspecified additional logarithmic powers are hidden.
+
+\textbf{Derivation.} Run the Musco-Musco block Krylov algorithm at internal spectral tolerance \AtlasInlineMath{\eta=\varepsilon/4}. The iteration count is 
+\AtlasMath{O\bigl(\varepsilon^{-1/2}\log(2d_{\mathrm{min}}/\varepsilon)\bigr).}
+ Charging each column separately and including the output conversion gives 
+\AtlasMath{N\le Ck\varepsilon^{-1/2}\log(2d_{\mathrm{min}}/\varepsilon).}
+ This branch requires \AtlasInlineMath{p\ge C_{\mathrm{bridge}}\log(d_{\mathrm{min}})/\varepsilon}, hence \AtlasInlineMath{d_{\mathrm{min}}^{1/p}\le1+\varepsilon/4}. Using \AtlasInlineMath{\operatorname{rank}(A(I_n-P))\le d_{\mathrm{min}}} yields 
+\AtlasMath{\begin{aligned}
+\|A(I_n-P)\|_{S_p}
+&\le(1+\varepsilon/4)^2\operatorname{OPT}_{\infty,k}\\
+&\le(1+\varepsilon)\operatorname{OPT}_{p,k}.
+\end{aligned}}
+
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]} theorem: Theorem 3.1; Proposition 3.2; section: §3; §9; pdf pages: 4; 5; 24; equations: (4); (6); (7); (65)
+
+The complete model, fixed worst-case budget, and 2/3 success probability have been verified. The key zero-padding, left-to-right projection, posterior-factorization, and overlap arguments have been read; the high-order spectral-profile lemma has not been independently reproved.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/1504.05477v4}{[3]} theorem: Algorithm 2; Theorem 1; Theorem 10; section: 2.1, 2.3, 6; pdf pages: 3; 4; 14; printed pages: 3; 4; 14; equations: (2)
+
+Original arXiv v4 PDF read from author MIT mirror. Query-count derivation counts every block column; arithmetic costs remain uncharged. The new Schatten lower theorem was not independently reproved.
+
+For rectangular matrices choose an orientation with the smaller dimension on the right; the LR26 section9 projector conversion adds at most k products.
+
+\needspace{4\baselineskip}\subsection{B6 - Randomized block Krylov with spectral-norm conversion. The full algorithm class is unrestricted.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{N\le Ck\varepsilon^{-1/2}\log(2d_{\mathrm{min}}/\varepsilon)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]} \href{https://arxiv.org/pdf/1504.05477v4}{[3]}
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{Q.} \AtlasInlineMath{Ck\varepsilon^{-1/2}\log\!\frac{2d_{\mathrm{min}}}{\varepsilon}}
+
+\textbf{Constants.} Spectral-norm algorithm constants are universal. The transfer to larger p uses only the fixed C\_bridge.
+
+\textbf{Logarithmic factors.} The only logarithmic factor is the explicit \AtlasInlineMath{\log(2d_{\mathrm{min}}/\varepsilon)}. No unspecified additional logarithmic powers are hidden.
+
+\textbf{Derivation.} Run the Musco-Musco block Krylov algorithm at internal spectral tolerance \AtlasInlineMath{\eta=\varepsilon/4}. Its iteration count is 
+\AtlasMath{O\bigl(\varepsilon^{-1/2}\log(2d_{\mathrm{min}}/\varepsilon)\bigr).}
+. Charging each column and including output conversion gives total calls 
+\AtlasMath{N\le Ck\varepsilon^{-1/2}\log(2d_{\mathrm{min}}/\varepsilon).}
+.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]} theorem: Theorem 3.1; Proposition 3.2; section: §3; §9; pdf pages: 4; 5; 24; equations: (4); (6); (7); (65)
+
+The complete model, fixed worst-case budget, and 2/3 success probability have been verified. The key zero-padding, left-to-right projection, posterior-factorization, and overlap arguments have been read; the high-order spectral-profile lemma has not been independently reproved.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/1504.05477v4}{[3]} theorem: Algorithm 2; Theorem 1; Theorem 10; section: 2.1, 2.3, 6; pdf pages: 3; 4; 14; printed pages: 3; 4; 14; equations: (2)
+
+Original arXiv v4 PDF read from author MIT mirror. Query-count derivation counts every block column; arithmetic costs remain uncharged. The new Schatten lower theorem was not independently reproved.
+
+For rectangular matrices choose an orientation with the smaller dimension on the right; the LR26 section9 projector conversion adds at most k products.
+
+\needspace{4\baselineskip}\subsection{B7 - Randomized block Krylov with spectral-norm conversion. The full algorithm class is unrestricted.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{N\le C_p k\varepsilon^{-1/3}\log(2d_{\mathrm{min}}/\varepsilon)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]} \href{https://arxiv.org/pdf/2202.05120v4}{[1]}
+
+\textbf{Conditions.} First fix \AtlasInlineMath{p\in[1,2)} and \AtlasInlineMath{0<\varepsilon\le\varepsilon_p\le1}.
+
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{Q.} \AtlasInlineMath{C_p k\varepsilon^{-1/3}\log\!\frac{2d_{\mathrm{min}}}{\varepsilon}}
+
+\textbf{Constants.} Only in this explicitly fixed p in [1,2) regime may C\_p, c\_p, and epsilon\_p depend on p; they are uniform in m, n, k, and epsilon.
+
+\textbf{Logarithmic factors.} The only logarithmic factor is the explicit \AtlasInlineMath{\log(2d_{\mathrm{min}}/\varepsilon)}. No unspecified additional logarithmic powers are hidden.
+
+\textbf{Derivation.} Fix \AtlasInlineMath{1\le p<2}, set \AtlasInlineMath{\delta_{\mathrm{low}}=\beta_B\varepsilon} and \AtlasInlineMath{\beta_B=\min\{1/2,c_B\log2/4\}}. Since \AtlasInlineMath{d_{\mathrm{min}}\ge2} and \AtlasInlineMath{\varepsilon\le\varepsilon_p\le1}, BCW's applicability condition \AtlasInlineMath{p\le c_B\log(d_{\mathrm{min}})/\delta_{\mathrm{low}}} holds. The factors \AtlasInlineMath{p^{1/6}} and \AtlasInlineMath{\sqrt p} in its total query bound can be absorbed into constants depending on fixed p, giving \AtlasInlineMath{N\le C_p k\varepsilon^{-1/3}\log(2d_{\mathrm{min}}/\varepsilon)}.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.35840v2}{[2]} theorem: Theorem 3.1; Proposition 3.2; section: §3; §9; pdf pages: 4; 5; 24; equations: (4); (6); (7); (65)
+
+The complete model, fixed worst-case budget, and 2/3 success probability have been verified. The key zero-padding, left-to-right projection, posterior-factorization, and overlap arguments have been read; the high-order spectral-profile lemma has not been independently reproved.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2202.05120v4}{[1]} theorem: Theorem 5.1; section: §5; pdf pages: 16
+
+Retain both the \AtlasInlineMath{p^{1/6}} and \AtlasInlineMath{\sqrt p} terms of the inherited upper bound. The \AtlasInlineMath{\sqrt p} term cannot be dropped when \AtlasInlineMath{p} grows.
+
+\needspace{4\baselineskip}\subsection{B8 - Deterministic basis reconstruction, choosing the smaller row or column direction.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{N\le\min\{m,n\}}
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{joint alternatives.} [\{"N\_left": 0, "N\_right": "n"\}, \{"N\_left": "m", "N\_right": 0\}]
+
+\textbf{Constants.} Exactly min\{m,n\} standard basis queries suffice, with no hidden logarithmic or p dependence.
+
+\textbf{Derivation.} Public dimensions select a complete reconstruction algorithm; an internal SVD returns the right rank-k projection.
+
+\textbf{Local argument.} A1
+
+\needspace{4\baselineskip}\subsection{B9 - Deterministic basis reconstruction, choosing the smaller row or column direction.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{N\le\min\{m,n\}}
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{joint alternatives.} [\{"N\_left": 0, "N\_right": "n"\}, \{"N\_left": "m", "N\_right": 0\}]
+
+\textbf{Constants.} Exactly min\{m,n\} standard basis queries suffice, with no hidden logarithmic or p dependence.
+
+\textbf{Derivation.} Public dimensions select a complete reconstruction algorithm; an internal SVD returns the right rank-k projection.
+
+\textbf{Local argument.} A1
+
+\needspace{4\baselineskip}\subsection{B10 - Deterministic basis reconstruction, choosing the smaller row or column direction.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{N\le\min\{m,n\}}
+\textbf{Simultaneous resource costs.} All coordinates refer to this one witness or necessary constraint.
+
+\textbf{joint alternatives.} [\{"N\_left": 0, "N\_right": "n"\}, \{"N\_left": "m", "N\_right": 0\}]
+
+\textbf{Constants.} Exactly min\{m,n\} standard basis queries suffice, with no hidden logarithmic or p dependence.
+
+\textbf{Derivation.} Public dimensions select a complete reconstruction algorithm; an internal SVD returns the right rank-k projection.
+
+\textbf{Local argument.} A1
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Deterministic basis reconstruction, choosing the smaller row or column direction.}
+\textbf{Scope.} All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force.
+
+Recover all columns in \AtlasInlineMath{n} right queries or all rows in \AtlasInlineMath{m} transpose queries, choosing the cheaper channel. Exact internal singular-value decomposition returns the orthogonal right projection onto the leading \AtlasInlineMath{k} right singular vectors. The singular-value characterization of the best rank-\AtlasInlineMath{k} Schatten approximation shows that the residual is optimal for the declared norm order, including zero optimal residual. The query count is \AtlasInlineMath{\min\{m,n\}}; the two alternatives are complete algorithms, not a coordinatewise combination of budgets.
+
+\needspace{7\baselineskip}\section{References}
+[1] Ainesh Bakshi; Kenneth L. Clarkson; David P. Woodruff. Low-Rank Approximation with 1/epsilon\textasciicircum{}(1/3) Matrix-Vector Products. 2022. arXiv:2202.05120v4; 2022-06-16.
+
+\url{https://arxiv.org/pdf/2202.05120v4}
+
+[2] Haihan Zhang; Wendao Wu; Chenheng Zhang; Yanyi Li; Chunyuan Zheng; Cong Fang; Haoxuan Li; Zhouchen Lin. Matrix-Vector Complexity of Low-Rank Approximation. 2026. arXiv:2609.35840v2; 2026-10-19.
+
+\url{https://arxiv.org/pdf/2609.35840v2}
+
+[3] Cameron Musco; Christopher Musco. Randomized Block Krylov Methods for Stronger and Faster Approximate Singular Value Decomposition. 2015. arXiv:1504.05477v4; 2015-10-30.
+
+\url{https://arxiv.org/pdf/1504.05477v4}
+
+\end{document}

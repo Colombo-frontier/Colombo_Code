@@ -1,0 +1,922 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE",
+  "primary_domain": "saddle_point",
+  "oracle_order_collection": null,
+  "title": "Strict matrix saddlepoint search with binary comparisons",
+  "summary": "Find the unique strict pure saddlepoint of a hidden matrix, or determine that it does not exist.",
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "saddle_point"
+      ],
+      "formulation_code": "strict_matrix_saddlepoint_search",
+      "formulation": "A_{ij}>A_{ik}\\ \\forall k\\ne j,\\qquad A_{ij}<A_{\\ell j}\\ \\forall\\ell\\ne i",
+      "formulation_latex": "A_{ij}>A_{ik}\\ \\forall k\\ne j,\\qquad A_{ij}<A_{\\ell j}\\ \\forall\\ell\\ne i",
+      "solution_goal": "find_strict_saddlepoint_or_absence",
+      "protocol_ref": null,
+      "description_paragraphs": [
+        "Identify the unique matrix entry that is strictly largest in its row and strictly smallest in its column. If no such entry exists, report absence."
+      ]
+    },
+    "model": {
+      "instance": "An arbitrary fixed hidden matrix $A\\in\\mathbb R^{m\\times n}$ with public positive integer dimensions.",
+      "assumptions": [
+        {
+          "subject_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__obj_A",
+          "property_code": "arbitrary_real_matrix",
+          "variable_blocks": [],
+          "norm_ref": null,
+          "parameter_refs": [
+            "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m",
+            "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+          ],
+          "scope": "Whole fixed matrix",
+          "description": "Entries may tie and existence is unrestricted."
+        }
+      ],
+      "parameter_domain_description": "Public integers $m,n\\ge1$. All real matrices of the stated shape are admissible.",
+      "description_paragraphs": [
+        "Fix $A\\in\\mathbb R^{m\\times n}$. Entries may repeat. A strict saddlepoint, when it exists, is unique."
+      ]
+    },
+    "oracle": {
+      "public_inputs": [
+        "m",
+        "n"
+      ],
+      "hidden_objects": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__obj_A"
+      ],
+      "auxiliary_interfaces": [],
+      "protocol_ref": null,
+      "query_domain_description": "Two entry indices in the same fixed matrix.",
+      "operations": [
+        {
+          "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__ora_compare",
+          "operation_code": "binary_matrix_entry_comparison",
+          "target_object": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__obj_A",
+          "variable_blocks": [],
+          "query_signature": "$((i,j),(\\ell,k))\\in([m]\\times[n])^2$",
+          "response_signature": "$\\mathbf{1}\\{A_{ij}<A_{\\ell k}\\}$",
+          "derivative_order": "not_applicable",
+          "order_convention": "Reversing the indices permits equality to be detected with two calls.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "One exact binary comparison result."
+          },
+          "domain_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__dom_cells",
+          "coupling": "Every query concerns the same fixed hidden matrix.",
+          "index_control": "The algorithm selects the ordered pair of indices.",
+          "access_schedule": "Sequential adaptive comparisons are permitted.",
+          "cost_rule_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__res_compare"
+        }
+      ],
+      "description_paragraphs": [
+        "Choose any ordered pair of matrix cells and receive the exact bit $\\mathbf{1}\\{A_{ij}<A_{\\ell k}\\}$. Equality can be identified with a second query in the reverse direction.",
+        "The interface reveals only the comparison bits."
+      ]
+    },
+    "output": {
+      "object_type": "matrix_index_or_absence",
+      "feasibility": "One index pair or the absence symbol.",
+      "certificate_requirement": "No additional output certificate is required.",
+      "description_paragraphs": [
+        "Return $(i,j)\\in[m]\\times[n]$ satisfying both strict inequalities, or $\\bot$ if no such entry exists."
+      ]
+    },
+    "metric": {
+      "criterion": "exact_saddlepoint_identification",
+      "base_expression": "\\mathbf{1}\\{\\widehat{s}\\ne s(A)\\}",
+      "description_paragraphs": [
+        "Let $s(A)$ be the unique strict saddlepoint index, or $\\bot$ when absent. The exact identification error is $\\mathbf{1}\\{\\widehat{s}\\ne s(A)\\}$."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "oracle_calls",
+          "unit": "comparison",
+          "description": "One binary comparison request."
+        }
+      ],
+      "cost_rules": [
+        {
+          "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__res_compare",
+          "operation_refs": [
+            "CV_S_STRICT_MATRIX_SADDLE_COMPARE__ora_compare"
+          ],
+          "cost": {
+            "oracle_calls": 1
+          }
+        }
+      ],
+      "budget_semantics": "Fixed worst-case total comparisons.",
+      "scalarization": "Compare the number of charged comparisons.",
+      "setup_cost": "Public dimension access is uncharged.",
+      "description_paragraphs": [
+        "Each ordered binary comparison costs one unit. The bracket measures comparison calls. The source upper bound additionally holds for total unit-cost running time."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "deterministic",
+      "label": "Deterministic exact identification",
+      "algorithms": {
+        "randomization": "deterministic",
+        "adaptivity": "Fully adaptive comparisons.",
+        "restrictions": [
+          "Deterministic algorithms"
+        ],
+        "description_paragraphs": [
+          "The next comparison and final output may depend on all preceding replies. Any deterministic comparison strategy is admissible."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "exact_per_instance",
+          "complete_expression": "\\widehat{s}(A)=s(A)\\quad\\forall A",
+          "randomness_sources": [],
+          "description_paragraphs": [
+            "The algorithm must return the exact index or correct absence verdict on every input matrix."
+          ]
+        }
+      ],
+      "budget": {
+        "description": "Worst-case comparison count on each public matrix shape."
+      },
+      "specification_overrides": {}
+    }
+  ],
+  "parameters": [
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m",
+      "symbol": "m",
+      "meaning": "Number of rows",
+      "kind": "independent",
+      "domain": "$\\mathbb N_{\\ge1}$",
+      "public": true,
+      "definition": "Number of rows",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n",
+      "symbol": "n",
+      "meaning": "Number of columns",
+      "kind": "independent",
+      "domain": "$\\mathbb N_{\\ge1}$",
+      "public": true,
+      "definition": "Number of columns",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "m",
+      "meaning": "Number of rows",
+      "domain": "$\\mathbb N_{\\ge1}$",
+      "definition": "Number of rows",
+      "parameter_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m"
+    },
+    {
+      "symbol_latex": "n",
+      "meaning": "Number of columns",
+      "domain": "$\\mathbb N_{\\ge1}$",
+      "definition": "Number of columns",
+      "parameter_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+    },
+    {
+      "symbol_latex": "A",
+      "meaning": "Fixed hidden real matrix",
+      "domain": "$\\mathbb R^{m\\times n}$",
+      "definition": "The algorithm only accesses comparisons between its entries.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Number of charged binary comparisons",
+      "domain": "$\\mathbb N_{\\ge0}$",
+      "definition": "One comparison request costs one unit, regardless of the chosen pair.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\bot",
+      "meaning": "No strict saddlepoint exists",
+      "domain": "Output symbol",
+      "definition": "Return this symbol exactly when no strict saddlepoint exists.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "kind": "target_accuracy_cost",
+      "view_id": "deterministic",
+      "guarantee_id": "exact_per_instance",
+      "optimization_direction": "minimize",
+      "units": "comparisons",
+      "tracked_parameters": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m",
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+      ],
+      "fixed_parameters": [],
+      "label": "Minimum worst-case comparison count for exact identification",
+      "expression_latex": "N^\\star(m,n)=\\inf_{\\mathcal A\\text{ exact}}\\ \\sup_{A\\in\\mathbb R^{m\\times n}}N_{\\mathcal A}(A)",
+      "analysis_scope": "All deterministic comparison algorithms solving the entire fixed-shape instance class."
+    }
+  ],
+  "resource_projections": [
+    {
+      "resource_projection_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__projection",
+      "expression": "N",
+      "description": "Number of charged binary comparisons.",
+      "mode": "multiplicative_rate"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_general",
+      "specification_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE",
+      "name": "At least two cells",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m"
+              },
+              "op": "ge",
+              "right": 1
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+              },
+              "op": "ge",
+              "right": 1
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "op": "add",
+                "args": [
+                  {
+                    "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m"
+                  },
+                  {
+                    "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+                  }
+                ]
+              },
+              "op": "ge",
+              "right": 3
+            }
+          }
+        ]
+      },
+      "predicate_text": "$m,n\\ge1$ and $m+n\\ge3$",
+      "parameter_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m",
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+      ],
+      "kind": "theorem_window"
+    },
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_single",
+      "specification_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE",
+      "name": "One cell",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m"
+              },
+              "op": "eq",
+              "right": 1
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+              },
+              "op": "eq",
+              "right": 1
+            }
+          }
+        ]
+      },
+      "predicate_text": "$m=n=1$",
+      "parameter_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m",
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+      ],
+      "kind": "theorem_window"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_general_upper",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "view_id": "deterministic",
+      "guarantee_id": "exact_per_instance",
+      "quantity_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "formula_latex": "O(m+n)",
+      "method": "Linear-time comparison search of Dallant",
+      "algorithm_or_hard_family": "Linear-time comparison search of Dallant",
+      "claim_semantics": "numerical_inequality",
+      "region_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_general"
+      ],
+      "source_refs": [
+        "SP_DALLANT_2026"
+      ],
+      "evidence_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__e_upper"
+      ],
+      "proof_refs": [],
+      "resource_costs": {
+        "oracle_calls": "O(m+n)"
+      },
+      "eligible_for_bracket": true,
+      "included_in_bracket": true,
+      "selected_in_regimes": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__c_general"
+      ],
+      "applicability": {
+        "conditions": [
+          "$m,n\\ge1$ and $m+n\\ge3$"
+        ],
+        "oracle_mapping": "Exact ordered binary comparisons.",
+        "guarantee_mapping": "Exact identification on all inputs of the fixed shape.",
+        "resource_mapping": "Count binary comparisons, including verification."
+      },
+      "witness_type": "deterministic",
+      "evidence_role": "algorithmic_witness"
+    },
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_general_lower",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "view_id": "deterministic",
+      "guarantee_id": "exact_per_instance",
+      "quantity_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "formula_latex": "\\Omega(m+n)",
+      "method": "Unqueried cell adversary",
+      "algorithm_or_hard_family": "Unqueried cell adversary",
+      "claim_semantics": "numerical_inequality",
+      "region_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_general"
+      ],
+      "source_refs": [
+        "SP_DALLANT_2026"
+      ],
+      "evidence_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__e_lower"
+      ],
+      "proof_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__proof_lower"
+      ],
+      "resource_costs": {
+        "oracle_calls": "\\Omega(m+n)"
+      },
+      "eligible_for_bracket": true,
+      "included_in_bracket": true,
+      "selected_in_regimes": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__c_general"
+      ],
+      "applicability": {
+        "conditions": [
+          "$m,n\\ge1$ and $m+n\\ge3$"
+        ],
+        "oracle_mapping": "Exact ordered binary comparisons.",
+        "guarantee_mapping": "Exact identification on all inputs of the fixed shape.",
+        "resource_mapping": "Count binary comparisons, including verification."
+      },
+      "lower_scope_type": "all_admissible_algorithms",
+      "evidence_role": "all_algorithm_necessity",
+      "lower_algorithm_scope": "All deterministic adaptive binary comparison strategies."
+    },
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_single_upper",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "view_id": "deterministic",
+      "guarantee_id": "exact_per_instance",
+      "quantity_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "formula_latex": "0",
+      "method": "One-cell regime",
+      "algorithm_or_hard_family": "One-cell regime",
+      "claim_semantics": "numerical_inequality",
+      "region_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_single"
+      ],
+      "source_refs": [],
+      "evidence_refs": [],
+      "proof_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__proof_trivial"
+      ],
+      "resource_costs": {
+        "oracle_calls": "0"
+      },
+      "eligible_for_bracket": true,
+      "included_in_bracket": true,
+      "selected_in_regimes": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__c_single"
+      ],
+      "applicability": {
+        "conditions": [
+          "$m=n=1$"
+        ],
+        "oracle_mapping": "Exact ordered binary comparisons.",
+        "guarantee_mapping": "Exact identification on all inputs of the fixed shape.",
+        "resource_mapping": "Count binary comparisons, including verification."
+      },
+      "witness_type": "deterministic",
+      "evidence_role": "algorithmic_witness"
+    },
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_single_lower",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "view_id": "deterministic",
+      "guarantee_id": "exact_per_instance",
+      "quantity_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "formula_latex": "0",
+      "method": "One-cell regime",
+      "algorithm_or_hard_family": "One-cell regime",
+      "claim_semantics": "numerical_inequality",
+      "region_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_single"
+      ],
+      "source_refs": [],
+      "evidence_refs": [],
+      "proof_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__proof_trivial"
+      ],
+      "resource_costs": {
+        "oracle_calls": "0"
+      },
+      "eligible_for_bracket": true,
+      "included_in_bracket": true,
+      "selected_in_regimes": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__c_single"
+      ],
+      "applicability": {
+        "conditions": [
+          "$m=n=1$"
+        ],
+        "oracle_mapping": "Exact ordered binary comparisons.",
+        "guarantee_mapping": "Exact identification on all inputs of the fixed shape.",
+        "resource_mapping": "Count binary comparisons, including verification."
+      },
+      "lower_scope_type": "all_admissible_algorithms",
+      "evidence_role": "all_algorithm_necessity",
+      "lower_algorithm_scope": "All deterministic adaptive binary comparison strategies."
+    }
+  ],
+  "comparisons": [
+    {
+      "comparison_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__c_general",
+      "comparison_key": {
+        "setting_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE",
+        "view_id": "deterministic",
+        "guarantee_id": "exact_per_instance",
+        "quantity_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__quantity",
+        "resource_projection_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__projection",
+        "regime_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_general"
+      },
+      "label": "At least two cells",
+      "view_id": "deterministic",
+      "guarantee_id": "exact_per_instance",
+      "quantity_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "resource_projection_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__projection",
+      "regime_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_general",
+      "source_region_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_general",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m"
+              },
+              "op": "ge",
+              "right": 1
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+              },
+              "op": "ge",
+              "right": 1
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "op": "add",
+                "args": [
+                  {
+                    "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m"
+                  },
+                  {
+                    "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+                  }
+                ]
+              },
+              "op": "ge",
+              "right": 3
+            }
+          }
+        ]
+      },
+      "predicate_text": "$m,n\\ge1$ and $m+n\\ge3$",
+      "parameter_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m",
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+      ],
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "upper_refs": [
+          "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_general_upper"
+        ],
+        "lower_refs": [
+          "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_general_lower"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "comparison_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__c_general",
+        "quantity_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__quantity",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N",
+        "resource_projection_description": "Number of charged binary comparisons.",
+        "ratio_or_gap": "$\\Theta(m+n)$",
+        "envelopes": {
+          "upper": {
+            "expression": "O(m+n)",
+            "expression_latex": "O(m+n)",
+            "claim_refs": [
+              "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_general_upper"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "\\Omega(m+n)",
+            "expression_latex": "\\Omega(m+n)",
+            "claim_refs": [
+              "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_general_lower"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_general_upper",
+            "when_region_refs": [
+              "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_general"
+            ],
+            "meaning": "At least two cells"
+          }
+        ],
+        "claim_guards": {
+          "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_general_upper": [
+            {
+              "region_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_general",
+              "predicate_text": "$m,n\\ge1$ and $m+n\\ge3$"
+            }
+          ],
+          "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_general_lower": [
+            {
+              "region_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_general",
+              "predicate_text": "$m,n\\ge1$ and $m+n\\ge3$"
+            }
+          ]
+        },
+        "envelope_certificate": "Matching bounds throughout the stated matrix-shape regime."
+      }
+    },
+    {
+      "comparison_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__c_single",
+      "comparison_key": {
+        "setting_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE",
+        "view_id": "deterministic",
+        "guarantee_id": "exact_per_instance",
+        "quantity_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__quantity",
+        "resource_projection_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__projection",
+        "regime_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_single"
+      },
+      "label": "One cell",
+      "view_id": "deterministic",
+      "guarantee_id": "exact_per_instance",
+      "quantity_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__quantity",
+      "resource_projection_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__projection",
+      "regime_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_single",
+      "source_region_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_single",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m"
+              },
+              "op": "eq",
+              "right": 1
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+              },
+              "op": "eq",
+              "right": 1
+            }
+          }
+        ]
+      },
+      "predicate_text": "$m=n=1$",
+      "parameter_refs": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_m",
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__p_n"
+      ],
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "upper_refs": [
+          "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_single_upper"
+        ],
+        "lower_refs": [
+          "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_single_lower"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "comparison_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__c_single",
+        "quantity_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__quantity",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N",
+        "resource_projection_description": "Number of charged binary comparisons.",
+        "ratio_or_gap": "$0$",
+        "envelopes": {
+          "upper": {
+            "expression": "0",
+            "expression_latex": "0",
+            "claim_refs": [
+              "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_single_upper"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "0",
+            "expression_latex": "0",
+            "claim_refs": [
+              "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_single_lower"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_single_upper",
+            "when_region_refs": [
+              "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_single"
+            ],
+            "meaning": "One cell"
+          }
+        ],
+        "claim_guards": {
+          "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_single_upper": [
+            {
+              "region_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_single",
+              "predicate_text": "$m=n=1$"
+            }
+          ],
+          "CV_S_STRICT_MATRIX_SADDLE_COMPARE__b_single_lower": [
+            {
+              "region_ref": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__r_single",
+              "predicate_text": "$m=n=1$"
+            }
+          ]
+        },
+        "envelope_certificate": "Matching bounds throughout the stated matrix-shape regime."
+      }
+    }
+  ],
+  "bracket_rows": [
+    {
+      "row_id": "row_general",
+      "comparison_ids": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__c_general"
+      ],
+      "view_ids": [
+        "deterministic"
+      ]
+    },
+    {
+      "row_id": "row_single",
+      "comparison_ids": [
+        "CV_S_STRICT_MATRIX_SADDLE_COMPARE__c_single"
+      ],
+      "view_ids": [
+        "deterministic"
+      ]
+    }
+  ],
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "comparison_count": 2,
+    "status_counts": {
+      "optimal": 2
+    },
+    "missing_sides": [],
+    "gap_classes": [],
+    "gap_details": [],
+    "special_statuses": []
+  },
+  "proofs": [
+    {
+      "proof_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__proof_lower",
+      "title": "Unqueried cell adversary",
+      "body": [
+        "Fix a matrix with strict saddlepoint (1,1). A comparison transcript that never uses one of the other entries in row 1 or column 1 is identical after changing that entry to equal A[1,1]. The alteration invalidates the output (1,1). Every one of the m+n-2 other row and column cells must therefore occur in the transcript. A comparison touches at most two of them."
+      ],
+      "scope": "At least two cells",
+      "algorithm_scope": "All deterministic adaptive comparison algorithms"
+    },
+    {
+      "proof_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__proof_trivial",
+      "title": "One-cell regime",
+      "body": [
+        "In a one-entry matrix both strict inequality systems are vacuous. Output (1,1) immediately."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__e_upper",
+      "source_ref": "SP_DALLANT_2026",
+      "locator": {
+        "theorem": "Theorem 1.1 and Sections 4–5",
+        "pdf_pages": [
+          2,
+          6,
+          7
+        ]
+      },
+      "supports": "Dallant 2026 gives a deterministic linear-time comparison algorithm. It removes a constant fraction of the longer dimension at each stage using selection across monotone prefix-maximum lists. An index tie-break handles repeated keys, followed by strict verification using the original keys. Section 5 extends the bound to rectangular matrices.",
+      "statement_summary": [
+        "Dallant 2026 gives a deterministic linear-time comparison algorithm. It removes a constant fraction of the longer dimension at each stage using selection across monotone prefix-maximum lists. An index tie-break handles repeated keys, followed by strict verification using the original keys. Section 5 extends the bound to rectangular matrices."
+      ]
+    },
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__e_lower",
+      "source_ref": "SP_DALLANT_2026",
+      "locator": {
+        "theorem": "Discussion following Theorem 1.1",
+        "pdf_pages": [
+          2
+        ]
+      },
+      "supports": "The source states the linear comparison verification lower bound.",
+      "statement_summary": [
+        "The proof record gives an indistinguishability argument covering arbitrary comparisons and rectangular matrices."
+      ]
+    },
+    {
+      "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__e_history",
+      "source_ref": "SP_DALLANT_ESA_2024",
+      "locator": {
+        "theorem": "Theorem 1",
+        "pdf_pages": [
+          2
+        ]
+      },
+      "supports": "A Las Vegas comparison algorithm reaches linear time with high probability on square inputs. The deterministic time question was settled by the 2026 result."
+    }
+  ],
+  "references": [
+    {
+      "id": "SP_DALLANT_2026",
+      "title": "An optimal deterministic algorithm for finding a strict saddlepoint",
+      "authors": [
+        "Justin Dallant"
+      ],
+      "year": 2026,
+      "url": "https://arxiv.org/abs/2607.22312v1",
+      "version": "arXiv:2607.22312v1 (24 July 2026)",
+      "publication_status": "preprint"
+    },
+    {
+      "id": "SP_DALLANT_ESA_2024",
+      "title": "An Optimal Randomized Algorithm for Finding the Saddlepoint",
+      "authors": [
+        "Justin Dallant",
+        "Frederik Haagensen",
+        "Riko Jacob",
+        "László Kozma",
+        "Sebastian Wild"
+      ],
+      "year": 2024,
+      "url": "https://doi.org/10.4230/LIPIcs.ESA.2024.44",
+      "venue": "ESA 2024",
+      "doi": "10.4230/LIPIcs.ESA.2024.44",
+      "publication_status": "published"
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__obj_A",
+        "definition": "Fixed hidden real matrix $A$.",
+        "type": "matrix",
+        "depends_on": []
+      }
+    ],
+    "variable_blocks": [],
+    "domains": [
+      {
+        "id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE__dom_cells",
+        "definition": "$[m]\\times[n]$",
+        "roles": [
+          "comparison_indices",
+          "output_indices"
+        ]
+      }
+    ],
+    "norms": [],
+    "protocols": [],
+    "comparators": []
+  },
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "saddle_point"
+    },
+    {
+      "facet": "goal",
+      "value": "exact_saddlepoint_identification"
+    },
+    {
+      "facet": "structure",
+      "value": "arbitrary_real_matrix"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_comparison"
+    },
+    {
+      "facet": "algorithm",
+      "value": "deterministic"
+    },
+    {
+      "facet": "guarantee",
+      "value": "exact_per_instance"
+    },
+    {
+      "facet": "resource",
+      "value": "oracle_calls"
+    }
+  ],
+  "relations": [
+    {
+      "target_setting_id": "CV_S_SIMPLEX_MATRIX_GAME",
+      "relation": "different_protocol",
+      "notes": "The neighboring setting outputs approximate mixed strategies under two-sided matrix-vector products."
+    }
+  ],
+  "aliases": [],
+  "provenance": {
+    "source_schema_version": "6.1.0",
+    "source_snapshot": "scout-census-2024-2026",
+    "source_order": 420,
+    "source_json_sha256": "bf759e550c7471dbe67eced6cadb684287df20dd19b9cb122c991105ff707cc4",
+    "transformations": [
+      "source_backed_new_profile",
+      "binary_comparison_model_normalization"
+    ]
+  }
+}

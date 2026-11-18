@@ -1,0 +1,1151 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "CV_S_HIGH_SADDLE_gap",
+  "title": "Higher-order convex-concave saddle-point problems: complete scalar jets and global gap",
+  "summary": "Solve $\\min_{x\\in X}\\max_{y\\in Y}f(x,y)$, with $K=X\\times Y$ and $z=(x,y)$. The target is the global saddle-point gap.",
+  "primary_domain": "minimax",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "minimax"
+    },
+    {
+      "facet": "domain",
+      "value": "saddle_point"
+    },
+    {
+      "facet": "goal",
+      "value": "saddle_gap"
+    },
+    {
+      "facet": "structure",
+      "value": "convex_concave"
+    },
+    {
+      "facet": "structure",
+      "value": "high_order"
+    },
+    {
+      "facet": "feedback",
+      "value": "complete_scalar_jet"
+    },
+    {
+      "facet": "algorithm",
+      "value": "arbitrary_randomized"
+    },
+    {
+      "facet": "guarantee",
+      "value": "fixed_probability"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "minimax",
+        "saddle_point"
+      ],
+      "formulation_code": "convex_concave_saddle",
+      "formulation": "\\min_{x\\in X}\\max_{y\\in Y}f(x,y);\\ Z=X\\times Y",
+      "solution_goal": "gap",
+      "protocol_ref": null,
+      "code": "convex_concave_saddle",
+      "description_paragraphs": [
+        "Solve $\\min_{x\\in X}\\max_{y\\in Y}f(x,y)$, with $K=X\\times Y$ and $z=(x,y)$. The target is the global saddle-point gap."
+      ]
+    },
+    "model": {
+      "instance": "\\min_{x\\in X}\\max_{y\\in Y}f(x,y);\\ Z=X\\times Y",
+      "assumptions": [
+        {
+          "subject_id": "CV_S_HIGH_SADDLE_gap_obj_0a8e7bc5cf",
+          "property_code": "convex_in_block",
+          "variable_blocks": [
+            "CV_S_HIGH_SADDLE_gap_var_3998a5b63e"
+          ],
+          "norm_ref": "CV_S_HIGH_SADDLE_gap_nor_7645e32b20",
+          "parameter_refs": [],
+          "scope": "All point pairs in the declared function domain. Blockwise constants are uniform in the remaining fixed variables.",
+          "description": "For every fixed $y\\in Y$, the function $x\\mapsto f(x,y)$ is convex on $X$."
+        },
+        {
+          "subject_id": "CV_S_HIGH_SADDLE_gap_obj_0a8e7bc5cf",
+          "property_code": "concave_in_block",
+          "variable_blocks": [
+            "CV_S_HIGH_SADDLE_gap_var_ecb2fdd9b2"
+          ],
+          "norm_ref": "CV_S_HIGH_SADDLE_gap_nor_7645e32b20",
+          "parameter_refs": [],
+          "scope": "All point pairs in the declared function domain. Blockwise constants are uniform in the remaining fixed variables.",
+          "description": "For every fixed $x\\in X$, the function $y\\mapsto f(x,y)$ is concave on $Y$. No positive strong-concavity modulus is assumed."
+        },
+        {
+          "subject_id": "CV_S_HIGH_SADDLE_gap_obj_0a8e7bc5cf",
+          "property_code": "highest_derivative_lipschitz",
+          "variable_blocks": [
+            "CV_S_HIGH_SADDLE_gap_var_3998a5b63e",
+            "CV_S_HIGH_SADDLE_gap_var_ecb2fdd9b2"
+          ],
+          "norm_ref": "CV_S_HIGH_SADDLE_gap_nor_7645e32b20",
+          "parameter_refs": [
+            "CV_S_HIGH_SADDLE_gap_p_31ca8b172d",
+            "CV_S_HIGH_SADDLE_gap_p_861aaa09c5"
+          ],
+          "scope": "All point pairs in the declared function domain. Blockwise constants are uniform in the remaining fixed variables.",
+          "description": "The conditions $f\\in C^p$ and $\\|\\nabla^p f(z)-\\nabla^p f(w)\\|\\le L_p\\|z-w\\|$ hold on a neighborhood of the product domain, with $p\\ge2$ fixed."
+        },
+        {
+          "subject_id": "CV_S_HIGH_SADDLE_gap_obj_f85e24f920",
+          "property_code": "diameter_bound",
+          "variable_blocks": [
+            "CV_S_HIGH_SADDLE_gap_var_3998a5b63e",
+            "CV_S_HIGH_SADDLE_gap_var_ecb2fdd9b2"
+          ],
+          "norm_ref": "CV_S_HIGH_SADDLE_gap_nor_7645e32b20",
+          "parameter_refs": [
+            "CV_S_HIGH_SADDLE_gap_p_810572da37"
+          ],
+          "scope": "The entire declared scope.",
+          "description": "The feasible domain is nonempty, compact, and convex, with $\\operatorname{diam}(K)\\le D_K$; for saddle problems, $K=X\\times Y$."
+        }
+      ],
+      "parameter_domain_description": "$D_K$: positive real; $L_p$: positive real; $d$: integer at least 2; $\\varepsilon$: positive real; $p$: integer at least 2. Derived quantities are defined in the parameter table. Each region states any additional accuracy and dimension conditions.",
+      "code": "model_declared",
+      "description_paragraphs": [
+        "The sets $X\\subset\\mathbb R^{d_x}$ and $Y\\subset\\mathbb R^{d_y}$ are known, nonempty, compact, and convex; $K=X\\times Y\\subset\\mathbb R^d$, $d=d_x+d_y$, and $\\operatorname{diam}(K)\\le D_K$. Queries and outputs lie in $K$; differentiability holds on an open neighborhood of $K$.",
+        "Fix an integer $p\\ge2$. The function $f$ is convex on $x$ and concave on $y$; assume $f\\in C^p$ and $\\|\\nabla^p f(z)-\\nabla^p f(w)\\|_{\\rm op}\\le L_p\\|z-w\\|_2$.",
+        "These conditions ensure existence of a solution. Derivative tensors use the multilinear operator norm induced by the Euclidean norm."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "CV_S_HIGH_SADDLE_gap_ora_01fa10e5cb",
+          "operation_code": "payoff_complete_jet",
+          "target_object": "CV_S_HIGH_SADDLE_gap_obj_0a8e7bc5cf",
+          "variable_blocks": [
+            "CV_S_HIGH_SADDLE_gap_var_3998a5b63e",
+            "CV_S_HIGH_SADDLE_gap_var_ecb2fdd9b2"
+          ],
+          "query_signature": "(x,y)\\in Z",
+          "response_signature": "(f,\\nabla f,\\ldots,\\nabla^p f)",
+          "derivative_reference_object": "CV_S_HIGH_SADDLE_gap_obj_0a8e7bc5cf",
+          "derivative_order": {
+            "parameter_ref": "CV_S_HIGH_SADDLE_gap_p_861aaa09c5",
+            "offset": 0
+          },
+          "order_convention": "Derivative order refers to the scalar payoff $f$. The joint gradient has two blocks; the response signature specifies whether a Hessian or complete derivative jet is supplied.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact responses from the same hidden object fixed before interaction"
+          },
+          "domain_ref": "CV_S_HIGH_SADDLE_gap_dom_d0b57ac76f",
+          "coupling": "Deterministic exact responses with repeated queries allowed; stochastic sample-reuse permissions are irrelevant.",
+          "index_control": "none",
+          "access_schedule": "offline adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "CV_S_HIGH_SADDLE_gap_res_baf8b4ee82"
+        },
+        {
+          "id": "CV_S_HIGH_SADDLE_gap_ora_a438daa441",
+          "operation_code": "projection",
+          "target_object": "CV_S_HIGH_SADDLE_gap_obj_f85e24f920",
+          "variable_blocks": [],
+          "query_signature": "u\\in\\mathbb R^{d_x+d_y}",
+          "response_signature": "\\Pi_K(u)",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "This operation is charged according to its explicit input and output, not renamed according to a scalar function's derivative order.",
+          "feedback_quality": {
+            "code": "exact",
+            "description": "Exact responses from the same hidden object fixed before interaction"
+          },
+          "domain_ref": "CV_S_HIGH_SADDLE_gap_dom_294b241e52",
+          "coupling": "Deterministic exact responses with repeated queries allowed; stochastic sample-reuse permissions are irrelevant.",
+          "index_control": "none",
+          "access_schedule": "offline adaptive",
+          "accuracy_argument": null,
+          "cost_rule_ref": "CV_S_HIGH_SADDLE_gap_res_c0013b387a"
+        }
+      ],
+      "public_inputs": [
+        "Public inputs comprise the block dimensions $d_x,d_y$ and parameters $D_K$, $L_p$, $\\varepsilon$, and $p$, together with the stated initial point and feasible-set information. Analytic descriptions of hidden functions, operators, and matrices are not supplied."
+      ],
+      "hidden_objects": [
+        "CV_S_HIGH_SADDLE_gap_obj_0a8e7bc5cf"
+      ],
+      "auxiliary_interfaces": [
+        "exact projection onto the known set is available; count retained separately and uncharged in the query projection"
+      ],
+      "protocol_ref": null,
+      "query_domain_description": "K=X×Y is a known nonempty compact convex product domain; queries and outputs are feasible.",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "Public inputs comprise the block dimensions $d_x,d_y$ and parameters $D_K$, $L_p$, $\\varepsilon$, and $p$, together with the stated initial point and feasible-set information. Analytic descriptions of hidden functions, operators, and matrices are not supplied.",
+        "$$\nz\\in K\\longmapsto(f(z),\\nabla f(z),\\ldots,\\nabla^p f(z))\n$$",
+        "One exact query returns the entire derivative bundle, not just tensor actions along a selected direction. Repeated queries at the same point are allowed.",
+        "Exact Euclidean projection onto the known set is allowed. Its calls are recorded separately and excluded from the primary query count."
+      ]
+    },
+    "output": {
+      "object_type": "primal_dual_pair",
+      "domain_ref": "CV_S_HIGH_SADDLE_gap_dom_d0b57ac76f",
+      "feasibility": "output must belong to stated output domain",
+      "allowed_postprocessing": "arbitrary measurable postprocessing; unqueried output permitted unless restriction says otherwise",
+      "certificate_requirement": "none",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "Return $\\widehat{z}\\in K$, a feasible primal–dual pair $(\\widehat{x},\\widehat{y})$.",
+        "The output may be any measurable postprocessing of the history, including an unqueried point, average, or convex combination. It must satisfy the stated domain and feasibility requirements; no additional function value or computable certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "\\max_{v\\in Y}f(\\widehat x,v)-\\min_{u\\in X}f(u,\\widehat y)",
+      "normalization": "exactly as displayed; no square/norm interchange",
+      "reference_object": "CV_S_HIGH_SADDLE_gap_obj_0a8e7bc5cf",
+      "nonnegativity": true,
+      "finiteness_conditions": "compact domain and continuous data, or the specific coercivity/existence promise stated in MODEL",
+      "comparator_ref": null,
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "$$\n\\max_{v\\in Y}f(\\widehat{x},v)-\\min_{u\\in X}f(u,\\widehat{y})\n$$",
+        "This nonnegative error uses the declared Euclidean geometry.",
+        "$F_f(x,y)=(\\nabla_xf(x,y),-\\nabla_yf(x,y))$ is a derived operator determined by the scalar feedback."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "N_jet",
+          "unit": "calls",
+          "description": "Number of complete derivative-bundle queries up to the declared scalar derivative order",
+          "display_symbol": "N_{\\rm jet}"
+        },
+        {
+          "code": "N_projection",
+          "unit": "calls",
+          "description": "Number of exact Euclidean projections onto the known feasible domain, recorded separately from primary information queries",
+          "display_symbol": "N_{\\rm projection}"
+        },
+        {
+          "code": "N_model_solve",
+          "unit": "internal operations",
+          "description": "exact known tensor-model solves uncharged; no unknown best-response oracle",
+          "display_symbol": "N_{\\rm model_solve}"
+        }
+      ],
+      "budget_semantics": "fixed worst-case query cap",
+      "cost_rules": [
+        {
+          "id": "CV_S_HIGH_SADDLE_gap_res_baf8b4ee82",
+          "operation_refs": [
+            "CV_S_HIGH_SADDLE_gap_ora_01fa10e5cb"
+          ],
+          "cost": {
+            "N_jet": 1
+          }
+        },
+        {
+          "id": "CV_S_HIGH_SADDLE_gap_res_c0013b387a",
+          "operation_refs": [
+            "CV_S_HIGH_SADDLE_gap_ora_a438daa441"
+          ],
+          "cost": {
+            "N_projection": 1
+          }
+        }
+      ],
+      "scalarization": "only the explicitly selected query component is optimized; all auxiliary costs retained",
+      "setup_cost": "none beyond stated public inputs",
+      "online_cost": "offline; not applicable",
+      "amortization_scope": "one instance, one requested accuracy",
+      "precision_model": "exact real responses; arithmetic and bit costs uncharged; no finite-bit conclusion",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "Each complete jet call counts once in $N_{\\rm jet}$. Projection and known Taylor-model solution counts are recorded separately; the main comparison counts only $N_{\\rm jet}$.",
+        "Use a fixed worst-case budget: calls never exceed the prespecified $N$ on any instance or random execution path. Earlier stopping within the budget is permitted.",
+        "Count all information calls for one instance and one requested accuracy, including initialization. Exact-real arithmetic, storage, and solving known models from public inputs and returned data are uncharged. This query-complexity quantity does not certify arithmetic or bit complexity."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "allowed",
+        "adaptivity": "arbitrary measurable adaptive queries and outputs",
+        "restrictions": [
+          "none"
+        ],
+        "internal_computation": "exact real arithmetic and arbitrary measurable transcript-based internal computation uncharged; no bound on arithmetic or bits is inferred",
+        "parallelism": "sequential; parallel rounds not identified with calls",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "Arbitrary measurable sequential adaptive randomized algorithms are allowed. The private seed is independent of the hidden instance. Queries, stopping, and output may use the full history, without additional span, zero-respecting, communication, or memory restrictions."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "\\exists\\mathcal A\\ \\forall I:\\quad \\Pr(\\max_{v\\in Y}f(\\widehat x,v)-\\min_{u\\in X}f(u,\\widehat y)\\le\\varepsilon)\\ge2/3",
+          "aggregation_order": [
+            "instancewise expectation/probability of the complete metric; suprema inside metric remain inside expectation"
+          ],
+          "quantifier_order": "choose a single algorithm from public inputs, then all compatible hidden instances and legal oracle rules",
+          "randomness_sources": [
+            "Private random seed of the algorithm"
+          ],
+          "confidence_parameters": [
+            "failure probability fixed to 1/3"
+          ],
+          "time_uniformity": "fixed target accuracy; not an anytime guarantee",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "A single algorithm is chosen from the public input and must satisfy the guarantee for every fixed admissible instance.",
+            "$$\n\\Pr\\!\\left(\\max_{v\\in Y}f(\\widehat{x},v)-\\min_{u\\in X}f(u,\\widehat{y})\\le\\varepsilon\\right)\\ge\\frac23.\n$$",
+            "Probability is over private algorithmic randomness only. The unknown instance is fixed before interaction."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "fixed worst-case query cap",
+        "precision_model": "exact real responses; arithmetic and bit costs uncharged; no finite-bit conclusion",
+        "scalarization": "only the explicitly selected query component is optimized; all auxiliary costs retained"
+      },
+      "alias_ids": [
+        "CV_S_HIGH_SADDLE_gap"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "CV_S_HIGH_SADDLE_gap_obj_0a8e7bc5cf",
+        "type": "scalar_payoff",
+        "definition": "The unknown real-valued payoff is $f:X\\times Y\\to\\mathbb R$, where $X\\subset\\mathbb R^{d_x}$ and $Y\\subset\\mathbb R^{d_y}$. All required derivatives are defined on a neighborhood of the product domain.",
+        "depends_on": [],
+        "role_code": "payoff"
+      },
+      {
+        "id": "CV_S_HIGH_SADDLE_gap_obj_9cedaeb3f4",
+        "type": "saddle_operator",
+        "definition": "The derived saddle operator is $F_f(x,y)=(\\nabla_x f(x,y),-\\nabla_y f(x,y))\\in\\mathbb R^{d_x+d_y}$.",
+        "depends_on": [
+          "CV_S_HIGH_SADDLE_gap_obj_0a8e7bc5cf"
+        ],
+        "role_code": "operator"
+      },
+      {
+        "id": "CV_S_HIGH_SADDLE_gap_obj_f85e24f920",
+        "type": "known_domain",
+        "definition": "The feasible set is explicitly public. Exact projections and linear algebra use known geometry and reveal no hidden-function information.",
+        "depends_on": [],
+        "role_code": "known_geometry"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "CV_S_HIGH_SADDLE_gap_var_3998a5b63e",
+        "dimension": "d_x",
+        "space": "finite-dimensional real Euclidean space"
+      },
+      {
+        "id": "CV_S_HIGH_SADDLE_gap_var_ecb2fdd9b2",
+        "dimension": "d_y",
+        "space": "finite-dimensional real Euclidean space"
+      }
+    ],
+    "domains": [
+      {
+        "id": "CV_S_HIGH_SADDLE_gap_dom_d0b57ac76f",
+        "definition": "K=X×Y is a known nonempty compact convex product domain; queries and outputs are feasible.",
+        "roles": [
+          "function_definition",
+          "query",
+          "output",
+          "optimization"
+        ]
+      },
+      {
+        "id": "CV_S_HIGH_SADDLE_gap_dom_294b241e52",
+        "definition": "R^{d_x+d_y}; product-space projection input, with d=d_x+d_y",
+        "roles": [
+          "query"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "CV_S_HIGH_SADDLE_gap_nor_7645e32b20",
+        "definition": "Euclidean norm and inner product are $\\|v\\|_2=(\\sum_jv_j^2)^{1/2}$ and $\\langle u,v\\rangle=\\sum_j u_jv_j$. The joint space uses $\\|(x,y)\\|_2=(\\|x\\|_2^2+\\|y\\|_2^2)^{1/2}$. Multilinear derivative tensors carry the induced operator norm."
+      }
+    ],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "CV_S_HIGH_SADDLE_gap_p_810572da37",
+      "symbol": "D_K",
+      "meaning": "A Euclidean-diameter bound on the entire feasible product domain.",
+      "kind": "independent",
+      "domain": "Positive real number",
+      "public": true,
+      "definition": "$\\operatorname{diam}(K)=\\sup_{u,v\\in K}\\|u-v\\|_2\\le D_K$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "CV_S_HIGH_SADDLE_gap_p_31ca8b172d",
+      "symbol": "L_p",
+      "meaning": "Lipschitz upper bound for the scalar function's $p$th Fréchet derivative in the Euclidean induced tensor norm",
+      "kind": "independent",
+      "domain": "Positive real number",
+      "public": true,
+      "definition": "$\\|\\nabla^p f(z)-\\nabla^p f(w)\\|_{\\rm op}\\le L_p\\|z-w\\|_2$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "CV_S_HIGH_SADDLE_gap_p_aac7487c14",
+      "symbol": "\\chi_{\\mathrm{gap}}",
+      "meaning": "Dimensionless accuracy ratio expressed in the units of the specified metric",
+      "kind": "derived",
+      "domain": "Positive real number",
+      "public": true,
+      "definition": "$\\chi_{\\mathrm{gap}}=L_pD_K^{p+1}/\\varepsilon$",
+      "dependencies": [
+        "CV_S_HIGH_SADDLE_gap_p_31ca8b172d",
+        "CV_S_HIGH_SADDLE_gap_p_810572da37",
+        "CV_S_HIGH_SADDLE_gap_p_861aaa09c5",
+        "CV_S_HIGH_SADDLE_gap_p_258cd1f3e7"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_symbol_alias": "q_{\\mathrm{gap}}"
+    },
+    {
+      "id": "CV_S_HIGH_SADDLE_gap_p_0d6e8b6f18",
+      "symbol": "Q_{0,p}",
+      "meaning": "Sufficient accuracy threshold for integer rounding in the lower bound at fixed $p$",
+      "kind": "proof_constant",
+      "domain": "Positive proof constant with no specified numerical value",
+      "public": false,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [
+        "CV_S_HIGH_SADDLE_gap_p_861aaa09c5"
+      ],
+      "numeric_value": null
+    },
+    {
+      "id": "CV_S_HIGH_SADDLE_gap_p_cffd0f6f5a",
+      "symbol": "d",
+      "meaning": "The joint Euclidean dimension is $d=d_x+d_y$. Within its stated window, the lower bound may choose finite block dimensions.",
+      "kind": "independent",
+      "domain": "Integer at least $2$",
+      "public": true,
+      "definition": "$d=d_x+d_y$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "CV_S_HIGH_SADDLE_gap_p_258cd1f3e7",
+      "symbol": "\\varepsilon",
+      "meaning": "Target tolerance for the complete weak-VI gap or global saddle gap, in the units of that gap.",
+      "kind": "independent",
+      "domain": "Positive real number",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "CV_S_HIGH_SADDLE_gap_p_861aaa09c5",
+      "symbol": "p",
+      "meaning": "Fix the derivative order. The scalar interface returns through order p, equivalently through order p − 1 for the derived operator.",
+      "kind": "independent",
+      "domain": "Integer at least $2$",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "D_K",
+      "meaning": "A Euclidean-diameter bound on the entire feasible product domain.",
+      "domain": "Positive real number",
+      "definition": "$\\operatorname{diam}(K)=\\sup_{u,v\\in K}\\|u-v\\|_2\\le D_K$",
+      "parameter_ref": "CV_S_HIGH_SADDLE_gap_p_810572da37"
+    },
+    {
+      "symbol_latex": "L_p",
+      "meaning": "Lipschitz upper bound for the scalar function's $p$th Fréchet derivative in the Euclidean induced tensor norm",
+      "domain": "Positive real number",
+      "definition": "$\\|\\nabla^p f(z)-\\nabla^p f(w)\\|_{\\rm op}\\le L_p\\|z-w\\|_2$",
+      "parameter_ref": "CV_S_HIGH_SADDLE_gap_p_31ca8b172d"
+    },
+    {
+      "symbol_latex": "\\chi_{\\mathrm{gap}}",
+      "meaning": "Dimensionless accuracy ratio expressed in the units of the specified metric",
+      "domain": "Positive real number",
+      "definition": "$\\chi_{\\mathrm{gap}}=L_pD_K^{p+1}/\\varepsilon$",
+      "parameter_ref": "CV_S_HIGH_SADDLE_gap_p_aac7487c14"
+    },
+    {
+      "symbol_latex": "Q_{0,p}",
+      "meaning": "Sufficient accuracy threshold for integer rounding in the lower bound at fixed $p$",
+      "domain": "Positive proof constant with no specified numerical value",
+      "definition": null,
+      "parameter_ref": "CV_S_HIGH_SADDLE_gap_p_0d6e8b6f18"
+    },
+    {
+      "symbol_latex": "d",
+      "meaning": "The joint Euclidean dimension is $d=d_x+d_y$. Within its stated window, the lower bound may choose finite block dimensions.",
+      "domain": "Integer at least $2$",
+      "definition": "$d=d_x+d_y$",
+      "parameter_ref": "CV_S_HIGH_SADDLE_gap_p_cffd0f6f5a"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Target tolerance for the complete weak-VI gap or global saddle gap, in the units of that gap.",
+      "domain": "Positive real number",
+      "definition": null,
+      "parameter_ref": "CV_S_HIGH_SADDLE_gap_p_258cd1f3e7"
+    },
+    {
+      "symbol_latex": "p",
+      "meaning": "Fix the derivative order. The scalar interface returns through order p, equivalently through order p − 1 for the derived operator.",
+      "domain": "Integer at least $2$",
+      "definition": null,
+      "parameter_ref": "CV_S_HIGH_SADDLE_gap_p_861aaa09c5"
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_2,\\langle\\cdot,\\cdot\\rangle",
+      "meaning": "Euclidean norm and inner product; the product-space norm is the square root of the sum of the squared block norms.",
+      "domain": "The specified finite-dimensional real vector space.",
+      "definition": "$\\|v\\|_2=\\sqrt{\\langle v,v\\rangle}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "d_x,d_y",
+      "meaning": "Positive integer primal and dual block dimensions; joint dimension $d=d_x+d_y$",
+      "domain": "Positive integer",
+      "definition": "$d=d_x+d_y$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f",
+      "meaning": "Unknown real-valued payoff, with primal and dual input blocks.",
+      "domain": "$f:(x,y)\\mapsto f(x,y)\\in\\mathbb R$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x,y,z",
+      "meaning": "Primal variable, dual variable, and joint point",
+      "domain": "$x\\in\\mathbb R^{d_x},\\ y\\in\\mathbb R^{d_y},\\ z=(x,y)\\in\\mathbb R^{d_x+d_y}$",
+      "definition": "$z=(x,y)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla f,\\nabla_x f,\\nabla_y f",
+      "meaning": "Complete joint gradient and its two blocks",
+      "domain": "$\\nabla_x f\\in\\mathbb R^{d_x},\\ \\nabla_y f\\in\\mathbb R^{d_y}$",
+      "definition": "$\\nabla f=(\\nabla_x f,\\nabla_y f)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla^j f",
+      "meaning": "The jth Fréchet derivative of a scalar function. The complete derivative bundle contains orders zero through p.",
+      "domain": "The quantity $0\\le j\\le p$ is a j-linear map taking j vectors to a real scalar.",
+      "definition": "$\\nabla^0f=f$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "F_f",
+      "meaning": "Monotone saddle-point operator induced by the payoff function",
+      "domain": "$K\\to\\mathbb R^{d_x+d_y}$",
+      "definition": "$F_f(x,y)=(\\nabla_x f(x,y),-\\nabla_y f(x,y))$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_{\\rm op}",
+      "meaning": "Matrix or multilinear tensor norm induced by the Euclidean norm",
+      "domain": "Matrix and derivative tensors used in this profile",
+      "definition": "$\\|T\\|_{\\rm op}=\\sup_{\\|u_1\\|_2,\\ldots,\\|u_j\\|_2\\le1}\\|T[u_1,\\ldots,u_j]\\|_2$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "K",
+      "meaning": "A known nonempty compact convex feasible set.",
+      "domain": "A subset of Euclidean space.",
+      "definition": "$K=X\\times Y\\subset\\mathbb R^{d_x+d_y}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "X,Y",
+      "meaning": "Both primal and dual domains are known, nonempty, compact, and convex. Their product has diameter at most $D_K$.",
+      "domain": "$X\\subset\\mathbb R^{d_x},\\ Y\\subset\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat x,\\widehat y",
+      "meaning": "The point or variable blocks ultimately returned by the algorithm, corresponding to the hatted variables in the error formula.",
+      "domain": "Feasible variable pairs in $\\mathbb R^{d_x}\\times\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat z",
+      "meaning": "Joint output consisting of the two variable blocks",
+      "domain": "$\\mathbb R^{d_x+d_y}$",
+      "definition": "$\\widehat z=(\\widehat x,\\widehat y)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E,\\Pr",
+      "meaning": "Expectation and probability over the explicitly allowed algorithm and sample randomness, with the hidden instance fixed.",
+      "domain": "Operations on the corresponding probability space",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_{\\rm jet}",
+      "meaning": "Number of complete derivative-bundle queries up to the declared scalar derivative order",
+      "domain": "Nonnegative integer count; expected work is its expectation.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_{\\rm projection}",
+      "meaning": "Number of exact Euclidean projections onto the known feasible domain, recorded separately from primary information queries",
+      "domain": "Nonnegative integer count; expected work is its expectation.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_{\\rm model_solve}",
+      "meaning": "exact known tensor-model solves uncharged; no unknown best-response oracle",
+      "domain": "Nonnegative integer count; expected work is its expectation.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "A uniform cap on principal information calls for every admissible instance and execution path.",
+      "domain": "Nonnegative integer",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^\\star",
+      "meaning": "The infimum principal query budget among algorithms satisfying every stated instancewise output guarantee.",
+      "domain": "Nonnegative extended real value; by convention, positive infinity if no successful algorithm or no uniform finite budget exists",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A,I",
+      "meaning": "An algorithm selected from public inputs and an admissible hidden instance fixed before interaction",
+      "domain": "The specified algorithm and model classes.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\omega",
+      "meaning": "A complete realization of algorithmic and sample randomness.",
+      "domain": "Corresponding sample space",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta,\\widetilde O",
+      "meaning": "Asymptotic upper and lower bounds, constant-factor matching, and upper bounds hiding the stated logarithmic factors, within the corresponding regions.",
+      "domain": "Nonnegative complexity function; subscript p permits additional dependence only on fixed p",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathfrak A_\\varepsilon",
+      "meaning": "Algorithms using the allowed interfaces, algorithm restrictions, and output domain, and satisfying the displayed complete error guarantee for every fixed admissible instance",
+      "domain": "The algorithm class is defined at fixed public parameters and target tolerance $\\varepsilon$.",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "CV_S_HIGH_SADDLE_gap__main__q1",
+      "kind": "target_accuracy_cost",
+      "expression": "N^\\star(\\varepsilon)=\\inf_{\\mathcal A\\in\\mathfrak A_\\varepsilon}\\sup_I \\sup_\\omega N_{\\rm jet}(\\mathcal A,I,\\omega)",
+      "optimization_direction": "minimize",
+      "units": "N_jet",
+      "budget_variables": [],
+      "tolerance_variables": [
+        "CV_S_HIGH_SADDLE_gap_p_258cd1f3e7"
+      ],
+      "analysis_scope": "Take the worst case over admissible finite-dimensional instances. Theorems with dimension conditions apply only within those windows and do not establish fixed-dimensional saturation rates.",
+      "tracked_parameters": [
+        "CV_S_HIGH_SADDLE_gap_p_258cd1f3e7",
+        "CV_S_HIGH_SADDLE_gap_p_31ca8b172d",
+        "CV_S_HIGH_SADDLE_gap_p_810572da37",
+        "CV_S_HIGH_SADDLE_gap_p_aac7487c14"
+      ],
+      "fixed_parameters": [
+        "CV_S_HIGH_SADDLE_gap_p_861aaa09c5"
+      ],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "expression_latex": "N^\\star(\\varepsilon)=\\inf_{\\mathcal A\\in\\mathfrak A_\\varepsilon}\\sup_I \\sup_\\omega N_{\\rm jet}(\\mathcal A,I,\\omega)",
+      "display_notation_note": "One call is charged for the full response specified by the interface. The algorithm class obeys the declared randomization, adaptivity, and output rules and must satisfy the complete error guarantee on every fixed admissible instance. The call cap is uniform over instances and execution paths.",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "The number of complete jet responses.",
+      "expression": "N_jet",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_42bae10b68"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "CV_S_HIGH_SADDLE_gap__main__r1",
+      "specification_ref": "CV_S_HIGH_SADDLE_gap",
+      "name": "Main higher-order theorem regime",
+      "predicate_text": "Fix the integer $p\\ge2$ and impose $\\chi_{\\rm gap}\\ge Q_{0,p}$. The worst case ranges over all admissible finite block dimensions.",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_HIGH_SADDLE_gap_p_861aaa09c5"
+              },
+              "op": "ge",
+              "right": 2
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_HIGH_SADDLE_gap_p_aac7487c14"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "CV_S_HIGH_SADDLE_gap_p_0d6e8b6f18"
+              }
+            }
+          }
+        ]
+      },
+      "parameter_refs": [
+        "CV_S_HIGH_SADDLE_gap_p_cffd0f6f5a",
+        "CV_S_HIGH_SADDLE_gap_p_258cd1f3e7",
+        "CV_S_HIGH_SADDLE_gap_p_861aaa09c5",
+        "CV_S_HIGH_SADDLE_gap_p_31ca8b172d",
+        "CV_S_HIGH_SADDLE_gap_p_810572da37",
+        "CV_S_HIGH_SADDLE_gap_p_0d6e8b6f18",
+        "CV_S_HIGH_SADDLE_gap_p_aac7487c14"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Use the open or closed endpoints in each predicate. A universal constant without a numerical value yields an unknown numerical applicability result."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "CV_S_HIGH_SADDLE_gap__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "O_p(1+\\chi_{\\mathrm{gap}}^{2/(3p-1)})",
+      "quantity_ref": "CV_S_HIGH_SADDLE_gap__main__q1",
+      "region_refs": [
+        "CV_S_HIGH_SADDLE_gap__main__r1"
+      ],
+      "method": "scalar-to-operator jet simulation plus log-free high-order VI upper",
+      "algorithm_or_hard_family": "scalar-to-operator jet simulation plus log-free high-order VI upper",
+      "algorithm_class_scope": "A deterministic scalar-jet upper bound.",
+      "resource_costs": {
+        "N_jet": "O_p(1+\\chi_{\\mathrm{gap}}^{2/(3p-1)})",
+        "N_projection": "$O_p\\!\\left(1+\\chi_{\\mathrm{gap}}^{2/(3p-1)}\\right)$, using the quantity $\\chi_{\\mathrm{gap}}$ for this target and retaining dependence on the fixed order $p$.",
+        "N_model_solve": "$O_p\\!\\left(1+\\chi_{\\mathrm{gap}}^{2/(3p-1)}\\right)$. Only models defined by already returned coefficients are solved exactly; internal arithmetic is excluded from the query count."
+      },
+      "parameter_choice": "specified by the cited theorem; unknown thresholds not assigned numerical values",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "CV_SRC_mvi_optimal_2609_23557",
+        "CV_SRC_saddle_higher_2609_28246"
+      ],
+      "evidence_refs": [
+        "CV_S_HIGH_SADDLE_gap__main__e2",
+        "CV_S_HIGH_SADDLE_gap__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "CV_S_HIGH_SADDLE_gap__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The operator $F_f=(\\nabla_xf,-\\nabla_yf)$ is monotone and its derivative $\\mathrm D^{p-1}F_f$ has Lipschitz bound $L_p$. One full scalar jet of order p yields the complete operator jet through order p-1 without extra calls.",
+          "Use the actual monotone-VI algorithm and its output certificate. Proposition 3.6 of the scalar saddle-point source provides the structural map for the derived operator.",
+          "On the product domain, convexity-concavity bounds global saddle gap by $D_K\\operatorname{dist}(0,F_f(z)+N_K(z))$. Run at internal tangent tolerance $\\varepsilon/D_K$, giving $\\chi_{\\rm gap}=L_pD_K^{p+1}/\\varepsilon$."
+        ],
+        "dimension_conditions": "The upper bound holds in every admissible finite dimension. The lower bound applies only in its separately stated dimension window.",
+        "guarantee_mapping": "The error criterion, sources of randomness, and expectation/probability quantifiers match this specification. Any conversion is explained separately below.",
+        "oracle_mapping": "Use only primitive operations recorded under ORACLE. Unknown inner solutions and reduced gradients are not supplied for free.",
+        "output_mapping": "Outputs belong to the declared space and are evaluated by this profile's METRIC. Different gaps, norms, and squared norms are not interchanged.",
+        "resource_mapping": "All resource costs come from one algorithm or one hard construction. Initialization and nested calls are included."
+      },
+      "hidden_constants": "Use the source theorem’s universal constants except where derivative order or structural budgets are explicitly fixed. Unspecified sufficient thresholds remain symbolic.",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": "Let $S=\\operatorname{diag}(I,-I)$ and $F=S\\nabla f$. One scalar jet of order $p$ constructs $(F,\\mathrm DF,\\ldots,\\mathrm D^{p-1}F)$ with the same $L_p$. Tangent residual transfers directly; by $\\operatorname{Gap}\\le D_K r_{\\rm tan}$, a gap target uses residual tolerance $\\varepsilon/D_K$. Combine the reduction in Proposition 3.6 with Theorem 3.1 of arXiv:2609.23557. This supplies no additional free oracle access to the unknown object.",
+      "witness_type": "deterministic",
+      "witness_type_note": "Accelerated Halpern and known-model subroutines with complete jets use no random selection. Scalar-jet simulation preserves this determinism.",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "CV_S_HIGH_SADDLE_gap__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\Omega_p(\\chi_{\\mathrm{gap}}^{2/(3p-1)})",
+      "quantity_ref": "CV_S_HIGH_SADDLE_gap__main__q1",
+      "region_refs": [
+        "CV_S_HIGH_SADDLE_gap__main__r1"
+      ],
+      "method": "scalar flat-gate convex-concave chain",
+      "algorithm_or_hard_family": "scalar flat-gate convex-concave chain",
+      "algorithm_class_scope": "Arbitrary randomized scalar-jet algorithms; the hard construction itself is a scalar convex-concave function.",
+      "resource_costs": {
+        "N": "\\Omega_p(\\chi_{\\mathrm{gap}}^{2/(3p-1)})"
+      },
+      "parameter_choice": "specified by the cited theorem; unknown thresholds not assigned numerical values",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "CV_SRC_saddle_higher_2609_28246"
+      ],
+      "evidence_refs": [
+        "CV_S_HIGH_SADDLE_gap__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "CV_S_HIGH_SADDLE_gap__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Every condition in the eight-axis specification and associated regime must hold jointly. Sufficient constants from different theorems are not assumed identical."
+        ],
+        "dimension_conditions": "The deterministic hard construction requires $d_x=d_y=2N+2$. For randomized algorithms, dimension $d_x,d_y\\le C_p(N+1)^3\\log(N+2)$ suffices, where $C_p$ may depend on the fixed order $p$.",
+        "guarantee_mapping": "The error criterion, sources of randomness, and expectation/probability quantifiers match this specification. Any conversion is explained separately below.",
+        "oracle_mapping": "Use only primitive operations recorded under ORACLE. Unknown inner solutions and reduced gradients are not supplied for free.",
+        "output_mapping": "Outputs belong to the declared space and are evaluated by this profile's METRIC. Different gaps, norms, and squared norms are not interchanged.",
+        "resource_mapping": "All resource costs come from one algorithm or one hard construction. Initialization and nested calls are included."
+      },
+      "hidden_constants": "Use the source theorem’s universal constants except where derivative order or structural budgets are explicitly fixed. Unspecified sufficient thresholds remain symbolic.",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "lower_scope_type": "unrestricted_randomized",
+      "lower_scope_type_note": "The verified source theorem allows arbitrary randomized adaptive algorithms. Domain, output, dimension, and fixed-budget conditions remain those of the specification and region.",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Main higher-order theorem regime",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_HIGH_SADDLE_gap_p_861aaa09c5"
+              },
+              "op": "ge",
+              "right": 2
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "CV_S_HIGH_SADDLE_gap_p_aac7487c14"
+              },
+              "op": "ge",
+              "right": {
+                "parameter": "CV_S_HIGH_SADDLE_gap_p_0d6e8b6f18"
+              }
+            }
+          }
+        ]
+      },
+      "predicate_text": "Fix the integer $p\\ge2$ and impose $\\chi_{\\rm gap}\\ge Q_{0,p}$. The worst case ranges over all admissible finite block dimensions.",
+      "parameter_refs": [
+        "CV_S_HIGH_SADDLE_gap_p_cffd0f6f5a",
+        "CV_S_HIGH_SADDLE_gap_p_258cd1f3e7",
+        "CV_S_HIGH_SADDLE_gap_p_861aaa09c5",
+        "CV_S_HIGH_SADDLE_gap_p_31ca8b172d",
+        "CV_S_HIGH_SADDLE_gap_p_810572da37",
+        "CV_S_HIGH_SADDLE_gap_p_0d6e8b6f18",
+        "CV_S_HIGH_SADDLE_gap_p_aac7487c14"
+      ],
+      "source_region_ref": "CV_S_HIGH_SADDLE_gap__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "CV_S_HIGH_SADDLE_gap__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "CV_S_HIGH_SADDLE_gap__main__q1",
+      "resource_projection_id": "resource_42bae10b68",
+      "regime_id": "CV_S_HIGH_SADDLE_gap__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "CV_S_HIGH_SADDLE_gap__main__b1"
+        ],
+        "lower_refs": [
+          "CV_S_HIGH_SADDLE_gap__main__b2"
+        ],
+        "comparison_ref": "CV_S_HIGH_SADDLE_gap__main__c1",
+        "quantity_ref": "CV_S_HIGH_SADDLE_gap__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_jet",
+        "ratio_or_gap": "$O_p(1)$",
+        "envelopes": {
+          "upper": {
+            "expression": "C_p(1+\\chi_{\\mathrm{gap}}^{2/(3p-1)})",
+            "claim_refs": [
+              "CV_S_HIGH_SADDLE_gap__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "C_p(1+\\chi_{\\mathrm{gap}}^{2/(3p-1)})"
+          },
+          "lower": {
+            "expression": "c_p\\chi_{\\mathrm{gap}}^{2/(3p-1)}",
+            "claim_refs": [
+              "CV_S_HIGH_SADDLE_gap__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "c_p\\chi_{\\mathrm{gap}}^{2/(3p-1)}"
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "CV_S_HIGH_SADDLE_gap__main__b1",
+            "when_region_refs": [
+              "CV_S_HIGH_SADDLE_gap__main__r1"
+            ],
+            "meaning": "Use this algorithm only on its own applicability region; scalar envelopes take minimum over applicable branches."
+          }
+        ],
+        "claim_guards": {
+          "CV_S_HIGH_SADDLE_gap__main__b1": [
+            {
+              "region_ref": "CV_S_HIGH_SADDLE_gap__main__r1",
+              "predicate_text": "Fix the integer $p\\ge2$ and impose $\\chi_{\\rm gap}\\ge Q_{0,p}$. The worst case ranges over all admissible finite block dimensions."
+            }
+          ],
+          "CV_S_HIGH_SADDLE_gap__main__b2": [
+            {
+              "region_ref": "CV_S_HIGH_SADDLE_gap__main__r1",
+              "predicate_text": "Fix the integer $p\\ge2$ and impose $\\chi_{\\rm gap}\\ge Q_{0,p}$. The worst case ranges over all admissible finite block dimensions."
+            }
+          ]
+        },
+        "envelope_certificate": "This is a synthesis across sources. Keep the scalar lower bound and the new VI upper bound as independent references; a source's near-optimality summary does not replace its native theorem statement.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "The number of complete jet responses."
+      },
+      "comparison_key": {
+        "setting_id": "CV_S_HIGH_SADDLE_gap",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "CV_S_HIGH_SADDLE_gap__main__q1",
+        "resource_projection_id": "resource_42bae10b68",
+        "regime_id": "CV_S_HIGH_SADDLE_gap__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "CV_S_HIGH_SADDLE_gap__main__e1",
+      "source_ref": "CV_SRC_saddle_higher_2609_28246",
+      "locator": {
+        "theorem": "Theorem3.5; Lemma3.4; Proposition3.6",
+        "section": "",
+        "pdf_pages": [
+          6,
+          7,
+          8
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "HIGH_SAD_gap",
+      "notes": [
+        "The source scalar-payoff hard family directly covers arbitrary randomized algorithms. A general vector-VI lower bound is not converted backward to a saddle lower bound without a construction."
+      ]
+    },
+    {
+      "id": "CV_S_HIGH_SADDLE_gap__main__e2",
+      "source_ref": "CV_SRC_mvi_optimal_2609_23557",
+      "source_refs": [
+        "CV_SRC_mvi_optimal_2609_23557"
+      ],
+      "locator": {
+        "theorem": "Theorems 3.1 and 5.1",
+        "section": "Sections 3,5",
+        "pdf_pages": [
+          5,
+          11
+        ],
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "HIGH_VI_UP",
+      "notes": [
+        "Let $T$ denote the outer iteration count. Lemma 5.4 and (22)-(23) sum all inner-solver calls to obtain total inner cost $O(T)$. The counted object is a full jet call, so outer iterations alone are insufficient. Bound the source initial distance to a solution by the domain diameter $D_K$."
+      ],
+      "location": "Assumptions2.1–2.4; Definition2.1/2.2; Theorems3.1,5.1; Lemma5.4",
+      "statement_summary": "Log-free O_p((L_p R_0^p/epsilon)^{2/(3p-1)}) operator-jet upper.",
+      "applicability_review": "Source R_0=||x0-x*|| <= $D_K$, not a new diameter assumption. Full operator jet through p-1; same-point tangent certificate. All nested F calls counted. Exact known Taylor-model solves are internal. Fixed p. Deterministic upper satisfies randomized success2/3. Source does not itself supply unrestricted randomized lower."
+    }
+  ],
+  "references": [
+    {
+      "id": "CV_SRC_mvi_optimal_2609_23557",
+      "authors": [
+        "Xinliang Zhang",
+        "Lesi Chen",
+        "Linxuan Pan",
+        "Chengchang Liu",
+        "Junchi Yang",
+        "Jingzhao Zhang"
+      ],
+      "title": "Optimal High-Order Methods for Solving Monotone Variational Inequalities",
+      "year": 2026,
+      "version": "arXiv:2609.23557v1, 2026-09-20",
+      "url": "https://arxiv.org/pdf/2609.23557v1",
+      "publication_status": "preprint"
+    },
+    {
+      "id": "CV_SRC_saddle_higher_2609_28246",
+      "authors": [
+        "Yanyi Li",
+        "Haihan Zhang",
+        "Chenheng Zhang",
+        "Wendao Wu",
+        "Chunyuan Zheng",
+        "Cong Fang",
+        "Haoxuan Li",
+        "Zhouchen Lin"
+      ],
+      "title": "Near-Optimal Higher-Order Oracle Complexity for Convex--Concave Minimax Optimization",
+      "year": 2026,
+      "version": "arXiv:2609.28246v2, 2026-10-19",
+      "url": "https://arxiv.org/pdf/2609.28246v2",
+      "publication_status": "preprint"
+    }
+  ],
+  "relations": [
+    {
+      "id": "CV_REL_TANGENT_TO_GAP",
+      "source_ref": "CV_S_HIGH_SADDLE_tan",
+      "target_ref": "CV_S_HIGH_SADDLE_gap",
+      "relation_kind": "one_way_error_reduction",
+      "conditions": [
+        "Differentiable payoff, convex in the primal variable and concave in the dual variable",
+        "The known compact convex product domain $K=X\\times Y$ satisfies $\\operatorname{diam}(K)\\le D_K$"
+      ],
+      "instance_map": "Uses the same payoff function and the same product domain.",
+      "output_map": "Retain the same feasible primal–dual point.",
+      "error_map": "$\\operatorname{Gap}_f(z)\\le D_K\\operatorname{dist}(0,F_f(z)+N_K(z))$. To attain gap tolerance $\\varepsilon$, use tangent-residual tolerance $\\varepsilon/D_K$.",
+      "oracle_simulation": "No additional hidden-information calls are needed.",
+      "cost_map": {
+        "expression": null,
+        "components": {
+          "extra_calls": "0"
+        }
+      },
+      "evidence_refs": [
+        "CV_S_HIGH_SADDLE_gap__main__e1"
+      ]
+    }
+  ],
+  "aliases": [
+    {
+      "legacy_id": "CV_S_HIGH_SADDLE_gap",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "optimal": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "CV_S_HIGH_SADDLE_gap__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "746ba3bb289d52d7939622252570837ac43b012767ee0581bda04cdd84dd5821",
+    "source_order": 3,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

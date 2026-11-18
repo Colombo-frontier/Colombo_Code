@@ -1,0 +1,1007 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ONX_CALIBRATION",
+  "title": "Binary sequential calibration with arbitrary causal randomized predictors",
+  "summary": "Each round, the predictor outputs a probability while the environment simultaneously selects a binary outcome. Both may use the past, but the environment cannot observe the current realized prediction first. The objective is standard cumulative absolute calibration error.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "absolute_calibration"
+    },
+    {
+      "facet": "structure",
+      "value": "binary_outcomes"
+    },
+    {
+      "facet": "feedback",
+      "value": "simultaneous_binary_outcome"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    },
+    {
+      "facet": "algorithm",
+      "value": "polynomial_time"
+    }
+  ],
+  "common_specification": {
+    "metric": {
+      "base_expression": "$$\\operatorname{Cal}_T=\\sum_{p\\in\\{p_1,\\ldots,p_T\\}}\\left|\\sum_{t:p_t=p}(y_t-p_t)\\right|.$$ Sum only over distinct forecast probabilities actually used. This is neither per-round absolute error nor binned approximate calibration.",
+      "base_expression_latex": "\\operatorname{Cal}_T=\\sum_{p\\in\\{p_1,\\ldots,p_T\\}}\\left|\\sum_{t:p_t=p}(y_t-p_t)\\right|.",
+      "normalization": "Group exactly equal prediction values and sum absolute deviations. Do not divide by T.",
+      "comparator_ref": "ONX_CALIBRATION_com_ecac11a384",
+      "finiteness_conditions": "The triangle inequality places calibration error in $[0,T]$.",
+      "description_paragraphs": [
+        "$$\n\\operatorname{Cal}_T=\\sum_{p\\in\\{p_1,\\ldots,p_T\\}}\\left|\\sum_{t:p_t=p}(y_t-p_t)\\right|.\n$$",
+        "The outer sum runs only over distinct prediction probabilities actually used. The criterion is neither per-round absolute error nor an approximation after binning."
+      ],
+      "nonnegativity": true
+    },
+    "output": {
+      "object_type": "online_trajectory",
+      "feasibility": "Output a probability $p_t\\in[0,1]$ each round. Evaluation uses the realized prediction and outcome trajectories; predictions cannot be rewritten after the game ends.",
+      "allowed_postprocessing": "Previously executed online actions cannot be changed.",
+      "certificate_requirement": "No function value, optimality certificate, or final recommendation is required unless explicitly listed for this axis.",
+      "description_paragraphs": [
+        "Output a probability $p_t\\in[0,1]$ each round. Evaluation uses the realized prediction and outcome trajectories; predictions cannot be rewritten after the game ends."
+      ]
+    },
+    "model": {
+      "existence": "Use the model's concrete compactness, continuity, unique-optimum, or controllability promises; add none implicitly.",
+      "parameter_domain_description": "T: $T\\in\\mathbb N,\\ T\\ge1$ (public)",
+      "instance": "The outcome $y_t\\in\\{0,1\\}$ and prediction $p_t\\in[0,1]$ are generated simultaneously each round. The outcome strategy may use all past predictions and outcomes, but not the realization of the current prediction or the current private seed.",
+      "assumptions": [
+        {
+          "subject_id": "ONX_CALIBRATION_obj_577798f047",
+          "property_code": "explicit_model_clause",
+          "variable_blocks": [
+            "ONX_CALIBRATION_var_414dbbb311"
+          ],
+          "norm_ref": "ONX_CALIBRATION_nor_3238055105",
+          "scope": "All admissible values of the listed variables and round indices",
+          "description": "The outcome $y_t\\in\\{0,1\\}$ and prediction $p_t\\in[0,1]$ are generated simultaneously each round. The outcome strategy may use all past predictions and outcomes, but not the realization of the current prediction or the current private seed."
+        }
+      ],
+      "structured_source_contract": {
+        "predictions": "p_t in [0,1]",
+        "outcomes": "y_t in {0,1}",
+        "timing": "simultaneous choices; both may use past predictions/outcomes, adversary cannot see current realized randomized p_t before choosing y_t",
+        "bins": "sum over exact prediction values actually used, not an independently fixed coarse histogram"
+      },
+      "description_paragraphs": [
+        "The outcome $y_t\\in\\{0,1\\}$ and prediction $p_t\\in[0,1]$ are generated simultaneously each round. The outcome strategy may use all past predictions and outcomes, but not the realization of the current prediction or the current private seed."
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "$T$ sequential rounds, or $T$ rounds per task"
+        },
+        {
+          "code": "native_feedback",
+          "unit": "as_specified",
+          "description": "There are $T$ predictions and $N=T$ binary-outcome observations. Computation and observation counts are separate; information-theoretic existence does not imply an efficient algorithm. Initialization and exploration are charged. Information, arithmetic, communication, and memory remain separate resources; no optimal arithmetic or bit complexity is asserted."
+        }
+      ],
+      "cost_rules": [
+        {
+          "id": "ONX_CALIBRATION_res_ebdebae8a9",
+          "operation_refs": [
+            "ONX_CALIBRATION_ora_3abdb6a371"
+          ],
+          "cost": {
+            "T": "predictions",
+            "N": "T observed binary outcomes",
+            "computation": "separate resource; information-theoretic existence is not an efficient algorithm"
+          }
+        }
+      ],
+      "scalarization": "Compare only at the specified joint budget and with the same native performance measure.",
+      "setup_cost": "All initialization, exploration, and identification calls are included in the budget.",
+      "precision_model": "Exact real-arithmetic model; bit complexity is unspecified",
+      "description_paragraphs": [
+        "There are $T$ predictions and $N=T$ binary outcome observations. Computation is accounted for separately. An information-theoretic existence result does not itself give an efficient algorithm.",
+        "Exploration, initialization, and system identification all consume the stated online budget. Queries, arithmetic, communication rounds or bits, and memory remain joint resources. No arithmetic or bit-complexity optimality is asserted."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "ONX_CALIBRATION_ora_3abdb6a371",
+          "operation_code": "simultaneous_binary_outcome",
+          "target_object": "ONX_CALIBRATION_obj_577798f047",
+          "query_signature": "The predictor chooses $p_t\\in[0,1]$ while the adversary simultaneously chooses $y_t\\in\\{0,1\\}$. Both may use past predictions and outcomes, but the adversary choosing $y_t$ cannot see the current realized randomized prediction $p_t$. After both act, $p_t,y_t$ is revealed. No true conditional mean or privileged prediction interface is supplied. Past feedback may be stored and reused computationally; no additional historical or sample queries are available beyond the explicitly declared interface.",
+          "response_signature": {
+            "feedback": "after choices reveal y_t and p_t; no privileged conditional-mean oracle"
+          },
+          "domain_ref": "ONX_CALIBRATION_dom_07e59189ae",
+          "feedback_quality": {
+            "feedback": "after choices reveal y_t and p_t; no privileged conditional-mean oracle"
+          },
+          "access_schedule_ref": "ONX_CALIBRATION_pro_3944b1151a",
+          "cost_rule_ref": "ONX_CALIBRATION_res_ebdebae8a9",
+          "display_label_zh": "Simultaneous binary outcome"
+        }
+      ],
+      "public_inputs": [
+        "T"
+      ],
+      "hidden_objects": [
+        "Current outcome $y_t$, unrevealed when the prediction is submitted",
+        "Future outcome"
+      ],
+      "auxiliary_interfaces": {
+        "feedback": "after choices reveal y_t and p_t; no privileged conditional-mean oracle"
+      },
+      "protocol_ref": "ONX_CALIBRATION_pro_3944b1151a",
+      "description_paragraphs": [
+        "The predictor chooses $p_t\\in[0,1]$ while the adversary simultaneously chooses $y_t\\in\\{0,1\\}$.",
+        "Both players may use past predictions and outcomes. When choosing $y_t$, the adversary cannot observe the current realized random prediction $p_t$.",
+        "The quantity $p_t,y_t$ is revealed after both parties act. No true conditional mean or other privileged prediction interface is supplied.",
+        "Received feedback may be stored and reused in computation. Unrevealed information cannot be requested from past rounds, and consumed random samples cannot receive additional queries. Current-round exceptions are limited to the explicitly supplied full-function access or same-sample two-point interface."
+      ]
+    },
+    "task": {
+      "formulation_latex": "\\operatorname{Cal}_T=\\sum_{p\\in\\{p_1,\\ldots,p_T\\}}\\left|\\sum_{t:p_t=p}(y_t-p_t)\\right|.",
+      "solution_goal": "Minimize performance as defined by the metric, guarantee, and native resource.",
+      "protocol_ref": "ONX_CALIBRATION_pro_3944b1151a",
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "description_paragraphs": [
+        "Each round, the predictor outputs a probability while the environment simultaneously selects a binary outcome. Both may use the past, but the environment cannot observe the current realized prediction first. The objective is standard cumulative absolute calibration error."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "randomized_unrestricted_computation",
+      "label": "Randomized unrestricted computation",
+      "algorithms": {
+        "randomization": "Private randomness is allowed and independent of the fixed instance and future external randomness.",
+        "adaptivity": "Strictly follows the per-round and within-batch protocol of the oracle",
+        "restrictions": [
+          "$$\\inf_{\\mathcal A}\\ \\sup_{\\mathcal E\\ \\text{nonanticipating}}\\ \\mathbb E_{\\mathcal A,\\mathcal E}\\!\\left[\\operatorname{Cal}_T\\right].$$",
+          "Expectation includes both players' randomness; the target is neither a pathwise nor a high-probability calibration guarantee.",
+          "Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits."
+        ],
+        "internal_computation": "Unrestricted except for explicit polynomial-time or protocol constraints",
+        "parallelism": "Follows the simultaneous-query, task-batch, and communication timing specified by the oracle",
+        "description_paragraphs": [
+          "$$\n\\inf_{\\mathcal{A}}\\ \\sup_{\\mathcal{E}\\ \\text{\\text{nonanticipating}}}\\ \\mathbb{E}_{\\mathcal{A},\\mathcal{E}}\\!\\left[\\operatorname{Cal}_T\\right].\n$$",
+          "Expectation includes both players' randomness; the target is neither a pathwise nor a high-probability calibration guarantee.",
+          "Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "Control $\\mathbb E[\\operatorname{Cal}_T]$ against every admissible outcome strategy, with expectation over both predictor and outcome-strategy randomness. Choose an admissible predictor first, then take the worst case over environment strategies.",
+          "aggregation_order": [
+            "Control $\\mathbb E[\\operatorname{Cal}_T]$ against every admissible outcome strategy, with expectation over both predictor and outcome-strategy randomness. Choose an admissible predictor first, then take the worst case over environment strategies."
+          ],
+          "quantifier_order": "One admissible algorithm using only public information must handle every prescribed instance; adaptation to unknown budgets must be performed by that same algorithm.",
+          "randomness_sources": [
+            "Private randomness of the algorithm",
+            "Observation or environment randomness explicitly allowed by the oracle."
+          ],
+          "runtime_guarantee": "The resource budget is fixed. Expected error is not automatically converted to high probability or a random-runtime bound.",
+          "description_paragraphs": [
+            "Control $\\mathbb{E}[\\operatorname{Cal}_T]$ against every admissible outcome strategy, with expectation over both predictor and outcome-strategy randomness. Choose an admissible predictor first, then take the worst case over environment strategies."
+          ]
+        }
+      ],
+      "specification_overrides": {
+        "task": {
+          "formulation_code": "onx_cal_unrestricted",
+          "formulation": "Each round, the predictor outputs a probability while the environment simultaneously selects a binary outcome. Both may use the past, but the environment cannot observe the current realized prediction first. The objective is standard cumulative absolute calibration error. Internal computation is unrestricted."
+        },
+        "model": {
+          "information_registry_ref": "ONX_CAL_UNRESTRICTED_INFORMATION"
+        }
+      },
+      "budget": {
+        "precision_model": "Exact real-arithmetic model; bit complexity is unspecified",
+        "scalarization": "Compare only at the specified joint budget and with the same native performance measure."
+      },
+      "alias_ids": [
+        "ONX_CAL_UNRESTRICTED"
+      ],
+      "display_qualifications": []
+    },
+    {
+      "view_id": "randomized_polynomial_time",
+      "label": "Randomized polynomial time",
+      "algorithms": {
+        "randomization": "Private randomness is allowed and independent of the fixed instance and future external randomness.",
+        "adaptivity": "Strictly follows the per-round and within-batch protocol of the oracle",
+        "restrictions": [
+          "$$\\inf_{\\mathcal A}\\ \\sup_{\\mathcal E\\ \\text{nonanticipating}}\\ \\mathbb E_{\\mathcal A,\\mathcal E}\\!\\left[\\operatorname{Cal}_T\\right].$$",
+          "Expectation includes both players' randomness; the target is neither a pathwise nor a high-probability calibration guarantee.",
+          "Per-round and total computation must obey the declared polynomial-time restriction. An existence-only minimax policy with unlimited computation is not an admissible upper-bound witness.",
+          "Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits."
+        ],
+        "internal_computation": "Unrestricted except for explicit polynomial-time or protocol constraints",
+        "parallelism": "Follows the simultaneous-query, task-batch, and communication timing specified by the oracle",
+        "description_paragraphs": [
+          "$$\n\\inf_{\\mathcal{A}}\\ \\sup_{\\mathcal{E}\\ \\text{\\text{nonanticipating}}}\\ \\mathbb{E}_{\\mathcal{A},\\mathcal{E}}\\!\\left[\\operatorname{Cal}_T\\right].\n$$",
+          "Expectation includes both players' randomness; the target is neither a pathwise nor a high-probability calibration guarantee.",
+          "Per-round and total computation must obey the declared polynomial-time restriction. An existence-only minimax policy with unlimited computation is not an admissible upper-bound witness.",
+          "Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "Control $\\mathbb E[\\operatorname{Cal}_T]$ against every admissible outcome strategy, with expectation over both predictor and outcome-strategy randomness. Choose an admissible predictor first, then take the worst case over environment strategies.",
+          "aggregation_order": [
+            "Control $\\mathbb E[\\operatorname{Cal}_T]$ against every admissible outcome strategy, with expectation over both predictor and outcome-strategy randomness. Choose an admissible predictor first, then take the worst case over environment strategies."
+          ],
+          "quantifier_order": "One admissible algorithm using only public information must handle every prescribed instance; adaptation to unknown budgets must be performed by that same algorithm.",
+          "randomness_sources": [
+            "Private randomness of the algorithm",
+            "Observation or environment randomness explicitly allowed by the oracle."
+          ],
+          "runtime_guarantee": "The resource budget is fixed. Expected error is not automatically converted to high probability or a random-runtime bound.",
+          "description_paragraphs": [
+            "Control $\\mathbb{E}[\\operatorname{Cal}_T]$ against every admissible outcome strategy, with expectation over both predictor and outcome-strategy randomness. Choose an admissible predictor first, then take the worst case over environment strategies."
+          ]
+        }
+      ],
+      "specification_overrides": {
+        "task": {
+          "formulation_code": "onx_cal_polytime",
+          "formulation": "Each round, the predictor outputs a probability while the environment simultaneously selects a binary outcome. Both may use the past, but the environment cannot observe the current realized prediction first. The objective is standard cumulative absolute calibration error. Internal computation is restricted to polynomial time in the input length."
+        },
+        "model": {
+          "information_registry_ref": "ONX_CAL_POLYTIME_INFORMATION"
+        }
+      },
+      "budget": {
+        "precision_model": "Exact real-arithmetic model; bit complexity is unspecified",
+        "scalarization": "Compare only at the specified joint budget and with the same native performance measure."
+      },
+      "alias_ids": [
+        "ONX_CAL_POLYTIME"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ONX_CALIBRATION_obj_577798f047",
+        "type": "online_environment",
+        "definition": "The outcome $y_t\\in\\{0,1\\}$ and prediction $p_t\\in[0,1]$ are generated simultaneously each round. The outcome strategy may use all past predictions and outcomes, but not the realization of the current prediction or the current private seed."
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ONX_CALIBRATION_var_414dbbb311",
+        "space": "Forecast probability $p_t\\in[0,1]$",
+        "dimension": "1"
+      }
+    ],
+    "domains": [
+      {
+        "id": "ONX_CALIBRATION_dom_07e59189ae",
+        "definition": "The outcome $y_t\\in\\{0,1\\}$ and prediction $p_t\\in[0,1]$ are generated simultaneously each round. The outcome strategy may use all past predictions and outcomes, but not the realization of the current prediction or the current private seed."
+      }
+    ],
+    "norms": [
+      {
+        "id": "ONX_CALIBRATION_nor_3238055105",
+        "definition": {
+          "predictions": "p_t in [0,1]",
+          "outcomes": "y_t in {0,1}",
+          "timing": "simultaneous choices; both may use past predictions/outcomes, adversary cannot see current realized randomized p_t before choosing y_t",
+          "bins": "sum over exact prediction values actually used, not an independently fixed coarse histogram"
+        }
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ONX_CALIBRATION_pro_3944b1151a",
+        "steps": [
+          "The predictor chooses $p_t\\in[0,1]$ while the adversary simultaneously chooses $y_t\\in\\{0,1\\}$.",
+          "Both players may use past predictions and outcomes. When choosing $y_t$, the adversary cannot observe the current realized random prediction $p_t$.",
+          "The quantity $p_t,y_t$ is revealed after both parties act. No true conditional mean or other privileged prediction interface is supplied.",
+          "Received feedback may be stored and reused in computation. Unrevealed information cannot be requested from past rounds, and consumed random samples cannot receive additional queries. Current-round exceptions are limited to the explicitly supplied full-function access or same-sample two-point interface."
+        ],
+        "adversary_information": "Follow the model and oracle timing. Current private random realizations are not visible to the environment.",
+        "loss_bearing_points": "Output a probability $p_t\\in[0,1]$ each round. Evaluation uses the realized prediction and outcome trajectories; predictions cannot be rewritten after the game ends.",
+        "past_requery": "History may be stored. New information from old samples or past rounds is unavailable unless the native interface explicitly permits it."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ONX_CALIBRATION_com_ecac11a384",
+        "definition": "$$\\operatorname{Cal}_T=\\sum_{p\\in\\{p_1,\\ldots,p_T\\}}\\left|\\sum_{t:p_t=p}(y_t-p_t)\\right|.$$ Sum only over distinct forecast probabilities actually used. This is neither per-round absolute error nor binned approximate calibration."
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ONX_CALIBRATION_p_0c093224ff",
+      "symbol": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "dependencies": [],
+      "constant_dependencies": []
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The information protocol fixes feedback count per round. The horizon $T$ is not an independent cumulative scalar-query count.",
+      "parameter_ref": "ONX_CALIBRATION_p_0c093224ff"
+    },
+    {
+      "symbol_latex": "p_t,y_t",
+      "meaning": "Probability forecast and binary outcome at round $t$",
+      "domain": "$p_t\\in[0,1],\\ y_t\\in\\{0,1\\}$",
+      "definition": "The current outcome strategy cannot first observe the realized random prediction. Both choices are revealed after they are made.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal P_T",
+      "meaning": "Set of distinct prediction values actually used during an interaction",
+      "domain": "A finite set with at most T elements.",
+      "definition": "The set is $\\mathcal P_T=\\{p_1,\\ldots,p_T\\}$. Exactly equal numerical values belong to the same group.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\operatorname{Cal}_T",
+      "meaning": "Absolute calibration error grouped by the exact forecast values",
+      "domain": "Real number in $[0,T]$",
+      "definition": "$\\operatorname{Cal}_T=\\sum_{p\\in\\mathcal P_T}|\\sum_{t:p_t=p}(y_t-p_t)|$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal E",
+      "meaning": "Outcome-generation policy that cannot observe the current realized prediction",
+      "domain": "Causal environment policy",
+      "definition": "The strategy may depend on all previous predictions and outcomes and may also randomize.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation covers the joint randomness of the predictor and admissible environment. Absolute values and grouping by prediction value precede expectation.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Cumulative observations counted according to the declared feedback type.",
+      "domain": "Nonnegative integer or integer-valued stopping time",
+      "definition": "$N=T$, the number of binary outcomes observed after the actions.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\gamma_{\\mathrm{cal}}",
+      "meaning": "Fixed positive exponent correction in the efficient calibration theorem",
+      "domain": "$0<\\gamma_{\\mathrm{cal}}<1$",
+      "definition": "This is the quantity $\\epsilon_{AB}$ in source Theorem 1, whose existence follows from the sign-preservation bound in Lemma 3. It is not a tunable accuracy, privacy parameter, or numerically known constant in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "T^{2/3-\\gamma_{\\mathrm{cal}}/18}",
+      "meaning": "The calibration-error exponent of this efficient algorithm.",
+      "domain": "Asymptotic rate guaranteed by the theorem",
+      "definition": "The source does not supply a numerical decimal exponent that can be substituted here.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ONX_CALIBRATION__randomized_unrestricted_computation__q1",
+      "kind": "native_performance",
+      "expression": "Control $\\mathbb E[\\operatorname{Cal}_T]$ against every admissible outcome strategy, with expectation over both predictor and outcome-strategy randomness. Choose an admissible predictor first, then take the worst case over environment strategies.",
+      "expression_latex": "\\operatorname{Cal}_T=\\sum_{p\\in\\{p_1,\\ldots,p_T\\}}\\left|\\sum_{t:p_t=p}(y_t-p_t)\\right|.",
+      "optimization_direction": "minimize",
+      "units": "The setting’s native loss, regret, or error scale.",
+      "budget_variables": [
+        "ONX_CALIBRATION_p_0c093224ff"
+      ],
+      "comparison_scale": "native_metric",
+      "analysis_scope": "Compare only within this setting and the explicit regime, retaining multiple objectives and time normalization.",
+      "view_id": "randomized_unrestricted_computation",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ONX_CALIBRATION__randomized_polynomial_time__q1",
+      "kind": "native_performance",
+      "expression": "Control $\\mathbb E[\\operatorname{Cal}_T]$ against every admissible outcome strategy, with expectation over both predictor and outcome-strategy randomness. Choose an admissible predictor first, then take the worst case over environment strategies.",
+      "expression_latex": "\\operatorname{Cal}_T=\\sum_{p\\in\\{p_1,\\ldots,p_T\\}}\\left|\\sum_{t:p_t=p}(y_t-p_t)\\right|.",
+      "optimization_direction": "minimize",
+      "units": "The setting’s native loss, regret, or error scale.",
+      "budget_variables": [
+        "ONX_CALIBRATION_p_0c093224ff"
+      ],
+      "comparison_scale": "native_metric",
+      "analysis_scope": "Compare only within this setting and the explicit regime, retaining multiple objectives and time normalization.",
+      "view_id": "randomized_polynomial_time",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+      "expression": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+      "mode": "native_metric",
+      "resource_projection_id": "resource_6a63cfee9f"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ONX_CALIBRATION__randomized_unrestricted_computation__r1",
+      "specification_ref": "ONX_CALIBRATION",
+      "name": "SUPPORTED",
+      "predicate_text": "Assume $T\\ge1$ and standard absolute calibration. The environment cannot observe the current realized prediction.",
+      "kind": "theorem_window",
+      "parameter_refs": [],
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "$T\\ge1$ and standard absolute calibration; the environment cannot observe the current realized prediction."
+      },
+      "endpoint_notes": "Unspecified numerical thresholds remain symbolic. Fixed-parameter dependence does not imply dimension-uniform constants."
+    },
+    {
+      "id": "ONX_CALIBRATION__randomized_unrestricted_computation__r2",
+      "specification_ref": "ONX_CALIBRATION",
+      "name": "The bound’s native applicability window.",
+      "predicate_text": "$T\\ge1$. The target is expected cumulative absolute calibration error. The adversary cannot anticipate the current realized random prediction. The preprint theorem statement supplies the recorded evidence; its minimax reduction does not itself implement a polynomial-time predictor.",
+      "kind": "source_window"
+    },
+    {
+      "id": "ONX_CALIBRATION__randomized_unrestricted_computation__r3",
+      "specification_ref": "ONX_CALIBRATION",
+      "name": "The bound’s native applicability window.",
+      "predicate_text": "Use a randomized outcome adversary fixed before interaction, targeting expected standard absolute calibration error.",
+      "kind": "source_window"
+    },
+    {
+      "id": "ONX_CALIBRATION__randomized_polynomial_time__r1",
+      "specification_ref": "ONX_CALIBRATION",
+      "name": "SUPPORTED",
+      "predicate_text": "The source fixes $\\gamma_{\\mathrm{cal}}>0$ and gives total computation $O(T^{7/2}\\log^2T)$.",
+      "kind": "theorem_window",
+      "parameter_refs": [],
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "The source fixes $\\gamma_{\\mathrm{cal}}>0$ and gives total computation $O(T^{7/2}\\log^2T)$."
+      },
+      "endpoint_notes": "Unspecified numerical thresholds remain symbolic. Fixed-parameter dependence does not imply dimension-uniform constants."
+    },
+    {
+      "id": "ONX_CALIBRATION__randomized_polynomial_time__r2",
+      "specification_ref": "ONX_CALIBRATION",
+      "name": "The bound’s native applicability window.",
+      "predicate_text": "$\\gamma_{\\mathrm{cal}}>0$ is the fixed exponent correction from the sign-preserving reduction, corresponding to $\\epsilon_{AB}$ in the source; it is neither an accuracy nor a privacy parameter. The total arithmetic cost is $O(T^{7/2}\\log^2T)$. The explicit exponent $0.662942288$ from another reduction does not automatically apply to this efficient algorithm.",
+      "kind": "source_window"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ONX_CALIBRATION__randomized_unrestricted_computation__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "O\\!\\left(T^{0.662942288}\\right)",
+      "quantity_ref": "ONX_CALIBRATION__randomized_unrestricted_computation__q1",
+      "region_refs": [
+        "ONX_CALIBRATION__randomized_unrestricted_computation__r2"
+      ],
+      "method": "A minimax reduction from strengthened sign-preserving games to calibration.",
+      "algorithm_or_hard_family": "A minimax reduction from strengthened sign-preserving games to calibration.",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "source_refs": [
+        "ONX_SRC_CAL2026"
+      ],
+      "evidence_refs": [
+        "ONX_CALIBRATION__randomized_unrestricted_computation__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ONX_CALIBRATION__randomized_unrestricted_computation__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The criterion is $T\\ge1$: expected standard cumulative absolute calibration error. The adversary cannot foresee the current realized randomized prediction.",
+          "The preprint statement has been read. Its minimax reduction does not by itself implement a polynomial-time predictor."
+        ],
+        "condition_prose_zh": [
+          "The criterion is $T\\ge1$: expected standard cumulative absolute calibration error. The adversary cannot foresee the current realized randomized prediction.",
+          "The preprint statement has been read. Its minimax reduction does not by itself implement a polynomial-time predictor."
+        ],
+        "oracle_mapping": "Retain the specified feedback type, sample coupling, public information, and environment permissions.",
+        "source_guards_original": [
+          "T>=1",
+          "expected standard absolute calibration",
+          "simultaneous/nonanticipating outcomes"
+        ]
+      },
+      "witness_type": "randomized",
+      "view_id": "randomized_unrestricted_computation",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ONX_CALIBRATION__randomized_unrestricted_computation__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\Omega\\!\\left(T^{0.54389}\\right)",
+      "quantity_ref": "ONX_CALIBRATION__randomized_unrestricted_computation__q1",
+      "region_refs": [
+        "ONX_CALIBRATION__randomized_unrestricted_computation__r3"
+      ],
+      "method": "Hard outcome process for the strengthened sign-preservation game",
+      "algorithm_or_hard_family": "Hard outcome process for the strengthened sign-preservation game",
+      "algorithm_class_scope": "All causal randomized algorithms with this setting's permissions are allowed. The hard environment cannot anticipate the private seed. Boundaries of restricted mechanism classes are specified under ALGORITHMS.",
+      "source_refs": [
+        "ONX_SRC_CAL2024"
+      ],
+      "evidence_refs": [
+        "ONX_CALIBRATION__randomized_unrestricted_computation__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ONX_CALIBRATION__randomized_unrestricted_computation__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "Use a randomized outcome adversary fixed before interaction, targeting expected standard absolute calibration error."
+        ],
+        "condition_prose_zh": [
+          "Use a randomized outcome adversary fixed before interaction, targeting expected standard absolute calibration error."
+        ],
+        "oracle_mapping": "Retain the specified feedback type, sample coupling, public information, and environment permissions.",
+        "source_guards_original": [
+          "oblivious randomized outcome adversary",
+          "expected standard calibration error"
+        ]
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "randomized_unrestricted_computation",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ONX_CALIBRATION__randomized_polynomial_time__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "O\\!\\left(\\log^2T\\;T^{,2/3-\\gamma_{\\mathrm{cal}}/18}\\right)",
+      "quantity_ref": "ONX_CALIBRATION__randomized_polynomial_time__q1",
+      "region_refs": [
+        "ONX_CALIBRATION__randomized_polynomial_time__r2"
+      ],
+      "method": "A polynomial-time calibrator from the efficient sign-preserving reduction.",
+      "algorithm_or_hard_family": "A polynomial-time calibrator from the efficient sign-preserving reduction.",
+      "algorithm_class_scope": "A feasible randomized policy, with expectation or probability guarantees mapped from the source to this contract.",
+      "source_refs": [
+        "ONX_SRC_CALEFF2026"
+      ],
+      "evidence_refs": [
+        "ONX_CALIBRATION__randomized_polynomial_time__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ONX_CALIBRATION__randomized_polynomial_time__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The quantity $\\gamma_{\\mathrm{cal}}>0$ is a fixed exponent correction from the sign-preserving reduction, corresponding to $\\epsilon_{AB}$ in the source. It is neither an accuracy parameter nor a privacy parameter.",
+          "Total arithmetic work is $O(T^{7/2}\\log^2T)$. The explicit exponent $0.662942288$ from another reduction does not automatically apply to this efficient algorithm."
+        ],
+        "condition_prose_zh": [
+          "The quantity $\\gamma_{\\mathrm{cal}}>0$ is a fixed exponent correction from the sign-preserving reduction, corresponding to $\\epsilon_{AB}$ in the source. It is neither an accuracy parameter nor a privacy parameter.",
+          "Total arithmetic work is $O(T^{7/2}\\log^2T)$. The explicit exponent $0.662942288$ from another reduction does not automatically apply to this efficient algorithm."
+        ],
+        "oracle_mapping": "Retain the specified feedback type, sample coupling, public information, and environment permissions.",
+        "source_guards_original": [
+          "gamma_cal>0 is source SPR constant, not accuracy or privacy parameter",
+          "total computation O(T^(7/2) log(T)^2)"
+        ]
+      },
+      "witness_type": "randomized",
+      "view_id": "randomized_polynomial_time",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ONX_CALIBRATION__randomized_polynomial_time__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\Omega\\!\\left(T^{0.54389}\\right)",
+      "quantity_ref": "ONX_CALIBRATION__randomized_polynomial_time__q1",
+      "region_refs": [
+        "ONX_CALIBRATION__randomized_polynomial_time__r1"
+      ],
+      "method": "Hard outcome process for the strengthened sign-preservation game",
+      "algorithm_or_hard_family": "Hard outcome process for the strengthened sign-preservation game",
+      "algorithm_class_scope": "All causal randomized algorithms with the stated permissions; directions of information and algorithm-class transfers are given in the derivation.",
+      "source_refs": [
+        "ONX_SRC_CAL2024"
+      ],
+      "evidence_refs": [
+        "ONX_CALIBRATION__randomized_polynomial_time__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ONX_CALIBRATION__randomized_polynomial_time__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The hard outcome process is randomized before interaction. The metric is the specified expected standard calibration error, and the predictor may use private randomness."
+        ],
+        "condition_prose_zh": [
+          "The hard outcome process is randomized before interaction. The metric is the specified expected standard calibration error, and the predictor may use private randomness."
+        ],
+        "oracle_mapping": "Retain the specified feedback type, sample coupling, public information, and environment permissions.",
+        "source_guards_original": [
+          "oblivious randomized outcome adversary",
+          "expected standard calibration error"
+        ]
+      },
+      "derivation": "The source lower bound covers every causal randomized forecaster and hence its polynomial-time subclass. This transfer does not require making the hard process computationally solvable by the algorithm.",
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "randomized_polynomial_time",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "SUPPORTED",
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "$T\\ge1$ and standard absolute calibration; the environment cannot observe the current realized prediction."
+      },
+      "predicate_text": "Assume $T\\ge1$ and standard absolute calibration. The environment cannot observe the current realized prediction.",
+      "parameter_refs": [],
+      "source_region_ref": "ONX_CALIBRATION__randomized_unrestricted_computation__r1",
+      "status": {
+        "code": "polynomial_gap",
+        "label": "Polynomial gap",
+        "missing_sides": []
+      },
+      "comparison_id": "ONX_CALIBRATION__randomized_unrestricted_computation__c1",
+      "view_id": "randomized_unrestricted_computation",
+      "guarantee_id": "g1",
+      "quantity_id": "ONX_CALIBRATION__randomized_unrestricted_computation__q1",
+      "resource_projection_id": "resource_6a63cfee9f",
+      "regime_id": "ONX_CALIBRATION__randomized_unrestricted_computation__r1",
+      "bracket": {
+        "upper_refs": [
+          "ONX_CALIBRATION__randomized_unrestricted_computation__b1"
+        ],
+        "lower_refs": [
+          "ONX_CALIBRATION__randomized_unrestricted_computation__b2"
+        ],
+        "comparison_ref": "ONX_CALIBRATION__randomized_unrestricted_computation__c1",
+        "quantity_ref": "ONX_CALIBRATION__randomized_unrestricted_computation__q1",
+        "comparison_mode": "native_metric",
+        "resource_projection": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression": "O(T^{0.662942288})",
+            "display_latex": "O(T^{0.662942288})",
+            "claim_refs": [
+              "ONX_CALIBRATION__randomized_unrestricted_computation__b1"
+            ],
+            "included": true,
+            "expression_latex": "O(T^{0.662942288})"
+          },
+          "lower": {
+            "expression": "\\Omega(T^{0.54389})",
+            "display_latex": "\\Omega(T^{0.54389})",
+            "claim_refs": [
+              "ONX_CALIBRATION__randomized_unrestricted_computation__b2"
+            ],
+            "included": true,
+            "expression_latex": "\\Omega(T^{0.54389})"
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "ONX_CALIBRATION__randomized_unrestricted_computation__b1": [
+            {
+              "region_ref": "ONX_CALIBRATION__randomized_unrestricted_computation__r2",
+              "predicate_text": "$T\\ge1$. The target is expected cumulative absolute calibration error. The adversary cannot anticipate the current realized random prediction. The preprint theorem statement supplies the recorded evidence; its minimax reduction does not itself implement a polynomial-time predictor."
+            }
+          ],
+          "ONX_CALIBRATION__randomized_unrestricted_computation__b2": [
+            {
+              "region_ref": "ONX_CALIBRATION__randomized_unrestricted_computation__r3",
+              "predicate_text": "Use a randomized outcome adversary fixed before interaction, targeting expected standard absolute calibration error."
+            }
+          ]
+        },
+        "envelope_certificate": "",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Fixed native online budget, with computational, communication, and privacy resources retained separately."
+      },
+      "comparison_key": {
+        "setting_id": "ONX_CALIBRATION",
+        "view_id": "randomized_unrestricted_computation",
+        "guarantee_id": "g1",
+        "quantity_id": "ONX_CALIBRATION__randomized_unrestricted_computation__q1",
+        "resource_projection_id": "resource_6a63cfee9f",
+        "regime_id": "ONX_CALIBRATION__randomized_unrestricted_computation__r1"
+      }
+    },
+    {
+      "label": "SUPPORTED",
+      "predicate": {
+        "type": "explicit_mathematical_predicate",
+        "latex": "The source fixes $\\gamma_{\\mathrm{cal}}>0$ and gives total computation $O(T^{7/2}\\log^2T)$."
+      },
+      "predicate_text": "The source fixes $\\gamma_{\\mathrm{cal}}>0$ and gives total computation $O(T^{7/2}\\log^2T)$.",
+      "parameter_refs": [],
+      "source_region_ref": "ONX_CALIBRATION__randomized_polynomial_time__r1",
+      "status": {
+        "code": "polynomial_gap",
+        "label": "Polynomial gap",
+        "missing_sides": []
+      },
+      "comparison_id": "ONX_CALIBRATION__randomized_polynomial_time__c1",
+      "view_id": "randomized_polynomial_time",
+      "guarantee_id": "g1",
+      "quantity_id": "ONX_CALIBRATION__randomized_polynomial_time__q1",
+      "resource_projection_id": "resource_6a63cfee9f",
+      "regime_id": "ONX_CALIBRATION__randomized_polynomial_time__r1",
+      "bracket": {
+        "upper_refs": [
+          "ONX_CALIBRATION__randomized_polynomial_time__b1"
+        ],
+        "lower_refs": [
+          "ONX_CALIBRATION__randomized_polynomial_time__b2"
+        ],
+        "comparison_ref": "ONX_CALIBRATION__randomized_polynomial_time__c1",
+        "quantity_ref": "ONX_CALIBRATION__randomized_polynomial_time__q1",
+        "comparison_mode": "native_metric",
+        "resource_projection": "Fixed native online budget, with computational, communication, and privacy resources retained separately.",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression": "O(\\log^2T\\;T^{2/3-\\gamma_{\\rm cal}/18})",
+            "display_latex": "O(\\log^2T\\;T^{2/3-\\gamma_{\\rm cal}/18})",
+            "claim_refs": [
+              "ONX_CALIBRATION__randomized_polynomial_time__b1"
+            ],
+            "included": true,
+            "expression_latex": "O(\\log^2T\\;T^{2/3-\\gamma_{\\rm cal}/18})"
+          },
+          "lower": {
+            "expression": "\\Omega(T^{0.54389})",
+            "display_latex": "\\Omega(T^{0.54389})",
+            "claim_refs": [
+              "ONX_CALIBRATION__randomized_polynomial_time__b2"
+            ],
+            "included": true,
+            "expression_latex": "\\Omega(T^{0.54389})"
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "ONX_CALIBRATION__randomized_polynomial_time__b1": [
+            {
+              "region_ref": "ONX_CALIBRATION__randomized_polynomial_time__r2",
+              "predicate_text": "$\\gamma_{\\mathrm{cal}}>0$ is the fixed exponent correction from the sign-preserving reduction, corresponding to $\\epsilon_{AB}$ in the source; it is neither an accuracy nor a privacy parameter. The total arithmetic cost is $O(T^{7/2}\\log^2T)$. The explicit exponent $0.662942288$ from another reduction does not automatically apply to this efficient algorithm."
+            }
+          ],
+          "ONX_CALIBRATION__randomized_polynomial_time__b2": [
+            {
+              "region_ref": "ONX_CALIBRATION__randomized_polynomial_time__r1",
+              "predicate_text": "The source fixes $\\gamma_{\\mathrm{cal}}>0$ and gives total computation $O(T^{7/2}\\log^2T)$."
+            }
+          ]
+        },
+        "envelope_certificate": "",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Fixed native online budget, with computational, communication, and privacy resources retained separately."
+      },
+      "comparison_key": {
+        "setting_id": "ONX_CALIBRATION",
+        "view_id": "randomized_polynomial_time",
+        "guarantee_id": "g1",
+        "quantity_id": "ONX_CALIBRATION__randomized_polynomial_time__q1",
+        "resource_projection_id": "resource_6a63cfee9f",
+        "regime_id": "ONX_CALIBRATION__randomized_polynomial_time__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ONX_CALIBRATION__randomized_unrestricted_computation__e1",
+      "source_ref": "ONX_SRC_CAL2026",
+      "locator": "Theorem 1.1 p.2; Section 6 explicit feasible tuple and Appendix A certificate",
+      "supports": "Source support for the listed results and necessary explicit transfers: $O\\!\\left(T^{0.662942288}\\right)$. Applicability is restricted separately by each atomic bound's model, feedback, regime, and quantifiers.",
+      "notes": []
+    },
+    {
+      "id": "ONX_CALIBRATION__randomized_unrestricted_computation__e2",
+      "source_ref": "ONX_SRC_CAL2024",
+      "locator": "Theorem 1.3, PDF p.3 (printed p.2)",
+      "supports": "Source support for the listed results and necessary explicit transfers: $\\Omega\\!\\left(T^{0.54389}\\right)$. Applicability is restricted separately by each atomic bound's model, feedback, regime, and quantifiers.",
+      "notes": []
+    },
+    {
+      "id": "ONX_CALIBRATION__randomized_polynomial_time__e1",
+      "source_ref": "ONX_SRC_CALEFF2026",
+      "locator": "Theorem 1, PDF p.2",
+      "supports": "The source supports $O\\!\\left(\\log^2T\\;T^{,2/3-\\gamma_{\\mathrm{cal}}/18}\\right)$ and the stated reductions, subject to each atomic claim's model, feedback, parameter region, and quantifiers.",
+      "notes": []
+    },
+    {
+      "id": "ONX_CALIBRATION__randomized_polynomial_time__e2",
+      "source_ref": "ONX_SRC_CAL2024",
+      "locator": "Theorem 1.3, PDF p.3 (printed p.2)",
+      "supports": "Source support for the listed results and necessary explicit transfers: $\\Omega\\!\\left(T^{0.54389}\\right)$. Applicability is restricted separately by each atomic bound's model, feedback, regime, and quantifiers.",
+      "notes": []
+    }
+  ],
+  "references": [
+    {
+      "id": "ONX_SRC_CAL2024",
+      "authors": [
+        "Yuval Dagan",
+        "Constantinos Daskalakis",
+        "Maxwell Fishelson",
+        "Noah Golowich",
+        "Robert Kleinberg",
+        "Princewill Okoroafor"
+      ],
+      "title": "Improved bounds for calibration via stronger sign preservation games",
+      "year": 2024,
+      "version": "2406.13668v1",
+      "url": "https://arxiv.org/pdf/2406.13668v1",
+      "publication_status": "preprint_version_inspected"
+    },
+    {
+      "id": "ONX_SRC_CAL2026",
+      "authors": [
+        "Eric Dai",
+        "Maxwell Fishelson"
+      ],
+      "title": "Explicit Asymptotic Bounds for Sequential Calibration Beyond T^(2/3)",
+      "year": 2026,
+      "version": "2610.07623v2",
+      "url": "https://arxiv.org/pdf/2610.07623v2",
+      "publication_status": "preprint_version_inspected"
+    },
+    {
+      "id": "ONX_SRC_CALEFF2026",
+      "authors": [
+        "Zihan Zhang"
+      ],
+      "title": "Efficient Sequential Calibration with O(T^(2/3-epsilon)) Error Bound",
+      "year": 2026,
+      "version": "2607.12928v1",
+      "url": "https://arxiv.org/pdf/2607.12928v1",
+      "publication_status": "preprint_version_inspected"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "ONX_CAL_UNRESTRICTED",
+      "view_id": "randomized_unrestricted_computation"
+    },
+    {
+      "legacy_id": "ONX_CAL_POLYTIME",
+      "view_id": "randomized_polynomial_time"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "polynomial_gap",
+        "label": "Polynomial gap present"
+      }
+    ],
+    "gap_classes": [
+      "polynomial_gap"
+    ],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 2,
+    "status_counts": {
+      "polynomial_gap": 2
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ONX_CALIBRATION__randomized_unrestricted_computation__c1"
+      ],
+      "view_ids": [
+        "randomized_unrestricted_computation"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "ONX_CALIBRATION__randomized_polynomial_time__c1"
+      ],
+      "view_ids": [
+        "randomized_polynomial_time"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "cf93353f8247d12ab41d42ad9a44a05644e8f4d1109a283c2dbf863e72cb70ed",
+    "source_order": 137,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

@@ -1,0 +1,187 @@
+profile = "hard"  # Resource preset: standard / hard.
+research_mode = "oracle_complexity"  # Colombo is dedicated to Oracle Complexity.
+storage_version = 4
+
+# One configuration source. Profiles below contain differences only.
+# --config, when used, selects one COMPLETE file rather than merging an overlay.
+# No CELL_AGENT_TIMEOUT, per-task CLI budget, or MCP budget overrides.
+
+[workflow]
+version = 3
+
+# Only final integrate + Verifier is timed. Research uses Waves and dispatches.
+# Revisions, retries and resume of the same integration stage retain its clock.
+[integration]
+timeout_seconds = 7200
+
+[brain]
+model = ""
+reasoning_effort = ""
+search_enabled = true
+
+[verifier]
+model = ""
+reasoning_effort = ""
+
+[audit]
+model = ""
+reasoning_effort = ""
+
+# max_rounds counts Waves. Initial plans, supplements and new resume attempts
+# consume one dispatch each. No separate run-wide dispatch/model-call cap.
+[limits]
+max_rounds = 3
+max_dispatches_per_wave = 3
+max_parallel_cells = 2
+
+# Infrastructure waits, not independent research-stage time budgets.
+[runtime]
+python = ""
+codex_bin = ""
+auth_home = ""
+model_catalog_json = ""
+cell_prepare_timeout_seconds = 90
+cell_launch_grace_seconds = 15
+audit_start_margin_seconds = 5
+submission_reserve_seconds = 45
+submission_reserve_fraction = 0.15
+
+[cell]
+python = ""
+stop_on_confirmed_error = true
+
+[cell.settings.model]
+name = ""
+reasoning_effort = "medium"
+
+# Per-Cell process-start counts; no whole-run research deadline.
+[cell.settings.agents]
+prover_max_rounds = 3
+verifier_max_rounds = 3
+report_check_max_attempts = 2
+
+# Per-challenge rounds and per-report-revision checks; no independent timer.
+[cell.settings.challenge]
+max_rounds = 2
+max_check_attempts = 2
+
+# Managed Experiment resources; no whole-run research deadline.
+# API credentials remain in the environment, never in this file.
+[cell.settings.experiment]
+enabled = true
+model = "gpt-6-astra"
+# Independent Responses API effort; never inherit the native Cell CLI effort.
+reasoning_effort = "medium"
+max_runs = 6
+max_tool_calls = 3
+max_output_tokens = 4000
+memory_limit = "1g"
+download_reserve_seconds = 15
+artifact_max_bytes = 12582912
+max_total_artifact_bytes = 33554432
+max_files = 32
+poll_seconds = 1.0
+
+# Recovery settings retained for the Cell runtime. Wave-based runs allocate no
+# shared time reserves; data limits only control the recovery package.
+[cell.settings.handoff]
+reserve_seconds = 60
+recovery_seconds = 90
+recovery_reasoning_effort = "low"
+recovery_min_start_seconds = 60
+recovery_input_max_bytes = 65536
+recovery_source_max_bytes = 8388608
+recovery_max_records = 12
+
+# Per-parent concurrency / tree depth, not a full-tree global concurrency cap.
+[cell.settings.parallel]
+max_subcells = 4
+max_depth = 1
+context_dependency_depth = 1
+
+[cell.settings.retrieval]
+search_results = 5
+verifier_search_results = 10
+max_search_results = 20
+memory_results = 10
+summary_max_chars = 600
+verifier_memory_results = 100
+max_memory_results = 1000
+include_context = true
+verifier_reverse = true
+
+# HTTP connect/read waits stay finite; read timeout is per socket read.
+[cell.settings.network]
+search_provider = "serper"
+reader_provider = "jina"
+api_key_file = ""
+prover_search_enabled = true
+subcell_search_enabled = false
+max_download_bytes = 12582912
+connect_timeout_seconds = 8
+read_timeout_seconds = 25
+arxiv_interval_seconds = 3.0
+query_max_chars = 2000
+html_max_links = 100
+chunk_bytes = 65536
+theorem_search_url = ""
+
+# Long MCP operations return job receipts; polls use this finite transport wait.
+# Startup/locks/termination are infrastructure waits, not research deadlines.
+[cell.settings.runtime]
+mcp_startup_timeout_seconds = 45
+mcp_tool_timeout_seconds = 120
+process_poll_seconds = 0.2
+terminate_wait_seconds = 5
+task_lock_timeout_seconds = 10
+store_lock_timeout_seconds = 10
+lock_poll_seconds = 0.025
+
+[cell.settings.limits]
+record_id_max_chars = 128
+group_id_max_chars = 256
+request_id_max_chars = 512
+
+# hard contains ONLY differences from the standard base above.
+# Switch the first line to profile = "standard" for smaller count allocations.
+
+[profiles.hard.brain]
+model = "gpt-6-astra"
+reasoning_effort = "ultra"
+
+[profiles.hard.verifier]
+model = "gpt-6-astra"
+reasoning_effort = "ultra"
+
+[profiles.hard.audit]
+model = "gpt-6-astra"
+reasoning_effort = "ultra"
+
+[profiles.hard.limits]
+max_rounds = 8
+max_dispatches_per_wave = 6
+max_parallel_cells = 4
+
+[profiles.hard.cell.settings.model]
+name = "gpt-6-astra"
+reasoning_effort = "ultra"
+
+[profiles.hard.cell.settings.agents]
+prover_max_rounds = 15
+verifier_max_rounds = 20
+report_check_max_attempts = 4
+
+[profiles.hard.cell.settings.challenge]
+max_rounds = 4
+max_check_attempts = 4
+
+[profiles.hard.cell.settings.experiment]
+reasoning_effort = "max"
+max_runs = 12
+
+[profiles.hard.cell.settings.network]
+subcell_search_enabled = true
+
+[profiles.hard.cell.settings.parallel]
+max_subcells = 8
+max_depth = 2

@@ -1,0 +1,1991 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "SO_ZO_N06_main",
+  "title": "Higher-order smooth strongly convex optimization in the Hilbert–Schmidt norm",
+  "summary": "Minimize $f$ globally over $\\mathbb{R}^d$ and return a point with small objective gap.",
+  "primary_domain": "single_objective",
+  "oracle_order_collection": "zo",
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "single_objective"
+    },
+    {
+      "facet": "oracle_order",
+      "value": "zero"
+    },
+    {
+      "facet": "goal",
+      "value": "global_minimization"
+    },
+    {
+      "facet": "structure",
+      "value": "strongly_convex"
+    },
+    {
+      "facet": "feedback",
+      "value": "independent_noisy_value"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expected_loss"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_worst_case"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "solution_goal": "global_minimization",
+      "code": "single_objective_optimization",
+      "description_paragraphs": [
+        "Minimize $f$ globally over $\\mathbb{R}^d$ and return a point with small objective gap."
+      ],
+      "navigation_domains": [
+        "single_objective"
+      ],
+      "formulation_code": "SO.global_minimization"
+    },
+    "model": {
+      "properties": {
+        "convexity": "strongly_convex",
+        "regularity": [
+          "gradient_lipschitz",
+          "higher_order_holder_hilbert_schmidt"
+        ],
+        "structure": [
+          "no_additional_structure"
+        ],
+        "growth": [
+          "strong_convexity"
+        ]
+      },
+      "domain_roles": {
+        "function": "R^d; all declared regularity is global",
+        "optimization": "R^d",
+        "query": "$\\mathbb{R}^d$",
+        "output": "$\\mathbb{R}^d$",
+        "localization": "A global minimizer x_* is promised in B_2(x_0,R), with x_0 and R public; this is not a restriction on queries or outputs."
+      },
+      "code": "admissible_model_class",
+      "description_paragraphs": [
+        "$f:\\mathbb{R}^d\\to\\mathbb{R}$ is differentiable and satisfies $\\|\\nabla f(x)-\\nabla f(y)\\|_2\\le\\beta\\|x-y\\|_2$ for every $x,y\\in\\mathbb{R}^d$.",
+        "$f$ is globally convex and has a global minimizer $x_*\\in B_2(x_0,R)$; $x_0$ and $R$ are known.",
+        "Strong convexity is defined in the Euclidean norm: $f((1-t)x+ty)\\le(1-t)f(x)+tf(y)-\\frac{\\mu}{2}t(1-t)\\|x-y\\|_2^2$ for $x,y$ and $t\\in[0,1]$ in the domain.",
+        "The main statistical region uses $0<\\mu<\\beta$; the equal-curvature endpoint is discussed only in the explicitly stated regions.",
+        "$\\alpha>2$. Set $m=\\lceil\\alpha\\rceil-1$ and $\\gamma_\\alpha=\\alpha-m\\in(0,1]$. The $m$th derivative of $f$ satisfies $\\|D^mf(x)-D^mf(y)\\|_{\\mathrm{HS}}\\le H_\\alpha\\|x-y\\|_2^{\\gamma_\\alpha}$ for every $x,y$ in the ambient space.",
+        "Derivative tensors use the Hilbert–Schmidt norm, the square root of the sum of squared tensor coordinates in an orthonormal basis."
+      ],
+      "geometry_refs": [
+        "SO_ZO_N06_main_dom_6d314c33f5",
+        "SO_ZO_N06_main_dom_7b65514df7",
+        "SO_ZO_N06_main_dom_9a1be5c15c",
+        "SO_ZO_N06_main_dom_39707c6baa",
+        "SO_ZO_N06_main_dom_df388e63b7"
+      ]
+    },
+    "oracle": {
+      "public_inputs": [
+        "SO_ZO_N06_main_p_bb728db2b9",
+        "\\beta",
+        "\\mu",
+        "SO_ZO_N06_main_p_1e4ef504fa",
+        "\\sigma_v",
+        "\\alpha",
+        "H_\\alpha",
+        "\\varepsilon",
+        "SO_ZO_N06_main_p_842ef9f04b",
+        "SO_ZO_N06_main_obj_a4c2f12f78"
+      ],
+      "domain": "$\\mathbb{R}^d$",
+      "variant": null,
+      "code": "independent_noisy_value",
+      "description_paragraphs": [
+        "A query at $x_t\\in \\mathbb{R}^d$ returns one scalar $Y_t=f(x_t)+\\xi_t$.",
+        "$\\xi_t$ is i.i.d. centered noise with $\\mathbb{E}\\xi_t^2\\le\\sigma_v^2$, independent of the algorithmic seed and preceding observations. Its distribution is unknown; the algorithm must cover every noise law satisfying the stated bound.",
+        "Every observation is charged independently. No same-sample coupling, sample handle, or noiseless function value is supplied.",
+        "The public inputs are $d$, $\\beta$, $\\mu$, $R$, $\\sigma_v$, $\\alpha$, $H_\\alpha$, $\\varepsilon$, $T$, $x_0$, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface."
+      ]
+    },
+    "output": {
+      "domain": "$\\mathbb{R}^d$",
+      "code": "output_space",
+      "description_paragraphs": [
+        "Return $\\widehat{x}\\in \\mathbb{R}^d$. The output may be an unqueried point, a random choice among previous points, or an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output."
+      ]
+    },
+    "metric": {
+      "native_metric_wording": "The base loss is $\\ell(I,x)=f(x)-f_*$, where $f_*=\\inf_{u\\in \\mathbb{R}^d}f(u)$. This nonnegative loss is evaluated at the output, with tolerance $\\varepsilon$.",
+      "formula_latex": "f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)",
+      "threshold_latex": "\\varepsilon",
+      "code": "global_minimization",
+      "description_paragraphs": [
+        "The base loss is $\\ell(I,x)=f(x)-f_*$, where $f_*=\\inf_{u\\in \\mathbb{R}^d}f(u)$. This nonnegative loss is evaluated at the output, with tolerance $\\varepsilon$."
+      ],
+      "base_expression": "f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)"
+    },
+    "resource": {
+      "unit": "one paid scalar function value",
+      "budget_mode": "fixed_worst_case",
+      "accounting": {
+        "atomic_unit": "one paid scalar function value",
+        "budget_mode": "fixed_worst_case",
+        "arithmetic_precision": "exact_real_unpriced_unless_specified",
+        "free_operations": "Only the public operations explicitly stated in this specification are free. Operations accessing the unknown instance provide no free information."
+      },
+      "code": "oracle_resource",
+      "description_paragraphs": [
+        "Each scalar function value or noisy observation costs $1$ call. Every location in a multipoint finite difference, every initialization query, and every reference observation is charged.",
+        "Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "randomized_allowed",
+        "adaptivity": "sequential_adaptive",
+        "restrictions": [],
+        "code": "randomized_allowed",
+        "description_paragraphs": [
+          "Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.",
+          "Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "quantifiers": "one_algorithm_for_all_admissible_instances",
+          "probability_space": "The algorithm's private seed and all randomness in the stated oracle or environment, after the instance and feedback law are fixed.",
+          "formula_latex": "\\exists\\mathcal{A}\\ \\forall I\\in\\mathcal{I}:\\ \\mathbb{E}[f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)]\\le \\varepsilon",
+          "code": "expected_loss",
+          "description_paragraphs": [
+            "After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. Require $\\mathbb{E}[\\ell(I,\\widehat{x})]\\le \\varepsilon$, fixing the instance before averaging over algorithmic and feedback randomness.",
+            "Oracle cost uses a deterministic worst-case budget: $N\\le T$ on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "SO_ZO_N06_main"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "SO_ZO_N06_main_obj_a4c2f12f78",
+        "information": "public",
+        "description": "x_0",
+        "knowledge": "declared_public_input"
+      }
+    ],
+    "variable_blocks": [],
+    "domains": [
+      {
+        "id": "SO_ZO_N06_main_dom_6d314c33f5",
+        "roles": [
+          "function"
+        ],
+        "description": "R^d; all declared regularity is global"
+      },
+      {
+        "id": "SO_ZO_N06_main_dom_7b65514df7",
+        "roles": [
+          "optimization"
+        ],
+        "description": "R^d"
+      },
+      {
+        "id": "SO_ZO_N06_main_dom_9a1be5c15c",
+        "roles": [
+          "query"
+        ],
+        "description": "$\\mathbb{R}^d$"
+      },
+      {
+        "id": "SO_ZO_N06_main_dom_39707c6baa",
+        "roles": [
+          "output"
+        ],
+        "description": "$\\mathbb{R}^d$"
+      },
+      {
+        "id": "SO_ZO_N06_main_dom_df388e63b7",
+        "roles": [
+          "localization"
+        ],
+        "description": "A global minimizer x_* is promised in B_2(x_0,R), with x_0 and R public; this is not a restriction on queries or outputs."
+      }
+    ],
+    "norms": [],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "SO_ZO_N06_main_p_bb728db2b9",
+      "symbol": "d",
+      "meaning": "Dimension of the variable space",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "d"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_1c5476f952",
+      "symbol": "\\beta",
+      "meaning": "Public upper bound on the gradient Lipschitz constant",
+      "kind": "independent",
+      "domain": "$\\beta>0$",
+      "public": false,
+      "definition": "The object, norm and domain are fixed by the specific inequalities in this profile's model.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "beta"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_7ce7a5991a",
+      "symbol": "\\mu",
+      "meaning": "Public lower bound on the strong-convexity modulus",
+      "kind": "independent",
+      "domain": "$\\mu>0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "mu"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_1e4ef504fa",
+      "symbol": "R",
+      "meaning": "Upper bound on the distance from the public initial point to a minimizer",
+      "kind": "independent",
+      "domain": "$R>0$",
+      "public": true,
+      "definition": "$\\|x_*-x_0\\|_2\\le R$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "R"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_c29814dafc",
+      "symbol": "\\sigma_v",
+      "meaning": "Upper bound on scalar observation-noise scale",
+      "kind": "independent",
+      "domain": "$\\sigma_v\\ge0$",
+      "public": false,
+      "definition": "$\\mathbb{E}\\xi^2\\le\\sigma_v^2$; conditional-variance assumptions are interpreted with respect to the specified interaction history.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "sigma_v"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_4f5bba07da",
+      "symbol": "\\alpha",
+      "meaning": "Higher-order smoothness order",
+      "kind": "independent",
+      "domain": "$\\alpha>2$",
+      "public": false,
+      "definition": "Use $m=\\lceil\\alpha\\rceil-1$ and $\\gamma_\\alpha=\\alpha-m$ for the integer derivative order and its Hölder exponent.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "alpha"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_a92eec49dd",
+      "symbol": "H_\\alpha",
+      "meaning": "Hölder modulus of the highest derivative in the specified tensor norm",
+      "kind": "independent",
+      "domain": "$H_\\alpha>0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "H_alpha"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_5c322c6737",
+      "symbol": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "epsilon"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_842ef9f04b",
+      "symbol": "T",
+      "meaning": "Known query budget or argument of the risk curve",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb{N}_0$",
+      "public": true,
+      "definition": "Use $N\\le T$ in the fixed-budget specification and $\\mathbb{E}[N]\\le T$ in the expected-budget specification.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "T"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_f80bfb74b8",
+      "symbol": "\\kappa",
+      "meaning": "Ratio of the known smoothness and strong-convexity bounds",
+      "kind": "derived",
+      "domain": "$\\kappa\\ge1$",
+      "public": false,
+      "definition": "$\\kappa=\\beta/\\mu$",
+      "dependencies": [
+        "SO_ZO_N06_main_p_1c5476f952",
+        "SO_ZO_N06_main_p_7ce7a5991a"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "kappa"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_7a5867dd29",
+      "symbol": "m",
+      "meaning": "Integer order of the highest Hölder-continuous derivative",
+      "kind": "derived",
+      "domain": "$m\\ge2$ is an integer",
+      "public": false,
+      "definition": "$m=\\lceil\\alpha\\rceil-1$",
+      "dependencies": [
+        "SO_ZO_N06_main_p_4f5bba07da"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "m"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_7e046d8e49",
+      "symbol": "\\gamma_\\alpha",
+      "meaning": "Hölder exponent of the highest derivative",
+      "kind": "derived",
+      "domain": "$0<\\gamma_\\alpha\\le1$",
+      "public": false,
+      "definition": "$\\gamma_\\alpha=\\alpha-m$; the symbol $\\gamma$ in the auxiliary complexity expressions denotes the same exponent.",
+      "dependencies": [
+        "SO_ZO_N06_main_p_4f5bba07da",
+        "SO_ZO_N06_main_p_7a5867dd29"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "gamma"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_706917c7bc",
+      "symbol": "\\tau",
+      "meaning": "Dimension-correction exponent for Hilbert-Schmidt regularity",
+      "kind": "derived",
+      "domain": "$\\tau\\ge0$",
+      "public": false,
+      "definition": "$\\tau=(\\alpha-1)/2$ when $m$ is even; $\\tau=(m-1)/2$ when $m$ is odd.",
+      "dependencies": [
+        "SO_ZO_N06_main_p_4f5bba07da",
+        "SO_ZO_N06_main_p_7a5867dd29"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "tau"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_c267eb8eb1",
+      "symbol": "s",
+      "meaning": "Dimension exponent in the high-order statistical complexity",
+      "kind": "derived",
+      "domain": "$s>0$",
+      "public": false,
+      "definition": "$s=2-\\tau/(\\alpha-1)$",
+      "dependencies": [
+        "SO_ZO_N06_main_p_4f5bba07da",
+        "SO_ZO_N06_main_p_706917c7bc"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "s"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_582414083f",
+      "symbol": "Q",
+      "meaning": "Smoothness accuracy ratio",
+      "kind": "derived",
+      "domain": "$Q>0$",
+      "public": false,
+      "definition": "$Q=\\beta R^2/\\varepsilon$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "Q"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_5676ddcf20",
+      "symbol": "\\nu",
+      "meaning": "Curvature slack in the lower-bound construction",
+      "kind": "derived",
+      "domain": "$\\nu>0$ when $0<\\mu<\\beta$",
+      "public": false,
+      "definition": "$\\nu=\\min\\{\\mu,(\\beta-\\mu)/2\\}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "nu"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_07fef65014",
+      "symbol": "\\Phi_T",
+      "meaning": "Higher-order smooth statistical error scale at a fixed budget",
+      "kind": "derived",
+      "domain": "$T>0$",
+      "public": false,
+      "definition": "$\\Phi_T=\\frac{H_\\alpha^{2/\\alpha}}{\\mu}d^{2-(2+\\tau)/\\alpha}(\\sigma_v^2/T)^{(\\alpha-1)/\\alpha}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "Phi_T"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_c8b258f381",
+      "symbol": "\\Phi_1",
+      "meaning": "Statistical scale for a single query budget",
+      "kind": "derived",
+      "domain": "$\\Phi_1\\ge0$",
+      "public": false,
+      "definition": "$\\Phi_1=\\frac{H_\\alpha^{2/\\alpha}}{\\mu}d^{2-(2+\\tau)/\\alpha}(\\sigma_v^2)^{(\\alpha-1)/\\alpha}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "Phi_1"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_a13b70fb5e",
+      "symbol": "\\Phi_0",
+      "meaning": "Objective-gap scale before saturation of the high-order strongly convex lower bound",
+      "kind": "derived",
+      "domain": "$\\Phi_0>0$ when $0<\\mu<\\beta$",
+      "public": false,
+      "definition": "$\\Phi_0=\\min\\{\\mu R^2,\\nu^{2(\\alpha-1)/(\\alpha-2)}\\mu^{-1}H_\\alpha^{-2/(\\alpha-2)}\\}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "Phi_0"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_f4c2fd7ebc",
+      "symbol": "T_0",
+      "meaning": "Startup-budget scale of the high-order method",
+      "kind": "derived",
+      "domain": "$T_0>0$ when $\\Phi_1>0$",
+      "public": false,
+      "definition": "$T_0=C_\\alpha d\\sqrt\\kappa\\log_2[C_\\alpha d\\kappa(1+\\beta R^2/\\Phi_1)]$, where $C_\\alpha>0$ depends only on the fixed $\\alpha$.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "T0"
+    },
+    {
+      "id": "SO_ZO_N06_main_p_652490946a",
+      "symbol": "T_*",
+      "meaning": "Call scale of the leading high-order statistical term",
+      "kind": "derived",
+      "domain": "$T_*\\ge0$",
+      "public": false,
+      "definition": "$T_*=d^s\\sigma_v^2H_\\alpha^{2/(\\alpha-1)}(\\mu\\varepsilon)^{-\\alpha/(\\alpha-1)}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "T_star"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "Dimension of the variable space",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_N06_main_p_bb728db2b9"
+    },
+    {
+      "symbol_latex": "\\beta",
+      "meaning": "Public upper bound on the gradient Lipschitz constant",
+      "domain": "$\\beta>0$",
+      "definition": "The object, norm and domain are fixed by the specific inequalities in this profile's model.",
+      "parameter_ref": "SO_ZO_N06_main_p_1c5476f952"
+    },
+    {
+      "symbol_latex": "\\mu",
+      "meaning": "Public lower bound on the strong-convexity modulus",
+      "domain": "$\\mu>0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_N06_main_p_7ce7a5991a"
+    },
+    {
+      "symbol_latex": "R",
+      "meaning": "Upper bound on the distance from the public initial point to a minimizer",
+      "domain": "$R>0$",
+      "definition": "$\\|x_*-x_0\\|_2\\le R$",
+      "parameter_ref": "SO_ZO_N06_main_p_1e4ef504fa"
+    },
+    {
+      "symbol_latex": "\\sigma_v",
+      "meaning": "Upper bound on scalar observation-noise scale",
+      "domain": "$\\sigma_v\\ge0$",
+      "definition": "$\\mathbb{E}\\xi^2\\le\\sigma_v^2$; conditional-variance assumptions are interpreted with respect to the specified interaction history.",
+      "parameter_ref": "SO_ZO_N06_main_p_c29814dafc"
+    },
+    {
+      "symbol_latex": "\\alpha",
+      "meaning": "Higher-order smoothness order",
+      "domain": "$\\alpha>2$",
+      "definition": "Use $m=\\lceil\\alpha\\rceil-1$ and $\\gamma_\\alpha=\\alpha-m$ for the integer derivative order and its Hölder exponent.",
+      "parameter_ref": "SO_ZO_N06_main_p_4f5bba07da"
+    },
+    {
+      "symbol_latex": "H_\\alpha",
+      "meaning": "Hölder modulus of the highest derivative in the specified tensor norm",
+      "domain": "$H_\\alpha>0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_N06_main_p_a92eec49dd"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "domain": "$\\varepsilon>0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_N06_main_p_5c322c6737"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Known query budget or argument of the risk curve",
+      "domain": "$T\\in\\mathbb{N}_0$",
+      "definition": "Use $N\\le T$ in the fixed-budget specification and $\\mathbb{E}[N]\\le T$ in the expected-budget specification.",
+      "parameter_ref": "SO_ZO_N06_main_p_842ef9f04b"
+    },
+    {
+      "symbol_latex": "\\kappa",
+      "meaning": "Ratio of the known smoothness and strong-convexity bounds",
+      "domain": "$\\kappa\\ge1$",
+      "definition": "$\\kappa=\\beta/\\mu$",
+      "parameter_ref": "SO_ZO_N06_main_p_f80bfb74b8"
+    },
+    {
+      "symbol_latex": "m",
+      "meaning": "Integer order of the highest Hölder-continuous derivative",
+      "domain": "$m\\ge2$ is an integer",
+      "definition": "$m=\\lceil\\alpha\\rceil-1$",
+      "parameter_ref": "SO_ZO_N06_main_p_7a5867dd29"
+    },
+    {
+      "symbol_latex": "\\gamma_\\alpha",
+      "meaning": "Hölder exponent of the highest derivative",
+      "domain": "$0<\\gamma_\\alpha\\le1$",
+      "definition": "$\\gamma_\\alpha=\\alpha-m$; the symbol $\\gamma$ in the auxiliary complexity expressions denotes the same exponent.",
+      "parameter_ref": "SO_ZO_N06_main_p_7e046d8e49"
+    },
+    {
+      "symbol_latex": "\\tau",
+      "meaning": "Dimension-correction exponent for Hilbert-Schmidt regularity",
+      "domain": "$\\tau\\ge0$",
+      "definition": "$\\tau=(\\alpha-1)/2$ when $m$ is even; $\\tau=(m-1)/2$ when $m$ is odd.",
+      "parameter_ref": "SO_ZO_N06_main_p_706917c7bc"
+    },
+    {
+      "symbol_latex": "s",
+      "meaning": "Dimension exponent in the high-order statistical complexity",
+      "domain": "$s>0$",
+      "definition": "$s=2-\\tau/(\\alpha-1)$",
+      "parameter_ref": "SO_ZO_N06_main_p_c267eb8eb1"
+    },
+    {
+      "symbol_latex": "Q",
+      "meaning": "Smoothness accuracy ratio",
+      "domain": "$Q>0$",
+      "definition": "$Q=\\beta R^2/\\varepsilon$",
+      "parameter_ref": "SO_ZO_N06_main_p_582414083f"
+    },
+    {
+      "symbol_latex": "\\nu",
+      "meaning": "Curvature slack in the lower-bound construction",
+      "domain": "$\\nu>0$ when $0<\\mu<\\beta$",
+      "definition": "$\\nu=\\min\\{\\mu,(\\beta-\\mu)/2\\}$",
+      "parameter_ref": "SO_ZO_N06_main_p_5676ddcf20"
+    },
+    {
+      "symbol_latex": "\\Phi_T",
+      "meaning": "Higher-order smooth statistical error scale at a fixed budget",
+      "domain": "$T>0$",
+      "definition": "$\\Phi_T=\\frac{H_\\alpha^{2/\\alpha}}{\\mu}d^{2-(2+\\tau)/\\alpha}(\\sigma_v^2/T)^{(\\alpha-1)/\\alpha}$",
+      "parameter_ref": "SO_ZO_N06_main_p_07fef65014"
+    },
+    {
+      "symbol_latex": "\\Phi_1",
+      "meaning": "Statistical scale for a single query budget",
+      "domain": "$\\Phi_1\\ge0$",
+      "definition": "$\\Phi_1=\\frac{H_\\alpha^{2/\\alpha}}{\\mu}d^{2-(2+\\tau)/\\alpha}(\\sigma_v^2)^{(\\alpha-1)/\\alpha}$",
+      "parameter_ref": "SO_ZO_N06_main_p_c8b258f381"
+    },
+    {
+      "symbol_latex": "\\Phi_0",
+      "meaning": "Objective-gap scale before saturation of the high-order strongly convex lower bound",
+      "domain": "$\\Phi_0>0$ when $0<\\mu<\\beta$",
+      "definition": "$\\Phi_0=\\min\\{\\mu R^2,\\nu^{2(\\alpha-1)/(\\alpha-2)}\\mu^{-1}H_\\alpha^{-2/(\\alpha-2)}\\}$",
+      "parameter_ref": "SO_ZO_N06_main_p_a13b70fb5e"
+    },
+    {
+      "symbol_latex": "T_0",
+      "meaning": "Startup-budget scale of the high-order method",
+      "domain": "$T_0>0$ when $\\Phi_1>0$",
+      "definition": "$T_0=C_\\alpha d\\sqrt\\kappa\\log_2[C_\\alpha d\\kappa(1+\\beta R^2/\\Phi_1)]$, where $C_\\alpha>0$ depends only on the fixed $\\alpha$.",
+      "parameter_ref": "SO_ZO_N06_main_p_f4c2fd7ebc"
+    },
+    {
+      "symbol_latex": "T_*",
+      "meaning": "Call scale of the leading high-order statistical term",
+      "domain": "$T_*\\ge0$",
+      "definition": "$T_*=d^s\\sigma_v^2H_\\alpha^{2/(\\alpha-1)}(\\mu\\varepsilon)^{-\\alpha/(\\alpha-1)}$",
+      "parameter_ref": "SO_ZO_N06_main_p_652490946a"
+    },
+    {
+      "symbol_latex": "x,y,u",
+      "meaning": "Function arguments and dummy variables in the formulas",
+      "domain": "$x,y,u\\in\\mathbb{R}^d$; spherical domains are embedded in $\\mathbb{R}^{d+1}$",
+      "definition": "Admissible ranges are specified separately by the task, model and oracle in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat{x}",
+      "meaning": "Final algorithm output",
+      "domain": "$\\mathbb{R}^d$",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "I",
+      "meaning": "Complete problem instance",
+      "domain": "$I\\in\\mathcal{I}$",
+      "definition": "Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{I}",
+      "meaning": "Admissible instance class determined by the eight specification fields in this profile",
+      "domain": "Instances satisfying the public parameter bounds",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{A}",
+      "meaning": "Algorithm or strategy",
+      "domain": "Measurable adaptive strategies allowed in this profile",
+      "definition": "The algorithm is selected before the hidden instance.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\ell",
+      "meaning": "Base loss or residual",
+      "domain": "$\\ell:\\mathcal{I}\\times\\mathcal{X}_{\\mathrm{out}}\\to[0,+\\infty]$",
+      "definition": "The exact formula appears in this profile's performance-criterion section.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb{E},\\Pr",
+      "meaning": "Expectation and probability",
+      "domain": "Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee",
+      "definition": "Fix the instance first; aggregate cost and error separately.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\inf,\\sup",
+      "meaning": "Infimum and supremum",
+      "domain": "Evaluated only over the variable sets explicitly specified in the formula",
+      "definition": "In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_2,\\langle\\cdot,\\cdot\\rangle",
+      "meaning": "Euclidean norm and inner product",
+      "domain": "$\\|x\\|_2=\\sqrt{\\langle x,x\\rangle}$",
+      "definition": "$\\langle x,y\\rangle=x^\\top y$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "B_p(c,R)",
+      "meaning": "Closed norm ball",
+      "domain": "$p\\in[1,\\infty],\\ R\\ge0$",
+      "definition": "$B_p(c,R)=\\{x:\\|x-c\\|_p\\le R\\}$; $B_2$ denotes the Euclidean ball.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,T",
+      "meaning": "Actual call count and declared budget",
+      "domain": "$N,T\\in\\mathbb{N}_0$",
+      "definition": "A fixed budget bounds every execution path; the Markov specification uses an expected budget.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta,\\widetilde{O}",
+      "meaning": "Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms",
+      "domain": "Within the joint parameter window specified for each complexity regime",
+      "definition": "Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C,c_\\alpha,C_\\alpha",
+      "meaning": "Positive constant in a proof or asymptotic bound",
+      "domain": "$0<c,C,c_\\alpha,C_\\alpha<\\infty$",
+      "definition": "Unsubscripted constants have the dependencies stated in the bound; constants subscripted by $\\alpha$ may depend only on the fixed smoothness order.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_+,e",
+      "meaning": "Natural logarithm, truncated logarithm, and Euler's number",
+      "domain": "$z>0$",
+      "definition": "$\\log_+(z)=\\max\\{0,\\log z\\}$; $e=\\exp(1)$, and $\\log_2$ denotes the base-two logarithm.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,f_*",
+      "meaning": "Population objective and its optimal value",
+      "domain": "$f:\\mathcal{X}_{\\mathrm{fun}}\\to\\mathbb{R}$",
+      "definition": "$f_*=\\inf_{x\\in \\mathbb{R}^d}f(x)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "Y_t,\\xi_t,t",
+      "meaning": "Scalar-observation number, noise, and call index",
+      "domain": "$Y_t,\\xi_t\\in\\mathbb{R},\\ t\\in\\mathbb{N}$",
+      "definition": "Noise independence, distribution class and scale are fixed by this profile's oracle.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{F}_{t-1}",
+      "meaning": "The history before the current query",
+      "domain": "The $\\sigma$-algebra generated by the algorithm's seed and previous feedback",
+      "definition": "The current query may depend on this history.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla f,\\nabla^2f,D^jf",
+      "meaning": "Gradient, Hessian, and higher Fréchet derivatives",
+      "domain": "$\\nabla f\\in\\mathbb{R}^d,\\ \\nabla^2f\\in\\mathbb{R}^{d\\times d}$; $D^jf$ is a $j$-linear form",
+      "definition": "Used only at derivative orders and on regions where the model guarantees its existence.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_{\\mathrm{op}}",
+      "meaning": "Euclidean induced matrix or tensor operator norm",
+      "domain": "Take the supremum over Euclidean unit input vectors of the corresponding order.",
+      "definition": "$\\|T\\|_{\\mathrm{op}}=\\sup_{\\|u_1\\|_2,\\ldots,\\|u_j\\|_2\\le1}|T[u_1,\\ldots,u_j]|$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "m,\\gamma_\\alpha",
+      "meaning": "Integer derivative order and Hölder exponent of the high-order regularity condition",
+      "domain": "$m\\ge2,\\ 0<\\gamma_\\alpha\\le1$",
+      "definition": "$m=\\lceil\\alpha\\rceil-1$, $\\gamma_\\alpha=\\alpha-m$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|T\\|_{\\mathrm{HS}}",
+      "meaning": "Hilbert-Schmidt tensor norm",
+      "domain": "Defined through tensor coordinates in a Euclidean orthonormal basis",
+      "definition": "$\\|T\\|_{\\mathrm{HS}}=(\\sum_{i_1,\\ldots,i_m}|T[e_{i_1},\\ldots,e_{i_m}]|^2)^{1/2}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{X}_{\\mathrm{fun}},\\mathcal{X}_{\\mathrm{out}},\\mathcal{X}",
+      "meaning": "Function domain, admissible output domain and optimization domain",
+      "domain": "Each is the Euclidean space or subset explicitly specified in this profile",
+      "definition": "$\\mathcal{X}_{\\mathrm{out}}=\\mathbb{R}^d$ and $\\mathcal{X}=\\mathbb{R}^d$; the function domain is the region on which the model imposes regularity.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^*",
+      "meaning": "Optimal worst-case oracle complexity satisfying the complete guarantee",
+      "domain": "$N^*\\in[0,+\\infty]$",
+      "definition": "Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_*",
+      "meaning": "A global minimizer or quadratic center whose existence is promised by the model",
+      "domain": "Belongs to the localization domain specified here; used only under the stated existence promise",
+      "definition": "The full-space minimizer is unique in the strongly convex class. The center of a positive semidefinite quadratic model need not be unique.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_0",
+      "meaning": "Public initial point",
+      "domain": "$x_0\\in\\mathbb{R}^d$",
+      "definition": "Belongs to the feasible domain required by the model.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "key": "risk_at_T",
+      "kind": "fixed_budget_risk",
+      "projection": "declared_budget",
+      "label": "Error risk at a fixed declared budget",
+      "units": "loss",
+      "id": "SO_ZO_N06_main__main__q1",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [
+        "SO_ZO_N06_main_p_bb728db2b9",
+        "SO_ZO_N06_main_p_1c5476f952",
+        "SO_ZO_N06_main_p_7ce7a5991a",
+        "SO_ZO_N06_main_p_1e4ef504fa",
+        "SO_ZO_N06_main_p_c29814dafc",
+        "SO_ZO_N06_main_p_4f5bba07da",
+        "SO_ZO_N06_main_p_a92eec49dd",
+        "SO_ZO_N06_main_p_5c322c6737",
+        "SO_ZO_N06_main_p_842ef9f04b"
+      ],
+      "fixed_parameters": [],
+      "analysis_scope": "declared_joint_parameter_window",
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": "risk_at_T",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "expression_latex": "R^\\star_{v,\\pi}(B;\\theta)=\\inf_{\\mathcal A\\in\\mathfrak A_v:\\ C_\\pi(\\mathcal A,I)\\le B\\ \\forall I}\\sup_I\\mathbb E[\\ell(I,\\mathcal A)]",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    },
+    {
+      "key": "calls",
+      "kind": "target_accuracy_cost",
+      "projection": "declared_atomic_resource",
+      "label": "one paid scalar function value",
+      "units": "one paid scalar function value",
+      "id": "SO_ZO_N06_main__main__q2",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [
+        "SO_ZO_N06_main_p_bb728db2b9",
+        "SO_ZO_N06_main_p_1c5476f952",
+        "SO_ZO_N06_main_p_7ce7a5991a",
+        "SO_ZO_N06_main_p_1e4ef504fa",
+        "SO_ZO_N06_main_p_c29814dafc",
+        "SO_ZO_N06_main_p_4f5bba07da",
+        "SO_ZO_N06_main_p_a92eec49dd",
+        "SO_ZO_N06_main_p_5c322c6737",
+        "SO_ZO_N06_main_p_842ef9f04b"
+      ],
+      "fixed_parameters": [],
+      "analysis_scope": "declared_joint_parameter_window",
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": "oracle_call_complexity",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "expression_latex": "C^\\star_{v,\\pi}(\\varepsilon;\\theta)=\\inf\\{B\\ge0:\\exists\\mathcal A\\in\\mathfrak A_v,\\ C_\\pi(\\mathcal A,I)\\le B\\ \\text{and}\\ G_v(\\mathcal A,I;\\varepsilon)\\ \\forall I\\}",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Error risk at a fixed declared budget",
+      "expression": "declared_budget",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_66d012a2da"
+    },
+    {
+      "description": "one paid scalar function value",
+      "expression": "declared_atomic_resource",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_fd5ea394a6"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "SO_ZO_N06_main__main__r1",
+      "specification_ref": "SO_ZO_N06_main",
+      "name": "Parameter regime N06.R1",
+      "universe_ref": null,
+      "predicate": {
+        "op": "source_condition",
+        "text": "Fix $\\alpha>2$ and choose $\\mu=R=H_\\alpha=\\sigma_v=1$ and $\\beta=3$, with $d\\ge2$ and integer $T\\ge1$. The Hilbert-Schmidt model uses $m=\\lceil\\alpha\\rceil-1$; $\\tau=(\\alpha-1)/2$ for even $m$, $\\tau=(m-1)/2$ for odd $m$, and $s=2-\\tau/(\\alpha-1)$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "Fix $\\alpha>2$ and choose $\\mu=R=H_\\alpha=\\sigma_v=1$ and $\\beta=3$, with $d\\ge2$ and integer $T\\ge1$. The Hilbert-Schmidt model uses $m=\\lceil\\alpha\\rceil-1$; $\\tau=(\\alpha-1)/2$ for even $m$, $\\tau=(m-1)/2$ for odd $m$, and $s=2-\\tau/(\\alpha-1)$.",
+      "kind": "parameter_region"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__r2",
+      "specification_ref": "SO_ZO_N06_main",
+      "name": "Parameter regime N06.R2",
+      "universe_ref": null,
+      "predicate": {
+        "op": "source_condition",
+        "text": "Fix $\\alpha>2$; require $d\\ge2$, $0<\\mu<\\beta$, $R,H_\\alpha,\\sigma_v>0$, $T\\ge T_0$ and $\\Phi_T\\le\\Phi_0$. All derived quantities are computed from the formulas in the symbol table.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "Fix $\\alpha>2$; require $d\\ge2$, $0<\\mu<\\beta$, $R,H_\\alpha,\\sigma_v>0$, $T\\ge T_0$ and $\\Phi_T\\le\\Phi_0$. All derived quantities are computed from the formulas in the symbol table.",
+      "kind": "parameter_region"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__r3",
+      "specification_ref": "SO_ZO_N06_main",
+      "name": "Parameter regime N06.R_stat_calls",
+      "universe_ref": null,
+      "predicate": {
+        "op": "source_condition",
+        "text": "Fix $\\alpha>2$; require $d\\ge2$, $0<\\mu<\\beta$, $R,H_\\alpha,\\sigma_v>0$, $0<\\varepsilon\\le c_\\alpha\\Phi_0$ and $T_*\\ge C_\\alpha d\\sqrt\\kappa[1+\\log(\\beta R^2/\\varepsilon)]$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "Fix $\\alpha>2$; require $d\\ge2$, $0<\\mu<\\beta$, $R,H_\\alpha,\\sigma_v>0$, $0<\\varepsilon\\le c_\\alpha\\Phi_0$ and $T_*\\ge C_\\alpha d\\sqrt\\kappa[1+\\log(\\beta R^2/\\varepsilon)]$.",
+      "kind": "parameter_region"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__r4",
+      "specification_ref": "SO_ZO_N06_main",
+      "name": "Parameter regime N06.R_zero",
+      "universe_ref": null,
+      "predicate": {
+        "op": "source_condition",
+        "text": "$\\varepsilon\\ge\\beta R^2/2$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$\\varepsilon\\ge\\beta R^2/2$.",
+      "kind": "parameter_region"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "SO_ZO_N06_main__main__b1",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "O_\\alpha(T_*(\\varepsilon)+d\\sqrt\\kappa[1+\\log Q])",
+      "quantity_ref": "SO_ZO_N06_main__main__q2",
+      "quantity_refs": [
+        "SO_ZO_N06_main__main__q2"
+      ],
+      "region_refs": [],
+      "method": "High-order randomized finite differences with accelerated restarts",
+      "source_refs": [
+        "SO_SRC_79514ef868410bc9"
+      ],
+      "evidence_refs": [
+        "SO_ZO_N06_main__main__e1",
+        "SO_ZO_N06_main__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_N06_main__main__c3"
+      ],
+      "applicability": {
+        "conditions": [
+          "Fix $\\alpha>2$, with $d\\ge2$, $0<\\mu<\\beta$ and $R,H_\\alpha,\\sigma_v>0$. The nontrivial accuracy regime is $Q>1$."
+        ],
+        "oracle_mapping": "Scalar observations follow the independent-noise, conditional-noise, or mixed-error law specified here; every repeated observation is charged separately.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__b2",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "\\Omega_\\alpha(T_*(\\varepsilon))",
+      "quantity_ref": "SO_ZO_N06_main__main__q2",
+      "quantity_refs": [
+        "SO_ZO_N06_main__main__q2"
+      ],
+      "region_refs": [],
+      "method": "Smooth hard family under a Hilbert-Schmidt regularity bound",
+      "source_refs": [
+        "SO_SRC_79514ef868410bc9"
+      ],
+      "evidence_refs": [
+        "SO_ZO_N06_main__main__e3",
+        "SO_ZO_N06_main__main__e4",
+        "SO_ZO_N06_main__main__e5"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_N06_main__main__c3"
+      ],
+      "applicability": {
+        "conditions": [
+          "Fix $\\alpha>2$, with $d\\ge2$, $0<\\mu<\\beta$, $R,H_\\alpha,\\sigma_v>0$ and $0<\\varepsilon\\le c_\\alpha\\Phi_0$."
+        ],
+        "oracle_mapping": "Scalar observations follow the independent-noise, conditional-noise, or mixed-error law specified here; every repeated observation is charged separately.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__b3",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "C_\\alpha\\min\\{1,(d^s/T)^{(\\alpha-1)/\\alpha}\\}",
+      "quantity_ref": "SO_ZO_N06_main__main__q1",
+      "quantity_refs": [
+        "SO_ZO_N06_main__main__q1"
+      ],
+      "region_refs": [],
+      "method": "High-order randomized finite differences with accelerated restarts",
+      "source_refs": [
+        "SO_SRC_79514ef868410bc9"
+      ],
+      "evidence_refs": [
+        "SO_ZO_N06_main__main__e6"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_N06_main__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\mu=R=H_\\alpha=\\sigma_v=1$, $\\beta=3$, $d\\ge2$ and $T\\ge1$, with $\\alpha>2$ fixed in advance."
+        ],
+        "oracle_mapping": "Scalar observations follow the independent-noise, conditional-noise, or mixed-error law specified here; every repeated observation is charged separately.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__b4",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "c_\\alpha\\min\\{1,(d^s/T)^{(\\alpha-1)/\\alpha}\\}",
+      "quantity_ref": "SO_ZO_N06_main__main__q1",
+      "quantity_refs": [
+        "SO_ZO_N06_main__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Smooth hard family under a Hilbert-Schmidt regularity bound",
+      "source_refs": [
+        "SO_SRC_79514ef868410bc9"
+      ],
+      "evidence_refs": [
+        "SO_ZO_N06_main__main__e7"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_N06_main__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\mu=R=H_\\alpha=\\sigma_v=1$, $\\beta=3$, $d\\ge2$ and $T\\ge1$, with $\\alpha>2$ fixed in advance. The lower bound uses Gaussian noise."
+        ],
+        "oracle_mapping": "Scalar observations follow the independent-noise, conditional-noise, or mixed-error law specified here; every repeated observation is charged separately.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__b5",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "C_\\alpha\\Phi_T",
+      "quantity_ref": "SO_ZO_N06_main__main__q1",
+      "quantity_refs": [
+        "SO_ZO_N06_main__main__q1"
+      ],
+      "region_refs": [],
+      "method": "High-order randomized finite differences with accelerated restarts",
+      "source_refs": [
+        "SO_SRC_79514ef868410bc9"
+      ],
+      "evidence_refs": [
+        "SO_ZO_N06_main__main__e8",
+        "SO_ZO_N06_main__main__e9"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_N06_main__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$T\\ge T_0$, $d\\ge2$, fixed $\\alpha>2$ and $0<\\mu<\\beta$; all remaining scale parameters are positive."
+        ],
+        "oracle_mapping": "Scalar observations follow the independent-noise, conditional-noise, or mixed-error law specified here; every repeated observation is charged separately.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__b6",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "c_\\alpha\\min\\{\\Phi_T,\\Phi_0\\}",
+      "quantity_ref": "SO_ZO_N06_main__main__q1",
+      "quantity_refs": [
+        "SO_ZO_N06_main__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Smooth hard family under a Hilbert-Schmidt regularity bound",
+      "source_refs": [
+        "SO_SRC_79514ef868410bc9"
+      ],
+      "evidence_refs": [
+        "SO_ZO_N06_main__main__e10"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_N06_main__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$d\\ge2$, fixed $\\alpha>2$ and $0<\\mu<\\beta$; all remaining scales are positive. The lower bound uses a Gaussian-noise subclass."
+        ],
+        "oracle_mapping": "Scalar observations follow the independent-noise, conditional-noise, or mixed-error law specified here; every repeated observation is charged separately.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__b7",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "0",
+      "quantity_ref": "SO_ZO_N06_main__main__q2",
+      "quantity_refs": [
+        "SO_ZO_N06_main__main__q2"
+      ],
+      "region_refs": [],
+      "method": "Return the public initial point",
+      "source_refs": [],
+      "evidence_refs": [
+        "SO_ZO_N06_main__main__e11",
+        "SO_ZO_N06_main__main__e12"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_N06_main__main__c4"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\varepsilon\\ge \\beta R^2/2$."
+        ],
+        "oracle_mapping": "Scalar observations follow the independent-noise, conditional-noise, or mixed-error law specified here; every repeated observation is charged separately.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "deterministic",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ]
+    },
+    {
+      "id": "SO_ZO_N06_main__main__b8",
+      "direction": "lower",
+      "claim_semantics": "bound",
+      "formula_latex": "0",
+      "quantity_ref": "SO_ZO_N06_main__main__q2",
+      "quantity_refs": [
+        "SO_ZO_N06_main__main__q2"
+      ],
+      "region_refs": [],
+      "method": "Nonnegative oracle cost",
+      "source_refs": [],
+      "evidence_refs": [
+        "SO_ZO_N06_main__main__e13",
+        "SO_ZO_N06_main__main__e14"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_N06_main__main__c4"
+      ],
+      "applicability": {
+        "conditions": [
+          "$\\varepsilon\\ge \\beta R^2/2$."
+        ],
+        "oracle_mapping": "Scalar observations follow the independent-noise, conditional-noise, or mixed-error law specified here; every repeated observation is charged separately.",
+        "guarantee_mapping": "Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Parameter regime N06.R1",
+      "predicate": {
+        "op": "source_condition",
+        "text": "Fix $\\alpha>2$ and choose $\\mu=R=H_\\alpha=\\sigma_v=1$ and $\\beta=3$, with $d\\ge2$ and integer $T\\ge1$. The Hilbert-Schmidt model uses $m=\\lceil\\alpha\\rceil-1$; $\\tau=(\\alpha-1)/2$ for even $m$, $\\tau=(m-1)/2$ for odd $m$, and $s=2-\\tau/(\\alpha-1)$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "Fix $\\alpha>2$ and choose $\\mu=R=H_\\alpha=\\sigma_v=1$ and $\\beta=3$, with $d\\ge2$ and integer $T\\ge1$. The Hilbert-Schmidt model uses $m=\\lceil\\alpha\\rceil-1$; $\\tau=(\\alpha-1)/2$ for even $m$, $\\tau=(m-1)/2$ for odd $m$, and $s=2-\\tau/(\\alpha-1)$.",
+      "parameter_refs": [
+        "SO_ZO_N06_main_p_bb728db2b9",
+        "SO_ZO_N06_main_p_1c5476f952",
+        "SO_ZO_N06_main_p_7ce7a5991a",
+        "SO_ZO_N06_main_p_1e4ef504fa",
+        "SO_ZO_N06_main_p_c29814dafc",
+        "SO_ZO_N06_main_p_4f5bba07da",
+        "SO_ZO_N06_main_p_a92eec49dd",
+        "SO_ZO_N06_main_p_5c322c6737",
+        "SO_ZO_N06_main_p_842ef9f04b",
+        "SO_ZO_N06_main_p_f80bfb74b8",
+        "SO_ZO_N06_main_p_7a5867dd29",
+        "SO_ZO_N06_main_p_7e046d8e49",
+        "SO_ZO_N06_main_p_706917c7bc",
+        "SO_ZO_N06_main_p_c267eb8eb1",
+        "SO_ZO_N06_main_p_582414083f",
+        "SO_ZO_N06_main_p_5676ddcf20",
+        "SO_ZO_N06_main_p_07fef65014",
+        "SO_ZO_N06_main_p_c8b258f381",
+        "SO_ZO_N06_main_p_a13b70fb5e",
+        "SO_ZO_N06_main_p_f4c2fd7ebc",
+        "SO_ZO_N06_main_p_652490946a"
+      ],
+      "source_region_ref": "SO_ZO_N06_main__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_N06_main__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_N06_main__main__q1",
+      "resource_projection_id": "resource_66d012a2da",
+      "regime_id": "SO_ZO_N06_main__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_N06_main__main__b3"
+        ],
+        "lower_refs": [
+          "SO_ZO_N06_main__main__b4"
+        ],
+        "comparison_ref": "SO_ZO_N06_main__main__c1",
+        "quantity_ref": "SO_ZO_N06_main__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "ratio_or_gap": "$O_\\alpha(1)$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "O_\\alpha(\\min\\{1,(d^s/T)^{(\\alpha-1)/\\alpha}\\})",
+            "claim_refs": [
+              "SO_ZO_N06_main__main__b3"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega_\\alpha(\\min\\{1,(d^s/T)^{(\\alpha-1)/\\alpha}\\})",
+            "claim_refs": [
+              "SO_ZO_N06_main__main__b4"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_ZO_N06_main__main__b3": [
+            {
+              "region_ref": null,
+              "predicate_text": "$\\mu=R=H_\\alpha=\\sigma_v=1$, $\\beta=3$, $d\\ge2$ and $T\\ge1$, with $\\alpha>2$ fixed in advance."
+            }
+          ],
+          "SO_ZO_N06_main__main__b4": [
+            {
+              "region_ref": null,
+              "predicate_text": "$\\mu=R=H_\\alpha=\\sigma_v=1$, $\\beta=3$, $d\\ge2$ and $T\\ge1$, with $\\alpha>2$ fixed in advance. The lower bound uses Gaussian noise."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Error risk at a fixed declared budget",
+        "tracked_parameters": [
+          "SO_ZO_N06_main_p_bb728db2b9",
+          "SO_ZO_N06_main_p_1c5476f952",
+          "SO_ZO_N06_main_p_7ce7a5991a",
+          "SO_ZO_N06_main_p_1e4ef504fa",
+          "SO_ZO_N06_main_p_c29814dafc",
+          "SO_ZO_N06_main_p_4f5bba07da",
+          "SO_ZO_N06_main_p_a92eec49dd",
+          "SO_ZO_N06_main_p_5c322c6737",
+          "SO_ZO_N06_main_p_842ef9f04b"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_N06_main",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_N06_main__main__q1",
+        "resource_projection_id": "resource_66d012a2da",
+        "regime_id": "SO_ZO_N06_main__main__r1"
+      }
+    },
+    {
+      "label": "Parameter regime N06.R2",
+      "predicate": {
+        "op": "source_condition",
+        "text": "Fix $\\alpha>2$; require $d\\ge2$, $0<\\mu<\\beta$, $R,H_\\alpha,\\sigma_v>0$, $T\\ge T_0$ and $\\Phi_T\\le\\Phi_0$. All derived quantities are computed from the formulas in the symbol table.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "Fix $\\alpha>2$; require $d\\ge2$, $0<\\mu<\\beta$, $R,H_\\alpha,\\sigma_v>0$, $T\\ge T_0$ and $\\Phi_T\\le\\Phi_0$. All derived quantities are computed from the formulas in the symbol table.",
+      "parameter_refs": [
+        "SO_ZO_N06_main_p_bb728db2b9",
+        "SO_ZO_N06_main_p_1c5476f952",
+        "SO_ZO_N06_main_p_7ce7a5991a",
+        "SO_ZO_N06_main_p_1e4ef504fa",
+        "SO_ZO_N06_main_p_c29814dafc",
+        "SO_ZO_N06_main_p_4f5bba07da",
+        "SO_ZO_N06_main_p_a92eec49dd",
+        "SO_ZO_N06_main_p_5c322c6737",
+        "SO_ZO_N06_main_p_842ef9f04b",
+        "SO_ZO_N06_main_p_f80bfb74b8",
+        "SO_ZO_N06_main_p_7a5867dd29",
+        "SO_ZO_N06_main_p_7e046d8e49",
+        "SO_ZO_N06_main_p_706917c7bc",
+        "SO_ZO_N06_main_p_c267eb8eb1",
+        "SO_ZO_N06_main_p_582414083f",
+        "SO_ZO_N06_main_p_5676ddcf20",
+        "SO_ZO_N06_main_p_07fef65014",
+        "SO_ZO_N06_main_p_c8b258f381",
+        "SO_ZO_N06_main_p_a13b70fb5e",
+        "SO_ZO_N06_main_p_f4c2fd7ebc",
+        "SO_ZO_N06_main_p_652490946a"
+      ],
+      "source_region_ref": "SO_ZO_N06_main__main__r2",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_N06_main__main__c2",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_N06_main__main__q1",
+      "resource_projection_id": "resource_66d012a2da",
+      "regime_id": "SO_ZO_N06_main__main__r2",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_N06_main__main__b5"
+        ],
+        "lower_refs": [
+          "SO_ZO_N06_main__main__b6"
+        ],
+        "comparison_ref": "SO_ZO_N06_main__main__c2",
+        "quantity_ref": "SO_ZO_N06_main__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "ratio_or_gap": "$O_\\alpha(1)$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "O_\\alpha(\\Phi_T)",
+            "claim_refs": [
+              "SO_ZO_N06_main__main__b5"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega_\\alpha(\\Phi_T)",
+            "claim_refs": [
+              "SO_ZO_N06_main__main__b6"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_ZO_N06_main__main__b5": [
+            {
+              "region_ref": null,
+              "predicate_text": "$T\\ge T_0$, $d\\ge2$, fixed $\\alpha>2$ and $0<\\mu<\\beta$; all remaining scale parameters are positive."
+            }
+          ],
+          "SO_ZO_N06_main__main__b6": [
+            {
+              "region_ref": null,
+              "predicate_text": "$d\\ge2$, fixed $\\alpha>2$ and $0<\\mu<\\beta$; all remaining scales are positive. The lower bound uses a Gaussian-noise subclass."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Error risk at a fixed declared budget",
+        "tracked_parameters": [
+          "SO_ZO_N06_main_p_bb728db2b9",
+          "SO_ZO_N06_main_p_1c5476f952",
+          "SO_ZO_N06_main_p_7ce7a5991a",
+          "SO_ZO_N06_main_p_1e4ef504fa",
+          "SO_ZO_N06_main_p_c29814dafc",
+          "SO_ZO_N06_main_p_4f5bba07da",
+          "SO_ZO_N06_main_p_a92eec49dd",
+          "SO_ZO_N06_main_p_5c322c6737",
+          "SO_ZO_N06_main_p_842ef9f04b"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_N06_main",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_N06_main__main__q1",
+        "resource_projection_id": "resource_66d012a2da",
+        "regime_id": "SO_ZO_N06_main__main__r2"
+      }
+    },
+    {
+      "label": "Parameter regime N06.R_stat_calls",
+      "predicate": {
+        "op": "source_condition",
+        "text": "Fix $\\alpha>2$; require $d\\ge2$, $0<\\mu<\\beta$, $R,H_\\alpha,\\sigma_v>0$, $0<\\varepsilon\\le c_\\alpha\\Phi_0$ and $T_*\\ge C_\\alpha d\\sqrt\\kappa[1+\\log(\\beta R^2/\\varepsilon)]$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "Fix $\\alpha>2$; require $d\\ge2$, $0<\\mu<\\beta$, $R,H_\\alpha,\\sigma_v>0$, $0<\\varepsilon\\le c_\\alpha\\Phi_0$ and $T_*\\ge C_\\alpha d\\sqrt\\kappa[1+\\log(\\beta R^2/\\varepsilon)]$.",
+      "parameter_refs": [
+        "SO_ZO_N06_main_p_bb728db2b9",
+        "SO_ZO_N06_main_p_1c5476f952",
+        "SO_ZO_N06_main_p_7ce7a5991a",
+        "SO_ZO_N06_main_p_1e4ef504fa",
+        "SO_ZO_N06_main_p_c29814dafc",
+        "SO_ZO_N06_main_p_4f5bba07da",
+        "SO_ZO_N06_main_p_a92eec49dd",
+        "SO_ZO_N06_main_p_5c322c6737",
+        "SO_ZO_N06_main_p_842ef9f04b",
+        "SO_ZO_N06_main_p_f80bfb74b8",
+        "SO_ZO_N06_main_p_7a5867dd29",
+        "SO_ZO_N06_main_p_7e046d8e49",
+        "SO_ZO_N06_main_p_706917c7bc",
+        "SO_ZO_N06_main_p_c267eb8eb1",
+        "SO_ZO_N06_main_p_582414083f",
+        "SO_ZO_N06_main_p_5676ddcf20",
+        "SO_ZO_N06_main_p_07fef65014",
+        "SO_ZO_N06_main_p_c8b258f381",
+        "SO_ZO_N06_main_p_a13b70fb5e",
+        "SO_ZO_N06_main_p_f4c2fd7ebc",
+        "SO_ZO_N06_main_p_652490946a"
+      ],
+      "source_region_ref": "SO_ZO_N06_main__main__r3",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_N06_main__main__c3",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_N06_main__main__q2",
+      "resource_projection_id": "resource_fd5ea394a6",
+      "regime_id": "SO_ZO_N06_main__main__r3",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_N06_main__main__b1"
+        ],
+        "lower_refs": [
+          "SO_ZO_N06_main__main__b2"
+        ],
+        "comparison_ref": "SO_ZO_N06_main__main__c3",
+        "quantity_ref": "SO_ZO_N06_main__main__q2",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "$O_\\alpha(1)$",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "O_\\alpha(T_*(\\varepsilon))",
+            "claim_refs": [
+              "SO_ZO_N06_main__main__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "\\Omega_\\alpha(T_*(\\varepsilon))",
+            "claim_refs": [
+              "SO_ZO_N06_main__main__b2"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_ZO_N06_main__main__b1": [
+            {
+              "region_ref": null,
+              "predicate_text": "Fix $\\alpha>2$, with $d\\ge2$, $0<\\mu<\\beta$ and $R,H_\\alpha,\\sigma_v>0$. The nontrivial accuracy regime is $Q>1$."
+            }
+          ],
+          "SO_ZO_N06_main__main__b2": [
+            {
+              "region_ref": null,
+              "predicate_text": "Fix $\\alpha>2$, with $d\\ge2$, $0<\\mu<\\beta$, $R,H_\\alpha,\\sigma_v>0$ and $0<\\varepsilon\\le c_\\alpha\\Phi_0$."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "one paid scalar function value",
+        "tracked_parameters": [
+          "SO_ZO_N06_main_p_bb728db2b9",
+          "SO_ZO_N06_main_p_1c5476f952",
+          "SO_ZO_N06_main_p_7ce7a5991a",
+          "SO_ZO_N06_main_p_1e4ef504fa",
+          "SO_ZO_N06_main_p_c29814dafc",
+          "SO_ZO_N06_main_p_4f5bba07da",
+          "SO_ZO_N06_main_p_a92eec49dd",
+          "SO_ZO_N06_main_p_5c322c6737",
+          "SO_ZO_N06_main_p_842ef9f04b"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_N06_main",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_N06_main__main__q2",
+        "resource_projection_id": "resource_fd5ea394a6",
+        "regime_id": "SO_ZO_N06_main__main__r3"
+      }
+    },
+    {
+      "label": "Parameter regime N06.R_zero",
+      "predicate": {
+        "op": "source_condition",
+        "text": "$\\varepsilon\\ge\\beta R^2/2$.",
+        "evaluation": "requires_source_specific_certificate"
+      },
+      "predicate_text": "$\\varepsilon\\ge\\beta R^2/2$.",
+      "parameter_refs": [
+        "SO_ZO_N06_main_p_bb728db2b9",
+        "SO_ZO_N06_main_p_1c5476f952",
+        "SO_ZO_N06_main_p_7ce7a5991a",
+        "SO_ZO_N06_main_p_1e4ef504fa",
+        "SO_ZO_N06_main_p_c29814dafc",
+        "SO_ZO_N06_main_p_4f5bba07da",
+        "SO_ZO_N06_main_p_a92eec49dd",
+        "SO_ZO_N06_main_p_5c322c6737",
+        "SO_ZO_N06_main_p_842ef9f04b",
+        "SO_ZO_N06_main_p_f80bfb74b8",
+        "SO_ZO_N06_main_p_7a5867dd29",
+        "SO_ZO_N06_main_p_7e046d8e49",
+        "SO_ZO_N06_main_p_706917c7bc",
+        "SO_ZO_N06_main_p_c267eb8eb1",
+        "SO_ZO_N06_main_p_582414083f",
+        "SO_ZO_N06_main_p_5676ddcf20",
+        "SO_ZO_N06_main_p_07fef65014",
+        "SO_ZO_N06_main_p_c8b258f381",
+        "SO_ZO_N06_main_p_a13b70fb5e",
+        "SO_ZO_N06_main_p_f4c2fd7ebc",
+        "SO_ZO_N06_main_p_652490946a"
+      ],
+      "source_region_ref": "SO_ZO_N06_main__main__r4",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "SO_ZO_N06_main__main__c4",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_N06_main__main__q2",
+      "resource_projection_id": "resource_fd5ea394a6",
+      "regime_id": "SO_ZO_N06_main__main__r4",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_N06_main__main__b7"
+        ],
+        "lower_refs": [
+          "SO_ZO_N06_main__main__b8"
+        ],
+        "comparison_ref": "SO_ZO_N06_main__main__c4",
+        "quantity_ref": "SO_ZO_N06_main__main__q2",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_atomic_resource",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "0",
+            "claim_refs": [
+              "SO_ZO_N06_main__main__b7"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression_latex": "0",
+            "claim_refs": [
+              "SO_ZO_N06_main__main__b8"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "SO_ZO_N06_main__main__b7": [
+            {
+              "region_ref": null,
+              "predicate_text": "$\\varepsilon\\ge \\beta R^2/2$."
+            }
+          ],
+          "SO_ZO_N06_main__main__b8": [
+            {
+              "region_ref": null,
+              "predicate_text": "$\\varepsilon\\ge \\beta R^2/2$."
+            }
+          ]
+        },
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "one paid scalar function value",
+        "tracked_parameters": [
+          "SO_ZO_N06_main_p_bb728db2b9",
+          "SO_ZO_N06_main_p_1c5476f952",
+          "SO_ZO_N06_main_p_7ce7a5991a",
+          "SO_ZO_N06_main_p_1e4ef504fa",
+          "SO_ZO_N06_main_p_c29814dafc",
+          "SO_ZO_N06_main_p_4f5bba07da",
+          "SO_ZO_N06_main_p_a92eec49dd",
+          "SO_ZO_N06_main_p_5c322c6737",
+          "SO_ZO_N06_main_p_842ef9f04b"
+        ],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_N06_main",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_N06_main__main__q2",
+        "resource_projection_id": "resource_fd5ea394a6",
+        "regime_id": "SO_ZO_N06_main__main__r4"
+      }
+    }
+  ],
+  "proofs": [
+    {
+      "proof_id": "ZO_PROOF_ZERO",
+      "title": "Zero-query certificates",
+      "body": "A public feasible point whose objective gap is at most $G_0$ solves every target $\\varepsilon\\ge G_0$ with exactly zero calls.\n\nFor a convex mean objective that is $L$-Lipschitz on a ball of radius $R$, the center has gap at most $LR$. A sample Lipschitz modulus $G$ with $\\mathbb E G^r\\le L^r$, $r>1$, implies $\\mathbb E G\\le L$, so the same certificate applies to moment models. Integrability at one point ensures that the mean is defined.\n\nIf a globally $\\beta$-smooth objective has a global minimizer within distance $R$ of the public initial point, its gradient vanishes at that minimizer and the smoothness inequality gives gap at most $\\beta R^2/2$. In a declared norm, use the corresponding radius in that norm. For $B_p(R)$ with Euclidean regularity this radius is $R$ when $p\\le2$ and $R d^{1/2-1/p}$ when $p\\ge2$.\n\nFor a known positive semidefinite quadratic matrix $A$, the center has gap at most $\\lambda_{\\max}(A)R^2/2$; if $A=0$, the loss is identically zero. A public initial-gap promise $\\Delta$ directly gives the certificate $G_0=\\Delta$. For the Markov potential $r_0$, its companion initial iterate has gap at most $\\mu r_0$. These are different certificates with different model assumptions; in particular, an unknown matrix with no public spectral bound does not acquire a uniform certificate.\n\nCall counts are nonnegative. Together with the stated algorithm, this proves exact zero complexity on each certified region. The upper/lower ratio is undefined, so it is stored as null rather than as $0/0$.",
+      "scope": "The stated sufficient accuracy regions only; no assertion that every certificate is sharp.",
+      "limitations": [
+        "Local argument and specification transfer; cited external theorems remain primary dependencies."
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "SO_ZO_N06_main__main__e1",
+      "source_ref": "SO_SRC_79514ef868410bc9",
+      "locator": {
+        "theorem": "Theorem 1(c); Corollary E.5",
+        "pdf_pages": [
+          3
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_N06_main__main__b1"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e2",
+      "source_ref": "SO_SRC_79514ef868410bc9",
+      "locator": {
+        "theorem": "Theorem 1(c); Corollary E.5",
+        "pdf_pages": [
+          37
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_N06_main__main__b1"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e3",
+      "source_ref": "SO_SRC_79514ef868410bc9",
+      "locator": {
+        "theorem": "Theorem 1(b); Corollary E.5",
+        "pdf_pages": [
+          3
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_N06_main__main__b2"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e4",
+      "source_ref": "SO_SRC_79514ef868410bc9",
+      "locator": {
+        "theorem": "Theorem 1(b); Corollary E.5",
+        "pdf_pages": [
+          29
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_N06_main__main__b2"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e5",
+      "source_ref": "SO_SRC_79514ef868410bc9",
+      "locator": {
+        "theorem": "Theorem 1(b); Corollary E.5",
+        "pdf_pages": [
+          30
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_N06_main__main__b2"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e6",
+      "source_ref": "SO_SRC_79514ef868410bc9",
+      "locator": {
+        "theorem": "Corollary E.5, PDF p.31",
+        "pdf_pages": [
+          31
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_N06_main__main__b3"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e7",
+      "source_ref": "SO_SRC_79514ef868410bc9",
+      "locator": {
+        "theorem": "Corollary E.5, PDF p.31",
+        "pdf_pages": [
+          31
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_N06_main__main__b4"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e8",
+      "source_ref": "SO_SRC_79514ef868410bc9",
+      "locator": {
+        "theorem": "Theorem 1(a), PDF pp.3-4; Theorem F.6, PDF pp.37-38",
+        "pdf_pages": [
+          3
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_N06_main__main__b5"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e9",
+      "source_ref": "SO_SRC_79514ef868410bc9",
+      "locator": {
+        "theorem": "Theorem 1(a), PDF pp.3-4; Theorem F.6, PDF pp.37-38",
+        "pdf_pages": [
+          37
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_N06_main__main__b5"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e10",
+      "source_ref": "SO_SRC_79514ef868410bc9",
+      "locator": {
+        "theorem": "Theorem 1(b), PDF pp.3-4",
+        "pdf_pages": [
+          3
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_N06_main__main__b6"
+      ],
+      "notes": []
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e11",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ],
+      "location": "Local arguments in this profile"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e12",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ],
+      "location": "Local arguments in this profile"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e13",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ],
+      "location": "Local arguments in this profile"
+    },
+    {
+      "id": "SO_ZO_N06_main__main__e14",
+      "kind": "local_argument",
+      "proof_refs": [
+        "ZO_PROOF_ZERO"
+      ],
+      "location": "Local arguments in this profile"
+    }
+  ],
+  "references": [
+    {
+      "id": "SO_SRC_79514ef868410bc9",
+      "authors": "Loginov, Dvinskikh, Tupitsa, Osmanov, Dorn and Gasnikov",
+      "title": "Minimax Oracle Call Complexity, Rounds and Admissible Noise in Zeroth-Order Optimization of Highly Smooth Functions",
+      "version": "arXiv:2610.05517v2, 2026-10-14",
+      "url": "https://arxiv.org/pdf/2610.05517v2",
+      "publication_status": "preprint"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "SO_ZO_N06_main",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 4,
+    "status_counts": {
+      "optimal": 4
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "SO_ZO_N06_main__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "SO_ZO_N06_main__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_3",
+      "comparison_ids": [
+        "SO_ZO_N06_main__main__c3"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_4",
+      "comparison_ids": [
+        "SO_ZO_N06_main__main__c4"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "eb5dc1e80d5aa431c9cf3a0a4870213453f411b740de03d2e556f73be7d55e8a",
+    "source_order": 184,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

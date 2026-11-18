@@ -1,0 +1,777 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "SO_ZO_S02_rand_native",
+  "title": "High-dimensional sparse convex objectives with independent noisy values",
+  "summary": "Minimize $f$ globally over $\\mathbb{R}^d$ and return a point with small objective gap.",
+  "primary_domain": "single_objective",
+  "oracle_order_collection": "zo",
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "single_objective"
+    },
+    {
+      "facet": "oracle_order",
+      "value": "zero"
+    },
+    {
+      "facet": "goal",
+      "value": "global_minimization"
+    },
+    {
+      "facet": "structure",
+      "value": "convex"
+    },
+    {
+      "facet": "feedback",
+      "value": "independent_noisy_value"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "fixed_success_probability"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_worst_case"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "solution_goal": "global_minimization",
+      "code": "single_objective_optimization",
+      "description_paragraphs": [
+        "Minimize $f$ globally over $\\mathbb{R}^d$ and return a point with small objective gap."
+      ],
+      "navigation_domains": [
+        "single_objective"
+      ],
+      "formulation_code": "SO.global_minimization"
+    },
+    "model": {
+      "properties": {
+        "convexity": "convex",
+        "regularity": [
+          "coordinate_l1_gradient_bound",
+          "entrywise_l1_hessian_bound"
+        ],
+        "structure": [
+          "fixed_unknown_coordinate_support"
+        ],
+        "growth": []
+      },
+      "domain_roles": {
+        "function": "All of R^d; regularity constraints are as stated in the model.",
+        "optimization": "All of R^d; stationarity tasks define Delta using the full-space infimum.",
+        "query": "$\\mathbb{R}^d$",
+        "output": "$\\mathbb{R}^d$",
+        "localization": "A global minimizer with $\\|x^*\\|_1\\le B$ exists. Iterations are organized over the known $\\ell_{1}$ localization set, while the oracle remains available throughout the ambient space."
+      },
+      "code": "admissible_model_class",
+      "description_paragraphs": [
+        "$f:\\mathbb{R}^d\\to\\mathbb{R}$ is convex and twice differentiable, and has a global minimizer $x_*$ satisfying $\\|x_*\\|_1\\le B$.",
+        "For every $x$, $\\|\\nabla f(x)\\|_0\\le s$, $\\|\\nabla f(x)\\|_1\\le H$, and $\\sum_{i,j=1}^d|\\partial_{ij}f(x)|\\le H$ hold. There is a fixed unknown set $S\\subseteq\\{1,\\ldots,d\\}$ with $|S|\\le s$ such that $f(x)=f_S(x_S)$."
+      ],
+      "geometry_refs": [
+        "SO_ZO_S02_rand_native_dom_ee4105a4ce",
+        "SO_ZO_S02_rand_native_dom_84b722f474",
+        "SO_ZO_S02_rand_native_dom_9a1be5c15c",
+        "SO_ZO_S02_rand_native_dom_39707c6baa",
+        "SO_ZO_S02_rand_native_dom_1587027725"
+      ]
+    },
+    "oracle": {
+      "public_inputs": [
+        "SO_ZO_S02_rand_native_p_bb728db2b9",
+        "SO_ZO_S02_rand_native_p_7390ffad8e",
+        "SO_ZO_S02_rand_native_obj_4ece788517",
+        "SO_ZO_S02_rand_native_obj_84d4799cbd",
+        "\\sigma_v",
+        "\\varepsilon",
+        "SO_ZO_S02_rand_native_p_aebd246b97"
+      ],
+      "domain": "$\\mathbb{R}^d$",
+      "variant": "iid_gaussian_value_noise",
+      "code": "independent_noisy_value",
+      "description_paragraphs": [
+        "A query at $x_t\\in \\mathbb{R}^d$ returns one scalar $Y_t=f(x_t)+\\xi_t$.",
+        "$\\xi_t$ is drawn i.i.d. from $N(0,\\sigma_v^2)$, independently of the algorithmic seed and preceding observations.",
+        "Every observation is charged independently. No same-sample coupling, sample handle, or noiseless function value is supplied.",
+        "The global support $S$ is hidden.",
+        "The public inputs are $d$, $s$, $H$, $B$, $\\sigma_v$, $\\varepsilon$, $T$, together with the sets, kernels and auxiliary operations explicitly declared above. Information about the unknown objective and any undisclosed sample distribution is obtained only through the stated interface."
+      ]
+    },
+    "output": {
+      "domain": "$\\mathbb{R}^d$",
+      "code": "output_space",
+      "description_paragraphs": [
+        "Return $\\widehat{x}\\in \\mathbb{R}^d$. The output may be an unqueried point, a random choice among previous points, or an average or convex combination that remains in the stated space. No function value, gradient, inner solution, or accuracy certificate must accompany the output."
+      ]
+    },
+    "metric": {
+      "native_metric_wording": "The base loss is $\\ell(I,x)=f(x)-f_*$, where $f_*=\\inf_{u\\in \\mathbb{R}^d}f(u)$. This nonnegative loss is evaluated at the output, with tolerance $\\varepsilon$.",
+      "formula_latex": "f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)",
+      "threshold_latex": "\\varepsilon",
+      "code": "global_minimization",
+      "description_paragraphs": [
+        "The base loss is $\\ell(I,x)=f(x)-f_*$, where $f_*=\\inf_{u\\in \\mathbb{R}^d}f(u)$. This nonnegative loss is evaluated at the output, with tolerance $\\varepsilon$."
+      ],
+      "base_expression": "f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)"
+    },
+    "resource": {
+      "unit": "One scalar function value or observation",
+      "budget_mode": "fixed_worst_case",
+      "accounting": {
+        "atomic_unit": "One scalar function value or observation",
+        "budget_mode": "fixed_worst_case",
+        "arithmetic_precision": "exact_real_unpriced_unless_specified",
+        "free_operations": "Only the public operations explicitly stated in this specification are free. Operations accessing the unknown instance provide no free information."
+      },
+      "code": "oracle_resource",
+      "description_paragraphs": [
+        "Each scalar function value or noisy observation costs $1$ call. Every location in a multipoint finite difference, every initialization query, and every reference observation is charged.",
+        "Only the declared oracle resource is charged. Computation and storage using existing information, together with explicitly known geometric and proximal operations, are free."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "randomization": "randomized_allowed",
+        "adaptivity": "sequential_adaptive",
+        "restrictions": [],
+        "code": "randomized_allowed",
+        "description_paragraphs": [
+          "Private randomization is allowed, with the seed independent of the instance and external randomness. Queries, stopping and postprocessing may be arbitrary measurable adaptive functions of the history. No linear-span or zero-respecting restriction is imposed.",
+          "Interactions are sequential, and every actual response in a batch is charged separately. Except for explicitly listed auxiliary interfaces, arithmetic, linear algebra, storage, and internal computation on available information are free, with no additional communication or memory restriction. Finite-difference steps must be finite and positive; real-number precision is not charged separately."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "quantifiers": "one_algorithm_for_all_admissible_instances",
+          "probability_space": "The algorithm's private seed and all randomness in the stated oracle or environment, after the instance and feedback law are fixed.",
+          "formula_latex": "\\exists\\mathcal{A}\\ \\forall I\\in\\mathcal{I}:\\ \\Pr(f(\\widehat{x})-\\inf_{u\\in \\mathbb{R}^d}f(u)\\le \\varepsilon)\\ge2/3",
+          "code": "fixed_success_probability",
+          "description_paragraphs": [
+            "After fixing the public inputs, choose one algorithm that works for every admissible instance and reply law. The error requirement is $\\Pr(\\ell(I,\\widehat{x})\\le \\varepsilon)\\ge2/3$.",
+            "Probability is over both the algorithm's seed and all feedback randomness, after fixing the instance and admissible environment law.",
+            "Oracle cost uses a deterministic worst-case budget: $N\\le T$ on every possible execution path. For multiple resources, coordinatewise caps apply jointly along the same path."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "SO_ZO_S02_rand_native"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "SO_ZO_S02_rand_native_obj_4ece788517",
+        "information": "public",
+        "description": "H",
+        "knowledge": "declared_public_input"
+      },
+      {
+        "id": "SO_ZO_S02_rand_native_obj_84d4799cbd",
+        "information": "public",
+        "description": "B",
+        "knowledge": "declared_public_input"
+      }
+    ],
+    "variable_blocks": [],
+    "domains": [
+      {
+        "id": "SO_ZO_S02_rand_native_dom_ee4105a4ce",
+        "roles": [
+          "function"
+        ],
+        "description": "All of R^d; regularity constraints are as stated in the model."
+      },
+      {
+        "id": "SO_ZO_S02_rand_native_dom_84b722f474",
+        "roles": [
+          "optimization"
+        ],
+        "description": "All of R^d; stationarity tasks define Delta using the full-space infimum."
+      },
+      {
+        "id": "SO_ZO_S02_rand_native_dom_9a1be5c15c",
+        "roles": [
+          "query"
+        ],
+        "description": "$\\mathbb{R}^d$"
+      },
+      {
+        "id": "SO_ZO_S02_rand_native_dom_39707c6baa",
+        "roles": [
+          "output"
+        ],
+        "description": "$\\mathbb{R}^d$"
+      },
+      {
+        "id": "SO_ZO_S02_rand_native_dom_1587027725",
+        "roles": [
+          "localization"
+        ],
+        "description": "A global minimizer with $\\|x^*\\|_1\\le B$ exists. Iterations are organized over the known $\\ell_{1}$ localization set, while the oracle remains available throughout the ambient space."
+      }
+    ],
+    "norms": [],
+    "protocols": [],
+    "comparators": []
+  },
+  "parameters": [
+    {
+      "id": "SO_ZO_S02_rand_native_p_bb728db2b9",
+      "symbol": "d",
+      "meaning": "Dimension of the variable space",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "public": true,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "d"
+    },
+    {
+      "id": "SO_ZO_S02_rand_native_p_7390ffad8e",
+      "symbol": "s",
+      "meaning": "Upper bound on the size of the unknown global support",
+      "kind": "independent",
+      "domain": "$s\\in\\{1,\\ldots,d\\}$",
+      "public": true,
+      "definition": "$|S|\\le s$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "s"
+    },
+    {
+      "id": "SO_ZO_S02_rand_native_p_c9ca935d45",
+      "symbol": "H",
+      "meaning": "Joint budget for coordinatewise gradient and Hessian regularity",
+      "kind": "independent",
+      "domain": "$H>0$",
+      "public": false,
+      "definition": "$\\|\\nabla f(x)\\|_1\\le H$ and $\\sum_{i,j}|\\partial_{ij}f(x)|\\le H$.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "Hcoord"
+    },
+    {
+      "id": "SO_ZO_S02_rand_native_p_b74e0ff66f",
+      "symbol": "B",
+      "meaning": "Known one-norm localization radius for a global minimizer",
+      "kind": "independent",
+      "domain": "$B>0$",
+      "public": false,
+      "definition": "$\\|x_*\\|_1\\le B$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "B1"
+    },
+    {
+      "id": "SO_ZO_S02_rand_native_p_4853c27c52",
+      "symbol": "\\sigma_v",
+      "meaning": "Standard deviation of independent Gaussian value noise",
+      "kind": "independent",
+      "domain": "$\\sigma_v\\ge0$",
+      "public": false,
+      "definition": "$\\xi\\sim N(0,\\sigma_v^2)$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "sigma_v"
+    },
+    {
+      "id": "SO_ZO_S02_rand_native_p_aebd246b97",
+      "symbol": "T",
+      "meaning": "Known query budget or argument of the risk curve",
+      "kind": "resource_budget",
+      "domain": "$T\\in\\mathbb{N}_0$",
+      "public": true,
+      "definition": "Use $N\\le T$ in the fixed-budget specification and $\\mathbb{E}[N]\\le T$ in the expected-budget specification.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "T"
+    },
+    {
+      "id": "SO_ZO_S02_rand_native_p_5c322c6737",
+      "symbol": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": false,
+      "definition": "",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "epsilon"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "Dimension of the variable space",
+      "domain": "$d\\in\\mathbb{N},\\ d\\ge1$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_S02_rand_native_p_bb728db2b9"
+    },
+    {
+      "symbol_latex": "s",
+      "meaning": "Upper bound on the size of the unknown global support",
+      "domain": "$s\\in\\{1,\\ldots,d\\}$",
+      "definition": "$|S|\\le s$",
+      "parameter_ref": "SO_ZO_S02_rand_native_p_7390ffad8e"
+    },
+    {
+      "symbol_latex": "H",
+      "meaning": "Joint budget for coordinatewise gradient and Hessian regularity",
+      "domain": "$H>0$",
+      "definition": "$\\|\\nabla f(x)\\|_1\\le H$ and $\\sum_{i,j}|\\partial_{ij}f(x)|\\le H$.",
+      "parameter_ref": "SO_ZO_S02_rand_native_p_c9ca935d45"
+    },
+    {
+      "symbol_latex": "B",
+      "meaning": "Known one-norm localization radius for a global minimizer",
+      "domain": "$B>0$",
+      "definition": "$\\|x_*\\|_1\\le B$",
+      "parameter_ref": "SO_ZO_S02_rand_native_p_b74e0ff66f"
+    },
+    {
+      "symbol_latex": "\\sigma_v",
+      "meaning": "Standard deviation of independent Gaussian value noise",
+      "domain": "$\\sigma_v\\ge0$",
+      "definition": "$\\xi\\sim N(0,\\sigma_v^2)$",
+      "parameter_ref": "SO_ZO_S02_rand_native_p_4853c27c52"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Known query budget or argument of the risk curve",
+      "domain": "$T\\in\\mathbb{N}_0$",
+      "definition": "Use $N\\le T$ in the fixed-budget specification and $\\mathbb{E}[N]\\le T$ in the expected-budget specification.",
+      "parameter_ref": "SO_ZO_S02_rand_native_p_aebd246b97"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Error target; norm and squared-norm criteria use different thresholds",
+      "domain": "$\\varepsilon>0$",
+      "definition": "",
+      "parameter_ref": "SO_ZO_S02_rand_native_p_5c322c6737"
+    },
+    {
+      "symbol_latex": "x,y,u",
+      "meaning": "Function arguments and dummy variables in the formulas",
+      "domain": "$x,y,u\\in\\mathbb{R}^d$; spherical domains are embedded in $\\mathbb{R}^{d+1}$",
+      "definition": "Admissible ranges are specified separately by the task, model and oracle in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat{x}",
+      "meaning": "Final algorithm output",
+      "domain": "$\\mathbb{R}^d$",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "I",
+      "meaning": "Complete problem instance",
+      "domain": "$I\\in\\mathcal{I}$",
+      "definition": "Includes the unknown objective and its admissible feedback distribution or environment law. Public parameters are fixed before the quantifiers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{I}",
+      "meaning": "Admissible instance class determined by the eight specification fields in this profile",
+      "domain": "Instances satisfying the public parameter bounds",
+      "definition": "",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{A}",
+      "meaning": "Algorithm or strategy",
+      "domain": "Measurable adaptive strategies allowed in this profile",
+      "definition": "The algorithm is selected before the hidden instance.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\ell",
+      "meaning": "Base loss or residual",
+      "domain": "$\\ell:\\mathcal{I}\\times\\mathcal{X}_{\\mathrm{out}}\\to[0,+\\infty]$",
+      "definition": "The exact formula appears in this profile's performance-criterion section.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb{E},\\Pr",
+      "meaning": "Expectation and probability",
+      "domain": "Evaluated over the algorithmic and feedback randomness specified by this profile's guarantee",
+      "definition": "Fix the instance first; aggregate cost and error separately.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\inf,\\sup",
+      "meaning": "Infimum and supremum",
+      "domain": "Evaluated only over the variable sets explicitly specified in the formula",
+      "definition": "In the risk definition, the infimum over algorithms precedes the supremum over instances or centers.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_2,\\langle\\cdot,\\cdot\\rangle",
+      "meaning": "Euclidean norm and inner product",
+      "domain": "$\\|x\\|_2=\\sqrt{\\langle x,x\\rangle}$",
+      "definition": "$\\langle x,y\\rangle=x^\\top y$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "B_p(c,R)",
+      "meaning": "Closed norm ball",
+      "domain": "$p\\in[1,\\infty],\\ R\\ge0$",
+      "definition": "$B_p(c,R)=\\{x:\\|x-c\\|_p\\le R\\}$; $B_2$ denotes the Euclidean ball.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,T",
+      "meaning": "Actual call count and declared budget",
+      "domain": "$N,T\\in\\mathbb{N}_0$",
+      "definition": "A fixed budget bounds every execution path; the Markov specification uses an expected budget.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta,\\widetilde{O}",
+      "meaning": "Asymptotic upper bounds, lower bounds, matching orders, and upper bounds with hidden logarithms",
+      "domain": "Within the joint parameter window specified for each complexity regime",
+      "definition": "Dependence of hidden constants on fixed parameters is stated separately for each bound. Tilde notation may hide logarithmic factors only in the declared variables.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C,c_\\alpha,C_\\alpha",
+      "meaning": "Positive constant in a proof or asymptotic bound",
+      "domain": "$0<c,C,c_\\alpha,C_\\alpha<\\infty$",
+      "definition": "Unsubscripted constants have the dependencies stated in the bound; constants subscripted by $\\alpha$ may depend only on the fixed smoothness order.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_+,e",
+      "meaning": "Natural logarithm, truncated logarithm, and Euler's number",
+      "domain": "$z>0$",
+      "definition": "$\\log_+(z)=\\max\\{0,\\log z\\}$; $e=\\exp(1)$, and $\\log_2$ denotes the base-two logarithm.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "r_T",
+      "meaning": "Error scale of the final recommendation under the budget",
+      "domain": "$T\\in\\mathbb{N}_0$",
+      "definition": "Under an expectation guarantee, the quantity is $\\inf_{\\mathcal{A}:N\\le T}\\sup_I\\mathbb{E}[f(\\widehat{x})-f_*]$. Under a fixed-success-probability guarantee, it is the $2/3$ quantile threshold with the same quantifier order.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,f_*",
+      "meaning": "Population objective and its optimal value",
+      "domain": "$f:\\mathcal{X}_{\\mathrm{fun}}\\to\\mathbb{R}$",
+      "definition": "$f_*=\\inf_{x\\in \\mathbb{R}^d}f(x)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "Y_t,\\xi_t,t",
+      "meaning": "Scalar-observation number, noise, and call index",
+      "domain": "$Y_t,\\xi_t\\in\\mathbb{R},\\ t\\in\\mathbb{N}$",
+      "definition": "Noise independence, distribution class and scale are fixed by this profile's oracle.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{F}_{t-1}",
+      "meaning": "The history before the current query",
+      "domain": "The $\\sigma$-algebra generated by the algorithm's seed and previous feedback",
+      "definition": "The current query may depend on this history.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla f,\\nabla^2f,D^jf",
+      "meaning": "Gradient, Hessian, and higher Fréchet derivatives",
+      "domain": "$\\nabla f\\in\\mathbb{R}^d,\\ \\nabla^2f\\in\\mathbb{R}^{d\\times d}$; $D^jf$ is a $j$-linear form",
+      "definition": "Used only at derivative orders and on regions where the model guarantees its existence.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|\\cdot\\|_{\\mathrm{op}}",
+      "meaning": "Euclidean induced matrix or tensor operator norm",
+      "domain": "Take the supremum over Euclidean unit input vectors of the corresponding order.",
+      "definition": "$\\|T\\|_{\\mathrm{op}}=\\sup_{\\|u_1\\|_2,\\ldots,\\|u_j\\|_2\\le1}|T[u_1,\\ldots,u_j]|$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "S,x_S,f_S",
+      "meaning": "Unknown global support, coordinate subvector, and lower-dimensional objective",
+      "domain": "$S\\subseteq\\{1,\\ldots,d\\},\\ |S|\\le s$",
+      "definition": "$f(x)=f_S(x_S)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|v\\|_0,\\|v\\|_1",
+      "meaning": "Number of nonzero coordinates and the one-norm",
+      "domain": "$v\\in\\mathbb{R}^d$",
+      "definition": "$\\|v\\|_0=|\\{i:v_i\\ne0\\}|$, $\\|v\\|_1=\\sum_i|v_i|$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal{X}_{\\mathrm{fun}},\\mathcal{X}_{\\mathrm{out}},\\mathcal{X}",
+      "meaning": "Function domain, admissible output domain and optimization domain",
+      "domain": "Each is the Euclidean space or subset explicitly specified in this profile",
+      "definition": "$\\mathcal{X}_{\\mathrm{out}}=\\mathbb{R}^d$ and $\\mathcal{X}=\\mathbb{R}^d$; the function domain is the region on which the model imposes regularity.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^*",
+      "meaning": "Optimal worst-case oracle complexity satisfying the complete guarantee",
+      "domain": "$N^*\\in[0,+\\infty]$",
+      "definition": "Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "x_*",
+      "meaning": "A global minimizer or quadratic center whose existence is promised by the model",
+      "domain": "Belongs to the localization domain specified here; used only under the stated existence promise",
+      "definition": "The full-space minimizer is unique in the strongly convex class. The center of a positive semidefinite quadratic model need not be unique.",
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "key": "simple_regret_quantile_at_T",
+      "kind": "fixed_budget_error_quantile",
+      "projection": "declared_budget",
+      "label": "Error quantile at a fixed budget and success probability",
+      "units": "loss",
+      "id": "SO_ZO_S02_rand_native__main__q1",
+      "optimization_direction": "minimize",
+      "tracked_parameters": [],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "source_quantity_code": "simple_regret_quantile_at_T",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "expression_latex": "q^\\star_{v,\\pi}(B,\\delta;\\theta)=\\inf\\{\\varepsilon:\\exists\\mathcal A\\in\\mathfrak A_v,\\ C_\\pi\\le B,\\ \\Pr(\\ell(I,\\mathcal A)\\le\\varepsilon)\\ge1-\\delta\\ \\forall I\\}",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Error quantile at a fixed budget and success probability",
+      "expression": "declared_budget",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_e7d6932b73"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "SO_ZO_S02_rand_native__main__r1",
+      "specification_ref": "SO_ZO_S02_rand_native",
+      "name": "Additional theorem window",
+      "universe_ref": null,
+      "predicate": {
+        "description": "$Cs^3\\log d\\le T\\le d$. The noise is independent and Gaussian, the support is fixed, and all remaining coordinate bounds are as stated in the model."
+      },
+      "predicate_text": "$Cs^3\\log d\\le T\\le d$. The noise is independent and Gaussian, the support is fixed, and all remaining coordinate bounds are as stated in the model.",
+      "kind": "theorem_window"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "SO_ZO_S02_rand_native__main__b1",
+      "direction": "upper",
+      "claim_semantics": "bound",
+      "formula_latex": "r_T\\lesssim B(\\sigma_v^2H^2s\\log d/T)^{1/4}+\\widetilde{O}(T^{-1/3})",
+      "quantity_ref": "SO_ZO_S02_rand_native__main__q1",
+      "quantity_refs": [
+        "SO_ZO_S02_rand_native__main__q1"
+      ],
+      "region_refs": [],
+      "method": "Sparse gradient estimation and convex optimization",
+      "source_refs": [
+        "SO_SRC_9c2f0ee6dde99741"
+      ],
+      "evidence_refs": [
+        "SO_ZO_S02_rand_native__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_ZO_S02_rand_native__main__c1"
+      ],
+      "applicability": {
+        "conditions": [
+          "The global support is fixed. Both the gradient one-norm and the sum of absolute Hessian entries satisfy the model bounds; $Cs^3\\log d\\le T\\le d$. The risk remainder retains polynomial dependence on $s,\\sigma_v,H,B$."
+        ],
+        "oracle_mapping": "Scalar observations follow the independent-noise, conditional-noise, or mixed-error law specified here; every repeated observation is charged separately.",
+        "guarantee_mapping": "The displayed risk is a simple-regret quantile scale at a fixed success probability; it is not labeled as expected risk.",
+        "resource_mapping": "Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.",
+        "output_mapping": "The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions."
+      },
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Additional theorem window",
+      "predicate": {
+        "description": "$Cs^3\\log d\\le T\\le d$. The noise is independent and Gaussian, the support is fixed, and all remaining coordinate bounds are as stated in the model."
+      },
+      "predicate_text": "$Cs^3\\log d\\le T\\le d$. The noise is independent and Gaussian, the support is fixed, and all remaining coordinate bounds are as stated in the model.",
+      "parameter_refs": [
+        "SO_ZO_S02_rand_native_p_bb728db2b9",
+        "SO_ZO_S02_rand_native_p_7390ffad8e",
+        "SO_ZO_S02_rand_native_p_c9ca935d45",
+        "SO_ZO_S02_rand_native_p_b74e0ff66f",
+        "SO_ZO_S02_rand_native_p_4853c27c52",
+        "SO_ZO_S02_rand_native_p_aebd246b97",
+        "SO_ZO_S02_rand_native_p_5c322c6737"
+      ],
+      "source_region_ref": "SO_ZO_S02_rand_native__main__r1",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "SO_ZO_S02_rand_native__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_ZO_S02_rand_native__main__q1",
+      "resource_projection_id": "resource_e7d6932b73",
+      "regime_id": "SO_ZO_S02_rand_native__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "SO_ZO_S02_rand_native__main__b1"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "SO_ZO_S02_rand_native__main__c1",
+        "quantity_ref": "SO_ZO_S02_rand_native__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "B(\\sigma_v^2H^2s\\log d/T)^{1/4}+\\widetilde{O}_{s,\\sigma_v,H,B}(T^{-1/3})",
+            "claim_refs": [
+              "SO_ZO_S02_rand_native__main__b1"
+            ],
+            "included": true
+          },
+          "lower": null
+        },
+        "dispatch": [],
+        "claim_guards": {},
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Error quantile at a fixed budget and success probability",
+        "tracked_parameters": [],
+        "fixed_parameters": []
+      },
+      "comparison_key": {
+        "setting_id": "SO_ZO_S02_rand_native",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_ZO_S02_rand_native__main__q1",
+        "resource_projection_id": "resource_e7d6932b73",
+        "regime_id": "SO_ZO_S02_rand_native__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "SO_ZO_S02_rand_native__main__e1",
+      "source_ref": "SO_SRC_9c2f0ee6dde99741",
+      "locator": {
+        "theorem": "Theorem 1",
+        "pdf_pages": [
+          5
+        ],
+        "printed_pages": []
+      },
+      "supports": [
+        "SO_ZO_S02_rand_native__main__b1"
+      ],
+      "notes": []
+    }
+  ],
+  "references": [
+    {
+      "id": "SO_SRC_9c2f0ee6dde99741",
+      "authors": "Wang, Du, Balakrishnan and Singh",
+      "title": "Stochastic Zeroth-order Optimization in High Dimensions",
+      "version": "AISTATS 2018, PMLR 84",
+      "url": "https://proceedings.mlr.press/v84/wang18e/wang18e.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "SO_ZO_S02_rand_native",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "lower"
+    ],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "missing_lower": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "SO_ZO_S02_rand_native__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "395db31bcc0cc58d54412a8022c38f6eff223a25767a0452a5665e01e3fb18a5",
+    "source_order": 219,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

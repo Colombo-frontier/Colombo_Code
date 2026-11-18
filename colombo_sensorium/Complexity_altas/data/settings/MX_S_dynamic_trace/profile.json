@@ -1,0 +1,1157 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "MX_S_dynamic_trace",
+  "title": "Dynamic trace estimation with access to past matrices and pointwise-in-time correctness",
+  "summary": "For a fixed sequence $A_1,\\ldots,A_T$, output estimates of $\\tau_t=\\operatorname{tr}(A_t)$ sequentially. The interface for $A_{t+1}$ becomes available only after output $\\widehat\\tau_t$.",
+  "primary_domain": "matrix_computation",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "matrix_computation"
+    },
+    {
+      "facet": "goal",
+      "value": "per_time_absolute_trace"
+    },
+    {
+      "facet": "structure",
+      "value": "schatten_variation_budget"
+    },
+    {
+      "facet": "feedback",
+      "value": "past_matrix_matvec"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_causal"
+    },
+    {
+      "facet": "guarantee",
+      "value": "per_time_confidence"
+    },
+    {
+      "facet": "resource",
+      "value": "total_history_matvec"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "matrix_computation"
+      ],
+      "description_zh": "For a fixed sequence $A_1,\\ldots,A_T$, output estimates of $\\tau_t=\\operatorname{tr}(A_t)$ sequentially. The interface for $A_{t+1}$ becomes available only after output $\\widehat\\tau_t$.",
+      "formulation_latex": "\\tau_t=\\operatorname{tr}(A_t),\\quad t=1,\\ldots,T",
+      "code": "task_declared",
+      "description_paragraphs": [
+        "For a fixed sequence $A_1,\\ldots,A_T$, output estimates of $\\tau_t=\\operatorname{tr}(A_t)$ sequentially. The interface for $A_{t+1}$ becomes available only after output $\\widehat\\tau_t$."
+      ]
+    },
+    "model": {
+      "description_zh": "The matrices $A_t\\in\\mathbb R^{d\\times d}$ may be nonsymmetric and indefinite. The entire sequence is fixed before the algorithmic seed is drawn. Assume $1\\le p\\le2$, $\\|A_t\\|_{S_p}\\le1$, $\\|A_{t+1}-A_t\\|_{S_p}\\le\\alpha$, and $0\\le\\alpha<1$.",
+      "assumptions": [
+        {
+          "subject_id": "MX_S_dynamic_trace_obj_64bea120de",
+          "property_code": "explicit_matrix_class",
+          "variable_blocks": [],
+          "norm_ref": "MX_S_dynamic_trace_nor_c0635cecc4",
+          "scope": "Each fixed admissible input and its entire query domain",
+          "description": "The matrices $A_t\\in\\mathbb R^{d\\times d}$ may be nonsymmetric and indefinite. The entire sequence is fixed before the algorithmic seed is drawn. Assume $1\\le p\\le2$, $\\|A_t\\|_{S_p}\\le1$, $\\|A_{t+1}-A_t\\|_{S_p}\\le\\alpha$, and $0\\le\\alpha<1$."
+        }
+      ],
+      "code": "model_declared",
+      "description_paragraphs": [
+        "The matrices $A_t\\in\\mathbb{R}^{d\\times d}$ may be nonsymmetric and indefinite. The entire sequence is fixed before the algorithmic seed is drawn. Assume $1\\le p\\le2$, $\\|A_t\\|_{S_p}\\le1$, $\\|A_{t+1}-A_t\\|_{S_p}\\le\\alpha$, and $0\\le\\alpha<1$."
+      ]
+    },
+    "oracle": {
+      "description_zh": "Inputs $d,T,p,\\alpha,\\varepsilon,\\delta$ are public. At time $t$ choose $j\\le t$ and any $v\\in\\mathbb R^d$ to obtain exact $A_jv$. Future matrices are inaccessible, while past matrices remain accessible. A difference product requires subtraction of two charged native products.",
+      "public_inputs": [
+        "d,T,p,α,ε,δ"
+      ],
+      "hidden_objects": [
+        "MX_S_dynamic_trace_obj_64bea120de"
+      ],
+      "operations": [
+        {
+          "id": "MX_S_dynamic_trace_ora_acb8ed24ad",
+          "operation_code": "past_matrix_matvec",
+          "target_object": "MX_S_dynamic_trace_obj_64bea120de",
+          "query_signature": "(j,v),\\ 1\\le j\\le t,\\ v\\in\\mathbb R^d",
+          "response_signature": "A_jv",
+          "feedback_quality": {
+            "code": "exact"
+          },
+          "cost": {
+            "N": 1
+          },
+          "derivative_order": "not_applicable",
+          "index_control": "The algorithm selects queries; the matrix is fixed throughout the instance, and repeated queries are permitted.",
+          "access_schedule": "At time $t$, query any $j\\le t$; future matrices are unavailable.",
+          "variable_blocks": [
+            "MX_S_dynamic_trace_var_a45ffbf4cb"
+          ],
+          "domain_ref": "MX_S_dynamic_trace_dom_3acedd8aeb",
+          "derivative_reference_object": null,
+          "coupling": "Fixed matrix sequence; every past matrix remains available for reuse",
+          "cost_rule_ref": "MX_S_dynamic_trace_res_6deae3bf68"
+        }
+      ],
+      "protocol_ref": "MX_S_dynamic_trace_pro_990b3a599a",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "Inputs $d,T,p,\\alpha,\\varepsilon,\\delta$ are public. At time $t$ choose $j\\le t$ and any $v\\in\\mathbb{R}^d$ to obtain exact $A_jv$. Future matrices are inaccessible, while past matrices remain accessible. A difference product requires subtraction of two charged native products."
+      ]
+    },
+    "output": {
+      "description_zh": "Return a scalar $\\widehat\\tau_t$ at each time. Earlier outputs cannot be supplied retrospectively after the sequence ends. No additional certificate is required.",
+      "object_type": "online_scalar_sequence",
+      "domain_ref": "MX_S_dynamic_trace_dom_e445acde3a",
+      "feasibility": "Return a scalar $\\widehat\\tau_t$ at each time. Earlier outputs cannot be supplied retrospectively after the sequence ends. No additional certificate is required.",
+      "certificate_requirement": "none beyond true-error guarantee",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "Return a scalar $\\widehat\\tau_t$ at each time. Earlier outputs cannot be supplied retrospectively after the sequence ends. No additional certificate is required."
+      ]
+    },
+    "metric": {
+      "description_zh": "The base loss indexed by $t$ is $|\\widehat\\tau_t-\\operatorname{tr}(A_t)|$, with threshold $\\varepsilon$. This is an absolute error; norm normalization is already part of the model assumptions.",
+      "base_expression": "|\\widehat\\tau_t-\\tau_t|\\le\\varepsilon",
+      "base_expression_latex": "|\\widehat\\tau_t-\\tau_t|\\le\\varepsilon",
+      "reference_object": "MX_S_dynamic_trace_obj_64bea120de",
+      "comparator_ref": "MX_S_dynamic_trace_com_f8c32ee750",
+      "normalization": "The base loss indexed by $t$ is $|\\widehat\\tau_t-\\operatorname{tr}(A_t)|$, with threshold $\\varepsilon$. This is an absolute error; norm normalization is already part of the model assumptions.",
+      "finiteness_conditions": "The matrix is finite-dimensional and satisfies the model's spectral, norm, and function assumptions. Zero denominators and zero optimal error follow the conventions explicitly stated here.",
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "The base loss indexed by $t$ is $|\\widehat\\tau_t-\\operatorname{tr}(A_t)|$, with threshold $\\varepsilon$. This is an absolute error; norm normalization is already part of the model assumptions."
+      ]
+    },
+    "resource": {
+      "description_zh": "Record the calls at every time and for every matrix and sum them to obtain $N$; one $(A_{t+1}-A_t)v$ costs two calls. This comparison uses a fixed total budget. Expected cost is a separate quantity.\n\nReading public inputs and exact internal arithmetic, storage, and postprocessing are uncharged. The query budget is not a running-time or bit-complexity bound.",
+      "components": [
+        {
+          "code": "N",
+          "unit": "single-vector matrix products"
+        }
+      ],
+      "cost_rules": [
+        {
+          "id": "MX_S_dynamic_trace_res_6deae3bf68",
+          "operation_refs": [
+            "MX_S_dynamic_trace_ora_acb8ed24ad"
+          ],
+          "cost": {
+            "N": 1
+          }
+        }
+      ],
+      "budget_semantics": "fixed worst-case joint budget; no expectation substituted",
+      "scalarization": "sum all declared unit matvec calls",
+      "precision_model": "exact real queries/responses",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "Record calls at every time and matrix and sum them to obtain $N$; one $(A_{t+1}-A_t)v$ costs two calls. Compare the displayed algorithms under a fixed total budget. Expected cost is a separate quantity.",
+        "Reading public inputs and performing exact internal arithmetic, storage, and postprocessing are free in this query model. The budget is not a running-time or bit-complexity claim."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "description_zh": "Randomized adaptive online algorithms are allowed. The algorithm must output the current estimate before the next interface becomes available. Storage and exact internal arithmetic are unrestricted, with no Krylov or linear-span condition.",
+        "randomization": "private random seed allowed",
+        "adaptivity": "obeys declared online/block protocol",
+        "restrictions": [],
+        "internal_computation": "Randomized adaptive online algorithms are allowed. The algorithm must output the current estimate before the next interface becomes available. Storage and exact internal arithmetic are unrestricted, with no Krylov or linear-span condition.",
+        "parallelism": "Block calls are charged by column; no separate communication-round budget is imposed.",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "Randomized adaptive online algorithms are allowed. The algorithm must output the current estimate before the next interface becomes available. Storage and exact internal arithmetic are unrestricted, with no Krylov or linear-span condition."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "description_zh": "Choose one algorithm, then require $\\Pr(|\\widehat\\tau_t-\\operatorname{tr}(A_t)|\\le\\varepsilon)\\ge1-\\delta$ for every admissible fixed sequence and each fixed time $t$. Probability is over private randomness; simultaneous correctness at every time is not required.",
+          "complete_expression": "Choose one algorithm, then require $\\Pr(|\\widehat\\tau_t-\\operatorname{tr}(A_t)|\\le\\varepsilon)\\ge1-\\delta$ for every admissible fixed sequence and each fixed time $t$. Probability is over private randomness; simultaneous correctness at every time is not required.",
+          "randomness_sources": [
+            "algorithm_private_seed"
+          ],
+          "time_uniformity": "each fixed time separately",
+          "quantifier_order": "exists algorithm or specified procedure; for every fixed legal input and every allowed feedback rule; then probability over private seed where present",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "Choose one algorithm, then require $\\Pr(|\\widehat\\tau_t-\\operatorname{tr}(A_t)|\\le\\varepsilon)\\ge1-\\delta$ for every admissible fixed sequence and each fixed time $t$. Probability is over private randomness; simultaneous correctness at every time is not required."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "budget_semantics": "fixed worst-case joint budget; no expectation substituted",
+        "precision_model": "exact real queries/responses",
+        "scalarization": "sum all declared unit matvec calls"
+      },
+      "alias_ids": [
+        "MX_S_dynamic_trace"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "MX_S_dynamic_trace_obj_64bea120de",
+        "type": "matrix_sequence",
+        "definition": "The matrices $A_t\\in\\mathbb R^{d\\times d}$ may be nonsymmetric and indefinite. The entire sequence is fixed before the algorithmic seed is drawn. Assume $1\\le p\\le2$, $\\|A_t\\|_{S_p}\\le1$, $\\|A_{t+1}-A_t\\|_{S_p}\\le\\alpha$, and $0\\le\\alpha<1$.",
+        "depends_on": [],
+        "information_ref": "MX_S_dynamic_trace_information"
+      },
+      {
+        "id": "MX_S_dynamic_trace_obj_c669280fdc",
+        "type": "public_input_tuple",
+        "definition": "The tuple $(d,T,p,\\alpha,\\varepsilon,\\delta)$ is public. Access becomes available sequentially at each time.",
+        "depends_on": [],
+        "information_ref": "MX_S_dynamic_trace_information"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "MX_S_dynamic_trace_var_a45ffbf4cb",
+        "dimension": "d+1",
+        "space": "$\\{(j,v):1\\le j\\le t,\\ v\\in\\mathbb R^d\\}$"
+      }
+    ],
+    "domains": [
+      {
+        "id": "MX_S_dynamic_trace_dom_3acedd8aeb",
+        "definition": "$\\{(j,v):1\\le j\\le t,\\ v\\in\\mathbb R^d\\}$",
+        "roles": [
+          "query"
+        ]
+      },
+      {
+        "id": "MX_S_dynamic_trace_dom_e445acde3a",
+        "definition": "Return a scalar $\\widehat\\tau_t$ at each time. Earlier outputs cannot be supplied retrospectively after the sequence ends. No additional certificate is required.",
+        "roles": [
+          "output"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "MX_S_dynamic_trace_nor_c0635cecc4",
+        "definition": "Euclidean vector norm $\\|z\\|_2=(\\sum_i|z_i|^2)^{1/2}$ and matrix operator norm $\\|M\\|_{\\rm op}=\\max_{\\|z\\|_2=1}\\|Mz\\|_2$. Define $\\|M\\|_{S_p}=(\\sum_i\\sigma_i(M)^p)^{1/p}$; settings allowing p=infinity use $\\|M\\|_{S_\\infty}=\\|M\\|_{\\rm op}$."
+      }
+    ],
+    "protocols": [
+      {
+        "id": "MX_S_dynamic_trace_pro_990b3a599a",
+        "definition": "At time $t$, only matrices indexed by $j\\le t$ are accessible. The next matrix opens after the current estimate is returned.",
+        "environment": "oblivious_fixed_sequence",
+        "feedback_timing": "past_and_current_queries_before_current_output"
+      }
+    ],
+    "comparators": [
+      {
+        "id": "MX_S_dynamic_trace_com_f8c32ee750",
+        "definition": "For a fixed sequence $A_1,\\ldots,A_T$, output estimates of $\\tau_t=\\operatorname{tr}(A_t)$ sequentially. The interface for $A_{t+1}$ opens only after output $\\widehat\\tau_t$. Loss $|\\widehat\\tau_t-\\operatorname{tr}(A_t)|$ at index $t$ has threshold $\\varepsilon$. It is absolute error; norm normalization is already part of the model promise."
+      }
+    ],
+    "local_symbols": [
+      {
+        "symbol": "d",
+        "meaning": "The order of the square input matrix and the dimension of each query vector.",
+        "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+        "definition": "A\\in\\mathbb R^{d\\times d}"
+      },
+      {
+        "symbol": "T",
+        "meaning": "Total number of matrix interfaces revealed sequentially",
+        "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+        "definition": "(A_1,\\ldots,A_T)"
+      },
+      {
+        "symbol": "p",
+        "meaning": "Schatten norm exponent shared by the input norm and variation budget.",
+        "domain": "$1\\le p\\le2$",
+        "definition": "\\|M\\|_{S_p}=(\\sum_i\\sigma_i(M)^p)^{1/p}"
+      },
+      {
+        "symbol": "\\alpha",
+        "meaning": "Schatten-norm bound on differences between consecutive matrices",
+        "domain": "$0\\le\\alpha<1$",
+        "definition": "\\|A_{t+1}-A_t\\|_{S_p}\\le\\alpha"
+      },
+      {
+        "symbol": "\\varepsilon",
+        "meaning": "The absolute trace-error tolerance at each time.",
+        "domain": "$\\varepsilon>0$",
+        "definition": "|\\widehat\\tau_t-\\operatorname{tr}(A_t)|\\le\\varepsilon"
+      },
+      {
+        "symbol": "\\delta",
+        "meaning": "Allowed failure probability at each fixed time",
+        "domain": "$0<\\delta<1$",
+        "definition": "\\forall t:\\Pr(|\\widehat\\tau_t-\\operatorname{tr}(A_t)|\\le\\varepsilon)\\ge1-\\delta"
+      },
+      {
+        "symbol": "A_t",
+        "meaning": "The $t$th arriving fixed hidden matrix, which may be nonsymmetric and indefinite",
+        "domain": "$\\mathbb R^{d\\times d},\\ 1\\le t\\le T$",
+        "definition": null
+      },
+      {
+        "symbol": "t,j",
+        "meaning": "Current time and index of the arrived matrix queried in this call.",
+        "domain": "$1\\le j\\le t\\le T$",
+        "definition": null
+      },
+      {
+        "symbol": "\\tau_t,\\widehat\\tau_t",
+        "meaning": "The current true trace and its estimate, which must be output before the next interface opens.",
+        "domain": "$\\mathbb R$",
+        "definition": "\\tau_t=\\operatorname{tr}(A_t)"
+      },
+      {
+        "symbol": "\\sigma_i(M)",
+        "meaning": "Singular values in nonincreasing order",
+        "domain": "$1\\le i\\le\\min\\{\\operatorname{rows}(M),\\operatorname{cols}(M)\\}$",
+        "definition": "\\sigma_1(M)\\ge\\cdots\\ge\\sigma_{\\min\\{\\operatorname{rows}(M),\\operatorname{cols}(M)\\}}(M)\\ge0"
+      },
+      {
+        "symbol": "\\|M\\|_{S_p}",
+        "meaning": "The Schatten norm shared by input and difference matrices.",
+        "domain": "A nonnegative real.",
+        "definition": "\\|M\\|_{S_p}=(\\sum_i\\sigma_i(M)^p)^{1/p}"
+      },
+      {
+        "symbol": "L_\\alpha",
+        "meaning": "The positive logarithmic factor in the dynamic upper bound.",
+        "domain": "$0<\\alpha\\le1/2$",
+        "definition": "L_\\alpha=\\log(2/\\alpha)"
+      },
+      {
+        "symbol": "H_{\\alpha,\\delta}",
+        "meaning": "Confidence logarithm in the dynamic upper bound",
+        "domain": "$0<\\alpha\\le1/2,\\ 0<\\delta<1/2$",
+        "definition": "H_{\\alpha,\\delta}=\\log(2/(\\alpha\\delta))"
+      },
+      {
+        "symbol": "N",
+        "meaning": "Total single-vector query budget across all times and all historical matrices",
+        "domain": "$\\mathbb N_0$",
+        "definition": null
+      },
+      {
+        "symbol": "N^\\star",
+        "meaning": "Minimum worst-case total query budget sufficient for the stated pointwise probability guarantee",
+        "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+        "definition": null
+      },
+      {
+        "symbol": "c,C",
+        "meaning": "Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value.",
+        "domain": "Independent of the dimension, accuracy, and probability parameters tracked by this bound.",
+        "definition": null
+      },
+      {
+        "symbol": "\\log",
+        "meaning": "Natural logarithm",
+        "domain": "Positive real argument",
+        "definition": "\\log x=\\ln x"
+      },
+      {
+        "symbol": "O,\\Omega,\\Theta",
+        "meaning": "Upper, lower, and two-sided bounds up to constants in the same applicable regime",
+        "domain": "Hidden constants have only the parameter dependence explicitly permitted by the associated bound.",
+        "definition": null
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "MX_S_dynamic_trace_p_e256ce7535",
+      "symbol": "T",
+      "meaning": "Total number of matrix interfaces revealed sequentially",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "specification_refs": [
+        "MX_S_dynamic_trace"
+      ],
+      "definition": "$(A_1,\\ldots,A_T)$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_dynamic_trace_p_a9a9401a59",
+      "symbol": "\\alpha",
+      "meaning": "Schatten-norm bound on differences between consecutive matrices",
+      "kind": "independent",
+      "domain": "$0\\le\\alpha<1$",
+      "public": true,
+      "specification_refs": [
+        "MX_S_dynamic_trace"
+      ],
+      "definition": "$\\|A_{t+1}-A_t\\|_{S_p}\\le\\alpha$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_dynamic_trace_p_3e1b1d5d1e",
+      "symbol": "\\delta",
+      "meaning": "Allowed failure probability at each fixed time",
+      "kind": "independent",
+      "domain": "$0<\\delta<1$",
+      "public": true,
+      "specification_refs": [
+        "MX_S_dynamic_trace"
+      ],
+      "definition": "$\\forall t:\\Pr(|\\widehat\\tau_t-\\operatorname{tr}(A_t)|\\le\\varepsilon)\\ge1-\\delta$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_dynamic_trace_p_815f8aa08b",
+      "symbol": "p",
+      "meaning": "Schatten norm exponent shared by the input norm and variation budget.",
+      "kind": "independent",
+      "domain": "$1\\le p\\le2$",
+      "public": true,
+      "specification_refs": [
+        "MX_S_dynamic_trace"
+      ],
+      "definition": "$\\|M\\|_{S_p}=(\\sum_i\\sigma_i(M)^p)^{1/p}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "MX_S_dynamic_trace_p_1d1d52d4bc",
+      "symbol": "d",
+      "meaning": "The order of the square input matrix and the dimension of each query vector.",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "public": true,
+      "definition": "$A\\in\\mathbb R^{d\\times d}$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_d"
+    },
+    {
+      "id": "MX_S_dynamic_trace_p_d86ddc1bf6",
+      "symbol": "\\varepsilon",
+      "meaning": "The absolute trace-error tolerance at each time.",
+      "kind": "independent",
+      "domain": "$\\varepsilon>0$",
+      "public": true,
+      "definition": "$|\\widehat\\tau_t-\\operatorname{tr}(A_t)|\\le\\varepsilon$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "legacy_id": "MX_eps"
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "d",
+      "meaning": "The order of the square input matrix and the dimension of each query vector.",
+      "domain": "$d\\in\\mathbb N,\\ d\\ge1$",
+      "definition": "$A\\in\\mathbb R^{d\\times d}$",
+      "parameter_ref": "MX_S_dynamic_trace_p_1d1d52d4bc"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Total number of matrix interfaces revealed sequentially",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "$(A_1,\\ldots,A_T)$",
+      "parameter_ref": "MX_S_dynamic_trace_p_e256ce7535"
+    },
+    {
+      "symbol_latex": "p",
+      "meaning": "Schatten norm exponent shared by the input norm and variation budget.",
+      "domain": "$1\\le p\\le2$",
+      "definition": "$\\|M\\|_{S_p}=(\\sum_i\\sigma_i(M)^p)^{1/p}$",
+      "parameter_ref": "MX_S_dynamic_trace_p_815f8aa08b"
+    },
+    {
+      "symbol_latex": "\\alpha",
+      "meaning": "Schatten-norm bound on differences between consecutive matrices",
+      "domain": "$0\\le\\alpha<1$",
+      "definition": "$\\|A_{t+1}-A_t\\|_{S_p}\\le\\alpha$",
+      "parameter_ref": "MX_S_dynamic_trace_p_a9a9401a59"
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "The absolute trace-error tolerance at each time.",
+      "domain": "$\\varepsilon>0$",
+      "definition": "$|\\widehat\\tau_t-\\operatorname{tr}(A_t)|\\le\\varepsilon$",
+      "parameter_ref": "MX_S_dynamic_trace_p_d86ddc1bf6"
+    },
+    {
+      "symbol_latex": "\\delta",
+      "meaning": "Allowed failure probability at each fixed time",
+      "domain": "$0<\\delta<1$",
+      "definition": "$\\forall t:\\Pr(|\\widehat\\tau_t-\\operatorname{tr}(A_t)|\\le\\varepsilon)\\ge1-\\delta$",
+      "parameter_ref": "MX_S_dynamic_trace_p_3e1b1d5d1e"
+    },
+    {
+      "symbol_latex": "A_t",
+      "meaning": "The $t$th arriving fixed hidden matrix, which may be nonsymmetric and indefinite",
+      "domain": "$\\mathbb R^{d\\times d},\\ 1\\le t\\le T$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t,j",
+      "meaning": "Current time and index of the arrived matrix queried in this call.",
+      "domain": "$1\\le j\\le t\\le T$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\tau_t,\\widehat\\tau_t",
+      "meaning": "The current true trace and its estimate, which must be output before the next interface opens.",
+      "domain": "$\\mathbb R$",
+      "definition": "$\\tau_t=\\operatorname{tr}(A_t)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\sigma_i(M)",
+      "meaning": "Singular values in nonincreasing order",
+      "domain": "$1\\le i\\le\\min\\{\\operatorname{rows}(M),\\operatorname{cols}(M)\\}$",
+      "definition": "$\\sigma_1(M)\\ge\\cdots\\ge\\sigma_{\\min\\{\\operatorname{rows}(M),\\operatorname{cols}(M)\\}}(M)\\ge0$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\|M\\|_{S_p}",
+      "meaning": "The Schatten norm shared by input and difference matrices.",
+      "domain": "A nonnegative real.",
+      "definition": "$\\|M\\|_{S_p}=(\\sum_i\\sigma_i(M)^p)^{1/p}$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "L_\\alpha",
+      "meaning": "The positive logarithmic factor in the dynamic upper bound.",
+      "domain": "$0<\\alpha\\le1/2$",
+      "definition": "$L_\\alpha=\\log(2/\\alpha)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "H_{\\alpha,\\delta}",
+      "meaning": "Confidence logarithm in the dynamic upper bound",
+      "domain": "$0<\\alpha\\le1/2,\\ 0<\\delta<1/2$",
+      "definition": "$H_{\\alpha,\\delta}=\\log(2/(\\alpha\\delta))$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Total single-vector query budget across all times and all historical matrices",
+      "domain": "$\\mathbb N_0$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N^\\star",
+      "meaning": "Minimum worst-case total query budget sufficient for the stated pointwise probability guarantee",
+      "domain": "$\\mathbb N_0\\cup\\{+\\infty\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value.",
+      "domain": "Independent of the dimension, accuracy, and probability parameters tracked by this bound.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log",
+      "meaning": "Natural logarithm",
+      "domain": "Positive real argument",
+      "definition": "$\\log x=\\ln x$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\Theta",
+      "meaning": "Upper, lower, and two-sided bounds up to constants in the same applicable regime",
+      "domain": "Hidden constants have only the parameter dependence explicitly permitted by the associated bound.",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "MX_S_dynamic_trace__main__q1",
+      "specification_refs": [
+        "MX_S_dynamic_trace"
+      ],
+      "kind": "target_accuracy_cost",
+      "expression": "N^\\star(\\varepsilon,\\delta;d,T,p,\\alpha)",
+      "expression_latex": "N^\\star(\\varepsilon,\\delta;d,T,p,\\alpha)",
+      "optimization_direction": "minimize",
+      "units": "matvec calls",
+      "budget_variables": [
+        "N"
+      ],
+      "tracked_parameters": [
+        "MX_S_dynamic_trace_p_e256ce7535",
+        "MX_S_dynamic_trace_p_a9a9401a59",
+        "MX_S_dynamic_trace_p_3e1b1d5d1e",
+        "MX_S_dynamic_trace_p_815f8aa08b",
+        "MX_S_dynamic_trace_p_1d1d52d4bc",
+        "MX_S_dynamic_trace_p_d86ddc1bf6"
+      ],
+      "analysis_scope": "Take the worst total budget over complete admissible sequences fixed before the seed is generated. The success requirement applies separately at each fixed time.",
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "tolerance_variables": [
+        "MX_S_dynamic_trace_p_a9a9401a59",
+        "MX_S_dynamic_trace_p_3e1b1d5d1e",
+        "MX_S_dynamic_trace_p_d86ddc1bf6"
+      ],
+      "fixed_parameters": [],
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Number of right matrix-vector product queries",
+      "expression": "N_right",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_c2ecc59741"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "MX_S_dynamic_trace__main__r1",
+      "specification_ref": "MX_S_dynamic_trace",
+      "name": "An upper bound for general Schatten variation budgets.",
+      "kind": "theorem_window",
+      "predicate_text": "Assume $1\\le p\\le2$, $0<\\alpha\\le1/2$, $\\varepsilon>0$, and $0<\\delta<1/2$. Every model matrix has Schatten norm at most one. Define $L_\\alpha=\\log(2/\\alpha)$ and $H_{\\alpha,\\delta}=\\log(2/(\\alpha\\delta))$.",
+      "predicate_semantics": "Conjunction of the displayed guards; not a different setting.",
+      "parameter_refs": [
+        "MX_S_dynamic_trace_p_e256ce7535",
+        "MX_S_dynamic_trace_p_815f8aa08b",
+        "MX_S_dynamic_trace_p_a9a9401a59",
+        "MX_S_dynamic_trace_p_3e1b1d5d1e"
+      ],
+      "predicate": {
+        "predicate": {
+          "name": "source_window_BM_BOUND_dynamic_general_upper_REG",
+          "args": [
+            "MX_S_dynamic_trace_p_e256ce7535",
+            "MX_S_dynamic_trace_p_815f8aa08b",
+            "MX_S_dynamic_trace_p_a9a9401a59",
+            "MX_S_dynamic_trace_p_3e1b1d5d1e"
+          ],
+          "description": "Assume $1\\le p\\le2$, $0<\\alpha\\le1/2$, $\\varepsilon>0$, and $0<\\delta<1/2$. Every model matrix has Schatten norm at most one. Define $L_\\alpha=\\log(2/\\alpha)$ and $H_{\\alpha,\\delta}=\\log(2/(\\alpha\\delta))$."
+        }
+      },
+      "endpoint_notes": "Retain the source conditions symbolically. A condition without an executable numerical predicate evaluates to unknown and cannot be ignored."
+    },
+    {
+      "id": "MX_S_dynamic_trace__main__r2",
+      "specification_ref": "MX_S_dynamic_trace",
+      "name": "Refined upper bound in terms of the nuclear-norm variation budget",
+      "kind": "theorem_window",
+      "predicate_text": "Assume $p=1$, $0<\\alpha\\le1/2$, $\\varepsilon>0$, and $0<\\delta<1/2$. Use the same truncated logarithm $L_\\alpha,H_{\\alpha,\\delta}$.",
+      "predicate_semantics": "Conjunction of the displayed guards; not a different setting.",
+      "parameter_refs": [
+        "MX_S_dynamic_trace_p_e256ce7535",
+        "MX_S_dynamic_trace_p_815f8aa08b",
+        "MX_S_dynamic_trace_p_a9a9401a59",
+        "MX_S_dynamic_trace_p_3e1b1d5d1e"
+      ],
+      "predicate": {
+        "predicate": {
+          "name": "source_window_BM_BOUND_dynamic_nuclear_upper_REG",
+          "args": [
+            "MX_S_dynamic_trace_p_e256ce7535",
+            "MX_S_dynamic_trace_p_815f8aa08b",
+            "MX_S_dynamic_trace_p_a9a9401a59",
+            "MX_S_dynamic_trace_p_3e1b1d5d1e"
+          ],
+          "description": "Assume $p=1$, $0<\\alpha\\le1/2$, $\\varepsilon>0$, and $0<\\delta<1/2$. Use the same truncated logarithm $L_\\alpha,H_{\\alpha,\\delta}$."
+        }
+      },
+      "endpoint_notes": "Retain the source conditions symbolically. A condition without an executable numerical predicate evaluates to unknown and cannot be ignored."
+    },
+    {
+      "id": "MX_S_dynamic_trace__main__r3",
+      "specification_ref": "MX_S_dynamic_trace",
+      "name": "Static endpoint with zero variation",
+      "predicate_text": "$\\alpha=0$, $1\\le p\\le2$, $T\\ge1$, $0<\\delta<1/2$, $\\varepsilon>0$.",
+      "predicate": {
+        "predicate": {
+          "name": "dynamic_static_endpoint",
+          "args": [],
+          "description": "$\\alpha=0$, $1\\le p\\le2$, $T\\ge1$, $0<\\delta<1/2$, $\\varepsilon>0$."
+        }
+      },
+      "parameter_refs": [],
+      "kind": "theorem_window",
+      "endpoint_notes": "Universal constants and dimension thresholds without numerical values remain symbolic. Numerical filtering returns unknown when such conditions cannot be resolved."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "MX_S_dynamic_trace__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "N\\le C\\left[(T\\alpha+1)L_\\alpha^{1+p}\\left(\\frac{\\sqrt{H_{\\alpha,\\delta}}}{\\varepsilon}\\right)^p+T H_{\\alpha,\\delta}\\right]",
+      "quantity_ref": "MX_S_dynamic_trace__main__q1",
+      "region_refs": [
+        "MX_S_dynamic_trace__main__r1"
+      ],
+      "method": "Randomized segmented binary-tree trace estimation; all previous matrices remain accessible, with a pointwise-in-time error guarantee",
+      "algorithm_or_hard_family": "Randomized segmented binary-tree trace estimation; all previous matrices remain accessible, with a pointwise-in-time error guarantee",
+      "source_refs": [
+        "MX_SRC_DT"
+      ],
+      "evidence_refs": [
+        "MX_S_dynamic_trace__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_dynamic_trace__main__c1"
+      ],
+      "applicability": {
+        "goal_mapping": "Success holds separately at each fixed time, not necessarily simultaneously for all outputs.",
+        "oracle_mapping": "A tree node is computed only after its right endpoint arrives. Each difference product costs two original-matrix calls.",
+        "time_mapping": "A tree node can be evaluated once its later endpoint has arrived, preserving source information access.",
+        "log_mapping": "In the source window $0<\\alpha\\le1/2$, replacing $\\log(1/\\alpha)$ and $\\log(1/(\\alpha\\delta))$ by larger truncated logarithms only enlarges the upper bound by constants."
+      },
+      "hidden_constants": "Fixed declared regularity and initialization budgets; no unlisted joint-parameter optimality is asserted.",
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "MX_S_dynamic_trace__main__b2",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "N\\le C\\left[\\frac{(T\\alpha+1)L_\\alpha^2\\sqrt{H_{\\alpha,\\delta}}}{\\varepsilon}+T\\min\\left\\{1,\\frac{\\alpha}{\\varepsilon}\\right\\}H_{\\alpha,\\delta}\\right]",
+      "quantity_ref": "MX_S_dynamic_trace__main__q1",
+      "region_refs": [
+        "MX_S_dynamic_trace__main__r2"
+      ],
+      "method": "Randomized binary-tree estimation that skips sufficiently small increments, for nuclear norm p = 1.",
+      "algorithm_or_hard_family": "Randomized binary-tree estimation that skips sufficiently small increments, for nuclear norm p = 1.",
+      "source_refs": [
+        "MX_SRC_DT"
+      ],
+      "evidence_refs": [
+        "MX_S_dynamic_trace__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_dynamic_trace__main__c2"
+      ],
+      "applicability": {
+        "goal_mapping": "Absolute trace error ε with failure probability δ at each time.",
+        "resource_mapping": "Count every primitive matrix product; a difference product costs two calls."
+      },
+      "hidden_constants": "Fixed declared regularity and initialization budgets; no unlisted joint-parameter optimality is asserted.",
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "MX_S_dynamic_trace__main__b3",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "N\\le C\\min\\left\\{d,\\left(\\frac{\\sqrt{\\log(1/\\delta)}}{\\varepsilon}\\right)^p+\\log(1/\\delta)\\right\\}",
+      "quantity_ref": "MX_S_dynamic_trace__main__q1",
+      "region_refs": [
+        "MX_S_dynamic_trace__main__r3"
+      ],
+      "method": "One static Schatten-normalized trace estimate reused over time, or standard-basis reconstruction.",
+      "algorithm_or_hard_family": "One static Schatten-normalized trace estimate reused over time, or standard-basis reconstruction.",
+      "algorithm_class_scope": [
+        "Randomized adaptive online algorithms are allowed. The algorithm must output the current estimate before the next interface becomes available. Storage and exact internal arithmetic are unrestricted, with no Krylov or linear-span condition."
+      ],
+      "source_refs": [
+        "MX_SRC_DT"
+      ],
+      "evidence_refs": [
+        "MX_S_dynamic_trace__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "MX_S_dynamic_trace__main__c3"
+      ],
+      "applicability": {},
+      "hidden_constants": "Positive universal constants, permitted to depend on any explicitly fixed auxiliary parameters.",
+      "hidden_logs": [],
+      "derivation": "When α = 0, every A_t equals A_1 exactly.",
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "An upper bound for general Schatten variation budgets.",
+      "predicate": {
+        "predicate": {
+          "name": "source_window_BM_BOUND_dynamic_general_upper_REG",
+          "args": [
+            "MX_S_dynamic_trace_p_e256ce7535",
+            "MX_S_dynamic_trace_p_815f8aa08b",
+            "MX_S_dynamic_trace_p_a9a9401a59",
+            "MX_S_dynamic_trace_p_3e1b1d5d1e"
+          ],
+          "description": "Assume $1\\le p\\le2$, $0<\\alpha\\le1/2$, $\\varepsilon>0$, and $0<\\delta<1/2$. Every model matrix has Schatten norm at most one. Define $L_\\alpha=\\log(2/\\alpha)$ and $H_{\\alpha,\\delta}=\\log(2/(\\alpha\\delta))$."
+        }
+      },
+      "predicate_text": "Assume $1\\le p\\le2$, $0<\\alpha\\le1/2$, $\\varepsilon>0$, and $0<\\delta<1/2$. Every model matrix has Schatten norm at most one. Define $L_\\alpha=\\log(2/\\alpha)$ and $H_{\\alpha,\\delta}=\\log(2/(\\alpha\\delta))$.",
+      "parameter_refs": [
+        "MX_S_dynamic_trace_p_e256ce7535",
+        "MX_S_dynamic_trace_p_815f8aa08b",
+        "MX_S_dynamic_trace_p_a9a9401a59",
+        "MX_S_dynamic_trace_p_3e1b1d5d1e"
+      ],
+      "source_region_ref": "MX_S_dynamic_trace__main__r1",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "MX_S_dynamic_trace__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_dynamic_trace__main__q1",
+      "resource_projection_id": "resource_c2ecc59741",
+      "regime_id": "MX_S_dynamic_trace__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "MX_S_dynamic_trace__main__b1"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "MX_S_dynamic_trace__main__c1",
+        "quantity_ref": "MX_S_dynamic_trace__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_right",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression": "N\\le C\\left[(T\\alpha+1)L_\\alpha^{1+p}\\left(\\frac{\\sqrt{H_{\\alpha,\\delta}}}{\\varepsilon}\\right)^p+T H_{\\alpha,\\delta}\\right]",
+            "claim_refs": [
+              "MX_S_dynamic_trace__main__b1"
+            ],
+            "included": true,
+            "expression_latex": "N\\le C\\left[(T\\alpha+1)L_\\alpha^{1+p}\\left(\\frac{\\sqrt{H_{\\alpha,\\delta}}}{\\varepsilon}\\right)^p+T H_{\\alpha,\\delta}\\right]"
+          },
+          "lower": null
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "MX_S_dynamic_trace__main__b1": [
+            {
+              "region_ref": "MX_S_dynamic_trace__main__r1",
+              "predicate_text": "Assume $1\\le p\\le2$, $0<\\alpha\\le1/2$, $\\varepsilon>0$, and $0<\\delta<1/2$. Every model matrix has Schatten norm at most one. Define $L_\\alpha=\\log(2/\\alpha)$ and $H_{\\alpha,\\delta}=\\log(2/(\\alpha\\delta))$."
+            }
+          ]
+        },
+        "envelope_certificate": "The upper bound applies on the general variation-budget window. The broader lower-bound claim in Theorem 5.3 cites Lemma 5.1 and Appendix D.1, which establish only a single-segment scaling reduction with $\\alpha=1/(T-1)$. A matching bound over the full window requires a multisegment direct-sum argument and is not certified by this row.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Number of right matrix-vector product queries"
+      },
+      "comparison_key": {
+        "setting_id": "MX_S_dynamic_trace",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_dynamic_trace__main__q1",
+        "resource_projection_id": "resource_c2ecc59741",
+        "regime_id": "MX_S_dynamic_trace__main__r1"
+      }
+    },
+    {
+      "label": "Refined upper bound in terms of the nuclear-norm variation budget",
+      "predicate": {
+        "predicate": {
+          "name": "source_window_BM_BOUND_dynamic_nuclear_upper_REG",
+          "args": [
+            "MX_S_dynamic_trace_p_e256ce7535",
+            "MX_S_dynamic_trace_p_815f8aa08b",
+            "MX_S_dynamic_trace_p_a9a9401a59",
+            "MX_S_dynamic_trace_p_3e1b1d5d1e"
+          ],
+          "description": "Assume $p=1$, $0<\\alpha\\le1/2$, $\\varepsilon>0$, and $0<\\delta<1/2$. Use the same truncated logarithm $L_\\alpha,H_{\\alpha,\\delta}$."
+        }
+      },
+      "predicate_text": "Assume $p=1$, $0<\\alpha\\le1/2$, $\\varepsilon>0$, and $0<\\delta<1/2$. Use the same truncated logarithm $L_\\alpha,H_{\\alpha,\\delta}$.",
+      "parameter_refs": [
+        "MX_S_dynamic_trace_p_e256ce7535",
+        "MX_S_dynamic_trace_p_815f8aa08b",
+        "MX_S_dynamic_trace_p_a9a9401a59",
+        "MX_S_dynamic_trace_p_3e1b1d5d1e"
+      ],
+      "source_region_ref": "MX_S_dynamic_trace__main__r2",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "MX_S_dynamic_trace__main__c2",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_dynamic_trace__main__q1",
+      "resource_projection_id": "resource_c2ecc59741",
+      "regime_id": "MX_S_dynamic_trace__main__r2",
+      "bracket": {
+        "upper_refs": [
+          "MX_S_dynamic_trace__main__b2"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "MX_S_dynamic_trace__main__c2",
+        "quantity_ref": "MX_S_dynamic_trace__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_right",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression": "N\\le C\\left[\\frac{(T\\alpha+1)L_\\alpha^2\\sqrt{H_{\\alpha,\\delta}}}{\\varepsilon}+T\\min\\left\\{1,\\frac{\\alpha}{\\varepsilon}\\right\\}H_{\\alpha,\\delta}\\right]",
+            "claim_refs": [
+              "MX_S_dynamic_trace__main__b2"
+            ],
+            "included": true,
+            "expression_latex": "N\\le C\\left[\\frac{(T\\alpha+1)L_\\alpha^2\\sqrt{H_{\\alpha,\\delta}}}{\\varepsilon}+T\\min\\left\\{1,\\frac{\\alpha}{\\varepsilon}\\right\\}H_{\\alpha,\\delta}\\right]"
+          },
+          "lower": null
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "MX_S_dynamic_trace__main__b2": [
+            {
+              "region_ref": "MX_S_dynamic_trace__main__r2",
+              "predicate_text": "Assume $p=1$, $0<\\alpha\\le1/2$, $\\varepsilon>0$, and $0<\\delta<1/2$. Use the same truncated logarithm $L_\\alpha,H_{\\alpha,\\delta}$."
+            }
+          ]
+        },
+        "envelope_certificate": "Refined p=1 upper bound retaining min{1,alpha/epsilon}. Applicability of the full piecewise high-confidence lower bound still requires independent verification.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Number of right matrix-vector product queries"
+      },
+      "comparison_key": {
+        "setting_id": "MX_S_dynamic_trace",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_dynamic_trace__main__q1",
+        "resource_projection_id": "resource_c2ecc59741",
+        "regime_id": "MX_S_dynamic_trace__main__r2"
+      }
+    },
+    {
+      "label": "Static endpoint with zero variation",
+      "predicate": {
+        "predicate": {
+          "name": "dynamic_static_endpoint",
+          "args": [],
+          "description": "$\\alpha=0$, $1\\le p\\le2$, $T\\ge1$, $0<\\delta<1/2$, $\\varepsilon>0$."
+        }
+      },
+      "predicate_text": "$\\alpha=0$, $1\\le p\\le2$, $T\\ge1$, $0<\\delta<1/2$, $\\varepsilon>0$.",
+      "parameter_refs": [],
+      "source_region_ref": "MX_S_dynamic_trace__main__r3",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "MX_S_dynamic_trace__main__c3",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "MX_S_dynamic_trace__main__q1",
+      "resource_projection_id": "resource_c2ecc59741",
+      "regime_id": "MX_S_dynamic_trace__main__r3",
+      "bracket": {
+        "upper_refs": [
+          "MX_S_dynamic_trace__main__b3"
+        ],
+        "lower_refs": [],
+        "comparison_ref": "MX_S_dynamic_trace__main__c3",
+        "quantity_ref": "MX_S_dynamic_trace__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_right",
+        "ratio_or_gap": "",
+        "envelopes": {
+          "upper": {
+            "expression": "O\\!\\left(\\min\\{d,(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p+\\log(1/\\delta)\\}\\right)",
+            "claim_refs": [
+              "MX_S_dynamic_trace__main__b3"
+            ],
+            "included": true,
+            "expression_latex": "O\\!\\left(\\min\\{d,(\\sqrt{\\log(1/\\delta)}/\\varepsilon)^p+\\log(1/\\delta)\\}\\right)"
+          },
+          "lower": null
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "MX_S_dynamic_trace__main__b3": [
+            {
+              "region_ref": "MX_S_dynamic_trace__main__r3",
+              "predicate_text": "$\\alpha=0$, $1\\le p\\le2$, $T\\ge1$, $0<\\delta<1/2$, $\\varepsilon>0$."
+            }
+          ]
+        },
+        "envelope_certificate": "A valid achievable branch at the static endpoint. A relative-norm lower bound is not transferred without checking a construction with the required fixed norm.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "Number of right matrix-vector product queries"
+      },
+      "comparison_key": {
+        "setting_id": "MX_S_dynamic_trace",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "MX_S_dynamic_trace__main__q1",
+        "resource_projection_id": "resource_c2ecc59741",
+        "regime_id": "MX_S_dynamic_trace__main__r3"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "MX_S_dynamic_trace__main__e1",
+      "source_ref": "MX_SRC_DT",
+      "locator": {
+        "pdf_pages": [
+          3,
+          7,
+          8,
+          9,
+          10,
+          18,
+          19
+        ],
+        "theorem_or_section": "Dynamic model; Theorems 3.1 and B.2",
+        "theorem": "Dynamic model; Theorems 3.1 and B.2",
+        "section": "",
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "The DT dynamic model permits queries to all matrices that have arrived and guarantees absolute trace accuracy at each fixed time. Theorem 3.1 gives an upper bound for $p\\in[1,2]$. At $p=1$, Theorem B.2 improves the second term to $T\\min\\{1,\\alpha/\\varepsilon\\}H_{\\alpha,\\delta}$. A difference product costs two primitive calls.",
+      "notes": [
+        "The DT dynamic model permits queries to all matrices that have arrived and guarantees absolute trace accuracy at each fixed time. Theorem 3.1 gives an upper bound for $p\\in[1,2]$. At $p=1$, Theorem B.2 improves the second term to $T\\min\\{1,\\alpha/\\varepsilon\\}H_{\\alpha,\\delta}$. A difference product costs two primitive calls."
+      ]
+    },
+    {
+      "id": "MX_S_dynamic_trace__main__e2",
+      "source_ref": "MX_SRC_DT",
+      "locator": {
+        "theorem": "Theorem B.1 plus α=0 identity"
+      },
+      "supports": "At $\\alpha=0$, all matrices coincide. One static estimate may be reused at every time, preserving each time's guarantee.",
+      "notes": []
+    }
+  ],
+  "references": [
+    {
+      "id": "MX_SRC_DT",
+      "authors": [
+        "David P. Woodruff",
+        "Fred Zhang",
+        "Qiuyi (Richard) Zhang"
+      ],
+      "title": "Optimal Query Complexities for Dynamic Trace Estimation",
+      "year": 2022,
+      "version": "arXiv:2209.15219v1; 2022-09-30",
+      "url": "https://arxiv.org/pdf/2209.15219v1",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "MX_S_dynamic_trace",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "lower"
+    ],
+    "special_statuses": [],
+    "comparison_count": 3,
+    "status_counts": {
+      "missing_lower": 3
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "MX_S_dynamic_trace__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "MX_S_dynamic_trace__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_3",
+      "comparison_ids": [
+        "MX_S_dynamic_trace__main__c3"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "cd97731b8f1919d815700a782c557eeb2656c4c6c9ca1b478499b6f92f4e3d74",
+    "source_order": 103,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

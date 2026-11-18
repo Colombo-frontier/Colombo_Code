@@ -1,0 +1,764 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "BL_SPEC_finite_average_sc",
+  "title": "Finite-sum bilevel optimization with strong convexity only in the average lower level.",
+  "summary": "Solve the bilevel problem $\\min_x\\Phi(x)$, where $\\Phi(x)=f(x,y^*(x))$ and $y^*(x)=\\operatorname*{argmin}_y g(x,y)$ is the unique global lower-level solution. The upper- and lower-level variables are $x\\in\\mathbb{R}^{d_x}$ and $y\\in\\mathbb{R}^{d_y}$. Seek approximate stationarity of the reduced objective under the stated error criterion and guarantee. Assumptions on $f$, $g$, and $\\Phi$ are specified separately. Here $f=n_f^{-1}\\sum_i f_i$ and $g=n_g^{-1}\\sum_jg_j$.",
+  "primary_domain": "bilevel",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "bilevel"
+    },
+    {
+      "facet": "goal",
+      "value": "reduced_stationarity"
+    },
+    {
+      "facet": "structure",
+      "value": "lower_strong_convexity"
+    },
+    {
+      "facet": "structure",
+      "value": "finite_sum"
+    },
+    {
+      "facet": "structure",
+      "value": "average_sc_only"
+    },
+    {
+      "facet": "feedback",
+      "value": "exact_gradient"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "bilevel"
+      ],
+      "detail": "min Φ; f=n_f^{-1}Σf_i, g=n_g^{-1}Σg_j",
+      "description_paragraphs": [
+        "Solve the bilevel problem $\\min_x\\Phi(x)$, where $\\Phi(x)=f(x,y^*(x))$ and $y^*(x)=\\operatorname*{argmin}_y g(x,y)$ is the unique global lower-level solution. The upper- and lower-level variables are $x\\in\\mathbb{R}^{d_x}$ and $y\\in\\mathbb{R}^{d_y}$. Seek approximate stationarity of the reduced objective under the stated error criterion and guarantee. Assumptions on $f$, $g$, and $\\Phi$ are specified separately. Here $f=n_f^{-1}\\sum_i f_i$ and $g=n_g^{-1}\\sum_jg_j$."
+      ]
+    },
+    "model": {
+      "lower_geometry": "The average g(x,·) is μ_y-strongly convex. Individual g_j may be nonconvex.",
+      "regularity": [
+        "Every $\\nabla f_i$ and $\\nabla g_j$ is jointly $L$-Lipschitz.",
+        "The xy and yy blocks of every g_j are jointly rho-Lipschitz.",
+        "The bound ‖∇_y f‖ ≤ B_f is imposed only on the average f."
+      ],
+      "initialization": "Φ(x0)−infΦ≤Δ, ||y0−y*(x0)||≤R_y",
+      "bounded_below": "Phi is finite and bounded below; its public initial gap is at most Delta.",
+      "description_paragraphs": [
+        "Each component gradient is $L$-Lipschitz in the joint Euclidean space. The $xy,yy$ Hessian block of every $g_j$ is $\\rho$-Lipschitz. Only the average $g(x,\\cdot)$ must be $\\mu_y$-strongly convex; individual $g_j$ may be nonconvex.",
+        "Only the average upper-level function must satisfy $\\|\\nabla_yf\\|\\le B_f$. The function $\\Phi$ is bounded below, and $\\Phi(x_0)-\\inf\\Phi\\le\\Delta$ and $\\|y_0-y^*(x_0)\\|\\le R_y$ hold."
+      ],
+      "outer_geometry": "The reduced objective may be nonconvex. Its differentiability or local Lipschitz regularity is specified by the model and accuracy measure."
+    },
+    "oracle": {
+      "operations": [
+        "The algorithm selects (i,x,y) and receives exact ∇f_i.",
+        "A query $(j,x,y)$ returns the exact gradient $\\nabla g_j$."
+      ],
+      "coupling": "Any component may be revisited; each access is charged.",
+      "query_domain": "The full space, with component indices publicly selectable.",
+      "description_paragraphs": [
+        "Component counts, dimensions, budgets, and initial points are public. The algorithm chooses $(i,x,y)$ to obtain exact $\\nabla f_i(x,y)$, or chooses $(j,x,y)$ to obtain exact $\\nabla g_j(x,y)$. Any component may be queried repeatedly throughout the full space. There is no sample noise or additional hidden-solution interface."
+      ]
+    },
+    "output": {
+      "description_paragraphs": [
+        "Return any measurable $\\widehat{x}\\in\\mathbb{R}^{d_x}$; unqueried outputs are allowed, with no inner point or certificate required."
+      ]
+    },
+    "metric": {
+      "description_paragraphs": [
+        "$\\|\\nabla\\Phi(\\widehat{x})\\|_2^2$."
+      ]
+    },
+    "resource": {
+      "detail": "$Q=N_f+N_g$; a full scan costs $n_f+n_g$ calls.",
+      "description_paragraphs": [
+        "The resource is $N=N_{\\nabla f}+N_{\\nabla g}$, with one unit per full component gradient. A complete scan costs $n_f+n_g$. The budget is fixed on every execution path."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "description_paragraphs": [
+          "Arbitrary randomized adaptive algorithms are allowed, with measurable queries, stopping, and postprocessing. Outputs may be unqueried, randomly selected historical points, or admissible averages. No span or zero-respecting restriction applies. Queries are sequential; each response in a batch is charged. Internal arithmetic, linear algebra, and storage are free, with no separate work, memory, or communication budget."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "description_paragraphs": [
+            "For each instance, require $\\mathbb{E}\\|\\nabla\\Phi(\\widehat{x})\\|_2^2\\le\\varepsilon^2$. Expectation is over algorithmic randomness only."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "BL_SPEC_finite_average_sc"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {},
+  "parameters": [
+    {
+      "id": "BL_SPEC_finite_average_sc_p_0d1c5067b5",
+      "symbol": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_average_sc_p_a136776370",
+      "symbol": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_average_sc_p_dc5f6d3bad",
+      "symbol": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_average_sc_p_a8593b76f4",
+      "symbol": "L",
+      "meaning": "Common joint-variable Lipschitz upper bound for the complete gradients at both levels",
+      "domain": "$L\\ge\\mu_y>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_average_sc_p_7e3c5f5710",
+      "symbol": "B_f",
+      "meaning": "A uniform norm bound on the population upper function’s lower-variable gradient block.",
+      "domain": "$B_f\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\|\\nabla_yf(x,y)\\|\\le B_f$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_average_sc_p_183e94cd86",
+      "symbol": "\\mu_y",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "domain": "$\\mu_y>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_average_sc_p_850094ef78",
+      "symbol": "\\rho",
+      "meaning": "Common joint Lipschitz upper bound for the lower function's cross-Hessian block and lower-variable Hessian block",
+      "domain": "$\\rho\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_average_sc_p_25c351f23c",
+      "symbol": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_average_sc_p_b6cd508fbf",
+      "symbol": "R_y",
+      "meaning": "Public initial lower-level distance bound",
+      "domain": "$R_y\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\|y_0-y^*(x_0)\\|\\le R_y$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_average_sc_p_9e69b29b82",
+      "symbol": "n_f",
+      "meaning": "Number of upper-level finite-sum components",
+      "domain": "Positive integer",
+      "definition": null,
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_average_sc_p_b117c65560",
+      "symbol": "n_g",
+      "meaning": "Number of lower-level finite-sum components",
+      "domain": "Positive integer",
+      "definition": null,
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "x,y",
+      "meaning": "The upper- and lower-level variables.",
+      "domain": "$x\\in\\mathbb R^{d_x},y\\in\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,g",
+      "meaning": "The original upper- and lower-level real-valued functions.",
+      "domain": "$f,g:\\mathbb R^{d_x}\\times\\mathbb R^{d_y}\\to\\mathbb R$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat x,x_0,y_0",
+      "meaning": "Output outer point, public outer initial point, and public lower-level initial point",
+      "domain": "Each lies in its corresponding variable space.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Phi",
+      "meaning": "The reduced objective.",
+      "domain": "Defined in the task specification",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "y^*",
+      "meaning": "Mapping to the unique lower-level global minimizer",
+      "domain": "Constraints specified under TASK",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla,\\|\\cdot\\|",
+      "meaning": "Euclidean gradient and vector norm; matrix and higher-derivative norms are the induced Euclidean operator norms",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E,\\Pr,\\inf,\\sup",
+      "meaning": "Expectation, probability, infimum, and supremum, with aggregation order and randomness specified by the guarantee.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal O,\\Omega,\\Theta,\\widetilde{\\mathcal O}",
+      "meaning": "Asymptotic upper, lower, matching-order, and declared-logarithm upper bounds; fixed parameters are specified in each evidence record",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive absolute constants or functions of fixed budgets, with dependencies specified by the corresponding result",
+      "domain": "$0<c,C<\\infty$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_average_sc_p_0d1c5067b5"
+    },
+    {
+      "symbol_latex": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_average_sc_p_a136776370"
+    },
+    {
+      "symbol_latex": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_average_sc_p_dc5f6d3bad"
+    },
+    {
+      "symbol_latex": "L",
+      "meaning": "Common joint-variable Lipschitz upper bound for the complete gradients at both levels",
+      "domain": "$L\\ge\\mu_y>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_average_sc_p_a8593b76f4"
+    },
+    {
+      "symbol_latex": "B_f",
+      "meaning": "A uniform norm bound on the population upper function’s lower-variable gradient block.",
+      "domain": "$B_f\\ge0$",
+      "definition": "$\\|\\nabla_yf(x,y)\\|\\le B_f$",
+      "parameter_ref": "BL_SPEC_finite_average_sc_p_7e3c5f5710"
+    },
+    {
+      "symbol_latex": "\\mu_y",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "domain": "$\\mu_y>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_average_sc_p_183e94cd86"
+    },
+    {
+      "symbol_latex": "\\rho",
+      "meaning": "Common joint Lipschitz upper bound for the lower function's cross-Hessian block and lower-variable Hessian block",
+      "domain": "$\\rho\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_average_sc_p_850094ef78"
+    },
+    {
+      "symbol_latex": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "parameter_ref": "BL_SPEC_finite_average_sc_p_25c351f23c"
+    },
+    {
+      "symbol_latex": "R_y",
+      "meaning": "Public initial lower-level distance bound",
+      "domain": "$R_y\\ge0$",
+      "definition": "$\\|y_0-y^*(x_0)\\|\\le R_y$",
+      "parameter_ref": "BL_SPEC_finite_average_sc_p_b6cd508fbf"
+    },
+    {
+      "symbol_latex": "n_f",
+      "meaning": "Number of upper-level finite-sum components",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_average_sc_p_9e69b29b82"
+    },
+    {
+      "symbol_latex": "n_g",
+      "meaning": "Number of lower-level finite-sum components",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_average_sc_p_b117c65560"
+    },
+    {
+      "symbol_latex": "g_{xy},g_{yy}",
+      "meaning": "Mixed lower-level Hessian block and lower-variable Hessian block",
+      "domain": "$g_{xy}\\in\\mathbb R^{d_x\\times d_y},g_{yy}\\in\\mathbb R^{d_y\\times d_y}$",
+      "definition": "$g_{xy}=\\mathrm D_y\\nabla_xg,\\quad g_{yy}=\\mathrm D_y\\nabla_yg$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f_i,g_j",
+      "meaning": "Upper- and lower-level component functions in the finite sums",
+      "domain": "$1\\le i\\le n_f,\\ 1\\le j\\le n_g$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "i,j",
+      "meaning": "Upper- and lower-level component indices queried by the algorithm",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,Q",
+      "meaning": "This is the total call budget under the stated resource projection. If only one symbol is used, the two names are aliases for that same budget.",
+      "domain": "RESOURCE specifies which operations are summed; no additional unit cost is introduced.",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "BL_SPEC_finite_average_sc__main__q_declared",
+      "kind": "target_accuracy_cost",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "optimization_direction": "minimize",
+      "units": "oracle_calls",
+      "tracked_parameters": [
+        "BL_SPEC_finite_average_sc_p_0d1c5067b5",
+        "BL_SPEC_finite_average_sc_p_a136776370",
+        "BL_SPEC_finite_average_sc_p_dc5f6d3bad",
+        "BL_SPEC_finite_average_sc_p_a8593b76f4",
+        "BL_SPEC_finite_average_sc_p_7e3c5f5710",
+        "BL_SPEC_finite_average_sc_p_183e94cd86",
+        "BL_SPEC_finite_average_sc_p_850094ef78",
+        "BL_SPEC_finite_average_sc_p_25c351f23c",
+        "BL_SPEC_finite_average_sc_p_b6cd508fbf",
+        "BL_SPEC_finite_average_sc_p_9e69b29b82",
+        "BL_SPEC_finite_average_sc_p_b117c65560"
+      ],
+      "fixed_parameters": [],
+      "label": "Minimum charged resource attaining the stated success guarantee",
+      "analysis_scope": "The full documented parameter domain; no upper or lower bound is admitted for this comparison.",
+      "resource_coordinates": "N_f + N_g",
+      "expression_latex": "C^\\star_{v,\\pi}(\\varepsilon;\\theta)=\\inf\\{B\\ge0:\\exists\\mathcal A\\in\\mathfrak A_v,\\ C_\\pi(\\mathcal A,I)\\le B\\ \\text{and}\\ G_v(\\mathcal A,I;\\varepsilon)\\ \\forall I\\}",
+      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "The primary charged resource specified in the common resource contract.",
+      "expression": "N_f + N_g",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "resource_cc7c360256"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "BL_SPEC_finite_average_sc__main__r1",
+      "name": "The declared parameter domain.",
+      "predicate_text": "All admissible parameters in the eight-part specification; subregions with two-sided evidence have not yet been separated.",
+      "kind": "unassessed_full_domain"
+    },
+    {
+      "id": "BL_SPEC_finite_average_sc__main__r2",
+      "specification_ref": "BL_SPEC_finite_average_sc",
+      "name": "Component-gradient lower bound in the normalized high-accuracy regime",
+      "predicate_text": "$n_f\\ge1024$, $n_g\\ge1$, $L=B_f=\\rho=\\Delta=R_y=1$, $\\kappa=L/\\mu_y\\ge2$ and $0<\\varepsilon\\le\\varepsilon_L$. The hard-instance dimensions can grow.",
+      "predicate": null,
+      "parameter_refs": [
+        "BL_SPEC_finite_average_sc_p_9e69b29b82",
+        "BL_SPEC_finite_average_sc_p_b117c65560",
+        "BL_SPEC_finite_average_sc_p_a8593b76f4",
+        "BL_SPEC_finite_average_sc_p_7e3c5f5710",
+        "BL_SPEC_finite_average_sc_p_183e94cd86",
+        "BL_SPEC_finite_average_sc_p_850094ef78",
+        "BL_SPEC_finite_average_sc_p_25c351f23c",
+        "BL_SPEC_finite_average_sc_p_b6cd508fbf",
+        "BL_SPEC_finite_average_sc_p_0d1c5067b5"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "The universal source threshold remains symbolic. This is a worst-case high-dimensional lower bound."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "BL_SPEC_finite_average_sc__main__b1",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\Omega\\!\\left(n_f+n_g+\\sqrt{n_f}\\,\\kappa^2\\varepsilon^{-2}\\right)",
+      "quantity_ref": "BL_SPEC_finite_average_sc__main__q_declared",
+      "region_refs": [
+        "BL_SPEC_finite_average_sc__main__r2"
+      ],
+      "method": "Subclass transfer of the amplified-chain and component-needle lower bounds",
+      "algorithm_or_hard_family": "Zhou and Niu, Proposition F.1. An affine lower solution amplifies the upper hidden chain. Independent component-needle families give linear costs in the two component counts.",
+      "algorithm_class_scope": "{\"adaptivity\": \"arbitrary measurable functions of past responses\", \"internal_computation\": \"unlimited uncharged internal computation; oracle/sample complexity only\", \"parallelism\": \"sequential adaptive calls; simultaneous batch calls count separately\", \"randomization\": \"arbitrary private randomness\", \"restrictions\": []}",
+      "resource_costs": {
+        "declared_scalar_projection": "\\Omega\\!\\left(n_f+n_g+\\sqrt{n_f}\\,\\kappa^2\\varepsilon^{-2}\\right)"
+      },
+      "parameter_choice": "as cited theorem; any reparameterization is recorded under derivation",
+      "joint_budget_constraints": [],
+      "source_refs": [
+        "BL_SRC_zhou2026"
+      ],
+      "evidence_refs": [
+        "BL_SPEC_finite_average_sc__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "BL_SPEC_finite_average_sc__main__c2"
+      ],
+      "applicability": {
+        "conditions": [
+          "$n_f\\ge1024$, $n_g\\ge1$, $L=B_f=\\rho=\\Delta=R_y=1$, $\\kappa=L/\\mu_y\\ge2$ and $0<\\varepsilon\\le\\varepsilon_L$. The hard-instance dimensions can grow."
+        ],
+        "dimension_conditions": "The source uses sufficiently large finite dimensions that can grow with the query budget.",
+        "oracle_mapping": "Both contracts reveal the exact full gradient of a chosen component at an arbitrary query point, at unit cost. Restricting instances to the source's hard subclasses preserves all algorithm permissions.",
+        "guarantee_mapping": "The source lower bound uses the same per-instance mean-square target $\\mathbb E\\|\\nabla\\Phi(\\widehat{x})\\|_2^2\\le\\varepsilon^2$ and covers the target fixed cap.",
+        "resource_mapping": "Sum of calls to the two selectable component-gradient interfaces. The source fixed worst-case budget applies directly.",
+        "output_mapping": "One arbitrary measurable upper-level point, which need not have been queried."
+      },
+      "hidden_constants": "Only universal constants are suppressed.",
+      "hidden_logs": [],
+      "derivation": "Restrict the target instance class to the three source hard families. Their starting lower-level solutions are zero or plus/minus one and their lower Hessians are constant.",
+      "lower_scope_type": "unrestricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "The declared parameter domain.",
+      "predicate": null,
+      "predicate_text": "All admissible parameters in the eight-part specification; subregions with two-sided evidence have not yet been separated.",
+      "parameter_refs": [],
+      "source_region_ref": "BL_SPEC_finite_average_sc__main__r1",
+      "status": {
+        "code": "missing_both",
+        "label": "Both bounds missing",
+        "missing_sides": [
+          "lower",
+          "upper"
+        ]
+      },
+      "comparison_id": "BL_SPEC_finite_average_sc__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "BL_SPEC_finite_average_sc__main__q_declared",
+      "resource_projection_id": "resource_cc7c360256",
+      "regime_id": "BL_SPEC_finite_average_sc__main__r1",
+      "bracket": {
+        "upper_refs": [],
+        "lower_refs": [],
+        "comparison_ref": null,
+        "quantity_ref": "BL_SPEC_finite_average_sc__main__q_declared",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_f + N_g",
+        "ratio_or_gap": null,
+        "envelopes": {},
+        "dispatch": [],
+        "claim_guards": {},
+        "envelope_certificate": null,
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "The primary charged resource specified in the common resource contract."
+      },
+      "comparison_key": {
+        "setting_id": "BL_SPEC_finite_average_sc",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "BL_SPEC_finite_average_sc__main__q_declared",
+        "resource_projection_id": "resource_cc7c360256",
+        "regime_id": "BL_SPEC_finite_average_sc__main__r1"
+      }
+    },
+    {
+      "label": "Component-gradient lower bound in the normalized high-accuracy regime",
+      "predicate": null,
+      "predicate_text": "$n_f\\ge1024$, $n_g\\ge1$, $L=B_f=\\rho=\\Delta=R_y=1$, $\\kappa=L/\\mu_y\\ge2$ and $0<\\varepsilon\\le\\varepsilon_L$. The hard-instance dimensions can grow.",
+      "parameter_refs": [
+        "BL_SPEC_finite_average_sc_p_9e69b29b82",
+        "BL_SPEC_finite_average_sc_p_b117c65560",
+        "BL_SPEC_finite_average_sc_p_a8593b76f4",
+        "BL_SPEC_finite_average_sc_p_7e3c5f5710",
+        "BL_SPEC_finite_average_sc_p_183e94cd86",
+        "BL_SPEC_finite_average_sc_p_850094ef78",
+        "BL_SPEC_finite_average_sc_p_25c351f23c",
+        "BL_SPEC_finite_average_sc_p_b6cd508fbf",
+        "BL_SPEC_finite_average_sc_p_0d1c5067b5"
+      ],
+      "source_region_ref": "BL_SPEC_finite_average_sc__main__r2",
+      "status": {
+        "code": "missing_upper",
+        "label": "Missing upper bound",
+        "missing_sides": [
+          "upper"
+        ]
+      },
+      "comparison_id": "BL_SPEC_finite_average_sc__main__c2",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "BL_SPEC_finite_average_sc__main__q_declared",
+      "resource_projection_id": "resource_cc7c360256",
+      "regime_id": "BL_SPEC_finite_average_sc__main__r2",
+      "bracket": {
+        "upper_refs": [],
+        "lower_refs": [
+          "BL_SPEC_finite_average_sc__main__b1"
+        ],
+        "comparison_ref": "BL_SPEC_finite_average_sc__main__c2",
+        "quantity_ref": "BL_SPEC_finite_average_sc__main__q_declared",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "N_f + N_g",
+        "ratio_or_gap": null,
+        "envelopes": {
+          "lower": {
+            "expression_latex": "\\Omega\\!\\left(n_f+n_g+\\sqrt{n_f}\\,\\kappa^2\\varepsilon^{-2}\\right)",
+            "claim_refs": [
+              "BL_SPEC_finite_average_sc__main__b1"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [],
+        "claim_guards": {
+          "BL_SPEC_finite_average_sc__main__b1": [
+            {
+              "region_ref": "BL_SPEC_finite_average_sc__main__r2",
+              "predicate_text": "$n_f\\ge1024$, $n_g\\ge1$, $L=B_f=\\rho=\\Delta=R_y=1$, $\\kappa=L/\\mu_y\\ge2$ and $0<\\varepsilon\\le\\varepsilon_L$. The hard-instance dimensions can grow."
+            }
+          ]
+        },
+        "envelope_certificate": "The lower envelope follows from an admissible hard subclass. No general upper envelope has been established in this comparison.",
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": "The primary charged resource specified in the common resource contract."
+      },
+      "comparison_key": {
+        "setting_id": "BL_SPEC_finite_average_sc",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "BL_SPEC_finite_average_sc__main__q_declared",
+        "resource_projection_id": "resource_cc7c360256",
+        "regime_id": "BL_SPEC_finite_average_sc__main__r2"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "BL_SPEC_finite_average_sc__main__e1",
+      "source_ref": "BL_SRC_zhou2026",
+      "locator": {
+        "theorem": "Proposition F.1 and its hard-family constructions",
+        "pdf_pages": [
+          21,
+          22
+        ],
+        "printed_pages": [
+          21,
+          22
+        ]
+      },
+      "supports": [
+        "BL_SPEC_finite_average_sc__main__b1"
+      ],
+      "notes": [
+        "The source lower bound covers randomized adaptive algorithms with arbitrary measurable outputs, using selectable exact full component gradients at both levels and a fixed worst-case budget.",
+        "Each lower component is strongly convex in all three hard families, so the lower population average is strongly convex as required here. The lower Hessians are constant and satisfy the target block regularity.",
+        "Choose the public starting points to be zero. The lower optimum at the starting point is zero in the amplified-chain and upper-needle families, and at distance one in the lower-needle family.",
+        "The componentwise strongly convex upper bound in the source has a stronger assumption than this profile. A matching upper bound for this profile remains unrecorded."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "BL_SRC_zhou2026",
+      "authors": [
+        "Qihao Zhou",
+        "Shanshui Niu"
+      ],
+      "title": "Accelerating Finite-Sum Bilevel Optimization with Fully First-Order Oracles",
+      "year": 2026,
+      "version": "arXiv:2610.24538v1, 2026-10-17",
+      "url": "https://arxiv.org/pdf/2610.24538v1",
+      "publication_status": "preprint"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "BL_SPEC_finite_average_sc",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "lower",
+      "upper"
+    ],
+    "special_statuses": [],
+    "comparison_count": 2,
+    "status_counts": {
+      "missing_both": 1,
+      "missing_upper": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "BL_SPEC_finite_average_sc__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "BL_SPEC_finite_average_sc__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "2ae8935c9761d7018911dcd251540307ec5f9d1e46cc2c4eae0f04a28cc73000",
+    "source_order": 101,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

@@ -1,0 +1,647 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "BL_SPEC_finite_derivative_linear",
+  "title": "Finite-sum bilevel optimization: a lower bound under linear-iteration restrictions.",
+  "summary": "Solve the bilevel problem $\\min_x\\Phi(x)$, where $\\Phi(x)=f(x,y^*(x))$ and $y^*(x)=\\operatorname*{argmin}_y g(x,y)$ is the unique global lower-level solution. The upper- and lower-level variables are $x\\in\\mathbb{R}^{d_x}$ and $y\\in\\mathbb{R}^{d_y}$. Seek approximate stationarity of the reduced objective under the stated error criterion and guarantee. Assumptions on $f$, $g$, and $\\Phi$ are specified separately. Here $f=n_f^{-1}\\sum_if_i$ and $g=n_g^{-1}\\sum_jg_j$.",
+  "primary_domain": "bilevel",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "bilevel"
+    },
+    {
+      "facet": "goal",
+      "value": "reduced_stationarity"
+    },
+    {
+      "facet": "structure",
+      "value": "lower_strong_convexity"
+    },
+    {
+      "facet": "structure",
+      "value": "finite_sum"
+    },
+    {
+      "facet": "feedback",
+      "value": "derivative_vector"
+    },
+    {
+      "facet": "algorithm",
+      "value": "linear_restricted"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "bilevel"
+      ],
+      "detail": "f=(1/n_f) sum_i f_i, g=(1/n_g) sum_j g_j; Phi(x)=f(x,y*(x)); y* is the unique global lower minimizer.",
+      "description_paragraphs": [
+        "Solve the bilevel problem $\\min_x\\Phi(x)$, where $\\Phi(x)=f(x,y^*(x))$ and $y^*(x)=\\operatorname*{argmin}_y g(x,y)$ is the unique global lower-level solution. The upper- and lower-level variables are $x\\in\\mathbb{R}^{d_x}$ and $y\\in\\mathbb{R}^{d_y}$. Seek approximate stationarity of the reduced objective under the stated error criterion and guarantee. Assumptions on $f$, $g$, and $\\Phi$ are specified separately. Here $f=n_f^{-1}\\sum_if_i$ and $g=n_g^{-1}\\sum_jg_j$."
+      ]
+    },
+    "model": {
+      "function_class": "Each f_i has an L_F-Lipschitz gradient. Each g_j is twice continuously differentiable and mu_y-strongly convex in y. There is no additional uniform value-Lipschitz, Hessian-Lipschitz or third-derivative budget in Definition 4.1.",
+      "initialization": "Public x0,y0,v0; Phi(x0)-inf Phi<=Delta. No uniform lower initial-distance or v-distance budget is asserted for this native lower-bound class.",
+      "geometry": "Phi may be nonconvex; all vector norms are Euclidean.",
+      "description_paragraphs": [
+        "Each $f_i$ has $L_F$-Lipschitz joint gradient. Each $g_j$ is twice continuously differentiable and $\\mu_y$-strongly convex in $y$. This lower-bound class imposes no additional uniform Lipschitz budgets on function values, Hessians, or third derivatives.",
+        "The points $x_0,y_0,v_0$ are public and $\\Phi(x_0)-\\inf\\Phi\\le\\Delta$. No additional bound is imposed on the initial inner or adjoint distance."
+      ],
+      "outer_geometry": "The reduced objective may be nonconvex. Its differentiability or local Lipschitz regularity is specified by the model and accuracy measure."
+    },
+    "oracle": {
+      "operations": [
+        "Choose i in [n_f], j in [n_g], (x,y,v); receive the exact tuple (grad f_i(x,y), grad g_j(x,y), g_{j,yy}(x,y)v, g_{j,xy}(x,y)v)."
+      ],
+      "query_domain": "Whole Euclidean space, subject to the linear-algorithm transcript restrictions below.",
+      "coupling": "Components can be revisited; no stochastic sample noise.",
+      "description_paragraphs": [
+        "A query selects $i,j,x,y,v$ and returns the exact joint response $(\\nabla f_i,\\nabla g_j,g_{j,yy}v,g_{j,xy}v)$, with every component evaluated at $(x,y)$. Components may be queried repeatedly."
+      ]
+    },
+    "output": {
+      "description_paragraphs": [
+        "Return an outer point from the restricted iteration sequence. An arbitrary terminal output outside the permitted span cannot enlarge the algorithm class."
+      ]
+    },
+    "metric": {
+      "description_paragraphs": [
+        "$\\|\\nabla\\Phi(\\widehat{x})\\|_2^2$."
+      ]
+    },
+    "resource": {
+      "metric": "Q_tuple, the number of calls to the joint tuple in source Eq.(11).",
+      "budget": "Fixed worst-case call budget.",
+      "mapping": "One tuple can be simulated by four separate declared component operations, but arbitrary separate-operation algorithms need not satisfy Definition 4.2.",
+      "description_paragraphs": [
+        "The quantity $N_{\\mathrm{tuple}}$ counts joint responses, each costing one unit under a fixed worst-case budget. Four primitive calls can simulate one joint response, but this simulation does not remove the algorithm’s linear-iteration restriction."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "description_paragraphs": [
+          "Restrict to the linear bilevel iteration class in Dagréou et al., Definition 4.2. Component indices may be randomized, but the following history-span restrictions must hold:",
+          "$y_{t+1}\\in y_0+\\operatorname{span}\\{\\nabla_yg_{j_s}(x_s,y_s):s\\le t\\}$; $v_{t+1}\\in v_0+\\operatorname{span}\\{g_{j_s,yy}(x_s,y_s)v_s+\\nabla_yf_{i_s}(x_s,y_s):s\\le t\\}$; $x_{t+1}\\in x_0+\\operatorname{span}\\{g_{j_s,xy}(x_s,y_s)v_s+\\nabla_xf_{i_s}(x_s,y_s):s\\le t\\}$."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "description_paragraphs": [
+            "For every instance, $\\mathbb{E}\\|\\nabla\\Phi(\\widehat{x})\\|_2^2\\le\\varepsilon^2$."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "BL_SPEC_finite_derivative_linear"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {},
+  "parameters": [
+    {
+      "id": "BL_SPEC_finite_derivative_linear_p_0d1c5067b5",
+      "symbol": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_derivative_linear_p_a136776370",
+      "symbol": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_derivative_linear_p_dc5f6d3bad",
+      "symbol": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_derivative_linear_p_031e1448f0",
+      "symbol": "L_F",
+      "meaning": "A joint Lipschitz bound on each upper-level component’s full gradient.",
+      "domain": "$L_F>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_derivative_linear_p_183e94cd86",
+      "symbol": "\\mu_y",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "domain": "$\\mu_y>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_derivative_linear_p_25c351f23c",
+      "symbol": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_derivative_linear_p_b5084c91fc",
+      "symbol": "n_f",
+      "meaning": "Number of upper-level finite-sum components",
+      "kind": "independent",
+      "domain": "Positive integer",
+      "public": true,
+      "specification_refs": [
+        "BL_SPEC_finite_derivative_linear"
+      ],
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_finite_derivative_linear_p_417d99b335",
+      "symbol": "n_g",
+      "meaning": "Number of lower-level finite-sum components",
+      "kind": "independent",
+      "domain": "Positive integer",
+      "public": true,
+      "specification_refs": [
+        "BL_SPEC_finite_derivative_linear"
+      ],
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "x,y",
+      "meaning": "The upper- and lower-level variables.",
+      "domain": "$x\\in\\mathbb R^{d_x},y\\in\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,g",
+      "meaning": "The original upper- and lower-level real-valued functions.",
+      "domain": "$f,g:\\mathbb R^{d_x}\\times\\mathbb R^{d_y}\\to\\mathbb R$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat x,x_0,y_0",
+      "meaning": "Output outer point, public outer initial point, and public lower-level initial point",
+      "domain": "Each lies in its corresponding variable space.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Phi",
+      "meaning": "The reduced objective.",
+      "domain": "Defined in the task specification",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "y^*",
+      "meaning": "Mapping to the unique lower-level global minimizer",
+      "domain": "Constraints specified under TASK",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla,\\|\\cdot\\|",
+      "meaning": "Euclidean gradient and vector norm; matrix and higher-derivative norms are the induced Euclidean operator norms",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E,\\Pr,\\inf,\\sup",
+      "meaning": "Expectation, probability, infimum, and supremum, with aggregation order and randomness specified by the guarantee.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal O,\\Omega,\\Theta,\\widetilde{\\mathcal O}",
+      "meaning": "Asymptotic upper, lower, matching-order, and declared-logarithm upper bounds; fixed parameters are specified in each evidence record",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive absolute constants or functions of fixed budgets, with dependencies specified by the corresponding result",
+      "domain": "$0<c,C<\\infty$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_derivative_linear_p_0d1c5067b5"
+    },
+    {
+      "symbol_latex": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_derivative_linear_p_a136776370"
+    },
+    {
+      "symbol_latex": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_derivative_linear_p_dc5f6d3bad"
+    },
+    {
+      "symbol_latex": "L_F",
+      "meaning": "A joint Lipschitz bound on each upper-level component’s full gradient.",
+      "domain": "$L_F>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_derivative_linear_p_031e1448f0"
+    },
+    {
+      "symbol_latex": "\\mu_y",
+      "meaning": "The uniform strong-convexity modulus in the lower-level variable.",
+      "domain": "$\\mu_y>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_derivative_linear_p_183e94cd86"
+    },
+    {
+      "symbol_latex": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "parameter_ref": "BL_SPEC_finite_derivative_linear_p_25c351f23c"
+    },
+    {
+      "symbol_latex": "n_f",
+      "meaning": "Number of upper-level finite-sum components",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_derivative_linear_p_b5084c91fc"
+    },
+    {
+      "symbol_latex": "n_g",
+      "meaning": "Number of lower-level finite-sum components",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_finite_derivative_linear_p_417d99b335"
+    },
+    {
+      "symbol_latex": "g_{xy},g_{yy}",
+      "meaning": "Mixed lower-level Hessian block and lower-variable Hessian block",
+      "domain": "$g_{xy}\\in\\mathbb R^{d_x\\times d_y},g_{yy}\\in\\mathbb R^{d_y\\times d_y}$",
+      "definition": "$g_{xy}=\\mathrm D_y\\nabla_xg,\\quad g_{yy}=\\mathrm D_y\\nabla_yg$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f_i,g_j",
+      "meaning": "Upper- and lower-level component functions in the finite sums",
+      "domain": "$1\\le i\\le n_f,\\ 1\\le j\\le n_g$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "i,j",
+      "meaning": "Upper- and lower-level component indices queried by the algorithm",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "v_0,v_t",
+      "meaning": "Public initial adjoint vector and the algorithm's adjoint iterates.",
+      "domain": "$v_0,v_t\\in\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "g_{j,xy},g_{j,yy}",
+      "meaning": "Cross-Hessian and lower-variable Hessian blocks of lower component $j$.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t,s,\\operatorname{span}",
+      "meaning": "These denote the current iteration, a historical iteration, and a linear span. Enforce the three algorithm-restriction formulas separately.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,Q",
+      "meaning": "This is the total call budget under the stated resource projection. If only one symbol is used, the two names are aliases for that same budget.",
+      "domain": "RESOURCE specifies which operations are summed; no additional unit cost is introduced.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N_{\\rm tuple}",
+      "meaning": "Calls returning the joint tuple of two-level gradients and derivative–vector products.",
+      "domain": "Nonnegative integer",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "BL_SPEC_finite_derivative_linear__main__q1",
+      "kind": "source_scoped_metric_resource_statement",
+      "specification_ref": "BL_SPEC_finite_derivative_linear",
+      "metric_contract": "E||grad Phi(x_hat)||^2 <= epsilon^2.",
+      "resource_contract": {
+        "metric": "Q_tuple, the number of calls to the joint tuple in source Eq.(11).",
+        "budget": "Fixed worst-case call budget.",
+        "mapping": "One tuple can be simulated by four separate declared component operations, but arbitrary separate-operation algorithms need not satisfy Definition 4.2."
+      },
+      "claim_scope": "Finite-sum zero-chain embedded through g(y,x)=||y-x||^2/2",
+      "no_automatic_minimax_interpretation": true,
+      "tracked_parameters": [
+        "BL_SPEC_finite_derivative_linear_p_b5084c91fc",
+        "BL_SPEC_finite_derivative_linear_p_417d99b335"
+      ],
+      "fixed_parameters": [],
+      "bound_claim_refs": [
+        "BL_SPEC_finite_derivative_linear__main__b1"
+      ],
+      "interpretation": "This is the native source metric/resource guarantee. Joint precision, block size, runtime and oracle components stay separate; do not infer a scalar optimal query complexity.",
+      "nonnegativity": true,
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": null,
+      "expression": null,
+      "mode": "unassessed",
+      "resource_projection_id": "resource_cc7c360256"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "BL_SPEC_finite_derivative_linear__main__r1",
+      "specification_ref": "BL_SPEC_finite_derivative_linear",
+      "name": "BM_BOUND_finite_linear_native_lower source window",
+      "kind": "theorem_window",
+      "predicate_text": "$\\varepsilon^2\\le\\Delta L_F/(1000n_f)$. Retain the source smoothness class and the linear-iteration restriction in Definition 4.2. The hard-instance dimension may grow as specified in Theorem 2.",
+      "predicate_semantics": "Conjunction of the displayed guards; not a different setting.",
+      "parameter_refs": [
+        "BL_SPEC_finite_derivative_linear_p_b5084c91fc",
+        "BL_SPEC_finite_derivative_linear_p_417d99b335"
+      ],
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "epsilon^2 <= Delta*L_F/(1000*n_f); native smooth class and Definition 4.2 linear algorithms; dimension may grow as in Theorem 2."
+        }
+      },
+      "endpoint_notes": "Retain the source conditions symbolically. A condition without an executable numerical predicate evaluates to unknown and cannot be ignored."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "BL_SPEC_finite_derivative_linear__main__b1",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\Omega(\\sqrt{n_f}\\,\\varepsilon^{-2})",
+      "quantity_ref": "BL_SPEC_finite_derivative_linear__main__q1",
+      "region_refs": [
+        "BL_SPEC_finite_derivative_linear__main__r1"
+      ],
+      "method": "Finite-sum zero-chain embedded through g(y,x)=||y-x||^2/2",
+      "algorithm_or_hard_family": "Finite-sum zero-chain embedded through g(y,x)=||y-x||^2/2",
+      "source_refs": [
+        "BL_SRC_dagreou2024"
+      ],
+      "evidence_refs": [
+        "BL_SPEC_finite_derivative_linear__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "BL_SPEC_finite_derivative_linear__main__c1"
+      ],
+      "applicability": {
+        "goal_mapping": "Use squared-gradient tolerance $\\varepsilon_{\\rm source}=\\varepsilon^2$.",
+        "algorithm_mapping": "Covers only the linear-span algorithms and permitted iterates of source Definition 4.2.",
+        "resource_mapping": "Charge the joint tuple calls of source equation (11), retaining that restricted model.",
+        "dimension_conditions": "The lower-bound hard-instance dimension may grow with $\\Delta,L_F,n_f,1/\\varepsilon$. Here $L_F$ is the smoothness budget of the upper-level component gradients. The embedded reduced objective inherits that scale; this does not add a reduced-smoothness assumption to the full model class."
+      },
+      "hidden_constants": "Hold the stated regularity and initialization budgets fixed. Joint optimality is not claimed for parameters whose dependence is untracked.",
+      "lower_scope_type": "restricted_randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "BM_BOUND_finite_linear_native_lower source window",
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "epsilon^2 <= Delta*L_F/(1000*n_f); native smooth class and Definition 4.2 linear algorithms; dimension may grow as in Theorem 2."
+        }
+      },
+      "predicate_text": "$\\varepsilon^2\\le\\Delta L_F/(1000n_f)$. Retain the source smoothness class and the linear-iteration restriction in Definition 4.2. The hard-instance dimension may grow as specified in Theorem 2.",
+      "parameter_refs": [
+        "BL_SPEC_finite_derivative_linear_p_b5084c91fc",
+        "BL_SPEC_finite_derivative_linear_p_417d99b335"
+      ],
+      "source_region_ref": "BL_SPEC_finite_derivative_linear__main__r1",
+      "status": {
+        "code": "missing_upper",
+        "label": "Upper bound missing",
+        "missing_sides": [
+          "upper"
+        ]
+      },
+      "comparison_id": "BL_SPEC_finite_derivative_linear__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "BL_SPEC_finite_derivative_linear__main__q1",
+      "resource_projection_id": "resource_cc7c360256",
+      "regime_id": "BL_SPEC_finite_derivative_linear__main__r1",
+      "bracket": {
+        "upper_refs": [],
+        "lower_refs": [
+          "BL_SPEC_finite_derivative_linear__main__b1"
+        ],
+        "comparison_ref": null,
+        "quantity_ref": "BL_SPEC_finite_derivative_linear__main__q1",
+        "comparison_mode": "unassessed",
+        "resource_projection": null,
+        "ratio_or_gap": null,
+        "envelopes": {},
+        "dispatch": [],
+        "claim_guards": {
+          "BL_SPEC_finite_derivative_linear__main__b1": [
+            {
+              "region_ref": "BL_SPEC_finite_derivative_linear__main__r1",
+              "predicate_text": "$\\varepsilon^2\\le\\Delta L_F/(1000n_f)$. Retain the source smoothness class and the linear-iteration restriction in Definition 4.2. The hard-instance dimension may grow as specified in Theorem 2."
+            }
+          ]
+        },
+        "envelope_certificate": null,
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": null
+      },
+      "comparison_key": {
+        "setting_id": "BL_SPEC_finite_derivative_linear",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "BL_SPEC_finite_derivative_linear__main__q1",
+        "resource_projection_id": "resource_cc7c360256",
+        "regime_id": "BL_SPEC_finite_derivative_linear__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "BL_SPEC_finite_derivative_linear__main__e1",
+      "source_ref": "BL_SRC_dagreou2024",
+      "locator": {
+        "pdf_pages": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "theorem_or_section": "Assumptions 2.1–2.2; Eq.(11); Definitions 4.1–4.2; Theorems 1–2",
+        "theorem": "Assumptions 2.1–2.2; Eq.(11); Definitions 4.1–4.2; Theorems 1–2",
+        "section": "",
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Applies to SRBA upper assumes value/gradient/Hessian regularity for each f_i and derivatives through order 3 for each g_j, with each lower component SC., Theorem 2 uses a weaker model and the three-span linear algorithm class. Native lower model is separately recorded., The source upper m is n_f and lower n is n_g. Theorem 2 needs epsilon_atlas^2<=Delta L_F/(1000 n_f), and its dimension is allowed to grow.",
+      "notes": []
+    }
+  ],
+  "references": [
+    {
+      "id": "BL_SRC_dagreou2024",
+      "authors": [
+        "Mathieu Dagréou",
+        "Thomas Moreau",
+        "Samuel Vaiter",
+        "Pierre Ablin"
+      ],
+      "title": "A Lower Bound and a Near-Optimal Algorithm for Bilevel Empirical Risk Minimization",
+      "year": 2024,
+      "version": "AISTATS 2024, PMLR 238",
+      "url": "https://proceedings.mlr.press/v238/dagreou24a/dagreou24a.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "BL_SPEC_finite_derivative_linear",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "upper"
+    ],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "missing_upper": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "BL_SPEC_finite_derivative_linear__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "7e1bd664381a1d3c259204505b0ab7c8f0aa28910377b9a45c3647d822aa2f54",
+    "source_order": 106,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

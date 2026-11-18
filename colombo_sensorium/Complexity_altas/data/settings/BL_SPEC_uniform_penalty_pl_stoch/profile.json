@@ -1,0 +1,1098 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "BL_SPEC_uniform_penalty_pl_stoch",
+  "title": "Bilevel optimization with multiple lower solutions: uniform perturbed PL and stochastic gradients.",
+  "summary": "Consider the optimistic bilevel problem $Y^*(x)=\\operatorname*{argmin}_{y\\in\\mathbb{R}^{d_y}}g(x,y)$, $\\Phi(x)=\\min_{y\\in Y^*(x)}f(x,y)$, and seek stationarity of $\\min_x\\Phi(x)$. Multiple global lower-level solutions are allowed; the defining minima must be attained. Among lower-level minimizers, select one minimizing the upper-level objective.",
+  "primary_domain": "bilevel",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "bilevel"
+    },
+    {
+      "facet": "goal",
+      "value": "reduced_stationarity"
+    },
+    {
+      "facet": "structure",
+      "value": "uniform_perturbed_pl"
+    },
+    {
+      "facet": "feedback",
+      "value": "fresh_gradient"
+    },
+    {
+      "facet": "algorithm",
+      "value": "randomized_allowed"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    },
+    {
+      "facet": "resource",
+      "value": "fixed_calls"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "bilevel"
+      ],
+      "detail": "Y*(x)=argmin_y g(x,y); Phi(x)=min_{y in Y*(x)} f(x,y), with the optimistic minimum attained.",
+      "description_paragraphs": [
+        "Consider the optimistic bilevel problem $Y^*(x)=\\operatorname*{argmin}_{y\\in\\mathbb{R}^{d_y}}g(x,y)$, $\\Phi(x)=\\min_{y\\in Y^*(x)}f(x,y)$, and seek stationarity of $\\min_x\\Phi(x)$. Multiple global lower-level solutions are allowed; the defining minima must be attained. Among lower-level minimizers, select one minimizing the upper-level objective."
+      ]
+    },
+    "model": {
+      "selection": "Optimistic over all global lower minimizers; no arbitrary chosen branch and no pessimistic max.",
+      "uniform_PL": "For every x and every t in [0,t_bar], h_t(x,y)=g(x,y)+t f(x,y) attains a minimum and satisfies ||grad_y h_t||^2 >= 2 mu_PL (h_t-min_y h_t), with the same mu_PL>0.",
+      "regularity": "f,g have jointly Lipschitz gradients and Hessians with declared finite budgets L_f,L_g,rho_f,rho_g; f(x,.) is C_f-Lipschitz. This is population regularity, not per-sample smoothness.",
+      "initialization": "Phi(x0)-inf Phi<=Delta<infinity; dist(y0,Y*(x0))<=R_y<infinity; all those budgets are public.",
+      "derived_property": "Smoothness and differentiability of the optimistic Phi are obtained under the uniform perturbed-PL assumptions; PL of g alone is insufficient.",
+      "description_paragraphs": [
+        "For every $x$ and $t\\in[0,\\bar t]$, the perturbed lower-level objective $h_t(x,y)=g(x,y)+t f(x,y)$ attains its minimum and satisfies $\\|\\nabla_yh_t\\|^2\\ge2\\mu_{\\mathrm{PL}}(h_t-\\min_yh_t)$ with the same constant $\\mu_{\\mathrm{PL}}>0$.",
+        "The joint gradient and Hessian of $f,g$ have finite Lipschitz budgets $L_f,L_g,\\rho_f,\\rho_g$; $f(x,\\cdot)$ is $C_f$-Lipschitz. Also $\\Phi(x_0)-\\inf\\Phi\\le\\Delta$ and $\\operatorname{dist}(y_0,Y^*(x_0))\\le R_y$. These are population assumptions, not samplewise assumptions."
+      ],
+      "outer_geometry": "The reduced objective may be nonconvex. Its differentiability or local Lipschitz regularity is specified by the model and accuracy measure."
+    },
+    "oracle": {
+      "operations": [
+        "Choose h=f or g and point (x,y); receive G_h(x,y) with conditional mean grad h and conditional second centered moment <=sigma_h^2."
+      ],
+      "query_domain": "All (x,y) in R^{d_x+d_y}.",
+      "coupling": "Fresh independent samples at every call; no cross-point reuse. One selected full gradient per call.",
+      "description_paragraphs": [
+        "At any $(x,y)$, choose $h=f$ or $g$ and receive the fresh full-gradient sample $G_h$. Conditional on history $\\mathcal{H}$ and the query, $\\mathbb{E}[G_h\\mid\\mathcal{H}]=\\nabla h$ and $\\mathbb{E}[\\|G_h-\\nabla h\\|^2\\mid\\mathcal{H}]\\le\\sigma_h^2$ hold. Calls use independent fresh samples with no cross-point reuse.",
+        "Dimensions, budget, and initial point are public. No direct inner-solution, branch-selection, hypergradient, or second-order interface is supplied."
+      ]
+    },
+    "output": {
+      "description_paragraphs": [
+        "Return a single outer point $\\widehat{x}\\in\\mathbb{R}^{d_x}$, possibly a randomized historical point or an unqueried point. No certificate is required."
+      ]
+    },
+    "metric": {
+      "description_paragraphs": [
+        "The criterion is $\\|\\nabla\\Phi(\\widehat x)\\|$. Differentiability follows from the uniform perturbed-PL model, not from a PL condition on $g$ alone."
+      ]
+    },
+    "resource": {
+      "vector": [
+        "N_grad_f",
+        "N_grad_g"
+      ],
+      "projection": "Q=N_grad_f+N_grad_g; every sample in each batch is charged.",
+      "budget": "Fixed planned horizon and batch schedule.",
+      "description_paragraphs": [
+        "The budget is $N=N_{\\nabla f}+N_{\\nabla g}$. Each sample costs one unit, under a fixed worst-case budget including all initialization and inner-loop calls."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Main",
+      "algorithms": {
+        "description_paragraphs": [
+          "Arbitrary randomized adaptive algorithms are allowed, with measurable queries, stopping, and postprocessing. Outputs may be unqueried, randomly selected historical points, or admissible averages. No span or zero-respecting restriction applies. Queries are sequential; each response in a batch is charged. Internal arithmetic, linear algebra, and storage are free, with no separate work, memory, or communication budget."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "description_paragraphs": [
+            "For every instance, $\\mathbb E\\|\\nabla\\Phi(\\widehat x)\\|\\le\\varepsilon$, with expectation over observation and algorithm randomness."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {},
+      "alias_ids": [
+        "BL_SPEC_uniform_penalty_pl_stoch"
+      ],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {},
+  "parameters": [
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_0d1c5067b5",
+      "symbol": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_a136776370",
+      "symbol": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_dc5f6d3bad",
+      "symbol": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_256ee43d4f",
+      "symbol": "L_f",
+      "meaning": "Joint-variable Lipschitz upper bound for the complete population upper-level gradient",
+      "domain": "$L_f\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_4e3f70b140",
+      "symbol": "L_g",
+      "meaning": "A joint-variable Lipschitz bound on the population lower-level full gradient.",
+      "domain": "$L_g\\ge\\mu>0$",
+      "kind": "independent",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_eb3546e82c",
+      "symbol": "C_f",
+      "meaning": "A uniform norm bound on the population upper function’s lower-variable gradient block.",
+      "domain": "$C_f\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\|\\nabla_yf(x,y)\\|\\le C_f$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_75be85d0a9",
+      "symbol": "\\rho_f",
+      "meaning": "Joint-variable Lipschitz upper bound for the full upper Hessian.",
+      "domain": "$\\rho_f\\ge0$",
+      "definition": null,
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_18dccae2fb",
+      "symbol": "\\rho_g",
+      "meaning": "Joint-variable Lipschitz upper bound for the full lower Hessian.",
+      "domain": "$\\rho_g\\ge0$",
+      "definition": null,
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_636db27125",
+      "symbol": "\\mu_{\\rm PL}",
+      "meaning": "The common PL constant of all perturbed lower-level objectives.",
+      "domain": "$\\mu_{\\rm PL}>0$",
+      "definition": null,
+      "public": true,
+      "kind": "independent",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_25c351f23c",
+      "symbol": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_51d39720ea",
+      "symbol": "R_y",
+      "meaning": "A public bound on distance from the initial point to the lower solution set.",
+      "domain": "$R_y\\ge0$",
+      "kind": "independent",
+      "public": true,
+      "definition": "$\\operatorname{dist}(y_0,Y^*(x_0))\\le R_y$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_3a363803c9",
+      "symbol": "\\bar t",
+      "meaning": "Upper endpoint of the parameter interval in the uniform perturbed PL condition",
+      "kind": "independent",
+      "domain": "$\\bar t>0$",
+      "public": true,
+      "specification_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch"
+      ],
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_5a4f835e25",
+      "symbol": "\\ell",
+      "meaning": "Common regularity scale used by the uniformly perturbed PL algorithm",
+      "domain": "$\\ell>0$",
+      "definition": "$\\ell=\\max\\{C_f,L_f,L_g,\\rho_g\\}$",
+      "public": true,
+      "kind": "derived",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_208b6e71b4",
+      "symbol": "\\kappa",
+      "meaning": "The ratio of the common regularity scale to the uniform PL constant.",
+      "domain": "$\\kappa>0$",
+      "definition": "$\\kappa=\\ell/\\mu_{\\rm PL}$",
+      "public": true,
+      "kind": "derived",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_6c53cbc443",
+      "symbol": "\\sigma_f",
+      "meaning": "Conditional standard-deviation bound for the full stochastic upper-level gradient",
+      "kind": "independent",
+      "domain": "$\\sigma_f\\ge0$",
+      "public": true,
+      "specification_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch"
+      ],
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch_p_001eeb8609",
+      "symbol": "\\sigma_g",
+      "meaning": "Conditional standard-deviation bound for the full stochastic lower-level gradient",
+      "kind": "independent",
+      "domain": "$\\sigma_g\\ge0$",
+      "public": true,
+      "specification_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch"
+      ],
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "x,y",
+      "meaning": "The upper- and lower-level variables.",
+      "domain": "$x\\in\\mathbb R^{d_x},y\\in\\mathbb R^{d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "f,g",
+      "meaning": "The original upper- and lower-level real-valued functions.",
+      "domain": "$f,g:\\mathbb R^{d_x}\\times\\mathbb R^{d_y}\\to\\mathbb R$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\widehat x,x_0,y_0",
+      "meaning": "Output outer point, public outer initial point, and public lower-level initial point",
+      "domain": "Each lies in its corresponding variable space.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\Phi",
+      "meaning": "The reduced objective.",
+      "domain": "Defined in the task specification",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "Y^*",
+      "meaning": "Set of lower-level global minimizers",
+      "domain": "Constraints specified under TASK",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\nabla,\\|\\cdot\\|",
+      "meaning": "Euclidean gradient and vector norm; matrix and higher-derivative norms are the induced Euclidean operator norms",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E,\\Pr,\\inf,\\sup",
+      "meaning": "Expectation, probability, infimum, and supremum, with aggregation order and randomness specified by the guarantee.",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal O,\\Omega,\\Theta,\\widetilde{\\mathcal O}",
+      "meaning": "Asymptotic upper, lower, matching-order, and declared-logarithm upper bounds; fixed parameters are specified in each evidence record",
+      "domain": "",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive absolute constants or functions of fixed budgets, with dependencies specified by the corresponding result",
+      "domain": "$0<c,C<\\infty$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\varepsilon",
+      "meaning": "Target accuracy. Whether error is squared is determined by the metric and guarantee formulas.",
+      "domain": "$\\varepsilon>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_0d1c5067b5"
+    },
+    {
+      "symbol_latex": "d_x",
+      "meaning": "Upper-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_a136776370"
+    },
+    {
+      "symbol_latex": "d_y",
+      "meaning": "Lower-level dimension",
+      "domain": "Positive integer",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_dc5f6d3bad"
+    },
+    {
+      "symbol_latex": "L_f",
+      "meaning": "Joint-variable Lipschitz upper bound for the complete population upper-level gradient",
+      "domain": "$L_f\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_256ee43d4f"
+    },
+    {
+      "symbol_latex": "L_g",
+      "meaning": "A joint-variable Lipschitz bound on the population lower-level full gradient.",
+      "domain": "$L_g\\ge\\mu>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_4e3f70b140"
+    },
+    {
+      "symbol_latex": "C_f",
+      "meaning": "A uniform norm bound on the population upper function’s lower-variable gradient block.",
+      "domain": "$C_f\\ge0$",
+      "definition": "$\\|\\nabla_yf(x,y)\\|\\le C_f$",
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_eb3546e82c"
+    },
+    {
+      "symbol_latex": "\\rho_f",
+      "meaning": "Joint-variable Lipschitz upper bound for the full upper Hessian.",
+      "domain": "$\\rho_f\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_75be85d0a9"
+    },
+    {
+      "symbol_latex": "\\rho_g",
+      "meaning": "Joint-variable Lipschitz upper bound for the full lower Hessian.",
+      "domain": "$\\rho_g\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_18dccae2fb"
+    },
+    {
+      "symbol_latex": "\\mu_{\\rm PL}",
+      "meaning": "The common PL constant of all perturbed lower-level objectives.",
+      "domain": "$\\mu_{\\rm PL}>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_636db27125"
+    },
+    {
+      "symbol_latex": "\\Delta",
+      "meaning": "Public upper bound on the initial reduced-objective gap",
+      "domain": "$\\Delta\\ge0$",
+      "definition": "$\\Phi(x_0)-\\inf_x\\Phi(x)\\le\\Delta$",
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_25c351f23c"
+    },
+    {
+      "symbol_latex": "R_y",
+      "meaning": "A public bound on distance from the initial point to the lower solution set.",
+      "domain": "$R_y\\ge0$",
+      "definition": "$\\operatorname{dist}(y_0,Y^*(x_0))\\le R_y$",
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_51d39720ea"
+    },
+    {
+      "symbol_latex": "\\bar t",
+      "meaning": "Upper endpoint of the parameter interval in the uniform perturbed PL condition",
+      "domain": "$\\bar t>0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_3a363803c9"
+    },
+    {
+      "symbol_latex": "\\ell",
+      "meaning": "Common regularity scale used by the uniformly perturbed PL algorithm",
+      "domain": "$\\ell>0$",
+      "definition": "$\\ell=\\max\\{C_f,L_f,L_g,\\rho_g\\}$",
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_5a4f835e25"
+    },
+    {
+      "symbol_latex": "\\kappa",
+      "meaning": "The ratio of the common regularity scale to the uniform PL constant.",
+      "domain": "$\\kappa>0$",
+      "definition": "$\\kappa=\\ell/\\mu_{\\rm PL}$",
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_208b6e71b4"
+    },
+    {
+      "symbol_latex": "\\sigma_f",
+      "meaning": "Conditional standard-deviation bound for the full stochastic upper-level gradient",
+      "domain": "$\\sigma_f\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_6c53cbc443"
+    },
+    {
+      "symbol_latex": "\\sigma_g",
+      "meaning": "Conditional standard-deviation bound for the full stochastic lower-level gradient",
+      "domain": "$\\sigma_g\\ge0$",
+      "definition": null,
+      "parameter_ref": "BL_SPEC_uniform_penalty_pl_stoch_p_001eeb8609"
+    },
+    {
+      "symbol_latex": "G_f,G_g,\\mathcal H",
+      "meaning": "Upper- and lower-level stochastic full-gradient responses and the pre-draw history.",
+      "domain": "$G_f,G_g\\in\\mathbb R^{d_x+d_y}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "G_{f,x},G_{f,y},G_{g,x},G_{g,y}",
+      "meaning": "Outer and lower blocks of the corresponding full stochastic gradient",
+      "domain": "Outer-block dimension d_x and lower-block dimension d_y.",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "h_t,t",
+      "meaning": "The perturbed lower-level objective and perturbation parameter.",
+      "domain": "$0\\le t\\le\\bar t$",
+      "definition": "$h_t(x,y)=g(x,y)+tf(x,y)$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\operatorname{dist}",
+      "meaning": "Euclidean point-to-set distance",
+      "domain": "",
+      "definition": "$\\operatorname{dist}(u,S)=\\inf_{s\\in S}\\|u-s\\|$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N,Q",
+      "meaning": "This is the total call budget under the stated resource projection. If only one symbol is used, the two names are aliases for that same budget.",
+      "domain": "RESOURCE specifies which operations are summed; no additional unit cost is introduced.",
+      "definition": null,
+      "parameter_ref": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch__main__q1",
+      "kind": "source_scoped_metric_resource_statement",
+      "specification_ref": "BL_SPEC_uniform_penalty_pl_stoch",
+      "metric_contract": "E||grad Phi(x_hat)|| <= epsilon; a uniform random outer iterate implements the source average guarantee.",
+      "resource_contract": {
+        "vector": [
+          "N_grad_f",
+          "N_grad_g"
+        ],
+        "projection": "Q=N_grad_f+N_grad_g; every sample in each batch is charged.",
+        "budget": "Fixed planned horizon and batch schedule."
+      },
+      "claim_scope": "F2BSA",
+      "no_automatic_minimax_interpretation": true,
+      "tracked_parameters": [
+        "BL_SPEC_uniform_penalty_pl_stoch_p_6c53cbc443",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_001eeb8609",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_3a363803c9"
+      ],
+      "fixed_parameters": [],
+      "bound_claim_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__b3"
+      ],
+      "interpretation": "This is the native source metric/resource guarantee. Joint precision, block size, runtime and oracle components stay separate; do not infer a scalar optimal query complexity.",
+      "nonnegativity": true,
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch__main__q2",
+      "kind": "source_scoped_metric_resource_statement",
+      "specification_ref": "BL_SPEC_uniform_penalty_pl_stoch",
+      "metric_contract": "E||grad Phi(x_hat)|| <= epsilon; a uniform random outer iterate implements the source average guarantee.",
+      "resource_contract": {
+        "vector": [
+          "N_grad_f",
+          "N_grad_g"
+        ],
+        "projection": "Q=N_grad_f+N_grad_g; every sample in each batch is charged.",
+        "budget": "Fixed planned horizon and batch schedule."
+      },
+      "claim_scope": "F2BSA",
+      "no_automatic_minimax_interpretation": true,
+      "tracked_parameters": [
+        "BL_SPEC_uniform_penalty_pl_stoch_p_6c53cbc443",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_001eeb8609",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_3a363803c9"
+      ],
+      "fixed_parameters": [],
+      "bound_claim_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__b1"
+      ],
+      "interpretation": "This is the native source metric/resource guarantee. Joint precision, block size, runtime and oracle components stay separate; do not infer a scalar optimal query complexity.",
+      "nonnegativity": true,
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch__main__q3",
+      "kind": "source_scoped_metric_resource_statement",
+      "specification_ref": "BL_SPEC_uniform_penalty_pl_stoch",
+      "metric_contract": "E||grad Phi(x_hat)|| <= epsilon; a uniform random outer iterate implements the source average guarantee.",
+      "resource_contract": {
+        "vector": [
+          "N_grad_f",
+          "N_grad_g"
+        ],
+        "projection": "Q=N_grad_f+N_grad_g; every sample in each batch is charged.",
+        "budget": "Fixed planned horizon and batch schedule."
+      },
+      "claim_scope": "F2BSA",
+      "no_automatic_minimax_interpretation": true,
+      "tracked_parameters": [
+        "BL_SPEC_uniform_penalty_pl_stoch_p_6c53cbc443",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_001eeb8609",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_3a363803c9"
+      ],
+      "fixed_parameters": [],
+      "bound_claim_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__b2"
+      ],
+      "interpretation": "This is the native source metric/resource guarantee. Joint precision, block size, runtime and oracle components stay separate; do not infer a scalar optimal query complexity.",
+      "nonnegativity": true,
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": null,
+      "expression": null,
+      "mode": "unassessed",
+      "resource_projection_id": "resource_cc7c360256"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch__main__r1",
+      "specification_ref": "BL_SPEC_uniform_penalty_pl_stoch",
+      "name": "BM_BOUND_pl_stoch_det source window",
+      "kind": "theorem_window",
+      "predicate_text": "Assume $\\sigma_f=\\sigma_g=0$ and take $\\varepsilon$ sufficiently small that the source perturbation satisfies $t_{\\rm pen}\\le\\bar t$. Regularity, variance, initial gap, and distance budgets are fixed. The quantity $\\ell$ is the maximum normalized source regularity budget, with $\\kappa=\\ell/\\mu_{\\rm PL}$. The displayed logarithm requires $\\rho_f>0$ and $\\rho_f\\ell\\kappa/\\varepsilon\\ge e$; a positive public upper bound may be declared even when the actual variation is zero.",
+      "predicate_semantics": "Conjunction of the displayed guards; not a different setting.",
+      "parameter_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch_p_6c53cbc443",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_001eeb8609",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_3a363803c9"
+      ],
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "sigma_f=sigma_g=0; epsilon small enough for source perturbation t_pen<=t_bar and Theorem 4.2 schedule; fixed variance, gap and initial-distance budgets. ell,kappa are the source normalized maximum regularity and ell/mu_PL. The displayed logarithm is used only with positive rho_f and rho_f*ell*kappa/epsilon>=e; positive public upper budgets may be supplied even for zero actual variation."
+        }
+      },
+      "endpoint_notes": "Retain the source conditions symbolically. A condition without an executable numerical predicate evaluates to unknown and cannot be ignored."
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch__main__r2",
+      "specification_ref": "BL_SPEC_uniform_penalty_pl_stoch",
+      "name": "BM_BOUND_pl_stoch_upper_noise source window",
+      "kind": "theorem_window",
+      "predicate_text": "Assume $\\sigma_f>0,\\sigma_g=0$ and take $\\varepsilon$ sufficiently small that the source perturbation satisfies $t_{\\rm pen}\\le\\bar t$. Regularity, variance, initial gap, and distance budgets are fixed. The quantity $\\ell$ is the maximum normalized source regularity budget, with $\\kappa=\\ell/\\mu_{\\rm PL}$. The displayed logarithm requires $\\rho_f>0$ and $\\rho_f\\ell\\kappa/\\varepsilon\\ge e$; a positive public upper bound may be declared even when the actual variation is zero.",
+      "predicate_semantics": "Conjunction of the displayed guards; not a different setting.",
+      "parameter_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch_p_6c53cbc443",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_001eeb8609",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_3a363803c9"
+      ],
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "sigma_f>0,sigma_g=0; epsilon small enough for source perturbation t_pen<=t_bar and Theorem 4.2 schedule; fixed variance, gap and initial-distance budgets. ell,kappa are the source normalized maximum regularity and ell/mu_PL. The displayed logarithm is used only with positive rho_f and rho_f*ell*kappa/epsilon>=e; positive public upper budgets may be supplied even for zero actual variation."
+        }
+      },
+      "endpoint_notes": "Retain the source conditions symbolically. A condition without an executable numerical predicate evaluates to unknown and cannot be ignored."
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch__main__r3",
+      "specification_ref": "BL_SPEC_uniform_penalty_pl_stoch",
+      "name": "BM_BOUND_pl_stoch_both_noise source window",
+      "kind": "theorem_window",
+      "predicate_text": "Assume $\\sigma_f>0,\\sigma_g>0$ and take $\\varepsilon$ sufficiently small that the source perturbation satisfies $t_{\\rm pen}\\le\\bar t$. Regularity, variance, initial gap, and distance budgets are fixed. The quantity $\\ell$ is the maximum normalized source regularity budget, with $\\kappa=\\ell/\\mu_{\\rm PL}$. The displayed logarithm requires $\\rho_f>0$ and $\\rho_f\\ell\\kappa/\\varepsilon\\ge e$; a positive public upper bound may be declared even when the actual variation is zero.",
+      "predicate_semantics": "Conjunction of the displayed guards; not a different setting.",
+      "parameter_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch_p_6c53cbc443",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_001eeb8609",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_3a363803c9"
+      ],
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "sigma_f>0,sigma_g>0; epsilon small enough for source perturbation t_pen<=t_bar and Theorem 4.2 schedule; fixed variance, gap and initial-distance budgets. ell,kappa are the source normalized maximum regularity and ell/mu_PL. The displayed logarithm is used only with positive rho_f and rho_f*ell*kappa/epsilon>=e; positive public upper budgets may be supplied even for zero actual variation."
+        }
+      },
+      "endpoint_notes": "Retain the source conditions symbolically. A condition without an executable numerical predicate evaluates to unknown and cannot be ignored."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{O}\\!\\left(\\ell\\kappa^4\\varepsilon^{-2}\\log\\frac{\\rho_f\\ell\\kappa}{\\varepsilon}\\right)",
+      "quantity_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__q2",
+      "region_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__r1"
+      ],
+      "method": "F2BSA",
+      "algorithm_or_hard_family": "F2BSA",
+      "source_refs": [
+        "BL_SRC_chen2024"
+      ],
+      "evidence_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__c1"
+      ],
+      "applicability": {
+        "goal_mapping": "The source controls expected first-order stationarity error. A randomized outer output is allowed.",
+        "oracle_mapping": "Selected upper- and lower-level stochastic gradients use fresh samples; same-sample finite differences are unavailable.",
+        "resource_mapping": "Every gradient response in every batch is charged.",
+        "parameter_warning": "The displayed expression fixes the noise budgets. It is not uniformly valid as $\\sigma_f$ or $\\sigma_g$ tends to zero."
+      },
+      "hidden_constants": "Hold the stated regularity and initialization budgets fixed. Joint optimality is not claimed for parameters whose dependence is untracked.",
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch__main__b2",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{O}\\!\\left(\\ell\\kappa^5\\varepsilon^{-4}\\log\\frac{\\rho_f\\ell\\kappa}{\\varepsilon}\\right)",
+      "quantity_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__q3",
+      "region_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__r2"
+      ],
+      "method": "F2BSA",
+      "algorithm_or_hard_family": "F2BSA",
+      "source_refs": [
+        "BL_SRC_chen2024"
+      ],
+      "evidence_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__c2"
+      ],
+      "applicability": {
+        "goal_mapping": "The source controls expected first-order stationarity error. A randomized outer output is allowed.",
+        "oracle_mapping": "Selected upper- and lower-level stochastic gradients use fresh samples; same-sample finite differences are unavailable.",
+        "resource_mapping": "Every gradient response in every batch is charged.",
+        "parameter_warning": "The displayed expression fixes the noise budgets. It is not uniformly valid as $\\sigma_f$ or $\\sigma_g$ tends to zero."
+      },
+      "hidden_constants": "Hold the stated regularity and initialization budgets fixed. Joint optimality is not claimed for parameters whose dependence is untracked.",
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch__main__b3",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "\\mathcal{O}\\!\\left(\\ell^3\\kappa^{11}\\varepsilon^{-6}\\log\\frac{\\rho_f\\ell\\kappa}{\\varepsilon}\\right)",
+      "quantity_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__q1",
+      "region_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__r3"
+      ],
+      "method": "F2BSA",
+      "algorithm_or_hard_family": "F2BSA",
+      "source_refs": [
+        "BL_SRC_chen2024"
+      ],
+      "evidence_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__c3"
+      ],
+      "applicability": {
+        "goal_mapping": "The source controls expected first-order stationarity error. A randomized outer output is allowed.",
+        "oracle_mapping": "Selected upper- and lower-level stochastic gradients use fresh samples; same-sample finite differences are unavailable.",
+        "resource_mapping": "Every gradient response in every batch is charged.",
+        "parameter_warning": "The displayed expression fixes the noise budgets. It is not uniformly valid as $\\sigma_f$ or $\\sigma_g$ tends to zero."
+      },
+      "hidden_constants": "Hold the stated regularity and initialization budgets fixed. Joint optimality is not claimed for parameters whose dependence is untracked.",
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "BM_BOUND_pl_stoch_det source window",
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "sigma_f=sigma_g=0; epsilon small enough for source perturbation t_pen<=t_bar and Theorem 4.2 schedule; fixed variance, gap and initial-distance budgets. ell,kappa are the source normalized maximum regularity and ell/mu_PL. The displayed logarithm is used only with positive rho_f and rho_f*ell*kappa/epsilon>=e; positive public upper budgets may be supplied even for zero actual variation."
+        }
+      },
+      "predicate_text": "Assume $\\sigma_f=\\sigma_g=0$ and take $\\varepsilon$ sufficiently small that the source perturbation satisfies $t_{\\rm pen}\\le\\bar t$. Regularity, variance, initial gap, and distance budgets are fixed. The quantity $\\ell$ is the maximum normalized source regularity budget, with $\\kappa=\\ell/\\mu_{\\rm PL}$. The displayed logarithm requires $\\rho_f>0$ and $\\rho_f\\ell\\kappa/\\varepsilon\\ge e$; a positive public upper bound may be declared even when the actual variation is zero.",
+      "parameter_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch_p_6c53cbc443",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_001eeb8609",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_3a363803c9"
+      ],
+      "source_region_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__r1",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "BL_SPEC_uniform_penalty_pl_stoch__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "BL_SPEC_uniform_penalty_pl_stoch__main__q2",
+      "resource_projection_id": "resource_cc7c360256",
+      "regime_id": "BL_SPEC_uniform_penalty_pl_stoch__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "BL_SPEC_uniform_penalty_pl_stoch__main__b1"
+        ],
+        "lower_refs": [],
+        "comparison_ref": null,
+        "quantity_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__q2",
+        "comparison_mode": "unassessed",
+        "resource_projection": null,
+        "ratio_or_gap": null,
+        "envelopes": {},
+        "dispatch": [],
+        "claim_guards": {
+          "BL_SPEC_uniform_penalty_pl_stoch__main__b1": [
+            {
+              "region_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__r1",
+              "predicate_text": "Assume $\\sigma_f=\\sigma_g=0$ and take $\\varepsilon$ sufficiently small that the source perturbation satisfies $t_{\\rm pen}\\le\\bar t$. Regularity, variance, initial gap, and distance budgets are fixed. The quantity $\\ell$ is the maximum normalized source regularity budget, with $\\kappa=\\ell/\\mu_{\\rm PL}$. The displayed logarithm requires $\\rho_f>0$ and $\\rho_f\\ell\\kappa/\\varepsilon\\ge e$; a positive public upper bound may be declared even when the actual variation is zero."
+            }
+          ]
+        },
+        "envelope_certificate": null,
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": null
+      },
+      "comparison_key": {
+        "setting_id": "BL_SPEC_uniform_penalty_pl_stoch",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "BL_SPEC_uniform_penalty_pl_stoch__main__q2",
+        "resource_projection_id": "resource_cc7c360256",
+        "regime_id": "BL_SPEC_uniform_penalty_pl_stoch__main__r1"
+      }
+    },
+    {
+      "label": "BM_BOUND_pl_stoch_upper_noise source window",
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "sigma_f>0,sigma_g=0; epsilon small enough for source perturbation t_pen<=t_bar and Theorem 4.2 schedule; fixed variance, gap and initial-distance budgets. ell,kappa are the source normalized maximum regularity and ell/mu_PL. The displayed logarithm is used only with positive rho_f and rho_f*ell*kappa/epsilon>=e; positive public upper budgets may be supplied even for zero actual variation."
+        }
+      },
+      "predicate_text": "Assume $\\sigma_f>0,\\sigma_g=0$ and take $\\varepsilon$ sufficiently small that the source perturbation satisfies $t_{\\rm pen}\\le\\bar t$. Regularity, variance, initial gap, and distance budgets are fixed. The quantity $\\ell$ is the maximum normalized source regularity budget, with $\\kappa=\\ell/\\mu_{\\rm PL}$. The displayed logarithm requires $\\rho_f>0$ and $\\rho_f\\ell\\kappa/\\varepsilon\\ge e$; a positive public upper bound may be declared even when the actual variation is zero.",
+      "parameter_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch_p_6c53cbc443",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_001eeb8609",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_3a363803c9"
+      ],
+      "source_region_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__r2",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "BL_SPEC_uniform_penalty_pl_stoch__main__c2",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "BL_SPEC_uniform_penalty_pl_stoch__main__q3",
+      "resource_projection_id": "resource_cc7c360256",
+      "regime_id": "BL_SPEC_uniform_penalty_pl_stoch__main__r2",
+      "bracket": {
+        "upper_refs": [
+          "BL_SPEC_uniform_penalty_pl_stoch__main__b2"
+        ],
+        "lower_refs": [],
+        "comparison_ref": null,
+        "quantity_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__q3",
+        "comparison_mode": "unassessed",
+        "resource_projection": null,
+        "ratio_or_gap": null,
+        "envelopes": {},
+        "dispatch": [],
+        "claim_guards": {
+          "BL_SPEC_uniform_penalty_pl_stoch__main__b2": [
+            {
+              "region_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__r2",
+              "predicate_text": "Assume $\\sigma_f>0,\\sigma_g=0$ and take $\\varepsilon$ sufficiently small that the source perturbation satisfies $t_{\\rm pen}\\le\\bar t$. Regularity, variance, initial gap, and distance budgets are fixed. The quantity $\\ell$ is the maximum normalized source regularity budget, with $\\kappa=\\ell/\\mu_{\\rm PL}$. The displayed logarithm requires $\\rho_f>0$ and $\\rho_f\\ell\\kappa/\\varepsilon\\ge e$; a positive public upper bound may be declared even when the actual variation is zero."
+            }
+          ]
+        },
+        "envelope_certificate": null,
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": null
+      },
+      "comparison_key": {
+        "setting_id": "BL_SPEC_uniform_penalty_pl_stoch",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "BL_SPEC_uniform_penalty_pl_stoch__main__q3",
+        "resource_projection_id": "resource_cc7c360256",
+        "regime_id": "BL_SPEC_uniform_penalty_pl_stoch__main__r2"
+      }
+    },
+    {
+      "label": "BM_BOUND_pl_stoch_both_noise source window",
+      "predicate": {
+        "predicate": {
+          "name": "source_scoped_symbolic_window",
+          "args": [],
+          "description": "sigma_f>0,sigma_g>0; epsilon small enough for source perturbation t_pen<=t_bar and Theorem 4.2 schedule; fixed variance, gap and initial-distance budgets. ell,kappa are the source normalized maximum regularity and ell/mu_PL. The displayed logarithm is used only with positive rho_f and rho_f*ell*kappa/epsilon>=e; positive public upper budgets may be supplied even for zero actual variation."
+        }
+      },
+      "predicate_text": "Assume $\\sigma_f>0,\\sigma_g>0$ and take $\\varepsilon$ sufficiently small that the source perturbation satisfies $t_{\\rm pen}\\le\\bar t$. Regularity, variance, initial gap, and distance budgets are fixed. The quantity $\\ell$ is the maximum normalized source regularity budget, with $\\kappa=\\ell/\\mu_{\\rm PL}$. The displayed logarithm requires $\\rho_f>0$ and $\\rho_f\\ell\\kappa/\\varepsilon\\ge e$; a positive public upper bound may be declared even when the actual variation is zero.",
+      "parameter_refs": [
+        "BL_SPEC_uniform_penalty_pl_stoch_p_6c53cbc443",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_001eeb8609",
+        "BL_SPEC_uniform_penalty_pl_stoch_p_3a363803c9"
+      ],
+      "source_region_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__r3",
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "comparison_id": "BL_SPEC_uniform_penalty_pl_stoch__main__c3",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "BL_SPEC_uniform_penalty_pl_stoch__main__q1",
+      "resource_projection_id": "resource_cc7c360256",
+      "regime_id": "BL_SPEC_uniform_penalty_pl_stoch__main__r3",
+      "bracket": {
+        "upper_refs": [
+          "BL_SPEC_uniform_penalty_pl_stoch__main__b3"
+        ],
+        "lower_refs": [],
+        "comparison_ref": null,
+        "quantity_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__q1",
+        "comparison_mode": "unassessed",
+        "resource_projection": null,
+        "ratio_or_gap": null,
+        "envelopes": {},
+        "dispatch": [],
+        "claim_guards": {
+          "BL_SPEC_uniform_penalty_pl_stoch__main__b3": [
+            {
+              "region_ref": "BL_SPEC_uniform_penalty_pl_stoch__main__r3",
+              "predicate_text": "Assume $\\sigma_f>0,\\sigma_g>0$ and take $\\varepsilon$ sufficiently small that the source perturbation satisfies $t_{\\rm pen}\\le\\bar t$. Regularity, variance, initial gap, and distance budgets are fixed. The quantity $\\ell$ is the maximum normalized source regularity budget, with $\\kappa=\\ell/\\mu_{\\rm PL}$. The displayed logarithm requires $\\rho_f>0$ and $\\rho_f\\ell\\kappa/\\varepsilon\\ge e$; a positive public upper bound may be declared even when the actual variation is zero."
+            }
+          ]
+        },
+        "envelope_certificate": null,
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "resource_projection_description": null
+      },
+      "comparison_key": {
+        "setting_id": "BL_SPEC_uniform_penalty_pl_stoch",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "BL_SPEC_uniform_penalty_pl_stoch__main__q1",
+        "resource_projection_id": "resource_cc7c360256",
+        "regime_id": "BL_SPEC_uniform_penalty_pl_stoch__main__r3"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "BL_SPEC_uniform_penalty_pl_stoch__main__e1",
+      "source_ref": "BL_SRC_chen2024",
+      "locator": {
+        "pdf_pages": [
+          8,
+          10,
+          11,
+          12
+        ],
+        "theorem_or_section": "Assumption 4.1; Theorems 4.1–4.2; Assumption 4.2",
+        "theorem": "Assumption 4.1; Theorems 4.1–4.2; Assumption 4.2",
+        "section": "",
+        "printed_pages": [],
+        "equations": []
+      },
+      "supports": "Applies to The objective is optimistic over the full lower minimizer set; the uniform perturbation g+t f is PL for all t in an interval., Stochastic variance regimes in the actual Theorem 4.2 are: both zero, upper noise only (M_f>0,M_g=0), and both positive. The source introduction is not used to swap the partially stochastic regime., The perturbation sigma in the source is renamed t_pen, distinct from sigma_f,sigma_g noise., The deterministic selection conversion in the pre-existing atlas remains separate report evidence.",
+      "notes": []
+    }
+  ],
+  "references": [
+    {
+      "id": "BL_SRC_chen2024",
+      "authors": [
+        "Lesi Chen",
+        "Jing Xu",
+        "Jingzhao Zhang"
+      ],
+      "title": "On Finding Small Hyper-Gradients in Bilevel Optimization: Hardness Results and Improved Analysis",
+      "year": 2024,
+      "version": "COLT 2024, PMLR 247, pp.947–980",
+      "url": "https://proceedings.mlr.press/v247/chen24a/chen24a.pdf",
+      "publication_status": "published"
+    }
+  ],
+  "relations": [],
+  "aliases": [
+    {
+      "legacy_id": "BL_SPEC_uniform_penalty_pl_stoch",
+      "view_id": "main"
+    }
+  ],
+  "review": {
+    "editorial_revision": "2026-11-03",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "bounds_missing",
+        "label": "Bounds missing"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [
+      "lower"
+    ],
+    "special_statuses": [],
+    "comparison_count": 3,
+    "status_counts": {
+      "missing_lower": 3
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__c2"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    },
+    {
+      "row_id": "row_3",
+      "comparison_ids": [
+        "BL_SPEC_uniform_penalty_pl_stoch__main__c3"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.0.0",
+    "source_snapshot": "2026-11-03-full",
+    "source_json_sha256": "f961b8f94ad36055c99c36702d5266d7a7adb59366a69ad27f1a66ae5be672be",
+    "source_order": 107,
+    "transformations": [
+      "remove_requested_presentation_metadata",
+      "update_schema_version"
+    ],
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+  }
+}

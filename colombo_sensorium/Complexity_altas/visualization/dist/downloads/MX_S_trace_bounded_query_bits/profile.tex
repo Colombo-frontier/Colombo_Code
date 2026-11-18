@@ -1,0 +1,447 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} PSD trace estimation with finite-bit integer queries.\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{MX\_\allowbreak{}S\_\allowbreak{}trace\_\allowbreak{}bounded\_\allowbreak{}query\_\allowbreak{}bits}
+
+Matrix computation
+
+Estimate \AtlasInlineMath{\tau=\operatorname{tr}(A)} for an unknown positive semidefinite matrix.
+
+\textbf{Status.} Fully optimal
+
+\textbf{TASK tags.} task family: Matrix computation
+
+\textbf{MODEL tags.} spectral structure: Explicit matrix class; spectral structure: Real psd
+
+\textbf{ORACLE tags.} feedback quality: Exact; interface family: Bounded integer exact response; operation: Matrix right matvec; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} randomization: Private randomness allowed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; object: Scalar
+
+\textbf{METRIC tags.} criterion: Relative trace error
+
+\textbf{GUARANTEE tags.} randomness: Algorithm private seed; time uniformity: Fixed time or accuracy
+
+\textbf{RESOURCE tags.} measure: N right
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Estimate \AtlasInlineMath{\tau=\operatorname{tr}(A)} for an unknown positive semidefinite matrix.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+Assume \AtlasInlineMath{A=A^{\mathsf T}\succeq0} and \AtlasInlineMath{A\in\mathbb{R}^{d\times d}}, allow \AtlasInlineMath{A=0}, and use query-alphabet parameter \AtlasInlineMath{b_{\mathrm{q}}\in\mathbb{Z}_{\ge0}}.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Inputs \AtlasInlineMath{d,\varepsilon,b_{\mathrm{q}}} are public and \AtlasInlineMath{A} hidden. A query chooses \AtlasInlineMath{v\in\mathbb{Z}^d\cap[-2^{b_{\mathrm{q}}},2^{b_{\mathrm{q}}}]^d} and returns the exact real vector \AtlasInlineMath{Av}. Responses are not quantized and always use the same fixed matrix.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return a scalar \AtlasInlineMath{\widehat\tau\in\mathbb R}, without an additional certificate.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The success event is \AtlasInlineMath{|\widehat\tau-\operatorname{tr}(A)|\le\varepsilon\operatorname{tr}(A)}. A zero-trace input requires an output of exactly zero.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Count right products with single vectors only: \AtlasInlineMath{N=N_{\mathrm r}}. A block of width \AtlasInlineMath{q} costs \AtlasInlineMath{q} calls.
+
+The budget bounds calls for every fixed input and every private seed. Reading public inputs, exact real arithmetic, storage, and postprocessing are free. One call applies the interface to one vector.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+Algorithms may use private randomness and choose query vectors adaptively from the declared domain using all previous responses. Queries and outputs may be arbitrary measurable functions of the transcript; no Krylov or linear-span restriction applies. Exact internal arithmetic, storage, and communication are free in this oracle model. A block query is charged by its number of columns.
+
+The algorithm is selected using public inputs only. For every admissible input fixed before the private seed is drawn, the success event has probability at least \AtlasInlineMath{0.9} over that seed.
+
+\textbf{Budget convention.} fixed worst-case joint budget; no expectation substituted
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{d}: The order of the square input matrix and the dimension of each query vector. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb N,\ d\ge1}.
+
+\AtlasInlineMath{A\in\mathbb R^{d\times d}}
+
+\AtlasInlineMath{\varepsilon}: Absolute-error proportion relative to the nonnegative true trace \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{|\widehat\tau-\operatorname{tr}(A)|\le\varepsilon\operatorname{tr}(A)}
+
+\AtlasInlineMath{b_{\mathrm q}}: Amplitude exponent for permitted integer query coordinates \textbf{Domain:} \AtlasInlineMath{b_{\mathrm q}\in\mathbb Z_{\ge0}}.
+
+\AtlasInlineMath{v_i\in\mathbb Z,\quad |v_i|\le2^{b_{\mathrm q}}}
+
+\AtlasInlineMath{A}: Hidden real symmetric positive semidefinite matrix, possibly zero \textbf{Domain:} \AtlasInlineMath{\mathbb R^{d\times d}}.
+
+\AtlasInlineMath{\tau,\widehat\tau}: True trace and the estimator returned by the algorithm \textbf{Domain:} \AtlasInlineMath{\tau\ge0,\ \widehat\tau\in\mathbb R}.
+
+\AtlasInlineMath{\tau=\operatorname{tr}(A)=\sum_{i=1}^d A_{ii}}
+
+\AtlasInlineMath{n}: The hard-matrix order in the small-error embedding. \textbf{Domain:} An auxiliary proof quantity, distinct from the input dimension \AtlasInlineMath{d}.
+
+\AtlasInlineMath{n=\min\{d,\lfloor1/(96\varepsilon)\rfloor\}\quad(0<\varepsilon\le1/384,\ d\ge4)}
+
+\AtlasInlineMath{q}: Fixed query budget in the Wishart argument \textbf{Domain:} Auxiliary proof quantity only.
+
+\AtlasInlineMath{0\le q\le n/2}
+
+\AtlasInlineMath{G,W}: Standard Gaussian matrix and its Gram matrix in the Wishart argument \textbf{Domain:} \AtlasInlineMath{G,W\in\mathbb R^{n\times n}}.
+
+\AtlasInlineMath{G_{ij}\stackrel{\mathrm{iid}}{\sim}\mathcal N(0,1),\quad W=G^{\mathsf T}G}
+
+\AtlasInlineMath{\mathcal H}: Complete query history, including the private random seed, in the stated argument \textbf{Domain:} Sigma-algebra with respect to which the conditional distribution is defined.
+
+\AtlasInlineMath{c(\mathcal H),Z,\nu}: The known trace contribution, independent residual trace, and residual degrees of freedom conditional on query history. \textbf{Domain:} An auxiliary quantity in the posterior lemma.
+
+\AtlasInlineMath{\operatorname{tr}(W)\mid\mathcal H=c(\mathcal H)+Z,\quad Z\sim\chi^2_\nu,\quad\nu=(n-q)^2}
+
+\AtlasInlineMath{\chi^2_\nu}: Distribution of the sum of squares of \AtlasInlineMath{\nu} independent standard normal variables \textbf{Domain:} \AtlasInlineMath{\nu\in\mathbb N}.
+
+\AtlasInlineMath{I_j,0_j}: Identity and zero matrices of order \AtlasInlineMath{j} \textbf{Domain:} \AtlasInlineMath{\mathbb R^{j\times j}}.
+
+\AtlasInlineMath{c,C}: Positive universal constants in the corresponding bound. Identically named constants in different theorems need not have the same value. \textbf{Domain:} Independent of the dimension, accuracy, and probability parameters tracked by this bound.
+
+\AtlasInlineMath{\log}: Natural logarithm \textbf{Domain:} Positive real argument.
+
+\AtlasInlineMath{\log x=\ln x}
+
+\AtlasInlineMath{O,\Omega,\Theta}: Upper, lower, and two-sided bounds up to constants in the same applicable regime \textbf{Domain:} Hidden constants have only the parameter dependence explicitly permitted by the associated bound.
+
+\AtlasInlineMath{v}: One admissible integer query vector. \textbf{Domain:} \AtlasInlineMath{\mathbb Z^d\cap[-2^{b_{\mathrm q}},2^{b_{\mathrm q}}]^d}.
+
+\AtlasInlineMath{e_i}: The \AtlasInlineMath{i}th standard basis vector \textbf{Domain:} \AtlasInlineMath{1\le i\le d}.
+
+\AtlasInlineMath{(e_i)_j=\mathbf1\{i=j\}}
+
+\AtlasInlineMath{\mathcal R}: Rademacher probe distribution \textbf{Domain:} Each coordinate independently equals +1 or -1 with probability 1/2.
+
+\AtlasInlineMath{N,N_{\mathrm r}}: Single-vector query budget for exact right products Av. A block is charged by its column count. \textbf{Domain:} \AtlasInlineMath{\mathbb N_0}.
+
+\AtlasInlineMath{N=N_{\mathrm r}}
+
+\AtlasInlineMath{N^\star}: Minimum worst-case query budget attaining this profile's success guarantee \textbf{Domain:} \AtlasInlineMath{\mathbb N_0\cup\{+\infty\}}.
+
+The quantity is \AtlasInlineMath{N^\star=\inf_{\mathcal A}\sup_{I,\omega}N_{\mathcal A}(I,\omega)}, where the infimum ranges over admissible algorithms satisfying this profile's success guarantee.
+
+\AtlasInlineMath{\mathcal A,I,\omega}: The algorithm, fixed admissible input, and private algorithmic seed. \textbf{Domain:} Quantifiers for worst-case input and execution cost. Success probability is taken over $\omega$.
+
+\AtlasInlineMath{a_0}: Scale ratio in the two-scale construction for larger errors. \textbf{Domain:} A positive auxiliary proof parameter.
+
+\AtlasInlineMath{a_0>(1+\varepsilon)/(1-\varepsilon)\quad(0<\varepsilon<1)}
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\AtlasMath{N^\star(\varepsilon;d,b_{\mathrm q})}
+\textbf{Scope.} Choose one algorithm, then require the relevant error guarantee for every fixed input in the complete specification. Cost is a worst-case hard budget.
+
+\textbf{Optimization direction.} minimize
+
+\needspace{4\baselineskip}\subsection{R1 - Regime covered by the communication lower-bound reduction}
+\textbf{Region.} Assume \AtlasInlineMath{d\ge C/\varepsilon}, \AtlasInlineMath{0<\varepsilon<c}, and integer \AtlasInlineMath{b_{\mathrm{q}}\ge0}, with source sufficient dimension constant \AtlasInlineMath{C\ge1} and accuracy constant \AtlasInlineMath{0<c\le1/2}. The communication-reduction bound is retained, but the explicit Wishart lower bound is stronger on this region.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} \AtlasInlineMath{N=N_{\mathrm{r}}}
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B3
+
+\AtlasMath{\Omega(1/\varepsilon)}
+\textbf{Upper bound.} B1, B4
+
+\AtlasMath{O(1/\varepsilon)}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\textbf{Comparison argument.} This window satisfies \AtlasInlineMath{0<\varepsilon<1}, so Rademacher NA-Hutch++ and the explicit Wishart lower bound apply. Since \AtlasInlineMath{d\ge C/\varepsilon} and \AtlasInlineMath{C\ge1}, we have \AtlasInlineMath{\min\{d,1/\varepsilon\}=1/\varepsilon}. The communication lower bound remains an individual evidence record; the stronger posterior lower bound and admissible upper bound determine the status.
+
+\needspace{4\baselineskip}\subsection{R2 - Nontrivial full-accuracy regime with integer query counts}
+\textbf{Region.} Require \AtlasInlineMath{d\ge1}, integer \AtlasInlineMath{b_{\mathrm{q}}\ge0}, and \AtlasInlineMath{0<\varepsilon<1}. The fixed success probability is \AtlasInlineMath{0.9}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Number of right matrix-vector product queries
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B3
+
+\AtlasMath{\Omega(\min\{d,\varepsilon^{-1}\})}
+\textbf{Upper bound.} B1, B4
+
+\AtlasMath{O(\min\{d,\varepsilon^{-1}\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\textbf{Comparison argument.} Rademacher and standard-basis queries are admissible when \AtlasInlineMath{b_{\mathrm{q}}=0}. The explicit Wishart lower bound holds for all \AtlasInlineMath{0<\varepsilon<1} in the broader class of arbitrary randomized adaptive real queries, hence also for the integer-box interface.
+
+\needspace{4\baselineskip}\subsection{R3 - Zero-query endpoint at coarse accuracy}
+\textbf{Region.} Assume \AtlasInlineMath{d\ge1}, \AtlasInlineMath{\varepsilon\ge1}, and integer \AtlasInlineMath{b_{\mathrm{q}}\ge0}, with fixed success probability \AtlasInlineMath{0.9}.
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} \AtlasInlineMath{N=N_{\mathrm{r}}}
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B6
+
+\AtlasMath{0}
+\textbf{Upper bound.} B5
+
+\AtlasMath{0}
+\textbf{Gap or comparison.} The optimal query count is exactly \AtlasInlineMath{0}. No ratio with zero denominator is formed.
+
+\textbf{Comparison argument.} Positive semidefiniteness gives \AtlasInlineMath{\tau\ge0}. When \AtlasInlineMath{\varepsilon\ge1}, outputting zero has error \AtlasInlineMath{\tau}, which is at most \AtlasInlineMath{\varepsilon\tau}. Since query counts are nonnegative, the optimum is exactly zero.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+\needspace{4\baselineskip}\subsection{B1 - Nonadaptive Hutch++ with Rademacher probes and fixed failure probability 0.1}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+\AtlasMath{N\le C\varepsilon^{-1}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2010.09649v5}{[3]}
+
+\textbf{Oracle correspondence.} All probe coordinates are \AtlasInlineMath{\pm1}, hence legal for every \AtlasInlineMath{b_{\mathrm q}\ge0}. Internal postprocessing may use reals.
+
+\textbf{Resource conversion.} Each matrix-vector product has unit cost; this is not communication bit complexity.
+
+\textbf{Constants.} Fixed declared regularity and initialization budgets; no unlisted joint-parameter optimality is asserted.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2010.09649v5}{[3]} pdf pages: 7; 8; 9; theorem or section: Algorithm 2; Theorems 6-7; proof of Theorem 7; theorem: Algorithm 2; Theorems 6-7; proof of Theorem 7
+
+NA-Hutch++ in HPP Algorithm 2 and Theorem 6 queries only Rademacher vectors and uses \AtlasInlineMath{O(1/\varepsilon)} products at fixed success probability; these queries are admissible for every \AtlasInlineMath{b_q\ge0}. The communication reduction in Theorem 7 restricts integer query coordinates to magnitude at most \AtlasInlineMath{2^{b_q}} while keeping responses exact. Its hard instances have dimension of order \AtlasInlineMath{\varepsilon^{-1}}.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2010.09649v5}{[3]} theorem: Algorithm 2 lines 2-4; Theorem 6; pdf pages: 7
+
+In arXiv:2010.09649v5, page 7, line 2 of Algorithm 2 chooses all entries of \AtlasInlineMath{S,R,G} independently from \AtlasInlineMath{\pm1}. The only native queries are \AtlasInlineMath{AS,AR,AG}. Pseudoinverses and composite matrices in line 4 are internal computations on these responses, without queries along new real vectors. Theorem 6 gives \AtlasInlineMath{O(\log(1/\delta)/\varepsilon)} calls. Setting \AtlasInlineMath{\delta=0.1} yields an admissible \AtlasInlineMath{O(1/\varepsilon)} upper bound for every \AtlasInlineMath{b_{\mathrm q}\ge0}.
+
+\needspace{4\baselineskip}\subsection{B2 - A Gap-Hamming communication reduction allowing randomized adaptive integer queries.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{N\ge\frac{c}{\varepsilon\,[b_{\mathrm{q}}+\log(1/\varepsilon)]}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2010.09649v5}{[3]}
+
+\textbf{Oracle correspondence.} Query coordinates are restricted while responses remain exact. The lower bound applies only in the source construction's dimension window.
+
+\textbf{Constants.} Fixed declared regularity and initialization budgets; no unlisted joint-parameter optimality is asserted.
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2010.09649v5}{[3]} pdf pages: 7; 8; 9; theorem or section: Algorithm 2; Theorems 6-7; proof of Theorem 7; theorem: Algorithm 2; Theorems 6-7; proof of Theorem 7
+
+NA-Hutch++ in HPP Algorithm 2 and Theorem 6 queries only Rademacher vectors and uses \AtlasInlineMath{O(1/\varepsilon)} products at fixed success probability; these queries are admissible for every \AtlasInlineMath{b_q\ge0}. The communication reduction in Theorem 7 restricts integer query coordinates to magnitude at most \AtlasInlineMath{2^{b_q}} while keeping responses exact. Its hard instances have dimension of order \AtlasInlineMath{\varepsilon^{-1}}.
+
+\needspace{4\baselineskip}\subsection{B3 - Conditional Wishart trace anti-concentration and transfer from arbitrary real queries to bounded integer queries.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{N\ge c\min\{d,\varepsilon^{-1}\}}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2402.09379v3}{[2]} \href{https://proceedings.mlr.press/v125/braverman20a/braverman20a.pdf}{[1]}
+
+\textbf{Oracle correspondence.} Integer-box queries form a subset of arbitrary real queries, so the lower bound transfers from the stronger to the weaker interface.
+
+\textbf{Guarantee conversion.} Success probability \AtlasInlineMath{0.9} is stronger than \AtlasInlineMath{2/3} in D10. D10's large-error branch extends this result to all \AtlasInlineMath{0<\varepsilon<1}.
+
+\textbf{Constants.} Positive universal constants, permitted to depend on any explicitly fixed auxiliary parameters.
+
+\textbf{Derivation.} \textbf{Claim and scope.} For every integer \AtlasInlineMath{d\ge1} and \AtlasInlineMath{0<\varepsilon<1}, any randomized adaptive exact matrix-vector algorithm with a fixed worst-case budget that guarantees
+
+\AtlasMath{\Pr\bigl(|\widehat\tau-\operatorname{tr}(A)|\le\varepsilon\operatorname{tr}(A)\bigr)\ge2/3}
+
+for every real positive semidefinite matrix of order \AtlasInlineMath{d} requires \AtlasInlineMath{\Omega(\min\{d,1/\varepsilon\})} queries. Queries may be arbitrary real vectors and the output any measurable function of the transcript. This argument concerns constant success probability; it does not establish sharp dependence on arbitrary confidence levels.
+
+\textbf{Posterior lemma.} Use Lemma 13 of Braverman, Hazan, Simchowitz, and Woodworth (2020), or the unnormalized formulation in Proposition 3 and Appendix B.1 of *Fixed-Sparsity Matrix Approximation* (arXiv:2402.09379v3). Let \AtlasInlineMath{W=G^{\mathsf T}G}, where \AtlasInlineMath{G\in\mathbb R^{n\times n}} has independent standard Gaussian entries. After at most \AtlasInlineMath{q<n} adaptive queries, include the private seed in the transcript \AtlasInlineMath{\mathcal H}. A transcript-measurable orthogonal basis expresses the conditional matrix as a known matrix plus the Gram matrix of an independent standard Gaussian block of size \AtlasInlineMath{(n-q)\times(n-q)}. Thus
+
+\AtlasMath{\operatorname{tr}(W)\mid\mathcal H=c(\mathcal H)+Z,\qquad Z\sim\chi^2_{(n-q)^2},}
+
+where \AtlasInlineMath{Z} is independent of the transcript. Remove the component in the previously queried subspace from a dependent query. If the algorithm stops early, extend the transcript to \AtlasInlineMath{q} independent directions; its output remains measurable with respect to the extended transcript. This only provides additional information. For randomized algorithms, condition first on the independent private seed, apply the lemma, and then integrate. Adaptivity is preserved throughout.
+
+\textbf{Hard distribution at small tolerance.} Assume \AtlasInlineMath{0<\varepsilon\le1/384}. For \AtlasInlineMath{d\ge4}, set \AtlasInlineMath{n=\min\{d,\lfloor1/(96\varepsilon)\rfloor\}}, so \AtlasInlineMath{n\ge4}, and let \AtlasInlineMath{A=\operatorname{diag}(W,0_{d-n})}. A query in dimension \AtlasInlineMath{d} returns the \AtlasInlineMath{W} product of its first \AtlasInlineMath{n} coordinates and a zero tail, exactly simulating one query in dimension \AtlasInlineMath{n}. The matrix \AtlasInlineMath{A} is positive semidefinite and \AtlasInlineMath{\mathbb E\operatorname{tr}(A)=n^2}.
+
+\textbf{Anti-concentration.} Suppose \AtlasInlineMath{q\le n/2}. For \AtlasInlineMath{Z\sim\chi^2_\nu} with \AtlasInlineMath{\nu\ge4}, the density is bounded by \AtlasInlineMath{1/\sqrt\nu}. Its maximum occurs at \AtlasInlineMath{\nu-2}; the standard Stirling lower bound for the Gamma function, with \AtlasInlineMath{a=\nu/2\ge2}, gives the bound \AtlasInlineMath{e(1-1/a)^{a-1}/(2\sqrt{2\pi a})\le1/\sqrt{2a}}. Here \AtlasInlineMath{\nu=(n-q)^2}, so the conditional trace density is at most \AtlasInlineMath{2/n}. Markov's inequality gives \AtlasInlineMath{\Pr(\operatorname{tr}(A)>4n^2)\le1/4}. On success and \AtlasInlineMath{\operatorname{tr}(A)\le4n^2}, the true trace lies in an interval of length \AtlasInlineMath{8\varepsilon n^2} centered at the transcript-measurable estimate \AtlasInlineMath{\widehat\tau}. Integrating the conditional density yields
+
+\AtlasMath{\Pr(\text{success})\le\frac14+(8\varepsilon n^2)\frac2n=\frac14+16\varepsilon n\le\frac5{12}<\frac23.}
+
+This contradicts success probability at least \AtlasInlineMath{2/3} on every fixed input, which would imply average success at least \AtlasInlineMath{2/3} under this admissible input distribution. Consequently the budget exceeds \AtlasInlineMath{n/2}, and \AtlasInlineMath{n} is a universal constant multiple of \AtlasInlineMath{\min\{d,1/\varepsilon\}}.
+
+\textbf{Small dimensions.} For \AtlasInlineMath{d<4}, the output distribution of a zero-query algorithm is independent of the matrix. The permitted relative-error intervals for \AtlasInlineMath{I_d} and \AtlasInlineMath{2I_d} are disjoint when \AtlasInlineMath{\varepsilon\le1/384}. Both success probabilities therefore cannot be at least \AtlasInlineMath{2/3}. One necessary query gives the required constant-factor lower bound.
+
+\textbf{Remaining nontrivial tolerances.} Let \AtlasInlineMath{1/384<\varepsilon<1} and take any \AtlasInlineMath{d\ge1}. Choose \AtlasInlineMath{a_0>(1+\varepsilon)/(1-\varepsilon)}. The acceptable output intervals for \AtlasInlineMath{I_d} and \AtlasInlineMath{a_0I_d} are
+
+\AtlasMath{[(1-\varepsilon)d,(1+\varepsilon)d],\qquad [(1-\varepsilon)a_0d,(1+\varepsilon)a_0d],}
+
+and are disjoint. A zero-query algorithm has the same output distribution on both inputs, so its two success probabilities sum to at most \AtlasInlineMath{1} and cannot both be at least \AtlasInlineMath{2/3}. The fixed budget is therefore at least \AtlasInlineMath{1}. Since \AtlasInlineMath{\min\{d,1/\varepsilon\}\le384},
+
+\AtlasMath{N\ge1\ge\frac1{384}\min\{d,1/\varepsilon\}.}
+
+Combining the constants gives the uniform lower bound \AtlasInlineMath{\Omega(\min\{d,1/\varepsilon\})} for all \AtlasInlineMath{0<\varepsilon<1}. The scales of these inputs are neither revealed nor bounded, as required by the stated trace-estimation models.
+
+\textbf{Transfers.} The bound applies to nonadaptive algorithms, a subclass of adaptive algorithms. Bounded integer-coordinate queries are likewise a subclass of arbitrary real queries. The lower bound also applies at success probability \AtlasInlineMath{0.9}, uniformly for \AtlasInlineMath{b_{\mathrm q}\ge0}. Together with the admissible Rademacher NA-Hutch++ upper bound and reconstruction in \AtlasInlineMath{d} standard-basis queries, this yields \AtlasInlineMath{\Theta(\min\{d,1/\varepsilon\})}. This is an explicit consequence of the cited posterior lemma, rather than a trace-estimation theorem attributed directly to that source.
+
+\textbf{Zero-query endpoint.} If \AtlasInlineMath{\varepsilon\ge1}, positive semidefiniteness implies \AtlasInlineMath{\operatorname{tr}(A)\ge0}, and the constant output \AtlasInlineMath{\widehat\tau=0} satisfies
+
+\AtlasMath{|\widehat\tau-\operatorname{tr}(A)|=\operatorname{tr}(A)\le\varepsilon\operatorname{tr}(A).}
+
+for every input. It works at every allowed confidence level, dimension, and integer query alphabet. Nonnegativity of query cost makes the optimum exactly \AtlasInlineMath{0}. The nontrivial-tolerance rate \AtlasInlineMath{\Theta(\min\{d,1/\varepsilon\})} therefore does not extend to \AtlasInlineMath{\varepsilon\ge1}.
+
+\textbf{Local argument.} A1
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2402.09379v3}{[2]} theorem: Proposition 3; section: Appendix B.1
+
+\textbf{Source location.} \href{https://proceedings.mlr.press/v125/braverman20a/braverman20a.pdf}{[1]} theorem: Lemma 13; section: Appendix C.2; pdf pages: 11
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2402.09379v3}{[2]} theorem: Proposition 3; proof in Appendix B.1; section: §3.1; Appendix B.1; pdf pages: 11; 22; 23
+
+FS Proposition 3 and Appendix B.1 state the unnormalized form of the same adaptive Wishart posterior. Conditional on the complete query transcript and independent private seed, the residual block remains an independent Wishart matrix.
+
+\needspace{4\baselineskip}\subsection{B4 - Deterministic standard-basis reconstruction.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{N\le d}
+\textbf{Constants.} Positive universal constants, permitted to depend on any explicitly fixed auxiliary parameters.
+
+\textbf{Derivation.} Query every standard basis vector, collect all columns, then sum the diagonal with free internal computation.
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B5 - Deterministically return zero.}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{N\le0}
+\textbf{Conditions.} Assume \AtlasInlineMath{d\ge1}, \AtlasInlineMath{\varepsilon\ge1}, and integer \AtlasInlineMath{b_{\mathrm q}\ge0}, with fixed success probability \AtlasInlineMath{0.9}.
+
+\textbf{Guarantee conversion.} Deterministic success for every instance, satisfying the setting's probability requirement.
+
+\textbf{Resource conversion.} No matrix-vector product is queried, and every resource count is zero.
+
+\textbf{Constants.} No hidden constant
+
+\textbf{Local argument.} A3
+
+\needspace{4\baselineskip}\subsection{B6 - Nonnegative query count}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{N\ge0}
+\textbf{Conditions.} Assume \AtlasInlineMath{d\ge1}, \AtlasInlineMath{\varepsilon\ge1}, and integer \AtlasInlineMath{b_{\mathrm q}\ge0}, with fixed success probability \AtlasInlineMath{0.9}.
+
+\textbf{Guarantee conversion.} Deterministic success for every instance, satisfying the setting's probability requirement.
+
+\textbf{Resource conversion.} No matrix-vector product is queried, and every resource count is zero.
+
+\textbf{Constants.} No hidden constant
+
+\textbf{Local argument.} A3
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - standard Wishart posterior plus chi-square anti-concentration}
+\textbf{Scope.} All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force.
+
+\textbf{Claim and scope.} For every integer \AtlasInlineMath{d\ge1} and \AtlasInlineMath{0<\varepsilon<1}, any randomized adaptive exact matrix-vector algorithm with a fixed worst-case budget that guarantees
+
+\AtlasMath{\Pr\bigl(|\widehat\tau-\operatorname{tr}(A)|\le\varepsilon\operatorname{tr}(A)\bigr)\ge2/3}
+
+for every real positive semidefinite matrix of order \AtlasInlineMath{d} requires \AtlasInlineMath{\Omega(\min\{d,1/\varepsilon\})} queries. Queries may be arbitrary real vectors and the output any measurable function of the transcript. This argument concerns constant success probability; it does not establish sharp dependence on arbitrary confidence levels.
+
+\textbf{Posterior lemma.} Use Lemma 13 of Braverman, Hazan, Simchowitz, and Woodworth (2020), or the unnormalized formulation in Proposition 3 and Appendix B.1 of *Fixed-Sparsity Matrix Approximation* (arXiv:2402.09379v3). Let \AtlasInlineMath{W=G^{\mathsf T}G}, where \AtlasInlineMath{G\in\mathbb R^{n\times n}} has independent standard Gaussian entries. After at most \AtlasInlineMath{q<n} adaptive queries, include the private seed in the transcript \AtlasInlineMath{\mathcal H}. A transcript-measurable orthogonal basis expresses the conditional matrix as a known matrix plus the Gram matrix of an independent standard Gaussian block of size \AtlasInlineMath{(n-q)\times(n-q)}. Thus
+
+\AtlasMath{\operatorname{tr}(W)\mid\mathcal H=c(\mathcal H)+Z,\qquad Z\sim\chi^2_{(n-q)^2},}
+
+where \AtlasInlineMath{Z} is independent of the transcript. Remove the component in the previously queried subspace from a dependent query. If the algorithm stops early, extend the transcript to \AtlasInlineMath{q} independent directions; its output remains measurable with respect to the extended transcript. This only provides additional information. For randomized algorithms, condition first on the independent private seed, apply the lemma, and then integrate. Adaptivity is preserved throughout.
+
+\textbf{Hard distribution at small tolerance.} Assume \AtlasInlineMath{0<\varepsilon\le1/384}. For \AtlasInlineMath{d\ge4}, set \AtlasInlineMath{n=\min\{d,\lfloor1/(96\varepsilon)\rfloor\}}, so \AtlasInlineMath{n\ge4}, and let \AtlasInlineMath{A=\operatorname{diag}(W,0_{d-n})}. A query in dimension \AtlasInlineMath{d} returns the \AtlasInlineMath{W} product of its first \AtlasInlineMath{n} coordinates and a zero tail, exactly simulating one query in dimension \AtlasInlineMath{n}. The matrix \AtlasInlineMath{A} is positive semidefinite and \AtlasInlineMath{\mathbb E\operatorname{tr}(A)=n^2}.
+
+\textbf{Anti-concentration.} Suppose \AtlasInlineMath{q\le n/2}. For \AtlasInlineMath{Z\sim\chi^2_\nu} with \AtlasInlineMath{\nu\ge4}, the density is bounded by \AtlasInlineMath{1/\sqrt\nu}. Its maximum occurs at \AtlasInlineMath{\nu-2}; the standard Stirling lower bound for the Gamma function, with \AtlasInlineMath{a=\nu/2\ge2}, gives the bound \AtlasInlineMath{e(1-1/a)^{a-1}/(2\sqrt{2\pi a})\le1/\sqrt{2a}}. Here \AtlasInlineMath{\nu=(n-q)^2}, so the conditional trace density is at most \AtlasInlineMath{2/n}. Markov's inequality gives \AtlasInlineMath{\Pr(\operatorname{tr}(A)>4n^2)\le1/4}. On success and \AtlasInlineMath{\operatorname{tr}(A)\le4n^2}, the true trace lies in an interval of length \AtlasInlineMath{8\varepsilon n^2} centered at the transcript-measurable estimate \AtlasInlineMath{\widehat\tau}. Integrating the conditional density yields
+
+\AtlasMath{\Pr(\text{success})\le\frac14+(8\varepsilon n^2)\frac2n=\frac14+16\varepsilon n\le\frac5{12}<\frac23.}
+
+This contradicts success probability at least \AtlasInlineMath{2/3} on every fixed input, which would imply average success at least \AtlasInlineMath{2/3} under this admissible input distribution. Consequently the budget exceeds \AtlasInlineMath{n/2}, and \AtlasInlineMath{n} is a universal constant multiple of \AtlasInlineMath{\min\{d,1/\varepsilon\}}.
+
+\textbf{Small dimensions.} For \AtlasInlineMath{d<4}, the output distribution of a zero-query algorithm is independent of the matrix. The permitted relative-error intervals for \AtlasInlineMath{I_d} and \AtlasInlineMath{2I_d} are disjoint when \AtlasInlineMath{\varepsilon\le1/384}. Both success probabilities therefore cannot be at least \AtlasInlineMath{2/3}. One necessary query gives the required constant-factor lower bound.
+
+\textbf{Remaining nontrivial tolerances.} Let \AtlasInlineMath{1/384<\varepsilon<1} and take any \AtlasInlineMath{d\ge1}. Choose \AtlasInlineMath{a_0>(1+\varepsilon)/(1-\varepsilon)}. The acceptable output intervals for \AtlasInlineMath{I_d} and \AtlasInlineMath{a_0I_d} are
+
+\AtlasMath{[(1-\varepsilon)d,(1+\varepsilon)d],\qquad [(1-\varepsilon)a_0d,(1+\varepsilon)a_0d],}
+
+and are disjoint. A zero-query algorithm has the same output distribution on both inputs, so its two success probabilities sum to at most \AtlasInlineMath{1} and cannot both be at least \AtlasInlineMath{2/3}. The fixed budget is therefore at least \AtlasInlineMath{1}. Since \AtlasInlineMath{\min\{d,1/\varepsilon\}\le384},
+
+\AtlasMath{N\ge1\ge\frac1{384}\min\{d,1/\varepsilon\}.}
+
+Combining the constants gives the uniform lower bound \AtlasInlineMath{\Omega(\min\{d,1/\varepsilon\})} for all \AtlasInlineMath{0<\varepsilon<1}. The scales of these inputs are neither revealed nor bounded, as required by the stated trace-estimation models.
+
+\textbf{Transfers.} The bound applies to nonadaptive algorithms, a subclass of adaptive algorithms. Bounded integer-coordinate queries are likewise a subclass of arbitrary real queries. The lower bound also applies at success probability \AtlasInlineMath{0.9}, uniformly for \AtlasInlineMath{b_{\mathrm q}\ge0}. Together with the admissible Rademacher NA-Hutch++ upper bound and reconstruction in \AtlasInlineMath{d} standard-basis queries, this yields \AtlasInlineMath{\Theta(\min\{d,1/\varepsilon\})}. This is an explicit consequence of the cited posterior lemma, rather than a trace-estimation theorem attributed directly to that source.
+
+\textbf{Zero-query endpoint.} If \AtlasInlineMath{\varepsilon\ge1}, positive semidefiniteness implies \AtlasInlineMath{\operatorname{tr}(A)\ge0}, and the constant output \AtlasInlineMath{\widehat\tau=0} satisfies
+
+\AtlasMath{|\widehat\tau-\operatorname{tr}(A)|=\operatorname{tr}(A)\le\varepsilon\operatorname{tr}(A).}
+
+for every input. It works at every allowed confidence level, dimension, and integer query alphabet. Nonnegativity of query cost makes the optimum exactly \AtlasInlineMath{0}. The nontrivial-tolerance rate \AtlasInlineMath{\Theta(\min\{d,1/\varepsilon\})} therefore does not extend to \AtlasInlineMath{\varepsilon\ge1}.
+
+\textbf{Sources.} \href{https://arxiv.org/pdf/2402.09379v3}{[2]} \href{https://proceedings.mlr.press/v125/braverman20a/braverman20a.pdf}{[1]}
+
+\needspace{4\baselineskip}\subsection{A2 - Deterministic standard-basis reconstruction.}
+\textbf{Scope.} All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force.
+
+Every standard basis vector is a valid bounded-integer query for all allowed \AtlasInlineMath{b_{\rm q}\ge0}. Query all \AtlasInlineMath{d} basis vectors and sum the returned diagonal entries. This gives exact trace with deterministic success and uses \AtlasInlineMath{d} queries.
+
+\needspace{4\baselineskip}\subsection{A3 - Deterministically return zero.}
+\textbf{Scope.} All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force.
+
+For epsilon>=1, positive semidefiniteness gives tr(A)>=0, and the deterministic output zero satisfies |0-tr(A)|=tr(A)<=epsilon tr(A). No query is used. Since query cost is nonnegative, the optimum is exactly zero.
+
+\needspace{7\baselineskip}\section{References}
+[1] Mark Braverman; Elad Hazan; Max Simchowitz; Blake Woodworth. The Gradient Complexity of Linear Regression. 2020. COLT 2020 PMLR 125 PDF, 21 pages.
+
+\url{https://proceedings.mlr.press/v125/braverman20a/braverman20a.pdf}
+
+[2] Noah Amsel; Tyler Chen; Feyza Duman Keles; Diana Halikias; Cameron Musco; Christopher Musco. Fixed-sparsity matrix approximation from matrix-vector products. 2026. Mathematical text checked in arXiv:2402.09379v3 (2024-03-26); SIMAX 47(2), 2026 publication.
+
+\url{https://arxiv.org/pdf/2402.09379v3}
+
+[3] Raphael A. Meyer; Cameron Musco; Christopher Musco; David P. Woodruff. Hutch++: Optimal Stochastic Trace Estimation. 2021. arXiv:2010.09649v5; 2021-06-11 (PDF dated June 14).
+
+\url{https://arxiv.org/pdf/2010.09649v5}
+
+\end{document}

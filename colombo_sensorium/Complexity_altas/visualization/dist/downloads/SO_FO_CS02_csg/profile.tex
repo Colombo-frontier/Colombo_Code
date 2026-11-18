@@ -1,0 +1,745 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Exact coordinate subgradients: strongly convex Lipschitz minimization\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}FO\_\allowbreak{}CS02\_\allowbreak{}csg}
+
+Single-objective optimization
+
+Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.
+
+\textbf{Status.} Other quantified gap present
+
+\textbf{TASK tags.} formulation: Global minimization; task family: Single objective
+
+\textbf{MODEL tags.} convexity: Strongly convex; geometry: Convex body; geometry: Full space; smoothness: Lipschitz function
+
+\textbf{ORACLE tags.} access order: First-order interface; feedback quality: Exact; interface family: Coordinate subgradient; operation: Coordinate subgradient; public information: Hidden objects explicitly declared; public information: Known lower bound; public information: Known upper bound; public information: Known exact value; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; computation: Internal arithmetic uncharged; randomization: Deterministic; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; feasibility: Required; object: Point; postprocessing: Unqueried output explicitly allowed
+
+\textbf{METRIC tags.} criterion: Objective gap
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; mode: Deterministic; mode: Expectation; randomness: Algorithm private seed
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget; measure: Scalar oracle calls; precision: Bit precision not counted
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.
+
+
+\AtlasMath{\min_{x\in Q}f(x)}
+
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The unknown function \AtlasInlineMath{f:\mathbb R^d\to\mathbb R} is globally convex and satisfies \AtlasInlineMath{|f(u)-f(v)|\le L\|u-v\|_2}. Both the feasible and query domains are the public box \AtlasInlineMath{Q=[-R/\sqrt d,R/\sqrt d]^d}. An instance also contains a measurable selector \AtlasInlineMath{s_f(x)\in\partial f(x)} fixed before the run.
+
+For every \AtlasInlineMath{u,v\in Q} and \AtlasInlineMath{g\in\partial f(u)}, additionally require \AtlasInlineMath{f(v)\ge f(u)+\langle g,v-u\rangle+\mu\|v-u\|_2^2/2}. Strong convexity is imposed only on \AtlasInlineMath{Q}.
+
+Unless another geometry is specified, vectors use the Euclidean norm \AtlasInlineMath{\|\cdot\|_2}, and matrices and higher derivatives use the corresponding operator norm. The assumptions hold uniformly throughout the declared domain.
+
+Admissible parameter domain:
+
+
+\AtlasMath{\mu>0,\quad\mu R\le L}
+
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Public numerical inputs: \AtlasInlineMath{d,\ R,\ \varepsilon}.
+
+Public upper bounds: \AtlasInlineMath{L}.
+
+Public lower bounds: \AtlasInlineMath{\mu}.
+
+The unknown object is the objective \AtlasInlineMath{f}.
+
+For each query, the algorithm chooses \AtlasInlineMath{x\in Q} and \AtlasInlineMath{j\in\{1,\ldots,d\}} and receives one scalar coordinate response.
+
+
+\AtlasMath{[s_f(x)]_j,\quad s_f(x)\in\partial f(x)}
+
+
+All coordinate responses at the same point come from the selector \AtlasInlineMath{s_f} fixed before the run. The oracle cannot choose a different full subgradient after observing \AtlasInlineMath{j}.
+
+Projection onto the public box and exact internal arithmetic are free. No coordinate line-minimization oracle is supplied.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return a point \AtlasInlineMath{\widehat x\in Q}.
+
+The output may be unqueried or constructed from the query history, provided it is feasible. No additional function value or accuracy certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+\AtlasMath{\ell(f,\widehat{x})=f(\widehat{x})-\min_{x\in Q}f(x)}
+
+
+\AtlasInlineMath{f^\star=\inf_{x\in Q}f(x)}. The existence, compactness, or initial-suboptimality assumptions ensure that the optimal value in this comparison is finite.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+One complete response to a query \AtlasInlineMath{(x,j)} costs one call. The simultaneous function value in FCSG carries no additional charge.
+
+Cost is bounded uniformly on every execution path. All calls used for initialization, repetition, batching, or candidate verification are counted.
+
+Real arithmetic, precision, and storage applied to already available information are uncharged. Public geometric operations are limited to those explicitly granted by the oracle. Query complexity alone does not imply arithmetic, memory, or communication complexity.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+\needspace{4\baselineskip}\subsubsection{Deterministic / Pointwise guarantee}
+The algorithm uses no private random numbers. Query and stopping decisions may depend adaptively on the observed feedback.
+
+No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+
+\AtlasMath{\exists A\ \forall I,\ \ell(I,A^\mathcal{O}(I))\le\varepsilon}
+
+
+The error guarantee holds for every instance; it is not averaged over an input distribution.
+
+\needspace{4\baselineskip}\subsubsection{Randomized / Expected loss}
+Private randomization is allowed. Queries, stopping decisions, and postprocessing may adapt to observed feedback.
+
+No additional span, zero-respecting, linear-iteration, or memory restriction is imposed.
+
+Interaction is adaptive to the feedback history. Every actual response is charged separately, including responses in parallel or batch queries. Internal real arithmetic, storage, and postprocessing are uncharged.
+
+Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
+
+
+\AtlasMath{\exists A\ \forall I,\ \mathbb{E}\ell(I,A^\mathcal{O}(I))\le\varepsilon}
+
+
+The probability space includes the algorithm's private randomness. The instance and its admissible oracle law are fixed before randomness is averaged.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{x,\widehat{x}}: Query points and final output; their permitted spaces are specified separately by the oracle and output contracts \textbf{Domain:} \AtlasInlineMath{\widehat{x}\in Q}.
+
+\AtlasInlineMath{f}: Unknown objective, with domain and structure specified by the model
+
+\AtlasInlineMath{f^\star}: Optimal value of the complete task; the oracle need not return it
+
+
+\AtlasMath{f^\star=\inf_{x\in Q}f(x)}
+
+
+\AtlasInlineMath{Q}: Feasible set of the task
+
+
+\AtlasMath{Q(d,R)=[-R/\sqrt d,R/\sqrt d]^d}
+
+
+\AtlasInlineMath{\mathbb{R}^d}: Real vector space with \AtlasInlineMath{d} coordinates
+
+\AtlasInlineMath{\|\cdot\|_2,\langle\cdot,\cdot\rangle}: Euclidean norm and inner product
+
+\AtlasInlineMath{\partial f(x)}: Ambient subdifferential of the corresponding convex function
+
+
+\AtlasMath{\partial f(x)=\{g:f(u)\ge f(x)+\langle g,u-x\rangle\ \forall u\in\operatorname{dom}f\}}
+
+
+\AtlasInlineMath{s_f}: Measurable full-subgradient selector fixed before the run
+
+
+\AtlasMath{s_f(x)\in\partial f(x)}
+
+
+\AtlasInlineMath{j}: Coordinate index selected by the algorithm \textbf{Domain:} \AtlasInlineMath{j\in\{1,\ldots,d\}}.
+
+\AtlasInlineMath{d}: Dimension; a positive integer tracked explicitly. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb{N}_{\ge1}}.
+
+\AtlasInlineMath{L}: Public upper bound on the global Euclidean Lipschitz constant. \textbf{Domain:} \AtlasInlineMath{L>0}.
+
+\AtlasInlineMath{R}: Euclidean circumradius of the public box or ball \textbf{Domain:} \AtlasInlineMath{R>0}.
+
+\AtlasInlineMath{\varepsilon}: Target tolerance for the underlying error defined by the accuracy measure \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+\AtlasInlineMath{c}: Sufficiently small absolute constant. A smaller common value may be chosen across theorems; no executable numerical threshold is supplied. \textbf{Domain:} \AtlasInlineMath{0<c<1}.
+
+\AtlasInlineMath{C}: Sufficiently large absolute multiplicative constant, which may differ between formulas; not a numerical control parameter. \textbf{Domain:} \AtlasInlineMath{C>0}.
+
+\AtlasInlineMath{\mu}: Lower bound on the strong-convexity modulus of the objective specified by the model \textbf{Domain:} \AtlasInlineMath{\mu>0}.
+
+\AtlasInlineMath{\ell}: The underlying loss or error defined by the accuracy measure; its expected, probabilistic, or worst-case aggregation is specified by the success contract
+
+\AtlasInlineMath{I,\mathcal{O},A}: Admissible instance, a response rule consistent with that instance, and an algorithm; the algorithm is selected before the unknown instance
+
+\AtlasInlineMath{O,\Omega,\Theta,\widetilde{O},\widetilde\Omega}: Notation for asymptotic upper and lower bounds, constant-factor matching rates, and explicitly permitted logarithmic factors. Hidden-constant dependence is specified in each regime.
+
+\AtlasInlineMath{\log}: Natural logarithm; changing to another fixed base affects only a constant
+
+\AtlasInlineMath{\mathbb{E}}: Expectation over the declared randomness after fixing the instance and admissible response law
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\textbf{View.} Deterministic / Pointwise guarantee
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} One complete response to a query \AtlasInlineMath{(x,j)} costs one call. The simultaneous function value in FCSG carries no additional charge.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q2 - target accuracy cost}
+\textbf{View.} Randomized / Expected loss
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} One complete response to a query \AtlasInlineMath{(x,j)} costs one call. The simultaneous function value in FCSG carries no additional charge.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsection{R1 - Strong-convexity slack and nontrivial accuracy}
+\textbf{Region.} \AtlasInlineMath{0<\mu R\le L/4,\quad0<\varepsilon\le cLR}
+
+\textbf{Views.} Deterministic / Pointwise guarantee
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} One complete response to a query \AtlasInlineMath{(x,j)} costs one call. The simultaneous function value in FCSG carries no additional charge.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B4
+
+\AtlasMath{cd\log(2+LR/\varepsilon)}
+\textbf{Upper bound.} B1, B2, B3
+
+\AtlasMath{Cd\min\{L^2R^2/\varepsilon^2,L^2/(\mu\varepsilon),d\log(2+LR/\varepsilon)\}}
+\textbf{Gap or comparison.} \AtlasInlineMath{O\!\left(\min\left\{\frac{(LR/\varepsilon)^2}{\log(2+LR/\varepsilon)},\frac{L^2}{\mu\varepsilon\log(2+LR/\varepsilon)},d\right\}\right)}
+
+\textbf{Comparison argument.} The lower bound is used only in the sufficient-slack regime. The equality \AtlasInlineMath{\varepsilon=\mu R^2} compares convex and strongly convex upper bounds; it is not an established minimax transition.
+
+\needspace{4\baselineskip}\subsection{R2 - One-dimensional residual-budget regime}
+\textbf{Region.} \AtlasInlineMath{d=1,\quad\mu R\le L/4,\quad0<\varepsilon\le cLR}
+
+\textbf{Views.} Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+\textbf{Quantity.} Q1; Q2
+
+\textbf{Resource.} One complete response to a query \AtlasInlineMath{(x,j)} costs one call. The simultaneous function value in FCSG carries no additional charge.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B4, B10
+
+\AtlasMath{c\log(2+LR/\varepsilon)}
+\textbf{Upper bound.} B3, B9
+
+\AtlasMath{C\log(2+LR/\varepsilon)}
+\textbf{Gap or comparison.} \AtlasInlineMath{O(1)}
+
+\needspace{4\baselineskip}\subsection{R3 - Exact compatibility endpoint}
+\textbf{Region.} \AtlasInlineMath{\mu R=L}
+
+\textbf{Views.} Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+\textbf{Quantity.} Q1; Q2
+
+\textbf{Resource.} One complete response to a query \AtlasInlineMath{(x,j)} costs one call. The simultaneous function value in FCSG carries no additional charge.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} Nonnegativity of the compared quantity
+
+\AtlasMath{0}
+\textbf{Upper bound.} B5, B11
+
+\AtlasMath{0}
+\needspace{4\baselineskip}\subsection{R4 - Zero-call center output}
+\textbf{Region.} \AtlasInlineMath{\varepsilon\ge LR}
+
+\textbf{Views.} Deterministic / Pointwise guarantee; Randomized / Expected loss
+
+\textbf{Quantity.} Q1; Q2
+
+\textbf{Resource.} One complete response to a query \AtlasInlineMath{(x,j)} costs one call. The simultaneous function value in FCSG carries no additional charge.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} Nonnegativity of the compared quantity
+
+\AtlasMath{0}
+\textbf{Upper bound.} B6, B12
+
+\AtlasMath{0}
+\needspace{4\baselineskip}\subsection{R5 - Strong-convexity slack and nontrivial accuracy}
+\textbf{Region.} \AtlasInlineMath{0<\mu R\le L/4,\quad0<\varepsilon\le cLR}
+
+\textbf{Views.} Randomized / Expected loss
+
+\textbf{Quantity.} Q2
+
+\textbf{Resource.} One complete response to a query \AtlasInlineMath{(x,j)} costs one call. The simultaneous function value in FCSG carries no additional charge.
+
+\textbf{Status.} Other quantified gap
+
+\textbf{Lower bound.} B10
+
+\AtlasMath{cd\log(2+LR/\varepsilon)}
+\textbf{Upper bound.} B7, B8, B9
+
+\AtlasMath{Cd\min\{L^2R^2/\varepsilon^2,L^2/(\mu\varepsilon),d\log(2+LR/\varepsilon)\}}
+\textbf{Gap or comparison.} \AtlasInlineMath{O\!\left(\min\left\{\frac{(LR/\varepsilon)^2}{\log(2+LR/\varepsilon)},\frac{L^2}{\mu\varepsilon\log(2+LR/\varepsilon)},d\right\}\right)}
+
+\textbf{Comparison argument.} The lower bound is used only in the sufficient-slack regime. The equality \AtlasInlineMath{\varepsilon=\mu R^2} compares convex and strongly convex upper bounds; it is not an established minimax transition.
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Output mapping.} The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+\textbf{Resource mapping.} Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+\needspace{4\baselineskip}\subsection{B1 - Ordinary subgradient descent with coordinate scans}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{Cd(1+L^2R^2/\varepsilon^2)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1405.4980}{[1]} \href{https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf}{[2]} \href{https://arxiv.org/pdf/2609.20701}{[3]}
+
+\textbf{Conditions.} 
+\AtlasMath{\mu>0,\quad\mu R\le L}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\mu>0,\quad\mu R\le L}
+
+\textbf{Oracle correspondence.} Applicable interfaces: function value and one coordinate of a subgradient, one coordinate of a subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Local argument.} A1, A2, A3
+
+\needspace{4\baselineskip}\subsection{B2 - Weighted strongly convex subgradient descent with coordinate scans}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{Cd(1+L^2/(\mu\varepsilon))}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1405.4980}{[1]} \href{https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf}{[2]} \href{https://arxiv.org/pdf/2609.20701}{[3]}
+
+\textbf{Conditions.} 
+\AtlasMath{\mu>0,\quad\mu R\le L}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\mu>0,\quad\mu R\le L}
+
+\textbf{Oracle correspondence.} Applicable interfaces: function value and one coordinate of a subgradient, one coordinate of a subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Local argument.} A1, A2, A3
+
+\needspace{4\baselineskip}\subsection{B3 - Exact cutting planes with coordinate scans}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{Cd^2\log(2+LR/\varepsilon)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1405.4980}{[1]} \href{https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf}{[2]} \href{https://arxiv.org/pdf/2609.20701}{[3]}
+
+\textbf{Conditions.} 
+\AtlasMath{\mu>0,\quad\mu R\le L}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\mu>0,\quad\mu R\le L}
+
+\textbf{Oracle correspondence.} Applicable interfaces: function value and one coordinate of a subgradient, one coordinate of a subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Local argument.} A1, A2, A3
+
+\needspace{4\baselineskip}\subsection{B4 - Coordinate-information tree for strongly convex objectives}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{cd\log(2+LR/\varepsilon)}
+\textbf{Conditions.} 
+\AtlasMath{0<\mu R\le L/4,\quad0<\varepsilon\le cLR}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{0<\mu R\le L/4,\quad0<\varepsilon\le cLR}
+
+\textbf{Oracle correspondence.} Applicable interfaces: one coordinate of a subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Local argument.} A4
+
+\needspace{4\baselineskip}\subsection{B5 - Zero-query compatibility boundary}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Conditions.} 
+\AtlasMath{\mu R=L}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\mu R=L}
+
+\textbf{Oracle correspondence.} Applicable interfaces: function value and one coordinate of a subgradient, one coordinate of a subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Local argument.} A5
+
+\needspace{4\baselineskip}\subsection{B6 - Zero-query center output at coarse accuracy}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic / Pointwise guarantee
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1405.4980}{[1]} \href{https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf}{[2]} \href{https://arxiv.org/pdf/2609.20701}{[3]}
+
+\textbf{Conditions.} 
+\AtlasMath{\varepsilon\ge LR}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\varepsilon\ge LR}
+
+\textbf{Oracle correspondence.} Applicable interfaces: function value and one coordinate of a subgradient, one coordinate of a subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Local argument.} A1, A2, A3
+
+\needspace{4\baselineskip}\subsection{B7 - Ordinary subgradient descent with coordinate scans}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Expected loss
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{Cd(1+L^2R^2/\varepsilon^2)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1405.4980}{[1]} \href{https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf}{[2]} \href{https://arxiv.org/pdf/2609.20701}{[3]}
+
+\textbf{Conditions.} 
+\AtlasMath{\mu>0,\quad\mu R\le L}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\mu>0,\quad\mu R\le L}
+
+\textbf{Oracle correspondence.} Applicable interfaces: function value and one coordinate of a subgradient, one coordinate of a subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Local argument.} A1, A2, A3
+
+\needspace{4\baselineskip}\subsection{B8 - Weighted strongly convex subgradient descent with coordinate scans}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Expected loss
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{Cd(1+L^2/(\mu\varepsilon))}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1405.4980}{[1]} \href{https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf}{[2]} \href{https://arxiv.org/pdf/2609.20701}{[3]}
+
+\textbf{Conditions.} 
+\AtlasMath{\mu>0,\quad\mu R\le L}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\mu>0,\quad\mu R\le L}
+
+\textbf{Oracle correspondence.} Applicable interfaces: function value and one coordinate of a subgradient, one coordinate of a subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Local argument.} A1, A2, A3
+
+\needspace{4\baselineskip}\subsection{B9 - Exact cutting planes with coordinate scans}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Expected loss
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{Cd^2\log(2+LR/\varepsilon)}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1405.4980}{[1]} \href{https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf}{[2]} \href{https://arxiv.org/pdf/2609.20701}{[3]}
+
+\textbf{Conditions.} 
+\AtlasMath{\mu>0,\quad\mu R\le L}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\mu>0,\quad\mu R\le L}
+
+\textbf{Oracle correspondence.} Applicable interfaces: function value and one coordinate of a subgradient, one coordinate of a subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Local argument.} A1, A2, A3
+
+\needspace{4\baselineskip}\subsection{B10 - Coordinate-information tree for strongly convex objectives}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized / Expected loss
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{cd\log(2+LR/\varepsilon)}
+\textbf{Conditions.} 
+\AtlasMath{0<\mu R\le L/4,\quad0<\varepsilon\le cLR}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{0<\mu R\le L/4,\quad0<\varepsilon\le cLR}
+
+\textbf{Oracle correspondence.} Applicable interfaces: one coordinate of a subgradient. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
+
+\textbf{Guarantee conversion.} The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+\textbf{Local argument.} A4
+
+\needspace{4\baselineskip}\subsection{B11 - Zero-query compatibility boundary}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Expected loss
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Conditions.} 
+\AtlasMath{\mu R=L}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\mu R=L}
+
+\textbf{Oracle correspondence.} Applicable interfaces: function value and one coordinate of a subgradient, one coordinate of a subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Local argument.} A5
+
+\needspace{4\baselineskip}\subsection{B12 - Zero-query center output at coarse accuracy}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized / Expected loss
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Sources.} \href{https://arxiv.org/pdf/1405.4980}{[1]} \href{https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf}{[2]} \href{https://arxiv.org/pdf/2609.20701}{[3]}
+
+\textbf{Conditions.} 
+\AtlasMath{\varepsilon\ge LR}
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{\varepsilon\ge LR}
+
+\textbf{Oracle correspondence.} Applicable interfaces: function value and one coordinate of a subgradient, one coordinate of a subgradient. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
+
+\textbf{Guarantee conversion.} A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+\textbf{Local argument.} A1, A2, A3
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - Exact and noisy coordinate scans}
+\textbf{Scope.} A selector coherent across all coordinates at a point; fixed variance allocations in the noisy model.
+
+\textbf{Algorithm scope.} Deterministic scan and averaging policies, including when observations are random.
+
+At a fixed point, every coordinate response comes from the same measurable full-subgradient selector \AtlasInlineMath{s_f(x)}, fixed before the run. Scanning all \AtlasInlineMath{d} coordinates therefore reconstructs a legal subgradient in \AtlasInlineMath{d} calls. Projected, weighted strongly convex, and centroid-certificate methods transfer with that multiplier.
+
+For noisy coordinates, conditional means are \AtlasInlineMath{s_f(x)_j}, with fixed variance budgets \AtlasInlineMath{\sigma_j^2} satisfying \AtlasInlineMath{\sum_j\sigma_j^2\le\sigma^2}. Keep the point fixed through the scan. Iterated expectation gives
+
+\AtlasMath{\mathbb E\widehat g=s_f(x),\qquad
+\mathbb E\|\widehat g-s_f(x)\|^2
+=\sum_j\mathbb E|\widehat g_j-s_f(x)_j|^2\le\sigma^2.}
+
+Cross-coordinate independence is unnecessary for this sum of squares. Total second moment is at most \AtlasInlineMath{L^2+\sigma^2}, so the projected bounds apply. Every scan costs \AtlasInlineMath{d}. A deterministic scan and weighted output remain deterministic policies despite observation noise.
+
+At zero noise use the smallest applicable exact upper bound, including the certificate. At \AtlasInlineMath{\epsilon\ge LR}, the center suffices without sampling.
+
+For public separability \AtlasInlineMath{f=\sum_j\phi_j(x_j)}, with coordinate Lipschitz constants at most \AtlasInlineMath{L/\sqrt d}, subgradient signs permit bisection. Shrink each interval to length \AtlasInlineMath{\epsilon/(L\sqrt d)}, giving component error at most \AtlasInlineMath{\epsilon/d}. Total cost is \AtlasInlineMath{O(d\log(2+LR/\epsilon))}. The algorithm remains valid under strong convexity but requires the declared separability assumption.
+
+\textbf{Limits of the argument.} Coordinate-dependent replacement of the full selector invalidates the simulation. Separable bisection requires public separability.
+
+\needspace{4\baselineskip}\subsection{A2 - Projected and weighted subgradient bounds}
+\textbf{Scope.} Public Euclidean projection; unbiased conditional subgradient mean and a total second-moment bound, or exact subgradients.
+
+\textbf{Algorithm scope.} Deterministic policies and deterministic averages; randomness may come from observations.
+
+Projection onto a public closed convex set gives
+
+\AtlasMath{\|x_{t+1}-x^\star\|^2\le\|x_t-x^\star\|^2
+-2\eta_t\langle g_t,x_t-x^\star\rangle+\eta_t^2\|g_t\|^2.}
+
+For convex \AtlasInlineMath{f}, initial distance at most \AtlasInlineMath{R}, and conditional second moment at most \AtlasInlineMath{V}, the constant step \AtlasInlineMath{R/\sqrt{VK}} and averaged output have expected gap at most \AtlasInlineMath{R\sqrt{V/K}}. Exact subgradients correspond to \AtlasInlineMath{V=L^2}.
+
+Under \AtlasInlineMath{\mu}-strong convexity, use \AtlasInlineMath{\eta_t=2/[\mu(t+1)]}. With \AtlasInlineMath{a_t=\mathbb E\|x_t-x^\star\|^2},
+
+\AtlasMath{\mathbb E[f(x_t)-f^\star]\le{\mu(t-1)\over4}a_t
+-{\mu(t+1)\over4}a_{t+1}+{V\over\mu(t+1)}.}
+
+Multiply by \AtlasInlineMath{t}, sum, and use convexity. The weighted output
+\AtlasInlineMath{\sum_{t=1}^K2t\,x_t/[K(K+1)]} has expected gap at most \AtlasInlineMath{2V/[\mu(K+1)]}. Neither output rule requires private randomness. Apply norm conversion before these inequalities, preserving all dimension factors.
+
+\textbf{Limits of the argument.} Norm-conversion factors must be applied explicitly. No noisy cutting-plane result follows from this recursion.
+
+\needspace{4\baselineskip}\subsection{A3 - Subgradient certificates and centroid cuts}
+\textbf{Scope.} One full subgradient is sufficient. Public compact convex geometry and exact internal geometric computation are available.
+
+\textbf{Algorithm scope.} Deterministic upper-bound witness; valid as an upper bound for randomized views.
+
+Let \AtlasInlineMath{Q\subset\mathbb R^d} be public, compact, convex, and full dimensional, with diameter at most \AtlasInlineMath{D} in the stated norm. Suppose all returned subgradients have dual norm at most \AtlasInlineMath{L}. Query \AtlasInlineMath{g_i\in\partial f(x_i)} at the centroid of the current body and retain \AtlasInlineMath{\langle g_i,x_i-x\rangle\ge0}. The centroid halfspace theorem bounds the retained volume by \AtlasInlineMath{(1-e^{-1})^T\operatorname{vol}(Q)}.
+
+The computable certificate is
+
+\AtlasMath{\Gamma_T=\min_{\lambda\in\Delta_T}\max_{x\in Q}\sum_i\lambda_i\langle g_i,x_i-x\rangle
+=\max_{x\in Q}\min_i\langle g_i,x_i-x\rangle.}
+
+The equality is convex minimax. Subgradient inequalities and convexity imply
+\AtlasInlineMath{f(\sum_i\lambda_ix_i)-\min_Qf\le\Gamma_T}.
+If \AtlasInlineMath{\Gamma_T>\epsilon}, choose \AtlasInlineMath{z\in Q} with all cut margins greater than \AtlasInlineMath{\epsilon}. The copy \AtlasInlineMath{(1-a)z+aQ}, where \AtlasInlineMath{a=\epsilon/[2(\epsilon+LD)]}, survives every cut. Its volume is \AtlasInlineMath{a^d\operatorname{vol}(Q)}, contradicting centroid shrinkage once \AtlasInlineMath{T>C d\log(2+LD/\epsilon)}. If the body loses volume earlier, the same positive-volume argument already certifies the error. No function values or inscribed-ball estimate are required.
+
+For \AtlasInlineMath{Q=RB_p^d} and \AtlasInlineMath{\ell_q}-Lipschitz objectives, use \AtlasInlineMath{D=2Rd^{(1/q-1/p)_+}}. Returning the center has error at most \AtlasInlineMath{LRd^{(1/q-1/p)_+}}, giving the coarse zero-query regime. Exact centroid, minimax, and public geometric calculations are uncharged internal operations.
+
+For a deterministic selector with total movement at most \AtlasInlineMath{W(T)} on nested convex sets, instead impose deep cuts of margin \AtlasInlineMath{2LW(T)/T}. If all \AtlasInlineMath{T} sets are nonempty, every move has length at least \AtlasInlineMath{2W(T)/T}, contradicting the movement bound. At the first empty intersection, minimax gives error at most \AtlasInlineMath{2LW(T)/T}. Substitution of the cited stable-movement theorem yields the recorded nondual upper bound. Its deterministic information scope is distinct from the scope of randomized implementations.
+
+\textbf{Limits of the argument.} The stable-selector branch imports its movement theorem and does not claim efficient deterministic arithmetic time.
+
+\textbf{Sources.} \href{https://arxiv.org/pdf/1405.4980}{[1]} \href{https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf}{[2]} \href{https://arxiv.org/pdf/2609.20701}{[3]}
+
+\needspace{4\baselineskip}\subsection{A4 - Information trees for coordinate subgradients}
+\textbf{Scope.} Pure coordinate subgradient feedback from one fixed selector; box geometry.
+
+\textbf{Algorithm scope.} Lower bounds against arbitrary randomized adaptive algorithms.
+
+On \AtlasInlineMath{Q=[-R/\sqrt d,R/\sqrt d]^d}, choose \AtlasInlineMath{v} uniformly in \AtlasInlineMath{Q} and
+
+\AtlasMath{f_v(x)=(L/\sqrt d)\sum_j|x_j-v_j|.}
+
+The fixed coordinate selector returns one sign bit, except at probability-zero ties. Conditional on a private seed, \AtlasInlineMath{T} adaptive calls give at most \AtlasInlineMath{2^T} leaves. An \AtlasInlineMath{\epsilon}-accurate output requires
+\AtlasInlineMath{\|\widehat x-v\|_1\le\epsilon\sqrt d/L}.
+The volume of this ball relative to the prior box is
+\AtlasInlineMath{(d\epsilon/(LR))^d/d!\le(e\epsilon/(LR))^d}.
+Thus success probability is at most
+\AtlasInlineMath{2^T(e\epsilon/(LR))^d}.
+A constant success probability needs \AtlasInlineMath{\Omega(d\log(LR/\epsilon))} calls in the stated accuracy window. Averaging over private seeds preserves the bound; Markov converts expected error to constant-probability accuracy.
+
+For strong convexity with \AtlasInlineMath{\mu R\le L/4}, let \AtlasInlineMath{r=R/\sqrt d}, choose \AtlasInlineMath{v} uniformly in \AtlasInlineMath{[-r/2,r/2]^d}, and set
+
+\AtlasMath{f_v(x)=\mu\|x\|^2/2+(L/(2\sqrt d))\sum_j|x_j-v_j|
+\quad(x\in Q).}
+
+Its minimizer is \AtlasInlineMath{v}, and
+\AtlasInlineMath{f_v(x)-f_v(v)\ge(3L/(8\sqrt d))\|x-v\|_1}.
+Subtracting the known quadratic leaves a sign bit. Clipping the quadratic derivative outside each interval gives a globally convex Lipschitz extension with subgradient norm at most \AtlasInlineMath{\mu R+L/2\le3L/4}.
+
+These instances are separable. They also belong to the noisy model at zero noise. Their bit-counting proof does not transfer to value-augmented coordinate access.
+
+\textbf{Limits of the argument.} Exact function values can reveal additional information. The strong-convexity branch requires the stated slack.
+
+\needspace{4\baselineskip}\subsection{A5 - Compatibility and the residual Lipschitz budget}
+\textbf{Scope.} Lipschitz convex functions strongly convex only on the specified ball or box.
+
+\textbf{Algorithm scope.} Instancewise deterministic zero-query and localization upper bounds.
+
+Let \AtlasInlineMath{f} be \AtlasInlineMath{L}-Lipschitz and \AtlasInlineMath{\mu}-strongly convex on \AtlasInlineMath{B(0,R)}. Strong monotonicity at opposite boundary points implies \AtlasInlineMath{\mu R\le L}. Write \AtlasInlineMath{L_{\rm rem}=L-\mu R}. From an interior \AtlasInlineMath{x}, move in direction \AtlasInlineMath{g/\|g\|} to the boundary, a distance at least \AtlasInlineMath{R-\|x\|}. Strong monotonicity and the boundary norm bound imply
+\AtlasInlineMath{\|g\|\le L_{\rm rem}+\mu\|x\|}.
+Thus \AtlasInlineMath{\|g_0\|\le L_{\rm rem}}, and strong convexity gives
+
+\AtlasMath{f(0)-\min_Qf\le L_{\rm rem}^2/(2\mu).}
+
+Strong monotonicity and constrained optimality also give \AtlasInlineMath{\|x^\star\|\le L_{\rm rem}/\mu}. When \AtlasInlineMath{L/2\le\mu R<L}, optimize on this smaller public ball, where subgradient norms are at most \AtlasInlineMath{2L_{\rm rem}}. The two budgets are
+
+\AtlasMath{O(L_{\rm rem}^2/(\mu\epsilon)),\qquad
+O(d\log(2+L_{\rm rem}^2/(\mu\epsilon))).}
+
+At \AtlasInlineMath{\mu R=L}, zero is optimal. If \AtlasInlineMath{\mu R>L}, the model is empty.
+
+For the box \AtlasInlineMath{[-R/\sqrt d,R/\sqrt d]^d}, opposite corners give the same compatibility condition. At equality, every corner subgradient is \AtlasInlineMath{\mu v}. The convex function \AtlasInlineMath{f-\mu\|\cdot\|^2/2} therefore has zero subgradient at all corners; all corners minimize it, so it is constant on their convex hull. The box-constrained optimum is again zero without querying.
+
+\textbf{Limits of the argument.} The ball localization and box equality arguments have separate geometries; do not transfer the ball radius formula to arbitrary domains.
+
+\needspace{7\baselineskip}\section{References}
+[1] Sébastien Bubeck. Convex Optimization: Algorithms and Complexity. 2015.
+
+\url{https://arxiv.org/pdf/1405.4980}
+
+[2] Arkadi Nemirovski; Shmuel Onn; Uriel G. Rothblum. Accuracy Certificates for Computational Problems with Convex Structure. 2010.
+
+\url{https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf}
+
+[3] David Martínez-Rubio; Cristóbal Guzmán. Stable Movement for Nondual Lipschitz Convex Optimization: Efficiency and Nearly Optimal Oracle Rates. 2026-09-17; preprintv1.
+
+\url{https://arxiv.org/pdf/2609.20701}
+
+\end{document}

@@ -1,0 +1,1060 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ON_ADV_FIXED_DELAY_CAPACITY",
+  "title": "Adversarial finite-armed bandits with fixed feedback delay and limited tracking capacity",
+  "summary": "Play one arm each round against a fixed loss sequence. Only tracked rounds deliver their selected-arm losses after a public fixed delay, and at most C outstanding rounds can be tracked.",
+  "primary_domain": "online_bandit",
+  "oracle_order_collection": null,
+  "facets": [
+    {
+      "facet": "domain",
+      "value": "online_bandit"
+    },
+    {
+      "facet": "goal",
+      "value": "external_regret"
+    },
+    {
+      "facet": "structure",
+      "value": "finite_actions"
+    },
+    {
+      "facet": "guarantee",
+      "value": "expectation"
+    },
+    {
+      "facet": "feedback",
+      "value": "delayed_selected_arm_capacity"
+    },
+    {
+      "facet": "resource",
+      "value": "rounds_and_tracking_slots"
+    }
+  ],
+  "common_specification": {
+    "task": {
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation_code": "online_bandit_external_regret",
+      "formulation": "sum_t l_t(a_t) − min_i sum_t l_t(i)",
+      "solution_goal": "minimize_expected_cumulative_regret",
+      "protocol_ref": "ON_ADV_FIXED_DELAY_CAPACITY_pro_1ad04c9362",
+      "code": "online_bandit_external_regret",
+      "formulation_latex": "R_T=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i),\\qquad \\ell_t\\in[0,1]^K",
+      "goal_latex": "\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}}\\mathbb E_{\\mathcal A}[R_T]",
+      "description_paragraphs": [
+        "Minimize the worst-case expected external regret against the best single fixed arm. The learner must act in every round; delayed feedback is conditional on tracking, not on whether an action was played."
+      ]
+    },
+    "model": {
+      "instance": "One fixed adversarial loss sequence and a public common delay.",
+      "assumptions": [
+        {
+          "subject_id": "ON_ADV_FIXED_DELAY_CAPACITY_obj_1ffb680223",
+          "property_code": "loss_range",
+          "variable_blocks": [],
+          "norm_ref": null,
+          "parameter_refs": [
+            "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010",
+            "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562"
+          ],
+          "scope": "The objects, time horizon, and variable blocks explicitly declared here; none is inherited from another specification.",
+          "description": "Every coordinate of each obliviously fixed loss vector belongs to $[0,1]$."
+        }
+      ],
+      "parameter_domain_description": "Integers $K\\ge2$, $T\\ge1$, $1\\le d<T$, $2\\le C\\le d+1$. The theorem window is specified separately.",
+      "code": "model_declared",
+      "interaction_timing": "Play and decide tracking before current deliveries; deliveries happen at end of round.",
+      "adversary_information": "The environment fixes the entire loss table before interaction and does not know the private seed.",
+      "unresolved_applicability": [],
+      "description_paragraphs": [
+        "Loss vectors are in $[0,1]^K$, fixed before play and independent of the learner seed. There is no sampling noise. The delay is fixed and known."
+      ]
+    },
+    "oracle": {
+      "operations": [
+        {
+          "id": "ON_ADV_FIXED_DELAY_CAPACITY_ora_d7f3dc57ae",
+          "operation_code": "delayed_tracked_selected_arm",
+          "target_object": "ON_ADV_FIXED_DELAY_CAPACITY_obj_1ffb680223",
+          "variable_blocks": [
+            "ON_ADV_FIXED_DELAY_CAPACITY_var_5c6206093f"
+          ],
+          "query_signature": "At $t$, play $a_t\\in[K]$ and decide whether to track $t$.",
+          "response_signature": "At time $s+d$, return $(s,\\ell_s(a_s))$ if $s$ was tracked.",
+          "derivative_reference_object": null,
+          "derivative_order": "not_applicable",
+          "order_convention": "Exact scalar loss; no derivative order.",
+          "feedback_quality": {
+            "code": "exact_selected_loss",
+            "description": "The exact loss at the arm played in the tracked round."
+          },
+          "domain_ref": "ON_ADV_FIXED_DELAY_CAPACITY_dom_11673a929a",
+          "coupling": "All responses read one fixed loss table; untracked rounds and unselected arms are never observed.",
+          "index_control": "The learner chooses the action and tracking decision; the public fixed delay determines delivery.",
+          "access_schedule": "Deliveries at the end of the expiration round, after the current action and tracking decision.",
+          "accuracy_argument": null,
+          "cost_rule_ref": "ON_ADV_FIXED_DELAY_CAPACITY_res_fa21edc32a",
+          "query_latex": "(t,a_t,\\text{track or skip})",
+          "response_latex": "\\{(s,\\ell_s(a_s)):s+d=t,\\ s\\text{ tracked}\\}"
+        }
+      ],
+      "public_inputs": [
+        "K",
+        "T",
+        "d",
+        "C",
+        "loss coordinate range [0,1]"
+      ],
+      "hidden_objects": [
+        "ON_ADV_FIXED_DELAY_CAPACITY_obj_1ffb680223"
+      ],
+      "auxiliary_interfaces": [
+        "No additional access to hidden losses, means, or gradients is available. Projection, sampling, and internal optimization over public domains may have separately recorded computation costs; they are not free loss oracles."
+      ],
+      "protocol_ref": "ON_ADV_FIXED_DELAY_CAPACITY_pro_1ad04c9362",
+      "query_domain_description": "One selected arm per round plus a track-or-skip decision, subject to the outstanding cap.",
+      "code": "oracle_declared",
+      "description_paragraphs": [
+        "Before play, an oblivious adversary fixes $(\\ell_1,\\ldots,\\ell_T)$, with $\\ell_t\\in[0,1]^K$. The common delay $d$ is public.",
+        "At round $t$, choose and incur the loss of one arm $a_t\\in[K]$, and decide whether to start tracking that round. These choices use earlier delivered feedback and private randomness.",
+        "At the end of round $t$, return $(s,\\ell_s(a_s))$ for each still-tracked $s$ with $s+d=t$; release delivered slots. A round never tracked gives no feedback. No preemption is needed for the upper bound; this profile uses non-preemptive tracking.",
+        "At most $C$ rounds can be tracked at once, including a newly tracked round before that round's deliveries."
+      ]
+    },
+    "output": {
+      "object_type": "action_trajectory",
+      "domain_ref": "ON_ADV_FIXED_DELAY_CAPACITY_dom_11673a929a",
+      "feasibility": "Every loss-bearing action must belong to the action domain. The final output retains the complete action trajectory.",
+      "allowed_postprocessing": "Any measurable computation on received feedback is allowed. No native observation may be added after the budget is exhausted or the algorithm stops.",
+      "certificate_requirement": "Only the stated statistical guarantee is required, not a certificate verifiable through the feedback interface.",
+      "code": "output_declared",
+      "description_paragraphs": [
+        "The output is the complete action trajectory satisfying feasibility and timing requirements. Randomized mixtures may be implemented before acting. Retrospective averages or convex combinations cannot replace actions that have already incurred loss. No additional optimal value or certificate is required."
+      ]
+    },
+    "metric": {
+      "base_expression": "sum_t l_t(a_t) − min_i sum_t l_t(i)",
+      "normalization": "Use the cumulative quantity over T rounds without dividing by T. Preserve the displayed order of probability or expectation.",
+      "reference_object": "ON_ADV_FIXED_DELAY_CAPACITY_obj_1ffb680223",
+      "nonnegativity": false,
+      "finiteness_conditions": "Both cumulative losses lie in [0,T], so their difference on each execution path lies in [-T,T].",
+      "comparator_ref": "ON_ADV_FIXED_DELAY_CAPACITY_com_1365e7e04e",
+      "code": "metric_declared",
+      "description_paragraphs": [
+        "$$\nR_T=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i),\\qquad \\ell_t\\in[0,1]^K\n$$"
+      ]
+    },
+    "resource": {
+      "components": [
+        {
+          "code": "rounds",
+          "unit": "round",
+          "description": "Exactly T loss-incurring rounds."
+        },
+        {
+          "code": "tracking_capacity",
+          "unit": "slot",
+          "description": "At most C simultaneously tracked outstanding rounds."
+        },
+        {
+          "code": "native_feedback",
+          "unit": "scalar loss",
+          "description": "Only an expiring tracked round supplies one selected-arm loss."
+        }
+      ],
+      "budget_semantics": "Fixed horizon and hard outstanding capacity cap on every execution path.",
+      "cost_rules": [
+        {
+          "id": "ON_ADV_FIXED_DELAY_CAPACITY_res_fa21edc32a",
+          "operation_refs": [
+            "ON_ADV_FIXED_DELAY_CAPACITY_ora_d7f3dc57ae"
+          ],
+          "cost": {
+            "rounds": 1
+          },
+          "description": "Tracking occupies one slot until delivery. A delivered tracked round contributes one scalar response."
+        }
+      ],
+      "scalarization": "Evaluate expected regret at fixed T and C; do not equate C with cumulative observed losses.",
+      "setup_cost": "Only declared public inputs may be read. Hidden losses, means, or samples cannot be accessed in advance or outside the $T$ rounds or $\\tau$ samples.",
+      "online_cost": "One loss-incurring action per round. Track at most C outstanding indices.",
+      "amortization_scope": "The algorithm runs on one environment. Charged feedback cannot be reused across independent instances.",
+      "precision_model": "Observations and internal arithmetic use the exact-real model. No bit-complexity claim follows.",
+      "code": "resource_declared",
+      "description_paragraphs": [
+        "The profile measures regret at a fixed horizon and a fixed simultaneous tracking capacity. It does not bound internal arithmetic or total internal memory."
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "main",
+      "label": "Causal randomized policies with non-preemptive tracking",
+      "algorithms": {
+        "randomization": "Private randomization allowed, independent of the fixed loss sequence.",
+        "adaptivity": "Any causal policy from the public data and feedback already delivered.",
+        "restrictions": [
+          "Non-preemptive tracking. The cap C applies even before the end-of-round deliveries. No additional computational restriction."
+        ],
+        "internal_computation": "Exact internal processing and storage of already delivered losses are uncharged. Tracking slots refer to feedback acquisition, not ordinary internal memory.",
+        "parallelism": "Sequential online interaction.",
+        "code": "algorithms_declared",
+        "description_paragraphs": [
+          "All causal randomized learners and non-preemptive tracking policies satisfying the capacity cap are allowed. The lower bound also holds with preemption."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "The native objective is $\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}}\\mathbb E_{\\mathcal A}[R_T]$.",
+          "aggregation_order": [
+            "For a fixed loss table, take expectation over private randomness; then take worst case over fixed loss tables and optimize over admissible policies."
+          ],
+          "quantifier_order": "One learning algorithm must apply to every instance in the declared class. It may use public inputs only, not hidden instance parameters.",
+          "randomness_sources": [
+            "Private learner and tracking randomization."
+          ],
+          "confidence_parameters": [],
+          "time_uniformity": "The horizon T is fixed and public. The guarantee holds for that T; it does not automatically give an anytime result or a simultaneous high-probability statement for all T.",
+          "code": "guarantee_declared",
+          "description_paragraphs": [
+            "For each fixed admissible loss table, the upper bound controls $\\mathbb E[R_T]$ over learner and tracking randomness. The lower bound concerns the worst fixed table for each allowed policy."
+          ]
+        }
+      ],
+      "specification_overrides": {},
+      "budget": {
+        "description": "T online rounds; at most C simultaneously tracked rounds on every execution path."
+      },
+      "alias_ids": [],
+      "display_qualifications": []
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ON_ADV_FIXED_DELAY_CAPACITY_obj_1ffb680223",
+        "type": "loss_environment",
+        "definition": "Loss vectors are in $[0,1]^K$, fixed before play and independent of the learner seed. There is no sampling noise. The delay is fixed and known.",
+        "depends_on": [],
+        "role_code": "loss_vector_sequence"
+      }
+    ],
+    "variable_blocks": [
+      {
+        "id": "ON_ADV_FIXED_DELAY_CAPACITY_var_5c6206093f",
+        "dimension": "One discrete action index",
+        "space": "[K]"
+      }
+    ],
+    "domains": [
+      {
+        "id": "ON_ADV_FIXED_DELAY_CAPACITY_dom_11673a929a",
+        "definition": "[K]",
+        "roles": [
+          "action_domain",
+          "query_domain"
+        ]
+      }
+    ],
+    "norms": [
+      {
+        "id": "ON_ADV_FIXED_DELAY_CAPACITY_nor_60596e4d87",
+        "definition": "The model specifies coordinate ranges of finite vectors. Discrete action labels have no derivative order. A placeholder norm imposes no additional geometric assumption."
+      }
+    ],
+    "protocols": [
+      {
+        "id": "ON_ADV_FIXED_DELAY_CAPACITY_pro_1ad04c9362",
+        "steps": [
+          "Before play, an oblivious adversary fixes $(\\ell_1,\\ldots,\\ell_T)$, with $\\ell_t\\in[0,1]^K$. The common delay $d$ is public.",
+          "At round $t$, choose and incur the loss of one arm $a_t\\in[K]$, and decide whether to start tracking that round. These choices use earlier delivered feedback and private randomness.",
+          "At the end of round $t$, return $(s,\\ell_s(a_s))$ for each still-tracked $s$ with $s+d=t$; release delivered slots. A round never tracked gives no feedback. No preemption is needed for the upper bound; this profile uses non-preemptive tracking.",
+          "At most $C$ rounds can be tracked at once, including a newly tracked round before that round's deliveries."
+        ],
+        "adversary_information": "The environment fixes the complete loss sequence before interaction. It may know the algorithm and public parameters but cannot depend on the learner's private seed. This is an oblivious environment; nonanticipation describes the learner's causal information and does not extend the specification to a history-adaptive adversary.",
+        "loss_bearing_points": "Exactly one arm each round, even when its round is not tracked.",
+        "queries_per_round": "One loss-incurring action and one optional tracking registration per round; at most one delivered loss per round for fixed delay.",
+        "past_requery": "None. Delivered feedback can be processed; untracked past losses cannot be recovered."
+      }
+    ],
+    "comparators": [
+      {
+        "id": "ON_ADV_FIXED_DELAY_CAPACITY_com_1365e7e04e",
+        "definition": "Best fixed arm in hindsight."
+      }
+    ]
+  },
+  "parameters": [
+    {
+      "id": "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010",
+      "symbol": "K",
+      "meaning": "The finite number of arms.",
+      "kind": "independent",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "public": true,
+      "definition": "The arm set is $[K]=\\{1,\\ldots,K\\}$.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562",
+      "symbol": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "kind": "independent",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "public": true,
+      "definition": "The fixed number of loss-incurring rounds. Fewer than T losses may be observed.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_ADV_FIXED_DELAY_CAPACITY_p_d",
+      "symbol": "d",
+      "meaning": "Common delay, public before the game.",
+      "kind": "independent",
+      "domain": "$d\\in\\mathbb N,\\ 1\\le d<T$.",
+      "public": true,
+      "definition": "Feedback for round $s$ is delivered at the end of round $s+d$ if still tracked.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ON_ADV_FIXED_DELAY_CAPACITY_p_C",
+      "symbol": "C",
+      "meaning": "Maximum number of rounds simultaneously tracked.",
+      "kind": "independent",
+      "domain": "$C\\in\\mathbb N,\\ 2\\le C\\le d+1$.",
+      "public": true,
+      "definition": "The cap counts outstanding tracked rounds, including the newly accepted round before deliveries.",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "symbol_latex": "K",
+      "meaning": "The finite number of arms.",
+      "domain": "$K\\in\\mathbb N,\\ K\\ge2$",
+      "definition": "The arm set is $[K]=\\{1,\\ldots,K\\}$.",
+      "parameter_ref": "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010"
+    },
+    {
+      "symbol_latex": "T",
+      "meaning": "Online rounds within the fixed evaluation horizon.",
+      "domain": "$T\\in\\mathbb N,\\ T\\ge1$",
+      "definition": "The fixed number of loss-incurring rounds. Fewer than T losses may be observed.",
+      "parameter_ref": "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562"
+    },
+    {
+      "symbol_latex": "\\ell_t",
+      "meaning": "Hidden loss vector at round t",
+      "domain": "$\\ell_t\\in[0,1]^K$",
+      "definition": "The entire sequence is fixed before interaction; only coordinates allowed by the protocol become visible after acting.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "a_t",
+      "meaning": "Arm or expert that actually incurs loss in round $t$",
+      "domain": "$a_t\\in[K]$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "[K]",
+      "meaning": "Index set of K arms or experts",
+      "domain": "A finite set.",
+      "definition": "$[K]=\\{1,\\ldots,K\\}$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "i",
+      "meaning": "Comparator arm fixed over the entire horizon",
+      "domain": "$i\\in[K]$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "Y_t",
+      "meaning": "Exact loss observed in the current round",
+      "domain": "$Y_t\\in[0,1]$",
+      "definition": "$Y_t=\\ell_t(a_t)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\alpha,\\eta_t",
+      "meaning": "The Tsallis-INF regularization exponent and round-t learning rate.",
+      "domain": "Algorithm-tuning parameter",
+      "definition": "The quantities $\\alpha=1/2$ and $\\eta_t=2/\\sqrt t$ are not curvature or statistical-confidence parameters.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "R_T",
+      "meaning": "Cumulative loss difference relative to the comparator specified in this profile",
+      "domain": "Real-valued random variable",
+      "definition": "$R_T=\\sum_t\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_t\\ell_t(i)$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal R_T^*",
+      "meaning": "Minimax expected regret under the current information protocol and parameter region.",
+      "domain": "A nonnegative real.",
+      "definition": "$$\n\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\mathbb E_{\\mathcal A}[R_T],\\\\ R_T&=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).\\end{aligned}\n$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathcal A",
+      "meaning": "Learning policies satisfying the specified information, computation, and privacy restrictions",
+      "domain": "A measurable causal policy.",
+      "definition": "Actions may depend only on revealed information and the private seed. Additional restrictions are governed by the algorithm protocol in this profile.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "t",
+      "meaning": "Interaction-time index",
+      "domain": "$t\\in\\{1,\\ldots,T\\}$",
+      "definition": null,
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\mathbb E",
+      "meaning": "Mean operator",
+      "domain": "Expectation over the specified random variables",
+      "definition": "Expectation includes the learner's private randomness and, when allowed, the environment strategy's randomness. A fixed loss sequence introduces no additional observation noise.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "\\log,\\log_2",
+      "meaning": "Natural and binary logarithms",
+      "domain": "Function on the positive real axis",
+      "definition": "$\\log x=\\ln x$, $\\log_2x=\\log x/\\log2$.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c,C",
+      "meaning": "Positive constant in the bound without an assigned numerical value",
+      "domain": "Positive real number",
+      "definition": "Constants apply only under the associated bound’s conditions and fixed-parameter convention. Unspecified theorem constants are not treated as additional algorithm inputs.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "O,\\Omega,\\widetilde O,\\widetilde\\Omega",
+      "meaning": "Asymptotic upper and lower bounds, including explicitly permitted logarithmic suppression.",
+      "domain": "Asymptotic comparison notation",
+      "definition": "The result applies only in the regime declared for that bound. Tilde notation hides only its stated logarithms and fixed-parameter dependencies, never additional polynomial parameter factors.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "N",
+      "meaning": "Number of delivered selected-arm feedback values",
+      "domain": "An integer between zero and T.",
+      "definition": "Let $N$ be the number of tracked feedback values delivered by the end of round $T$. In general $N\\le T$, and equality is not required.",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "d",
+      "meaning": "Common delay, public before the game.",
+      "domain": "$d\\in\\mathbb N,\\ 1\\le d<T$.",
+      "definition": "Feedback for round $s$ is delivered at the end of round $s+d$ if still tracked.",
+      "parameter_ref": "ON_ADV_FIXED_DELAY_CAPACITY_p_d"
+    },
+    {
+      "symbol_latex": "C",
+      "meaning": "Maximum number of rounds simultaneously tracked.",
+      "domain": "$C\\in\\mathbb N,\\ 2\\le C\\le d+1$.",
+      "definition": "The cap counts outstanding tracked rounds, including the newly accepted round before deliveries.",
+      "parameter_ref": "ON_ADV_FIXED_DELAY_CAPACITY_p_C"
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ON_ADV_FIXED_DELAY_CAPACITY__main__q1",
+      "kind": "cumulative_regret",
+      "expression": "R*_T = inf_{A in admissible nonanticipating randomized learners} sup_{I in declared model} E_A,I[sum_t l_t(a_t) − min_i sum_t l_t(i)].",
+      "optimization_direction": "minimize",
+      "units": "loss",
+      "budget_variables": [
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562",
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_C"
+      ],
+      "tolerance_variables": [],
+      "analysis_scope": "All causal randomized policies with non-preemptive tracking and the given public parameters; supremum over obliviously fixed loss tables.",
+      "tracked_parameters": [
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562",
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010",
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_d",
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_C"
+      ],
+      "fixed_parameters": [],
+      "comparison_scale": "multiplicative_rate",
+      "nonnegativity": true,
+      "source_kind_label": "minimax_cumulative_regret",
+      "expression_latex": "\\begin{aligned}\\mathcal R_T^*&=\\inf_{\\mathcal A}\\sup_{\\ell_{1:T}\\in([0,1]^K)^T}\\mathbb E_{\\mathcal A}[R_T],\\\\ R_T&=\\sum_{t=1}^T\\ell_t(a_t)-\\min_{i\\in[K]}\\sum_{t=1}^T\\ell_t(i).\\end{aligned}",
+      "view_id": "main",
+      "guarantee_id": "g1"
+    }
+  ],
+  "resource_projections": [
+    {
+      "description": "Compare minimax expected regret with horizon T and hard capacity C fixed.",
+      "expression": "(T,C)",
+      "mode": "multiplicative_rate",
+      "resource_projection_id": "ON_ADV_FIXED_DELAY_CAPACITY_proj"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ON_ADV_FIXED_DELAY_CAPACITY__main__r1",
+      "specification_ref": "ON_ADV_FIXED_DELAY_CAPACITY",
+      "name": "Fixed delay with matching capacity bounds",
+      "predicate_text": "$K\\ge2$, $d\\ge1$, $2\\le C\\le d+1$, $T\\ge2(d+1)$, $K(d+1)\\le CT$, and $d\\log K\\le T$. All inputs are integers; $\\log$ is natural.",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010"
+              },
+              "op": "ge",
+              "right": 2
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_d"
+              },
+              "op": "ge",
+              "right": 1
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_C"
+              },
+              "op": "ge",
+              "right": 2
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_C"
+              },
+              "op": "le",
+              "right": {
+                "op": "add",
+                "args": [
+                  {
+                    "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_d"
+                  },
+                  1
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "op": "mul",
+                "args": [
+                  2,
+                  {
+                    "op": "add",
+                    "args": [
+                      {
+                        "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_d"
+                      },
+                      1
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010"
+              },
+              "op": "le",
+              "right": {
+                "op": "div",
+                "args": [
+                  {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_C"
+                      },
+                      {
+                        "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562"
+                      }
+                    ]
+                  },
+                  {
+                    "op": "add",
+                    "args": [
+                      {
+                        "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_d"
+                      },
+                      1
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "op": "mul",
+                "args": [
+                  {
+                    "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_d"
+                  },
+                  {
+                    "op": "log",
+                    "args": [
+                      {
+                        "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "op": "le",
+              "right": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562"
+              }
+            }
+          }
+        ]
+      },
+      "parameter_refs": [
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562",
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010",
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_d",
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_C"
+      ],
+      "kind": "theorem_window",
+      "endpoint_notes": "Retain K ≤ floor(CT/(d+1)); the matched window includes the saturation boundary."
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ON_ADV_FIXED_DELAY_CAPACITY__main__b1",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "upper_bound",
+      "formula_latex": "O\\!\\left(\\sqrt{TK(1+d/C)}+\\sqrt{Td\\log K}\\right)",
+      "quantity_ref": "ON_ADV_FIXED_DELAY_CAPACITY__main__q1",
+      "region_refs": [
+        "ON_ADV_FIXED_DELAY_CAPACITY__main__r1"
+      ],
+      "method": "Delayed FTRL with batch partitioning",
+      "algorithm_or_hard_family": "Delayed FTRL with batch partitioning",
+      "algorithm_class_scope": "Causal randomized learners with one loss-bearing action per round and a hard cap on tracked rounds.",
+      "resource_costs": {
+        "rounds": "T",
+        "tracking_capacity": "C"
+      },
+      "parameter_choice": "Use the stated integer and horizon window; the upper bound chooses the batch size from the public delay and capacity.",
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_RYABCHENKO_ATTIAS_ROY_2025"
+      ],
+      "evidence_refs": [
+        "ON_ADV_FIXED_DELAY_CAPACITY__main__e1"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_ADV_FIXED_DELAY_CAPACITY__main__c1"
+      ],
+      "applicability": {
+        "oracle_mapping": "Exact delayed selected-arm loss conditional on tracking; same fixed table.",
+        "guarantee_mapping": "Worst-case expected external regret; expectation over learner and scheduler randomness.",
+        "resource_mapping": "T rounds and hard capacity C; not a memory lower bound.",
+        "conditions": [
+          "$K\\ge2$, $d\\ge1$, $2\\le C\\le d+1$, $T\\ge2(d+1)$, $K(d+1)\\le CT$, and $d\\log K\\le T$. All inputs are integers; $\\log$ is natural."
+        ]
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "witness_type": "randomized",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": []
+    },
+    {
+      "id": "ON_ADV_FIXED_DELAY_CAPACITY__main__b2",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "lower_bound",
+      "formula_latex": "\\Omega\\!\\left(\\sqrt{TK(1+d/C)}+\\sqrt{Td\\log K}\\right)",
+      "quantity_ref": "ON_ADV_FIXED_DELAY_CAPACITY__main__q1",
+      "region_refs": [
+        "ON_ADV_FIXED_DELAY_CAPACITY__main__r1"
+      ],
+      "method": "Label-efficient and fixed-delay reductions",
+      "algorithm_or_hard_family": "Label-efficient and fixed-delay reductions",
+      "algorithm_class_scope": "Causal randomized learners with one loss-bearing action per round and a hard cap on tracked rounds.",
+      "resource_costs": {
+        "rounds": "T",
+        "tracking_capacity": "C"
+      },
+      "parameter_choice": "Use the stated integer and horizon window; the upper bound chooses the batch size from the public delay and capacity.",
+      "joint_budget_constraints": [
+        "Feedback and rounds are linked by the declared online protocol."
+      ],
+      "source_refs": [
+        "ON_SRC_RYABCHENKO_ATTIAS_ROY_2025"
+      ],
+      "evidence_refs": [
+        "ON_ADV_FIXED_DELAY_CAPACITY__main__e2"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ON_ADV_FIXED_DELAY_CAPACITY__main__c1"
+      ],
+      "applicability": {
+        "oracle_mapping": "Exact delayed selected-arm loss conditional on tracking; same fixed table.",
+        "guarantee_mapping": "Worst-case expected external regret; expectation over learner and scheduler randomness.",
+        "resource_mapping": "T rounds and hard capacity C; not a memory lower bound.",
+        "conditions": [
+          "$K\\ge2$, $d\\ge1$, $2\\le C\\le d+1$, $T\\ge2(d+1)$, $K(d+1)\\le CT$, and $d\\log K\\le T$. All inputs are integers; $\\log$ is natural."
+        ]
+      },
+      "hidden_constants": "Universal constants independent of the parameters explicitly tracked in this claim",
+      "hidden_logs": [
+        "None."
+      ],
+      "derivation": null,
+      "lower_scope_type": "all_admissible_algorithms",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "proof_refs": [],
+      "lower_algorithm_scope": "All causal randomized policies under the hard capacity cap, even with preemption and known delay."
+    }
+  ],
+  "comparisons": [
+    {
+      "label": "Fixed delay with matching capacity bounds",
+      "predicate": {
+        "all": [
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010"
+              },
+              "op": "ge",
+              "right": 2
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_d"
+              },
+              "op": "ge",
+              "right": 1
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_C"
+              },
+              "op": "ge",
+              "right": 2
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_C"
+              },
+              "op": "le",
+              "right": {
+                "op": "add",
+                "args": [
+                  {
+                    "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_d"
+                  },
+                  1
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562"
+              },
+              "op": "ge",
+              "right": {
+                "op": "mul",
+                "args": [
+                  2,
+                  {
+                    "op": "add",
+                    "args": [
+                      {
+                        "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_d"
+                      },
+                      1
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010"
+              },
+              "op": "le",
+              "right": {
+                "op": "div",
+                "args": [
+                  {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_C"
+                      },
+                      {
+                        "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562"
+                      }
+                    ]
+                  },
+                  {
+                    "op": "add",
+                    "args": [
+                      {
+                        "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_d"
+                      },
+                      1
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": {
+              "left": {
+                "op": "mul",
+                "args": [
+                  {
+                    "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_d"
+                  },
+                  {
+                    "op": "log",
+                    "args": [
+                      {
+                        "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "op": "le",
+              "right": {
+                "parameter": "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562"
+              }
+            }
+          }
+        ]
+      },
+      "predicate_text": "$K\\ge2$, $d\\ge1$, $2\\le C\\le d+1$, $T\\ge2(d+1)$, $K(d+1)\\le CT$, and $d\\log K\\le T$. All inputs are integers; $\\log$ is natural.",
+      "parameter_refs": [
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_76dd32a562",
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_585fcb7010",
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_d",
+        "ON_ADV_FIXED_DELAY_CAPACITY_p_C"
+      ],
+      "source_region_ref": "ON_ADV_FIXED_DELAY_CAPACITY__main__r1",
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "comparison_id": "ON_ADV_FIXED_DELAY_CAPACITY__main__c1",
+      "view_id": "main",
+      "guarantee_id": "g1",
+      "quantity_id": "ON_ADV_FIXED_DELAY_CAPACITY__main__q1",
+      "resource_projection_id": "ON_ADV_FIXED_DELAY_CAPACITY_proj",
+      "regime_id": "ON_ADV_FIXED_DELAY_CAPACITY__main__r1",
+      "bracket": {
+        "upper_refs": [
+          "ON_ADV_FIXED_DELAY_CAPACITY__main__b1"
+        ],
+        "lower_refs": [
+          "ON_ADV_FIXED_DELAY_CAPACITY__main__b2"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "comparison_ref": "ON_ADV_FIXED_DELAY_CAPACITY__main__c1",
+        "quantity_ref": "ON_ADV_FIXED_DELAY_CAPACITY__main__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "(T,C)",
+        "resource_projection_description": "Compare minimax expected regret with horizon T and hard capacity C fixed.",
+        "ratio_or_gap": "$\\Theta\\!\\left(\\sqrt{TK(1+d/C)}+\\sqrt{Td\\log K}\\right)$",
+        "envelopes": {
+          "upper": {
+            "expression": "O\\!\\left(\\sqrt{TK(1+d/C)}+\\sqrt{Td\\log K}\\right)",
+            "expression_latex": "O\\!\\left(\\sqrt{TK(1+d/C)}+\\sqrt{Td\\log K}\\right)",
+            "claim_refs": [
+              "ON_ADV_FIXED_DELAY_CAPACITY__main__b1"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "\\Omega\\!\\left(\\sqrt{TK(1+d/C)}+\\sqrt{Td\\log K}\\right)",
+            "expression_latex": "\\Omega\\!\\left(\\sqrt{TK(1+d/C)}+\\sqrt{Td\\log K}\\right)",
+            "claim_refs": [
+              "ON_ADV_FIXED_DELAY_CAPACITY__main__b2"
+            ],
+            "included": true
+          }
+        },
+        "dispatch": [
+          {
+            "claim_ref": "ON_ADV_FIXED_DELAY_CAPACITY__main__b1",
+            "when_region_refs": [
+              "ON_ADV_FIXED_DELAY_CAPACITY__main__r1"
+            ],
+            "meaning": "Use batch partitioning in the displayed window."
+          }
+        ],
+        "claim_guards": {
+          "ON_ADV_FIXED_DELAY_CAPACITY__main__b1": [
+            {
+              "region_ref": "ON_ADV_FIXED_DELAY_CAPACITY__main__r1",
+              "predicate_text": "$K\\ge2$, $d\\ge1$, $2\\le C\\le d+1$, $T\\ge2(d+1)$, $K(d+1)\\le CT$, and $d\\log K\\le T$. All inputs are integers; $\\log$ is natural."
+            }
+          ],
+          "ON_ADV_FIXED_DELAY_CAPACITY__main__b2": [
+            {
+              "region_ref": "ON_ADV_FIXED_DELAY_CAPACITY__main__r1",
+              "predicate_text": "$K\\ge2$, $d\\ge1$, $2\\le C\\le d+1$, $T\\ge2(d+1)$, $K(d+1)\\le CT$, and $d\\log K\\le T$. All inputs are integers; $\\log$ is natural."
+            }
+          ]
+        },
+        "envelope_certificate": "Matching up to universal constants for the displayed fixed-delay bandit window."
+      },
+      "comparison_key": {
+        "setting_id": "ON_ADV_FIXED_DELAY_CAPACITY",
+        "view_id": "main",
+        "guarantee_id": "g1",
+        "quantity_id": "ON_ADV_FIXED_DELAY_CAPACITY__main__q1",
+        "resource_projection_id": "ON_ADV_FIXED_DELAY_CAPACITY_proj",
+        "regime_id": "ON_ADV_FIXED_DELAY_CAPACITY__main__r1"
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ON_ADV_FIXED_DELAY_CAPACITY__main__e1",
+      "source_ref": "ON_SRC_RYABCHENKO_ATTIAS_ROY_2025",
+      "locator": {
+        "theorem": "Theorems 3.1–3.2; Appendix D.1",
+        "version": "https://arxiv.org/abs/2503.19856v1"
+      },
+      "supports": "The witness uses batches of size $b=\\max\\{1,\\lceil d/(C-1)\\rceil\\}$ and tracks one randomly chosen round per batch. The batch size enforces the capacity cap without preemption. The regret bound reduces to the displayed rate."
+    },
+    {
+      "id": "ON_ADV_FIXED_DELAY_CAPACITY__main__e2",
+      "source_ref": "ON_SRC_RYABCHENKO_ATTIAS_ROY_2025",
+      "locator": {
+        "theorem": "Theorem D.5, proof of Theorem 3.2",
+        "version": "https://arxiv.org/abs/2503.19856v1"
+      },
+      "supports": "Every delivered feedback occupies one slot for $d+1$ rounds, so at most $\\lfloor CT/(d+1)\\rfloor$ feedback values are useful. The label-efficient bandit lower bound gives the capacity term, and the ordinary fixed-delay lower bound gives the delay term. The reduction permits even clairvoyant preemption."
+    }
+  ],
+  "references": [
+    {
+      "id": "ON_SRC_RYABCHENKO_ATTIAS_ROY_2025",
+      "title": "Capacity-Constrained Online Learning with Delays: Scheduling Frameworks and Regret Trade-offs",
+      "authors": [
+        "Alexander Ryabchenko",
+        "Idan Attias",
+        "Daniel M. Roy"
+      ],
+      "year": 2025,
+      "url": "https://proceedings.mlr.press/v291/ryabchenko25a.html",
+      "venue": "COLT 2025"
+    }
+  ],
+  "relations": [
+    {
+      "target_setting_id": "ON_ADV_S",
+      "relation": "different_protocol",
+      "notes": "Immediate selected-arm feedback is a different protocol. The delay and the cap on outstanding feedback change which information becomes available."
+    }
+  ],
+  "aliases": [],
+  "review": {
+    "scientific_evidence": "COLT 2025 Theorem 3.2 and its proof in Appendix D.1. Profile uses a non-saturated window and a public fixed delay."
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "fully_optimal",
+        "label": "Fully optimal"
+      }
+    ],
+    "gap_classes": [],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 1,
+    "status_counts": {
+      "optimal": 1
+    },
+    "gap_details": []
+  },
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ON_ADV_FIXED_DELAY_CAPACITY__main__c1"
+      ],
+      "view_ids": [
+        "main"
+      ]
+    }
+  ],
+  "provenance": {
+    "source_schema_version": "6.1.0",
+    "source_snapshot": "scout-literature-2024-2026",
+    "source_json_sha256": "0486ff3ce7adb8941e23b3fe42f7c8a7a2da7d4d9d9f404b43859417c1ac7526",
+    "source_order": 418,
+    "transformations": [
+      "source_backed_new_profile",
+      "explicit_non_saturation_window"
+    ]
+  }
+}

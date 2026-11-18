@@ -1,0 +1,821 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Convex minimization with complete exact higher-order derivatives: full-space queries\par}\vspace{5pt}
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}HO\_\allowbreak{}HOC01\_\allowbreak{}S\_\allowbreak{}full}
+
+Single-objective optimization
+
+Solve \AtlasInlineMath{\min_{x\in \mathbb{R}^d}f(x)} to obtain an objective-value approximation relative to the global infimum.
+
+\textbf{Status.} Logarithmic gap present; Bounds missing
+
+\textbf{TASK tags.} formulation: Global minimization; task family: Single objective
+
+\textbf{MODEL tags.} convexity: Convex; geometry: Euclidean ball; geometry: Full space; smoothness: Kth derivative lipschitz
+
+\textbf{ORACLE tags.} access order: Higher-order interface; feedback quality: Exact; interface family: Full jet; operation: Exact jet k; public information: Computable access; public information: Hidden objects explicitly declared; public information: Known upper bound; public information: Known exact value; public information: Public inputs explicitly declared
+
+\textbf{ALGORITHMS tags.} adaptivity: Adaptive; randomization: Deterministic; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+\textbf{OUTPUT tags.} certificate: No additional output certificate required; feasibility: Required; object: Point; postprocessing: Unqueried output explicitly allowed
+
+\textbf{METRIC tags.} criterion: Objective gap
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; mode: Deterministic; mode: Probability; randomness: Algorithm private seed
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget; measure: Oracle calls; precision: Bit precision not counted
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+\needspace{4\baselineskip}\subsection{Task}
+Solve \AtlasInlineMath{\min_{x\in \mathbb{R}^d}f(x)} to obtain an objective-value approximation relative to the global infimum.
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+The objective \AtlasInlineMath{f:\mathbb{R}^d\to\mathbb{R}} is convex and \AtlasInlineMath{C^k}, with \AtlasInlineMath{k\ge2}.
+
+
+\AtlasMath{\|D^{k}f(x)-D^{k}f(y)\|_{\mathrm{op},2}\le M_k\|x-y\|_{2}.}
+
+
+There exists a global minimizer \AtlasInlineMath{x^*} satisfying \AtlasInlineMath{\|x^*-x_0\|_2\le R}.
+
+The highest-order regularity condition does not include uniform bounds on lower derivatives or a gradient-smoothness bound.
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+Each query selects \AtlasInlineMath{x} in \AtlasInlineMath{\mathbb{R}^d} and returns the complete exact tuple \AtlasInlineMath{J_{k}f(x)=(f(x),Df(x),\ldots,D^{k}f(x))}. The fixed objective uniquely determines the response, with no stochastic noise.
+
+The public inputs are \AtlasInlineMath{x_0}, the target accuracy, and \AtlasInlineMath{d}, \AtlasInlineMath{k}, \AtlasInlineMath{M_k}, \AtlasInlineMath{R}, \AtlasInlineMath{\varepsilon_f}. Numerical constants are admissible bounds and need not equal the sharp constants of the instance. The objective, unqueried derivatives, minimizer and minimum value are hidden.
+
+\needspace{4\baselineskip}\subsection{Output}
+Return \AtlasInlineMath{\widehat{x}\in \mathbb{R}^d}.
+
+The output may be an unqueried point, a feasible average of past iterates, or another feasible postprocessing result. No function value or additional computable certificate is required.
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+The base error is
+
+
+\AtlasMath{\mathcal{E}(\widehat{x})=f(\widehat{x})-f^*.}
+
+
+Here \AtlasInlineMath{f^*=\inf_{x\in \mathbb{R}^d}f(x)}. The lower-boundedness or attainment assumption makes this error finite and nonnegative.
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+Each primitive response specified under ORACLE costs one unit. Queries at new points introduced by any inner procedure also count toward the total.
+
+The resource budget is a fixed worst-case cap on every execution path. Initialization, stopping checks, and all actual responses in a batch are included.
+
+Arithmetic, linear algebra, tensor operations, storage, and global solution of known models are free. Bit complexity, communication, and wall-clock time are not counted.
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+\needspace{4\baselineskip}\subsubsection{Deterministic}
+Arbitrary measurable adaptive deterministic algorithms are allowed.
+
+No linear-span, Krylov or zero-respecting restriction is imposed. Memory and internal computation are unrestricted.
+
+Information is acquired adaptively in query order. Parallel submission does not reduce the number of actual responses counted. There is no communication-round or memory budget. Exact real arithmetic and arbitrarily small positive query separations are allowed.
+
+Choose one algorithm from the public inputs, then require its guarantee separately for every admissible instance and oracle law.
+
+
+\AtlasMath{f(\widehat{x})-f^*\le \varepsilon_f.}
+
+
+The running-cost guarantee is specified separately under RESOURCE.
+
+\needspace{4\baselineskip}\subsubsection{Randomized}
+Arbitrary measurable adaptive algorithms with private randomness are allowed.
+
+No linear-span, Krylov or zero-respecting restriction is imposed. Memory and internal computation are unrestricted.
+
+Information is acquired adaptively in query order. Parallel submission does not reduce the number of actual responses counted. There is no communication-round or memory budget. Exact real arithmetic and arbitrarily small positive query separations are allowed.
+
+Choose one algorithm from the public inputs, then require its guarantee separately for every admissible instance and oracle law.
+
+
+\AtlasMath{\Pr\!\left[f(\widehat{x})-f^*\le \varepsilon_f\right]\ge\frac23.}
+
+
+Expectation or probability is evaluated after fixing the instance; randomness comes from the algorithm's private random seed.
+
+The running-cost guarantee is specified separately under RESOURCE.
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+\AtlasInlineMath{x,\widehat{x},x_0}: Query or decision point, algorithm output, and public initial point. \textbf{Domain:} \AtlasInlineMath{\mathbb{R}^d}.
+
+\AtlasInlineMath{\mathbb{R}^d}: Real coordinate space; vectors use the Euclidean norm unless otherwise stated. \textbf{Domain:} \AtlasInlineMath{d} is a positive integer.
+
+\AtlasInlineMath{\langle u,v\rangle,\ \|u\|_2}: Euclidean inner product and norm.
+
+
+\AtlasMath{\langle u,v\rangle=u^\top v,\qquad\|u\|_2=\sqrt{\langle u,u\rangle}.}
+
+
+\AtlasInlineMath{D^jf(x),\ \nabla f(x),\ \nabla^2f(x)}: Fréchet derivative of order \AtlasInlineMath{j}, gradient and Hessian. \textbf{Domain:} \AtlasInlineMath{j\in\{0,\ldots,k\}} and \AtlasInlineMath{D^0f=f}.
+
+\AtlasInlineMath{\|T\|_{\mathrm{op}},\ \|T\|_{\mathrm{op},2}}: Induced operator norm of a Euclidean multilinear tensor; the spectral norm for matrices.
+
+
+\AtlasMath{\|T\|_{\mathrm{op}}=\|T\|_{\mathrm{op},2}=\sup_{\|u_1\|_2,\ldots,\|u_j\|_2\le1}|T[u_1,\ldots,u_j]|.}
+
+
+\AtlasInlineMath{\mathcal{E}}: Base error defined in the metric specification; expectation or probability aggregation is imposed by the guarantee.
+
+\AtlasInlineMath{N}: Total number of original oracle calls; the unit cost is specified in the resource convention. \textbf{Domain:} \AtlasInlineMath{N\in\mathbb{Z}_{\ge0}}.
+
+\AtlasInlineMath{T^*}: Minimum worst-case budget for one algorithm to meet the requirement on the full instance class, within the specified regime, guarantee and resource projection. Expected-resource specifications instead minimize the per-instance expected budget.
+
+\AtlasInlineMath{O,\Omega,\Theta,\widetilde{O}}: Asymptotic upper bounds, lower bounds, matching bounds up to constants, and upper bounds omitting the declared logarithmic factors. \textbf{Domain:} Hidden constants, fixed parameters, and omitted logarithmic variables are specified for each bound.
+
+\AtlasInlineMath{\inf,\sup,\min,\max}: Infimum, supremum, attained minimum and attained maximum.
+
+\AtlasInlineMath{c,C}: Positive universal constants without assigned numerical values; a subscript permits dependence only on the indicated fixed parameters. \textbf{Domain:} \AtlasInlineMath{0<c,C<\infty}.
+
+\AtlasInlineMath{J_{k}f(x)}: Function value and the complete tuple of derivatives from order one through the specified maximum order.
+
+
+\AtlasMath{J_{k}f(x)=(f(x),Df(x),\ldots,D^{k}f(x)).}
+
+
+\AtlasInlineMath{f,f^*}: Unknown objective and its global infimum over the specified feasible domain.
+
+
+\AtlasMath{f^*=\inf_{x\in \mathbb{R}^d}f(x).}
+
+
+\AtlasInlineMath{d}: Ambient dimension; dimension requirements are stated separately for each bound. \textbf{Domain:} \AtlasInlineMath{d\in\mathbb{N}_{+}}.
+
+\AtlasInlineMath{k}: Maximum order of the query interface and Taylor model; this integer is fixed before other parameters are compared. \textbf{Domain:} \AtlasInlineMath{k\in\mathbb{N}, k\ge2}.
+
+\AtlasInlineMath{M_k}: Global Lipschitz upper bound for the order-\AtlasInlineMath{k} derivative in the tensor operator norm. \textbf{Domain:} \AtlasInlineMath{M_k\ge0}.
+
+\AtlasInlineMath{R}: Upper bound on the distance from the known initial point to at least one global minimizer. \textbf{Domain:} \AtlasInlineMath{R\ge0}.
+
+\AtlasInlineMath{\varepsilon_f}: Objective-gap tolerance \textbf{Domain:} \AtlasInlineMath{\varepsilon_f>0}.
+
+\AtlasInlineMath{a_k}: Complexity exponent associated with the highest-order regularity. \textbf{Domain:} \AtlasInlineMath{a_k>0}.
+
+
+\AtlasMath{a_k=\frac{2}{3\,k+1}.}
+
+
+\AtlasInlineMath{C_{k}}: Sufficient window constants depending only on the fixed orders or exponents in their subscripts; existence is asserted without numerical values. \textbf{Domain:} \AtlasInlineMath{C_{k}>1}.
+
+\AtlasInlineMath{Q_f}: Dimensionless ratio formed from the highest-order regularity, localization radius, and objective-value accuracy. \textbf{Domain:} \AtlasInlineMath{Q_f\ge0}.
+
+
+\AtlasMath{Q_f=\frac{M_k\,((R)^{k+1})}{\varepsilon_f}.}
+
+
+\AtlasInlineMath{\mathbb{E},\Pr}: Expectation and probability after fixing the instance; their randomness sources are specified by the guarantee.
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+\needspace{4\baselineskip}\subsection{Compared quantities}
+\needspace{4\baselineskip}\subsubsection{Q1 - target accuracy cost}
+\textbf{View.} Deterministic
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q2 - target accuracy cost}
+\textbf{View.} Deterministic
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q3 - target accuracy cost}
+\textbf{View.} Randomized
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsubsection{Q4 - target accuracy cost}
+\textbf{View.} Randomized
+
+\AtlasMath{C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}}
+\textbf{Definition.} Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
+
+\textbf{Scope.} declared\_joint\_parameter\_window
+
+\textbf{Optimization direction.} minimize
+
+Here v is the selected algorithm view, G\_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C\_pi the declared resource projection. C\_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+\needspace{4\baselineskip}\subsection{R1 - Sufficient dimension for the deterministic chain}
+\textbf{Region.} \AtlasInlineMath{d\ge C_k(1+Q_f^{a_k})}
+
+\textbf{Views.} Deterministic
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B2
+
+\AtlasMath{\Omega_k(1+Q_f^{a_k})}
+\textbf{Upper bound.} B1
+
+\AtlasMath{O_k(1+Q_f^{a_k})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O_k(1)}
+
+\needspace{4\baselineskip}\subsection{R2 - The localization or feasible ball degenerates to the initial point}
+\textbf{Region.} \AtlasInlineMath{R=0}
+
+\textbf{Views.} Deterministic; Randomized
+
+\textbf{Quantity.} Q2; Q4
+
+\textbf{Resource.} Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B4, B11
+
+\AtlasMath{0}
+\textbf{Upper bound.} B3, B10
+
+\AtlasMath{0}
+\needspace{4\baselineskip}\subsection{R3 - Zero highest-order regularity modulus}
+\textbf{Region.} \AtlasInlineMath{M_k=0,\ R>0}
+
+\textbf{Views.} Deterministic; Randomized
+
+\textbf{Quantity.} Q2; Q4
+
+\textbf{Resource.} Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B6, B13
+
+\AtlasMath{1}
+\textbf{Upper bound.} B5, B12
+
+\AtlasMath{1}
+\textbf{Gap or comparison.} \AtlasInlineMath{1}
+
+\needspace{4\baselineskip}\subsection{R4 - Finite-dimensional truncation: the tensor power does not exceed the dimension}
+\textbf{Region.} \AtlasInlineMath{d\ge Q_f^{a_k}}
+
+\textbf{Views.} Deterministic
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
+
+\textbf{Status.} Optimal
+
+\textbf{Lower bound.} B8
+
+\AtlasMath{\Omega_k(1+\min\{d,Q_f^{a_k}\})}
+\textbf{Upper bound.} B1, B7
+
+\AtlasMath{O_k(1+\min\{Q_f^{a_k},d\log(2+Q_f)\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O_k(1)}
+
+\textbf{Comparison argument.} The finite-dimensional argument treats legal queries, boundary minimizers, and arbitrary unqueried outputs separately for each domain. Compare the two verified envelopes according to the relative sizes of d and Q\textasciicircum{}a.
+
+\needspace{4\baselineskip}\subsection{R5 - Finite-dimensional high-accuracy regime}
+\textbf{Region.} \AtlasInlineMath{1\le d<Q_f^{a_k}}
+
+\textbf{Views.} Deterministic
+
+\textbf{Quantity.} Q1
+
+\textbf{Resource.} Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
+
+\textbf{Status.} Logarithmic gap
+
+\textbf{Lower bound.} B8
+
+\AtlasMath{\Omega_k(1+\min\{d,Q_f^{a_k}\})}
+\textbf{Upper bound.} B1, B7
+
+\AtlasMath{O_k(1+\min\{Q_f^{a_k},d\log(2+Q_f)\})}
+\textbf{Gap or comparison.} \AtlasInlineMath{O_k(\min\{Q_f^{a_k}/d,\log(2+Q_f)\})}
+
+\textbf{Comparison argument.} The finite-dimensional argument treats legal queries, boundary minimizers, and arbitrary unqueried outputs separately for each domain. Compare the two verified envelopes according to the relative sizes of d and Q\textasciicircum{}a.
+
+\needspace{4\baselineskip}\subsection{R6 - Positive-parameter domain}
+\textbf{Region.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Views.} Randomized
+
+\textbf{Quantity.} Q3
+
+\textbf{Resource.} Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
+
+\textbf{Status.} Lower bound missing
+
+\textbf{Lower bound.} No admitted bound for this comparison
+
+\textbf{Upper bound.} B9
+
+\AtlasMath{O_k(1+Q_f^{a_k})}
+\needspace{4\baselineskip}\subsection{R7 - Positive-parameter domain}
+\textbf{Region.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Views.} Randomized
+
+\textbf{Quantity.} Q3
+
+\textbf{Resource.} Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
+
+\textbf{Status.} Lower bound missing
+
+\textbf{Lower bound.} No admitted bound for this comparison
+
+\textbf{Upper bound.} B9, B14
+
+\AtlasMath{O_k(1+\min\{Q_f^{a_k},d\log(2+Q_f)\})}
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+\textbf{Oracle mapping.} Each query selects \AtlasInlineMath{x} in \AtlasInlineMath{\mathbb{R}^d} and returns the complete exact tuple \AtlasInlineMath{J_{k}f(x)=(f(x),Df(x),\ldots,D^{k}f(x))}. The fixed objective uniquely determines the response, with no stochastic noise.
+
+\textbf{Output mapping.} Return \AtlasInlineMath{\widehat{x}\in \mathbb{R}^d}.
+
+\textbf{Resource mapping.} Each primitive response specified under ORACLE costs one unit. Queries at new points introduced by any inner procedure also count toward the total.
+
+\needspace{4\baselineskip}\subsection{B1 - Higher-order tensor acceleration without bisection search}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O_k(1+Q_f^{a_k})}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2205.09647v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Guarantee conversion.} Deterministic-error guarantee for every instance
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2205.09647v1}{[1]} theorem: Theorem 5, Eq. (32); actual oracle accounting; pdf pages: 9
+
+\needspace{4\baselineskip}\subsection{B2 - Resisting rotations of a high-order chain, including the unqueried output}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All deterministic adaptive algorithms
+
+\AtlasMath{\Omega_k(1+Q_f^{a_k})}
+\textbf{Conditions.} \AtlasInlineMath{d\ge C_k(1+Q_f^{a_k})}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d\ge C_k(1+Q_f^{a_k})}
+
+\textbf{Guarantee conversion.} Deterministic-error guarantee for every instance
+
+\textbf{Local argument.} A1
+
+\needspace{4\baselineskip}\subsection{B3 - Return the public initial point}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{R=0}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{R=0}
+
+\textbf{Guarantee conversion.} Deterministic-error guarantee for every instance
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B4 - Nonnegativity of oracle cost}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{R=0}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{R=0}
+
+\textbf{Guarantee conversion.} Deterministic-error guarantee for every instance
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B5 - Recover a polynomial from one complete derivative reply}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{1}
+\textbf{Conditions.} \AtlasInlineMath{M_k=0,\ R>0}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{M_k=0,\ R>0}
+
+\textbf{Guarantee conversion.} Deterministic-error guarantee for every instance
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B6 - Two admissible instances indistinguishable without queries}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{1}
+\textbf{Conditions.} \AtlasInlineMath{M_k=0,\ R>0}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{M_k=0,\ R>0}
+
+\textbf{Guarantee conversion.} Deterministic-error guarantee for every instance
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B7 - Exact centroid cuts on \AtlasInlineMath{C_0=B\cap\{U\le\min_B U+2\delta_0\}}; internal model optimization, integration and global computation are free}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O_k(1+d\log(2+Q_f))}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2411.08987v2}{[2]} \href{https://msp.org/pjm/1960/10-4/pjm-v10-n4-p18-s.pdf}{[3]} \href{https://arxiv.org/pdf/2205.09647v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Guarantee conversion.} Deterministic-error guarantee for every instance
+
+\textbf{Local argument.} A3, A1, A4
+
+\needspace{4\baselineskip}\subsection{B8 - Dimension-truncated high-order resisting chain}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Deterministic
+
+\textbf{Witness or lower-bound scope.} All deterministic adaptive algorithms
+
+\AtlasMath{\Omega_k(1+\min\{d,Q_f^{a_k}\})}
+\textbf{Conditions.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Guarantee conversion.} Deterministic-error guarantee for every instance
+
+\textbf{Local argument.} A1, A5, A2
+
+\needspace{4\baselineskip}\subsection{B9 - Higher-order tensor acceleration without bisection search}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O_k(1+Q_f^{a_k})}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2205.09647v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Guarantee conversion.} Success probability at least 2/3 for every instance
+
+\textbf{Source location.} \href{https://arxiv.org/pdf/2205.09647v1}{[1]} theorem: Theorem 5, Eq. (32); actual oracle accounting; pdf pages: 9
+
+\needspace{4\baselineskip}\subsection{B10 - Return the public initial point}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{R=0}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{R=0}
+
+\textbf{Guarantee conversion.} Success probability at least 2/3 for every instance
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B11 - Nonnegativity of oracle cost}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{0}
+\textbf{Conditions.} \AtlasInlineMath{R=0}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{R=0}
+
+\textbf{Guarantee conversion.} Success probability at least 2/3 for every instance
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B12 - Recover a polynomial from one complete derivative reply}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{1}
+\textbf{Conditions.} \AtlasInlineMath{M_k=0,\ R>0}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{M_k=0,\ R>0}
+
+\textbf{Guarantee conversion.} Success probability at least 2/3 for every instance
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B13 - Two admissible instances indistinguishable without queries}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} lower
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} All randomized adaptive algorithms
+
+\AtlasMath{1}
+\textbf{Conditions.} \AtlasInlineMath{M_k=0,\ R>0}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{M_k=0,\ R>0}
+
+\textbf{Guarantee conversion.} Success probability at least 2/3 for every instance
+
+\textbf{Local argument.} A2
+
+\needspace{4\baselineskip}\subsection{B14 - Exact centroid cuts on \AtlasInlineMath{C_0=B\cap\{U\le\min_B U+2\delta_0\}}; internal model optimization, integration and global computation are free}
+\textbf{Admission.} Included in the bracket
+
+\textbf{Direction.} upper
+
+\textbf{View.} Randomized
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+\AtlasMath{O_k(1+d\log(2+Q_f))}
+\textbf{Sources.} \href{https://arxiv.org/pdf/2411.08987v2}{[2]} \href{https://msp.org/pjm/1960/10-4/pjm-v10-n4-p18-s.pdf}{[3]} \href{https://arxiv.org/pdf/2205.09647v1}{[1]}
+
+\textbf{Conditions.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Dimension conditions.} \AtlasInlineMath{M_k,R,\varepsilon_f>0,\ d\ge1}
+
+\textbf{Guarantee conversion.} Success probability at least 2/3 for every instance
+
+\textbf{Local argument.} A3, A1, A4
+
+\needspace{7\baselineskip}\section{5. Local arguments}
+\needspace{4\baselineskip}\subsection{A1 - A dimension-controlled convex high-order resisting chain}
+\textbf{Scope.} Arbitrary deterministic complete-jet algorithms, including unqueried outputs. No randomized lower bound follows from the resisting-rotation argument. Constants depend only on fixed derivative order and Hölder exponent.
+
+\textbf{Algorithm scope.} Arbitrary deterministic complete-jet algorithms, including unqueried outputs. No randomized lower bound follows from the resisting-rotation argument. Constants depend only on fixed derivative order and Hölder exponent.
+
+For fixed \AtlasInlineMath{s=k+\nu>2}, the construction gives deterministic lower bounds for objective accuracy and gradient norm, including arbitrary unqueried outputs.
+
+For \AtlasInlineMath{N\ge2}, define
+
+\AtlasMath{h_N(z)=\frac1s\left(\sum_{i=1}^{N-1}|z_i-z_{i+1}|^s+|z_N|^s\right)-z_1.}
+
+Let \AtlasInlineMath{A} be the forward-difference matrix with a terminal row. Its Euclidean operator norm is at most two. The first \AtlasInlineMath{k} derivatives of \AtlasInlineMath{|u|^s/s} vanish at zero, and its kth derivative has a \AtlasInlineMath{\nu}-Hölder modulus depending only on \AtlasInlineMath{k,\nu}. Applying Hölder's inequality with exponents \AtlasInlineMath{s/\nu,s,\ldots,s} gives
+
+\AtlasMath{|[D^kh_N(z)-D^kh_N(w)][u_1,\ldots,u_k]|
+\le H_{k,\nu}\|z-w\|_2^\nu\prod_j\|u_j\|_2,}
+
+with \AtlasInlineMath{H_{k,\nu}} independent of \AtlasInlineMath{N}.
+
+The minimizer is \AtlasInlineMath{z^*=(N,N-1,\ldots,1)}, with
+
+\AtlasMath{h_N(0)-h_N(z^*)=(s-1)N/s,\qquad
+\|z^*\|^2=N(N+1)(2N+1)/6.}
+
+If \AtlasInlineMath{z_{t+1}=\cdots=z_N=0}, then the remaining chain gives
+
+\AtlasMath{h_N(z)-h_N(z^*)\ge(s-1)(N-t)/s,\qquad
+\|\nabla h_N(z)\|\ge1/\sqrt{t+1}.}
+
+For the gradient inequality, the first \AtlasInlineMath{t+1} gradient coordinates sum to \AtlasInlineMath{-1}, and Cauchy-Schwarz applies.
+
+For any deterministic adaptive algorithm making \AtlasInlineMath{T} queries, select orthonormal chain directions successively, orthogonal to previous directions and the query displacements seen so far. Vanishing derivatives of unrevealed terms ensure that each complete jet exposes at most the next direction. After the output is determined, choose the remaining hidden directions orthogonal to that output too. The sufficient dimension \AtlasInlineMath{d\ge N+T+1} leaves room for these choices. The final function
+
+\AtlasMath{f(x)=\alpha h_N(V^\top(x-x_0)/b)}
+
+is one fixed admissible instance consistent with the entire transcript. This construction does not select a separate instance after seeing a randomized algorithm's private seed.
+
+For a radius promise, take \AtlasInlineMath{b=R/\|z^*\|} and \AtlasInlineMath{\alpha=M_{k,\nu}b^s/H_{k,\nu}}. Choosing \AtlasInlineMath{N=2T+2} for objective gap or \AtlasInlineMath{N=T+2} for gradient norm gives
+
+\AtlasMath{\operatorname{gap}(T)\ge\frac{c_{k,\nu}M_{k,\nu}R^s}{(T+1)^{(3s-2)/2}},\qquad
+\operatorname{grad}_R(T)\ge\frac{c_{k,\nu}M_{k,\nu}R^{s-1}}{(T+1)^{(3s-2)/2}}.}
+
+For an initial-gap promise, set \AtlasInlineMath{\alpha=\Delta s/((s-1)N)} and \AtlasInlineMath{b=(\alpha H_{k,\nu}/M_{k,\nu})^{1/s}}. Then
+
+\AtlasMath{\operatorname{grad}_\Delta(T)\ge\frac{c_{k,\nu}M_{k,\nu}^{1/s}\Delta^{(s-1)/s}}{(T+1)^{(3s-2)/(2s)}}.}
+
+Inverting these inequalities yields the linked bounds with a sufficient dimension proportional to one plus the complexity scale. The minimizer lies in the localization ball, so the same hard subclass is admissible for ball-restricted optimization.
+
+\textbf{Limits of the argument.} The mapped bound retains its complete model, oracle, algorithm view, guarantee, quantity, resource projection, and parameter-region conditions. This argument does not enlarge that scope.
+
+\needspace{4\baselineskip}\subsection{A2 - Zero-query and polynomial-recovery endpoints}
+\textbf{Scope.} Applies only to the indicated objective-gap, first-order, or spectral second-order criteria. A true minimizer need not satisfy a finite-radius high-order Taylor-decrease criterion; those criteria require their own argument. Public-domain, curvature, and accuracy conditions remain those of the linked bound.
+
+\textbf{Algorithm scope.} Applies only to the indicated objective-gap, first-order, or spectral second-order criteria. A true minimizer need not satisfy a finite-radius high-order Taylor-decrease criterion; those criteria require their own argument. Public-domain, curvature, and accuracy conditions remain those of the linked bound.
+
+Zero-query guarantees follow from a public initial-error bound. A zero highest-order regularity modulus permits exact polynomial recovery from one complete jet.
+
+For a full-space differentiable objective with \AtlasInlineMath{f(x_0)-\inf f\le\Delta}, the condition \AtlasInlineMath{\Delta=0} makes \AtlasInlineMath{x_0} a global minimizer. Its gradient is zero, and its Hessian is positive semidefinite whenever it exists. Thus first-order and spectral second-order stationarity require no query. An objective-gap target also requires no query when \AtlasInlineMath{\varepsilon_f\ge\Delta}. Nonnegative query cost proves exact optimality of these zero bounds.
+
+If a public gradient-Lipschitz bound \AtlasInlineMath{\beta} is part of the specification, the descent lemma gives \AtlasInlineMath{\|\nabla f(x_0)\|^2\le2\beta\Delta}. For convex full-space objectives with a minimizer within distance \AtlasInlineMath{R}, it also gives \AtlasInlineMath{f(x_0)-f^*\le\beta R^2/2} and \AtlasInlineMath{\|\nabla f(x_0)\|\le\beta R}. These sufficient zero-query regions require that explicit first-order regularity assumption. If only the highest derivative is controlled, positive quadratics can have arbitrary curvature and arbitrarily large initial gap despite zero highest-order modulus.
+
+On a connected Euclidean domain, \AtlasInlineMath{M_k=0} or \AtlasInlineMath{M_{k,\nu}=0} makes \AtlasInlineMath{D^kf} constant, so \AtlasInlineMath{f} is a polynomial of degree at most \AtlasInlineMath{k}. One complete jet determines all coefficients. Under the specified free internal computation, a known polynomial can then be optimized on a compact public domain, or combined with a public regularizer and solved through the declared known-model interface.
+
+A bounded-below polynomial on the full space need not attain its infimum. For approximate spectral stationarity, shift \AtlasInlineMath{x_0} to zero and minimize \AtlasInlineMath{f(x)+\eta\|x\|^2/2}. This function is coercive, and its minimizer \AtlasInlineMath{x_\eta} satisfies \AtlasInlineMath{\eta\|x_\eta\|^2/2\le\Delta}, \AtlasInlineMath{\|\nabla f(x_\eta)\|\le\sqrt{2\eta\Delta}}, and \AtlasInlineMath{\nabla^2f(x_\eta)\succeq-\eta I}. Choosing \AtlasInlineMath{\eta\le\min\{\varepsilon_H,\varepsilon_g^2/(2\Delta)\}} meets both targets. For global objective accuracy, exact polynomial coefficients permit arbitrary-accuracy internal global optimization; no additional unknown-function query is needed.
+
+To exclude zero queries in a nontrivial region, choose two positive quadratics centered on opposite sides of \AtlasInlineMath{x_0}, with the same public budgets and disjoint acceptable-output sets. A zero-query algorithm has the same output distribution on both instances, so their success probabilities sum to at most one. It cannot succeed with probability at least \AtlasInlineMath{2/3} on each. With only highest-order regularity, curvature can be increased until the acceptable sets are disjoint at any prescribed positive accuracy and positive localization radius. In an initial-gap model with additional curvature restrictions, retain the bound's explicit accuracy and compatibility window.
+
+If both a global PL constant \AtlasInlineMath{\mu} and a gradient-Lipschitz upper bound \AtlasInlineMath{\beta} are supplied, then \AtlasInlineMath{2\mu(f-f_*)\le\|\nabla f\|^2\le2\beta(f-f_*)}. When \AtlasInlineMath{\mu>\beta>0}, every gap is zero and the class contains only constant objectives. This degeneracy does not apply without the extra \AtlasInlineMath{\beta} assumption.
+
+\textbf{Limits of the argument.} The mapped bound retains its complete model, oracle, algorithm view, guarantee, quantity, resource projection, and parameter-region conditions. This argument does not enlarge that scope.
+
+\needspace{4\baselineskip}\subsection{A3 - Public convex constraints and composite terms}
+\textbf{Scope.} Applies only where the auxiliary operations are explicitly permitted. Does not merge distinct oracle interfaces or impose a lower bound on a publicly known singleton feasible domain.
+
+\textbf{Algorithm scope.} Applies only where the auxiliary operations are explicitly permitted. Does not merge distinct oracle interfaces or impose a lower bound on a publicly known singleton feasible domain.
+
+The convex high-order proximal analysis transfers to a public proper closed convex term when the declared auxiliary interface solves known composite models globally.
+
+For \AtlasInlineMath{F=f+\psi}, solve the known model
+
+\AtlasMath{T_k(f;x,y)+\psi(y)+CM\|y-x\|^s.}
+
+At a global model minimizer y, model optimality supplies a compatible \AtlasInlineMath{v_\psi\in\partial\psi(y)}. Then \AtlasInlineMath{v=\nabla f(y)+v_\psi} is a subgradient of F, and the residual relative to the model's regularization gradient is exactly the Taylor-gradient error of f. The subgradient support inequality and Bregman three-point identity used in the convex accelerated framework therefore remain valid. Mirror subproblems also stay in the effective domain of \AtlasInlineMath{\psi}, and queries are convex combinations of known feasible points, preserving ball-restricted access.
+
+This transfer requires global solution of the known high-order composite model and mirror subproblems, including a compatible subgradient or normal-cone selection. An ordinary projection, ordinary proximal map, or linear-minimization oracle alone does not automatically supply that capability. Unknown objective values or gradients requested at candidate points cost additional complete jets; at most a constant number per iteration preserves the stated order. The primary theorem's phrase 'one highest-order call per iteration' does not make other unknown-function information free.
+
+For lower bounds on the family of permitted public regularizers, choose the subclass \AtlasInlineMath{\psi=0} and use the convex resisting chain. This is a family-level inclusion argument, not a lower bound for every individually fixed special regularizer or feasible set.
+
+\textbf{Limits of the argument.} The mapped bound retains its complete model, oracle, algorithm view, guarantee, quantity, resource projection, and parameter-region conditions. This argument does not enlarge that scope.
+
+\textbf{Sources.} \href{https://arxiv.org/pdf/2411.08987v2}{[2]}
+
+\needspace{4\baselineskip}\subsection{A4 - Finite-dimensional convex upper bound by centroid cuts}
+\textbf{Scope.} Deterministic complete-jet algorithms, also valid as upper-bound witnesses in randomized views. Internal centroid, convex-body, and known-model computations are free in oracle accounting; arithmetic complexity is not claimed.
+
+\textbf{Algorithm scope.} Deterministic complete-jet algorithms, also valid as upper-bound witnesses in randomized views. Internal centroid, convex-body, and known-model computations are free in oracle accounting; arithmetic complexity is not claimed.
+
+For fixed \AtlasInlineMath{k\ge2}, \AtlasInlineMath{R,M_k>0}, complete jets give \AtlasInlineMath{O_k(1+d\log(2+M_kR^{k+1}/\varepsilon_f))} calls, both with unrestricted queries and with queries restricted to the public ball.
+
+For unrestricted queries with a global minimizer within R of \AtlasInlineMath{x_0}, use the internal ball \AtlasInlineMath{B=B_2(x_0,2R)}. For ball-restricted optimization, use \AtlasInlineMath{B=B_2(x_0,R)} itself. The second case permits a constrained boundary minimizer and never queries the larger ball. Let b be the radius of B.
+
+Query one jet at \AtlasInlineMath{x_0} and define
+
+\AtlasMath{U(y)=T_k(f;x_0,y)+\frac{kM_k}{(k+1)!}\|y-x_0\|^{k+1}.}
+
+The value remainder gives \AtlasInlineMath{0\le U(y)-f(y)\le M_k\|y-x_0\|^{k+1}/k!}. The Hessian remainder gives
+
+\AtlasMath{\nabla^2T_k(y)\succeq-\frac{M_k}{(k-1)!}\|y-x_0\|^{k-1}I.}
+
+The regularizer's Hessian contains the opposite scalar-matrix term plus a positive semidefinite rank-one term. Thus U is convex on B, including the continuous extension at \AtlasInlineMath{x_0}. This argument uses only segments within the legal ball.
+
+Set \AtlasInlineMath{\delta_0=M_kb^{k+1}/k!}, \AtlasInlineMath{u=\min_B U}, and \AtlasInlineMath{C_0=B\cap\{U\le u+2\delta_0\}}. These are known after one jet and can be computed through free internal geometry. An optimum \AtlasInlineMath{x^*} lies in \AtlasInlineMath{C_0}, and every z in \AtlasInlineMath{C_0} satisfies \AtlasInlineMath{f(z)-f^*\le3\delta_0}. The body is full-dimensional even if \AtlasInlineMath{x^*} lies on the boundary: move a small positive distance from \AtlasInlineMath{x^*} toward any interior point of B. Continuity preserves the strict U-sublevel inequality, producing an interior ball in \AtlasInlineMath{C_0}. No quantitative inradius bound is needed.
+
+For \AtlasInlineMath{0<\varepsilon_f<3\delta_0}, let \AtlasInlineMath{\lambda=\varepsilon_f/(3\delta_0)} and \AtlasInlineMath{K_\varepsilon=\{y\in C_0:f(y)-f^*\le\varepsilon_f\}}. Convexity implies
+
+\AtlasMath{x^*+\lambda(C_0-x^*)\subseteq K_\varepsilon,\qquad
+\operatorname{vol}(K_\varepsilon)\ge\lambda^d\operatorname{vol}(C_0).}
+
+This affine volume formula holds equally for boundary \AtlasInlineMath{x^*}.
+
+At the centroid \AtlasInlineMath{c_t} of \AtlasInlineMath{C_t}, query a complete jet. A zero gradient certifies optimality. Otherwise retain the halfspace \AtlasInlineMath{\langle\nabla f(c_t),y-c_t\rangle\le0}. Grünbaum's centroid theorem ensures that each cut leaves at most \AtlasInlineMath{\rho=1-e^{-1}} of the previous volume. Queries remain in B. If every queried centroid has gap greater than \AtlasInlineMath{\varepsilon_f}, convexity makes every cut retain all of \AtlasInlineMath{K_{\varepsilon}}. Consequently \AtlasInlineMath{\lambda^d\le\rho^N}, a contradiction once
+
+\AtlasMath{N>\frac{d\log(3\delta_0/\varepsilon_f)}{-\log\rho}.}
+
+Run this public fixed number of iterations and return the queried point with smallest exact value. No knowledge of \AtlasInlineMath{f^*} or free success test is needed. If \AtlasInlineMath{\varepsilon_f\ge\delta_0}, the minimizer of U already meets the target after the initial jet.
+
+This proves the displayed finite-dimensional bound. Taking the minimum with the applicable accelerated tensor upper bound gives
+
+\AtlasMath{O_k\left(1+\min\{Q^{2/(3k+1)},d\log(2+Q)\}\right),\qquad Q=M_kR^{k+1}/\varepsilon_f.}
+
+For ball-restricted tensor acceleration, the public-domain composite transfer must also be permitted. The centroid branch itself does not depend on that transfer.
+
+\textbf{Limits of the argument.} The mapped bound retains its complete model, oracle, algorithm view, guarantee, quantity, resource projection, and parameter-region conditions. This argument does not enlarge that scope.
+
+\textbf{Sources.} \href{https://msp.org/pjm/1960/10-4/pjm-v10-n4-p18-s.pdf}{[3]} \href{https://arxiv.org/pdf/2205.09647v1}{[1]}
+
+\needspace{4\baselineskip}\subsection{A5 - Finite-dimensional deterministic truncation}
+\textbf{Scope.} Arbitrary deterministic complete-jet algorithms, all finite \AtlasInlineMath{d\ge1}, positive \AtlasInlineMath{M_k} and R. The same one-query argument handles zero modulus separately.
+
+\textbf{Algorithm scope.} Arbitrary deterministic complete-jet algorithms, all finite \AtlasInlineMath{d\ge1}, positive \AtlasInlineMath{M_k} and R. The same one-query argument handles zero modulus separately.
+
+The deterministic complete-jet lower bound is \AtlasInlineMath{\Omega_k(1+\min\{d,Q^{2/(3k+1)}\})} for \AtlasInlineMath{Q=M_kR^{k+1}/\varepsilon_f}.
+
+Use the convex chain with \AtlasInlineMath{s=k+1} and \AtlasInlineMath{N=2T+2}. Its kth-derivative Lipschitz modulus is at most \AtlasInlineMath{H_k=2^{k+1}k!}, independent of N, and its minimizer has norm at most \AtlasInlineMath{N^{3/2}}. The adaptive orthogonal construction, including the final unqueried output, needs only \AtlasInlineMath{d\ge N+T+1=3T+3}.
+
+Scale with \AtlasInlineMath{b=R/\|z^*\|} and \AtlasInlineMath{\alpha=M_kb^{k+1}/H_k}. The final fixed instance has a global minimizer at distance exactly R, so it belongs both to the unrestricted localization class and to the ball-domain hard subclass. Its output gap is at least
+
+\AtlasMath{\gamma_k\frac{M_kR^{k+1}}{(T+1)^{(3k+1)/2}},\qquad
+\gamma_k=\frac{k}{2(k+1)H_k2^{(3k+1)/2}}.}
+
+Choose T as a sufficiently small k-dependent multiple of \AtlasInlineMath{\min\{d,Q^{2/(3k+1)}\}}, rounded down. Whenever that minimum is sufficiently large, both the dimension condition and failure inequality hold.
+
+For \AtlasInlineMath{d=1,2} or a bounded minimum, use two translated positive quadratics with minimizers at \AtlasInlineMath{x_0\pm R e_1} and enough common curvature to make their acceptable sets disjoint. Their kth-derivative Lipschitz modulus is zero, so they satisfy every nonnegative \AtlasInlineMath{M_k} budget. At least one query is necessary. This fills the small-dimension and small-budget endpoints and yields the full lower bound with its additive one-query term.
+
+With the finite-dimensional upper bound, the ratio is at most a constant times
+
+\AtlasMath{\frac{1+\min\{Q^{2/(3k+1)},d\log(2+Q)\}}{1+\min\{Q^{2/(3k+1)},d\}}.}
+
+It is constant in the sufficient region \AtlasInlineMath{d\ge Q^{2/(3k+1)}} and at most logarithmic elsewhere. The proof does not show that the logarithm is necessary, nor does it supply the same truncation lower bound for randomized algorithms.
+
+\textbf{Limits of the argument.} The mapped bound retains its complete model, oracle, algorithm view, guarantee, quantity, resource projection, and parameter-region conditions. This argument does not enlarge that scope.
+
+\needspace{7\baselineskip}\section{References}
+[1] Dmitry Kovalev; Alexander Gasnikov. The First Optimal Acceleration of High-Order Methods in Smooth Convex Optimization. arXiv:2205.09647v1; NeurIPS 2022.
+
+\url{https://arxiv.org/pdf/2205.09647v1}
+
+[2] Juan Pablo Contreras; Cristóbal Guzmán; David Martínez-Rubio. Non-Euclidean High-Order Smooth Convex Optimization. arXiv:2411.08987v2 (2025-02-06); COLT 2025 extended abstract.
+
+\url{https://arxiv.org/pdf/2411.08987v2}
+
+[3] Branko Grünbaum. Partitions of mass-distributions and of convex bodies by hyperplanes. Pacific Journal of Mathematics 10(4), 1257-1261 (1960).
+
+\url{https://msp.org/pjm/1960/10-4/pjm-v10-n4-p18-s.pdf}
+
+\end{document}
