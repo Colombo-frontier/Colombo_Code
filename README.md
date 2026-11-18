@@ -37,7 +37,7 @@ If Colombo informs your research, please cite the [paper](https://arxiv.org/abs/
 }
 ```
 
-For authors of papers that use the Colombo system: Although optional, it is highly appreciated if you could send an email to [colombo.2026@outlook.com](mailto:colombo.2026@outlook.com) telling us your identity (name, position and affiliation) or the results obtained via Colombo.
+For authors of papers that use the Colombo system: Although optional, it is highly appreciated if you could send an email to [colombo.2026@outlook.com](mailto:colombo.2026@outlook.com) telling us your identity (name, position and affiliation) or the results obtained via Colombo (best with the link to the paper).
 
 ## Contents
 
