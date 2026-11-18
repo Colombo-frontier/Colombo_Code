@@ -1,4 +1,6 @@
-[**arXiv:2611.23080 — Read the paper**](https://arxiv.org/abs/2611.23080)
+<p align="center">
+  <a href="https://arxiv.org/abs/2611.23080"><img src="https://img.shields.io/badge/arXiv-2611.23080-b31b1b" alt="Colombo paper on arXiv"></a>
+</p>
 
 # Colombo: A Frontier-to-Frontier Autoresearch System for Oracle-Based Optimization
 
