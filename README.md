@@ -12,6 +12,10 @@ Two mechanisms drive the system: **Self-Organization** adapts research programme
 
 The [accompanying paper](https://arxiv.org/abs/2611.23080) reports optimal or near-optimal rates for more than fifty settings and describes 56 research works. This repository provides the system source, scientific memory, Sensorium tools, and Complexity Atlas data. Local research runs and model transcripts are excluded from the source distribution.
 
+![Frontier-to-frontier research: Colombo perceives the frontier, formulates problems, consolidates knowledge, and regenerates the frontier](assets/colombo-nautical-frontier-light-ivory-soft-sea.png)
+
+*Frontier-to-frontier renewal: supported discoveries reshape the research frontier and create the basis for further inquiry.*
+
 ## Contents
 
 - [How Colombo works](#how-colombo-works)
@@ -47,7 +51,7 @@ $$
 
 Here, $N_s^*$ is the optimal complexity under the declared model; $\varepsilon$, $\delta$, and $\theta$ specify accuracy, failure probability, and problem parameters. Improving an algorithm can lower $U_s$; a stronger hardness argument can raise $L_s$. Both sides must refer to the same assumptions and parameter regime.
 
-![Colombo architecture: Sensorium, Brain, specialized Cells, verification, formal certification, paper composition, and Long-Term Memory](https://arxiv.org/html/2611.23080v1/figures/colombo-architecture.png)
+![Colombo architecture: Sensorium, Brain, specialized Cells, verification, formal certification, paper composition, and Long-Term Memory](assets/colombo-architecture.png)
 
 *The paper's system architecture: frontier sensing supplies a Setting Profile; supported findings inform subsequent investigations.*
 
@@ -103,6 +107,7 @@ These are reported research outcomes, rather than a guarantee that a new run wil
 ```text
 Colombo/
 ├── README.md
+├── assets/                        # Paper figures used by this README
 ├── colobmo_system/                 # Brain/Cell research system
 │   ├── run.py                     # New run, configuration preview, status, resume
 │   ├── run_cell.py                # Standalone proof Cell
@@ -630,7 +635,7 @@ These components have their own environments, configuration, entry points, and p
 | Run ended without a completed proof | Inspect status and the exact final review. Exhausted allocation or a partial result does not imply full completion. |
 | Completed Brain run fails downstream handoff | The current adapter also requires a single exported conclusion and no open questions in the adopted ProofDraft. Retained open questions or reconciliation history can prevent handoff; inspect the diagnostics and preserve the original records. |
 | Lean blocked or Writing did not start | Provision the pinned Lean environment and inspect `lean/result.json`; Writing needs passed Lean evidence and a valid handoff. |
-| Figures do not load | Images are linked from versioned arXiv HTML. Open the [paper PDF](https://arxiv.org/pdf/2611.23080) if the image host is unavailable. |
+| Figures do not load | The nautical and architecture figures are bundled in `assets/`; keep this directory with the README. The two mechanism figures use versioned arXiv links; open the [paper PDF](https://arxiv.org/pdf/2611.23080) if that image host is unavailable. |
 
 For syntax, use `python run.py --help`, `python run.py run --help`, `python run_cell.py --help`, and `python run_pipeline.py --help` from the system directory.
 
