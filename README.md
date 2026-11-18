@@ -1,8 +1,9 @@
+# Colombo: A Frontier-to-Frontier Autoresearch System for Oracle-Based Optimization
+
 <p align="center">
   <a href="https://arxiv.org/abs/2611.23080"><img src="https://img.shields.io/badge/arXiv-2611.23080-b31b1b" alt="Colombo paper on arXiv"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-4c1" alt="Apache 2.0 license"></a>
 </p>
-
-# Colombo: A Frontier-to-Frontier Autoresearch System for Oracle-Based Optimization
 
 **Formulate problems, investigate complexity gaps, verify findings, and preserve knowledge for further discovery.**
 
@@ -36,6 +37,7 @@ The [accompanying paper](https://arxiv.org/abs/2611.23080) reports optimal or ne
 - [Troubleshooting](#troubleshooting)
 - [Further documentation](#further-documentation)
 - [Citation](#citation)
+- [License](#license)
 
 ## How Colombo works
 
@@ -109,6 +111,7 @@ These are reported research outcomes, rather than a guarantee that a new run wil
 ```text
 Colombo/
 ├── README.md
+├── LICENSE                        # Apache License 2.0
 ├── assets/                        # Paper figures used by this README
 ├── colobmo_system/                 # Brain/Cell research system
 │   ├── run.py                     # New run, configuration preview, status, resume
@@ -669,3 +672,11 @@ If Colombo informs your research, please cite the [paper](https://arxiv.org/abs/
   url           = {https://arxiv.org/abs/2611.23080}
 }
 ```
+
+## License
+
+Copyright 2026 Colombo contributors.
+
+Colombo is licensed under the [Apache License, Version 2.0](LICENSE).
+
+Third-party components and externally sourced materials retain their respective licenses and copyright/attribution notices. The bundled MathJax copies include their own licenses in the [visualization assets](colombo_sensorium/Complexity_altas/visualization/assets/mathjax/LICENSE) and [distribution assets](colombo_sensorium/Complexity_altas/visualization/dist/assets/mathjax/LICENSE).
