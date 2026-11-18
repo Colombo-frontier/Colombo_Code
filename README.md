@@ -19,8 +19,29 @@ The [accompanying paper](https://arxiv.org/abs/2611.23080) reports optimal or ne
 
 *Frontier-to-frontier renewal: supported discoveries reshape the research frontier and create the basis for further inquiry.*
 
+## Citation
+
+If Colombo informs your research, please cite the [paper](https://arxiv.org/abs/2611.23080):
+
+```bibtex
+@misc{zhang2026colombo,
+  title         = {Colombo: A Frontier-to-Frontier Autoresearch System for Oracle-Based Optimization},
+  author        = {Haihan Zhang and Wendao Wu and Chenheng Zhang and
+                   Chunyuan Zheng and Yanyi Li and Cong Fang and
+                   Haoxuan Li and Zhouchen Lin},
+  year          = {2026},
+  eprint        = {2611.23080},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  url           = {https://arxiv.org/abs/2611.23080}
+}
+```
+
+For authors of papers that use the Colombo system: Although optional, it is highly appreciated if you could send an email to [colombo.2026@outlook.com](mailto:colombo.2026@outlook.com) telling us your identity (name, position and affiliation) or the results obtained via Colombo.
+
 ## Contents
 
+- [Citation](#citation)
 - [How Colombo works](#how-colombo-works)
 - [Research highlights](#research-highlights)
 - [Explore the Complexity Atlas](#explore-the-complexity-atlas)
@@ -37,7 +58,6 @@ The [accompanying paper](https://arxiv.org/abs/2611.23080) reports optimal or ne
 - [Sensorium and Complexity Atlas](#sensorium-and-complexity-atlas)
 - [Troubleshooting](#troubleshooting)
 - [Further documentation](#further-documentation)
-- [Citation](#citation)
 - [License](#license)
 
 ## How Colombo works
@@ -669,24 +689,6 @@ For syntax, use `python run.py --help`, `python run.py run --help`, `python run_
 - [Independent Memory Agent](colobmo_system/colombo_memory_agent/README.md)
 - [Lean and Writing Agents](colobmo_system/docs/DOWNSTREAM.md)
 - [Sensorium package](colombo_sensorium/README.md)
-
-## Citation
-
-If Colombo informs your research, please cite the [paper](https://arxiv.org/abs/2611.23080):
-
-```bibtex
-@misc{zhang2026colombo,
-  title         = {Colombo: A Frontier-to-Frontier Autoresearch System for Oracle-Based Optimization},
-  author        = {Haihan Zhang and Wendao Wu and Chenheng Zhang and
-                   Chunyuan Zheng and Yanyi Li and Cong Fang and
-                   Haoxuan Li and Zhouchen Lin},
-  year          = {2026},
-  eprint        = {2611.23080},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.AI},
-  url           = {https://arxiv.org/abs/2611.23080}
-}
-```
 
 ## License
 
