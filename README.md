@@ -7,7 +7,7 @@
 
 **Formulate problems, investigate complexity gaps, verify findings, and preserve knowledge for further discovery.**
 
-[Quickstart](#quickstart) · [API keys](#authentication-and-api-keys) · [Configuration](#configuration) · [Atlas](#sensorium-and-complexity-atlas) · [Citation](#citation)
+[Quickstart](#quickstart) · [API keys](#authentication-and-api-keys) · [Configuration](#configuration) · [Atlas](#explore-the-complexity-atlas) · [Citation](#citation)
 
 Colombo is a self-organizing AI research system for **oracle-based optimization**. It studies how efficiently a problem class can be solved through a prescribed information interface, and which costs every admissible algorithm must incur. Algorithms establish achievable **upper bounds**; hard-instance constructions establish unavoidable **lower bounds**. The gap between them defines a concrete research frontier.
 
@@ -23,6 +23,7 @@ The [accompanying paper](https://arxiv.org/abs/2611.23080) reports optimal or ne
 
 - [How Colombo works](#how-colombo-works)
 - [Research highlights](#research-highlights)
+- [Explore the Complexity Atlas](#explore-the-complexity-atlas)
 - [Repository layout](#repository-layout)
 - [Installation](#installation)
 - [Authentication and API keys](#authentication-and-api-keys)
@@ -106,13 +107,27 @@ The paper's [Research Outcomes](https://arxiv.org/html/2611.23080v1#S3) section 
 
 These are reported research outcomes, rather than a guarantee that a new run will reproduce them or solve an arbitrary submitted problem. The bundled Atlas provides setting-level records, sources, and exports.
 
+## Explore the Complexity Atlas
+
+Explore **425 problem settings** through an interactive 3D map, a 2D overview, and a searchable setting library.
+
+[![Complexity Atlas: 425 settings in seven Task constellations, colored by complexity-bracket status](assets/complexity-atlas.jpg)](#browse-without-running-agents)
+
+*Each point represents a problem setting. The seven constellations group settings by Task; point colors summarize their recorded Complexity Bracket status, from optimal or near-optimal bounds to unresolved gaps and missing bounds. The full legend appears below the map.*
+
+Select a setting in the interactive Atlas to inspect its bounds, assumptions, and sources. Enable connections to explore shared **Task**, **Oracle**, and **Model** labels. Distances are illustrative, and connections indicate shared classifications rather than mathematical equivalence or reductions.
+
+**[Browse the interactive Atlas locally](#browse-without-running-agents)** · [Atlas guide](colombo_sensorium/Complexity_altas/README.md)
+
+The image above is a static preview. The bundled interactive pages run locally without starting research agents or supplying API keys.
+
 ## Repository layout
 
 ```text
 Colombo/
 ├── README.md
 ├── LICENSE                        # Apache License 2.0
-├── assets/                        # Paper figures used by this README
+├── assets/                        # Paper figures and Atlas preview for this README
 ├── colobmo_system/                 # Brain/Cell research system
 │   ├── run.py                     # New run, configuration preview, status, resume
 │   ├── run_cell.py                # Standalone proof Cell
