@@ -111,15 +111,15 @@ These are reported research outcomes, rather than a guarantee that a new run wil
 
 Explore **425 problem settings** through an interactive 3D map, a 2D overview, and a searchable setting library.
 
-[![Complexity Atlas: 425 settings in seven Task constellations, colored by complexity-bracket status](assets/complexity-atlas.jpg)](#browse-without-running-agents)
+[![Animated Complexity Atlas: a rotating view of 425 settings in seven Task constellations, colored by complexity-bracket status](assets/complexity-atlas.gif)](#browse-without-running-agents)
 
 *Each point represents a problem setting. The seven constellations group settings by Task; point colors summarize their recorded Complexity Bracket status, from optimal or near-optimal bounds to unresolved gaps and missing bounds. The full legend appears below the map.*
 
 Select a setting in the interactive Atlas to inspect its bounds, assumptions, and sources. Enable connections to explore shared **Task**, **Oracle**, and **Model** labels. Distances are illustrative, and connections indicate shared classifications rather than mathematical equivalence or reductions.
 
-**[Browse the interactive Atlas locally](#browse-without-running-agents)** · [Atlas guide](colombo_sensorium/Complexity_altas/README.md)
+**[Browse the interactive Atlas locally](#browse-without-running-agents)** · [Static preview](assets/complexity-atlas.jpg) · [Atlas guide](colombo_sensorium/Complexity_altas/README.md)
 
-The image above is a static preview. The bundled interactive pages run locally without starting research agents or supplying API keys.
+The animation above previews the Atlas rotation. Open the interactive version to rotate and zoom the view, explore relationships, and inspect individual settings. The bundled interactive pages run locally without starting research agents or supplying API keys.
 
 ## Repository layout
 
