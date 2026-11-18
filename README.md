@@ -1,8 +1,10 @@
+[**arXiv:2611.23080 — Read the paper**](https://arxiv.org/abs/2611.23080)
+
 # Colombo: A Frontier-to-Frontier Autoresearch System for Oracle-Based Optimization
 
 **Formulate problems, investigate complexity gaps, verify findings, and preserve knowledge for further discovery.**
 
-[Paper](https://arxiv.org/abs/2611.23080) · [Quickstart](#quickstart) · [API keys](#authentication-and-api-keys) · [Configuration](#configuration) · [Atlas](#sensorium-and-complexity-atlas) · [Citation](#citation)
+[Quickstart](#quickstart) · [API keys](#authentication-and-api-keys) · [Configuration](#configuration) · [Atlas](#sensorium-and-complexity-atlas) · [Citation](#citation)
 
 Colombo is a self-organizing AI research system for **oracle-based optimization**. It studies how efficiently a problem class can be solved through a prescribed information interface, and which costs every admissible algorithm must incur. Algorithms establish achievable **upper bounds**; hard-instance constructions establish unavoidable **lower bounds**. The gap between them defines a concrete research frontier.
 
@@ -21,7 +23,7 @@ The [accompanying paper](https://arxiv.org/abs/2611.23080) reports optimal or ne
 - [Configuration](#configuration)
 - [Run your own research problem](#run-your-own-research-problem)
 - [Monitor, resume, and understand results](#monitor-resume-and-understand-results)
-- [Standalone Cells and experiments](#standalone-cells-and-experiments)
+- [Standalone proof Cells](#standalone-proof-cells)
 - [Lean certification and paper composition](#lean-certification-and-paper-composition)
 - [Scientific Memory](#scientific-memory)
 - [Sensorium and Complexity Atlas](#sensorium-and-complexity-atlas)
@@ -103,7 +105,7 @@ Colombo/
 ├── README.md
 ├── colobmo_system/                 # Brain/Cell research system
 │   ├── run.py                     # New run, configuration preview, status, resume
-│   ├── run_cell.py                # Standalone Cell
+│   ├── run_cell.py                # Standalone proof Cell
 │   ├── run_pipeline.py            # Optional independent Lean → Writing pipeline
 │   ├── config.toml                # Brain/Cell parameters and resource profiles
 │   ├── downstream.toml            # Separate Lean/Writing parameters
@@ -437,7 +439,7 @@ Standalone Cells have their own discovery. If overrides are needed, set `CELL_CO
 
 For Serper/Jina, supply both keys in the environment. The shipped `api_key_file` is empty; an explicitly configured key file is an alternative, not a required repository file.
 
-To enable hosted experiments after Quickstart, set `enabled = true`, provide `OPENAI_API_KEY`, and select an API model supporting the requested tools. See the [Experiment Cell guide](colobmo_system/agents/experiment_cell/README.md) for the native researcher and hosted execution workflow.
+Experiments are invoked within the research workflow; **Experiment Cell has no standalone user launch command**. To enable hosted experiments in that workflow, set `enabled = true`, provide `OPENAI_API_KEY`, and select an API model supporting the requested tools. See the [Experiment Cell guide](colobmo_system/agents/experiment_cell/README.md) for its internal workflow. Empirical results can guide conjectures and expose failure modes, but do not by themselves certify mathematical bounds or near-optimality.
 
 ## Run your own research problem
 
@@ -509,9 +511,9 @@ python run.py reconcile-final-review --run-dir runs/my-problem
 
 This checks existing final-proof/review bindings and, when eligible, appends corrective progress/conclusion records without model calls. It preserves the proof, reviews, open questions, and usage. It is idempotent, not a proof-repair command or a way to bypass unresolved work. See the [system guide](colobmo_system/README.md).
 
-## Standalone Cells and experiments
+## Standalone proof Cells
 
-Use a standalone Cell for a focused problem that does not need Brain-level coordination:
+Use a standalone proof Cell for a focused mathematical problem that does not need Brain-level coordination:
 
 ```sh
 python run_cell.py goal.md --run-dir runs/my-cell --research-mode oracle_complexity --specialization general
@@ -520,8 +522,6 @@ python run_cell.py --run-dir runs/my-cell --resume
 ```
 
 Standalone Cells read **`colobmo_system/config.toml`**, not the `config.local.toml` selected for a Brain run. Apply your model, search, and Experiment settings there before starting one. The default standalone mode is `generic`; specify `--research-mode oracle_complexity` for this example. Consult `--help` and the [Cell guide](colobmo_system/agents/cell/README.md) for other supported options.
-
-The Experiment Cell performs empirical investigation with its own records and review. Hosted execution requires the separate API key described above. Experiments can guide conjectures or expose failure modes, but their reports do not by themselves certify a mathematical bound or near-optimality claim.
 
 ## Lean certification and paper composition
 
