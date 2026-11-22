@@ -81,13 +81,19 @@ run('ball_geometry_recovers_explicit_feasible_domains', () => {
   const ball = commonId('MODEL', 'geometry', 'ball');
   const query = [...exampleFacetIds, ball];
   const matching = ids(state(query));
-  const positives = ['SO_ZO_E01', 'SO_ZO_E02', 'SO_ZO_E06b', 'SO_ZO_E06e', 'SO_ZO_E07_neighborhood', 'SO_ZO_E09c', 'SO_ZO_E09c_sc'];
-  const localizationOnly = ['SO_ZO_E03', 'SO_ZO_E04', 'SO_ZO_E05', 'SO_ZO_E06a', 'SO_ZO_E06d', 'SO_ZO_E06f_rand', 'SO_ZO_E09a', 'SO_ZO_E09b', 'SO_ZO_O01'];
+  const positives = ['SO_ZO_E01', 'SO_ZO_E02', 'SO_ZO_E03', 'SO_ZO_E06b', 'SO_ZO_E06e', 'SO_ZO_E07_neighborhood', 'SO_ZO_E09c', 'SO_ZO_E09c_sc'];
+  const localizationOnly = ['SO_ZO_E04', 'SO_ZO_E05', 'SO_ZO_E06a', 'SO_ZO_E06d', 'SO_ZO_E06f_rand', 'SO_ZO_E09a', 'SO_ZO_E09b', 'SO_ZO_O01'];
   for (const id of positives) {
     assert(matching.includes(id), `Missing explicit feasible ball: ${id}`);
-    assert(read(`visualization/dist/settings/${id}.html`).includes('Explicit feasible domain'));
+    const source = read(`visualization/dist/settings/${id}.html`);
+    assert(source.includes(id === 'SO_ZO_E03' ? 'queries and output in the ball' : 'Explicit feasible domain'));
   }
   for (const id of localizationOnly) assert(!matching.includes(id), `Localization ball became a feasible ball: ${id}`);
+  const e03 = toolkitTags.get('SO_ZO_E03');
+  const e03ByView = new Map(e03.views.map(view => [view.view_id, effectiveFacetIds(e03, view)]));
+  assert(e03ByView.get('bounded_query_deterministic').includes(ball), 'Bounded-query regime must expose its feasible ball');
+  assert(!e03ByView.get('deterministic').includes(ball), 'Unrestricted deterministic view must remain unrestricted');
+  assert(!e03ByView.get('randomized').includes(ball), 'Unrestricted randomized view must remain unrestricted');
   assert.deepEqual(ids(state([], 'zeroth-order exact convex ball geometry')), matching);
   const group = globalThis.AtlasBrowseEngine.groupKey('common', 'MODEL', 'geometry');
   assert.equal(engine.facetCounts(example, new Set([group])).get(group).get(ball), matching.length);

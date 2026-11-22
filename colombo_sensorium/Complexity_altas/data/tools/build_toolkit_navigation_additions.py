@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from datetime import datetime, timezone
 
 from import_toolkit_tags import HUMAN, ROOT, digest, pointer, read, require, write
@@ -57,11 +58,13 @@ def view_assertion(profile, index):
 
 
 def fixtures(settings, before, after):
-    positives = ['SO_ZO_E01', 'SO_ZO_E02', 'SO_ZO_E06b', 'SO_ZO_E06e',
+    positives = ['SO_ZO_E01', 'SO_ZO_E02', 'SO_ZO_E03', 'SO_ZO_E06b', 'SO_ZO_E06e',
                  'SO_ZO_E07_neighborhood', 'SO_ZO_E09c', 'SO_ZO_E09c_sc']
-    excluded = ['SO_ZO_E03', 'SO_ZO_E06d', 'SO_ZO_N04a_gaussian', 'SO_ZO_C15a_rand_native']
+    excluded = ['SO_ZO_E06d', 'SO_ZO_N04a_gaussian', 'SO_ZO_C15a_rand_native']
     checks = [{'setting_id': sid, 'check': 'literal ball and same-view Exact/Zero/Convex',
-               'passed': sid in settings and sid in after} for sid in positives]
+               'passed': (sid in settings or sid in before) and sid in after} for sid in positives]
+    checks.append({'setting_id': 'SO_ZO_E03', 'check': 'bounded view only; original full-space views remain excluded',
+                   'passed': after.get('SO_ZO_E03') == ['bounded_query_deterministic']})
     checks.extend({'setting_id': sid, 'check': 'localization, query or trust radius grants no optimization-ball membership',
                    'passed': sid not in settings and sid not in after} for sid in excluded)
     checks.append({'setting_id': 'SO_ZO_N01_main', 'check': 'explicit ball with noisy feedback stays outside Exact',
@@ -88,6 +91,11 @@ def fixtures(settings, before, after):
 def build():
     catalog = read(ROOT, 'data/derived/catalog.json')
     dictionary = read(ROOT, HUMAN)
+    # Fixtures and additions must use the same normalized view memberships as
+    # the public site. Legacy native tags can still contain proposed IDs.
+    sys.path.insert(0, str(ROOT / 'visualization/src'))
+    from public_navigation_bridge import load_bridge, project
+    bridge_rules, bridge_registry = load_bridge(ROOT)
     definition = next(item for item in dictionary['concepts'] if item['concept_id'] == BALL)
     settings, before, after = {}, {}, {}
     imported_ball_views = 0
@@ -98,6 +106,9 @@ def build():
         profile_bytes = (base / 'profile.json').read_bytes()
         human_bytes = (base / 'human_tags.json').read_bytes()
         profile, human = json.loads(profile_bytes), json.loads(human_bytes)
+        classification = json.loads((base / 'classification.json').read_bytes())
+        human, _ = project(profile, classification, human, dictionary, ROOT,
+                           bridge_rules, bridge_registry)
         evidence = []
         existing = 0
         for index, view in enumerate(human['views']):
