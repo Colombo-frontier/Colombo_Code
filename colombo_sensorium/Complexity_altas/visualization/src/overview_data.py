@@ -53,7 +53,9 @@ def category(counts):
     return 'optimal'
 
 
-def build_overview(profiles, human_tags, dictionary, root):
+def build_overview(profiles, human_tags, dictionary, root, colombo=None):
+    from colombo_results import public_summary
+    colombo = colombo or {}
     groups = [{'id': f'{axis}:{key}', 'axis': axis, 'label': label}
               for axis, group_rows in AXES.items() for key, label in group_rows]
     group_ids = {g['id'] for g in groups}
@@ -78,6 +80,8 @@ def build_overview(profiles, human_tags, dictionary, root):
             raise ValueError(f'Unregistered primary task {domain} in {sid}')
         points.append({'id': sid, 'title': p['title'], 'task': domain, 'status': tone,
                        'comparisons': dict(counts), 'memberships': view_membership})
+        if sid in colombo:
+            points[-1]['colombo'] = public_summary(colombo[sid])
     status_rows = [{'id': cid, 'label': label, 'color': color, 'description': description, 'count': totals[cid]}
                    for cid, label, color, description in STATUS]
     data = {'schema_version': '1.0.0', 'groups': groups, 'concepts': concepts, 'tasks': TASKS,

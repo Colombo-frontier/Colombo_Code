@@ -36,7 +36,7 @@
   const camera = {...initial};
   const pointers = new Map();
   let selected = null, hovered = null, matching = null, edges = new Map();
-  let projected = [], projectedById = new Map(), frame = 0, lastFrame = 0;
+  let projected = [], renderOrder = [], projectedById = new Map(), frame = 0, lastFrame = 0;
   let spinning = false, visible = true, clickCandidate = null;
   let mode = 'star', bundleFocus = null, bundleHover = null;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -47,6 +47,13 @@
     if (cls) el.className = cls;
     return el;
   };
+  const colomboMark = p => p.colombo?.state === 'adopted' ? p.colombo : null;
+  const colomboBadge = mark => {
+    const badge = make('span', '★ Colombo', 'colombo-badge');
+    badge.dataset.colomboState = mark.state;
+    return badge;
+  };
+  canvas.dataset.colomboMarked = String(points.filter(p => colomboMark(p)).length);
 
   for (const [axis, name] of [['TASK', 'Task'], ['ORACLE', 'Oracle'], ['MODEL', 'Model']]) {
     const group = make('optgroup'); group.label = name; group.dataset.axis = axis;
@@ -227,7 +234,9 @@
       }
       ctx.setLineDash([]);
     }
-    for (const item of projected) {
+    // Paint attributed points last so dense clusters do not bury their halos.
+    renderOrder = [...projected].sort((a, b) => Number(!!colomboMark(a.p)) - Number(!!colomboMark(b.p)));
+    for (const item of renderOrder) {
       const id = item.p.id, active = id === selected || id === hovered;
       const filtered = matching && !matching.has(id) && id !== selected;
       const distant = (all ? bundleFocus : root) && !linked.has(id) && id !== selected;
@@ -238,6 +247,29 @@
       ctx.beginPath(); ctx.arc(item.x, item.y, r * (active ? 2.5 : 1.75), 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = opacity;
       ctx.beginPath(); ctx.arc(item.x, item.y, r * (active ? 1.21 : 1), 0, Math.PI * 2); ctx.fill();
+      const mark = colomboMark(item.p);
+      if (mark) {
+        // The coral halo sits outside the original status-colored core.
+        const haloRadius = r + (active ? 4.5 : 3.1);
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.setLineDash([]);
+        ctx.strokeStyle = '#ff5266';
+        ctx.lineWidth = active ? 2.8 : 2.15;
+        ctx.shadowColor = '#ff304f';
+        ctx.shadowBlur = active ? 18 : 12;
+        ctx.beginPath();
+        ctx.arc(item.x, item.y, haloRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        // A pale inner rim keeps the red halo distinct from every core color.
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#fff1ea';
+        ctx.lineWidth = .8;
+        ctx.beginPath();
+        ctx.arc(item.x, item.y, haloRadius - 1.3, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
     }
     if (root) {
       ctx.strokeStyle = '#f3f9f7'; ctx.lineWidth = 1.3; ctx.globalAlpha = .9;
@@ -272,8 +304,8 @@
   }
   function pick(pos) {
     let hit = null, distance = Infinity;
-    for (let i = projected.length - 1; i >= 0; i--) {
-      const item = projected[i];
+    for (let i = renderOrder.length - 1; i >= 0; i--) {
+      const item = renderOrder[i];
       const d = Math.hypot(pos.x - item.x, pos.y - item.y);
       if (d <= Math.max(6, item.radius + 3.5) && d < distance - .35) { hit = item; distance = d; }
     }
@@ -290,6 +322,11 @@
     if (!item) { tip.hidden = true; return; }
     const p = item.p;
     tip.replaceChildren(make('strong', p.title), make('span', p.id + ' · ' + palette.get(p.status).label));
+    const mark = colomboMark(p);
+    if (mark) {
+      tip.append(colomboBadge(mark));
+      if (mark.scope_note) tip.append(make('span', mark.scope_note, 'colombo-scope-note'));
+    }
     positionTip(item.x, item.y);
   }
   function positionTip(x, y) {
@@ -324,6 +361,11 @@
       }
       const breakdown = Object.entries(p.comparisons).map(([code, n]) => n + ' ' + overview.comparison_labels[code]).join(' · ');
       summary.append(make('code', id), make('h3', p.title), make('p', palette.get(p.status).label + ' · ' + breakdown));
+      const mark = colomboMark(p);
+      if (mark) {
+        summary.append(colomboBadge(mark));
+        if (mark.scope_note) summary.append(make('p', mark.scope_note, 'colombo-scope-note'));
+      }
       const links = make('div', '', 'nebula-destinations');
       const profile = make('a', 'Open profile ↗'); profile.href = 'settings/' + encodeURIComponent(id) + '.html';
       const graph = make('a', 'Relationship graph ↗'); graph.href = 'graph.html?setting=' + encodeURIComponent(id);

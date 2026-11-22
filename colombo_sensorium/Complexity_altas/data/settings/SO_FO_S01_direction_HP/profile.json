@@ -2,7 +2,7 @@
   "schema_version": "6.1.0",
   "setting_id": "SO_FO_S01_direction_HP",
   "title": "Stochastic convex Lipschitz minimization: directional moment bounds and a composite objective; high-probability risk; stochastic full subgradients",
-  "summary": "Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.",
+  "summary": "Fixed-budget high-probability objective risk under separate norm and directional heavy-tail moments. Source-scoped all-budget envelopes are recorded for an explicitly fixed query-dependent fresh kernel. High-dimensional saturation and statistical regimes match; finite-budget transients remain quantified, and no matching source lower is imported below its dimension or outside its confidence window.",
   "primary_domain": "single_objective",
   "oracle_order_collection": "fo",
   "facets": [
@@ -102,13 +102,14 @@
         "The objective is $f+h$. The function $f$ is convex and $L$-Lipschitz; $h$ is public, proximable, and $\\mu$-strongly convex, with $\\mu=0$ allowed. A minimizer lies within distance $R$ of $x_0$. The centered noise norm has $\\alpha$th moment at most $\\sigma^\\alpha$, and every unit-direction projection has $\\alpha$th moment at most $\\sigma_{\\mathrm{dir}}^\\alpha$.",
         "Unless another geometry is specified, vectors use the Euclidean norm $\\|\\cdot\\|_2$, and matrices and higher derivatives use the corresponding operator norm. The assumptions hold uniformly throughout the declared domain.",
         "Write $F=f+h$ and $F^\\star=\\inf_{x\\in\\mathbb R^d}F(x)$. The public proximal term $h$ is $\\mu$-strongly convex; when $\\mu=0$, only convexity is required. The directional centered-moment condition is $\\mathbb E_t|\\langle u,G_t-\\mathbb E_tG_t\\rangle|^\\alpha\\le\\sigma_{\\mathrm{dir}}^\\alpha$ for every unit vector $u$.",
-        "Admissible parameter domain:\n\n$$d\\in\\mathbb{N}_{\\ge1},\\quad L,R>0,\\quad\\mu\\ge0,\\quad0<\\sigma_{\\rm dir}\\le\\sigma,\\quad1<\\alpha\\le2,\\quad0<\\delta<1/2,\\quad T\\in\\mathbb{N}_{\\ge1}$$"
+        "Admissible parameter domain:\n\n$$d\\in\\mathbb{N}_{\\ge1},\\quad L,R>0,\\quad\\mu\\ge0,\\quad0<\\sigma_{\\rm dir}\\le\\sigma,\\quad1<\\alpha\\le2,\\quad0<\\delta<1/2,\\quad T\\in\\mathbb{N}_{\\ge1}$$",
+        "The public proximal term is proper, closed and convex, and its exact proximal map is available for every positive proximal parameter. It is part of the admissible instance class; the minimax lower bound is not asserted for every arbitrarily prescribed fixed nonquadratic regularizer."
       ],
       "geometry_refs": [
         "SO_FO_S01_direction_HP_dom_9c8eb9c0cf",
         "SO_FO_S01_direction_HP_dom_0167330a0f"
       ],
-      "parameter_domain_ref": "SO_FO_S01_direction_HP_R_R_S01_direction_HP_R_parameter_domain",
+      "parameter_domain_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
       "parameter_domain_latex": "d\\in\\mathbb N_{\\ge1},\\quad L,R>0,\\quad\\mu\\ge0,\\quad0<\\sigma_{\\rm dir}\\le\\sigma,\\quad1<\\alpha\\le2,\\quad0<\\delta<1/2,\\quad T\\in\\mathbb N_{\\ge1}"
     },
     "oracle": {
@@ -182,7 +183,7 @@
           "description": "Unknown objective or component functions; a stochastic instance also specifies an observation law satisfying the stated assumptions."
         }
       ],
-      "coupling": "Every observation is fresh. Same-point batches are conditionally independent, and the conditional moment bounds hold uniformly over histories. Samples cannot be reused across points.",
+      "coupling": "The instance fixes a query-dependent response kernel K_x before interaction. Given the query x_t, each raw response is a fresh draw from K_{x_t}, independent of the preceding history and private randomness conditional on x_t. Repeated calls at a frozen query are independent copies of the same kernel. Its mean belongs to the subdifferential of f at that query, and both centered moment bounds hold uniformly over queries. Samples cannot be reused across points. A raw response discarded by rejection or used in a batch still costs one call.",
       "auxiliary_interfaces": [
         "The exact proximal map of the public function $h$ is available at zero query cost."
       ],
@@ -194,9 +195,11 @@
         "The unknown object is the objective $f$. Access to the composite term $h$, including public information and proximal operations, is specified by the interface below.",
         "Query points lie in $\\mathbb{R}^d$; feedback consists of stochastic full subgradients:",
         "$$G_t,\\quad \\mathbb{E}_tG_t\\in\\partial f(x_t),\\quad\\mathbb{E}_t\\|G_t-\\mathbb{E}_tG_t\\|^\\alpha\\le\\sigma^\\alpha$$",
-        "Every observation is fresh. Same-point batches are conditionally independent, and the conditional moment bounds hold uniformly over histories. Samples cannot be reused across points.",
-        "The exact proximal map of the public function $h$ is available at zero query cost."
-      ]
+        "The instance fixes a query-dependent response kernel K_x before interaction. Given the query x_t, each raw response is a fresh draw from K_{x_t}, independent of the preceding history and private randomness conditional on x_t. Repeated calls at a frozen query are independent copies of the same kernel. Its mean belongs to the subdifferential of f at that query, and both centered moment bounds hold uniformly over queries. Samples cannot be reused across points. A raw response discarded by rejection or used in a batch still costs one call.",
+        "The exact proximal map of the public function $h$ is available at zero query cost.",
+        "The fixed-kernel interpretation is made explicit for source compatibility. No equivalence to the broader class of history-dependent response kernels is asserted."
+      ],
+      "kernel_semantics": "fixed_query_dependent_kernel_fresh_independent_draws"
     },
     "output": {
       "object_type": "point",
@@ -235,7 +238,8 @@
       "description_paragraphs": [
         "One full stochastic-gradient sample costs one call; a batch of $b$ samples costs $b$ calls.",
         "Cost is bounded uniformly on every execution path. All calls used for initialization, repetition, batching, or candidate verification are counted.",
-        "Real arithmetic, precision, and storage applied to already available information are uncharged. Public geometric operations are limited to those explicitly granted by the oracle. Query complexity alone does not imply arithmetic, memory, or communication complexity."
+        "Real arithmetic, precision, and storage applied to already available information are uncharged. Public geometric operations are limited to those explicitly granted by the oracle. Query complexity alone does not imply arithmetic, memory, or communication complexity.",
+        "Every raw oracle draw is counted, including rejected observations. The source algorithm may use unrestricted internal computation; no polynomial arithmetic or storage bound follows from the oracle bound."
       ]
     }
   },
@@ -454,6 +458,462 @@
       "constant_dependencies": [],
       "numeric_value": null,
       "source_parameter_id": "T"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP_p_q_20261122",
+      "symbol": "q",
+      "meaning": "Heavy-tail statistical exponent.",
+      "kind": "derived",
+      "domain": "Determined by the public parameters in its displayed definition.",
+      "public": true,
+      "definition": "q=1-1/\\alpha",
+      "definition_latex": "q=1-1/\\alpha",
+      "evaluation_expression": {
+        "op": "sub",
+        "args": [
+          1,
+          {
+            "op": "div",
+            "args": [
+              1,
+              {
+                "ref": "SO_FO_S01_direction_HP_p_debd1b8136"
+              }
+            ]
+          }
+        ]
+      },
+      "dependencies": [
+        "SO_FO_S01_direction_HP_p_debd1b8136"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "q"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP_p_e_20261122",
+      "symbol": "e",
+      "meaning": "Ratio of norm and directional moment scales; e need not equal d.",
+      "kind": "derived",
+      "domain": "Determined by the public parameters in its displayed definition.",
+      "public": true,
+      "definition": "e=\\sigma^2/\\sigma_{\\rm dir}^2",
+      "definition_latex": "e=\\sigma^2/\\sigma_{\\rm dir}^2",
+      "evaluation_expression": {
+        "op": "div",
+        "args": [
+          {
+            "op": "pow",
+            "args": [
+              {
+                "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+              },
+              2
+            ]
+          },
+          {
+            "op": "pow",
+            "args": [
+              {
+                "ref": "SO_FO_S01_direction_HP_p_5fea494340"
+              },
+              2
+            ]
+          }
+        ]
+      },
+      "dependencies": [
+        "SO_FO_S01_direction_HP_p_a6849cb45c",
+        "SO_FO_S01_direction_HP_p_5fea494340"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "e"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP_p_ell_20261122",
+      "symbol": "\\ell",
+      "meaning": "Confidence logarithm, kept explicitly.",
+      "kind": "derived",
+      "domain": "Determined by the public parameters in its displayed definition.",
+      "public": true,
+      "definition": "\\ell=\\log(3/\\delta)",
+      "definition_latex": "\\ell=\\log(3/\\delta)",
+      "evaluation_expression": {
+        "op": "log",
+        "args": [
+          {
+            "op": "div",
+            "args": [
+              3,
+              {
+                "ref": "SO_FO_S01_direction_HP_p_160a9a596f"
+              }
+            ]
+          }
+        ]
+      },
+      "dependencies": [
+        "SO_FO_S01_direction_HP_p_160a9a596f"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "ell"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP_p_A_20261122",
+      "symbol": "A",
+      "meaning": "Heavy-tail amplitude without the confidence term.",
+      "kind": "derived",
+      "domain": "Determined by the public parameters in its displayed definition.",
+      "public": true,
+      "definition": "A=\\sigma_{\\rm dir}e^q",
+      "definition_latex": "A=\\sigma_{\\rm dir}e^q",
+      "evaluation_expression": {
+        "op": "mul",
+        "args": [
+          {
+            "ref": "SO_FO_S01_direction_HP_p_5fea494340"
+          },
+          {
+            "op": "pow",
+            "args": [
+              {
+                "ref": "SO_FO_S01_direction_HP_p_e_20261122"
+              },
+              {
+                "ref": "SO_FO_S01_direction_HP_p_q_20261122"
+              }
+            ]
+          }
+        ]
+      },
+      "dependencies": [
+        "SO_FO_S01_direction_HP_p_5fea494340",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_q_20261122"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "A"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP_p_u_20261122",
+      "symbol": "u_T",
+      "meaning": "Pure heavy-tail amplitude.",
+      "kind": "derived",
+      "domain": "Determined by the public parameters in its displayed definition.",
+      "public": true,
+      "definition": "u_T=\\sigma_{\\rm dir}((e+\\ell)/T)^q",
+      "definition_latex": "u_T=\\sigma_{\\rm dir}((e+\\ell)/T)^q",
+      "evaluation_expression": {
+        "op": "mul",
+        "args": [
+          {
+            "ref": "SO_FO_S01_direction_HP_p_5fea494340"
+          },
+          {
+            "op": "pow",
+            "args": [
+              {
+                "op": "div",
+                "args": [
+                  {
+                    "op": "add",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_e_20261122"
+                      },
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_ell_20261122"
+                      }
+                    ]
+                  },
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                  }
+                ]
+              },
+              {
+                "ref": "SO_FO_S01_direction_HP_p_q_20261122"
+              }
+            ]
+          }
+        ]
+      },
+      "dependencies": [
+        "SO_FO_S01_direction_HP_p_5fea494340",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_ell_20261122",
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_q_20261122"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "u"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP_p_w_20261122",
+      "symbol": "w_T",
+      "meaning": "Statistical amplitude, retaining the finite-variance term.",
+      "kind": "derived",
+      "domain": "Determined by the public parameters in its displayed definition.",
+      "public": true,
+      "definition": "w_T=\\sigma/\\sqrt T+u_T",
+      "definition_latex": "w_T=\\sigma/\\sqrt T+u_T",
+      "evaluation_expression": {
+        "op": "add",
+        "args": [
+          {
+            "op": "div",
+            "args": [
+              {
+                "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+              },
+              {
+                "op": "pow",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                  },
+                  0.5
+                ]
+              }
+            ]
+          },
+          {
+            "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+          }
+        ]
+      },
+      "dependencies": [
+        "SO_FO_S01_direction_HP_p_a6849cb45c",
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_u_20261122"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "w"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP_p_a_20261122",
+      "symbol": "a_T",
+      "meaning": "Deterministic and confidence transients in the upper amplitude.",
+      "kind": "derived",
+      "domain": "Determined by the public parameters in its displayed definition.",
+      "public": true,
+      "definition": "a_T=L/\\sqrt T+L\\ell/T",
+      "definition_latex": "a_T=L/\\sqrt T+L\\ell/T",
+      "evaluation_expression": {
+        "op": "add",
+        "args": [
+          {
+            "op": "div",
+            "args": [
+              {
+                "ref": "SO_FO_S01_direction_HP_p_93d9a0e01d"
+              },
+              {
+                "op": "pow",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                  },
+                  0.5
+                ]
+              }
+            ]
+          },
+          {
+            "op": "div",
+            "args": [
+              {
+                "op": "mul",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_93d9a0e01d"
+                  },
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_ell_20261122"
+                  }
+                ]
+              },
+              {
+                "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+              }
+            ]
+          }
+        ]
+      },
+      "dependencies": [
+        "SO_FO_S01_direction_HP_p_93d9a0e01d",
+        "SO_FO_S01_direction_HP_p_ell_20261122",
+        "SO_FO_S01_direction_HP_p_61193f3c91"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "a"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP_p_v_20261122",
+      "symbol": "v_T",
+      "meaning": "Full upper amplitude.",
+      "kind": "derived",
+      "domain": "Determined by the public parameters in its displayed definition.",
+      "public": true,
+      "definition": "v_T=a_T+w_T",
+      "definition_latex": "v_T=a_T+w_T",
+      "evaluation_expression": {
+        "op": "add",
+        "args": [
+          {
+            "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+          },
+          {
+            "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+          }
+        ]
+      },
+      "dependencies": [
+        "SO_FO_S01_direction_HP_p_a_20261122",
+        "SO_FO_S01_direction_HP_p_w_20261122"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "v"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP_p_v0_20261122",
+      "symbol": "v_T^{(0)}",
+      "meaning": "Upper amplitude at source failure probability delta_0=1/20.",
+      "kind": "derived",
+      "domain": "Determined by the public parameters in its displayed definition.",
+      "public": true,
+      "definition": "v_T^{(0)}=L/\\sqrt T+L\\log(60)/T+\\sigma/\\sqrt T+\\sigma_{\\rm dir}((e+\\log(60))/T)^q",
+      "definition_latex": "v_T^{(0)}=L/\\sqrt T+L\\log(60)/T+\\sigma/\\sqrt T+\\sigma_{\\rm dir}((e+\\log(60))/T)^q",
+      "evaluation_expression": {
+        "op": "add",
+        "args": [
+          {
+            "op": "div",
+            "args": [
+              {
+                "ref": "SO_FO_S01_direction_HP_p_93d9a0e01d"
+              },
+              {
+                "op": "pow",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                  },
+                  0.5
+                ]
+              }
+            ]
+          },
+          {
+            "op": "div",
+            "args": [
+              {
+                "op": "mul",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_93d9a0e01d"
+                  },
+                  {
+                    "op": "log",
+                    "args": [
+                      60
+                    ]
+                  }
+                ]
+              },
+              {
+                "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+              }
+            ]
+          },
+          {
+            "op": "div",
+            "args": [
+              {
+                "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+              },
+              {
+                "op": "pow",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                  },
+                  0.5
+                ]
+              }
+            ]
+          },
+          {
+            "op": "mul",
+            "args": [
+              {
+                "ref": "SO_FO_S01_direction_HP_p_5fea494340"
+              },
+              {
+                "op": "pow",
+                "args": [
+                  {
+                    "op": "div",
+                    "args": [
+                      {
+                        "op": "add",
+                        "args": [
+                          {
+                            "ref": "SO_FO_S01_direction_HP_p_e_20261122"
+                          },
+                          {
+                            "op": "log",
+                            "args": [
+                              60
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                      }
+                    ]
+                  },
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_q_20261122"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "dependencies": [
+        "SO_FO_S01_direction_HP_p_93d9a0e01d",
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_a6849cb45c",
+        "SO_FO_S01_direction_HP_p_5fea494340",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_q_20261122"
+      ],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "v0"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP_p_C0_20261122",
+      "symbol": "C_0",
+      "meaning": "Any fixed positive domination constant, chosen independently of all varying problem parameters. It is a comparison-window convention, not an additional hidden oracle input.",
+      "kind": "fixed_constant",
+      "domain": "$C_0>0$ fixed before varying the problem parameters",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null,
+      "source_parameter_id": "C0"
     }
   ],
   "symbols": [
@@ -631,6 +1091,83 @@
       "domain": "",
       "definition": "",
       "parameter_ref": null
+    },
+    {
+      "symbol_latex": "q",
+      "meaning": "Heavy-tail statistical exponent.",
+      "domain": "",
+      "definition": "$$q=1-1/\\alpha$$",
+      "parameter_ref": "SO_FO_S01_direction_HP_p_q_20261122"
+    },
+    {
+      "symbol_latex": "e",
+      "meaning": "Ratio of norm and directional moment scales; e need not equal d.",
+      "domain": "",
+      "definition": "$$e=\\sigma^2/\\sigma_{\\rm dir}^2$$",
+      "parameter_ref": "SO_FO_S01_direction_HP_p_e_20261122"
+    },
+    {
+      "symbol_latex": "\\ell",
+      "meaning": "Confidence logarithm, kept explicitly.",
+      "domain": "",
+      "definition": "$$\\ell=\\log(3/\\delta)$$",
+      "parameter_ref": "SO_FO_S01_direction_HP_p_ell_20261122"
+    },
+    {
+      "symbol_latex": "A",
+      "meaning": "Heavy-tail amplitude without the confidence term.",
+      "domain": "",
+      "definition": "$$A=\\sigma_{\\rm dir}e^q$$",
+      "parameter_ref": "SO_FO_S01_direction_HP_p_A_20261122"
+    },
+    {
+      "symbol_latex": "u_T",
+      "meaning": "Pure heavy-tail amplitude.",
+      "domain": "",
+      "definition": "$$u_T=\\sigma_{\\rm dir}((e+\\ell)/T)^q$$",
+      "parameter_ref": "SO_FO_S01_direction_HP_p_u_20261122"
+    },
+    {
+      "symbol_latex": "w_T",
+      "meaning": "Statistical amplitude, retaining the finite-variance term.",
+      "domain": "",
+      "definition": "$$w_T=\\sigma/\\sqrt T+u_T$$",
+      "parameter_ref": "SO_FO_S01_direction_HP_p_w_20261122"
+    },
+    {
+      "symbol_latex": "a_T",
+      "meaning": "Deterministic and confidence transients in the upper amplitude.",
+      "domain": "",
+      "definition": "$$a_T=L/\\sqrt T+L\\ell/T$$",
+      "parameter_ref": "SO_FO_S01_direction_HP_p_a_20261122"
+    },
+    {
+      "symbol_latex": "v_T",
+      "meaning": "Full upper amplitude.",
+      "domain": "",
+      "definition": "$$v_T=a_T+w_T$$",
+      "parameter_ref": "SO_FO_S01_direction_HP_p_v_20261122"
+    },
+    {
+      "symbol_latex": "v_T^{(0)}",
+      "meaning": "Upper amplitude at source failure probability delta_0=1/20.",
+      "domain": "",
+      "definition": "$$v_T^{(0)}=L/\\sqrt T+L\\log(60)/T+\\sigma/\\sqrt T+\\sigma_{\\rm dir}((e+\\log(60))/T)^q$$",
+      "parameter_ref": "SO_FO_S01_direction_HP_p_v0_20261122"
+    },
+    {
+      "symbol_latex": "\\mathcal H_{\\mu,R}(z)",
+      "meaning": "Curvature and initialization envelope.",
+      "domain": "$z\\ge0$",
+      "definition": "$$\\mathcal H_{\\mu,R}(z)=\\max_{0\\le r\\le R}(zr-\\mu r^2/2)=\\begin{cases}Rz,&\\mu=0,\\\\z^2/(2\\mu),&\\mu>0,\\ z\\le\\mu R,\\\\Rz-\\mu R^2/2,&\\mu>0,\\ z\\ge\\mu R.\\end{cases}$$",
+      "parameter_ref": null
+    },
+    {
+      "symbol_latex": "c_\\alpha,C_\\alpha,C_{\\alpha,C_0}",
+      "meaning": "Positive constants depending only on the displayed subscripts. No uniformity as alpha tends to one is asserted.",
+      "domain": "Positive",
+      "definition": "",
+      "parameter_ref": null
     }
   ],
   "quantities": [
@@ -653,15 +1190,16 @@
         "SO_FO_S01_direction_HP_p_61193f3c91"
       ],
       "fixed_parameters": [
-        "SO_FO_S01_direction_HP_p_debd1b8136"
+        "SO_FO_S01_direction_HP_p_debd1b8136",
+        "SO_FO_S01_direction_HP_p_C0_20261122"
       ],
       "analysis_scope": "declared_joint_parameter_window",
       "comparison_scale": "multiplicative_rate",
       "source_quantity_code": null,
       "view_id": "randomized__probability",
       "guarantee_id": "g1",
-      "expression_latex": "R^\\star_{v,\\pi}(B;\\theta)=\\inf_{\\mathcal A\\in\\mathfrak A_v:\\ C_\\pi(\\mathcal A,I)\\le B\\ \\forall I}\\sup_I\\mathbb E[\\ell(I,\\mathcal A)]",
-      "definition_note": "Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit."
+      "expression_latex": "\\mathcal R_{T,\\delta}=\\inf_{\\mathcal A:\\,N_{\\mathcal A}\\le T\\ {\\rm a.s.}}\\inf\\{r\\ge0:\\sup_{I,\\mathcal O}\\Pr(F_I(\\widehat x_{\\mathcal A}^{\\mathcal O})-F_I^\\star>r)\\le\\delta\\}",
+      "definition_note": "Fixed-budget high-probability risk: the smallest loss threshold whose failure probability is at most delta uniformly over admissible instances and the fixed query-dependent kernels. The probability includes private and oracle randomness. The budget is an almost-sure cap on raw calls. This quantity is not expected loss."
     }
   ],
   "resource_projections": [
@@ -842,64 +1380,1386 @@
       },
       "predicate_text": "$d\\in\\mathbb{N}_{\\ge1}$",
       "kind": "target_domain"
-    }
-  ],
-  "bounds": [],
-  "comparisons": [
+    },
     {
-      "label": "High-probability contract under directional moment bounds",
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_source_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "Adopted source confidence range",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
+      "predicate": {
+        "cmp": "lt",
+        "left": {
+          "ref": "SO_FO_S01_direction_HP_p_160a9a596f"
+        },
+        "right": 0.1
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$.",
+      "kind": "source_validity"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_source_highdim_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "Source lower-bound dimension window",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
       "predicate": {
         "all": [
           {
-            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r3"
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_source_20261122"
           },
           {
-            "cmp": "gt",
+            "cmp": "ge",
             "left": {
-              "ref": "SO_FO_S01_direction_HP_p_5fea494340"
+              "ref": "SO_FO_S01_direction_HP_p_b4e942dc3f"
+            },
+            "right": {
+              "ref": "SO_FO_S01_direction_HP_p_e_20261122"
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$ and $d\\ge\\lceil e\\rceil$.",
+      "kind": "source_validity"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_confidence_tail_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "Remaining native confidence range",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
+      "predicate": {
+        "cmp": "ge",
+        "left": {
+          "ref": "SO_FO_S01_direction_HP_p_160a9a596f"
+        },
+        "right": 0.1
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $1/10\\le\\delta<1/2$.",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_small_dim_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "Dimensions below the source lower-bound threshold",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_source_20261122"
+          },
+          {
+            "cmp": "lt",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_b4e942dc3f"
+            },
+            "right": {
+              "ref": "SO_FO_S01_direction_HP_p_e_20261122"
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$ and $d<\\lceil e\\rceil$.",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_saturation_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "Saturated statistical amplitude",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_source_highdim_20261122"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+            },
+            "right": {
+              "ref": "SO_FO_S01_direction_HP_p_93d9a0e01d"
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T\\ge L$.",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "High-dimensional unsaturated source window",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_source_highdim_20261122"
+          },
+          {
+            "cmp": "lt",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+            },
+            "right": {
+              "ref": "SO_FO_S01_direction_HP_p_93d9a0e01d"
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$.",
+      "kind": "source_validity"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_convex_heavy_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "General convex pure heavy-tail regime",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "cmp": "eq",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
             },
             "right": 0
           },
           {
             "cmp": "le",
             "left": {
-              "ref": "SO_FO_S01_direction_HP_p_5fea494340"
+              "op": "add",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+                },
+                {
+                  "op": "div",
+                  "args": [
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+                    },
+                    {
+                      "op": "pow",
+                      "args": [
+                        {
+                          "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                        },
+                        0.5
+                      ]
+                    }
+                  ]
+                }
+              ]
             },
             "right": {
-              "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$ and $a_T+\\sigma/\\sqrt T\\le C_0u_T$.",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_strong_heavy_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "Strongly convex pure heavy-tail quadratic regime",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "all": [
+              {
+                "cmp": "gt",
+                "left": {
+                  "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                },
+                "right": 0
+              },
+              {
+                "cmp": "le",
+                "left": {
+                  "op": "add",
+                  "args": [
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+                    },
+                    {
+                      "op": "div",
+                      "args": [
+                        {
+                          "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+                        },
+                        {
+                          "op": "pow",
+                          "args": [
+                            {
+                              "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                            },
+                            0.5
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "right": {
+                  "op": "mul",
+                  "args": [
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                    },
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                    }
+                  ]
+                }
+              },
+              {
+                "cmp": "le",
+                "left": {
+                  "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                },
+                "right": {
+                  "op": "mul",
+                  "args": [
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                    },
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_4497cc9e5d"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T+\\sigma/\\sqrt T\\le C_0u_T$, and $u_T\\le\\mu R$.",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_convex_stat_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "General convex full statistical regime",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "cmp": "eq",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+            },
+            "right": 0
+          },
+          {
+            "not": {
+              "cmp": "le",
+              "left": {
+                "op": "add",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+                  },
+                  {
+                    "op": "div",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+                      },
+                      {
+                        "op": "pow",
+                        "args": [
+                          {
+                            "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                          },
+                          0.5
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "right": {
+                "op": "mul",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                  },
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$, $a_T\\le C_0w_T$, and not $a_T+\\sigma/\\sqrt T\\le C_0u_T$.",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_strong_quad_stat_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "Strongly convex full statistical quadratic regime",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+            },
+            "right": 0
+          },
+          {
+            "not": {
+              "all": [
+                {
+                  "cmp": "gt",
+                  "left": {
+                    "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                  },
+                  "right": 0
+                },
+                {
+                  "cmp": "le",
+                  "left": {
+                    "op": "add",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+                      },
+                      {
+                        "op": "div",
+                        "args": [
+                          {
+                            "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+                          },
+                          {
+                            "op": "pow",
+                            "args": [
+                              {
+                                "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                              },
+                              0.5
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "right": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                      },
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "cmp": "le",
+                  "left": {
+                    "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                  },
+                  "right": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                      },
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_4497cc9e5d"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+                }
+              ]
+            }
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_4497cc9e5d"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T\\le\\mu R$, and the complete pure heavy-tail quadratic predicate is false.",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_strong_transition_stat_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "Strongly convex statistical transition regime",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+            },
+            "right": 0
+          },
+          {
+            "not": {
+              "all": [
+                {
+                  "cmp": "gt",
+                  "left": {
+                    "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                  },
+                  "right": 0
+                },
+                {
+                  "cmp": "le",
+                  "left": {
+                    "op": "add",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+                      },
+                      {
+                        "op": "div",
+                        "args": [
+                          {
+                            "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+                          },
+                          {
+                            "op": "pow",
+                            "args": [
+                              {
+                                "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                              },
+                              0.5
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "right": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                      },
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "cmp": "le",
+                  "left": {
+                    "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                  },
+                  "right": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                      },
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_4497cc9e5d"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+                }
+              ]
             }
           },
           {
             "cmp": "gt",
             "left": {
-              "ref": "SO_FO_S01_direction_HP_p_160a9a596f"
+              "ref": "SO_FO_S01_direction_HP_p_w_20261122"
             },
-            "right": 0
-          },
-          {
-            "cmp": "lt",
-            "left": {
-              "ref": "SO_FO_S01_direction_HP_p_160a9a596f"
-            },
-            "right": 0.5
-          },
-          {
-            "cmp": "ge",
-            "left": {
-              "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
-            },
-            "right": 1
-          },
-          {
-            "cmp": "ge",
-            "left": {
-              "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
-            },
-            "right": 0
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_4497cc9e5d"
+                }
+              ]
+            }
           }
         ]
       },
-      "predicate_text": "$0<\\sigma_{\\rm dir}\\le\\sigma,\\ 0<\\delta<1/2,\\ T\\ge1,\\ \\mu\\ge0$",
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T>\\mu R$, and the complete pure heavy-tail quadratic predicate is false.",
+      "kind": "rate_branch"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__r_remaining_20261122",
+      "specification_ref": "SO_FO_S01_direction_HP",
+      "name": "Remaining finite-budget transient regime",
+      "universe_ref": "SO_FO_S01_direction_HP__randomized__probability__r2",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "not": {
+              "cmp": "le",
+              "left": {
+                "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+              },
+              "right": {
+                "op": "mul",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                  },
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $a_T>C_0w_T$.",
+      "kind": "rate_branch"
+    }
+  ],
+  "bounds": [
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_all_upper_20261122",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "C_\\alpha\\mathcal H_{\\mu,R}(\\min\\{L,v_T\\})",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_source_20261122"
+      ],
+      "method": "Source mixed-moment optimization and localization",
+      "algorithm_or_hard_family": "Source mixed-moment optimization and localization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_all_budget_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_small_dim_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__c_remaining_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha; no dependence on d, L, R, mu, sigma, sigma_dir, delta or T is hidden.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "witness_type": "deterministic",
+      "witness_type_note": "Deterministic adaptive policy given the observed oracle samples: Appendix A.3 uses known-density means and deterministic internal optimization; proximal conversion, rejection decisions and localization use returned data. Oracle observations remain stochastic. This witness is admissible in the randomized-allowed target view."
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_all_lower_20261122",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "c_\\alpha\\mathcal H_{\\mu,R}(\\min\\{L,w_T\\})",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_source_highdim_20261122"
+      ],
+      "method": "Source adaptive testing lower construction",
+      "algorithm_or_hard_family": "Source adaptive testing lower construction",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_all_budget_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_remaining_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$ and $d\\ge\\lceil e\\rceil$."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha; no dependence on d, L, R, mu, sigma, sigma_dir, delta or T is hidden.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "lower_scope_type": "unrestricted_randomized"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_confidence_upper_20261122",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "C_\\alpha\\mathcal H_{\\mu,R}(\\min\\{L,v_T^{(0)}\\})",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_confidence_tail_20261122"
+      ],
+      "method": "Source upper at delta_0=1/20",
+      "algorithm_or_hard_family": "Source upper at delta_0=1/20",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_all_budget_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_confidence_transfer_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_confidence_tail_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $1/10\\le\\delta<1/2$."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha; no dependence on d, L, R, mu, sigma, sigma_dir, delta or T is hidden.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "witness_type": "deterministic",
+      "witness_type_note": "Deterministic adaptive policy given the observed oracle samples: Appendix A.3 uses known-density means and deterministic internal optimization; proximal conversion, rejection decisions and localization use returned data. Oracle observations remain stochastic. This witness is admissible in the randomized-allowed target view."
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_saturation_upper_20261122",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "O_{\\alpha}\\!\\left(\\mathcal H_{\\mu,R}(L)\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_saturation_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_all_budget_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_statistical_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_saturation_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T\\ge L$."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha; no dependence on d, L, R, mu, sigma, sigma_dir, delta or T is hidden.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "witness_type": "deterministic",
+      "witness_type_note": "Deterministic adaptive policy given the observed oracle samples: Appendix A.3 uses known-density means and deterministic internal optimization; proximal conversion, rejection decisions and localization use returned data. Oracle observations remain stochastic. This witness is admissible in the randomized-allowed target view."
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_saturation_lower_20261122",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\Omega_{\\alpha}\\!\\left(\\mathcal H_{\\mu,R}(L)\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_saturation_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_all_budget_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_statistical_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_saturation_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T\\ge L$."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha; no dependence on d, L, R, mu, sigma, sigma_dir, delta or T is hidden.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "lower_scope_type": "unrestricted_randomized"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_convex_heavy_upper_20261122",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "O_{\\alpha,C_0}\\!\\left(R(A+\\sigma_{\\rm dir}\\ell^q)/T^q\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_convex_heavy_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_heavy_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_convex_heavy_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$ and $a_T+\\sigma/\\sqrt T\\le C_0u_T$."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha and the fixed C0.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "witness_type": "deterministic",
+      "witness_type_note": "Deterministic adaptive policy given the observed oracle samples: Appendix A.3 uses known-density means and deterministic internal optimization; proximal conversion, rejection decisions and localization use returned data. Oracle observations remain stochastic. This witness is admissible in the randomized-allowed target view."
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_convex_heavy_lower_20261122",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\Omega_{\\alpha,C_0}\\!\\left(R(A+\\sigma_{\\rm dir}\\ell^q)/T^q\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_convex_heavy_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_heavy_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_convex_heavy_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$ and $a_T+\\sigma/\\sqrt T\\le C_0u_T$."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha and the fixed C0.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "lower_scope_type": "unrestricted_randomized"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_strong_heavy_upper_20261122",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "O_{\\alpha,C_0}\\!\\left((A^2+\\sigma_{\\rm dir}^2\\ell^{2q})/(\\mu T^{2q})\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_strong_heavy_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_heavy_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_strong_heavy_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T+\\sigma/\\sqrt T\\le C_0u_T$, and $u_T\\le\\mu R$."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha and the fixed C0.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "witness_type": "deterministic",
+      "witness_type_note": "Deterministic adaptive policy given the observed oracle samples: Appendix A.3 uses known-density means and deterministic internal optimization; proximal conversion, rejection decisions and localization use returned data. Oracle observations remain stochastic. This witness is admissible in the randomized-allowed target view."
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_strong_heavy_lower_20261122",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\Omega_{\\alpha,C_0}\\!\\left((A^2+\\sigma_{\\rm dir}^2\\ell^{2q})/(\\mu T^{2q})\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_strong_heavy_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_heavy_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_strong_heavy_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T+\\sigma/\\sqrt T\\le C_0u_T$, and $u_T\\le\\mu R$."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha and the fixed C0.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "lower_scope_type": "unrestricted_randomized"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_convex_stat_upper_20261122",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "O_{\\alpha,C_0}\\!\\left(Rw_T\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_convex_stat_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_statistical_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_convex_stat_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$, $a_T\\le C_0w_T$, and not $a_T+\\sigma/\\sqrt T\\le C_0u_T$."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha and the fixed C0.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "witness_type": "deterministic",
+      "witness_type_note": "Deterministic adaptive policy given the observed oracle samples: Appendix A.3 uses known-density means and deterministic internal optimization; proximal conversion, rejection decisions and localization use returned data. Oracle observations remain stochastic. This witness is admissible in the randomized-allowed target view."
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_convex_stat_lower_20261122",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\Omega_{\\alpha,C_0}\\!\\left(Rw_T\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_convex_stat_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_statistical_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_convex_stat_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$, $a_T\\le C_0w_T$, and not $a_T+\\sigma/\\sqrt T\\le C_0u_T$."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha and the fixed C0.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "lower_scope_type": "unrestricted_randomized"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_strong_quad_stat_upper_20261122",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "O_{\\alpha,C_0}\\!\\left(w_T^2/\\mu\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_strong_quad_stat_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_statistical_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_strong_quad_stat_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T\\le\\mu R$, and the complete pure heavy-tail quadratic predicate is false."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha and the fixed C0.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "witness_type": "deterministic",
+      "witness_type_note": "Deterministic adaptive policy given the observed oracle samples: Appendix A.3 uses known-density means and deterministic internal optimization; proximal conversion, rejection decisions and localization use returned data. Oracle observations remain stochastic. This witness is admissible in the randomized-allowed target view."
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_strong_quad_stat_lower_20261122",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\Omega_{\\alpha,C_0}\\!\\left(w_T^2/\\mu\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_strong_quad_stat_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_statistical_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_strong_quad_stat_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T\\le\\mu R$, and the complete pure heavy-tail quadratic predicate is false."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha and the fixed C0.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "lower_scope_type": "unrestricted_randomized"
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_strong_transition_stat_upper_20261122",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "O_{\\alpha,C_0}\\!\\left(\\mathcal H_{\\mu,R}(w_T)\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_strong_transition_stat_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_statistical_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_strong_transition_stat_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T>\\mu R$, and the complete pure heavy-tail quadratic predicate is false."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha and the fixed C0.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "witness_type": "deterministic",
+      "witness_type_note": "Deterministic adaptive policy given the observed oracle samples: Appendix A.3 uses known-density means and deterministic internal optimization; proximal conversion, rejection decisions and localization use returned data. Oracle observations remain stochastic. This witness is admissible in the randomized-allowed target view."
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__b_strong_transition_stat_lower_20261122",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "claim_semantics": "scalar_bound",
+      "formula_latex": "\\Omega_{\\alpha,C_0}\\!\\left(\\mathcal H_{\\mu,R}(w_T)\\right)",
+      "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "quantity_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__q1"
+      ],
+      "region_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__r_strong_transition_stat_20261122"
+      ],
+      "method": "Source theorem plus explicit target specialization",
+      "algorithm_or_hard_family": "Source theorem plus explicit target specialization",
+      "algorithm_class_scope": "Arbitrary adaptive randomized algorithms with the stated fixed query-dependent kernels and an almost-sure cap on all raw calls.",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_statistical_20261122"
+      ],
+      "proof_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_strong_transition_stat_20261122"
+      ],
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "applicability": {
+        "conditions": [
+          "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T>\\mu R$, and the complete pure heavy-tail quadratic predicate is false."
+        ],
+        "oracle_mapping": "Whole-space specialization with the explicitly fixed query-dependent fresh kernel and public exact prox; no function values or reusable samples.",
+        "guarantee_mapping": "Identical high-probability loss threshold under the fixed raw-call cap; no expectation-to-probability conversion.",
+        "resource_mapping": "Every raw sample is one call, including rejected observations, initialization, batches and localization.",
+        "regularizer_scope": "Upper is uniform over all admissible public h. Lower is minimax over that class and uses the quadratic h subclass."
+      },
+      "hidden_constants": "Only alpha and the fixed C0.",
+      "hidden_logs": [],
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "lower_scope_type": "unrestricted_randomized"
+    }
+  ],
+  "comparisons": [
+    {
+      "comparison_id": "SO_FO_S01_direction_HP__randomized__probability__c_confidence_tail_20261122",
+      "label": "Native confidence values outside the adopted source lower range",
+      "predicate": {
+        "cmp": "ge",
+        "left": {
+          "ref": "SO_FO_S01_direction_HP_p_160a9a596f"
+        },
+        "right": 0.1
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $1/10\\le\\delta<1/2$.",
       "parameter_refs": [
         "SO_FO_S01_direction_HP_p_b4e942dc3f",
         "SO_FO_S01_direction_HP_p_93d9a0e01d",
@@ -909,40 +2769,72 @@
         "SO_FO_S01_direction_HP_p_debd1b8136",
         "SO_FO_S01_direction_HP_p_5fea494340",
         "SO_FO_S01_direction_HP_p_160a9a596f",
-        "SO_FO_S01_direction_HP_p_61193f3c91"
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_q_20261122",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_ell_20261122",
+        "SO_FO_S01_direction_HP_p_A_20261122",
+        "SO_FO_S01_direction_HP_p_u_20261122",
+        "SO_FO_S01_direction_HP_p_w_20261122",
+        "SO_FO_S01_direction_HP_p_a_20261122",
+        "SO_FO_S01_direction_HP_p_v_20261122",
+        "SO_FO_S01_direction_HP_p_v0_20261122",
+        "SO_FO_S01_direction_HP_p_C0_20261122"
       ],
-      "source_region_ref": "SO_FO_S01_direction_HP__randomized__probability__r1",
-      "status": {
-        "code": "missing_both",
-        "label": "Both bounds missing",
-        "missing_sides": [
-          "lower",
-          "upper"
-        ]
-      },
-      "comparison_id": "SO_FO_S01_direction_HP__randomized__probability__c1",
+      "source_region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_confidence_tail_20261122",
       "view_id": "randomized__probability",
       "guarantee_id": "g1",
       "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
       "resource_projection_id": "resource_c9228d28be",
-      "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r1",
+      "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_confidence_tail_20261122",
+      "comparison_key": {
+        "setting_id": "SO_FO_S01_direction_HP",
+        "view_id": "randomized__probability",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "resource_projection_id": "resource_c9228d28be",
+        "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_confidence_tail_20261122"
+      },
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
       "bracket": {
-        "upper_refs": [],
-        "lower_refs": [],
-        "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c1",
+        "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c_confidence_tail_20261122",
         "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
         "comparison_mode": "multiplicative_rate",
         "resource_projection": "declared_budget",
-        "ratio_or_gap": "",
-        "envelopes": {
-          "upper": null,
-          "lower": null
-        },
-        "dispatch": [],
-        "claim_guards": {},
+        "upper_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_confidence_upper_20261122"
+        ],
+        "lower_refs": [],
         "achievable_refs": [],
         "necessary_refs": [],
-        "resource_projection_description": "Error risk under the prescribed fixed budget",
+        "envelopes": {
+          "upper": {
+            "expression": "C_\\alpha\\mathcal H_{\\mu,R}(\\min\\{L,v_T^{(0)}\\})",
+            "expression_latex": "C_\\alpha\\mathcal H_{\\mu,R}(\\min\\{L,v_T^{(0)}\\})",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_confidence_upper_20261122"
+            ],
+            "included": true
+          },
+          "lower": null
+        },
+        "ratio_or_gap": "Upper follows by running at delta_0=1/20. No target lower for delta>=1/10 is imported here.",
+        "envelope_certificate": "The cited source statement, the explicit target-class transfer and local envelope algebra support exactly this row; no blanket theorem-proof certification is asserted.",
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_S01_direction_HP__randomized__probability__b_confidence_upper_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_confidence_tail_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $1/10\\le\\delta<1/2$."
+            }
+          ]
+        },
         "tracked_parameters": [
           "SO_FO_S01_direction_HP_p_b4e942dc3f",
           "SO_FO_S01_direction_HP_p_93d9a0e01d",
@@ -954,22 +2846,1589 @@
           "SO_FO_S01_direction_HP_p_61193f3c91"
         ],
         "fixed_parameters": [
-          "SO_FO_S01_direction_HP_p_debd1b8136"
+          "SO_FO_S01_direction_HP_p_debd1b8136",
+          "SO_FO_S01_direction_HP_p_C0_20261122"
+        ]
+      }
+    },
+    {
+      "comparison_id": "SO_FO_S01_direction_HP__randomized__probability__c_small_dim_20261122",
+      "label": "Upper bound below the source lower-bound dimension threshold",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_source_20261122"
+          },
+          {
+            "cmp": "lt",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_b4e942dc3f"
+            },
+            "right": {
+              "ref": "SO_FO_S01_direction_HP_p_e_20261122"
+            }
+          }
         ]
       },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$ and $d<\\lceil e\\rceil$.",
+      "parameter_refs": [
+        "SO_FO_S01_direction_HP_p_b4e942dc3f",
+        "SO_FO_S01_direction_HP_p_93d9a0e01d",
+        "SO_FO_S01_direction_HP_p_4497cc9e5d",
+        "SO_FO_S01_direction_HP_p_c0e27b2477",
+        "SO_FO_S01_direction_HP_p_a6849cb45c",
+        "SO_FO_S01_direction_HP_p_debd1b8136",
+        "SO_FO_S01_direction_HP_p_5fea494340",
+        "SO_FO_S01_direction_HP_p_160a9a596f",
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_q_20261122",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_ell_20261122",
+        "SO_FO_S01_direction_HP_p_A_20261122",
+        "SO_FO_S01_direction_HP_p_u_20261122",
+        "SO_FO_S01_direction_HP_p_w_20261122",
+        "SO_FO_S01_direction_HP_p_a_20261122",
+        "SO_FO_S01_direction_HP_p_v_20261122",
+        "SO_FO_S01_direction_HP_p_v0_20261122",
+        "SO_FO_S01_direction_HP_p_C0_20261122"
+      ],
+      "source_region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_small_dim_20261122",
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "resource_projection_id": "resource_c9228d28be",
+      "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_small_dim_20261122",
       "comparison_key": {
         "setting_id": "SO_FO_S01_direction_HP",
         "view_id": "randomized__probability",
         "guarantee_id": "g1",
         "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
         "resource_projection_id": "resource_c9228d28be",
-        "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r1"
+        "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_small_dim_20261122"
+      },
+      "status": {
+        "code": "missing_lower",
+        "label": "Lower bound missing",
+        "missing_sides": [
+          "lower"
+        ]
+      },
+      "bracket": {
+        "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c_small_dim_20261122",
+        "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "upper_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_all_upper_20261122"
+        ],
+        "lower_refs": [],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "envelopes": {
+          "upper": {
+            "expression": "C_\\alpha\\mathcal H_{\\mu,R}(\\min\\{L,v_T\\})",
+            "expression_latex": "C_\\alpha\\mathcal H_{\\mu,R}(\\min\\{L,v_T\\})",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_all_upper_20261122"
+            ],
+            "included": true
+          },
+          "lower": null
+        },
+        "ratio_or_gap": "The cited lower requires d>=ceil(e); no dimension-uniform matching claim is made.",
+        "envelope_certificate": "The cited source statement, the explicit target-class transfer and local envelope algebra support exactly this row; no blanket theorem-proof certification is asserted.",
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_S01_direction_HP__randomized__probability__b_all_upper_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_source_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$."
+            }
+          ]
+        },
+        "tracked_parameters": [
+          "SO_FO_S01_direction_HP_p_b4e942dc3f",
+          "SO_FO_S01_direction_HP_p_93d9a0e01d",
+          "SO_FO_S01_direction_HP_p_4497cc9e5d",
+          "SO_FO_S01_direction_HP_p_c0e27b2477",
+          "SO_FO_S01_direction_HP_p_a6849cb45c",
+          "SO_FO_S01_direction_HP_p_5fea494340",
+          "SO_FO_S01_direction_HP_p_160a9a596f",
+          "SO_FO_S01_direction_HP_p_61193f3c91"
+        ],
+        "fixed_parameters": [
+          "SO_FO_S01_direction_HP_p_debd1b8136",
+          "SO_FO_S01_direction_HP_p_C0_20261122"
+        ]
+      }
+    },
+    {
+      "comparison_id": "SO_FO_S01_direction_HP__randomized__probability__c_saturation_20261122",
+      "label": "Saturated statistical amplitude",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_source_highdim_20261122"
+          },
+          {
+            "cmp": "ge",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+            },
+            "right": {
+              "ref": "SO_FO_S01_direction_HP_p_93d9a0e01d"
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T\\ge L$.",
+      "parameter_refs": [
+        "SO_FO_S01_direction_HP_p_b4e942dc3f",
+        "SO_FO_S01_direction_HP_p_93d9a0e01d",
+        "SO_FO_S01_direction_HP_p_4497cc9e5d",
+        "SO_FO_S01_direction_HP_p_c0e27b2477",
+        "SO_FO_S01_direction_HP_p_a6849cb45c",
+        "SO_FO_S01_direction_HP_p_debd1b8136",
+        "SO_FO_S01_direction_HP_p_5fea494340",
+        "SO_FO_S01_direction_HP_p_160a9a596f",
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_q_20261122",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_ell_20261122",
+        "SO_FO_S01_direction_HP_p_A_20261122",
+        "SO_FO_S01_direction_HP_p_u_20261122",
+        "SO_FO_S01_direction_HP_p_w_20261122",
+        "SO_FO_S01_direction_HP_p_a_20261122",
+        "SO_FO_S01_direction_HP_p_v_20261122",
+        "SO_FO_S01_direction_HP_p_v0_20261122",
+        "SO_FO_S01_direction_HP_p_C0_20261122"
+      ],
+      "source_region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_saturation_20261122",
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "resource_projection_id": "resource_c9228d28be",
+      "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_saturation_20261122",
+      "comparison_key": {
+        "setting_id": "SO_FO_S01_direction_HP",
+        "view_id": "randomized__probability",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "resource_projection_id": "resource_c9228d28be",
+        "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_saturation_20261122"
+      },
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c_saturation_20261122",
+        "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "upper_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_saturation_upper_20261122"
+        ],
+        "lower_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_saturation_lower_20261122"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "envelopes": {
+          "upper": {
+            "expression": "O_{\\alpha}\\!\\left(\\mathcal H_{\\mu,R}(L)\\right)",
+            "expression_latex": "O_{\\alpha}\\!\\left(\\mathcal H_{\\mu,R}(L)\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_saturation_upper_20261122"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "\\Omega_{\\alpha}\\!\\left(\\mathcal H_{\\mu,R}(L)\\right)",
+            "expression_latex": "\\Omega_{\\alpha}\\!\\left(\\mathcal H_{\\mu,R}(L)\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_saturation_lower_20261122"
+            ],
+            "included": true
+          }
+        },
+        "ratio_or_gap": "$\\Theta_\\alpha(1)$ multiplicative ratio; this is a nonzero saturated risk, not zero query complexity.",
+        "envelope_certificate": "The cited source statement, the explicit target-class transfer and local envelope algebra support exactly this row; no blanket theorem-proof certification is asserted.",
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_S01_direction_HP__randomized__probability__b_saturation_upper_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_saturation_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T\\ge L$."
+            }
+          ],
+          "SO_FO_S01_direction_HP__randomized__probability__b_saturation_lower_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_saturation_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T\\ge L$."
+            }
+          ]
+        },
+        "tracked_parameters": [
+          "SO_FO_S01_direction_HP_p_b4e942dc3f",
+          "SO_FO_S01_direction_HP_p_93d9a0e01d",
+          "SO_FO_S01_direction_HP_p_4497cc9e5d",
+          "SO_FO_S01_direction_HP_p_c0e27b2477",
+          "SO_FO_S01_direction_HP_p_a6849cb45c",
+          "SO_FO_S01_direction_HP_p_5fea494340",
+          "SO_FO_S01_direction_HP_p_160a9a596f",
+          "SO_FO_S01_direction_HP_p_61193f3c91"
+        ],
+        "fixed_parameters": [
+          "SO_FO_S01_direction_HP_p_debd1b8136",
+          "SO_FO_S01_direction_HP_p_C0_20261122"
+        ]
+      }
+    },
+    {
+      "comparison_id": "SO_FO_S01_direction_HP__randomized__probability__c_convex_heavy_20261122",
+      "label": "General convex pure heavy-tail regime",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "cmp": "eq",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+            },
+            "right": 0
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "op": "add",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+                },
+                {
+                  "op": "div",
+                  "args": [
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+                    },
+                    {
+                      "op": "pow",
+                      "args": [
+                        {
+                          "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                        },
+                        0.5
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$ and $a_T+\\sigma/\\sqrt T\\le C_0u_T$.",
+      "parameter_refs": [
+        "SO_FO_S01_direction_HP_p_b4e942dc3f",
+        "SO_FO_S01_direction_HP_p_93d9a0e01d",
+        "SO_FO_S01_direction_HP_p_4497cc9e5d",
+        "SO_FO_S01_direction_HP_p_c0e27b2477",
+        "SO_FO_S01_direction_HP_p_a6849cb45c",
+        "SO_FO_S01_direction_HP_p_debd1b8136",
+        "SO_FO_S01_direction_HP_p_5fea494340",
+        "SO_FO_S01_direction_HP_p_160a9a596f",
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_q_20261122",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_ell_20261122",
+        "SO_FO_S01_direction_HP_p_A_20261122",
+        "SO_FO_S01_direction_HP_p_u_20261122",
+        "SO_FO_S01_direction_HP_p_w_20261122",
+        "SO_FO_S01_direction_HP_p_a_20261122",
+        "SO_FO_S01_direction_HP_p_v_20261122",
+        "SO_FO_S01_direction_HP_p_v0_20261122",
+        "SO_FO_S01_direction_HP_p_C0_20261122"
+      ],
+      "source_region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_convex_heavy_20261122",
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "resource_projection_id": "resource_c9228d28be",
+      "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_convex_heavy_20261122",
+      "comparison_key": {
+        "setting_id": "SO_FO_S01_direction_HP",
+        "view_id": "randomized__probability",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "resource_projection_id": "resource_c9228d28be",
+        "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_convex_heavy_20261122"
+      },
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c_convex_heavy_20261122",
+        "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "upper_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_convex_heavy_upper_20261122"
+        ],
+        "lower_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_convex_heavy_lower_20261122"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "envelopes": {
+          "upper": {
+            "expression": "O_{\\alpha,C_0}\\!\\left(R(A+\\sigma_{\\rm dir}\\ell^q)/T^q\\right)",
+            "expression_latex": "O_{\\alpha,C_0}\\!\\left(R(A+\\sigma_{\\rm dir}\\ell^q)/T^q\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_convex_heavy_upper_20261122"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "\\Omega_{\\alpha,C_0}\\!\\left(R(A+\\sigma_{\\rm dir}\\ell^q)/T^q\\right)",
+            "expression_latex": "\\Omega_{\\alpha,C_0}\\!\\left(R(A+\\sigma_{\\rm dir}\\ell^q)/T^q\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_convex_heavy_lower_20261122"
+            ],
+            "included": true
+          }
+        },
+        "ratio_or_gap": "$\\Theta_{\\alpha,C_0}(1)$ multiplicative ratio.",
+        "envelope_certificate": "The cited source statement, the explicit target-class transfer and local envelope algebra support exactly this row; no blanket theorem-proof certification is asserted.",
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_S01_direction_HP__randomized__probability__b_convex_heavy_upper_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_convex_heavy_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$ and $a_T+\\sigma/\\sqrt T\\le C_0u_T$."
+            }
+          ],
+          "SO_FO_S01_direction_HP__randomized__probability__b_convex_heavy_lower_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_convex_heavy_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$ and $a_T+\\sigma/\\sqrt T\\le C_0u_T$."
+            }
+          ]
+        },
+        "tracked_parameters": [
+          "SO_FO_S01_direction_HP_p_b4e942dc3f",
+          "SO_FO_S01_direction_HP_p_93d9a0e01d",
+          "SO_FO_S01_direction_HP_p_4497cc9e5d",
+          "SO_FO_S01_direction_HP_p_c0e27b2477",
+          "SO_FO_S01_direction_HP_p_a6849cb45c",
+          "SO_FO_S01_direction_HP_p_5fea494340",
+          "SO_FO_S01_direction_HP_p_160a9a596f",
+          "SO_FO_S01_direction_HP_p_61193f3c91"
+        ],
+        "fixed_parameters": [
+          "SO_FO_S01_direction_HP_p_debd1b8136",
+          "SO_FO_S01_direction_HP_p_C0_20261122"
+        ]
+      }
+    },
+    {
+      "comparison_id": "SO_FO_S01_direction_HP__randomized__probability__c_strong_heavy_20261122",
+      "label": "Strongly convex pure heavy-tail quadratic regime",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "all": [
+              {
+                "cmp": "gt",
+                "left": {
+                  "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                },
+                "right": 0
+              },
+              {
+                "cmp": "le",
+                "left": {
+                  "op": "add",
+                  "args": [
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+                    },
+                    {
+                      "op": "div",
+                      "args": [
+                        {
+                          "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+                        },
+                        {
+                          "op": "pow",
+                          "args": [
+                            {
+                              "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                            },
+                            0.5
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "right": {
+                  "op": "mul",
+                  "args": [
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                    },
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                    }
+                  ]
+                }
+              },
+              {
+                "cmp": "le",
+                "left": {
+                  "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                },
+                "right": {
+                  "op": "mul",
+                  "args": [
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                    },
+                    {
+                      "ref": "SO_FO_S01_direction_HP_p_4497cc9e5d"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T+\\sigma/\\sqrt T\\le C_0u_T$, and $u_T\\le\\mu R$.",
+      "parameter_refs": [
+        "SO_FO_S01_direction_HP_p_b4e942dc3f",
+        "SO_FO_S01_direction_HP_p_93d9a0e01d",
+        "SO_FO_S01_direction_HP_p_4497cc9e5d",
+        "SO_FO_S01_direction_HP_p_c0e27b2477",
+        "SO_FO_S01_direction_HP_p_a6849cb45c",
+        "SO_FO_S01_direction_HP_p_debd1b8136",
+        "SO_FO_S01_direction_HP_p_5fea494340",
+        "SO_FO_S01_direction_HP_p_160a9a596f",
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_q_20261122",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_ell_20261122",
+        "SO_FO_S01_direction_HP_p_A_20261122",
+        "SO_FO_S01_direction_HP_p_u_20261122",
+        "SO_FO_S01_direction_HP_p_w_20261122",
+        "SO_FO_S01_direction_HP_p_a_20261122",
+        "SO_FO_S01_direction_HP_p_v_20261122",
+        "SO_FO_S01_direction_HP_p_v0_20261122",
+        "SO_FO_S01_direction_HP_p_C0_20261122"
+      ],
+      "source_region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_strong_heavy_20261122",
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "resource_projection_id": "resource_c9228d28be",
+      "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_strong_heavy_20261122",
+      "comparison_key": {
+        "setting_id": "SO_FO_S01_direction_HP",
+        "view_id": "randomized__probability",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "resource_projection_id": "resource_c9228d28be",
+        "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_strong_heavy_20261122"
+      },
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c_strong_heavy_20261122",
+        "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "upper_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_heavy_upper_20261122"
+        ],
+        "lower_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_heavy_lower_20261122"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "envelopes": {
+          "upper": {
+            "expression": "O_{\\alpha,C_0}\\!\\left((A^2+\\sigma_{\\rm dir}^2\\ell^{2q})/(\\mu T^{2q})\\right)",
+            "expression_latex": "O_{\\alpha,C_0}\\!\\left((A^2+\\sigma_{\\rm dir}^2\\ell^{2q})/(\\mu T^{2q})\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_strong_heavy_upper_20261122"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "\\Omega_{\\alpha,C_0}\\!\\left((A^2+\\sigma_{\\rm dir}^2\\ell^{2q})/(\\mu T^{2q})\\right)",
+            "expression_latex": "\\Omega_{\\alpha,C_0}\\!\\left((A^2+\\sigma_{\\rm dir}^2\\ell^{2q})/(\\mu T^{2q})\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_strong_heavy_lower_20261122"
+            ],
+            "included": true
+          }
+        },
+        "ratio_or_gap": "$\\Theta_{\\alpha,C_0}(1)$ multiplicative ratio.",
+        "envelope_certificate": "The cited source statement, the explicit target-class transfer and local envelope algebra support exactly this row; no blanket theorem-proof certification is asserted.",
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_heavy_upper_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_strong_heavy_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T+\\sigma/\\sqrt T\\le C_0u_T$, and $u_T\\le\\mu R$."
+            }
+          ],
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_heavy_lower_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_strong_heavy_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T+\\sigma/\\sqrt T\\le C_0u_T$, and $u_T\\le\\mu R$."
+            }
+          ]
+        },
+        "tracked_parameters": [
+          "SO_FO_S01_direction_HP_p_b4e942dc3f",
+          "SO_FO_S01_direction_HP_p_93d9a0e01d",
+          "SO_FO_S01_direction_HP_p_4497cc9e5d",
+          "SO_FO_S01_direction_HP_p_c0e27b2477",
+          "SO_FO_S01_direction_HP_p_a6849cb45c",
+          "SO_FO_S01_direction_HP_p_5fea494340",
+          "SO_FO_S01_direction_HP_p_160a9a596f",
+          "SO_FO_S01_direction_HP_p_61193f3c91"
+        ],
+        "fixed_parameters": [
+          "SO_FO_S01_direction_HP_p_debd1b8136",
+          "SO_FO_S01_direction_HP_p_C0_20261122"
+        ]
+      }
+    },
+    {
+      "comparison_id": "SO_FO_S01_direction_HP__randomized__probability__c_convex_stat_20261122",
+      "label": "General convex full statistical regime",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "cmp": "eq",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+            },
+            "right": 0
+          },
+          {
+            "not": {
+              "cmp": "le",
+              "left": {
+                "op": "add",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+                  },
+                  {
+                    "op": "div",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+                      },
+                      {
+                        "op": "pow",
+                        "args": [
+                          {
+                            "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                          },
+                          0.5
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "right": {
+                "op": "mul",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                  },
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$, $a_T\\le C_0w_T$, and not $a_T+\\sigma/\\sqrt T\\le C_0u_T$.",
+      "parameter_refs": [
+        "SO_FO_S01_direction_HP_p_b4e942dc3f",
+        "SO_FO_S01_direction_HP_p_93d9a0e01d",
+        "SO_FO_S01_direction_HP_p_4497cc9e5d",
+        "SO_FO_S01_direction_HP_p_c0e27b2477",
+        "SO_FO_S01_direction_HP_p_a6849cb45c",
+        "SO_FO_S01_direction_HP_p_debd1b8136",
+        "SO_FO_S01_direction_HP_p_5fea494340",
+        "SO_FO_S01_direction_HP_p_160a9a596f",
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_q_20261122",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_ell_20261122",
+        "SO_FO_S01_direction_HP_p_A_20261122",
+        "SO_FO_S01_direction_HP_p_u_20261122",
+        "SO_FO_S01_direction_HP_p_w_20261122",
+        "SO_FO_S01_direction_HP_p_a_20261122",
+        "SO_FO_S01_direction_HP_p_v_20261122",
+        "SO_FO_S01_direction_HP_p_v0_20261122",
+        "SO_FO_S01_direction_HP_p_C0_20261122"
+      ],
+      "source_region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_convex_stat_20261122",
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "resource_projection_id": "resource_c9228d28be",
+      "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_convex_stat_20261122",
+      "comparison_key": {
+        "setting_id": "SO_FO_S01_direction_HP",
+        "view_id": "randomized__probability",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "resource_projection_id": "resource_c9228d28be",
+        "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_convex_stat_20261122"
+      },
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c_convex_stat_20261122",
+        "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "upper_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_convex_stat_upper_20261122"
+        ],
+        "lower_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_convex_stat_lower_20261122"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "envelopes": {
+          "upper": {
+            "expression": "O_{\\alpha,C_0}\\!\\left(Rw_T\\right)",
+            "expression_latex": "O_{\\alpha,C_0}\\!\\left(Rw_T\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_convex_stat_upper_20261122"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "\\Omega_{\\alpha,C_0}\\!\\left(Rw_T\\right)",
+            "expression_latex": "\\Omega_{\\alpha,C_0}\\!\\left(Rw_T\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_convex_stat_lower_20261122"
+            ],
+            "included": true
+          }
+        },
+        "ratio_or_gap": "$\\Theta_{\\alpha,C_0}(1)$ multiplicative ratio.",
+        "envelope_certificate": "The cited source statement, the explicit target-class transfer and local envelope algebra support exactly this row; no blanket theorem-proof certification is asserted.",
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_S01_direction_HP__randomized__probability__b_convex_stat_upper_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_convex_stat_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$, $a_T\\le C_0w_T$, and not $a_T+\\sigma/\\sqrt T\\le C_0u_T$."
+            }
+          ],
+          "SO_FO_S01_direction_HP__randomized__probability__b_convex_stat_lower_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_convex_stat_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu=0$, $a_T\\le C_0w_T$, and not $a_T+\\sigma/\\sqrt T\\le C_0u_T$."
+            }
+          ]
+        },
+        "tracked_parameters": [
+          "SO_FO_S01_direction_HP_p_b4e942dc3f",
+          "SO_FO_S01_direction_HP_p_93d9a0e01d",
+          "SO_FO_S01_direction_HP_p_4497cc9e5d",
+          "SO_FO_S01_direction_HP_p_c0e27b2477",
+          "SO_FO_S01_direction_HP_p_a6849cb45c",
+          "SO_FO_S01_direction_HP_p_5fea494340",
+          "SO_FO_S01_direction_HP_p_160a9a596f",
+          "SO_FO_S01_direction_HP_p_61193f3c91"
+        ],
+        "fixed_parameters": [
+          "SO_FO_S01_direction_HP_p_debd1b8136",
+          "SO_FO_S01_direction_HP_p_C0_20261122"
+        ]
+      }
+    },
+    {
+      "comparison_id": "SO_FO_S01_direction_HP__randomized__probability__c_strong_quad_stat_20261122",
+      "label": "Strongly convex full statistical quadratic regime",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+            },
+            "right": 0
+          },
+          {
+            "not": {
+              "all": [
+                {
+                  "cmp": "gt",
+                  "left": {
+                    "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                  },
+                  "right": 0
+                },
+                {
+                  "cmp": "le",
+                  "left": {
+                    "op": "add",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+                      },
+                      {
+                        "op": "div",
+                        "args": [
+                          {
+                            "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+                          },
+                          {
+                            "op": "pow",
+                            "args": [
+                              {
+                                "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                              },
+                              0.5
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "right": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                      },
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "cmp": "le",
+                  "left": {
+                    "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                  },
+                  "right": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                      },
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_4497cc9e5d"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+                }
+              ]
+            }
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_4497cc9e5d"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T\\le\\mu R$, and the complete pure heavy-tail quadratic predicate is false.",
+      "parameter_refs": [
+        "SO_FO_S01_direction_HP_p_b4e942dc3f",
+        "SO_FO_S01_direction_HP_p_93d9a0e01d",
+        "SO_FO_S01_direction_HP_p_4497cc9e5d",
+        "SO_FO_S01_direction_HP_p_c0e27b2477",
+        "SO_FO_S01_direction_HP_p_a6849cb45c",
+        "SO_FO_S01_direction_HP_p_debd1b8136",
+        "SO_FO_S01_direction_HP_p_5fea494340",
+        "SO_FO_S01_direction_HP_p_160a9a596f",
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_q_20261122",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_ell_20261122",
+        "SO_FO_S01_direction_HP_p_A_20261122",
+        "SO_FO_S01_direction_HP_p_u_20261122",
+        "SO_FO_S01_direction_HP_p_w_20261122",
+        "SO_FO_S01_direction_HP_p_a_20261122",
+        "SO_FO_S01_direction_HP_p_v_20261122",
+        "SO_FO_S01_direction_HP_p_v0_20261122",
+        "SO_FO_S01_direction_HP_p_C0_20261122"
+      ],
+      "source_region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_strong_quad_stat_20261122",
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "resource_projection_id": "resource_c9228d28be",
+      "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_strong_quad_stat_20261122",
+      "comparison_key": {
+        "setting_id": "SO_FO_S01_direction_HP",
+        "view_id": "randomized__probability",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "resource_projection_id": "resource_c9228d28be",
+        "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_strong_quad_stat_20261122"
+      },
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c_strong_quad_stat_20261122",
+        "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "upper_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_quad_stat_upper_20261122"
+        ],
+        "lower_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_quad_stat_lower_20261122"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "envelopes": {
+          "upper": {
+            "expression": "O_{\\alpha,C_0}\\!\\left(w_T^2/\\mu\\right)",
+            "expression_latex": "O_{\\alpha,C_0}\\!\\left(w_T^2/\\mu\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_strong_quad_stat_upper_20261122"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "\\Omega_{\\alpha,C_0}\\!\\left(w_T^2/\\mu\\right)",
+            "expression_latex": "\\Omega_{\\alpha,C_0}\\!\\left(w_T^2/\\mu\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_strong_quad_stat_lower_20261122"
+            ],
+            "included": true
+          }
+        },
+        "ratio_or_gap": "$\\Theta_{\\alpha,C_0}(1)$ multiplicative ratio.",
+        "envelope_certificate": "The cited source statement, the explicit target-class transfer and local envelope algebra support exactly this row; no blanket theorem-proof certification is asserted.",
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_quad_stat_upper_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_strong_quad_stat_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T\\le\\mu R$, and the complete pure heavy-tail quadratic predicate is false."
+            }
+          ],
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_quad_stat_lower_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_strong_quad_stat_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T\\le\\mu R$, and the complete pure heavy-tail quadratic predicate is false."
+            }
+          ]
+        },
+        "tracked_parameters": [
+          "SO_FO_S01_direction_HP_p_b4e942dc3f",
+          "SO_FO_S01_direction_HP_p_93d9a0e01d",
+          "SO_FO_S01_direction_HP_p_4497cc9e5d",
+          "SO_FO_S01_direction_HP_p_c0e27b2477",
+          "SO_FO_S01_direction_HP_p_a6849cb45c",
+          "SO_FO_S01_direction_HP_p_5fea494340",
+          "SO_FO_S01_direction_HP_p_160a9a596f",
+          "SO_FO_S01_direction_HP_p_61193f3c91"
+        ],
+        "fixed_parameters": [
+          "SO_FO_S01_direction_HP_p_debd1b8136",
+          "SO_FO_S01_direction_HP_p_C0_20261122"
+        ]
+      }
+    },
+    {
+      "comparison_id": "SO_FO_S01_direction_HP__randomized__probability__c_strong_transition_stat_20261122",
+      "label": "Strongly convex statistical transition regime",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+            },
+            "right": 0
+          },
+          {
+            "not": {
+              "all": [
+                {
+                  "cmp": "gt",
+                  "left": {
+                    "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                  },
+                  "right": 0
+                },
+                {
+                  "cmp": "le",
+                  "left": {
+                    "op": "add",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+                      },
+                      {
+                        "op": "div",
+                        "args": [
+                          {
+                            "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+                          },
+                          {
+                            "op": "pow",
+                            "args": [
+                              {
+                                "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                              },
+                              0.5
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "right": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                      },
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "cmp": "le",
+                  "left": {
+                    "ref": "SO_FO_S01_direction_HP_p_u_20261122"
+                  },
+                  "right": {
+                    "op": "mul",
+                    "args": [
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                      },
+                      {
+                        "ref": "SO_FO_S01_direction_HP_p_4497cc9e5d"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "cmp": "le",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+                }
+              ]
+            }
+          },
+          {
+            "cmp": "gt",
+            "left": {
+              "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+            },
+            "right": {
+              "op": "mul",
+              "args": [
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                },
+                {
+                  "ref": "SO_FO_S01_direction_HP_p_4497cc9e5d"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T>\\mu R$, and the complete pure heavy-tail quadratic predicate is false.",
+      "parameter_refs": [
+        "SO_FO_S01_direction_HP_p_b4e942dc3f",
+        "SO_FO_S01_direction_HP_p_93d9a0e01d",
+        "SO_FO_S01_direction_HP_p_4497cc9e5d",
+        "SO_FO_S01_direction_HP_p_c0e27b2477",
+        "SO_FO_S01_direction_HP_p_a6849cb45c",
+        "SO_FO_S01_direction_HP_p_debd1b8136",
+        "SO_FO_S01_direction_HP_p_5fea494340",
+        "SO_FO_S01_direction_HP_p_160a9a596f",
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_q_20261122",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_ell_20261122",
+        "SO_FO_S01_direction_HP_p_A_20261122",
+        "SO_FO_S01_direction_HP_p_u_20261122",
+        "SO_FO_S01_direction_HP_p_w_20261122",
+        "SO_FO_S01_direction_HP_p_a_20261122",
+        "SO_FO_S01_direction_HP_p_v_20261122",
+        "SO_FO_S01_direction_HP_p_v0_20261122",
+        "SO_FO_S01_direction_HP_p_C0_20261122"
+      ],
+      "source_region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_strong_transition_stat_20261122",
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "resource_projection_id": "resource_c9228d28be",
+      "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_strong_transition_stat_20261122",
+      "comparison_key": {
+        "setting_id": "SO_FO_S01_direction_HP",
+        "view_id": "randomized__probability",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "resource_projection_id": "resource_c9228d28be",
+        "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_strong_transition_stat_20261122"
+      },
+      "status": {
+        "code": "optimal",
+        "label": "Optimal",
+        "missing_sides": []
+      },
+      "bracket": {
+        "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c_strong_transition_stat_20261122",
+        "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "upper_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_transition_stat_upper_20261122"
+        ],
+        "lower_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_transition_stat_lower_20261122"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "envelopes": {
+          "upper": {
+            "expression": "O_{\\alpha,C_0}\\!\\left(\\mathcal H_{\\mu,R}(w_T)\\right)",
+            "expression_latex": "O_{\\alpha,C_0}\\!\\left(\\mathcal H_{\\mu,R}(w_T)\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_strong_transition_stat_upper_20261122"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "\\Omega_{\\alpha,C_0}\\!\\left(\\mathcal H_{\\mu,R}(w_T)\\right)",
+            "expression_latex": "\\Omega_{\\alpha,C_0}\\!\\left(\\mathcal H_{\\mu,R}(w_T)\\right)",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_strong_transition_stat_lower_20261122"
+            ],
+            "included": true
+          }
+        },
+        "ratio_or_gap": "$\\Theta_{\\alpha,C_0}(1)$ multiplicative ratio.",
+        "envelope_certificate": "The cited source statement, the explicit target-class transfer and local envelope algebra support exactly this row; no blanket theorem-proof certification is asserted.",
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_transition_stat_upper_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_strong_transition_stat_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T>\\mu R$, and the complete pure heavy-tail quadratic predicate is false."
+            }
+          ],
+          "SO_FO_S01_direction_HP__randomized__probability__b_strong_transition_stat_lower_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_strong_transition_stat_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $\\mu>0$, $a_T\\le C_0w_T$, $w_T>\\mu R$, and the complete pure heavy-tail quadratic predicate is false."
+            }
+          ]
+        },
+        "tracked_parameters": [
+          "SO_FO_S01_direction_HP_p_b4e942dc3f",
+          "SO_FO_S01_direction_HP_p_93d9a0e01d",
+          "SO_FO_S01_direction_HP_p_4497cc9e5d",
+          "SO_FO_S01_direction_HP_p_c0e27b2477",
+          "SO_FO_S01_direction_HP_p_a6849cb45c",
+          "SO_FO_S01_direction_HP_p_5fea494340",
+          "SO_FO_S01_direction_HP_p_160a9a596f",
+          "SO_FO_S01_direction_HP_p_61193f3c91"
+        ],
+        "fixed_parameters": [
+          "SO_FO_S01_direction_HP_p_debd1b8136",
+          "SO_FO_S01_direction_HP_p_C0_20261122"
+        ]
+      }
+    },
+    {
+      "comparison_id": "SO_FO_S01_direction_HP__randomized__probability__c_remaining_20261122",
+      "label": "Unclosed finite-budget transient dependence",
+      "predicate": {
+        "all": [
+          {
+            "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_nonsaturated_20261122"
+          },
+          {
+            "not": {
+              "cmp": "le",
+              "left": {
+                "ref": "SO_FO_S01_direction_HP_p_a_20261122"
+              },
+              "right": {
+                "op": "mul",
+                "args": [
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_C0_20261122"
+                  },
+                  {
+                    "ref": "SO_FO_S01_direction_HP_p_w_20261122"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$, $d\\ge\\lceil e\\rceil$, and $w_T<L$. Also $a_T>C_0w_T$.",
+      "parameter_refs": [
+        "SO_FO_S01_direction_HP_p_b4e942dc3f",
+        "SO_FO_S01_direction_HP_p_93d9a0e01d",
+        "SO_FO_S01_direction_HP_p_4497cc9e5d",
+        "SO_FO_S01_direction_HP_p_c0e27b2477",
+        "SO_FO_S01_direction_HP_p_a6849cb45c",
+        "SO_FO_S01_direction_HP_p_debd1b8136",
+        "SO_FO_S01_direction_HP_p_5fea494340",
+        "SO_FO_S01_direction_HP_p_160a9a596f",
+        "SO_FO_S01_direction_HP_p_61193f3c91",
+        "SO_FO_S01_direction_HP_p_q_20261122",
+        "SO_FO_S01_direction_HP_p_e_20261122",
+        "SO_FO_S01_direction_HP_p_ell_20261122",
+        "SO_FO_S01_direction_HP_p_A_20261122",
+        "SO_FO_S01_direction_HP_p_u_20261122",
+        "SO_FO_S01_direction_HP_p_w_20261122",
+        "SO_FO_S01_direction_HP_p_a_20261122",
+        "SO_FO_S01_direction_HP_p_v_20261122",
+        "SO_FO_S01_direction_HP_p_v0_20261122",
+        "SO_FO_S01_direction_HP_p_C0_20261122"
+      ],
+      "source_region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_remaining_20261122",
+      "view_id": "randomized__probability",
+      "guarantee_id": "g1",
+      "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+      "resource_projection_id": "resource_c9228d28be",
+      "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_remaining_20261122",
+      "comparison_key": {
+        "setting_id": "SO_FO_S01_direction_HP",
+        "view_id": "randomized__probability",
+        "guarantee_id": "g1",
+        "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "resource_projection_id": "resource_c9228d28be",
+        "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r_remaining_20261122"
+      },
+      "status": {
+        "code": "other_quantified_gap",
+        "label": "Other quantified gap",
+        "missing_sides": []
+      },
+      "bracket": {
+        "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c_remaining_20261122",
+        "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+        "comparison_mode": "multiplicative_rate",
+        "resource_projection": "declared_budget",
+        "upper_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_all_upper_20261122"
+        ],
+        "lower_refs": [
+          "SO_FO_S01_direction_HP__randomized__probability__b_all_lower_20261122"
+        ],
+        "achievable_refs": [],
+        "necessary_refs": [],
+        "envelopes": {
+          "upper": {
+            "expression": "C_\\alpha\\mathcal H_{\\mu,R}(\\min\\{L,v_T\\})",
+            "expression_latex": "C_\\alpha\\mathcal H_{\\mu,R}(\\min\\{L,v_T\\})",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_all_upper_20261122"
+            ],
+            "included": true
+          },
+          "lower": {
+            "expression": "c_\\alpha\\mathcal H_{\\mu,R}(\\min\\{L,w_T\\})",
+            "expression_latex": "c_\\alpha\\mathcal H_{\\mu,R}(\\min\\{L,w_T\\})",
+            "claim_refs": [
+              "SO_FO_S01_direction_HP__randomized__probability__b_all_lower_20261122"
+            ],
+            "included": true
+          }
+        },
+        "ratio_or_gap": "The recorded ratio is $O_\\alpha(\\mathcal H_{\\mu,R}(\\min\\{L,v_T\\})/\\mathcal H_{\\mu,R}(w_T))$, at most $O_\\alpha((1+a_T/w_T)^2)$. This row does not assert matching deterministic transients, a uniform polynomial gap, or a full-literature optimum.",
+        "envelope_certificate": "The cited source statement, the explicit target-class transfer and local envelope algebra support exactly this row; no blanket theorem-proof certification is asserted.",
+        "dispatch": [],
+        "claim_guards": {
+          "SO_FO_S01_direction_HP__randomized__probability__b_all_upper_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_source_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$."
+            }
+          ],
+          "SO_FO_S01_direction_HP__randomized__probability__b_all_lower_20261122": [
+            {
+              "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r_source_highdim_20261122",
+              "predicate_text": "All native parameters: $d\\in\\mathbb N_{\\ge1}$, $L,R>0$, $\\mu\\ge0$, $0<\\sigma_{\\rm dir}\\le\\sigma$, $1<\\alpha\\le2$, $T\\in\\mathbb N_{\\ge1}$, $0<\\delta<1/2$; $C_0>0$ is fixed independently of them. Additionally $0<\\delta<1/10$ and $d\\ge\\lceil e\\rceil$."
+            }
+          ]
+        },
+        "tracked_parameters": [
+          "SO_FO_S01_direction_HP_p_b4e942dc3f",
+          "SO_FO_S01_direction_HP_p_93d9a0e01d",
+          "SO_FO_S01_direction_HP_p_4497cc9e5d",
+          "SO_FO_S01_direction_HP_p_c0e27b2477",
+          "SO_FO_S01_direction_HP_p_a6849cb45c",
+          "SO_FO_S01_direction_HP_p_5fea494340",
+          "SO_FO_S01_direction_HP_p_160a9a596f",
+          "SO_FO_S01_direction_HP_p_61193f3c91"
+        ],
+        "fixed_parameters": [
+          "SO_FO_S01_direction_HP_p_debd1b8136",
+          "SO_FO_S01_direction_HP_p_C0_20261122"
+        ]
       }
     }
   ],
-  "proofs": [],
-  "evidence": [],
-  "references": [],
+  "proofs": [
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+      "proof_id": "SO_FO_S01_direction_HP__randomized__probability__proof_source_transfer_20261122",
+      "kind": "local_applicability_derivation",
+      "title": "Source-to-target class and symbol map",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_all_budget_20261122"
+      ],
+      "body": "Set source X=R^d and source r=h, and rename (G,D,L,s,p) as (L,R,sigma,sigma_dir,alpha). The target f is globally Lipschitz on this X, and the target exact prox is exactly the source auxiliary interface. The explicitly fixed query-dependent kernels coincide with the source oracle. Both quantities minimize a uniform failure-probability threshold under an almost-sure raw-call cap. Thus the source upper theorem applies to every target instance. For the lower direction, source Theorem 2.2 uses X=R^d and h(x)=mu*||x||^2/2, including h=0 at mu=0. The source hard functions are globally convex and Lipschitz and obey the same initial-distance and moment budgets; hence they lie in the target class. This argument imports the cited theorem statement, not a reproof of it. To meet the Atlas cap on every execution path, stop before any (T+1)st call and return the last feasible point (or the public initial point). The source already uses at most T calls almost surely on every legal instance, so this change affects only a null event per instance and leaves its success probability unchanged. It does not cover history-adaptive response kernels or claim a lower bound for each individually prescribed public regularizer.",
+      "premises": [
+        {
+          "pointer": "/common_specification",
+          "sha256": "700bd90b73aae523641be265d92b758639af38c0f3ab91a41b73be9c0696e319"
+        },
+        {
+          "pointer": "/views",
+          "sha256": "bb50e5030ecbde798536c88857215054350ba80b99416078c95d4674686a53d5"
+        },
+        {
+          "pointer": "/quantities",
+          "sha256": "ed1d654804b32ed6936d7ad85c02a9b6f19411df17bfa03c74892de6016af71a"
+        },
+        {
+          "pointer": "/parameters",
+          "sha256": "cd5493a70bf42c3f19c57eabbb643253f46a0907d32647cdcfa4fdadb66a9c3d"
+        },
+        {
+          "pointer": "/regimes",
+          "sha256": "be501633904312c65f31f875c37820ef10ba742556a111cfef82335ffd108aa3"
+        }
+      ]
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122",
+      "proof_id": "SO_FO_S01_direction_HP__randomized__probability__proof_envelope_algebra_20261122",
+      "kind": "local_algebraic_derivation",
+      "title": "Envelope comparison, sharp subregions and exhaustive row routing",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_all_budget_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_heavy_20261122",
+        "SO_FO_S01_direction_HP__randomized__probability__e_statistical_20261122"
+      ],
+      "body": "Write H(z)=max_{0<=r<=R}(zr-mu*r^2/2). Maximizing the concave quadratic gives the displayed three branches. H is increasing. For k>=1, H(kz)<=k^2 H(z): substituting r=k*s and enlarging the allowed interval bounds the maximization by k^2 times H(z); the reverse scaling inequality for 0<=k<=1 follows by restricting to r=k*s. If w>=L, both source envelopes are H(L). If a<=C0*w, min(L,v)<= (1+C0)*min(L,w), so the ratio of source envelopes is at most (1+C0)^2. At mu=0 this gives R*w in the nonsaturated region. At mu>0, w<=mu*R gives w^2/(2*mu), and w>mu*R gives R*w-mu*R^2/2. The pure heavy-tail rows use Theorem 2.1 with its complete domination predicate and u<=L (implied by w<L). Their strong row also retains u<=mu*R. The other statistical rows explicitly exclude the pure-heavy rows. A pure-heavy predicate implies a<=C0*w, so it cannot intersect the remaining row a>C0*w. Confidence and dimension are split first, then w>=L versus w<L, then the stated curvature and domination predicates. These nine active rows partition the original native parameter domain for each fixed C0>0. They say nothing about an independent proof verification of the source theorem.",
+      "premises": [
+        {
+          "pointer": "/common_specification",
+          "sha256": "700bd90b73aae523641be265d92b758639af38c0f3ab91a41b73be9c0696e319"
+        },
+        {
+          "pointer": "/views",
+          "sha256": "bb50e5030ecbde798536c88857215054350ba80b99416078c95d4674686a53d5"
+        },
+        {
+          "pointer": "/quantities",
+          "sha256": "ed1d654804b32ed6936d7ad85c02a9b6f19411df17bfa03c74892de6016af71a"
+        },
+        {
+          "pointer": "/parameters",
+          "sha256": "cd5493a70bf42c3f19c57eabbb643253f46a0907d32647cdcfa4fdadb66a9c3d"
+        },
+        {
+          "pointer": "/regimes",
+          "sha256": "be501633904312c65f31f875c37820ef10ba742556a111cfef82335ffd108aa3"
+        }
+      ]
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__proof_confidence_transfer_20261122",
+      "proof_id": "SO_FO_S01_direction_HP__randomized__probability__proof_confidence_transfer_20261122",
+      "kind": "local_guarantee_derivation",
+      "title": "Upper transfer to the remaining native confidence range",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "evidence_refs": [
+        "SO_FO_S01_direction_HP__randomized__probability__e_all_budget_20261122"
+      ],
+      "body": "For 1/10<=delta<1/2, run the source upper algorithm with delta0=1/20. Its failure probability is at most delta0<=delta and its raw-call cap is still T. Substituting ell0=log(3/delta0)=log(60) into the upper amplitude gives v0 and proves the recorded upper bound in all finite dimensions. A lower bound for the stricter delta0 guarantee would not imply a lower bound for the weaker target delta, so none is imported.",
+      "premises": [
+        {
+          "pointer": "/common_specification",
+          "sha256": "700bd90b73aae523641be265d92b758639af38c0f3ab91a41b73be9c0696e319"
+        },
+        {
+          "pointer": "/views",
+          "sha256": "bb50e5030ecbde798536c88857215054350ba80b99416078c95d4674686a53d5"
+        },
+        {
+          "pointer": "/quantities",
+          "sha256": "ed1d654804b32ed6936d7ad85c02a9b6f19411df17bfa03c74892de6016af71a"
+        },
+        {
+          "pointer": "/parameters",
+          "sha256": "cd5493a70bf42c3f19c57eabbb643253f46a0907d32647cdcfa4fdadb66a9c3d"
+        },
+        {
+          "pointer": "/regimes",
+          "sha256": "be501633904312c65f31f875c37820ef10ba742556a111cfef82335ffd108aa3"
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__e_model_20261122",
+      "source_ref": "SO_SRC_2610_00260v2",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "locator": {
+        "section": "Section 2.1",
+        "theorem": "Model and minimax risk definition",
+        "equations": [
+          "(3)",
+          "(4)"
+        ],
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "location": "Section 2.1; Model and minimax risk definition",
+      "supports": "Fixed-kernel fresh subgradients; two centered moment bounds; public exact prox; high-probability fixed-budget objective risk.",
+      "statement_summary": "Fixed-kernel fresh subgradients; two centered moment bounds; public exact prox; high-probability fixed-budget objective risk.",
+      "applicability_review": "Use X=R^d. Symbols map as source (G,D,L,s,p)=(target L,R,sigma,sigma_dir,alpha).",
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "notes": [
+        "This record does not claim an independent verification of the full paper proof."
+      ]
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__e_all_budget_20261122",
+      "source_ref": "SO_SRC_2610_00260v2",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "locator": {
+        "section": "Section 2.3",
+        "theorem": "Theorem 2.2",
+        "equations": [
+          "(6)",
+          "(7)",
+          "(9)",
+          "(10)",
+          "(11)"
+        ],
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "location": "Section 2.3; Theorem 2.2",
+      "supports": "All-budget upper envelope and a high-dimensional lower envelope, with explicit deterministic transients.",
+      "statement_summary": "All-budget upper envelope and a high-dimensional lower envelope, with explicit deterministic transients.",
+      "applicability_review": "Upper holds in every finite dimension. Lower requires d>=ceil(e); its whole-space quadratic-regularizer hard instances are admitted here. Delta is below 1/10.",
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "notes": [
+        "This record does not claim an independent verification of the full paper proof."
+      ]
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__e_heavy_20261122",
+      "source_ref": "SO_SRC_2610_00260v2",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "locator": {
+        "section": "Section 2.2",
+        "theorem": "Theorem 2.1",
+        "equations": [
+          "(5)"
+        ],
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "location": "Section 2.2; Theorem 2.1",
+      "supports": "Pure heavy-tail rates under nonsaturation, domination and, for strong convexity, the quadratic-branch guard.",
+      "statement_summary": "Pure heavy-tail rates under nonsaturation, domination and, for strong convexity, the quadratic-branch guard.",
+      "applicability_review": "Keep a_T+sigma/sqrt(T)<=C0*u_T and u_T<=L. The strong branch also requires u_T<=mu*R. Our disjoint displayed rows use the sufficient restriction w_T<L.",
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "notes": [
+        "This record does not claim an independent verification of the full paper proof."
+      ]
+    },
+    {
+      "id": "SO_FO_S01_direction_HP__randomized__probability__e_statistical_20261122",
+      "source_ref": "SO_SRC_2610_00260v2",
+      "source_refs": [
+        "SO_SRC_2610_00260v2"
+      ],
+      "locator": {
+        "section": "Section 2.3",
+        "theorem": "Corollary 2.3 and following quadratic specialization",
+        "equations": [
+          "(12)"
+        ],
+        "pdf_pages": [],
+        "printed_pages": []
+      },
+      "location": "Section 2.3; Corollary 2.3 and following quadratic specialization",
+      "supports": "Matching saturation and statistical-envelope regimes; finite-variance term is retained.",
+      "statement_summary": "Matching saturation and statistical-envelope regimes; finite-variance term is retained.",
+      "applicability_review": "Keep d>=ceil(e) and either w_T>=L or a_T<=C0*w_T. Strong quadratic formula additionally uses w_T<=mu*R.",
+      "verification_level": "primary_statement_checked_and_applicability_reviewed",
+      "notes": [
+        "This record does not claim an independent verification of the full paper proof."
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "SO_SRC_2610_00260v2",
+      "authors": [
+        "Haihan Zhang",
+        "Wendao Wu",
+        "Chenheng Zhang",
+        "Yanyi Li",
+        "Chunyuan Zheng",
+        "Cong Fang",
+        "Haoxuan Li",
+        "Zhouchen Lin"
+      ],
+      "title": "Sharp High-Probability Statistical Rates for Heavy-Tailed Nonsmooth Convex Optimization",
+      "year": 2026,
+      "publication_status": "preprint",
+      "url": "https://arxiv.org/html/2610.00260v2",
+      "pdf_url": "https://arxiv.org/pdf/2610.00260v2",
+      "version": "arXiv:2610.00260v2, 2026-10-19",
+      "verification_date": "2026-11-22"
+    }
+  ],
   "relations": [],
   "aliases": [
     {
@@ -978,34 +4437,133 @@
     }
   ],
   "review": {
-    "editorial_revision": "2026-11-03",
-    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem."
+    "editorial_revision": "2026-11-22",
+    "scientific_evidence": "Evidence scope is stated for each claim; editorial and file validation do not constitute an independent reproof of every cited theorem.",
+    "source_alignment_20261122": {
+      "source_version": "2610.00260v2",
+      "verification": "Primary theorem statements and target applicability checked; not an independent proof audit.",
+      "oracle_clarification": "Explicit fixed query-dependent kernels; the broader history-adaptive-kernel model is not certified by this repair.",
+      "risk_definition_repair": "Replaced the inconsistent expected-loss quantity template by the view's high-probability budget risk.",
+      "parameter_map": {
+        "source_G": "target_L",
+        "source_D": "target_R",
+        "source_L": "target_sigma",
+        "source_s": "target_sigma_dir",
+        "source_p": "target_alpha"
+      },
+      "local_results": "Only class/symbol inclusion, confidence monotonicity, envelope algebra and row partition.",
+      "status_policy": "Source bounds, not a complete independent literature survey. No full-profile optimal label."
+    }
   },
   "summary_status": {
     "scope": "documented_comparison_domain",
     "badges": [
       {
+        "code": "other_quantified_gap",
+        "label": "Other quantified gap"
+      },
+      {
         "code": "bounds_missing",
         "label": "Bounds missing"
       }
     ],
-    "gap_classes": [],
+    "gap_classes": [
+      "other_quantified_gap"
+    ],
     "missing_sides": [
-      "lower",
-      "upper"
+      "lower"
     ],
     "special_statuses": [],
-    "comparison_count": 1,
+    "comparison_count": 9,
     "status_counts": {
-      "missing_both": 1
+      "missing_lower": 2,
+      "optimal": 6,
+      "other_quantified_gap": 1
     },
-    "gap_details": []
+    "gap_details": [
+      {
+        "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c_remaining_20261122",
+        "description": "Finite-budget upper transients need not match the retained source lower."
+      }
+    ]
   },
   "bracket_rows": [
     {
       "row_id": "row_1",
       "comparison_ids": [
-        "SO_FO_S01_direction_HP__randomized__probability__c1"
+        "SO_FO_S01_direction_HP__randomized__probability__c_confidence_tail_20261122"
+      ],
+      "view_ids": [
+        "randomized__probability"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_small_dim_20261122"
+      ],
+      "view_ids": [
+        "randomized__probability"
+      ]
+    },
+    {
+      "row_id": "row_3",
+      "comparison_ids": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_saturation_20261122"
+      ],
+      "view_ids": [
+        "randomized__probability"
+      ]
+    },
+    {
+      "row_id": "row_4",
+      "comparison_ids": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_convex_heavy_20261122"
+      ],
+      "view_ids": [
+        "randomized__probability"
+      ]
+    },
+    {
+      "row_id": "row_5",
+      "comparison_ids": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_strong_heavy_20261122"
+      ],
+      "view_ids": [
+        "randomized__probability"
+      ]
+    },
+    {
+      "row_id": "row_6",
+      "comparison_ids": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_convex_stat_20261122"
+      ],
+      "view_ids": [
+        "randomized__probability"
+      ]
+    },
+    {
+      "row_id": "row_7",
+      "comparison_ids": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_strong_quad_stat_20261122"
+      ],
+      "view_ids": [
+        "randomized__probability"
+      ]
+    },
+    {
+      "row_id": "row_8",
+      "comparison_ids": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_strong_transition_stat_20261122"
+      ],
+      "view_ids": [
+        "randomized__probability"
+      ]
+    },
+    {
+      "row_id": "row_9",
+      "comparison_ids": [
+        "SO_FO_S01_direction_HP__randomized__probability__c_remaining_20261122"
       ],
       "view_ids": [
         "randomized__probability"
@@ -1021,6 +4579,151 @@
       "remove_requested_presentation_metadata",
       "update_schema_version"
     ],
-    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs"
+    "mathematical_content_policy": "preserve_all_other_source_values_except_explicitly_audited_escape_repairs",
+    "comparison_history": [
+      {
+        "comparison": {
+          "label": "High-probability contract under directional moment bounds",
+          "predicate": {
+            "all": [
+              {
+                "region_ref": "SO_FO_S01_direction_HP__randomized__probability__r3"
+              },
+              {
+                "cmp": "gt",
+                "left": {
+                  "ref": "SO_FO_S01_direction_HP_p_5fea494340"
+                },
+                "right": 0
+              },
+              {
+                "cmp": "le",
+                "left": {
+                  "ref": "SO_FO_S01_direction_HP_p_5fea494340"
+                },
+                "right": {
+                  "ref": "SO_FO_S01_direction_HP_p_a6849cb45c"
+                }
+              },
+              {
+                "cmp": "gt",
+                "left": {
+                  "ref": "SO_FO_S01_direction_HP_p_160a9a596f"
+                },
+                "right": 0
+              },
+              {
+                "cmp": "lt",
+                "left": {
+                  "ref": "SO_FO_S01_direction_HP_p_160a9a596f"
+                },
+                "right": 0.5
+              },
+              {
+                "cmp": "ge",
+                "left": {
+                  "ref": "SO_FO_S01_direction_HP_p_61193f3c91"
+                },
+                "right": 1
+              },
+              {
+                "cmp": "ge",
+                "left": {
+                  "ref": "SO_FO_S01_direction_HP_p_c0e27b2477"
+                },
+                "right": 0
+              }
+            ]
+          },
+          "predicate_text": "$0<\\sigma_{\\rm dir}\\le\\sigma,\\ 0<\\delta<1/2,\\ T\\ge1,\\ \\mu\\ge0$",
+          "parameter_refs": [
+            "SO_FO_S01_direction_HP_p_b4e942dc3f",
+            "SO_FO_S01_direction_HP_p_93d9a0e01d",
+            "SO_FO_S01_direction_HP_p_4497cc9e5d",
+            "SO_FO_S01_direction_HP_p_c0e27b2477",
+            "SO_FO_S01_direction_HP_p_a6849cb45c",
+            "SO_FO_S01_direction_HP_p_debd1b8136",
+            "SO_FO_S01_direction_HP_p_5fea494340",
+            "SO_FO_S01_direction_HP_p_160a9a596f",
+            "SO_FO_S01_direction_HP_p_61193f3c91"
+          ],
+          "source_region_ref": "SO_FO_S01_direction_HP__randomized__probability__r1",
+          "status": {
+            "code": "missing_both",
+            "label": "Both bounds missing",
+            "missing_sides": [
+              "lower",
+              "upper"
+            ]
+          },
+          "comparison_id": "SO_FO_S01_direction_HP__randomized__probability__c1",
+          "view_id": "randomized__probability",
+          "guarantee_id": "g1",
+          "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+          "resource_projection_id": "resource_c9228d28be",
+          "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r1",
+          "bracket": {
+            "upper_refs": [],
+            "lower_refs": [],
+            "comparison_ref": "SO_FO_S01_direction_HP__randomized__probability__c1",
+            "quantity_ref": "SO_FO_S01_direction_HP__randomized__probability__q1",
+            "comparison_mode": "multiplicative_rate",
+            "resource_projection": "declared_budget",
+            "ratio_or_gap": "",
+            "envelopes": {
+              "upper": null,
+              "lower": null
+            },
+            "dispatch": [],
+            "claim_guards": {},
+            "achievable_refs": [],
+            "necessary_refs": [],
+            "resource_projection_description": "Error risk under the prescribed fixed budget",
+            "tracked_parameters": [
+              "SO_FO_S01_direction_HP_p_b4e942dc3f",
+              "SO_FO_S01_direction_HP_p_93d9a0e01d",
+              "SO_FO_S01_direction_HP_p_4497cc9e5d",
+              "SO_FO_S01_direction_HP_p_c0e27b2477",
+              "SO_FO_S01_direction_HP_p_a6849cb45c",
+              "SO_FO_S01_direction_HP_p_5fea494340",
+              "SO_FO_S01_direction_HP_p_160a9a596f",
+              "SO_FO_S01_direction_HP_p_61193f3c91"
+            ],
+            "fixed_parameters": [
+              "SO_FO_S01_direction_HP_p_debd1b8136"
+            ]
+          },
+          "comparison_key": {
+            "setting_id": "SO_FO_S01_direction_HP",
+            "view_id": "randomized__probability",
+            "guarantee_id": "g1",
+            "quantity_id": "SO_FO_S01_direction_HP__randomized__probability__q1",
+            "resource_projection_id": "resource_c9228d28be",
+            "regime_id": "SO_FO_S01_direction_HP__randomized__probability__r1"
+          }
+        },
+        "comparison_sha256": "b70d817e084a7ca03177f84c783501b1d95cd2dce025bd2de9f62b3cfbd1dc28",
+        "superseded_by": [
+          "SO_FO_S01_direction_HP__randomized__probability__c_confidence_tail_20261122",
+          "SO_FO_S01_direction_HP__randomized__probability__c_small_dim_20261122",
+          "SO_FO_S01_direction_HP__randomized__probability__c_saturation_20261122",
+          "SO_FO_S01_direction_HP__randomized__probability__c_convex_heavy_20261122",
+          "SO_FO_S01_direction_HP__randomized__probability__c_strong_heavy_20261122",
+          "SO_FO_S01_direction_HP__randomized__probability__c_convex_stat_20261122",
+          "SO_FO_S01_direction_HP__randomized__probability__c_strong_quad_stat_20261122",
+          "SO_FO_S01_direction_HP__randomized__probability__c_strong_transition_stat_20261122",
+          "SO_FO_S01_direction_HP__randomized__probability__c_remaining_20261122"
+        ],
+        "relation": "The former empty all-domain comparison is partitioned into nine source-scoped active rows.",
+        "retained_at": "2026-11-22"
+      }
+    ],
+    "repairs_20261122": {
+      "baseline_profile_sha256": "ecc1f716f0d4e8c5910c9c36d80fc2a6ec2bfb98d263af414362d9a60398fc4f",
+      "original_oracle_coupling": "Every observation is fresh. Same-point batches are conditionally independent, and the conditional moment bounds hold uniformly over histories. Samples cannot be reused across points.",
+      "original_quantity_expression_latex": "R^\\star_{v,\\pi}(B;\\theta)=\\inf_{\\mathcal A\\in\\mathfrak A_v:\\ C_\\pi(\\mathcal A,I)\\le B\\ \\forall I}\\sup_I\\mathbb E[\\ell(I,\\mathcal A)]",
+      "source": "https://arxiv.org/html/2610.00260v2",
+      "scope": "Adopt compatible source results and repair the high-probability quantity; preserve the setting ID, full-space geometry and existing algorithm view."
+    }
   }
 }

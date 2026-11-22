@@ -15,6 +15,7 @@
   const byId = new Map(data.points.map(p => [p.id, p]));
   const status = new Map(data.status_legend.map(s => [s.id, s]));
   const nodes = new Map();
+  const halos = new Map();
   const positions = new Map();
   let axis = 'TASK', group = 'TASK:family', chosen = null, filters = null;
   let tabStop = data.points[0]?.id, lines, dotOrder = [], related = new Map();
@@ -32,6 +33,11 @@
   };
   const activeLabels = point => Object.keys(point.memberships).filter(id => data.concepts[id].group === group);
   const pointStatus = p => status.get(p.status);
+  const colomboMark = p => p.colombo?.state === 'adopted' ? p.colombo : null;
+  const colomboDescription = p => {
+    const mark = colomboMark(p);
+    return mark ? ` · ${mark.label}${mark.scope_note ? ' · ' + mark.scope_note : ''}` : '';
+  };
 
   function cluster(point) {
     if (axis === 'TASK') return ['task:' + point.task, data.tasks[point.task], true];
@@ -54,13 +60,14 @@
     if (width < 200) return;
     lastWidth = width;
     const hasFocus = plot.contains(document.activeElement);
-    positions.clear(); nodes.clear(); dotOrder = [];
+    positions.clear(); nodes.clear(); halos.clear(); dotOrder = [];
     plot.replaceChildren();
     const backgrounds = svg('g', {'aria-hidden': 'true'});
     const guides = svg('g', {class: 'overview-guides', 'aria-hidden': 'true'});
     lines = svg('g', {class: 'overview-edges', 'aria-hidden': 'true'});
+    const haloLayer = svg('g', {'aria-hidden': 'true', class: 'overview-colombo-halos'});
     const dots = svg('g');
-    plot.append(backgrounds, guides, lines, dots);
+    plot.append(backgrounds, guides, lines, haloLayer, dots);
     const cohorts = new Map();
     for (const point of data.points) {
       const [key, label, shared] = cluster(point);
@@ -101,12 +108,19 @@
         if (cohort.shared && col > 0) {
           guides.append(svg('line', {x1: cx - step, y1: cy, x2: cx, y2: cy}));
         }
+        const mark = colomboMark(p);
+        const markClass = mark ? ' is-colombo' : '';
+        if (mark) {
+          const halo = svg('circle', {cx, cy, r: width < 620 ? 6.4 : 7.1, class: 'overview-colombo-halo'});
+          haloLayer.append(halo); halos.set(p.id, halo);
+        }
         const dot = svg('circle', {cx, cy, r: width < 620 ? 4.6 : 5.1, fill: pointStatus(p).color,
-          class: 'overview-dot', role: 'button', tabindex: p.id === tabStop ? '0' : '-1',
-          'aria-label': `${p.title} · ${p.id} · ${pointStatus(p).label}`,
+          class: 'overview-dot' + markClass, role: 'button', tabindex: p.id === tabStop ? '0' : '-1',
+          'aria-label': `${p.title} · ${p.id} · ${pointStatus(p).label}${colomboDescription(p)}`,
           'data-overview-id': p.id});
+        if (mark) dot.dataset.colomboState = mark.state;
         const tooltip = svg('title');
-        tooltip.textContent = `${p.title} · ${pointStatus(p).label}`;
+        tooltip.textContent = `${p.title} · ${pointStatus(p).label}${colomboDescription(p)}`;
         dot.append(tooltip); dots.append(dot);
         nodes.set(p.id, dot); dotOrder.push(p.id);
       });
@@ -133,6 +147,13 @@
     const info = html('div', '', 'overview-detail');
     const statusList = Object.entries(p.comparisons).map(([code, n]) => `${n} ${data.comparison_labels[code]}`);
     info.append(html('p', `Documented comparisons · ${statusList.join(' · ')}`, 'overview-breakdown'));
+    const mark = colomboMark(p);
+    if (mark) {
+      const badge = html('span', '★ Colombo', 'colombo-badge');
+      badge.dataset.colomboState = mark.state;
+      intro.append(badge);
+      if (mark.scope_note) info.append(html('p', mark.scope_note, 'colombo-scope-note'));
+    }
     const groupLabel = axis === 'TASK' ? 'Task family' : data.groups.find(g => g.id === group).label;
     const names = activeLabels(p).map(id => data.concepts[id].label);
     info.append(html('p', names.length
@@ -170,10 +191,14 @@
       node.classList.toggle('is-filtered', !!filters && !filters.has(id) && id !== chosen);
       node.classList.toggle('is-unrelated', !!chosen && id !== chosen && !related.has(id));
       node.classList.toggle('is-selected', id === chosen);
+      const halo = halos.get(id);
+      if (halo) {
+        for (const cls of ['is-filtered', 'is-unrelated', 'is-selected']) halo.classList.toggle(cls, node.classList.contains(cls));
+      }
       node.setAttribute('aria-pressed', String(id === chosen));
       const p = byId.get(id);
       const shared = related.get(id)?.map(cid => data.concepts[cid].label).join(', ');
-      const name = `${p.title} · ${p.id} · ${pointStatus(p).label}` + (shared ? ` · Shared: ${shared}` : '');
+      const name = `${p.title} · ${p.id} · ${pointStatus(p).label}${colomboDescription(p)}` + (shared ? ` · Shared: ${shared}` : '');
       node.setAttribute('aria-label', name);
       node.firstElementChild.textContent = name;
     }

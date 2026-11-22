@@ -55,6 +55,14 @@ const strong = commonId('MODEL', 'objective_convexity', 'strongly_convex');
 const notAssumed = commonId('MODEL', 'objective_convexity', 'not_assumed');
 const exact = commonId('ORACLE', 'quality', 'exact');
 
+run('colombo_search_returns_only_reviewed_near_optimal_profiles', () => {
+  const registry = JSON.parse(read('data/editorial/colombo_results.json')).settings;
+  const highlighted = Object.keys(registry).filter(id => registry[id].highlight).sort();
+  assert.equal(highlighted.length, 35);
+  assert.deepEqual(ids(state([], '★ Colombo')), highlighted);
+  assert.deepEqual(ids(state([], 'Colombo')), highlighted);
+});
+
 run('example_matches_current_source_view_intersection', () => {
   const expected = [...toolkitTags.values()].filter(tags => tags.views.some(view => exampleFacetIds.every(id => effectiveFacetIds(tags, view).includes(id)))).map(tags => tags.setting_id).sort();
   assert.deepEqual(exampleIds, expected);
@@ -114,7 +122,7 @@ run('single_objective_ordinals_agree_across_atlas_views', () => {
   assert.deepEqual(Object.keys(embedded('atlas-nebula-data').positions), settingIds);
   const graph = JSON.parse(read('data/derived/setting_graph.json'));
   assert.deepEqual(graph.settings.map(setting => setting.id), settingIds);
-  const cards = [...page.matchAll(/class="setting-row" data-setting="([^"]+)" data-setting-id="[^"]+"><div class="setting-order">(\d+)<\/div>/g)];
+  const cards = [...page.matchAll(/class="setting-row(?: [^"]+)?" data-setting="([^"]+)" data-setting-id="[^"]+"><div class="setting-order">(\d+)<\/div>/g)];
   assert.deepEqual(cards.map(card => card[1]), settingIds);
   for (const [index, entry] of catalog.entries()) {
     const number = String(index + 1).padStart(2, '0');
@@ -156,7 +164,7 @@ for (const fixture of dataAudit.semantic_fixtures.checks) {
     });
   }
 }
-for (const query of ['Zeroth-order Exact Convex', '零阶 精确 凸', '零阶精确凸', 'Zeroth-order · Exact · Convex', '"zeroth-order" "exact" "convex"']) {
+for (const query of ['Zeroth-order Exact Convex', 'Zeroth-order · Exact · Convex', '"zeroth-order" "exact" "convex"']) {
   run(`three_concepts:${query}`, () => { assert.deepEqual(ids(state([], query)), exampleIds); });
 }
 run('manual_same_group_OR', () => {
@@ -167,8 +175,8 @@ run('query_AND_manual_strong_convexity', () => {
 });
 run('longest_phrase_and_negation_boundaries', () => {
   assert.deepEqual(engine.parseQuery('strongly convex').concepts, [strong]);
-  for (const query of ['nonconvex', 'non-convex', '非凸', 'not strongly convex']) assert(!engine.parseQuery(query).concepts.includes(convex));
-  for (const query of ['inexact', '非精确', 'not exact']) assert(!engine.parseQuery(query).concepts.includes(exact));
+  for (const query of ['nonconvex', 'non-convex', 'not strongly convex']) assert(!engine.parseQuery(query).concepts.includes(convex));
+  for (const query of ['inexact', 'not exact']) assert(!engine.parseQuery(query).concepts.includes(exact));
 });
 run('counts_use_other_groups_and_distinct_settings', () => {
   const key = globalThis.AtlasBrowseEngine.groupKey('common', 'MODEL', 'objective_convexity');

@@ -1,4 +1,4 @@
-# Finite-sum nonconvex-strongly-concave minimax optimization: mean-square smoothness and zero-respecting algorithms
+# Finite-sum nonconvex-strongly-concave minimax optimization under mean-square smoothness
 
 **Setting ID.** `CV_S_FS_NCSC_AS`
 
@@ -1187,6 +1187,14 @@ $$
 Set every component equal to one hard payoff. One component-gradient call then exactly simulates one source full joint-gradient call.
 
 Retain the source condition-number threshold, nontrivial-accuracy window, and worst-case quantifier allowing finite dimension to grow with the budget.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 

@@ -167,10 +167,11 @@ def source_pointers_containing(value, needle, pointer=''):
 
 
 class ProfileRenderer:
-    def __init__(self, profile, classification=None, explanations=None):
+    def __init__(self, profile, classification=None, explanations=None, colombo=None):
         self.p = profile
         self.classification = classification or {}
         self.explanations = explanations or {}
+        self.colombo = colombo or {}
         self.math_normalizations = {}
         self.literal_signature_normalizations = {}
         self.refs = {r["id"]: r for r in profile.get("references", [])}
@@ -438,8 +439,14 @@ class ProfileRenderer:
             c = cs[0]
             br = c["bracket"]
             code = c["status"]["code"]
-            out.append(f'<article class="regime-card" id="regime-{i}" data-comparison-ids="{esc(",".join(row["comparison_ids"]))}"><div class="regime-top"><span class="regime-index">R{i}</span>{badge(code, STATUS.get(code, code))}</div><h3>{esc(c.get("label", "Parameter regime"))}</h3>')
+            credited = [cid for cid in row['comparison_ids'] if cid in self.colombo.get('comparison_ids', [])]
+            provenance_badge = colombo_badge(self.colombo) if credited else ''
+            credit_attribute = f' data-colombo-comparisons="{esc(",".join(credited))}"' if credited else ''
+            out.append(f'<article class="regime-card{" is-colombo" if credited else ""}" id="regime-{i}" data-comparison-ids="{esc(",".join(row["comparison_ids"]))}"{credit_attribute}><div class="regime-top"><span class="regime-index">R{i}</span>{provenance_badge}{badge(code, STATUS.get(code, code))}</div><h3>{esc(c.get("label", "Parameter regime"))}</h3>')
             out.append(self.field("Parameter region", c.get("predicate_text")))
+            if credited:
+                credited_views = list(dict.fromkeys(comps[cid]['view_id'] for cid in credited))
+                out.append(self.field('Colombo contribution views', '; '.join(self.view_label(vid) or vid for vid in credited_views)))
             out.append(self.field("Views", "; ".join(self.view_label(vid) for vid in dict.fromkeys(row["view_ids"]) if self.view_label(vid))))
             guarantees = []
             seen_guarantees = set()
@@ -669,13 +676,31 @@ def brand(prefix=""):
     return f'<a class="brand" href="{prefix}index.html"><span class="brand-mark" aria-hidden="true">∿</span><span>Complexity Atlas<small>ORACLE OPTIMIZATION</small></span></a>'
 
 
-def build_profile(p, index, total, previous, following, classification, human_tags, dictionary, normalization_report=None, explanations=None):
-    r = ProfileRenderer(p, classification, explanations)
+def colombo_badge(info):
+    if not info:
+        return ''
+    return (f'<span class="colombo-badge" data-colombo-state="{esc(info["state"])}" '
+            f'title="{esc(info["scope_note"])}">{esc(info["label"])}</span>')
+
+
+def colombo_legend():
+    return ('<div class="colombo-legend" aria-label="Colombo result highlights">'
+            '<span class="colombo-badge" data-colombo-state="adopted">★ Colombo</span>'
+            '<p>Near-optimal regions</p></div>')
+
+
+def build_profile(p, index, total, previous, following, classification, human_tags, dictionary, normalization_report=None, explanations=None, colombo=None):
+    r = ProfileRenderer(p, classification, explanations, colombo)
     ss = p["summary_status"]
     badges = "".join(badge(x["code"], x["label"]) for x in ss.get("badges", []) + ss.get("special_statuses", []))
     sid = p["setting_id"]
     graph_setting = quote(sid, safe="")
     out = [head(p["title"], "../", True), '<body class="profile-page"><header class="topbar">', brand("../"), f'<a class="back-link" href="../index.html">← All settings <span>{index:02d} / {total:02d}</span></a></header><div class="profile-layout"><aside class="document-nav"><div class="minor-eyebrow">In this profile</div><a href="#specification"><span>01</span> Setting specification</a><a href="#notation"><span>02</span> Notation and parameters</a><a href="#bracket"><span>03</span> Complexity bracket</a><a href="#evidence"><span>04</span> Evidence</a><a href="#downloads"><span>↓</span> Complete profile</a><a href="../graph.html?setting={graph_setting}"><span>↗</span> Related settings</a><div class="nav-note">{len(p["views"])} algorithm {"view" if len(p["views"]) == 1 else "views"}<br>{len(p["comparisons"])} scoped comparisons</div></aside><main class="profile-main" data-setting-id="{esc(sid)}"><div class="profile-intro"><div class="eyebrow">{esc(TOPICS.get(p["primary_domain"], p["primary_domain"]))} <span>·</span> SETTING {index:02d}</div><h1>{esc(p["title"])}</h1><div class="setting-id">{esc(sid)}</div>', r.para(p.get("summary"), "profile-summary"), '<div class="status-line">' + badges + '</div>', profile_tags_html(human_tags, dictionary), '<p class="status-scope">Status applies to the documented comparisons and their explicit parameter regions.</p></div>', r.specification(), r.notation(), r.bracket(), r.evidence(), f'<section class="downloads-section" id="downloads"><div><div class="minor-eyebrow">Complete profile</div><h2>Keep the full argument.</h2><p>Complete bounds, applicability reviews, local arguments and references.</p></div><div class="download-buttons"><a class="button primary" href="../downloads/{esc(sid)}/profile.pdf" download>Download PDF <span>↓</span></a><a class="button secondary" href="../downloads/{esc(sid)}/profile.tex" download>LaTeX source <span>↓</span></a></div></section><nav class="profile-pagination" aria-label="Adjacent settings">']
+    # Attribution is presentation metadata, separate from mathematical tags.
+    if colombo:
+        heading = '<h1>' + esc(p['title']) + '</h1>'
+        out = [part.replace(heading, '<div class="profile-heading">' + heading
+                            + colombo_badge(colombo) + '</div>', 1) for part in out]
     out.append(f'<a href="{esc(previous["setting_id"])}.html">← Previous setting</a>' if previous else '<span></span>')
     out.append(f'<a href="{esc(following["setting_id"])}.html">Next setting →</a>' if following else '<a href="../index.html">All settings →</a>')
     out.append(f'</nav></main></div><footer class="footer">Complexity Atlas <span>{total} profiles</span><a href="#">Back to top ↑</a></footer></body></html>')
@@ -692,11 +717,13 @@ def build_profile(p, index, total, previous, following, classification, human_ta
     return "".join(out)
 
 
-def build_index(profiles, catalog, human_tags, dictionary, overview, nebula):
+def build_index(profiles, catalog, human_tags, dictionary, overview, nebula, colombo_registry=None):
     from nebula_data import nebula_markup
     from overview_data import overview_markup
 
     count = len(profiles)
+    colombo_registry = colombo_registry or {'settings': {}, 'papers': []}
+    colombo_marks = colombo_registry['settings']
     catalog_entries = {entry.get('id') or entry.get('setting_id'): entry for entry in catalog['profiles']}
     common_axes, exact_axes = toolkit_filter_axes(dictionary, human_tags)
     statuses = {}
@@ -730,7 +757,7 @@ def build_index(profiles, catalog, human_tags, dictionary, overview, nebula):
            '<main class="atlas-main"><section class="atlas-heading"><div><div class="eyebrow">A STRUCTURED VIEW OF ORACLE COMPLEXITY</div>',
            '<h1>Known bounds.<br><em>Precisely scoped.</em></h1></div>',
            f'<div class="batch-panel"><span class="batch-number">{count}</span><div>Settings in this atlas</div><span class="batch-rule"></span><p>Full profiles available<br>as PDF and LaTeX.</p></div></section>',
-           nebula_markup(nebula, overview), overview_markup(overview),
+           colombo_legend(), nebula_markup(nebula, overview), overview_markup(overview),
            '<section class="library" id="setting-library" aria-label="Settings library"><div class="library-toolbar"><h2>Explore the atlas</h2>',
            '<label class="search-box"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 4.5 4.5"></path></svg><input id="search" type="search" placeholder="Search concepts, a setting ID, or text…" aria-label="Search concepts or profile text"><kbd>/</kbd></label></div>',
            '<div class="library-layout"><div class="filter-shell" id="filter-shell"><button class="filter-toggle" id="toggle-filters" type="button" aria-expanded="false" aria-controls="filter-panel"><span>Filters <span class="filter-toggle-count" id="filter-toggle-count"></span></span><span class="filter-toggle-action">Common filters <b aria-hidden="true">+</b></span></button>',
@@ -806,13 +833,15 @@ def build_index(profiles, catalog, human_tags, dictionary, overview, nebula):
         ss = p['summary_status']
         entry = catalog_entries[sid]
         tags = human_tags[sid]
+        colombo = colombo_marks.get(sid)
         common_views = {view['view_id']: view['facet_ids'] for view in tags['views']}
         precise_views = {view_id: set() for view_id in common_views}
         for detail in tags['details']:
             for view_id in detail['view_ids']:
                 precise_views[view_id].add(detail['machine_concept_id'])
         summary_badges = ss.get('badges', []) + ss.get('special_statuses', [])
-        out.append(f'<article class="setting-row" data-setting="{esc(sid)}" data-setting-id="{esc(sid)}"><div class="setting-order">{i:02d}</div><div class="setting-body"><div class="row-meta">{esc(TOPICS.get(p["primary_domain"], p["primary_domain"]))}<span>·</span><code>{esc(sid)}</code></div><h3><a href="settings/{esc(sid)}.html">{esc(p["title"])}</a></h3><div class="tags">{card_tags_html(tags)}</div><p class="matching-views" hidden></p><div class="row-bottom"><div class="status-line">')
+        mark_class = ' is-colombo' if colombo else ''
+        out.append(f'<article class="setting-row{mark_class}" data-setting="{esc(sid)}" data-setting-id="{esc(sid)}"><div class="setting-order">{i:02d}</div><div class="setting-body"><div class="row-meta">{esc(TOPICS.get(p["primary_domain"], p["primary_domain"]))}<span>·</span><code>{esc(sid)}</code></div><h3><a href="settings/{esc(sid)}.html">{esc(p["title"])}</a></h3>{colombo_badge(colombo)}<div class="tags">{card_tags_html(tags)}</div><p class="matching-views" hidden></p><div class="row-bottom"><div class="status-line">')
         out.extend(badge(s['code'], s['label']) for s in summary_badges)
         out.append(f'</div><span class="row-counts">{len(p["views"])} {"view" if len(p["views"]) == 1 else "views"}<span>·</span>{len(p["comparisons"])} {"comparison" if len(p["comparisons"]) == 1 else "comparisons"}</span></div></div><a class="row-arrow" href="settings/{esc(sid)}.html" aria-label="Open {esc(p["title"])}">↗</a></article>')
         if set(common_views) != set(entry['viewStatusCodes']):
@@ -821,7 +850,7 @@ def build_index(profiles, catalog, human_tags, dictionary, overview, nebula):
                         'viewTagSets': {view_id: sorted(ids) for view_id, ids in precise_views.items()},
                         'viewLabels': {view['view_id']: view['label'] for view in tags['views']},
                         'viewStatusCodes': entry['viewStatusCodes'],
-                        'commonViewFacets': common_views, 'search': search_text(p, tags)})
+                        'commonViewFacets': common_views, 'search': search_text(p, tags) + (' colombo ' + colombo['label'].lower() + ' ' + ' '.join(colombo['paper_ids']) if colombo else '')})
     metadata = {'commonAxes': common_axes, 'preciseTags': precise_tags,
                 'toolkitVocabularyVersion': dictionary['version'],
                 'statuses': [{'id': code, 'label': label} for code, label in statuses.items()],
@@ -869,6 +898,7 @@ def main():
     from nebula_data import build_nebula
     from overview_data import build_overview
     from specification_explanations import bind_explanations, load_explanations
+    from colombo_results import load_colombo_results, display_registry
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=pathlib.Path, default=ROOT)
@@ -925,6 +955,8 @@ def main():
         profiles.append(normalise_display_profile(profile))
         classifications[sid] = classification
         human_tags[sid] = tags
+    colombo_registry = display_registry(load_colombo_results(root, canonical_profiles))
+    colombo_marks = colombo_registry['settings']
     dist = root / "visualization/dist"
     (dist / "settings").mkdir(parents=True, exist_ok=True)
     (dist / "assets").mkdir(exist_ok=True)
@@ -934,13 +966,13 @@ def main():
     if math_src.exists():
         shutil.copytree(math_src, dist / "assets/mathjax", dirs_exist_ok=True)
     (dist / "navigation-projection.json").write_text(json.dumps({"settings": navigation_projection}, ensure_ascii=False, indent=2))
-    overview = build_overview(profiles, human_tags, dictionary, root)
+    overview = build_overview(profiles, human_tags, dictionary, root, colombo_marks)
     nebula = build_nebula(overview, root)
-    (dist / "index.html").write_text(build_index(profiles, catalog, human_tags, dictionary, overview, nebula))
+    (dist / "index.html").write_text(build_index(profiles, catalog, human_tags, dictionary, overview, nebula, colombo_registry))
     normalization_report = []
     for i, p in enumerate(profiles):
         sid = p['setting_id']
-        page = build_profile(p, i + 1, len(profiles), profiles[i - 1] if i else None, profiles[i + 1] if i + 1 < len(profiles) else None, classifications[sid], human_tags[sid], dictionary, normalization_report, bound_explanations[sid])
+        page = build_profile(p, i + 1, len(profiles), profiles[i - 1] if i else None, profiles[i + 1] if i + 1 < len(profiles) else None, classifications[sid], human_tags[sid], dictionary, normalization_report, bound_explanations[sid], colombo_marks.get(sid))
         page = append_native_records(page, canonical_profiles[sid])
         if html_title_errors(page):
             raise ValueError(f"Forbidden display label remains in {p['setting_id']}")

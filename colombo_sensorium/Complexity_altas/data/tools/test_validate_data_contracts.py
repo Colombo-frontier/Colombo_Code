@@ -16,7 +16,7 @@ def comparison(cid, regime='positive'):
 
 
 def profile():
-    model = {'budget': 2, 'label': '曲率'}
+    model = {'budget': 2, 'label': 'curvature'}
     return {'setting_id': 'example', 'common_specification': model,
             'comparisons': [comparison('current')], 'provenance': {},
             'proofs': [{'id': 'current_proof', 'premises': [
@@ -89,7 +89,7 @@ class IntegrityRegressionTests(unittest.TestCase):
 
     def test_current_binding_uses_canonical_unicode_object(self):
         value = profile()
-        value['common_specification'] = {'label': '曲率', 'budget': 2}
+        value['common_specification'] = {'label': 'curvature', 'budget': 2}
         self.assertEqual(inspect(value), ([], []))
 
     def test_changing_a_current_premise_is_fatal(self):

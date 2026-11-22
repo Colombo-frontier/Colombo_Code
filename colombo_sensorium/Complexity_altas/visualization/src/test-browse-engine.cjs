@@ -15,7 +15,21 @@ const embedded = id => JSON.parse(page.match(new RegExp(`<script id="${id}" type
 const records = embedded('atlas-search-data');
 const metadata = embedded('atlas-browse-meta');
 const toolkitDictionary = JSON.parse(read('data/vocabulary/human_tags.json'));
-const toolkitTags = new Map(records.map(record => [record.id, JSON.parse(read(`data/settings/${record.id}/human_tags.json`))]));
+const crypto = require('node:crypto');
+const projection = JSON.parse(read('visualization/dist/navigation-projection.json')).settings;
+const toolkitTags = new Map(records.map(record => {
+  const native = JSON.parse(read(`data/settings/${record.id}/human_tags.json`));
+  const projected = projection[record.id];
+  if (!projected) return [record.id, native];
+  for (const name of ['profile.json', 'classification.json', 'human_tags.json']) {
+    const actual = crypto.createHash('sha256').update(read(`data/settings/${record.id}/${name}`)).digest('hex');
+    assert.equal(actual, projected.input_files[name]);
+  }
+  assert.equal(crypto.createHash('sha256').update(read('data/vocabulary/human_tags.json')).digest('hex'), projected.dictionary_sha256);
+  assert.deepEqual(projected.tags.details, native.details);
+  assert.equal(projected.native_files_changed, false);
+  return [record.id, projected.tags];
+}));
 const navigationAdditions = JSON.parse(read('data/derived/toolkit_navigation_additions.json')).settings;
 const effectiveFacetIds = (tags, view) => [...new Set([
   ...view.facet_ids,
@@ -67,13 +81,19 @@ run('ball_geometry_recovers_explicit_feasible_domains', () => {
   const ball = commonId('MODEL', 'geometry', 'ball');
   const query = [...exampleFacetIds, ball];
   const matching = ids(state(query));
-  const positives = ['SO_ZO_E01', 'SO_ZO_E02', 'SO_ZO_E06b', 'SO_ZO_E06e', 'SO_ZO_E07_neighborhood', 'SO_ZO_E09c', 'SO_ZO_E09c_sc'];
-  const localizationOnly = ['SO_ZO_E03', 'SO_ZO_E04', 'SO_ZO_E05', 'SO_ZO_E06a', 'SO_ZO_E06d', 'SO_ZO_E06f_rand', 'SO_ZO_E09a', 'SO_ZO_E09b', 'SO_ZO_O01'];
+  const positives = ['SO_ZO_E01', 'SO_ZO_E02', 'SO_ZO_E03', 'SO_ZO_E06b', 'SO_ZO_E06e', 'SO_ZO_E07_neighborhood', 'SO_ZO_E09c', 'SO_ZO_E09c_sc'];
+  const localizationOnly = ['SO_ZO_E04', 'SO_ZO_E05', 'SO_ZO_E06a', 'SO_ZO_E06d', 'SO_ZO_E06f_rand', 'SO_ZO_E09a', 'SO_ZO_E09b', 'SO_ZO_O01'];
   for (const id of positives) {
     assert(matching.includes(id), `Missing explicit feasible ball: ${id}`);
-    assert(read(`visualization/dist/settings/${id}.html`).includes('Explicit feasible domain'));
+    const source = read(`visualization/dist/settings/${id}.html`);
+    assert(source.includes(id === 'SO_ZO_E03' ? 'queries and output in the ball' : 'Explicit feasible domain'));
   }
   for (const id of localizationOnly) assert(!matching.includes(id), `Localization ball became a feasible ball: ${id}`);
+  const e03 = toolkitTags.get('SO_ZO_E03');
+  const e03ByView = new Map(e03.views.map(view => [view.view_id, effectiveFacetIds(e03, view)]));
+  assert(e03ByView.get('bounded_query_deterministic').includes(ball), 'Bounded-query regime must expose its feasible ball');
+  assert(!e03ByView.get('deterministic').includes(ball), 'Unrestricted deterministic view must remain unrestricted');
+  assert(!e03ByView.get('randomized').includes(ball), 'Unrestricted randomized view must remain unrestricted');
   assert.deepEqual(ids(state([], 'zeroth-order exact convex ball geometry')), matching);
   const group = globalThis.AtlasBrowseEngine.groupKey('common', 'MODEL', 'geometry');
   assert.equal(engine.facetCounts(example, new Set([group])).get(group).get(ball), matching.length);
@@ -94,7 +114,7 @@ run('single_objective_ordinals_agree_across_atlas_views', () => {
   assert.deepEqual(Object.keys(embedded('atlas-nebula-data').positions), settingIds);
   const graph = JSON.parse(read('data/derived/setting_graph.json'));
   assert.deepEqual(graph.settings.map(setting => setting.id), settingIds);
-  const cards = [...page.matchAll(/class="setting-row" data-setting="([^"]+)" data-setting-id="[^"]+"><div class="setting-order">(\d+)<\/div>/g)];
+  const cards = [...page.matchAll(/class="setting-row(?: [^"]+)?" data-setting="([^"]+)" data-setting-id="[^"]+"><div class="setting-order">(\d+)<\/div>/g)];
   assert.deepEqual(cards.map(card => card[1]), settingIds);
   for (const [index, entry] of catalog.entries()) {
     const number = String(index + 1).padStart(2, '0');
@@ -136,7 +156,7 @@ for (const fixture of dataAudit.semantic_fixtures.checks) {
     });
   }
 }
-for (const query of ['Zeroth-order Exact Convex', '零阶 精确 凸', '零阶精确凸', 'Zeroth-order · Exact · Convex', '"zeroth-order" "exact" "convex"']) {
+for (const query of ['Zeroth-order Exact Convex', 'Zeroth-order · Exact · Convex', '"zeroth-order" "exact" "convex"']) {
   run(`three_concepts:${query}`, () => { assert.deepEqual(ids(state([], query)), exampleIds); });
 }
 run('manual_same_group_OR', () => {
@@ -147,8 +167,8 @@ run('query_AND_manual_strong_convexity', () => {
 });
 run('longest_phrase_and_negation_boundaries', () => {
   assert.deepEqual(engine.parseQuery('strongly convex').concepts, [strong]);
-  for (const query of ['nonconvex', 'non-convex', '非凸', 'not strongly convex']) assert(!engine.parseQuery(query).concepts.includes(convex));
-  for (const query of ['inexact', '非精确', 'not exact']) assert(!engine.parseQuery(query).concepts.includes(exact));
+  for (const query of ['nonconvex', 'non-convex', 'not strongly convex']) assert(!engine.parseQuery(query).concepts.includes(convex));
+  for (const query of ['inexact', 'not exact']) assert(!engine.parseQuery(query).concepts.includes(exact));
 });
 run('counts_use_other_groups_and_distinct_settings', () => {
   const key = globalThis.AtlasBrowseEngine.groupKey('common', 'MODEL', 'objective_convexity');
@@ -222,7 +242,7 @@ run('minimum_two_removals_are_distinguished_from_one', () => {
   assert.equal(diagnostic.suggestions[0].keys.length, 2);
   assert.equal(diagnostic.suggestions[0].restored, 1);
 });
-const report = {passed: checks.every(check => check.passed), source: 'built local HTML + Toolkit human tag sidecars + audited navigation additions + evidence fixtures + independent scope fixtures',
+const report = {passed: checks.every(check => check.passed), source: 'built local HTML + verified native navigation projection + Toolkit human tag sidecars + audited navigation additions + evidence fixtures + independent scope fixtures',
   profile_count: records.length, view_count: engine.records.reduce((n, record) => n + record.views.length, 0),
   common_option_count: engine.options.size, example_match_count: exampleIds.length, checks};
 if (reportPath) fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');

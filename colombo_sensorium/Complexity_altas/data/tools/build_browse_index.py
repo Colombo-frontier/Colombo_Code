@@ -56,85 +56,85 @@ def option(axis, group, value, name, aliases, description):
 
 
 for value, name, aliases in [
-    ('single_objective', 'Single objective', ['single objective', 'single-objective', '单目标']),
-    ('bilevel', 'Bilevel', ['bilevel', 'bi-level', '双层']),
-    ('minimax', 'Minimax', ['minimax', 'min-max', '极小极大']),
-    ('saddle_point', 'Saddle point', ['saddle point', 'saddle-point', '鞍点']),
-    ('variational_inequality', 'Variational inequality', ['variational inequality', 'vi', '变分不等式']),
-    ('matrix_computation', 'Matrix computation', ['matrix computation', '矩阵计算']),
-    ('online_bandit', 'Online learning / bandits', ['online learning', 'bandit', 'bandits', '在线学习', '赌博机']),
+    ('single_objective', 'Single objective', ['single objective', 'single-objective']),
+    ('bilevel', 'Bilevel', ['bilevel', 'bi-level']),
+    ('minimax', 'Minimax', ['minimax', 'min-max']),
+    ('saddle_point', 'Saddle point', ['saddle point', 'saddle-point']),
+    ('variational_inequality', 'Variational inequality', ['variational inequality', 'vi']),
+    ('matrix_computation', 'Matrix computation', ['matrix computation']),
+    ('online_bandit', 'Online learning / bandits', ['online learning', 'bandit', 'bandits']),
 ]:
     option('TASK', 'family', value, name, aliases, 'Source-declared task family: ' + name + '.')
 for value, name, aliases, desc in [
-    ('convex', 'Convex objective', ['convex', '凸', 'convex objective', '凸目标'], 'Same-target convexity, including certified same-target strong convexity; not merely convex geometry or a convex lower problem.'),
-    ('strongly_convex', 'Strongly convex objective', ['strongly convex', 'strongly-convex', '强凸', '强凸目标'], 'Strong convexity of the target objective on its declared domain.'),
-    ('weakly_convex', 'Weakly convex objective', ['weakly convex', 'weakly-convex', '弱凸'], 'Explicit weak-convexity promise on the target objective.'),
-    ('not_assumed', 'Convexity not assumed', ['nonconvex', 'non-convex', '非凸', 'convexity not assumed', '不假设凸性'], 'Convexity is explicitly not promised; this does not assert that every individual function is nonconvex.'),
+    ('convex', 'Convex objective', ['convex', 'convex objective'], 'Same-target convexity, including certified same-target strong convexity; not merely convex geometry or a convex lower problem.'),
+    ('strongly_convex', 'Strongly convex objective', ['strongly convex', 'strongly-convex', 'strongly convex objective'], 'Strong convexity of the target objective on its declared domain.'),
+    ('weakly_convex', 'Weakly convex objective', ['weakly convex', 'weakly-convex'], 'Explicit weak-convexity promise on the target objective.'),
+    ('not_assumed', 'Convexity not assumed', ['nonconvex', 'non-convex', 'convexity not assumed'], 'Convexity is explicitly not promised; this does not assert that every individual function is nonconvex.'),
 ]:
     option('MODEL', 'objective_convexity', value, name, aliases, desc)
 for value, name, aliases in [
-    ('convex_concave', 'Convex–concave payoff', ['convex concave', 'convex-concave', '凸凹'],),
-    ('nonconvex_strongly_concave', 'Nonconvex–strongly concave class', ['nonconvex strongly concave', 'nonconvex-strongly-concave', '非凸强凹']),
-    ('finite_sum', 'Finite sum', ['finite sum', 'finite-sum', '有限和']),
-    ('composite', 'Composite objective', ['composite objective', 'composite', '复合目标']),
+    ('convex_concave', 'Convex–concave payoff', ['convex concave', 'convex-concave'],),
+    ('nonconvex_strongly_concave', 'Nonconvex–strongly concave class', ['nonconvex strongly concave', 'nonconvex-strongly-concave']),
+    ('finite_sum', 'Finite sum', ['finite sum', 'finite-sum']),
+    ('composite', 'Composite objective', ['composite objective', 'composite']),
 ]:
     option('MODEL', 'structure', value, name, aliases, 'Explicit source-declared structure: ' + name + '.')
 for value, name, aliases in [
-    ('monotone', 'Monotone operator', ['monotone operator', 'monotone', '单调算子']),
-    ('strongly_monotone', 'Strongly monotone operator', ['strongly monotone', 'strongly-monotone', '强单调']),
+    ('monotone', 'Monotone operator', ['monotone operator', 'monotone']),
+    ('strongly_monotone', 'Strongly monotone operator', ['strongly monotone', 'strongly-monotone']),
 ]:
     option('MODEL', 'monotonicity', value, name, aliases, 'Applies to the declared target operator; no scalar-potential assumption is inferred.')
 for value, name, aliases in [
-    ('zero', 'Zeroth-order interface', ['zeroth order', 'zeroth-order', 'zero order', '零阶', '零阶接口']),
-    ('first', 'First-order interface', ['first order', 'first-order', '一阶', '一阶接口']),
-    ('higher', 'Higher-order interface', ['higher order', 'higher-order', 'high order', '高阶', '高阶接口']),
-    ('operator_matrix', 'Operator / matrix interface', ['operator interface', 'matrix interface', '算子接口', '矩阵接口']),
-    ('online_feedback', 'Online feedback protocol', ['online feedback', '在线反馈']),
+    ('zero', 'Zeroth-order interface', ['zeroth order', 'zeroth-order', 'zero order', 'zeroth-order interface']),
+    ('first', 'First-order interface', ['first order', 'first-order', 'first-order interface']),
+    ('higher', 'Higher-order interface', ['higher order', 'higher-order', 'high order', 'higher-order interface']),
+    ('operator_matrix', 'Operator / matrix interface', ['operator interface', 'matrix interface']),
+    ('online_feedback', 'Online feedback protocol', ['online feedback']),
 ]:
     option('ORACLE', 'access', value, name, aliases, GROUPS[('ORACLE', 'access')][1])
 for value, name, aliases in [
-    ('exact', 'Exact', ['exact', '精确', 'noiseless feedback', '无噪声反馈']),
-    ('stochastic', 'Stochastic / sampled', ['stochastic', 'sampled', '随机反馈', '采样反馈']),
-    ('inexact', 'Inexact / biased', ['inexact', 'biased feedback', '非精确', '有偏反馈']),
-    ('mixed', 'Mixed primitive qualities', ['mixed primitive qualities', 'mixed feedback', '混合反馈']),
+    ('exact', 'Exact', ['exact', 'noiseless feedback']),
+    ('stochastic', 'Stochastic / sampled', ['stochastic', 'sampled', 'stochastic feedback', 'sampled feedback']),
+    ('inexact', 'Inexact / biased', ['inexact', 'biased feedback']),
+    ('mixed', 'Mixed primitive qualities', ['mixed primitive qualities', 'mixed feedback']),
 ]:
     option('ORACLE', 'quality', value, name, aliases, GROUPS[('ORACLE', 'quality')][1])
 for value, name, aliases in [
-    ('deterministic', 'Deterministic algorithms', ['deterministic algorithms', 'deterministic algorithm', '确定性算法']),
-    ('randomized', 'Randomization allowed', ['randomized algorithms', 'randomized', '随机算法']),
+    ('deterministic', 'Deterministic algorithms', ['deterministic algorithms', 'deterministic algorithm']),
+    ('randomized', 'Randomization allowed', ['randomized algorithms', 'randomized']),
 ]:
     option('ALGORITHMS', 'randomization', value, name, aliases, GROUPS[('ALGORITHMS', 'randomization')][1])
 for value, name, aliases in [
-    ('point_vector', 'Point / vector / point pair', ['point output', 'vector output', '点输出', '向量输出']),
-    ('matrix_subspace', 'Matrix / subspace', ['matrix output', 'subspace output', '矩阵输出', '子空间输出']),
-    ('trajectory', 'Action trajectory', ['action trajectory', 'online trajectory', '动作轨迹']),
+    ('point_vector', 'Point / vector / point pair', ['point output', 'vector output']),
+    ('matrix_subspace', 'Matrix / subspace', ['matrix output', 'subspace output']),
+    ('trajectory', 'Action trajectory', ['action trajectory', 'online trajectory']),
 ]:
     option('OUTPUT', 'object', value, name, aliases, GROUPS[('OUTPUT', 'object')][1])
 for value, name, aliases in [
-    ('objective_gap', 'Objective gap', ['objective gap', 'function gap', '目标差距']),
-    ('first_order_stationarity', 'First-order stationarity', ['first-order stationarity', 'first order stationarity', '一阶平稳性', 'reduced gradient', '约化梯度']),
-    ('higher_order_stationarity', 'Higher-order stationarity', ['second-order stationarity', 'higher-order stationarity', '二阶平稳性', '高阶平稳性']),
-    ('saddle_gap', 'Saddle-point gap', ['saddle gap', 'saddle-point gap', '鞍点间隙']),
-    ('variational_gap_residual', 'Variational gap / residual', ['tangent residual', 'operator residual', 'variational gap', '切向残差', '算子残差']),
-    ('distance', 'Solution distance', ['solution distance', 'distance error', '解距离']),
-    ('regret', 'Regret', ['regret', '遗憾']),
-    ('matrix_accuracy', 'Matrix / linear-system accuracy', ['matrix accuracy', 'linear-system error', '矩阵误差', '线性系统误差']),
-    ('identification', 'Identification / decision error', ['identification error', 'decision error', '识别误差', '判定误差']),
+    ('objective_gap', 'Objective gap', ['objective gap', 'function gap']),
+    ('first_order_stationarity', 'First-order stationarity', ['first-order stationarity', 'first order stationarity', 'reduced gradient']),
+    ('higher_order_stationarity', 'Higher-order stationarity', ['second-order stationarity', 'higher-order stationarity']),
+    ('saddle_gap', 'Saddle-point gap', ['saddle gap', 'saddle-point gap']),
+    ('variational_gap_residual', 'Variational gap / residual', ['tangent residual', 'operator residual', 'variational gap']),
+    ('distance', 'Solution distance', ['solution distance', 'distance error']),
+    ('regret', 'Regret', ['regret']),
+    ('matrix_accuracy', 'Matrix / linear-system accuracy', ['matrix accuracy', 'linear-system error']),
+    ('identification', 'Identification / decision error', ['identification error', 'decision error']),
 ]:
     option('METRIC', 'goal', value, name, aliases, GROUPS[('METRIC', 'goal')][1])
 for value, name, aliases in [
-    ('deterministic', 'Deterministic error guarantee', ['deterministic guarantee', '确定性保证']),
-    ('expectation', 'Expected-error guarantee', ['expected error', 'expectation guarantee', '期望误差']),
-    ('probability', 'Probability guarantee', ['probability guarantee', 'high probability', 'fixed confidence', '概率保证', '高概率', '固定置信度']),
+    ('deterministic', 'Deterministic error guarantee', ['deterministic guarantee']),
+    ('expectation', 'Expected-error guarantee', ['expected error', 'expectation guarantee']),
+    ('probability', 'Probability guarantee', ['probability guarantee', 'high probability', 'fixed confidence']),
 ]:
     option('GUARANTEE', 'error_mode', value, name, aliases, GROUPS[('GUARANTEE', 'error_mode')][1])
 for value, name, aliases in [
-    ('oracle_calls', 'Oracle calls', ['oracle calls', 'query calls', 'oracle调用', '查询次数']),
-    ('samples', 'Samples', ['sample complexity', 'samples', '样本数']),
-    ('rounds', 'Time rounds', ['time rounds', 'horizon', '时间轮数']),
-    ('arithmetic', 'Arithmetic work', ['arithmetic work', 'arithmetic complexity', '算术运算']),
-    ('memory', 'Memory', ['memory complexity', 'memory', '内存']),
-    ('joint', 'Joint resource budget', ['joint budget', 'joint resources', '联合预算']),
+    ('oracle_calls', 'Oracle calls', ['oracle calls', 'query calls']),
+    ('samples', 'Samples', ['sample complexity', 'samples']),
+    ('rounds', 'Time rounds', ['time rounds', 'horizon']),
+    ('arithmetic', 'Arithmetic work', ['arithmetic work', 'arithmetic complexity']),
+    ('memory', 'Memory', ['memory complexity', 'memory']),
+    ('joint', 'Joint resource budget', ['joint budget', 'joint resources']),
 ]:
     option('RESOURCE', 'measure', value, name, aliases, GROUPS[('RESOURCE', 'measure')][1])
 
@@ -644,7 +644,7 @@ def fixtures(profiles):
     actual_hits = [profile['id'] for profile in profiles if any(matches(view, combo) for view in profile['views'])]
     alias_cases = [
         ('zeroth order exact convex', combo),
-        ('零阶 精确 凸', combo),
+        ('zeroth-order exact convex', combo),
         ('inexact nonconvex', ['ORACLE:quality:inexact', 'MODEL:objective_convexity:not_assumed']),
         ('strongly convex', ['MODEL:objective_convexity:strongly_convex']),
         ('first-order stationarity', ['METRIC:goal:first_order_stationarity']),

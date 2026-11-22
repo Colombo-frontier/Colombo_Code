@@ -53,6 +53,45 @@ def profile_nodes(profile):
     return [(kind,terminology(text)) for kind,text in renderer.document_nodes(profile)]
 
 
+
+def publication_tex(nodes):
+    """Wrap long native literals and identifiers without changing source nodes."""
+    end = "\\end{document}\n"
+    fragments = []
+    for kind, text in nodes:
+        fragment = renderer.to_tex([(kind, text)])
+        if not fragment.startswith(renderer.PREAMBLE) or not fragment.endswith(end):
+            raise ValueError("Unexpected renderer document wrapper")
+        fragment = fragment[len(renderer.PREAMBLE):-len(end)]
+        if kind == "literal":
+            # Source TeX strings in the native appendix are literal text. Soft
+            # breaks prevent unspaced strings from extending past the page.
+            fragments.append(native_literal_tex(text) + "\n")
+            continue
+        for token in sorted(set(re.findall(r"[A-Za-z0-9_:/.-]{40,}", text)),
+                            key=lambda item: (-len(item), item)):
+            if token.startswith(("https://", "http://")):
+                continue
+            escaped = renderer.escape(token)
+            fragment = fragment.replace(escaped, wrapped_token_tex(token))
+        fragments.append(fragment)
+    document = renderer.PREAMBLE + "\n".join(fragments) + end
+    return "\n".join(line.rstrip() for line in document.splitlines()) + "\n"
+
+
+def wrapped_token_tex(token):
+    return r"\allowbreak{}".join(renderer.escape(token[i:i + 24])
+                                 for i in range(0, len(token), 24))
+
+
+def native_literal_tex(text):
+    pieces = []
+    for token in re.split(r"(\S{40,})", text):
+        pieces.append(wrapped_token_tex(token) if len(token) >= 40 and not re.search(r"\s", token)
+                      else renderer.escape(token))
+    return "".join(pieces).replace("\'", r"\char39{}").replace('"', r"\char34{}").replace("-", r"\char45{}")
+
+
 def prepare_one(profile_path: Path, destination: Path) -> dict:
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
     setting_id = profile["setting_id"]
@@ -74,11 +113,18 @@ def prepare_one(profile_path: Path, destination: Path) -> dict:
         if any(char in reference["url"] for char in "\r\n{}"):
             raise ValueError(f"{setting_id}: reference URL contains an unsafe character")
 
-    nodes = profile_nodes(profile)
-    tex = renderer.to_tex(nodes)
-    markdown = renderer.to_md(nodes)
-    if re.search(r"\bCoverage\b|Information interface", tex + markdown, re.IGNORECASE):
-        raise ValueError(f"{setting_id}: excluded display labels remain in export")
+    # Import after profile_nodes has been defined: the read-only adapter captures
+    # that legacy entry point. Keeping it unchanged prevents recursive rendering.
+    from public_render_adapter import maintenance_nodes
+    from public_display_rules import legacy_title_errors, validate_content_ledger
+
+    nodes, content_ledger = maintenance_nodes(profile)
+    validate_content_ledger(profile, content_ledger)
+    title_errors = legacy_title_errors(nodes)
+    if title_errors:
+        raise ValueError(f"{setting_id}: excluded legacy heading/field titles: {title_errors}")
+    tex = publication_tex(nodes)
+    markdown = "\n".join(line.rstrip() for line in renderer.to_md(nodes).splitlines()) + "\n"
     if nodes[0] != ("h1", profile["title"]):
         raise ValueError(f"{setting_id}: original full title changed")
     sections = [text for kind, text in nodes if kind == "h2"]
@@ -118,7 +164,9 @@ def prepare_one(profile_path: Path, destination: Path) -> dict:
         "sections": sections,
         "publication_checks": {
             "original_title_preserved": True,
-            "coverage_removed": True,
+            "legacy_heading_field_titles_checked": True,
+            "native_appendix_original_prose_retained": True,
+            "native_content_ledger_validated": True,
             "oracle_interface_label": True,
             "setting_specification_combined": True,
             "compared_quantities_retained_inside_complexity_bracket": True,

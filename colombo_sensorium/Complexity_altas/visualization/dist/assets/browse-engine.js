@@ -27,10 +27,10 @@
     const aliases = [...aliasMap].map(([alias, choices]) => {
       // The generic terms have one explicit semantic dimension. Other
       // genuinely ambiguous aliases remain literal text.
-      if (choices.length > 1 && ['exact', '精确', 'exact oracle'].includes(alias)) {
+      if (choices.length > 1 && ['exact', 'exact oracle'].includes(alias)) {
         choices = choices.filter(option => option.axis === 'ORACLE' && /quality/.test(option.group));
       }
-      if (choices.length > 1 && ['convex', '凸'].includes(alias)) {
+      if (choices.length > 1 && ['convex'].includes(alias)) {
         choices = choices.filter(option => option.axis === 'MODEL' && /convexity/.test(option.group));
       }
       return {alias, choices};
@@ -73,7 +73,7 @@
           // Without a longer recognized negative phrase, a positive suffix
           // must not be extracted from "non convex", "not exact" or the Chinese term for "nonconvex".
           const prefix = normalized.slice(0, start);
-          if (/(?:\b(?:non|not|in)\s+|[非不])$/.test(prefix)) {
+          if (/\b(?:non|not|in)\s+$/.test(prefix)) {
             for (let i = start; i < end; i += 1) blocked[i] = true;
             continue;
           }
