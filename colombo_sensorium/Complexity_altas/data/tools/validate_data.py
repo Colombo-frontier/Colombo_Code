@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import pathlib
+import re
 import sys
 from datetime import datetime, timezone
 
@@ -22,6 +23,228 @@ def load(path):
 
 def hash_file(path):
     return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+
+
+def canonical_hash(value):
+    encoded = json.dumps(value, ensure_ascii=False, sort_keys=True,
+                         separators=(',', ':'), allow_nan=False).encode('utf-8')
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def pointer_tokens(pointer):
+    if not isinstance(pointer, str) or (pointer and not pointer.startswith('/')):
+        raise ValueError('Expected a JSON pointer')
+    if re.search(r'~(?![01])', pointer):
+        raise ValueError('Invalid JSON pointer escape')
+    return [token.replace('~1', '/').replace('~0', '~')
+            for token in pointer[1:].split('/')] if pointer else []
+
+
+def resolve_premise(value, pointer):
+    for token in pointer_tokens(pointer):
+        if isinstance(value, list):
+            if not re.fullmatch(r'0|[1-9][0-9]*', token):
+                raise ValueError('Invalid JSON array index')
+            value = value[int(token)]
+        else:
+            value = value[token]
+    return value
+
+
+def valid_digest(value, length=64):
+    return isinstance(value, str) and re.fullmatch(r'[0-9a-f]{' + str(length) + '}', value) is not None
+
+
+def validate_profile_integrity(profile, key_fields, check, warnings):
+    """Check active scopes and preserved history without recertifying old proofs."""
+    sid = profile['setting_id']
+    comparisons = {row['comparison_id']: row for row in profile.get('comparisons', [])}
+    seen_keys = set()
+    for cid, comparison in comparisons.items():
+        key = comparison.get('comparison_key', {})
+        if not isinstance(key, dict) or not all(field in key for field in key_fields):
+            continue  # The comparison schema reports incomplete keys separately.
+        signature = canonical_hash({field: key[field] for field in key_fields})
+        check('comparison_scope_unique', signature not in seen_keys,
+              sid + '/' + cid + ': duplicate active comparison scope')
+        seen_keys.add(signature)
+
+    history_ids = set()
+    history = profile.get('provenance', {}).get('comparison_history', [])
+    check('comparison_history', isinstance(history, list), sid + ': comparison history must be an array')
+    for entry in history if isinstance(history, list) else []:
+        original = entry.get('comparison') if isinstance(entry, dict) else None
+        if not isinstance(original, dict):
+            check('comparison_history', False, sid + ': missing historical comparison object')
+            continue
+        cid = original.get('comparison_id')
+        check('comparison_history', isinstance(cid, str) and bool(cid)
+              and cid not in comparisons and cid not in history_ids,
+              sid + ': historical comparison ID is missing, duplicated or still active: ' + str(cid))
+        if isinstance(cid, str):
+            history_ids.add(cid)
+        check('comparison_history_hash', entry.get('comparison_sha256') == canonical_hash(original),
+              sid + '/' + str(cid) + ': historical comparison hash mismatch')
+        replacements = entry.get('superseded_by')
+        check('comparison_history', isinstance(replacements, list) and bool(replacements)
+              and all(isinstance(target, str) and target in comparisons for target in replacements),
+              sid + '/' + str(cid) + ': historical comparison must name active successors')
+        check('comparison_history', isinstance(entry.get('relation'), str) and bool(entry['relation'].strip()),
+              sid + '/' + str(cid) + ': historical comparison needs a replacement relation')
+
+    proofs = {row.get('proof_id', row.get('id')): row for row in profile.get('proofs', [])}
+    historical_ids = {pid for pid, proof in proofs.items()
+                      if isinstance(proof.get('lifecycle'), dict)
+                      and proof['lifecycle'].get('state') == 'historical'}
+    for pid, proof in proofs.items():
+        scope = sid + '/' + str(pid)
+        lifecycle = proof.get('lifecycle', {})
+        if not isinstance(lifecycle, dict):
+            check('proof_lifecycle', False, scope + ': lifecycle must be an object')
+            lifecycle = {}
+        state = lifecycle.get('state', 'current')
+        check('proof_lifecycle', state in ('current', 'historical'), scope + ': unknown proof lifecycle state')
+        historical = state == 'historical'
+        if historical:
+            binding = lifecycle.get('premise_binding', {})
+            observed = binding.get('first_observed', {}) if isinstance(binding, dict) else {}
+            check('proof_lifecycle', lifecycle.get('eligible_for_current_bounds') is False,
+                  scope + ': historical proof must be ineligible for current bounds')
+            binding_ok = (isinstance(binding, dict)
+                          and binding.get('mode') == 'historical_unresolved'
+                          and binding.get('verification_status') == 'unresolved_snapshot'
+                          and isinstance(observed, dict)
+                          and valid_digest(observed.get('git_commit'), 40)
+                          and valid_digest(observed.get('profile_sha256'))
+                          and isinstance(binding.get('note'), str) and bool(binding['note'].strip()))
+            check('proof_historical_binding', binding_ok,
+                  scope + ': unresolved history requires an explicit first observation and uncertainty note')
+            successors = lifecycle.get('superseded_by')
+            check('proof_lifecycle', isinstance(successors, list) and bool(successors)
+                  and all(isinstance(target, str) and target in proofs and target not in historical_ids
+                          and target != pid for target in successors),
+                  scope + ': historical proof must name current successor proofs')
+            check('proof_lifecycle', isinstance(lifecycle.get('reason'), str) and bool(lifecycle['reason'].strip()),
+                  scope + ': historical proof needs a retention reason')
+            if binding_ok:
+                warnings.append({'kind': 'unresolved_historical_proof_premises', 'setting_id': sid,
+                                 'proof_id': pid, 'first_observed': observed,
+                                 'disposition': 'Original premise hashes are preserved, not rebound to the current profile. '
+                                                'First observation identifies a retained record, not its missing premise snapshot. '
+                                                'This proof cannot support current bounds.'})
+        premises = proof.get('premises', [])
+        check('proof_premises', isinstance(premises, list), scope + ': premises must be an array')
+        for index, premise in enumerate(premises if isinstance(premises, list) else []):
+            if not isinstance(premise, dict) or 'sha256' not in premise:
+                continue  # Unhashed prose premises make no integrity-binding claim.
+            label = scope + '/premises/' + str(index)
+            pointer = premise.get('pointer')
+            try:
+                pointer_tokens(pointer)
+                well_formed = valid_digest(premise['sha256'])
+            except ValueError:
+                well_formed = False
+            check('proof_premise_binding', well_formed, label + ': invalid pointer or SHA-256')
+            if not well_formed or historical:
+                continue
+            try:
+                value = resolve_premise(profile, pointer)
+            except (KeyError, IndexError, TypeError, ValueError):
+                check('proof_premise_binding', False, label + ': current premise pointer does not resolve')
+            else:
+                check('proof_premise_binding', canonical_hash(value) == premise['sha256'],
+                      label + ': current premise hash mismatch at ' + pointer)
+
+    evidence = {row['id']: row for row in profile.get('evidence', [])}
+    for bound in profile.get('bounds', []):
+        if not (bound.get('included_in_bracket', True) or bound.get('eligible_for_bracket', True)):
+            continue
+        pending = list(bound.get('proof_refs', []))
+        for eid in bound.get('evidence_refs', []):
+            pending.extend(evidence.get(eid, {}).get('proof_refs', []))
+        visited = set()
+        while pending:
+            pid = pending.pop()
+            if pid in visited:
+                continue
+            visited.add(pid)
+            check('current_bound_proof', pid not in historical_ids,
+                  sid + '/' + bound['id'] + ': current bound depends on historical proof ' + pid)
+            proof = proofs.get(pid, {})
+            pending.extend(proof.get('proof_refs', []))
+            pending.extend(proof.get('premise_proof_refs', []))
+    validate_research_targets(profile, key_fields, check)
+
+
+def validate_research_targets(profile, key_fields, check):
+    """Validate declared remaining regions, without deciding symbolic inclusion."""
+    sid = profile['setting_id']
+    comparisons = {row['comparison_id']: row for row in profile.get('comparisons', [])}
+    regimes = {row['id']: row for row in profile.get('regimes', [])}
+    parameters = {row['id'] for row in profile.get('parameters', [])}
+    scope_fields = [field for field in key_fields if field != 'regime_id']
+    for cid, comparison in comparisons.items():
+        if 'research_target' not in comparison:
+            continue
+        label = sid + '/' + cid
+        target = comparison['research_target']
+        check('research_target', isinstance(target, dict), label + ': research target must be an object')
+        if not isinstance(target, dict):
+            continue
+        outer, remaining = target.get('target_regime_ref'), target.get('remaining_regime_ref')
+        check('research_target_links', isinstance(outer, str) and outer in regimes,
+              label + ': target regime does not exist')
+        remaining_exists = isinstance(remaining, str) and remaining in regimes
+        check('research_target_links', remaining_exists and remaining == comparison.get('regime_id'),
+              label + ': remaining regime must be this comparison\'s active regime')
+        check('research_target', target.get('set_operation') == 'difference',
+              label + ': unsupported research-target set operation')
+        predicate = target.get('predicate')
+        check('research_target_predicate', isinstance(predicate, dict)
+              and predicate == comparison.get('predicate')
+              and remaining_exists and predicate == regimes[remaining].get('predicate'),
+              label + ': research target, comparison and remaining regime predicates differ')
+        excluded = target.get('excluded_closed_comparison_refs')
+        check('research_target_links', isinstance(excluded, list) and bool(excluded),
+              label + ': difference must name closed comparisons')
+        for excluded_id in excluded if isinstance(excluded, list) else []:
+            closed = comparisons.get(excluded_id) if isinstance(excluded_id, str) else None
+            check('research_target_links', closed is not None,
+                  label + ': excluded comparison does not exist: ' + str(excluded_id))
+            if closed is None:
+                continue
+            check('research_target_scope', all(comparison.get('comparison_key', {}).get(field)
+                                              == closed.get('comparison_key', {}).get(field)
+                                              for field in scope_fields),
+                  label + ': excluded comparison has another view/guarantee/quantity/resource scope: ' + excluded_id)
+            check('research_target_closed', closed.get('status', {}).get('code') == 'optimal',
+                  label + ': excluded comparison is not certified closed: ' + excluded_id)
+        for _, node in walk(predicate):
+            if not isinstance(node, dict):
+                continue
+            for field, available in (('region_ref', regimes), ('ref', parameters)):
+                if field in node:
+                    value = node[field]
+                    check('research_target_links', isinstance(value, str) and value in available,
+                          label + ': unknown predicate ' + field + ': ' + str(value))
+
+
+def validate_comparison_aliases(aliases, profiles, check):
+    """Legacy identifiers may be historical; navigation targets must be active."""
+    for group, entries in aliases.items():
+        for entry in entries:
+            sid = entry.get('setting_id')
+            if sid not in profiles:
+                continue  # The existing setting-level foreign-key check reports this.
+            active_ids = {row['comparison_id'] for row in profiles[sid]['comparisons']}
+            for field in ('comparison_id', 'comparison_ids', 'new_comparison_ids', 'navigation_default_comparison_id'):
+                if field not in entry or entry[field] is None:
+                    continue
+                targets = entry[field] if isinstance(entry[field], list) else [entry[field]]
+                for target in targets:
+                    check('alias_comparison_links', isinstance(target, str) and target in active_ids,
+                          group + '/' + str(entry.get('legacy_id', entry.get('old_comparison_id')))
+                          + ': alias target is not an active comparison: ' + str(target))
 
 
 def escape(value):
@@ -159,9 +382,9 @@ def validate():
         references = unique_index(active['references'], 'id', sid + '/references')
         proofs = unique_index(active['proofs'], 'proof_id', sid + '/proofs')
         comparisons = unique_index(active['comparisons'], 'comparison_id', sid + '/comparisons')
+        validate_profile_integrity(active, comparison_schema['required'], check, warnings)
         guarantees = {view_id: {guarantee['guarantee_id'] for guarantee in view['guarantees']}
                       for view_id, view in views.items()}
-        comparison_keys = set()
         for cid, comparison in comparisons.items():
             scope = sid + '/' + cid
             key = comparison['comparison_key']
@@ -170,13 +393,6 @@ def validate():
             check('comparison_scope', key['setting_id'] == sid, scope + ': wrong setting in key')
             for name in ['view_id', 'guarantee_id', 'quantity_id', 'resource_projection_id', 'regime_id']:
                 check('comparison_scope', comparison[name] == key[name], scope + ': key disagrees at ' + name)
-            key_tuple = tuple(key[name] for name in comparison_schema['required'])
-            if key_tuple in comparison_keys:
-                warnings.append({'kind':'inherited_comparison_scope_collision','setting_id':sid,
-                                 'comparison_id':cid,'comparison_key':key,
-                                 'disposition':'Source contains both a weaker and a stronger upper-envelope record on the same scope; retain separate original comparison IDs without claiming that the scope key is unique.'})
-            check('comparison_scope', True, '')
-            comparison_keys.add(key_tuple)
             view_id, guarantee_id = key['view_id'], key['guarantee_id']
             check('comparison_links', view_id in views and guarantee_id in guarantees.get(view_id, set()),
                   scope + ': missing view or guarantee')
@@ -270,6 +486,7 @@ def validate():
                         'identity_state': identity.get('matching_state', 'unreviewed')})
 
     aliases = load(DATA / 'registry' / 'aliases.json')
+    validate_comparison_aliases(aliases, source_by_id, check)
     for entries in aliases.values():
         for entry in entries:
             check('alias_links', entry['setting_id'] in source_by_id, 'Alias points outside pilot: ' + repr(entry))

@@ -98,6 +98,8 @@ Choose an algorithm from public parameters, then require $\mathbb{E}\|\nabla\Phi
 
 **Cost convention.** The adopted source lower concerns worst-instance expected stopping cost for the bundled fresh first-order response. No fixed-budget conversion is being assumed.
 
+Historical audit note: BL_SPEC_joint_expected_cost__main__p_zero_query retains its eight original premise hashes. Its exact predecessor premise snapshot has not been recovered; seven hashes differ from the current fields and four already differed in the first-observed 996c941 profile. It is ineligible for current bounds. The active effective-curvature zero-query proof is BL_SPEC_joint_expected_cost__main__proof_universal_curvature_20261122; the new guarded lower has its own independent proof.
+
 **Budget convention.** worst-case over instances of expected stopping/query cost E N_A; not a fixed per-run horizon
 
 ## 2. Notation and parameters

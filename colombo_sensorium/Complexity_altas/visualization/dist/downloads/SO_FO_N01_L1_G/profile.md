@@ -34,7 +34,13 @@ The regional bracket below specifies the quantified gaps and their parameter dep
 
 Find a point satisfying the stationarity criterion specified under the accuracy measure.
 
-$$\min_{x\in \mathbb{R}^d}f(x)$$
+
+
+$$
+\min_{x\in \mathbb{R}^d}f(x)
+$$
+
+
 
 ### Admissible model
 
@@ -46,7 +52,13 @@ Here $\beta$-smoothness means $\|\nabla f(u)-\nabla f(v)\|_2\le\beta\|u-v\|_2$ f
 
 Admissible parameter domain:
 
-$$d\in\mathbb{N}_{\ge1},\quad \beta>0,\quad \Delta>0,\quad \varepsilon>0$$
+
+
+$$
+d\in\mathbb{N}_{\ge1},\quad \beta>0,\quad \Delta>0,\quad \varepsilon>0
+$$
+
+
 
 ### Oracle interface
 
@@ -58,7 +70,13 @@ The unknown object is the objective $f$.
 
 Query points lie in $\mathbb{R}^d$; feedback consists of exact gradients:
 
-$$\nabla f(x)$$
+
+
+$$
+\nabla f(x)
+$$
+
+
 
 All responses are consistent with one fixed function instance. Exact values and derivatives agree across repeated queries at the same point.
 
@@ -70,7 +88,13 @@ The output may be unqueried or constructed from the query history, provided it i
 
 ### Loss or accuracy criterion
 
-$$\|\nabla f(\widehat{x})\|_2$$
+
+
+$$
+\|\nabla f(\widehat{x})\|_2
+$$
+
+
 
 $\varepsilon$ is a gradient-norm tolerance. Expected norm and expected squared norm are different performance requirements.
 
@@ -94,7 +118,13 @@ Interaction is adaptive to the feedback history. Every actual response is charge
 
 Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
 
-$$\forall I,\forall\text{admissible oracle responses},\quad\ell(I,\widehat{x})\le\varepsilon$$
+
+
+$$
+\forall I,\forall\text{admissible oracle responses},\quad\ell(I,\widehat{x})\le\varepsilon
+$$
+
+
 
 The error guarantee holds for every instance; it is not averaged over an input distribution.
 
@@ -108,9 +138,17 @@ Interaction is adaptive to the feedback history. Every actual response is charge
 
 Select an algorithm using the public parameters, and then require the following for every admissible instance and response rule:
 
-$$\forall I,\forall\text{admissible oracle responses},\quad\mathbb{E}[\ell(I,\widehat{x})]\le\varepsilon$$
+
+
+$$
+\forall I,\forall\text{admissible oracle responses},\quad\mathbb{E}[\ell(I,\widehat{x})]\le\varepsilon
+$$
+
+
 
 The probability space includes the algorithm's private randomness. The instance and its admissible oracle law are fixed before randomness is averaged.
+
+Let $D$ be the original normalized regime $d\ge3$, $\beta=\Delta=1$, $0<\varepsilon\le c$; let $H$ be the existing high-dimensional regime $d\ge C\varepsilon^{-2}\log(2+1/\varepsilon)$, with its normalization, and let $S=\{d/\log(2+d)\ge\varepsilon^{-2}\}$. The three sets $D\cap H$, $D\cap H^c\cap S$, and $D\cap H^c\cap S^c$ are disjoint and their union is $D$. The original c4 remains unchanged and covers $D\cap H$. No inclusion $H\subseteq S$ is assumed. Equality is assigned to the closed H or S branch. Only the third set is the remaining research region for this normalized target. On S the b10 lower simplifies to $c\varepsilon^{-2}$. The b3 upper is $C\varepsilon^{-2}$ after absorbing its harmless additive constant since $\varepsilon<1$. Thus the S branch is optimal up to universal constant factors; this is neither an exact query count nor a necessary dimension threshold for optimality. On the remaining branch both b5 and b10 lower-bound the same worst-instance quantity, so their maximum is valid even when their hard instances differ. The current shared AST constant satisfies $0<c<1$ and $\varepsilon\le c$, hence $\varepsilon^2\le c$, as required by b5. For the source theorems, choose a single sufficiently small admissibility constant below all accuracy thresholds, and take the minimum of their positive lower coefficients; this does not equate the original constants or give any unknown theorem constant a numerical value. The displayed U/L is the quantified remaining envelope, and can still be bounded along some slices; no uniformly divergent gap is asserted. This proof rearranges already recorded inequalities and makes no new external lower-bound claim.
 
 ## 2. Notation and parameters
 
@@ -124,7 +162,13 @@ $x_0$: Public initial point satisfying the stated initial-distance or initial-su
 
 $f^\star$: Optimal value of the complete task; the oracle need not return it
 
-$$f^\star=\inf_{x\in \mathbb{R}^d}f(x)$$
+
+
+$$
+f^\star=\inf_{x\in \mathbb{R}^d}f(x)
+$$
+
+
 
 $\mathbb{R}^d$: Real vector space with $d$ coordinates
 
@@ -362,9 +406,35 @@ $$
 
 **Gap or comparison.** $C/c$
 
-### R6 - Normalized regime with $d\ge3$
+### R6 - Closed saturated lower-envelope branch outside the source high-dimensional window
 
-**Region.** $d\ge3,\quad\beta=\Delta=1,\quad\varepsilon\le c$
+**Region.** $d\ge3,\quad\beta=\Delta=1,\quad0<\varepsilon\le c$; $d<C\varepsilon^{-2}\log(2+1/\varepsilon)$; $d/\log(2+d)\ge\varepsilon^{-2}$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q3
+
+**Resource.** Each primitive oracle query costs one call. Every query used in a finite-difference computation is charged separately.
+
+**Status.** Optimal
+
+**Lower bound.** B23
+
+$$
+c\varepsilon^{-2}
+$$
+
+**Upper bound.** B16
+
+$$
+C\varepsilon^{-2}
+$$
+
+**Gap or comparison.** $C/c$
+
+### R7 - Remaining quantified envelope after subtracting proved closed subregions
+
+**Region.** $d\ge3,\quad\beta=\Delta=1,\quad0<\varepsilon\le c$; $d<C\varepsilon^{-2}\log(2+1/\varepsilon)$; $d/\log(2+d)<\varepsilon^{-2}$
 
 **Views.** Randomized / Expected loss
 
@@ -386,7 +456,7 @@ $$
 C\varepsilon^{-2}
 $$
 
-**Gap or comparison.** $\text{displayed upper / displayed lower}$
+**Gap or comparison.** $\frac{C\varepsilon^{-2}}{c\max\{\varepsilon^{-1},\min\{\varepsilon^{-2},d/\log(2+d)\}\}}$
 
 ## 4. Bounds and supporting evidence
 
@@ -410,7 +480,13 @@ $$
 0
 $$
 
-**Conditions.** $$\varepsilon\ge\sqrt{2\beta\Delta}$$
+**Conditions.**
+
+$$
+\varepsilon\ge\sqrt{2\beta\Delta}
+$$
+
+
 
 **Dimension conditions.** $\varepsilon\ge\sqrt{2\beta\Delta}$
 
@@ -434,7 +510,13 @@ $$
 0
 $$
 
-**Conditions.** $$\varepsilon\ge\sqrt{2\beta\Delta}$$
+**Conditions.**
+
+$$
+\varepsilon\ge\sqrt{2\beta\Delta}
+$$
+
+
 
 **Dimension conditions.** $\varepsilon\ge\sqrt{2\beta\Delta}$
 
@@ -458,7 +540,13 @@ $$
 C(1+\beta\Delta/\varepsilon^2)
 $$
 
-**Conditions.** $$d\in\mathbb{N}_{\ge1},\quad \beta>0,\quad \Delta>0,\quad \varepsilon>0$$
+**Conditions.**
+
+$$
+d\in\mathbb{N}_{\ge1},\quad \beta>0,\quad \Delta>0,\quad \varepsilon>0
+$$
+
+
 
 **Dimension conditions.** $d\in\mathbb{N}_{\ge1},\quad \beta>0,\quad \Delta>0,\quad \varepsilon>0$
 
@@ -484,7 +572,13 @@ $$
 
 **Sources.** [1](https://arxiv.org/pdf/2209.07513)
 
-**Conditions.** $$\varepsilon^2\le c\beta\Delta$$
+**Conditions.**
+
+$$
+\varepsilon^2\le c\beta\Delta
+$$
+
+
 
 **Dimension conditions.** $\varepsilon^2\le c\beta\Delta$
 
@@ -510,7 +604,13 @@ $$
 
 **Sources.** [1](https://arxiv.org/pdf/2209.07513)
 
-**Conditions.** $$\varepsilon^2\le c\beta\Delta$$
+**Conditions.**
+
+$$
+\varepsilon^2\le c\beta\Delta
+$$
+
+
 
 **Dimension conditions.** $\varepsilon^2\le c\beta\Delta$
 
@@ -536,7 +636,13 @@ $$
 
 **Sources.** [1](https://arxiv.org/pdf/2209.07513)
 
-**Conditions.** $$\varepsilon^2\le c\beta\Delta$$
+**Conditions.**
+
+$$
+\varepsilon^2\le c\beta\Delta
+$$
+
+
 
 **Dimension conditions.** $\varepsilon^2\le c\beta\Delta$
 
@@ -562,7 +668,13 @@ $$
 
 **Sources.** [2](https://arxiv.org/pdf/2310.09157)
 
-**Conditions.** $$d\ge2,\quad\beta=\Delta=1,\quad\varepsilon\le c$$
+**Conditions.**
+
+$$
+d\ge2,\quad\beta=\Delta=1,\quad\varepsilon\le c
+$$
+
+
 
 **Dimension conditions.** $d\ge2,\quad\beta=\Delta=1,\quad\varepsilon\le c$
 
@@ -588,7 +700,13 @@ $$
 
 **Sources.** [3](https://arxiv.org/pdf/1710.11606)
 
-**Conditions.** $$\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-2}$$
+**Conditions.**
+
+$$
+\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-2}
+$$
+
+
 
 **Dimension conditions.** $\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-2}$
 
@@ -614,7 +732,13 @@ $$
 
 **Sources.** [4](https://proceedings.mlr.press/v313/liu26a.html)
 
-**Conditions.** $$\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-2}\log(2+1/\varepsilon)$$
+**Conditions.**
+
+$$
+\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-2}\log(2+1/\varepsilon)
+$$
+
+
 
 **Dimension conditions.** $\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-2}\log(2+1/\varepsilon)$
 
@@ -640,7 +764,13 @@ $$
 
 **Sources.** [3](https://arxiv.org/pdf/1710.11606)
 
-**Conditions.** $$\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-4}\log(2+1/\varepsilon)$$
+**Conditions.**
+
+$$
+\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-4}\log(2+1/\varepsilon)
+$$
+
+
 
 **Dimension conditions.** $\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-4}\log(2+1/\varepsilon)$
 
@@ -666,7 +796,13 @@ $$
 
 **Sources.** [3](https://arxiv.org/pdf/1710.11606)
 
-**Conditions.** $$\beta=\Delta=1,\quad0<\varepsilon\le c$$
+**Conditions.**
+
+$$
+\beta=\Delta=1,\quad0<\varepsilon\le c
+$$
+
+
 
 **Dimension conditions.** $\beta=\Delta=1,\quad0<\varepsilon\le c$
 
@@ -692,7 +828,13 @@ $$
 
 **Sources.** [4](https://proceedings.mlr.press/v313/liu26a.html)
 
-**Conditions.** $$\beta=\Delta=1,\quad0<\varepsilon\le c$$
+**Conditions.**
+
+$$
+\beta=\Delta=1,\quad0<\varepsilon\le c
+$$
+
+
 
 **Dimension conditions.** $\beta=\Delta=1,\quad0<\varepsilon\le c$
 
@@ -718,7 +860,13 @@ $$
 
 **Sources.** [3](https://arxiv.org/pdf/1710.11606)
 
-**Conditions.** $$\beta=\Delta=1,\quad0<\varepsilon\le c$$
+**Conditions.**
+
+$$
+\beta=\Delta=1,\quad0<\varepsilon\le c
+$$
+
+
 
 **Dimension conditions.** $\beta=\Delta=1,\quad0<\varepsilon\le c$
 
@@ -742,7 +890,13 @@ $$
 0
 $$
 
-**Conditions.** $$\varepsilon\ge\sqrt{2\beta\Delta}$$
+**Conditions.**
+
+$$
+\varepsilon\ge\sqrt{2\beta\Delta}
+$$
+
+
 
 **Dimension conditions.** $\varepsilon\ge\sqrt{2\beta\Delta}$
 
@@ -766,7 +920,13 @@ $$
 0
 $$
 
-**Conditions.** $$\varepsilon\ge\sqrt{2\beta\Delta}$$
+**Conditions.**
+
+$$
+\varepsilon\ge\sqrt{2\beta\Delta}
+$$
+
+
 
 **Dimension conditions.** $\varepsilon\ge\sqrt{2\beta\Delta}$
 
@@ -790,7 +950,13 @@ $$
 C(1+\beta\Delta/\varepsilon^2)
 $$
 
-**Conditions.** $$d\in\mathbb{N}_{\ge1},\quad \beta>0,\quad \Delta>0,\quad \varepsilon>0$$
+**Conditions.**
+
+$$
+d\in\mathbb{N}_{\ge1},\quad \beta>0,\quad \Delta>0,\quad \varepsilon>0
+$$
+
+
 
 **Dimension conditions.** $d\in\mathbb{N}_{\ge1},\quad \beta>0,\quad \Delta>0,\quad \varepsilon>0$
 
@@ -816,7 +982,13 @@ $$
 
 **Sources.** [1](https://arxiv.org/pdf/2209.07513)
 
-**Conditions.** $$d=1,\quad\varepsilon^2\le c\beta\Delta$$
+**Conditions.**
+
+$$
+d=1,\quad\varepsilon^2\le c\beta\Delta
+$$
+
+
 
 **Dimension conditions.** $d=1,\quad\varepsilon^2\le c\beta\Delta$
 
@@ -842,7 +1014,13 @@ $$
 
 **Sources.** [1](https://arxiv.org/pdf/2209.07513)
 
-**Conditions.** $$\varepsilon^2\le c\beta\Delta$$
+**Conditions.**
+
+$$
+\varepsilon^2\le c\beta\Delta
+$$
+
+
 
 **Dimension conditions.** $\varepsilon^2\le c\beta\Delta$
 
@@ -868,7 +1046,13 @@ $$
 
 **Sources.** [1](https://arxiv.org/pdf/2209.07513)
 
-**Conditions.** $$\varepsilon^2\le c\beta\Delta$$
+**Conditions.**
+
+$$
+\varepsilon^2\le c\beta\Delta
+$$
+
+
 
 **Dimension conditions.** $\varepsilon^2\le c\beta\Delta$
 
@@ -894,7 +1078,13 @@ $$
 
 **Sources.** [5](https://arxiv.org/pdf/2610.02791)
 
-**Conditions.** $$d=2,\quad\beta=\Delta=1,\quad\varepsilon\le c$$
+**Conditions.**
+
+$$
+d=2,\quad\beta=\Delta=1,\quad\varepsilon\le c
+$$
+
+
 
 **Dimension conditions.** $d=2,\quad\beta=\Delta=1,\quad\varepsilon\le c$
 
@@ -920,7 +1110,13 @@ $$
 
 **Sources.** [4](https://proceedings.mlr.press/v313/liu26a.html)
 
-**Conditions.** $$\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-2}\log(2+1/\varepsilon)$$
+**Conditions.**
+
+$$
+\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-2}\log(2+1/\varepsilon)
+$$
+
+
 
 **Dimension conditions.** $\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-2}\log(2+1/\varepsilon)$
 
@@ -946,7 +1142,13 @@ $$
 
 **Sources.** [3](https://arxiv.org/pdf/1710.11606)
 
-**Conditions.** $$\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-4}\log(2+1/\varepsilon)$$
+**Conditions.**
+
+$$
+\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-4}\log(2+1/\varepsilon)
+$$
+
+
 
 **Dimension conditions.** $\beta=\Delta=1,\quad\varepsilon\le c,\quad d\ge C\varepsilon^{-4}\log(2+1/\varepsilon)$
 
@@ -972,7 +1174,13 @@ $$
 
 **Sources.** [4](https://proceedings.mlr.press/v313/liu26a.html)
 
-**Conditions.** $$\beta=\Delta=1,\quad0<\varepsilon\le c$$
+**Conditions.**
+
+$$
+\beta=\Delta=1,\quad0<\varepsilon\le c
+$$
+
+
 
 **Dimension conditions.** $\beta=\Delta=1,\quad0<\varepsilon\le c$
 
@@ -998,7 +1206,13 @@ $$
 
 **Sources.** [3](https://arxiv.org/pdf/1710.11606)
 
-**Conditions.** $$\beta=\Delta=1,\quad0<\varepsilon\le c$$
+**Conditions.**
+
+$$
+\beta=\Delta=1,\quad0<\varepsilon\le c
+$$
+
+
 
 **Dimension conditions.** $\beta=\Delta=1,\quad0<\varepsilon\le c$
 
@@ -1017,9 +1231,13 @@ $$
 **Algorithm scope.** Deterministic upper witnesses and elementary indistinguishability lower bounds.
 
 Global $\beta$-smoothness and boundedness below imply
+
+
 $$
 f(x-\nabla f(x)/\beta)\le f(x)-\|\nabla f(x)\|^2/(2\beta).
 $$
+
+
 Thus $\|\nabla f(x_0)\|^2\le2\beta\Delta$. Summing the decrease and returning the queried point with least gradient norm gives $O(1+\beta\Delta/\epsilon^2)$ calls; values are unnecessary. If the initial gradient bound already meets the tolerance, output $x_0$ without querying.
 
 A globally $\beta$-Lipschitz gradient gives Hessian norm at most $\beta$, so the second-order zero-query regime additionally requires permitted negative curvature at least $\beta$.
@@ -1040,6 +1258,12 @@ so $\|\mathcal G_\beta(x_0)\|^2\le2\beta\Delta$.
 These bounds certify the corresponding zero-query outputs; the output contract does not require computing the residual.
 
 **Limits of the argument.** Each endpoint uses its own residual and model; the metrics are not interchangeable.
+
+### A2 - Subtract certified closed subregions before selecting a research target
+
+An explicit disjoint partition of the original d>=3 normalized comparison domain.
+
+Let $D$ be the original normalized regime $d\ge3$, $\beta=\Delta=1$, $0<\varepsilon\le c$; let $H$ be the existing high-dimensional regime $d\ge C\varepsilon^{-2}\log(2+1/\varepsilon)$, with its normalization, and let $S=\{d/\log(2+d)\ge\varepsilon^{-2}\}$. The three sets $D\cap H$, $D\cap H^c\cap S$, and $D\cap H^c\cap S^c$ are disjoint and their union is $D$. The original c4 remains unchanged and covers $D\cap H$. No inclusion $H\subseteq S$ is assumed. Equality is assigned to the closed H or S branch. Only the third set is the remaining research region for this normalized target. On S the b10 lower simplifies to $c\varepsilon^{-2}$. The b3 upper is $C\varepsilon^{-2}$ after absorbing its harmless additive constant since $\varepsilon<1$. Thus the S branch is optimal up to universal constant factors; this is neither an exact query count nor a necessary dimension threshold for optimality. On the remaining branch both b5 and b10 lower-bound the same worst-instance quantity, so their maximum is valid even when their hard instances differ. The current shared AST constant satisfies $0<c<1$ and $\varepsilon\le c$, hence $\varepsilon^2\le c$, as required by b5. For the source theorems, choose a single sufficiently small admissibility constant below all accuracy thresholds, and take the minimum of their positive lower coefficients; this does not equate the original constants or give any unknown theorem constant a numerical value. The displayed U/L is the quantified remaining envelope, and can still be bounded along some slices; no uniformly divergent gap is asserted. This proof rearranges already recorded inequalities and makes no new external lower-bound claim.
 
 ## References
 

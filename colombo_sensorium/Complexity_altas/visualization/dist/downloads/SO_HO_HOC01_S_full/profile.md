@@ -8,6 +8,8 @@ Solve $\min_{x\in \mathbb{R}^d}f(x)$ to obtain an objective-value approximation 
 
 **Status.** Logarithmic gap present; Bounds missing
 
+The regional bracket below specifies the quantified gaps and their parameter dependence.
+
 **TASK tags.** formulation: Global minimization; task family: Single objective
 
 **MODEL tags.** convexity: Convex; geometry: Euclidean ball; geometry: Full space; smoothness: Kth derivative lipschitz
@@ -34,7 +36,13 @@ Solve $\min_{x\in \mathbb{R}^d}f(x)$ to obtain an objective-value approximation 
 
 The objective $f:\mathbb{R}^d\to\mathbb{R}$ is convex and $C^k$, with $k\ge2$.
 
-$$\|D^{k}f(x)-D^{k}f(y)\|_{\mathrm{op},2}\le M_k\|x-y\|_{2}.$$
+
+
+$$
+\|D^{k}f(x)-D^{k}f(y)\|_{\mathrm{op},2}\le M_k\|x-y\|_{2}.
+$$
+
+
 
 There exists a global minimizer $x^*$ satisfying $\|x^*-x_0\|_2\le R$.
 
@@ -56,7 +64,13 @@ The output may be an unqueried point, a feasible average of past iterates, or an
 
 The base error is
 
-$$\mathcal{E}(\widehat{x})=f(\widehat{x})-f^*.$$
+
+
+$$
+\mathcal{E}(\widehat{x})=f(\widehat{x})-f^*.
+$$
+
+
 
 Here $f^*=\inf_{x\in \mathbb{R}^d}f(x)$. The lower-boundedness or attainment assumption makes this error finite and nonnegative.
 
@@ -80,7 +94,13 @@ Information is acquired adaptively in query order. Parallel submission does not 
 
 Choose one algorithm from the public inputs, then require its guarantee separately for every admissible instance and oracle law.
 
-$$f(\widehat{x})-f^*\le \varepsilon_f.$$
+
+
+$$
+f(\widehat{x})-f^*\le \varepsilon_f.
+$$
+
+
 
 The running-cost guarantee is specified separately under RESOURCE.
 
@@ -94,11 +114,19 @@ Information is acquired adaptively in query order. Parallel submission does not 
 
 Choose one algorithm from the public inputs, then require its guarantee separately for every admissible instance and oracle law.
 
-$$\Pr\!\left[f(\widehat{x})-f^*\le \varepsilon_f\right]\ge\frac23.$$
+
+
+$$
+\Pr\!\left[f(\widehat{x})-f^*\le \varepsilon_f\right]\ge\frac23.
+$$
+
+
 
 Expectation or probability is evaluated after fixing the instance; randomness comes from the algorithm's private random seed.
 
 The running-cost guarantee is specified separately under RESOURCE.
+
+The sole current positive-parameter bracket is randomized c4, with upper $O_k(1+\min\{Q_f^{a_k},d\log(2+Q_f)\})$. The weaker randomized c1 is retained in provenance.comparison_history, routes to c4, and is excluded from active comparisons, summary counts and research tasks. Its source bound b1 remains available and contributes to the minimum envelope; no lower bound has been added.
 
 ## 2. Notation and parameters
 
@@ -108,13 +136,25 @@ $\mathbb{R}^d$: Real coordinate space; vectors use the Euclidean norm unless oth
 
 $\langle u,v\rangle,\ \|u\|_2$: Euclidean inner product and norm.
 
-$$\langle u,v\rangle=u^\top v,\qquad\|u\|_2=\sqrt{\langle u,u\rangle}.$$
+
+
+$$
+\langle u,v\rangle=u^\top v,\qquad\|u\|_2=\sqrt{\langle u,u\rangle}.
+$$
+
+
 
 $D^jf(x),\ \nabla f(x),\ \nabla^2f(x)$: Fréchet derivative of order $j$, gradient and Hessian. **Domain:** $j\in\{0,\ldots,k\}$ and $D^0f=f$.
 
 $\|T\|_{\mathrm{op}},\ \|T\|_{\mathrm{op},2}$: Induced operator norm of a Euclidean multilinear tensor; the spectral norm for matrices.
 
-$$\|T\|_{\mathrm{op}}=\|T\|_{\mathrm{op},2}=\sup_{\|u_1\|_2,\ldots,\|u_j\|_2\le1}|T[u_1,\ldots,u_j]|.$$
+
+
+$$
+\|T\|_{\mathrm{op}}=\|T\|_{\mathrm{op},2}=\sup_{\|u_1\|_2,\ldots,\|u_j\|_2\le1}|T[u_1,\ldots,u_j]|.
+$$
+
+
 
 $\mathcal{E}$: Base error defined in the metric specification; expectation or probability aggregation is imposed by the guarantee.
 
@@ -130,11 +170,23 @@ $c,C$: Positive universal constants without assigned numerical values; a subscri
 
 $J_{k}f(x)$: Function value and the complete tuple of derivatives from order one through the specified maximum order.
 
-$$J_{k}f(x)=(f(x),Df(x),\ldots,D^{k}f(x)).$$
+
+
+$$
+J_{k}f(x)=(f(x),Df(x),\ldots,D^{k}f(x)).
+$$
+
+
 
 $f,f^*$: Unknown objective and its global infimum over the specified feasible domain.
 
-$$f^*=\inf_{x\in \mathbb{R}^d}f(x).$$
+
+
+$$
+f^*=\inf_{x\in \mathbb{R}^d}f(x).
+$$
+
+
 
 $d$: Ambient dimension; dimension requirements are stated separately for each bound. **Domain:** $d\in\mathbb{N}_{+}$.
 
@@ -148,13 +200,25 @@ $\varepsilon_f$: Objective-gap tolerance **Domain:** $\varepsilon_f>0$.
 
 $a_k$: Complexity exponent associated with the highest-order regularity. **Domain:** $a_k>0$.
 
-$$a_k=\frac{2}{3\,k+1}.$$
+
+
+$$
+a_k=\frac{2}{3\,k+1}.
+$$
+
+
 
 $C_{k}$: Sufficient window constants depending only on the fixed orders or exponents in their subscripts; existence is asserted without numerical values. **Domain:** $C_{k}>1$.
 
 $Q_f$: Dimensionless ratio formed from the highest-order regularity, localization radius, and objective-value accuracy. **Domain:** $Q_f\ge0$.
 
-$$Q_f=\frac{M_k\,((R)^{k+1})}{\varepsilon_f}.$$
+
+
+$$
+Q_f=\frac{M_k\,((R)^{k+1})}{\varepsilon_f}.
+$$
+
+
 
 $\mathbb{E},\Pr$: Expectation and probability after fixing the instance; their randomness sources are specified by the guarantee.
 
@@ -359,26 +423,6 @@ $$
 **Comparison argument.** The finite-dimensional argument treats legal queries, boundary minimizers, and arbitrary unqueried outputs separately for each domain. Compare the two verified envelopes according to the relative sizes of d and Q^a.
 
 ### R6 - Positive-parameter domain
-
-**Region.** $M_k,R,\varepsilon_f>0,\ d\ge1$
-
-**Views.** Randomized
-
-**Quantity.** Q3
-
-**Resource.** Each complete jet costs one unit, under a fixed worst-case call budget. Tensor operations, linear algebra, and global solution of known regularized models are free; this is not an arithmetic-time complexity measure.
-
-**Status.** Lower bound missing
-
-**Lower bound.** No admitted bound for this comparison
-
-**Upper bound.** B9
-
-$$
-O_k(1+Q_f^{a_k})
-$$
-
-### R7 - Positive-parameter domain
 
 **Region.** $M_k,R,\varepsilon_f>0,\ d\ge1$
 
@@ -735,29 +779,70 @@ $$
 For fixed $s=k+\nu>2$, the construction gives deterministic lower bounds for objective accuracy and gradient norm, including arbitrary unqueried outputs.
 
 For $N\ge2$, define
-$$h_N(z)=\frac1s\left(\sum_{i=1}^{N-1}|z_i-z_{i+1}|^s+|z_N|^s\right)-z_1.$$
+
+
+$$
+h_N(z)=\frac1s\left(\sum_{i=1}^{N-1}|z_i-z_{i+1}|^s+|z_N|^s\right)-z_1.
+$$
+
+
 Let $A$ be the forward-difference matrix with a terminal row. Its Euclidean operator norm is at most two. The first $k$ derivatives of $|u|^s/s$ vanish at zero, and its kth derivative has a $\nu$-Hölder modulus depending only on $k,\nu$. Applying Hölder's inequality with exponents $s/\nu,s,\ldots,s$ gives
-$$|[D^kh_N(z)-D^kh_N(w)][u_1,\ldots,u_k]|
-\le H_{k,\nu}\|z-w\|_2^\nu\prod_j\|u_j\|_2,$$
+
+
+$$
+|[D^kh_N(z)-D^kh_N(w)][u_1,\ldots,u_k]|
+\le H_{k,\nu}\|z-w\|_2^\nu\prod_j\|u_j\|_2,
+$$
+
+
 with $H_{k,\nu}$ independent of $N$.
 
 The minimizer is $z^*=(N,N-1,\ldots,1)$, with
-$$h_N(0)-h_N(z^*)=(s-1)N/s,\qquad
-\|z^*\|^2=N(N+1)(2N+1)/6.$$
+
+
+$$
+h_N(0)-h_N(z^*)=(s-1)N/s,\qquad
+\|z^*\|^2=N(N+1)(2N+1)/6.
+$$
+
+
 If $z_{t+1}=\cdots=z_N=0$, then the remaining chain gives
-$$h_N(z)-h_N(z^*)\ge(s-1)(N-t)/s,\qquad
-\|\nabla h_N(z)\|\ge1/\sqrt{t+1}.$$
+
+
+$$
+h_N(z)-h_N(z^*)\ge(s-1)(N-t)/s,\qquad
+\|\nabla h_N(z)\|\ge1/\sqrt{t+1}.
+$$
+
+
 For the gradient inequality, the first $t+1$ gradient coordinates sum to $-1$, and Cauchy–Schwarz applies.
 
 For any deterministic adaptive algorithm making $T$ queries, select orthonormal chain directions successively, orthogonal to previous directions and the query displacements seen so far. Vanishing derivatives of unrevealed terms ensure that each complete jet exposes at most the next direction. After the output is determined, choose the remaining hidden directions orthogonal to that output too. The sufficient dimension $d\ge N+T+1$ leaves room for these choices. The final function
-$$f(x)=\alpha h_N(V^\top(x-x_0)/b)$$
+
+
+$$
+f(x)=\alpha h_N(V^\top(x-x_0)/b)
+$$
+
+
 is one fixed admissible instance consistent with the entire transcript. This construction does not select a separate instance after seeing a randomized algorithm's private seed.
 
 For a radius promise, take $b=R/\|z^*\|$ and $\alpha=M_{k,\nu}b^s/H_{k,\nu}$. Choosing $N=2T+2$ for objective gap or $N=T+2$ for gradient norm gives
-$$\operatorname{gap}(T)\ge\frac{c_{k,\nu}M_{k,\nu}R^s}{(T+1)^{(3s-2)/2}},\qquad
-\operatorname{grad}_R(T)\ge\frac{c_{k,\nu}M_{k,\nu}R^{s-1}}{(T+1)^{(3s-2)/2}}.$$
+
+
+$$
+\begin{aligned}&\operatorname{gap}(T)\ge\frac{c_{k,\nu}M_{k,\nu}R^s}{(T+1)^{(3s-2)/2}},\\[3pt]&\operatorname{grad}_R(T)\ge\frac{c_{k,\nu}M_{k,\nu}R^{s-1}}{(T+1)^{(3s-2)/2}}.\end{aligned}
+$$
+
+
 For an initial-gap promise, set $\alpha=\Delta s/((s-1)N)$ and $b=(\alpha H_{k,\nu}/M_{k,\nu})^{1/s}$. Then
-$$\operatorname{grad}_\Delta(T)\ge\frac{c_{k,\nu}M_{k,\nu}^{1/s}\Delta^{(s-1)/s}}{(T+1)^{(3s-2)/(2s)}}.$$
+
+
+$$
+\operatorname{grad}_\Delta(T)\ge\frac{c_{k,\nu}M_{k,\nu}^{1/s}\Delta^{(s-1)/s}}{(T+1)^{(3s-2)/(2s)}}.
+$$
+
+
 Inverting these inequalities yields the linked bounds with a sufficient dimension proportional to one plus the complexity scale. The minimizer lies in the localization ball, so the same hard subclass is admissible for ball-restricted optimization.
 
 **Limits of the argument.** The mapped bound retains its complete model, oracle, algorithm view, guarantee, quantity, resource projection, and parameter-region conditions. This argument does not enlarge that scope.
@@ -793,7 +878,13 @@ If both a global PL constant $\mu$ and a gradient-Lipschitz upper bound $\beta$ 
 The convex high-order proximal analysis transfers to a public proper closed convex term when the declared auxiliary interface solves known composite models globally.
 
 For $F=f+\psi$, solve the known model
-$$T_k(f;x,y)+\psi(y)+CM\|y-x\|^s.$$
+
+
+$$
+T_k(f;x,y)+\psi(y)+CM\|y-x\|^s.
+$$
+
+
 At a global model minimizer y, model optimality supplies a compatible $v_\psi\in\partial\psi(y)$. Then $v=\nabla f(y)+v_\psi$ is a subgradient of F, and the residual relative to the model's regularization gradient is exactly the Taylor-gradient error of f. The subgradient support inequality and Bregman three-point identity used in the convex accelerated framework therefore remain valid. Mirror subproblems also stay in the effective domain of $\psi$, and queries are convex combinations of known feasible points, preserving ball-restricted access.
 
 This transfer requires global solution of the known high-order composite model and mirror subproblems, including a compatible subgradient or normal-cone selection. An ordinary projection, ordinary proximal map, or linear-minimization oracle alone does not automatically supply that capability. Unknown objective values or gradients requested at candidate points cost additional complete jets; at most a constant number per iteration preserves the stated order. The primary theorem's phrase 'one highest-order call per iteration' does not make other unknown-function information free.
@@ -815,24 +906,54 @@ For fixed $k\ge2$, $R,M_k>0$, complete jets give $O_k(1+d\log(2+M_kR^{k+1}/\vare
 For unrestricted queries with a global minimizer within R of $x_0$, use the internal ball $B=B_2(x_0,2R)$. For ball-restricted optimization, use $B=B_2(x_0,R)$ itself. The second case permits a constrained boundary minimizer and never queries the larger ball. Let b be the radius of B.
 
 Query one jet at $x_0$ and define
-$$U(y)=T_k(f;x_0,y)+\frac{kM_k}{(k+1)!}\|y-x_0\|^{k+1}.$$
+
+
+$$
+U(y)=T_k(f;x_0,y)+\frac{kM_k}{(k+1)!}\|y-x_0\|^{k+1}.
+$$
+
+
 The value remainder gives $0\le U(y)-f(y)\le M_k\|y-x_0\|^{k+1}/k!$. The Hessian remainder gives
-$$\nabla^2T_k(y)\succeq-\frac{M_k}{(k-1)!}\|y-x_0\|^{k-1}I.$$
+
+
+$$
+\nabla^2T_k(y)\succeq-\frac{M_k}{(k-1)!}\|y-x_0\|^{k-1}I.
+$$
+
+
 The regularizer's Hessian contains the opposite scalar-matrix term plus a positive semidefinite rank-one term. Thus U is convex on B, including the continuous extension at $x_0$. This argument uses only segments within the legal ball.
 
 Set $\delta_0=M_kb^{k+1}/k!$, $u=\min_B U$, and $C_0=B\cap\{U\le u+2\delta_0\}$. These are known after one jet and can be computed through free internal geometry. An optimum $x^*$ lies in $C_0$, and every z in $C_0$ satisfies $f(z)-f^*\le3\delta_0$. The body is full-dimensional even if $x^*$ lies on the boundary: move a small positive distance from $x^*$ toward any interior point of B. Continuity preserves the strict U-sublevel inequality, producing an interior ball in $C_0$. No quantitative inradius bound is needed.
 
 For $0<\varepsilon_f<3\delta_0$, let $\lambda=\varepsilon_f/(3\delta_0)$ and $K_\varepsilon=\{y\in C_0:f(y)-f^*\le\varepsilon_f\}$. Convexity implies
-$$x^*+\lambda(C_0-x^*)\subseteq K_\varepsilon,\qquad
-\operatorname{vol}(K_\varepsilon)\ge\lambda^d\operatorname{vol}(C_0).$$
+
+
+$$
+x^*+\lambda(C_0-x^*)\subseteq K_\varepsilon,\qquad
+\operatorname{vol}(K_\varepsilon)\ge\lambda^d\operatorname{vol}(C_0).
+$$
+
+
 This affine volume formula holds equally for boundary $x^*$.
 
 At the centroid $c_t$ of $C_t$, query a complete jet. A zero gradient certifies optimality. Otherwise retain the halfspace $\langle\nabla f(c_t),y-c_t\rangle\le0$. Grünbaum's centroid theorem ensures that each cut leaves at most $\rho=1-e^{-1}$ of the previous volume. Queries remain in B. If every queried centroid has gap greater than $\varepsilon_f$, convexity makes every cut retain all of $K_{\varepsilon}$. Consequently $\lambda^d\le\rho^N$, a contradiction once
-$$N>\frac{d\log(3\delta_0/\varepsilon_f)}{-\log\rho}.$$
+
+
+$$
+N>\frac{d\log(3\delta_0/\varepsilon_f)}{-\log\rho}.
+$$
+
+
 Run this public fixed number of iterations and return the queried point with smallest exact value. No knowledge of $f^*$ or free success test is needed. If $\varepsilon_f\ge\delta_0$, the minimizer of U already meets the target after the initial jet.
 
 This proves the displayed finite-dimensional bound. Taking the minimum with the applicable accelerated tensor upper bound gives
-$$O_k\left(1+\min\{Q^{2/(3k+1)},d\log(2+Q)\}\right),\qquad Q=M_kR^{k+1}/\varepsilon_f.$$
+
+
+$$
+O_k\left(1+\min\{Q^{2/(3k+1)},d\log(2+Q)\}\right),\qquad Q=M_kR^{k+1}/\varepsilon_f.
+$$
+
+
 For ball-restricted tensor acceleration, the public-domain composite transfer must also be permitted. The centroid branch itself does not depend on that transfer.
 
 **Limits of the argument.** The mapped bound retains its complete model, oracle, algorithm view, guarantee, quantity, resource projection, and parameter-region conditions. This argument does not enlarge that scope.
@@ -850,14 +971,26 @@ The deterministic complete-jet lower bound is $\Omega_k(1+\min\{d,Q^{2/(3k+1)}\}
 Use the convex chain with $s=k+1$ and $N=2T+2$. Its kth-derivative Lipschitz modulus is at most $H_k=2^{k+1}k!$, independent of N, and its minimizer has norm at most $N^{3/2}$. The adaptive orthogonal construction, including the final unqueried output, needs only $d\ge N+T+1=3T+3$.
 
 Scale with $b=R/\|z^*\|$ and $\alpha=M_kb^{k+1}/H_k$. The final fixed instance has a global minimizer at distance exactly R, so it belongs both to the unrestricted localization class and to the ball-domain hard subclass. Its output gap is at least
-$$\gamma_k\frac{M_kR^{k+1}}{(T+1)^{(3k+1)/2}},\qquad
-\gamma_k=\frac{k}{2(k+1)H_k2^{(3k+1)/2}}.$$
+
+
+$$
+\gamma_k\frac{M_kR^{k+1}}{(T+1)^{(3k+1)/2}},\qquad
+\gamma_k=\frac{k}{2(k+1)H_k2^{(3k+1)/2}}.
+$$
+
+
 Choose T as a sufficiently small k-dependent multiple of $\min\{d,Q^{2/(3k+1)}\}$, rounded down. Whenever that minimum is sufficiently large, both the dimension condition and failure inequality hold.
 
 For $d=1,2$ or a bounded minimum, use two translated positive quadratics with minimizers at $x_0\pm R e_1$ and enough common curvature to make their acceptable sets disjoint. Their kth-derivative Lipschitz modulus is zero, so they satisfy every nonnegative $M_k$ budget. At least one query is necessary. This fills the small-dimension and small-budget endpoints and yields the full lower bound with its additive one-query term.
 
 With the finite-dimensional upper bound, the ratio is at most a constant times
-$$\frac{1+\min\{Q^{2/(3k+1)},d\log(2+Q)\}}{1+\min\{Q^{2/(3k+1)},d\}}.$$
+
+
+$$
+\frac{1+\min\{Q^{2/(3k+1)},d\log(2+Q)\}}{1+\min\{Q^{2/(3k+1)},d\}}.
+$$
+
+
 It is constant in the sufficient region $d\ge Q^{2/(3k+1)}$ and at most logarithmic elsewhere. The proof does not show that the logarithm is necessary, nor does it supply the same truncation lower bound for randomized algorithms.
 
 **Limits of the argument.** The mapped bound retains its complete model, oracle, algorithm view, guarantee, quantity, resource projection, and parameter-region conditions. This argument does not enlarge that scope.
