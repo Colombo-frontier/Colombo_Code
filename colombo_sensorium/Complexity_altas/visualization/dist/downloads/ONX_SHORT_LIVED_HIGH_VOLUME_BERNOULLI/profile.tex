@@ -1,0 +1,503 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Short-lived high-volume Bernoulli bandits with bounded-density priors\par}\vspace{5pt}
+
+
+\textbf{Setting ID.} \texttt{ONX\_\allowbreak{}SHORT\_\allowbreak{}LIVED\_\allowbreak{}HIGH\_\allowbreak{}VOLUME\_\allowbreak{}BERNOULLI}
+
+
+
+Online learning and bandits
+
+
+
+Long-run Bayesian average loss with random arriving arms, finite lifetimes, and entire-round batched feedback.
+
+
+
+\textbf{Status.} Logarithmic gap
+
+
+
+\textbf{TASK tags.} solution concept: Short lived bayesian bandit; task family: Online bandit
+
+
+
+\textbf{ORACLE tags.} feedback quality: Stochastic bernoulli; operation: Batched bernoulli rewards; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+
+
+\textbf{ALGORITHMS tags.} randomization: Private randomness allowed
+
+
+
+\textbf{GUARANTEE tags.} quantifier: Algorithm before instance
+
+
+
+\textbf{RESOURCE tags.} measure: Arrivals per round; measure: Lifetime; measure: Plays per round
+
+
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+
+
+\needspace{4\baselineskip}\subsection{Task}
+
+
+Minimize long-run Bayesian average loss relative to the best currently alive arm in a streaming short-lived high-volume bandit.
+
+
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+
+
+At the start of every calendar round t, a new disjoint cohort A\_t of k arms arrives. An arm born at t remains available through t+w inclusive. Thus there are w+1 alive cohorts after initialization and w useful feedback opportunities before its last allocation.
+
+
+
+Each arm mean is drawn independently from a distribution D on [0,1]. Conditional on all means, rewards are independent Bernoulli draws across arms and plays. The prior density satisfies \AtlasInlineMath{c_1\le f(u)\le c_2} almost everywhere, where \AtlasInlineMath{0<c_1\le1\le c_2<\infty}. Arrival identities and times contain no mean information. The parameters w,c\_1,c\_2 are fixed for the rate statements.
+
+
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+
+
+At each round the policy chooses nonnegative integer allocations \AtlasInlineMath{\pi_t(a)} to alive arms, with \AtlasInlineMath{\sum_{a\in\mathcal A_t}\pi_t(a)=n}. The entire allocation is measurable before any reward from that round is revealed. All rewards from these n plays are revealed together afterward; no within-round adaptation or stopping is permitted.
+
+
+
+The values n,k,w,c\_1,c\_2 are public. The policy may be given D; the upper policy uses only its density bounds, and the lower bound holds even when D is the known uniform prior. The arm means are hidden.
+
+
+
+\needspace{4\baselineskip}\subsection{Output}
+
+
+The output is the executed sequence of batch allocations. Exactly n plays must be assigned each round, always to arms that are alive.
+
+
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+
+Let \AtlasInlineMath{\mu_t^*=\max_{a\in\mathcal A_t}\mu_a}. For a finite evaluation horizon T, \AtlasInlineMath{\mathcal L_{n,T}(\pi;D)=(nT)^{-1}\mathbb E_D\sum_{t=1}^T\sum_{a\in\mathcal A_t}\pi_t(a)(\mu_t^*-\mu_a)}. The expectation includes the prior, rewards, and policy randomness.
+
+
+
+The long-run risk uses \AtlasInlineMath{\overline{\mathcal L}_n(\pi;D)=\limsup_{T\to\infty}\mathcal L_{n,T}(\pi;D)}. Define \AtlasInlineMath{\mathcal L_n^*(c_1,c_2)=\inf_\pi\sup_{D\in\mathfrak D(c_1,c_2)}\overline{\mathcal L}_n(\pi;D)}, allowing a policy to take D as input. The expectation precedes the limit superior; this is not an expectation-of-limsup criterion.
+
+
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+
+
+The resource parameters are n plays per calendar round, k arriving arms per round, and lifetime w+1 rounds. There are nT rewards over a finite T-round evaluation. The asymptotic rate sends n to infinity at fixed w,c\_1,c\_2, with k possibly depending on n; T is sent to infinity inside the long-run performance criterion.
+
+
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+
+
+All randomized policies with allocations measurable before current-round feedback are allowed. Arms may be sampled multiple times in a round, but allocations cannot adapt within that round. The prior may be known.
+
+
+
+
+\AtlasMath{\sup_{D\in\mathfrak D(c_1,c_2)}\limsup_{T\to\infty}\mathcal L_{n,T}(\pi;D)\le\ell}
+
+
+
+
+One upper policy depending only on n,k,w,c\_1,c\_2 handles every density in the class. The lower bound holds for every policy under the fixed known uniform prior and even for liminf of the finite-horizon expected losses.
+
+
+
+\textbf{Budget convention.} fixed\_per\_round\_play\_count
+
+
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+
+
+\AtlasInlineMath{n}: Number of plays allocated in every round \textbf{Domain:} \AtlasInlineMath{n\ge1} integer.
+
+
+
+\AtlasInlineMath{k}: Number of newly arriving arms each round \textbf{Domain:} \AtlasInlineMath{k\ge1} integer.
+
+
+
+\AtlasInlineMath{w}: Number of feedback opportunities before an arm final-age allocation \textbf{Domain:} \AtlasInlineMath{w\ge1} integer; lifespan is w+1 rounds.
+
+
+
+\AtlasInlineMath{c_1,c_2}: Prior density lower and upper bounds \textbf{Domain:} \AtlasInlineMath{0<c_1\le1\le c_2<\infty}.
+
+
+
+\AtlasInlineMath{D}: Prior distribution of independent arm means \textbf{Domain:} Density between c\_1 and c\_2 on [0,1].
+
+
+
+\AtlasInlineMath{T}: Finite evaluation horizon before the long-run limit \textbf{Domain:} \AtlasInlineMath{T\ge1} integer.
+
+
+
+\AtlasInlineMath{\alpha_w}: Optimal finite-lifetime exponent \textbf{Domain:} \AtlasInlineMath{0<\alpha_w<1/2}.
+
+
+
+\AtlasInlineMath{\alpha_w=(2^w-1)/(2^{w+1}-1)}
+
+
+
+\AtlasInlineMath{\rho}: Fixed polynomial arrival exponent \textbf{Domain:} \AtlasInlineMath{\rho>0}.
+
+
+
+\AtlasInlineMath{k=\lfloor n^\rho\rfloor} in the polynomial-arrival regime
+
+
+
+\AtlasInlineMath{n_0}: Source asymptotic threshold \textbf{Domain:} \AtlasInlineMath{n_0=n_0(w,c_1,c_2)} finite.
+
+
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+
+
+\needspace{4\baselineskip}\subsection{Compared quantities}
+
+
+\needspace{4\baselineskip}\subsubsection{Q1 - minimax metric resource quantity}
+
+
+\AtlasMath{\mathcal L_n^*(c_1,c_2)}
+
+
+\textbf{Scope.} The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+
+
+\textbf{Optimization direction.} minimize
+
+
+
+\textbf{Resource contract.} expression: \AtlasInlineMath{(n,k,w)}; description: Exactly n plays per round, k arrivals per round, and a fixed finite lifetime.
+
+
+
+\needspace{4\baselineskip}\subsection{R1 - Finite lifetime with arbitrary arrival count}
+
+
+\textbf{Region.} Fix integer \AtlasInlineMath{w\ge1} and \AtlasInlineMath{0<c_1\le1\le c_2<\infty}; require \AtlasInlineMath{n\ge n_0(w,c_1,c_2)} and any integer \AtlasInlineMath{k\ge1}. No ambient Euclidean dimension; the number of alive arms is at most k(w+1). The lower bound is for liminf of expected averages, hence also bounds the same limsup-risk used by the upper bound.
+
+
+
+\textbf{Quantity.} Q1
+
+
+
+\textbf{Resource.} Exactly n plays per round, k arrivals per round, and a fixed finite lifetime.
+
+
+
+\textbf{Status.} Logarithmic gap
+
+
+
+\textbf{Lower bound.} B2
+
+
+
+\AtlasMath{\Omega_w(\max\{k^{-1},n^{-\alpha_w}\})}
+
+
+\textbf{Upper bound.} B1
+
+
+
+\AtlasMath{O_{w,c_1,c_2}\!\left(\min\{1,(\log n)/k+((\log n)/n)^{\alpha_w}\}\right)}
+
+
+\textbf{Gap or comparison.} At most logarithmic factors in n; max and sum of the two positive scales differ only by a factor of two.
+
+
+
+\needspace{4\baselineskip}\subsection{R2 - Optimal exponent for polynomial arm arrivals}
+
+
+\textbf{Region.} Fix \AtlasInlineMath{w,c_1,c_2} as above and \AtlasInlineMath{\rho>0}; let \AtlasInlineMath{k=\lfloor n^\rho\rfloor} and \AtlasInlineMath{n\ge n_0} sufficiently large. Alive-arm count grows as (w+1)floor(n\textasciicircum{}rho); no Euclidean dimension.
+
+
+
+\textbf{Quantity.} Q1
+
+
+
+\textbf{Resource.} Per-round n, polynomial k, and fixed w; the performance is a long-run average.
+
+
+
+\textbf{Status.} Logarithmic gap
+
+
+
+\textbf{Lower bound.} B4
+
+
+
+\AtlasMath{\widetilde\Omega_{w,\rho}(n^{-\min\{\rho,\alpha_w\}})}
+
+
+\textbf{Upper bound.} B3
+
+
+
+\AtlasMath{\widetilde O_{w,c_1,c_2,\rho}(n^{-\min\{\rho,\alpha_w\}})}
+
+
+\textbf{Gap or comparison.} The polynomial exponent is matched; only logarithmic factors remain.
+
+
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+
+
+\needspace{4\baselineskip}\subsection{B1 - Capped all-success screening across increasing cohort sampling depths.}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} upper
+
+
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+
+
+\AtlasMath{O_{w,c_1,c_2}\!\left(\min\{1,(\log n)/k+((\log n)/n)^{\alpha_w}\}\right)}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U09/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} Fix integer \AtlasInlineMath{w\ge1} and \AtlasInlineMath{0<c_1\le1\le c_2<\infty}; require \AtlasInlineMath{n\ge n_0(w,c_1,c_2)} and any integer \AtlasInlineMath{k\ge1}.; The lower bound is for liminf of expected averages, hence also bounds the same limsup-risk used by the upper bound.
+
+
+
+\textbf{Dimension conditions.} No ambient Euclidean dimension; the number of alive arms is at most k(w+1).
+
+
+
+\textbf{Constants.} Upper constants may depend on fixed w,c\_1,c\_2; lower constants may depend on w. No uniform-in-lifetime claim is made.
+
+
+
+\textbf{Logarithmic factors.} Powers of log(n) only, not powers of n.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U09/manuscript.pdf}{[1]} Theorem thm:main; equation eq:main-upper
+
+
+
+Capped all-success screening across increasing cohort sampling depths.. One batching policy independent of the exact prior.
+
+
+
+\needspace{4\baselineskip}\subsection{B2 - A batched posterior-discovery inequality and the arrival floor under a uniform prior.}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} lower
+
+
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+
+
+\AtlasMath{\Omega_w(\max\{k^{-1},n^{-\alpha_w}\})}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U09/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} Fix integer \AtlasInlineMath{w\ge1} and \AtlasInlineMath{0<c_1\le1\le c_2<\infty}; require \AtlasInlineMath{n\ge n_0(w,c_1,c_2)} and any integer \AtlasInlineMath{k\ge1}.; The lower bound is for liminf of expected averages, hence also bounds the same limsup-risk used by the upper bound.
+
+
+
+\textbf{Dimension conditions.} No ambient Euclidean dimension; the number of alive arms is at most k(w+1).
+
+
+
+\textbf{Constants.} Upper constants may depend on fixed w,c\_1,c\_2; lower constants may depend on w. No uniform-in-lifetime claim is made.
+
+
+
+\textbf{Logarithmic factors.} Powers of log(n) only, not powers of n.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U09/manuscript.pdf}{[1]} Theorem thm:main; equation eq:main-lower
+
+
+
+A batched posterior-discovery inequality and the arrival floor under a uniform prior.. Every randomized admissible policy, including policies knowing the prior.
+
+
+
+\needspace{4\baselineskip}\subsection{B3 - The same prior-uniform capped screening policy.}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} upper
+
+
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+
+
+\AtlasMath{\widetilde O_{w,c_1,c_2,\rho}(n^{-\min\{\rho,\alpha_w\}})}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U09/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} Fix \AtlasInlineMath{w,c_1,c_2} as above and \AtlasInlineMath{\rho>0}; let \AtlasInlineMath{k=\lfloor n^\rho\rfloor} and \AtlasInlineMath{n\ge n_0} sufficiently large.
+
+
+
+\textbf{Dimension conditions.} Alive-arm count grows as (w+1)floor(n\textasciicircum{}rho); no Euclidean dimension.
+
+
+
+\textbf{Constants.} Fixed w,c\_1,c\_2,rho may enter constants; no uniform growing-w rate is claimed.
+
+
+
+\textbf{Logarithmic factors.} Powers of log(n) only.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U09/manuscript.pdf}{[1]} Corollary cor:rho
+
+
+
+The same prior-uniform capped screening policy.. Admissible batched policies.
+
+
+
+\needspace{4\baselineskip}\subsection{B4 - Uniform-prior posterior-discovery and arrival lower bounds.}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} lower
+
+
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+
+
+\AtlasMath{\widetilde\Omega_{w,\rho}(n^{-\min\{\rho,\alpha_w\}})}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U09/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} Fix \AtlasInlineMath{w,c_1,c_2} as above and \AtlasInlineMath{\rho>0}; let \AtlasInlineMath{k=\lfloor n^\rho\rfloor} and \AtlasInlineMath{n\ge n_0} sufficiently large.
+
+
+
+\textbf{Dimension conditions.} Alive-arm count grows as (w+1)floor(n\textasciicircum{}rho); no Euclidean dimension.
+
+
+
+\textbf{Constants.} Fixed w,c\_1,c\_2,rho may enter constants; no uniform growing-w rate is claimed.
+
+
+
+\textbf{Logarithmic factors.} Powers of log(n) only.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U09/manuscript.pdf}{[1]} Corollary cor:rho
+
+
+
+Uniform-prior posterior-discovery and arrival lower bounds.. Every admissible policy, even with the uniform prior known.
+
+
+
+\needspace{7\baselineskip}\section{Maintenance appendix: Native proof extensions}
+
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f\allowbreak{}9a3ecbe5ed12ab4d8e11ba87\allowbreak{}3c2f11161202b945
+
+
+
+Native value (empty\_array): []
+
+
+
+\needspace{7\baselineskip}\section{References}
+
+
+[1] Colombo\_U09. Optimal Exponents for Short-Lived High-Volume Bandits. short\_lived\_high\_volume\_bandits.tex.
+
+
+
+\url{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U09/manuscript.pdf}
+
+\end{document}

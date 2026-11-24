@@ -1,5 +1,6 @@
 """Check that generated attribution stays scoped and distinct from math status."""
 from html.parser import HTMLParser
+from collections import Counter
 import json
 from pathlib import Path
 import unittest
@@ -81,28 +82,85 @@ class ColomboDeliveryTests(unittest.TestCase):
             self.assertEqual(self.registry['settings'][sid]['state'], 'pending')
 
     def test_heavy_tail_paper_uses_the_existing_profile(self):
-        self.assertEqual(len(self.registry['papers']), 20)
+        self.assertEqual(len(self.registry['papers']), 22)
         ids = {p['id'] for p in self.registry['papers']}
-        self.assertIn('2610.00260', ids)
+        self.assertEqual(ids, {
+            '2610.22208', '2610.20187', '2610.17074', '2610.16991', '2610.16832',
+            '2610.16771', '2610.12184', '2610.03638', '2610.03633', '2610.02095',
+            '2609.35840', '2610.00276', '2610.00275', '2610.00260', '2609.28246',
+            '2609.28238', '2610.00245', '2609.28202', '2610.00229', '2609.18728',
+            '2609.18230', '2609.13462'})
         mapped = {sid for sid, e in self.registry['settings'].items()
                   if any(c['paper_id'] == '2610.00260' for c in e['contributions'])}
         self.assertEqual(mapped, {'SO_FO_S01_direction_HP'})
 
     def test_only_reviewed_nontrivial_near_optimal_regions_are_highlighted(self):
         selected = {sid: e['highlight'] for sid, e in self.registry['settings'].items() if e.get('highlight')}
-        self.assertEqual(len(selected), 35)
-        self.assertEqual(sum(len(e['comparison_ids']) for e in selected.values()), 60)
+        self.assertEqual(len(selected), 39)
+        self.assertEqual(sum(len(e['comparison_ids']) for e in selected.values()), 66)
+        self.assertEqual(Counter(e['state'] for e in self.registry['settings'].values()),
+                         {'adopted': 49, 'pending': 2})
+        statuses, paper_ids = Counter(), set()
         for sid, entry in selected.items():
             profile = json.loads((ROOT/'data/settings'/sid/'profile.json').read_text())
             comparisons = {c['comparison_id']: c for c in profile['comparisons']}
             for cid in entry['comparison_ids']:
-                self.assertIn(comparisons[cid]['status']['code'], ('optimal', 'logarithmic_gap'))
+                code = comparisons[cid]['status']['code']
+                self.assertIn(code, ('optimal', 'logarithmic_gap'))
+                statuses[code] += 1
+            for contribution in self.registry['settings'][sid]['contributions']:
+                if set(contribution['comparison_ids']) & set(entry['comparison_ids']):
+                    paper_ids.add(contribution['paper_id'])
+        self.assertEqual(statuses, {'optimal': 41, 'logarithmic_gap': 25})
+        self.assertEqual(len(paper_ids), 20)
         hp = 'SO_FO_S01_direction_HP'
         saturation = hp + '__randomized__probability__c_saturation_20261122'
         profile = json.loads((ROOT/'data/settings'/hp/'profile.json').read_text())
         self.assertIn(saturation, {c['comparison_id'] for c in profile['comparisons']})
         self.assertEqual(len(selected[hp]['comparison_ids']), 5)
         self.assertNotIn(saturation, selected[hp]['comparison_ids'])
+
+    def test_added_papers_credit_only_the_six_located_comparisons(self):
+        expected = {
+            'CV_S_HIGH_SADDLE_tan': ('2609.28246', 'CV_SRC_saddle_higher_2609_28246',
+                {'main': ('b2', 'c1', 'e1')}),
+            'CV_S_HIGH_SADDLE_gap': ('2609.28246', 'CV_SRC_saddle_higher_2609_28246',
+                {'main': ('b2', 'c1', 'e1')}),
+            'SO_ZO_E04': ('2609.18728', 'SO_SRC_aafbdd36039133ac',
+                {'deterministic': ('b1', 'c3', 'e1'), 'randomized': ('b1', 'c3', 'e1')}),
+            'SO_ZO_E09b': ('2609.18728', 'SO_SRC_aafbdd36039133ac',
+                {'deterministic': ('b11', 'c6', 'e20'), 'randomized': ('b13', 'c7', 'e27')})}
+        mapped = {sid for sid, entry in self.registry['settings'].items()
+                  if any(c['paper_id'] in {'2609.28246', '2609.18728'} for c in entry['contributions'])}
+        self.assertEqual(mapped, set(expected))
+        for sid, (paper_id, reference_id, views) in expected.items():
+            with self.subTest(setting=sid):
+                entry = self.registry['settings'][sid]
+                contributions = [c for c in entry['contributions'] if c['paper_id'] == paper_id]
+                self.assertEqual(len(contributions), 1)
+                contribution = contributions[0]
+                prefix = lambda view, key: sid + '__' + view + '__' + key
+                bids = {prefix(view, row[0]) for view, row in views.items()}
+                cids = {prefix(view, row[1]) for view, row in views.items()}
+                self.assertEqual(set(contribution['reference_ids']), {reference_id})
+                self.assertEqual(set(contribution['view_ids']), set(views))
+                self.assertEqual(set(contribution['bound_refs']), bids)
+                self.assertEqual(set(contribution['comparison_ids']), cids)
+                self.assertEqual(set(entry['highlight']['comparison_ids']), cids)
+                profile = json.loads((ROOT/'data/settings'/sid/'profile.json').read_text())
+                bounds = {b['id']: b for b in profile['bounds']}
+                evidence = {e['id']: e for e in profile['evidence']}
+                for view, (bid, cid, eid) in views.items():
+                    self.assertIn(prefix(view, eid), bounds[prefix(view, bid)]['evidence_refs'])
+                    located = evidence[prefix(view, eid)]
+                    self.assertEqual(located['source_ref'], reference_id)
+                    self.assertTrue(located['locator']['pdf_pages'])
+                    self.assertNotIn('remains to be verified', located['locator']['theorem'])
+                if sid == 'SO_ZO_E09b':
+                    self.assertIn('n=1', entry['highlight']['scope_note'])
+                    for c in profile['comparisons']:
+                        if c['comparison_id'] in cids:
+                            self.assertIn('n=1', c['predicate_text'])
 
     def test_summary_stays_outside_atlas_files_and_pages(self):
         self.assertEqual(self.home.panels, 0)

@@ -1,0 +1,855 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Convex minimization with a fixed non-Euclidean proximal oracle\par}\vspace{5pt}
+
+
+\textbf{Setting ID.} \texttt{SO\_\allowbreak{}FO\_\allowbreak{}P01\_\allowbreak{}fixed\_\allowbreak{}non\_\allowbreak{}euclidean}
+
+
+
+Single-objective optimization
+
+
+
+A hidden finite convex objective is accessed only through the exact proximal point associated with a fixed power of an ell-p distance and a fixed positive coefficient.
+
+
+
+\textbf{Status.} Fully optimal on the documented comparison domain
+
+
+
+\textbf{TASK tags.} solution concept: Objective minimization; task family: Single objective
+
+
+
+\textbf{MODEL tags.} convexity: Convex
+
+
+
+\textbf{ORACLE tags.} feedback quality: Exact; operation: Fixed non euclidean prox; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+
+
+\textbf{ALGORITHMS tags.} randomization: Deterministic; randomization: Private randomness allowed; restriction: No additional span restriction explicitly imposed
+
+
+
+\textbf{GUARANTEE tags.} mode: Probability; quantifier: Algorithm before instance
+
+
+
+\textbf{RESOURCE tags.} budget: Fixed worst-case budget; measure: N prox
+
+
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+
+
+\needspace{4\baselineskip}\subsection{Task}
+
+
+Minimize an unknown finite convex function \AtlasInlineMath{f:\mathbb R^d\to\mathbb R} globally and return a point with small objective gap.
+
+
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+
+
+Fix \AtlasInlineMath{2<p<s<\infty} and \AtlasInlineMath{\lambda,R>0}. The class consists of finite convex functions having at least one attained global minimizer \AtlasInlineMath{x^\star} with \AtlasInlineMath{\|x^\star\|_p\le R}. No uniform Lipschitz, smoothness, or objective-scale bound is imposed.
+
+
+
+The localization ball is only a promise about one global minimizer. It does not restrict query centers or final outputs.
+
+
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+
+
+The only Oracle interface is
+\AtlasMath{P_f(c)=\operatorname*{argmin}_{x\in\mathbb R^d}\{f(x)+\lambda\|x-c\|_p^s\},\qquad c\in\mathbb R^d.}
+ One call returns this unique minimizer only, with no accompanying function value or subgradient.
+
+
+
+The positive coefficient \AtlasInlineMath{\lambda} and exponents \AtlasInlineMath{p,s} are public and fixed for the entire interaction. The algorithm may choose the center but may not choose another regularization coefficient or power. Public inputs are \AtlasInlineMath{d,p,s,\lambda,R,\varepsilon}; the objective is hidden.
+
+
+
+\needspace{4\baselineskip}\subsection{Output}
+
+
+Return any measurable \AtlasInlineMath{\widehat x\in\mathbb R^d} determined by the transcript. It need not be a queried center or a proximal response.
+
+
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+
+The loss is \AtlasInlineMath{f(\widehat x)-f^\star}, where \AtlasInlineMath{f^\star=\min_{x\in\mathbb R^d}f(x)}.
+
+
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+
+
+One exact fixed-coefficient proximal reply costs one call. The total number of calls is bounded on every instance and every realization of the private seed. Exact internal computation, storage, and specification of arbitrary finite query centers are uncharged.
+
+
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+
+
+\needspace{4\baselineskip}\subsubsection{Randomized / 2/3 success}
+
+
+Queries, stopping decisions, and the output are measurable functions of the preceding transcript and an instance-independent private random seed. The unknown instance is fixed before the seed is realized. No span, support, zero-respecting, or memory restriction is imposed.
+
+
+
+Internal exact-real computation and storage using public inputs and received information are uncharged. The stated budget must hold on every execution path.
+
+
+
+
+\AtlasMath{\forall f:\ \Pr(f(\widehat x)-f^\star\le\varepsilon)\ge2/3}
+
+
+
+
+The guarantee is per fixed objective, with an independent private seed and a pathwise query cap.
+
+
+
+\textbf{Budget convention.} fixed\_worst\_case
+
+
+
+\needspace{4\baselineskip}\subsubsection{Deterministic / Pointwise error}
+
+
+The algorithm is deterministic and adaptive. Queries, stopping, and the output may use the complete preceding transcript. No span, support, zero-respecting, or memory restriction is imposed.
+
+
+
+Internal exact-real computation and storage are uncharged. The stated budget holds on every admissible instance and every response history.
+
+
+
+
+\AtlasMath{\forall f:\ f(\widehat x)-f^\star\le\varepsilon}
+
+
+
+
+The error bound is deterministic for every admissible objective.
+
+
+
+\textbf{Budget convention.} fixed\_worst\_case
+
+
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+
+
+\AtlasInlineMath{d}: Ambient dimension \textbf{Domain:} \AtlasInlineMath{d\in\mathbb N_{\ge1}}.
+
+
+
+\AtlasInlineMath{p}: Norm exponent \textbf{Domain:} \AtlasInlineMath{2<p<s<\infty}.
+
+
+
+\AtlasInlineMath{s}: Fixed regularization power \textbf{Domain:} \AtlasInlineMath{s>p}.
+
+
+
+\AtlasInlineMath{\lambda}: Fixed proximal regularization coefficient \textbf{Domain:} \AtlasInlineMath{\lambda>0}.
+
+
+
+\AtlasInlineMath{R}: Radius of a global minimizer in ell-p \textbf{Domain:} \AtlasInlineMath{R>0}.
+
+
+
+\AtlasInlineMath{\varepsilon}: Target objective error \textbf{Domain:} \AtlasInlineMath{\varepsilon>0}.
+
+
+
+\AtlasInlineMath{\kappa}: Normalized target scale \textbf{Domain:} \AtlasInlineMath{\kappa>0}.
+
+
+
+\AtlasInlineMath{\kappa=\lambda R^s/\varepsilon}
+
+
+
+\AtlasInlineMath{\rho}: Accuracy exponent denominator \textbf{Domain:} \AtlasInlineMath{\rho>0}.
+
+
+
+\AtlasInlineMath{\rho=s+s/p-1}
+
+
+
+\AtlasInlineMath{C_p}: Explicit sufficient-dimension coefficient \textbf{Domain:} \AtlasInlineMath{C_p>0}.
+
+
+
+\AtlasInlineMath{C_p=2+12\cdot64^p}
+
+
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+
+
+\needspace{4\baselineskip}\subsection{Compared quantities}
+
+
+\needspace{4\baselineskip}\subsubsection{Q1 - minimax metric resource quantity}
+
+
+\textbf{View.} Randomized / 2/3 success
+
+
+
+\AtlasMath{Q^*_{\rm rand}(\varepsilon;d)}
+
+
+\textbf{Scope.} The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+
+
+\textbf{Optimization direction.} minimize
+
+
+
+\textbf{Resource contract.} expression: \AtlasInlineMath{N_{P_f}}; description: All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+
+
+\needspace{4\baselineskip}\subsubsection{Q2 - minimax metric resource quantity}
+
+
+\textbf{View.} Deterministic / Pointwise error
+
+
+
+\AtlasMath{Q^*_{\rm det}(\varepsilon;d)}
+
+
+\textbf{Scope.} The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+
+
+\textbf{Optimization direction.} minimize
+
+
+
+\textbf{Resource contract.} expression: \AtlasInlineMath{N_{P_f}}; description: All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+
+
+\needspace{4\baselineskip}\subsection{R1 - High-dimensional fixed-coefficient proximal complexity}
+
+
+\textbf{Region.} \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R,\varepsilon>0}, and \AtlasInlineMath{d\ge\lceil C_p(1+\kappa^{(p+3)/\rho})\rceil}. \AtlasInlineMath{d\ge\lceil(2+12\cdot64^p)(1+(\lambda R^s/\varepsilon)^{(p+3)/(s+s/p-1)})\rceil}. This is sufficient, not necessary. The lower construction is one finite distribution sampled before the algorithmic seed. The fixed coefficient is an essential part of the interface.
+
+
+
+\textbf{Views.} Randomized / 2/3 success
+
+
+
+\textbf{Quantity.} Q1
+
+
+
+\textbf{Resource.} All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+
+
+\textbf{Status.} Optimal
+
+
+
+\textbf{Lower bound.} B2
+
+
+
+\AtlasMath{\Omega_{p,s}(1+\kappa^{1/\rho})}
+
+
+\textbf{Upper bound.} B1
+
+
+
+\AtlasMath{O_{p,s}(1+\kappa^{1/\rho})}
+
+
+\textbf{Gap or comparison.}
+
+
+
+\AtlasMath{O_{p,s}(1)}
+
+
+\needspace{4\baselineskip}\subsection{R2 - Exact one-query regime}
+
+
+\textbf{Region.} \AtlasInlineMath{\varepsilon\ge\lambda R^s}, \AtlasInlineMath{d\ge1}, \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R>0}. All integer dimensions d>=1. There is no objective-scale bound, so zero queries cannot guarantee any finite positive target uniformly over the class.
+
+
+
+\textbf{Views.} Randomized / 2/3 success
+
+
+
+\textbf{Quantity.} Q1
+
+
+
+\textbf{Resource.} All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+
+
+\textbf{Status.} Optimal
+
+
+
+\textbf{Lower bound.} B4
+
+
+
+\AtlasMath{1}
+
+
+\textbf{Upper bound.} B3
+
+
+
+\AtlasMath{1}
+
+
+\textbf{Gap or comparison.} 1
+
+
+
+\needspace{4\baselineskip}\subsection{R3 - High-dimensional fixed-coefficient proximal complexity}
+
+
+\textbf{Region.} \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R,\varepsilon>0}, and \AtlasInlineMath{d\ge\lceil C_p(1+\kappa^{(p+3)/\rho})\rceil}. \AtlasInlineMath{d\ge\lceil(2+12\cdot64^p)(1+(\lambda R^s/\varepsilon)^{(p+3)/(s+s/p-1)})\rceil}. This is sufficient, not necessary. The lower construction is one finite distribution sampled before the algorithmic seed. The fixed coefficient is an essential part of the interface.
+
+
+
+\textbf{Views.} Deterministic / Pointwise error
+
+
+
+\textbf{Quantity.} Q2
+
+
+
+\textbf{Resource.} All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+
+
+\textbf{Status.} Optimal
+
+
+
+\textbf{Lower bound.} B6
+
+
+
+\AtlasMath{\Omega_{p,s}(1+\kappa^{1/\rho})}
+
+
+\textbf{Upper bound.} B5
+
+
+
+\AtlasMath{O_{p,s}(1+\kappa^{1/\rho})}
+
+
+\textbf{Gap or comparison.}
+
+
+
+\AtlasMath{O_{p,s}(1)}
+
+
+\needspace{4\baselineskip}\subsection{R4 - Exact one-query regime}
+
+
+\textbf{Region.} \AtlasInlineMath{\varepsilon\ge\lambda R^s}, \AtlasInlineMath{d\ge1}, \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R>0}. All integer dimensions d>=1. There is no objective-scale bound, so zero queries cannot guarantee any finite positive target uniformly over the class.
+
+
+
+\textbf{Views.} Deterministic / Pointwise error
+
+
+
+\textbf{Quantity.} Q2
+
+
+
+\textbf{Resource.} All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+
+
+\textbf{Status.} Optimal
+
+
+
+\textbf{Lower bound.} B8
+
+
+
+\AtlasMath{1}
+
+
+\textbf{Upper bound.} B7
+
+
+
+\AtlasMath{1}
+
+
+\textbf{Gap or comparison.} 1
+
+
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+
+
+\needspace{4\baselineskip}\subsection{B1 - Fixed-coefficient implementation of Adil--Bullins--Jambulapati--Sidford proximal acceleration}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} upper
+
+
+
+\textbf{View.} Randomized / 2/3 success
+
+
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+
+
+\AtlasMath{O_{p,s}(1+\kappa^{1/\rho})}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R,\varepsilon>0}, and \AtlasInlineMath{d\ge\lceil C_p(1+\kappa^{(p+3)/\rho})\rceil}.; The upper bound is valid in every dimension, including nonsmooth finite objectives.; The lower construction is one finite distribution sampled before the algorithmic seed. The fixed coefficient is an essential part of the interface.
+
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d\ge\lceil(2+12\cdot64^p)(1+(\lambda R^s/\varepsilon)^{(p+3)/(s+s/p-1)})\rceil}. This is sufficient, not necessary.
+
+
+
+\textbf{Constants.} Constants depend only on fixed p and s.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]} Theorem thm:matching; Section sec:upper; Proposition prop:upper
+
+
+
+Fixed-coefficient implementation of Adil--Bullins--Jambulapati--Sidford proximal acceleration. Deterministic unrestricted-center algorithms
+
+
+
+The upper bound is valid in every dimension, including nonsmooth finite objectives.
+
+
+
+\needspace{4\baselineskip}\subsection{B2 - Random hidden coordinates, a common radial term, and exact truncation of proximal replies}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} lower
+
+
+
+\textbf{View.} Randomized / 2/3 success
+
+
+
+\textbf{Witness or lower-bound scope.} randomized\_hard\_family
+
+
+
+\AtlasMath{\Omega_{p,s}(1+\kappa^{1/\rho})}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R,\varepsilon>0}, and \AtlasInlineMath{d\ge\lceil C_p(1+\kappa^{(p+3)/\rho})\rceil}.; The lower construction is one finite distribution sampled before the algorithmic seed. The fixed coefficient is an essential part of the interface.
+
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d\ge\lceil(2+12\cdot64^p)(1+(\lambda R^s/\varepsilon)^{(p+3)/(s+s/p-1)})\rceil}. This is sufficient, not necessary.
+
+
+
+\textbf{Constants.} Constants depend only on fixed p and s.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]} Theorems thm:budget and thm:matching; eq:dimension-corollary
+
+
+
+Random hidden coordinates, a common radial term, and exact truncation of proximal replies. All adaptive randomized algorithms with unrestricted centers and arbitrary measurable output
+
+
+
+\needspace{4\baselineskip}\subsection{B3 - Query the fixed proximal oracle at center zero}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} upper
+
+
+
+\textbf{View.} Randomized / 2/3 success
+
+
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+
+
+\AtlasMath{1}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\lambda R^s}, \AtlasInlineMath{d\ge1}, \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R>0}.; There is no objective-scale bound, so zero queries cannot guarantee any finite positive target uniformly over the class.
+
+
+
+\textbf{Dimension conditions.} All integer dimensions d>=1.
+
+
+
+\textbf{Constants.} Exact equality; no suppressed constants.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]} Section sec:upper, eq:one-query
+
+
+
+Query the fixed proximal oracle at center zero. Deterministic nonadaptive algorithm
+
+
+
+\needspace{4\baselineskip}\subsection{B4 - Two separated scaled absolute-value objectives}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} lower
+
+
+
+\textbf{View.} Randomized / 2/3 success
+
+
+
+\textbf{Witness or lower-bound scope.} randomized\_hard\_family
+
+
+
+\AtlasMath{1}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\lambda R^s}, \AtlasInlineMath{d\ge1}, \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R>0}.; There is no objective-scale bound, so zero queries cannot guarantee any finite positive target uniformly over the class.
+
+
+
+\textbf{Dimension conditions.} All integer dimensions d>=1.
+
+
+
+\textbf{Constants.} Exact equality; no suppressed constants.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]} Lemma lem:zero
+
+
+
+Two separated scaled absolute-value objectives. All randomized algorithms
+
+
+
+\needspace{4\baselineskip}\subsection{B5 - Fixed-coefficient implementation of Adil--Bullins--Jambulapati--Sidford proximal acceleration}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} upper
+
+
+
+\textbf{View.} Deterministic / Pointwise error
+
+
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+
+
+\AtlasMath{O_{p,s}(1+\kappa^{1/\rho})}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R,\varepsilon>0}, and \AtlasInlineMath{d\ge\lceil C_p(1+\kappa^{(p+3)/\rho})\rceil}.; The upper bound is valid in every dimension, including nonsmooth finite objectives.; The lower construction is one finite distribution sampled before the algorithmic seed. The fixed coefficient is an essential part of the interface.
+
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d\ge\lceil(2+12\cdot64^p)(1+(\lambda R^s/\varepsilon)^{(p+3)/(s+s/p-1)})\rceil}. This is sufficient, not necessary.
+
+
+
+\textbf{Constants.} Constants depend only on fixed p and s.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]} Theorem thm:matching; Section sec:upper; Proposition prop:upper
+
+
+
+Fixed-coefficient implementation of Adil--Bullins--Jambulapati--Sidford proximal acceleration. Deterministic unrestricted-center algorithms
+
+
+
+The upper bound is valid in every dimension, including nonsmooth finite objectives.
+
+
+
+\needspace{4\baselineskip}\subsection{B6 - Random hidden coordinates, a common radial term, and exact truncation of proximal replies}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} lower
+
+
+
+\textbf{View.} Deterministic / Pointwise error
+
+
+
+\textbf{Witness or lower-bound scope.} randomized\_hard\_family
+
+
+
+\AtlasMath{\Omega_{p,s}(1+\kappa^{1/\rho})}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R,\varepsilon>0}, and \AtlasInlineMath{d\ge\lceil C_p(1+\kappa^{(p+3)/\rho})\rceil}.; The lower construction is one finite distribution sampled before the algorithmic seed. The fixed coefficient is an essential part of the interface.
+
+
+
+\textbf{Dimension conditions.} \AtlasInlineMath{d\ge\lceil(2+12\cdot64^p)(1+(\lambda R^s/\varepsilon)^{(p+3)/(s+s/p-1)})\rceil}. This is sufficient, not necessary.
+
+
+
+\textbf{Constants.} Constants depend only on fixed p and s.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]} Theorems thm:budget and thm:matching; eq:dimension-corollary
+
+
+
+Random hidden coordinates, a common radial term, and exact truncation of proximal replies. All adaptive randomized algorithms with unrestricted centers and arbitrary measurable output
+
+
+
+\needspace{4\baselineskip}\subsection{B7 - Query the fixed proximal oracle at center zero}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} upper
+
+
+
+\textbf{View.} Deterministic / Pointwise error
+
+
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+
+
+\AtlasMath{1}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\lambda R^s}, \AtlasInlineMath{d\ge1}, \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R>0}.; There is no objective-scale bound, so zero queries cannot guarantee any finite positive target uniformly over the class.
+
+
+
+\textbf{Dimension conditions.} All integer dimensions d>=1.
+
+
+
+\textbf{Constants.} Exact equality; no suppressed constants.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]} Section sec:upper, eq:one-query
+
+
+
+Query the fixed proximal oracle at center zero. Deterministic nonadaptive algorithm
+
+
+
+\needspace{4\baselineskip}\subsection{B8 - Two separated scaled absolute-value objectives}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} lower
+
+
+
+\textbf{View.} Deterministic / Pointwise error
+
+
+
+\textbf{Witness or lower-bound scope.} randomized\_hard\_family
+
+
+
+\AtlasMath{1}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{\varepsilon\ge\lambda R^s}, \AtlasInlineMath{d\ge1}, \AtlasInlineMath{2<p<s<\infty}, \AtlasInlineMath{\lambda,R>0}.; There is no objective-scale bound, so zero queries cannot guarantee any finite positive target uniformly over the class.
+
+
+
+\textbf{Dimension conditions.} All integer dimensions d>=1.
+
+
+
+\textbf{Constants.} Exact equality; no suppressed constants.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}{[1]} Lemma lem:zero
+
+
+
+Two separated scaled absolute-value objectives. All randomized algorithms
+
+
+
+\needspace{7\baselineskip}\section{Maintenance appendix: Native proof extensions}
+
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f\allowbreak{}9a3ecbe5ed12ab4d8e11ba87\allowbreak{}3c2f11161202b945
+
+
+
+Native value (empty\_array): []
+
+
+
+\needspace{7\baselineskip}\section{References}
+
+
+[1] Colombo\_B2. Optimal Randomized Complexity of Fixed Non-Euclidean Proximal Oracles. B2\_proximal\_oracles\_publication.tex.
+
+
+
+\url{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B2/manuscript.pdf}
+
+\end{document}

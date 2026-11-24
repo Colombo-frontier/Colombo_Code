@@ -1,0 +1,2385 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{booktabs,tabularx,array,multirow}
+\usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\makeatletter
+\renewcommand{\theHALG@line}{\thealgorithm.\arabic{ALG@line}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,capitalize,noabbrev]{cleveref}
+\usepackage{natbib}
+\hypersetup{
+  pdftitle={Primary Ties and the Price of Unknown Trade-offs in Lexicographic Bandits},
+  pdfauthor={Colombo Team},
+  pdfsubject={Simultaneous regret, trade-off envelopes, and metric complexity},
+  pdfkeywords={lexicographic bandits, minimax regret, adaptation, Lipschitz bandits}
+}
+\emergencystretch=1.5em
+
+\allowdisplaybreaks
+\setlength{\parindent}{1.2em}
+\setlength{\parskip}{0.15em}
+\setlist{nosep}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{remark}[theorem]{Remark}
+\theoremstyle{definition}
+\newtheorem{example}[theorem]{Example}
+
+\newcommand{\X}{\mathcal X}
+\newcommand{\A}{\mathcal A}
+\newcommand{\C}{\mathcal C}
+\newcommand{\F}{\mathcal F}
+\newcommand{\Pcal}{\mathcal P}
+\newcommand{\Mcal}{\mathcal M}
+\newcommand{\Ocal}{\mathcal O}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\newcommand{\N}{\mathbb N}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\kl}{\operatorname{kl}}
+\newcommand{\Pack}{\operatorname{Pack}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\ind}{\mathbf 1}
+\newcommand{\pos}[1]{[#1]_+}
+\newcommand{\wtO}{\widetilde O}
+\newcommand{\wtOmega}{\widetilde\Omega}
+\newcommand{\wtTheta}{\widetilde\Theta}
+\newcommand{\LexETC}{{\normalfont\textsc{Lex-ETC}}}
+\newcommand{\PFETC}{{\normalfont\textsc{PF-ETC}}}
+\newcommand{\RSETC}{{\normalfont\textsc{RS-ETC}}}
+\newcommand{\argmax}{\operatorname*{arg\,max}}
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\crefname{assumption}{Assumption}{Assumptions}
+\Crefname{assumption}{Assumption}{Assumptions}
+\crefname{definition}{Definition}{Definitions}
+\Crefname{definition}{Definition}{Definitions}
+\crefname{remark}{Remark}{Remarks}
+\Crefname{remark}{Remark}{Remarks}
+
+\title{Primary Ties and the Price of Unknown Trade-offs\\
+       in Lexicographic Bandits}
+\author{Colombo Team\\[0.2em]
+  \normalsize\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Lexicographic bandits rank objectives by priority: the secondary objective
+is optimized only among primary-optimal arms. Without side information,
+an exact primary tie is statistically difficult to distinguish from a small
+primary improvement. Building on the classical two-arm obstruction, we
+characterize its consequences for arm count, trade-off information, and
+metric complexity. For two objectives and $K$ arms, the simultaneous
+expected minimax regret is
+$\widetilde\Theta(\min\{T,K^{1/3}T^{2/3}\})$.
+When the learner is given an upper bound $L$ on the local trade-off,
+we prove the phase diagram
+\[
+  \widetilde\Theta\!\left(
+  \min\{T,\sqrt{(1\vee L)KT},K^{1/3}T^{2/3}\}\right).
+\]
+The upper bounds control the positive part of each coordinate regret,
+whereas the lower bounds already hold for general coordinate regret.
+In compact metric spaces, a multiscale filtering algorithm adapts to the
+packing profile of the primary near-optimal set without knowing that
+profile. On regular anchor-plus-tie spaces with packing growth $Zr^{-d}$,
+the resulting rate is
+$\widetilde\Theta_d(\min\{T,Z^{1/(d+3)}T^{(d+2)/(d+3)}\})$.
+We also give a critical-entropy characterization for arbitrary compact tie
+spaces, an explicit expected-regret Pareto lower constraint, and the sharp
+two-arm confidence dependence
+$\Theta(\min\{T,T^{2/3}\log^{1/3}(1/\delta)\})$.
+The metric guarantees are information-theoretic and assume access to
+maximal nets. The analysis separates primary-tie complexity from the
+positive-gap annular geometry used in supplied-trade-off guarantees.
+\end{abstract}
+
+\medskip
+\noindent\textbf{Keywords:} lexicographic bandits; simultaneous regret;
+minimax bounds; unknown trade-offs; Lipschitz bandits; near-optimality packing.
+\par\smallskip
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}
+\label{sec:introduction}
+
+In a lexicographic decision problem, objectives have a strict priority
+order. A learner first seeks the best primary reward and then seeks the
+best secondary reward among primary-optimal actions. This ordering differs
+from optimizing a fixed weighted sum: even a small primary improvement
+takes precedence over a large secondary loss. With noisy observations,
+the central difficulty is deciding whether two primary means are exactly
+equal or merely close.
+
+Consider two arms whose primary means coincide. One arm has a fixed
+secondary advantage, so sampling the other arm incurs secondary regret.
+If the latter arm instead has a small, unknown primary advantage, repeatedly
+choosing the former incurs primary regret. \citet{huyuk2021lexicographic} used this obstruction to prove a
+$T^{2/3}$ lower bound for prior-free lexicographic bandits. Their example
+also shows why identifying the primary-optimal set is more demanding than
+approximately maximizing a single reward function.
+
+Subsequent work introduced a local trade-off parameter $\lambda_\star$
+that bounds the secondary improvement available per unit of primary loss
+\citep{xue2024lipschitz,xue2025jmlr}. Supplying a valid upper bound on
+$\lambda_\star$ permits stronger coordinate-wise regret guarantees.
+This raises a more quantitative question: how does the statistical cost
+depend on the amount of trade-off information and on the size and geometry
+of the region that may contain a primary optimum?
+
+This paper answers that question for two objectives. We require one policy
+to control both coordinate regrets on every admissible instance. For a
+finite set of $K$ arms, the minimax rate without an envelope is
+$\widetilde\Theta(K^{1/3}T^{2/3})$, capped by $T$. If an envelope $L$ is
+supplied, the rate improves to $\widetilde\Theta(\sqrt{(1\vee L)KT})$
+until $L$ reaches order $(T/K)^{1/3}$, at which point the prior-free rate
+is already optimal. Thus knowing a very loose envelope has no minimax
+benefit at the given horizon.
+
+The same calculation identifies the relevant geometry in a metric arm
+space. Suppose there are $N(\eps)$ separated locations where a primary
+improvement of height $\eps$ could be hidden. Distinguishing one such
+location requires order $\eps^{-2}$ observations. On the null instance,
+searching these locations incurs a fixed secondary loss per observation;
+on an alternative, missing the improvement incurs order $T\eps$ primary
+regret. The balance is therefore
+\begin{equation}
+\label{eq:intro-balance}
+  N(\eps)\eps^{-2}\asymp T\eps,
+  \qquad\text{or equivalently}\qquad
+  T\eps^3\asymp N(\eps).
+\end{equation}
+When $N(\eps)\asymp Z\eps^{-d}$, this balance yields the denominator
+$d+3$. We turn it into matching minimax bounds on regular metric spaces
+and a one-scale entropy formula without a power-law assumption.
+
+\paragraph{Contributions and relation to the classical obstruction.}
+The two-arm construction is included as a self-contained starting point
+and is explicitly attributed to \citet{huyuk2021lexicographic}. Our
+refinements concern the following questions.
+\begin{enumerate}[leftmargin=2.1em]
+  \item \textbf{Dependence on the number of arms.}
+  We match $\Omega(\min\{T,K^{1/3}T^{2/3}\})$ with a simple
+  explore-filter-commit upper bound, up to a logarithmic factor.
+  The upper bound controls positive coordinate losses even when general
+  secondary regret can be negative.
+  \item \textbf{Value of a supplied trade-off envelope.}
+  We characterize the complete finite-arm transition between square-root
+  regret and the cubic-search rate. Robust-score elimination reduces
+  exploration losses, while secondary maximization at commitment avoids
+  multiplying the final accuracy by the envelope.
+  \item \textbf{Adaptation to primary near-optimality geometry.}
+  A multiscale algorithm uses neither a trade-off envelope nor a packing
+  dimension or coefficient. We prove an instance-wise oracle upper bound,
+  matching class-wise rates on regular anchor-plus-tie spaces, and a
+  metric-wise critical-entropy characterization.
+  \item \textbf{Expected-regret and confidence refinements.}
+  We derive an explicit constraint between null-secondary and
+  alternative-primary expected regret. For high-probability regret,
+  the dependence on $\log(1/\delta)$ is sharp on two arms; for general
+  $K$, the upper and lower bounds differ only in an additional
+  $\log^{1/3}K$ factor.
+\end{enumerate}
+
+The packing profiles, maximal nets, and change-of-measure inequalities
+used below are standard. The analysis combines them with the
+lexicographic testing obstruction to quantify how side information and
+primary near-optimality geometry determine simultaneous regret.
+Throughout, a matching metric result refers to the stated primary-tie
+class; it does not identify the primary-tie dimension with an
+objective-wise annular zooming dimension.
+
+\paragraph{Organization.}
+We first place the results relative to the closest bandit guarantees and
+specify the model. Sections~\ref{sec:two-arm}--\ref{sec:envelope} develop
+the two-arm obstruction and the finite-arm phase diagram.
+Section~\ref{sec:profile} treats metric spaces, and
+Section~\ref{sec:frontiers} gives the Pareto and confidence refinements.
+The appendices contain the remaining proofs.
+
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Finite-arm lexicographic learning.}
+\citet{huyuk2021lexicographic} introduced prior-informed and prior-free
+lexicographic bandit algorithms. For a fixed number of arms, their
+PF-LEX algorithm has a $\widetilde O(T^{2/3})$ guarantee under
+priority-based regret, and their Theorem~2 proves a matching
+$\Omega(T^{2/3})$ lower bound on two arms. In priority-based regret,
+secondary loss is counted only when the chosen arm is primary-optimal.
+Our general coordinate regret counts secondary loss on every round;
+our upper bounds also control its positive part. On the two-arm lower
+family, the relevant coordinate regrets agree under these conventions.
+The earlier lower bound therefore applies directly. We extend its
+quantitative analysis rather than claim a new $T^{2/3}$ obstruction.
+
+\paragraph{Trade-off information and metric arms.}
+\citet{xue2024lipschitz,xue2025jmlr} study general coordinate regret
+with a supplied local-trade-off envelope. Their ADLO guarantee uses
+objective-wise positive-gap annular dimensions $d_z^i$ and coefficients
+$Z_i$. Their two-objective UCB-ADLO method removes the trade-off input
+but uses $d_z^1$ and $Z_1$. Table~\ref{tab:related} records the reported
+bounds with these inputs separated. Our dimension $d$ instead describes
+primary near-optimality or primary-tie packing; the two dimensions are
+not interchangeable. More precisely, their annular profile covers
+\[
+ \X_L^i(r)=\{x:\Lambda_i(L)r/2<\Delta_i(x)\le\Lambda_i(L)r\}
+\]
+by balls of radius $r/96$, with covering number at most
+$Z_i r^{-d_z^i}$. This excludes zero primary gaps, whereas our
+primary near-optimality profile includes them.
+
+For finite arms, the supplied-envelope ADLO bound is
+\begin{equation}
+\label{eq:adlo-finite-comparison}
+ (R_1(T),R_2(T))
+ \le \widetilde O\!\left(\sqrt{KT},(1+L)\sqrt{KT}\right).
+\end{equation}
+Our $\sqrt{(1\vee L)KT}$ branch optimizes the maximum of the two
+expected regrets. It does not dominate the primary guarantee in
+\eqref{eq:adlo-finite-comparison}. The annular-profile lower bound in
+\citet[Theorem~3]{xue2025jmlr} has a different quantifier structure:
+its benchmark depends on the constructed instance's own annular
+profile. It is not a fixed-$(K,L)$ minimax lower bound obtained by
+replacing those covering numbers with $K$.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.16}
+\caption{Closest guarantees and the information they use.
+All rates suppress logarithms and universal constants.
+For two objectives, $\Lambda_1(u)=1$ and $\Lambda_2(u)=1+u$.
+The annular parameters $(d_z^i,Z_i)$ and the primary-tie parameters
+$(d,Z)$ describe different sets. The notation $\mathfrak M$ denotes
+the simultaneous expected minimax criterion defined in
+\eqref{eq:joint-risk}; it is not an individual-coordinate optimum.}
+\label{tab:related}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.0cm}>{\raggedright\arraybackslash}p{3.25cm}Y@{}}
+\toprule
+Work and arm model & Information / criterion & Guarantee \\
+\midrule
+H\"uy\"uk--Tekin (2021), finite arms
+& No prior reward information; priority-based regret
+& $\widetilde O(T^{2/3})$ for fixed $K$;
+$\Omega(T^{2/3})$ already for $K=2$. \\
+\addlinespace
+Xue et al. (2025a), ADLO, metric arms
+& Supplied $L\ge\lambda_\star$; general coordinate regret
+& $\widetilde O\!\left(\Lambda_i(L)
+Z_i^{1/(d_z^i+2)}T^{(d_z^i+1)/(d_z^i+2)}\right)$. \\
+\addlinespace
+Xue et al. (2025a), UCB-ADLO, metric arms
+& Two objectives; supplied $(d_z^1,Z_1)$; no trade-off input
+& Reported $\widetilde O\!\left(T^{2/3}+
+\Lambda_i(\lambda_\star)Z_i^{1/(d_z^i+2)}
+T^{(3d_z^i+4)/(3d_z^i+6)}\right)$, for $\lambda_\star\ge1$. \\
+\addlinespace
+This paper, finite arms
+& No trade-off or optimal-set information; joint criterion
+& $\mathfrak M_{T,K}=
+\widetilde\Theta(\min\{T,K^{1/3}T^{2/3}\})$. \\
+\addlinespace
+This paper, finite arms
+& Supplied $L\ge\lambda_\star$; joint criterion
+& $\mathfrak M_{T,K}(L)=\widetilde\Theta\!\left(
+\min\{T,\sqrt{(1\vee L)KT},K^{1/3}T^{2/3}\}\right)$. \\
+\addlinespace
+This paper, regular tie spaces
+& Maximal-net access; no trade-off or profile input
+& $\widetilde\Theta_d\!\left(
+\min\{T,Z^{1/(d+3)}T^{(d+2)/(d+3)}\}\right)$;
+fixed regularity constants. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Other lexicographic models.}
+\citet{xue2025linear} study linear bandits with multiple supplied
+trade-offs. \citet{xue2025corruptions} give problem-dependent bounds
+under adversarial corruptions; both their known- and unknown-corruption
+budget algorithms still use a valid trade-off envelope.
+\citet{xue2026lexelim} combine regret minimization with best-arm
+identification: their outer-layer method uses optimal-set cardinalities,
+whereas their inner-layer method uses a trade-off envelope.
+Dominant-objective contextual bandits, similarity-based contextual
+bandits, and lexicographic reinforcement learning use additional
+structure or different performance criteria
+\citep{tekin2018dominant,turgay2018similarity,skalse2022lexicographic}.
+
+\paragraph{Metric complexity and adaptation.}
+Packing profiles and adaptive discretization are standard in metric
+and $X$-armed bandits
+\citep{kleinberg2008metric,bubeck2011xarmed,slivkins2011implicit}.
+Problem-dependent Lipschitz bounds are developed by
+\citet{magureanu2014lipschitz}. We use these geometric tools to measure
+the region in which a hidden primary improvement must be ruled out.
+Polynomial costs of adaptation also occur when the unknown quantity
+is smoothness \citep{locatelli2018adaptivity,hadiji2019polynomial}.
+Here smoothness is fixed; the unknown trade-off concerns the relation
+between two rewards. Our lower bounds use standard adaptive
+change-of-measure and testing inequalities
+\citep{bubeck2012survey,lattimore2020bandit}.
+
+\section{Model and Performance Criterion}
+\label{sec:model}
+
+\paragraph{Actions and observations.}
+Let $(\X,D)$ be a known nonempty compact metric space of diameter at
+most one. The horizon $T\ge2$ is an integer. At round $t$, a policy
+chooses $X_t\in\X$ using the past and its internal randomization, then
+observes both coordinates of a reward vector $(Y_t^1,Y_t^2)$.
+For $i\in\{1,2\}$, the conditional mean is $\mu^i(X_t)$ and the
+centered noise is conditionally $1$-sub-Gaussian:
+\[
+ \E\!\left[\exp\{\theta(Y_t^i-\mu^i(X_t))\}
+       \mid\mathcal H_{t-1},X_t\right]\le e^{\theta^2/2},
+ \qquad \theta\in\R.
+\]
+The upper bounds need no independence between coordinates.
+All lower bounds use independent unit-variance Gaussian coordinates.
+The mean functions take values in $[0,1]$ and are $1$-Lipschitz:
+\[
+ |\mu^i(x)-\mu^i(y)|\le D(x,y),\qquad i\in\{1,2\}.
+\]
+
+\paragraph{Lexicographic optimum and regret.}
+Continuity and compactness ensure that
+\[
+ \mu^1_\star=\max_{x\in\X}\mu^1(x),\qquad
+ \X_1^\star=\{x:\mu^1(x)=\mu^1_\star\}
+\]
+are well defined and that a lexicographic optimum exists:
+\[
+ x^\star\in\argmax_{x\in\X_1^\star}\mu^2(x).
+\]
+All such optima have the same reward vector. Define the coordinate gaps
+and general coordinate regrets by
+\[
+ \Delta_i(x)=\mu^i(x^\star)-\mu^i(x),\qquad
+ R_i(T)=\sum_{t=1}^T\Delta_i(X_t).
+\]
+The primary gap is nonnegative, while the secondary gap can be negative
+on a primary-suboptimal arm. Our upper bounds control the stronger
+positive-part quantity
+\[
+ R_i^+(T)=\sum_{t=1}^T[\Delta_i(X_t)]_+,
+ \qquad R_i(T)\le R_i^+(T)\le T.
+\]
+Thus an upper bound does not rely on cancellation between positive and
+negative secondary gaps.
+
+\paragraph{Trade-off information.}
+For two objectives, the local trade-off is
+\begin{equation}
+\label{eq:lambda-def}
+ \lambda_\star=
+ \inf\left\{\lambda\ge0:
+ \mu^2(x)-\mu^2(x^\star)\le\lambda\Delta_1(x),\quad x\in\X
+ \right\},
+\end{equation}
+where the infimum of the empty set is $+\infty$.
+It is finite on every finite arm set, but need not have a common
+finite upper bound over the instance class. It can also be infinite
+on a compact infinite arm space. An envelope is a supplied number
+$L\ge0$ satisfying $\lambda_\star\le L$.
+
+\paragraph{Simultaneous expected minimax criterion.}
+For an instance class $\F$, let
+\begin{equation}
+\label{eq:joint-risk}
+ \mathfrak M_T(\F)=
+ \inf_\pi\sup_{\nu\in\F}
+ \max_{i\in\{1,2\}}\E_\nu R_i^\pi(T).
+\end{equation}
+The same policy must work for every instance and both coordinates.
+Policies may use $T$ and the metric, together with any side information
+explicitly supplied in the theorem. They do not know the mean rewards.
+The expected criterion in \eqref{eq:joint-risk} is distinct from the
+high-probability positive-regret criterion defined in
+Section~\ref{sec:frontiers}.
+
+For a fixed metric space, $\F(\X)$ denotes all instances satisfying
+the observation and Lipschitz assumptions, and we abbreviate
+$\mathfrak M_T(\X)=\mathfrak M_T(\F(\X))$. The no-envelope metric
+results remain valid if the class is restricted to finite
+$\lambda_\star$: the upper bounds hold on the larger class, and all
+lower constructions have finite trade-off.
+For $K$ arms with the discrete metric $D(a,b)=\ind\{a\ne b\}$, write
+$\F_K$ and $\mathfrak M_{T,K}$. With a supplied envelope, write
+$\F_K(L)$ and $\mathfrak M_{T,K}(L)$; the infimum is then over policies
+allowed to use $L$. Similarly, $\mathfrak M_T(\X;L)$ uses the class
+$\F(\X;L)$ and policies given $L$.
+
+\paragraph{Notation.}
+The symbols $c,C$ denote positive universal constants that may change
+between displays. A subscript indicates permitted dependence.
+The notation $\widetilde O$ and $\widetilde\Theta$ suppresses
+logarithmic factors in the displayed parameters and horizon, but not
+powers of $K$, $L$, $Z$, or $T$. We use natural logarithms except in
+$\log_2$. Metric packing and covering conventions are specified in
+Section~\ref{sec:profile}.
+
+\section{The Two-Arm Obstruction and Annular Benchmarks}
+\label{sec:two-arm}
+
+We restate the two-arm construction of \citet[Theorem~2]{huyuk2021lexicographic}
+in the bounded-mean, general-coordinate-regret model used here. Translating
+the primary means and fixing a bounded secondary gap changes only numerical
+constants. The formulation also makes its consequence for supplied-envelope
+annular benchmarks explicit.
+
+\begin{theorem}[Classical two-arm obstruction, reformulated]
+\label{thm:two-arm-lower}
+There are universal constants $c,T_0>0$ such that, for every $T\ge T_0$, there exist two admissible two-arm Gaussian instances $\nu_0,\nu_1$ for which every policy satisfies
+\[
+  \max\left\{\E_0R_2(T),\E_1R_1(T)\right\}
+  \ge cT^{2/3}.
+\]
+The null has $\lambda_\star(\nu_0)=0$ and the alternative has a finite value $\lambda_\star(\nu_1)=\Theta(T^{1/3})$.
+\end{theorem}
+
+\begin{proof}
+Let the arms be $a,b$, fix $g=1/4$, and set $\eps=c_0T^{-1/3}$ for a sufficiently small numerical constant.  On the null,
+\[
+  \mu_0^1(a)=\mu_0^1(b)=1/2,
+  \qquad
+  \mu_0^2(a)=g,\quad \mu_0^2(b)=0.
+\]
+Thus $a$ is lexicographically optimal and $\lambda_\star(\nu_0)=0$.  On the alternative, keep the second coordinate unchanged and set
+\[
+  \mu_1^1(a)=1/2,
+  \qquad
+  \mu_1^1(b)=1/2+\eps.
+\]
+Then $b$ is the unique primary optimum and $\lambda_\star(\nu_1)=g/\eps$.
+
+Let $N_b(T)$ be the number of pulls of $b$.  The relevant regrets are exactly
+\[
+  R_{2,0}(T)=gN_b(T),
+  \qquad
+  R_{1,1}(T)=\eps\bigl(T-N_b(T)\bigr).
+\]
+If $\E_0R_2(T)\ge c\eps T$, we are done.  Otherwise
+\[
+  \E_0N_b(T)\le \frac{c\eps T}{g}.
+\]
+For independent unit-variance Gaussian feedback, the adaptive chain rule gives
+\[
+  \KL(P_0\Vert P_1)
+  =\frac{\eps^2}{2}\E_0N_b(T)
+  \le \frac{cT\eps^3}{2g}.
+\]
+Choose $c_0$ and then $c$ so that the last expression is at most $1/32$.  Markov's inequality gives $P_0(N_b(T)>T/2)\le 2c\eps/g$, and Pinsker's inequality transfers the event $N_b(T)\le T/2$ to $P_1$ with constant probability.  On this event, $R_{1,1}(T)\ge\eps T/2$.  Hence
+\[
+  \max\{\E_0R_2(T),\E_1R_1(T)\}
+  \ge c'\eps T
+  =\Omega(T^{2/3}).
+\]
+\end{proof}
+
+The construction also directly separates the known-trade-off zooming benchmark.
+
+\begin{proposition}[Trivial annular data on the hard pair]
+\label[proposition]{prop:two-arm-zooming}
+For each objective of each instance in \cref{thm:two-arm-lower}, every positive-gap annulus in the sense of \citet{xue2025jmlr} is empty or a singleton.  Hence the annular zooming dimension can be taken as $d_z^i=0$ with coefficient $Z_i=1$.  For the null-secondary pair one may use any constant valid envelope, and for the alternative-primary pair $\Lambda_1(\lambda)\equiv1$.  The corresponding known-trade-off coordinate benchmarks are therefore $\widetilde O(\sqrt T)$.
+\end{proposition}
+
+\begin{proof}
+The null has no positive primary gaps and only $b$ has a positive
+secondary gap. The alternative has only one positive primary gap,
+at $a$, and no positive secondary gaps. Every positive-gap annulus
+is therefore empty or a singleton. The annular coefficients can be
+taken to be one. On the null use the valid envelope $L=1$; on the
+alternative use any valid envelope and note that $\Lambda_1(L)=1$.
+The supplied-envelope ADLO bound in Table~\ref{tab:related} then
+gives $\widetilde O(\sqrt T)$ for the null's secondary coordinate
+and for the alternative's primary coordinate.
+\end{proof}
+
+This comparison uses two different instance-coordinate pairs. It does
+not assert a simultaneous $\widetilde O(\sqrt T)$ supplied-envelope
+bound for both coordinates of the large-trade-off alternative.
+
+
+\begin{corollary}[Polynomial price of adaptation]
+\label[corollary]{cor:no-price-false}
+No policy independent of $\lambda_\star$ can simultaneously guarantee, on every two-objective instance and for both coordinates, the known-trade-off objective-wise annular-zooming rate up to polylogarithmic factors.
+\end{corollary}
+
+\begin{remark}[The lower bound is not a small-$\lambda_\star$ artifact]
+\label[remark]{rem:lambda-ge-one}
+A three-arm modification makes every hard instance satisfy $\lambda_\star\ge1$.  Let
+\[
+  (\mu^1(a),\mu^2(a))=(g,g),\quad
+  (\mu^1(b),\mu^2(b))=(g,0),\quad
+  (\mu^1(c),\mu^2(c))=(0,2g)
+\]
+on the null, and increase only $\mu^1(b)$ by $\eps$ on the alternative.  The null has $\lambda_\star=1$ and the alternative has $\lambda_\star=g/\eps$.  Moreover,
+\[
+  R_{1,0}(T)=gN_c(T),
+  \qquad
+  R_{2,0}(T)=gN_b(T)-gN_c(T),
+\]
+so
+\[
+  \max\{\E_0R_1(T),\E_0R_2(T)\}
+  \ge \frac g2\E_0N_b(T).
+\]
+The same information argument yields $\Omega(T^{2/3})$.
+\end{remark}
+
+\section{Finite-Arm Minimax Bounds}
+\label{sec:finite}
+
+We first give an explicit trade-off-free upper bound.
+
+\begin{algorithm}[t]
+\caption{$\LexETC$: finite-arm lexicographic explore-filter-commit}
+\label{alg:lex-etc}
+\begin{algorithmic}[1]
+\Require horizon $T$, arm set $[K]$
+\State $\ell\gets\log(4KT)$ and $A\gets K^{1/3}T^{2/3}\ell^{1/3}$
+\If{$8A>T$}
+  \State play an arbitrary arm for all $T$ rounds and stop
+\EndIf
+\State $n\gets\left\lceil(T^2\ell/K^2)^{1/3}\right\rceil$, \quad
+       $\beta\gets\sqrt{2\ell/n}$
+\For{each arm $a\in[K]$}
+  \State pull $a$ exactly $n$ times and compute $\widehat\mu^1(a),\widehat\mu^2(a)$
+\EndFor
+\State $\widehat M_1\gets\max_a\widehat\mu^1(a)$
+\State $\widehat\C\gets\{a:\widehat\mu^1(a)\ge \widehat M_1-2\beta\}$
+\State $\widehat a\in\argmax_{a\in\widehat\C}\widehat\mu^2(a)$
+\State play $\widehat a$ for all remaining rounds
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Finite-arm upper bound]
+\label{thm:finite-upper}
+There is a universal constant $C$ such that, for every $K\ge2$ and $T\ge2$, $\LexETC$ uses neither $\lambda_\star$ nor an envelope for it and satisfies
+\[
+  \sup_{\nu\in\F_K}
+  \max_{i\le2}\E_\nu R_i(T)
+  \le
+  C\min\left\{
+    T,
+    (K\log(4KT))^{1/3}T^{2/3}
+  \right\}.
+\]
+\end{theorem}
+
+\paragraph{Proof idea.}
+On the event that every arm-coordinate empirical mean is within $\beta$ of its expectation, a lexicographic optimum remains in $\widehat\C$, every retained arm has primary gap at most $4\beta$, and the committed arm has secondary gap at most $2\beta$.  Thus the positive-part regret is at most $Kn+4T\beta$; the chosen $n$ balances the two terms.  The full proof is in \cref{app:finite-upper}.
+
+The matching lower bound generalizes the two-arm construction.
+
+\begin{theorem}[Finite-arm lower bound]
+\label{thm:finite-lower}
+There is a universal constant $c>0$ such that, for every $K\ge2$ and $T\ge2$,
+\[
+  \mathfrak M_{T,K}
+  \ge
+  c\min\left\{
+    T,
+    (K-1)^{1/3}T^{2/3}
+  \right\}.
+\]
+\end{theorem}
+
+\paragraph{Proof idea.}
+Use one anchor and $N=K-1$ candidate arms.  On the null, all primary means tie and the anchor has a secondary advantage $g$.  Alternative $j$ raises only candidate $j$ by $\eps$ in the primary coordinate.  If null-secondary regret is small, averaging gives a candidate with small null sampling count; the Gaussian KL to that alternative is $\eps^2\E_0N_j/2$.  The information condition is $T\eps^3\lesssim gN$.  Choosing $\eps\asymp\min\{1,(N/T)^{1/3}\}$ yields the result.  See \cref{app:finite-lower}.
+
+\begin{corollary}[Sharp finite-arm expected minimax rate]
+\label[corollary]{cor:finite-matching}
+For $K\ge2$,
+\[
+  \boxed{
+  \mathfrak M_{T,K}
+  =\wtTheta\!\left(
+    \min\{T,K^{1/3}T^{2/3}\}
+  \right).}
+\]
+For $K=1$, the value is zero.
+\end{corollary}
+
+\section{Supplied Envelopes and the Regret Transition}
+\label{sec:envelope}
+
+Suppose the learner is supplied with $L\ge\lambda_\star$, and write
+\[
+  B=1\vee L.
+\]
+The key scalarization is
+\[
+  s_B(x)=2B\mu^1(x)+\mu^2(x),
+  \qquad
+  G_B(x)=s_B(x^\star)-s_B(x).
+\]
+
+\begin{lemma}[Robust-score sandwich]
+\label[lemma]{lem:score-sandwich-main}
+For every arm $x$,
+\[
+  G_B(x)\ge B\Delta_1(x),
+  \qquad
+  \Delta_2(x)\le G_B(x).
+\]
+In particular, $x^\star$ maximizes $s_B$.
+\end{lemma}
+
+\begin{proof}
+By \eqref{eq:lambda-def}, $\Delta_2(x)\ge-L\Delta_1(x)$.  Hence
+\[
+  G_B(x)=2B\Delta_1(x)+\Delta_2(x)
+  \ge(2B-L)\Delta_1(x)
+  \ge B\Delta_1(x).
+\]
+The second inequality follows from $G_B(x)-\Delta_2(x)=2B\Delta_1(x)\ge0$.
+\end{proof}
+
+A multiscale elimination algorithm estimates both coordinates to accuracy $r_s=2^{-s}$, filters by the empirical robust score, and stops when the prospective regret-weighted exploration cost exceeds $Tr_s$.  It finally selects the surviving arm with the largest empirical secondary mean.  The last step is essential: it makes the commitment secondary gap $O(r_s)$ rather than $O(Br_s)$.
+
+\begin{theorem}[Finite-arm supplied-envelope phase diagram]
+\label{thm:finite-envelope}
+There are universal constants $c,C>0$ such that, for all $K\ge2$, $T\ge2$, and $L\ge0$,
+\[
+  c\min\left\{
+    T,\sqrt{(1\vee L)(K-1)T},(K-1)^{1/3}T^{2/3}
+  \right\}
+  \le \mathfrak M_{T,K}(L)
+\]
+and
+\[
+  \mathfrak M_{T,K}(L)
+  \le
+  \wtO\!\left(
+  \min\left\{
+    T,\sqrt{(1\vee L)KT},K^{1/3}T^{2/3}
+  \right\}
+  \right).
+\]
+Hence the bounds match up to logarithmic factors.
+\end{theorem}
+
+The proof appears in \cref{app:envelope}. For bounded $L$, a
+primary-only construction gives the lower bound. For larger $L$, the
+same hidden-candidate family uses $g=\min\{1/4,L\eps\}$ and covers
+both the square-root and cubic branches. Table~\ref{tab:regimes}
+makes the transition explicit. The thresholds below suppress
+logarithmic factors; the theorem itself includes the linear cap for
+every $K$ and $T$.
+
+\begin{table}[t]
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\caption{Finite-arm regimes for the joint expected criterion.
+Here $B=1\vee L$. Rates are up to logarithms and universal constants.}
+\label{tab:regimes}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{5.1cm}>{\raggedright\arraybackslash}p{3.4cm}Y@{}}
+\toprule
+Parameter range & Minimax rate & Source of difficulty \\
+\midrule
+$K\ge T$ & $T$ & Too many potential optima for the horizon. \\
+$2\le K\le T$, $1\le B\le(T/K)^{1/3}$
+& $\sqrt{BKT}$ & The envelope bounds secondary search losses. \\
+$2\le K\le T$, $B\ge(T/K)^{1/3}$
+& $K^{1/3}T^{2/3}$ & The fixed cost of searching primary ties dominates. \\
+No supplied envelope, $K\ge2$
+& $\min\{T,K^{1/3}T^{2/3}\}$ & The policy must cover arbitrarily large finite trade-offs. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Primary-Tie Geometry and Adaptation}
+\label{sec:profile}
+
+The finite-arm lower bound counts possible hidden primary improvements.  In a metric space, the corresponding quantity is the packing entropy of arms statistically compatible with a primary tie.
+
+\begin{definition}[Primary near-optimality packing profile]
+\label[definition]{def:profile}
+Fix $c_{\mathrm{nopt}}=64$.  For $0<r\le1$, define
+\[
+  \Pcal_\nu(r)
+  =\Pack\!\left(
+    \{x\in\X:\Delta_1(x)\le c_{\mathrm{nopt}}r\},
+    r
+  \right).
+\]
+For $d\ge0$ and $Z\ge1$, say that $\nu$ has power profile $(d,Z)$ if
+\[
+  \Pcal_\nu(r)\le Zr^{-d},\qquad 0<r\le1.
+\]
+\end{definition}
+
+This is the classical near-optimality packing profile from $X$-armed bandits.  The contribution is to identify it as the missing complexity for unknown lexicographic trade-offs.
+
+For a subset $U\subseteq\X$, let $\Pack(U,r)$ be the largest
+cardinality of a subset whose distinct points are at distance at least
+$r$, and let $\Cov(U,r)$ be the minimum number of closed radius-$r$
+balls needed to cover $U$, with both numbers set to zero for the
+empty set. Compactness of $\X$ makes both numbers finite.
+We assume a measurable maximal-net oracle that, given a nonempty compact
+$U$ and $r>0$,
+returns a finite inclusion-maximal $r$-separated subset. Such a subset
+covers $U$ by closed radius-$r$ balls. The oracle's computational cost
+is not included in the observation budget. A supplied covering
+hierarchy is discussed in \cref{app:entropy}.
+
+\begin{algorithm}[t]
+\caption{$\PFETC$: profile-oblivious primary filtering}
+\label{alg:pf-etc}
+\begin{algorithmic}[1]
+\Require horizon $T$, confidence $\delta$, maximal-net oracle
+\State $U_{-1}\gets\X$, $\Gamma_{-1}\gets0$, $r_s\gets2^{-s}$
+\For{$s=0,1,2,\ldots$}
+  \State $A_s\gets$ a measurable maximal $r_s$-separated subset of $U_{s-1}$
+  \State $n_s\gets\left\lceil2r_s^{-2}\log\!\left(\frac{8\pi^2(s+1)^2\max\{2,|A_s|\}}{3\delta}\right)\right\rceil$
+  \State $\Gamma_s^{\rm pro}\gets\Gamma_{s-1}+64|A_s|n_s$
+  \If{$\Gamma_s^{\rm pro}>Tr_s$}
+    \State stop before sampling stage $s$
+  \EndIf
+  \State sample every center in $A_s$ exactly $n_s$ fresh times
+  \State $G_s\gets\{x\in A_s:\widehat\mu_s^1(x)\ge\max_{y\in A_s}\widehat\mu_s^1(y)-3r_s\}$
+  \State $U_s\gets U_{s-1}\cap\bigcup_{x\in G_s}\overline B(x,r_s)$ and $\Gamma_s\gets\Gamma_s^{\rm pro}$
+\EndFor
+\If{no stage was completed}
+  \State play a fixed arm for all remaining rounds
+\Else
+  \State let $\tau$ be the last completed stage and commit to
+  $\widehat x_\tau\in\argmax_{x\in G_\tau}\widehat\mu_\tau^2(x)$
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Profile-oblivious oracle inequality]
+\label{thm:profile-oracle}
+Algorithm \ref{alg:pf-etc} uses neither $\lambda_\star$ nor any profile parameter.  For
+\[
+  \overline n_s(p,\delta)
+  =\left\lceil2r_s^{-2}\log\!\left(
+  \frac{8\pi^2(s+1)^2\max\{2,p\}}{3\delta}
+  \right)\right\rceil
+\]
+and
+\[
+  H_U(s;\nu,\delta)
+  =64\sum_{j=0}^s
+  \Pcal_\nu(r_j)\overline n_j(\Pcal_\nu(r_j),\delta),
+\]
+there is a universal constant $C$ such that
+\[
+  \max_{i\le2}\E_\nu R_i(T)
+  \le
+  C\left[
+    \min\left\{T,\inf_{s\ge0}
+    \bigl(H_U(s;\nu,\delta)+Tr_s\bigr)\right\}
+    +\delta T
+  \right].
+\]
+\end{theorem}
+
+\begin{corollary}[Power-profile upper bound]
+\label[corollary]{cor:power-upper}
+If $\Pcal_\nu(r)\le Zr^{-d}$ and $\delta=T^{-2}$, then the same policy, without knowing $d$ or $Z$, satisfies
+\[
+  \max_{i\le2}\E_\nu R_i(T)
+  \le
+  \wtO_d\!\left(
+  \min\left\{
+    T,
+    Z^{1/(d+3)}T^{(d+2)/(d+3)}
+  \right\}
+  \right).
+\]
+\end{corollary}
+
+The proof is in \cref{app:profile-upper}.  On the high-probability event, every active net contains a representative of $x^\star$, retained centers have primary gap $O(r_s)$, and the final empirical-secondary maximizer has both coordinate gaps $O(r_s)$.  The stopping rule compares the realized exploration cost to $Tr_s$ and thereby adapts to the unknown profile.
+
+\subsection{Matching regular metric classes}
+
+To state a matching lower bound, one needs a sufficiently rich metric class; a profile upper bound alone cannot force hardness on every subclass.
+
+\begin{assumption}[Regular anchor-plus-tie space]
+\label[assumption]{ass:regular}
+The arm space is $\X=\{a\}\cup S$, with $D(a,z)=1$ for $z\in S$
+and $\operatorname{diam}(S)\le1/4$. Fix $d\ge0$, $c_->0$, $c_+>0$,
+and $r_0\in(0,1/16]$. For some $Z\ge1$,
+\[
+ \Pack(S,4r)\ge c_-Zr^{-d},\qquad
+ \Cov(S,r)\le c_+Zr^{-d},\qquad 0<r\le r_0.
+\]
+\end{assumption}
+
+\begin{theorem}[Sharp regular-metric adaptation rate]
+\label{thm:regular-metric}
+For every fixed metric satisfying \cref{ass:regular},
+\[
+ \mathfrak M_T(\X)
+ =\widetilde\Theta_{d,c_-,c_+,r_0}\!\left(
+ \min\{T,Z^{1/(d+3)}T^{(d+2)/(d+3)}\}\right).
+\]
+The constants are uniform in $T$ and $Z$ when the displayed regularity
+parameters are fixed. The conclusion also holds on the subclass of
+finite local trade-offs. The upper policy needs neither
+$\lambda_\star$ nor the regularity parameters.
+\end{theorem}
+
+The lower bound chooses $N\asymp Z\eps^{-d}$ disjoint hidden locations.  The null makes all of $S$ primary-tied and assigns a secondary advantage to the anchor.  Alternative $v$ inserts the cone $(\eps-D(\cdot,v))_+$ in the primary objective.  The information balance becomes
+\[
+  T\eps^{d+3}\lesssim Z,
+\]
+which yields the $d+3$ denominator.  Complete details are in \cref{app:metric-lower}.
+
+\subsection{Arbitrary tie-metric entropy}
+\label{sec:entropy}
+
+The power-law assumption is not essential.  Fix $\X=\{a\}\cup S$ with $D(a,S)=1$ and arbitrary nonempty compact $S$ of diameter at most $1/4$.  Let
+\[
+  r_s=2^{-s-4},
+  \qquad
+  M_s=\Pack(S,r_s),
+  \qquad
+  s_T=\left\lceil\log_2(16T)\right\rceil+2.
+\]
+Define
+\[
+  \Psi_T^\infty(S)
+  =T\max_{0\le s\le s_T}
+  \min\left\{r_s,\left(\frac{M_s}{T}\right)^{1/3}\right\},
+\]
+and, for $B\ge1$,
+\[
+  \Psi_T^B(S)
+  =T\max_{0\le s\le s_T}
+  \min\left\{
+    r_s,
+    \sqrt{\frac{BM_s}{T}},
+    \left(\frac{M_s}{T}\right)^{1/3}
+  \right\}.
+\]
+
+\begin{theorem}[Arbitrary tie-metric entropy]
+\label{thm:entropy}
+There are universal constants $c,C>0$ such that, for every $T\ge2$,
+\[
+  c\Psi_T^\infty(S)
+  \le \mathfrak M_T(\X)
+  \le C\log^{2/3}(eT)\Psi_T^\infty(S).
+\]
+If an envelope $L$ is supplied and $B=1\vee L$, then
+\[
+  c\Psi_T^B(S)
+  \le \mathfrak M_T(\X;L)
+  \le C\log(eT)\Psi_T^B(S).
+\]
+The upper policy does not know the entropy sequence $(M_s)_s$.
+\end{theorem}
+
+This result is metric-wise for the anchor-plus-tie geometry.  It is not a claim of polynomial-time net construction from an arbitrary black-box metric.  If a well-shaped hierarchical covering tree is supplied, the traversal is output-sensitive and linear in the number of generated nodes.  The proof is in \cref{app:entropy}.
+
+\section{Expected-Regret Trade-offs and Confidence Bounds}
+\label{sec:frontiers}
+
+The balanced minimax lower bound follows from a more detailed constraint on how a policy distributes regret between the null and the alternatives.
+
+Consider one anchor $a$ and $N$ candidates.  Fix $g\in(0,1/4]$.  On the null, all primary means tie, the anchor has secondary mean $g$, and each candidate has secondary mean zero.  Alternative $j$ raises only candidate $j$ by $\eps$ in the primary coordinate.  Define
+\[
+  r_0=\E_0R_2(T),
+  \qquad
+  r_j(\eps)=\E_j^\eps R_1(T),
+  \qquad
+  r_\star(\eps)=\max_{j\in[N]}r_j(\eps).
+\]
+
+\begin{theorem}[Expected-regret Pareto lower constraint]
+\label{thm:pareto}
+For every policy and every $0<\eps\le g$,
+\[
+  \boxed{
+  \frac{r_0}{gN}
+  +\frac{r_\star(\eps)}{\eps}
+  \ge
+  \frac T2
+  \exp\left(-\frac{\eps^2r_0}{2gN}\right).}
+\]
+Consequently, if $r_0\le gT/8$,
+\[
+  \sup_{0<\eps\le g/2}r_\star(\eps)
+  \ge
+  cT\min\left\{
+    g,
+    \sqrt{\frac{gN}{r_0+gN}}
+  \right\}.
+\]
+In the square-root branch,
+\[
+  (r_0+gN)
+  \left(\sup_{\eps}r_\star(\eps)\right)^2
+  \ge cgNT^2.
+\]
+\end{theorem}
+
+This theorem is a Pareto \emph{lower constraint}; we do not claim a family of algorithms matching every point of the boundary.  The proof is in \cref{app:pareto}.
+
+For high-probability guarantees, define
+\[
+  \mathfrak Q_{T,K}(\delta)
+  =\inf_\pi\inf\left\{r:
+  \sup_{\nu\in\F_K}
+  \Pp_\nu\left(\max_{i\le2}R_i^+(T)>r\right)
+  \le\delta
+  \right\}.
+\]
+
+\begin{theorem}[General finite-arm high-probability lower bound]
+\label{thm:hp-lower}
+There are universal constants $c,C>0$ such that, for $K=N+1\ge2$, $T\ge C$, and $0<\delta\le1/16$,
+\[
+  \mathfrak Q_{T,K}(\delta)
+  \ge
+  c\min\left\{
+    T,
+    \bigl(N\log(1/\delta)\bigr)^{1/3}T^{2/3}
+  \right\}.
+\]
+\end{theorem}
+
+\begin{theorem}[Sharp two-arm high-probability rate]
+\label{thm:two-hp}
+There are universal constants $c,C>0$ such that, for $T\ge C$ and $0<\delta\le1/16$,
+\[
+  c\min\left\{
+    T,T^{2/3}\log^{1/3}(1/\delta)
+  \right\}
+  \le \mathfrak Q_{T,2}(\delta)
+\]
+\[
+  \le
+  C\min\left\{
+    T,T^{2/3}\log^{1/3}(8/\delta)
+  \right\}.
+\]
+\end{theorem}
+
+\begin{proposition}[General-$K$ high-probability bracket]
+\label[proposition]{prop:k-hp}
+For every $K\ge2$, $T\ge C$, and $0<\delta\le1/16$,
+\[
+  c\min\left\{
+    T,
+    ((K-1)\log(1/\delta))^{1/3}T^{2/3}
+  \right\}
+  \le \mathfrak Q_{T,K}(\delta)
+\]
+and
+\[
+  \mathfrak Q_{T,K}(\delta)
+  \le
+  C\min\left\{
+    T,
+    (K\log(4K/\delta))^{1/3}T^{2/3}
+  \right\}.
+\]
+Thus the confidence dependence is sharp; the current general-$K$ upper bound has an additional $\log^{1/3}K$ factor.
+\end{proposition}
+
+The high-probability lower bound uses a stopped-history KL argument: either the null explores many candidates with probability at least $\delta$, or some candidate is under-sampled with constant null probability; stopping at its $m$-th pull keeps KL at $O(\log(1/\delta))$ and binary-KL inversion transfers the under-sampling event.  Proofs are in \cref{app:high-prob}.
+
+\section{Discussion}
+\label{sec:discussion}
+
+The results distinguish three sources of statistical difficulty. Ordinary
+primary-reward uncertainty gives the square-root lower bound. A bounded
+trade-off permits a larger secondary loss near a primary optimum and
+increases that rate by a square-root dependence on the envelope. When
+the envelope is sufficiently large, the fixed loss of searching a primary
+tie dominates; further increases in the envelope do not change the
+finite-horizon minimax rate.
+
+The metric results make the search region explicit. The profile upper
+bound depends on the primary near-optimal set of the particular instance.
+Its matching lower bounds concern rich classes, constructed by allowing
+a primary improvement at any of many separated tie locations. A small
+profile therefore supplies an upper bound; it does not, by itself, imply
+that every instance with that profile is hard. The arbitrary-entropy
+theorem is likewise a minimax statement on a fixed anchor-plus-tie
+space, rather than an instance-wise equivalence.
+
+Several questions remain. The general-$K$ high-probability bounds leave
+a logarithmic gap in $K$. The Pareto inequality constrains what a policy
+can achieve, but a family of algorithms attaining every point of that
+constraint is not established here. More than two objectives may require
+several interacting search regions. Finally, the metric algorithms assume
+measurable maximal-net access; their oracle guarantees do not supply an
+efficient representation of an arbitrary compact metric space.
+
+\section{Conclusion}
+
+Primary ties link the classical impossibility of fast prior-free
+lexicographic learning to a quantitative theory of simultaneous regret.
+For finite arms, the sharp dependence is $K^{1/3}T^{2/3}$ without an
+envelope, and $\min\{\sqrt{(1\vee L)KT},K^{1/3}T^{2/3}\}$ with a
+supplied envelope, in both cases capped by $T$ and up to logarithms.
+For metric arms, the packing profile of primary near-optimal actions
+governs a profile-adaptive upper bound and yields matching $d+3$ rates
+on regular tie spaces. The entropy and confidence refinements describe
+the same testing cost at finer resolution.
+
+\appendix
+
+\section{Finite-Arm Proofs}
+\label[appendix]{app:finite-upper}
+
+\begin{lemma}[Terminal accuracy of $\LexETC$]
+\label[lemma]{lem:finite-terminal}
+On the event
+\[
+  \mathcal E=
+  \left\{
+  |\widehat\mu^i(a)-\mu^i(a)|\le\beta,
+  \ \forall a\in[K],\ i\in\{1,2\}
+  \right\},
+\]
+the arm committed by Algorithm~\ref{alg:lex-etc} satisfies
+\[
+  \Delta_1(\widehat a)\le4\beta,
+  \qquad
+  \Delta_2(\widehat a)\le2\beta.
+\]
+\end{lemma}
+
+\begin{proof}
+Let $a^\star$ be a lexicographic optimum.  On $\mathcal E$,
+\[
+  \widehat M_1-\widehat\mu^1(a^\star)
+  \le(\mu^1_\star+\beta)-(\mu^1_\star-\beta)
+  =2\beta,
+\]
+so $a^\star\in\widehat\C$.  For every $a\in\widehat\C$,
+\[
+  \widehat\mu^1(a)
+  \ge \widehat\mu^1(a^\star)-2\beta
+  \ge \mu^1_\star-3\beta,
+\]
+and hence $\mu^1(a)\ge\mu^1_\star-4\beta$.  Since $\widehat a$ maximizes the empirical secondary mean over a set containing $a^\star$,
+\[
+  \mu^2(\widehat a)
+  \ge\widehat\mu^2(\widehat a)-\beta
+  \ge\widehat\mu^2(a^\star)-\beta
+  \ge\mu^2(a^\star)-2\beta.
+\]
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:finite-upper}]
+By sub-Gaussian concentration,
+\[
+  \Pp(\mathcal E^c)
+  \le4K\exp(-n\beta^2/2)
+  =4Ke^{-\ell}
+  \le T^{-1}.
+\]
+Every positive instantaneous coordinate gap is at most one.  Thus exploration contributes at most $Kn$ to either positive-part regret.  On $\mathcal E$, \cref{lem:finite-terminal} bounds commitment by $4T\beta$; on $\mathcal E^c$, regret is at most $T$.  Therefore
+\[
+  \max_i\E R_i(T)
+  \le Kn+4T\beta+1.
+\]
+In the nontrivial branch, let $A=K^{1/3}T^{2/3}\ell^{1/3}\le T/8$.  Cubing gives $K\ell\le T/512$, hence $K\le T/512$.  Since
+\[
+  n\le(T^2\ell/K^2)^{1/3}+1,
+\]
+we have $Kn\le A+K<T/2$, so the algorithm is feasible.  Moreover,
+\[
+  Kn\le C A,
+  \qquad
+  T\beta\le C A.
+\]
+In the trivial branch, regret is at most $T$, which is within a universal constant of the linearly capped target.
+\end{proof}
+
+\section{Finite-Arm Lower Bounds}
+\label[appendix]{app:finite-lower}
+
+Let the arms be $\{a,1,\ldots,N\}$, $N=K-1$, and let $0<g\le1/4$.  On the null,
+\[
+  \mu_0^1(x)=1/2\quad\forall x,
+  \qquad
+  \mu_0^2(a)=g,
+  \qquad
+  \mu_0^2(j)=0.
+\]
+For alternative $j$, keep the second coordinate unchanged and set
+\[
+  \mu_j^1(j)=1/2+\eps,
+  \qquad
+  \mu_j^1(x)=1/2\quad(x\ne j).
+\]
+Use independent unit-variance Gaussian noise.
+
+\begin{lemma}[Costly search versus a hidden candidate]
+\label[lemma]{lem:finite-costly}
+There is a universal $c_0>0$ such that, if
+\[
+  0<\eps\le g/2,
+  \qquad
+  T\eps^3\le c_0gN,
+\]
+then every policy satisfies
+\[
+  \max\left\{
+    \E_0R_2(T),
+    \max_{j\in[N]}\E_jR_1(T)
+  \right\}
+  \ge c_0\eps T.
+\]
+\end{lemma}
+
+\begin{proof}
+Let $N_S(T)=\sum_jN_j(T)$.  Under the null,
+\[
+  R_2(T)=gN_S(T).
+\]
+If $\E_0R_2(T)\ge c_0\eps T$, we are done.  Otherwise, some $j$ satisfies
+\[
+  \E_0N_j(T)
+  \le\frac{c_0\eps T}{gN}.
+\]
+The adaptive Gaussian chain rule gives
+\[
+  \KL(P_0\Vert P_j)
+  =\frac{\eps^2}{2}\E_0N_j(T)
+  \le\frac{c_0T\eps^3}{2gN}.
+\]
+Choose constants so that this is at most $1/128$.  Let
+$E_j=\{N_j(T)\le T/2\}$.  Markov's inequality gives
+\[
+  P_0(E_j^c)
+  \le\frac{2\E_0N_j(T)}{T}
+  \le\frac{2c_0\eps}{gN}
+  \le\frac18.
+\]
+Pinsker's inequality therefore implies $P_j(E_j)\ge1/2$.  On $E_j$, at least $T/2$ pulls have primary gap $\eps$, so
+\[
+  \E_jR_1(T)\ge\frac{\eps T}{4}.
+\]
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:finite-lower}]
+Fix $g=1/4$ and take
+\[
+  \eps=c\min\left\{1,\left(\frac NT\right)^{1/3}\right\}
+\]
+with $c$ sufficiently small.  Then the conditions of \cref{lem:finite-costly} hold and
+\[
+  \mathfrak M_{T,K}
+  \ge c'\eps T
+  \ge c''\min\{T,N^{1/3}T^{2/3}\}.
+\]
+\end{proof}
+
+\section{Proof of the Supplied-Envelope Phase Diagram}
+\label[appendix]{app:envelope}
+
+We first make the robust-score algorithm precise and then prove the lower
+bound with a single construction that covers the entire range $L\ge2$.
+Throughout this section, $B=1\vee L$, $r_s=2^{-s}$, and
+$q_s=\min\{1,Br_s\}$.
+
+\subsection{Robust-score elimination}
+
+Fix a confidence level $\delta\in(0,1)$.  Set $A_0=[K]$ and
+$\Gamma_{-1}=0$.  For a nonempty active set $A_s$, define
+\[
+ n_s=\left\lceil 2r_s^{-2}
+ \log\left(\frac{8\pi^2(s+1)^2\max\{2,|A_s|\}}{3\delta}\right)
+ \right\rceil,
+ \qquad
+ \Gamma_s^{\mathrm{pro}}=
+ \Gamma_{s-1}+64q_s|A_s|n_s.
+\]
+Before taking any stage-$s$ samples, compare
+$\Gamma_s^{\mathrm{pro}}$ with $Tr_s$.
+If $\Gamma_s^{\mathrm{pro}}>Tr_s$, stop exploration.  When $s=0$, play
+an arbitrary arm for the entire horizon.  When $s\ge1$, set $\tau=s-1$
+and commit for all remaining rounds to
+\[
+ \widehat a\in\argmax_{a\in A_{\tau+1}}
+                     \widehat\mu^2_\tau(a),
+\]
+where the empirical means were computed at the last completed stage.
+Otherwise, pull each arm in $A_s$ exactly $n_s$ times, using fresh samples,
+set $\Gamma_s=\Gamma_s^{\mathrm{pro}}$, and form
+\[
+ \widehat s_{B,s}(a)=2B\widehat\mu^1_s(a)+\widehat\mu^2_s(a),
+ \qquad
+ A_{s+1}=\left\{a\in A_s:
+ \widehat s_{B,s}(a)\ge
+ \max_{b\in A_s}\widehat s_{B,s}(b)-12Br_s\right\}.
+\]
+The empirical maximizer always survives, so every active set is nonempty.
+
+The algorithm is feasible on every sample path.  Indeed, if stage $s$ is
+accepted, its cumulative sample count, including that stage, satisfies
+\begin{equation}
+\label{eq:envelope-feasibility}
+ \sum_{j=0}^s |A_j|n_j
+ \le \frac{\Gamma_s}{64q_s}
+ \le \frac{Tr_s}{64q_s}
+ \le \frac{T}{64}.
+\end{equation}
+Here $q_j\ge q_s\ge r_s$ for $j\le s$.  Thus there is enough time for
+every accepted stage and for the final commitment.  The algorithm also
+terminates: $n_s\ge r_s^{-2}$ and $q_s\ge r_s$ imply
+$\Gamma_s^{\mathrm{pro}}\ge64/r_s$, so sufficiently fine stages must fail
+the stopping test.  In particular, no stage with
+$s>\lceil\log_2 T\rceil$ can be reached.
+
+\begin{lemma}[Confidence and robust-score invariants]
+\label[lemma]{lem:finite-score-inv}
+With probability at least $1-\delta$, all completed-stage empirical means
+satisfy
+\[
+ |\widehat\mu_s^i(a)-\mu^i(a)|\le r_s,
+ \qquad a\in A_s,\quad i\in\{1,2\}.
+\]
+On this event, a lexicographic optimum is never eliminated.  Every arm
+active at stage $s\ge1$ satisfies
+\[
+ \Delta_1(a)\le36r_s,
+ \qquad [\Delta_2(a)]_+\le36Br_s.
+\]
+If at least one stage is completed, the committed arm satisfies
+\[
+ \Delta_1(\widehat a)\le18r_\tau,
+ \qquad \Delta_2(\widehat a)\le2r_\tau.
+\]
+\end{lemma}
+
+\begin{proof}
+Conditional on the history before stage $s$, the active set is fixed and
+the fresh observations satisfy the assumed conditional sub-Gaussian
+bound.  A union bound over its two coordinates and all its arms gives a
+conditional failure probability at most
+\[
+ 4|A_s|\exp(-n_sr_s^2/2)
+ \le\frac{3\delta}{2\pi^2(s+1)^2}.
+\]
+Summing over stages gives a total failure probability at most $\delta$.
+This argument also applies when a stage is not reached, by assigning it
+zero failure probability.
+
+On the confidence event, the score error is at most
+$(2B+1)r_s\le3Br_s$.  By \cref{lem:score-sandwich-main}, a lexicographic
+optimum $a^\star$ maximizes the true score.  Its empirical score is within
+$6Br_s$ of the empirical maximum, so it survives the $12Br_s$ filter.
+Every survivor $a\in A_{s+1}$ satisfies
+\[
+ G_B(a)
+ \le 3Br_s+12Br_s+3Br_s=18Br_s.
+\]
+The robust-score sandwich gives $\Delta_1(a)\le18r_s$ and
+$[\Delta_2(a)]_+\le18Br_s$.  Replacing $r_{s-1}$ by $2r_s$ proves the
+bounds for arms active at the beginning of stage $s$.
+Finally, $a^\star\in A_{\tau+1}$, so empirical secondary maximization
+at stage $\tau$ gives
+\[
+ \mu^2(\widehat a)
+ \ge\widehat\mu^2_\tau(\widehat a)-r_\tau
+ \ge\widehat\mu^2_\tau(a^\star)-r_\tau
+ \ge\mu^2(a^\star)-2r_\tau.
+\]
+Its primary gap is bounded by the survivor estimate from stage $\tau$.
+\end{proof}
+
+\begin{lemma}[Finite envelope upper bound]
+\label[lemma]{lem:finite-envelope-upper}
+There is a universal constant $C$ such that, with
+$\ell=\log(64KT/\delta)$, robust-score elimination satisfies, with
+probability at least $1-\delta$,
+\[
+ \max_{i\le2}R_i^+(T)
+ \le C\min\left\{
+ T,\sqrt{BK\ell T},(K\ell)^{1/3}T^{2/3}
+ \right\}.
+\]
+In particular, choosing $\delta=1/T$ proves the upper bound in
+\cref{thm:finite-envelope}.
+\end{lemma}
+
+\begin{proof}
+Work on the confidence event in \cref{lem:finite-score-inv}.  A pull in
+stage $s\ge1$ has either positive coordinate gap at most
+$\min\{1,36Br_s\}\le36q_s$.  The same bound holds at stage zero because
+$q_0=1$.  Thus the exploration regret is at most
+$(36/64)\Gamma_\tau$.  If the first failed stage is $j\ge1$, then
+$\tau=j-1$, and the commitment guarantee gives
+\begin{equation}
+\label{eq:envelope-crossing-risk}
+ \max_{i\le2}R_i^+(T)
+ \le\Gamma_\tau+18Tr_\tau
+ \le19Tr_\tau=38Tr_j.
+\end{equation}
+If $j=0$, the deterministic bound $R_i^+(T)\le T$ applies.
+
+We next relate this stopping rule to a deterministic cost bound.
+All attempted stages satisfy $s\le\lceil\log_2 T\rceil$.  Since
+$|A_s|\le K$, their sample sizes obey
+$n_s\le C_0r_s^{-2}\ell$ for a universal $C_0$.  Define, for every
+integer $s\ge0$,
+\[
+ H_s=64C_0K\ell\sum_{u=0}^s q_ur_u^{-2}.
+\]
+For each attempted stage, $\Gamma_s^{\mathrm{pro}}\le H_s$.
+The sequence $H_s$ is nondecreasing.  At the first failed stage $j$,
+\[
+ H_j\ge\Gamma_j^{\mathrm{pro}}>Tr_j.
+\]
+For $s\le j$, we have $Tr_s\ge Tr_j$; for $s\ge j$, we have
+$H_s\ge H_j>Tr_j$.  Hence
+\[
+ \inf_{s\ge0}\{H_s+Tr_s\}\ge Tr_j.
+\]
+Combined with \eqref{eq:envelope-crossing-risk}, this gives an upper
+bound of $38\inf_s\{H_s+Tr_s\}$ when $j\ge1$.  When $j=0$,
+$H_s\ge H_0>T$ for all $s$, and the same conclusion follows from the
+trivial bound $T$.
+
+Geometric summation yields
+\[
+ \sum_{u=0}^s q_ur_u^{-2}
+ \le\min\left\{\sum_{u=0}^s r_u^{-2},
+                  B\sum_{u=0}^s r_u^{-1}\right\}
+ \le2\min\{r_s^{-2},Br_s^{-1}\}.
+\]
+Consequently, the risk is at most a universal constant times
+\[
+ \inf_{s\ge0}\left\{
+ K\ell\min\{r_s^{-2},Br_s^{-1}\}+Tr_s\right\}.
+\]
+Choosing dyadic scales within a factor two of
+$(K\ell/T)^{1/3}$ and $(BK\ell/T)^{1/2}$, whenever these are at most
+one, proves the two nonlinear branches.  The deterministic bound $T$
+supplies the remaining branch.  Finally, the confidence failure adds at
+most $T\delta$ in expectation; with $\delta=1/T$, this is absorbed into
+the displayed bound.
+\end{proof}
+
+\subsection{Lower bounds for all envelope sizes}
+
+We include the primary-only lower bound to make the envelope argument
+self-contained.
+
+\begin{lemma}[Primary-only finite-arm lower bound]
+\label[lemma]{lem:primary-only-finite}
+There is a universal $c>0$ such that, for $K\ge2$ and $T\ge2$, every
+policy has expected primary regret at least
+$c\min\{T,\sqrt{KT}\}$ on some $K$-arm Gaussian instance with constant
+secondary means.  In particular, every such instance has
+$\lambda_\star=0$.
+\end{lemma}
+
+\begin{proof}
+Let $P_0$ denote the experiment with all primary means equal to $1/2$.
+For $j\in[K]$, let $P_j$ raise only arm $j$ to $1/2+\eta$, where
+\[
+ \eta=c_1\min\{1,\sqrt{K/T}\},\qquad 0<c_1\le1/4.
+\]
+All coordinates have independent unit-variance Gaussian noise and the
+secondary means are zero.  The adaptive chain rule and Pinsker's
+inequality give
+\[
+ \KL(P_0\Vert P_j)=\frac{\eta^2}{2}\E_0N_j(T),
+ \qquad
+ \E_jN_j(T)\le\E_0N_j(T)
+                  +\frac{T\eta}{2}\sqrt{\E_0N_j(T)}.
+\]
+Averaging over $j$ and applying Cauchy--Schwarz yields
+\[
+ \frac1K\sum_{j=1}^K\E_jN_j(T)
+ \le\frac TK+\frac{T\eta}{2}\sqrt{\frac TK}.
+\]
+Since $K\ge2$ and $\eta\sqrt{T/K}\le c_1$, the average primary
+regret on these alternatives is at least
+\[
+ \frac1K\sum_{j=1}^K\E_jR_1(T)
+ =\frac{\eta}{K}\sum_{j=1}^K\bigl(T-\E_jN_j(T)\bigr)
+ \ge\frac{\eta T}{4}.
+\]
+At least one alternative therefore has the claimed regret.
+\end{proof}
+
+\begin{lemma}[Envelope lower bound]
+\label[lemma]{lem:envelope-lower}
+For $N=K-1\ge1$, $T\ge2$, and $L\ge0$,
+\[
+ \mathfrak M_{T,K}(L)
+ \ge c\min\left\{
+ T,\sqrt{(1\vee L)NT},N^{1/3}T^{2/3}
+ \right\}
+\]
+for a universal constant $c>0$.
+\end{lemma}
+
+\begin{proof}
+For $0\le L<2$, \cref{lem:primary-only-finite} gives
+$c\min\{T,\sqrt{NT}\}$.  This is within a universal factor of the
+claimed minimum: when $N\le T$, its square-root branch is at most
+$\sqrt{2NT}$, and when $N>T$ the target is at most $T$.
+
+Now suppose $L\ge2$.  Use the anchor-and-candidates family from
+\cref{app:finite-lower}, with
+\[
+ \eps=c_2\min\left\{1,\sqrt{\frac{LN}{T}},
+                         \left(\frac NT\right)^{1/3}\right\},
+ \qquad
+ g=\min\{1/4,L\eps\}.
+\]
+Here $c_2>0$ is a sufficiently small universal constant, in particular
+$c_2\le1/8$.  The null has $\lambda_\star=0$, and each alternative
+has
+\[
+ \lambda_\star=\frac g\eps\le L.
+\]
+The inequality $\eps\le g/2$ holds in both cases: if $g=L\eps$ it
+follows from $L\ge2$, and if $g=1/4$ it follows from $\eps\le1/8$.
+When $g=L\eps$, we have
+\[
+ \frac{T\eps^3}{gN}
+ =\frac{T\eps^2}{LN}\le c_2^2.
+\]
+When $g=1/4$, we instead have
+\[
+ \frac{T\eps^3}{gN}\le4c_2^3.
+\]
+Choosing $c_2$ so that both upper bounds are at most the constant in
+\cref{lem:finite-costly}, we may apply that lemma.  The result is a
+lower bound $c'\eps T$, which is exactly the claimed three-branch
+minimum up to a universal constant.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:finite-envelope}]
+Combine \cref{lem:finite-envelope-upper,lem:envelope-lower} and use
+$K/2\le K-1\le K$ for $K\ge2$.
+\end{proof}
+
+\section{Proof of the Profile-Oblivious Oracle Inequality}
+\label[appendix]{app:profile-upper}
+
+\begin{lemma}[Uniform confidence for random stagewise nets]
+\label[lemma]{lem:stage-confidence}
+Conditionally on the past, let $A_s$ be a finite random set and pull each center $n_s$ fresh times as in Algorithm~\ref{alg:pf-etc}.  Simultaneously over all sampled stages, centers, and coordinates,
+\[
+  |\widehat\mu_s^i(x)-\mu^i(x)|\le r_s
+\]
+holds with probability at least $1-\delta$.
+\end{lemma}
+
+\begin{proof}
+Conditionally on the history before stage $s$, $A_s$ is fixed.  A union bound over $2|A_s|$ coordinate-center pairs gives conditional failure probability at most
+\[
+  4|A_s|e^{-n_sr_s^2/2}
+  \le\frac{3\delta}{2\pi^2(s+1)^2}.
+\]
+Summing over $s$ proves the claim.
+\end{proof}
+
+\begin{lemma}[Primary-filtering invariants]
+\label[lemma]{lem:profile-invariants}
+On the event of \cref{lem:stage-confidence}, for every completed stage $s$:
+\begin{enumerate}[label=(\roman*)]
+  \item $x^\star\in U_s$;
+  \item every $x\in G_s$ satisfies $\Delta_1(x)\le6r_s$;
+  \item $U_s\subseteq\{x:\Delta_1(x)\le7r_s\}$;
+  \item every completed candidate net, and the first rejected candidate net, satisfies $|A_s|\le\Pcal_\nu(r_s)$;
+  \item the terminal arm satisfies
+  $\Delta_1(\widehat x_\tau)\le6r_\tau$ and
+  $\Delta_2(\widehat x_\tau)\le3r_\tau$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Assume inductively that $x^\star\in U_{s-1}$.  By maximality, some $\bar x_s\in A_s$ satisfies $D(\bar x_s,x^\star)\le r_s$.  On the confidence event,
+\[
+  \widehat\mu_s^1(\bar x_s)
+  \ge\mu^1(x^\star)-2r_s,
+  \qquad
+  \max_{x\in A_s}\widehat\mu_s^1(x)
+  \le\mu^1(x^\star)+r_s.
+\]
+Hence $\bar x_s\in G_s$ and $x^\star\in U_s$.  For $x\in G_s$,
+\[
+  \widehat\mu_s^1(x)
+  \ge\widehat\mu_s^1(\bar x_s)-3r_s
+  \ge\mu^1(x^\star)-5r_s,
+\]
+so $\Delta_1(x)\le6r_s$.  Lipschitzness gives the active-set containment.  For $s\ge1$, $A_s\subseteq\{\Delta_1\le14r_s\}$ and is $r_s$-separated, so $|A_s|\le\Pcal_\nu(r_s)$ because $c_{\mathrm{nopt}}=64$.  At $s=0$, the claim is immediate from bounded gaps.  Finally, $\bar x_\tau\in G_\tau$, and empirical secondary maximization against it gives
+\[
+  \mu^2(\widehat x_\tau)
+  \ge\mu^2(\bar x_\tau)-2r_\tau
+  \ge\mu^2(x^\star)-3r_\tau.
+\]
+\end{proof}
+
+\begin{lemma}[Deterministic crossing]
+\label[lemma]{lem:crossing}
+Let $H_s$ be nondecreasing and $r_s=2^{-s}$.  If
+\[
+  s_\star=\min\{s:H_s>Tr_s\},
+\]
+then
+\[
+  Tr_{s_\star}
+  \le\inf_s\{H_s+Tr_s\}.
+\]
+If a procedure cannot stop before $s_\star$ and returns $\tau\ge s_\star-1$, then
+\[
+  Tr_\tau
+  \le2\inf_s\{H_s+Tr_s\}.
+\]
+\end{lemma}
+
+\begin{proof}
+If $s<s_\star$, then $Tr_s\ge2Tr_{s_\star}$.  If $s\ge s_\star$, then $H_s\ge H_{s_\star}>Tr_{s_\star}$.  The second conclusion follows from $r_\tau\le r_{s_\star-1}=2r_{s_\star}$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:profile-oracle}]
+Every active set is nonempty and compact: the empirical primary maximizer
+belongs to $G_s$ and remains in $U_s$. Thus the algorithm is defined on
+every sample path. Each accepted stage obeys
+$64\sum_{j\le s}|A_j|n_j=\Gamma_s\le Tr_s\le T$, so the exploration
+fits in the horizon. Since every candidate set is nonempty and
+$n_s\ge r_s^{-2}$, the stopping test eventually fails.
+
+On the confidence event, \cref{lem:profile-invariants} bounds every
+realized candidate size by the profile, including the first rejected
+stage. Thus the prospective proxy at stage $s$ is at most
+$H_U(s;\nu,\delta)$. If no stage is completed, the first prospective
+cost exceeds $T$ and hence $H_U(0;\nu,\delta)>T$. Monotonicity then
+makes the minimum with $T$ in the stated bound equal to $T$, so the
+fallback policy suffices.
+
+Otherwise, let $s_\star$ be the first deterministic crossing
+$H_U(s;\nu,\delta)>Tr_s$. The algorithm cannot stop earlier, so its
+last completed stage satisfies $\tau\ge s_\star-1$. Exploration
+contributes at most $Tr_\tau/64$ positive regret, and commitment
+contributes at most $6Tr_\tau$. The crossing lemma gives the displayed
+oracle bound. Combining this with the deterministic cap $T$ gives the
+minimum with $T$. On the confidence failure, positive regret is at
+most $T$, which contributes the additive $\delta T$ term.
+\end{proof}
+
+\begin{proof}[Proof of \cref{cor:power-upper}]
+Insert $\Pcal_\nu(r_j)\le Zr_j^{-d}$ into $H_U$.  The dyadic sum of $r_j^{-(d+2)}$ is dominated by its finest scale, yielding
+\[
+  H_U(s;\nu,T^{-2})
+  \le C_dZr_s^{-(d+2)}\log(cZT)
+\]
+for scales that can improve on the trivial bound.  Balance this with $Tr_s$.
+\end{proof}
+
+\section{Regular Metric Lower Bound}
+\label[appendix]{app:metric-lower}
+
+We first give an explicit family satisfying \cref{ass:regular},
+then prove the lower bound for every space in that assumption.
+For $d>0$, let $\Sigma_d=\{0,1\}^{\N}$ with ultrametric
+\[
+  \rho_d(u,v)=a_d^{k(u,v)},
+  \qquad a_d=2^{-1/d},
+\]
+where $k(u,v)$ is the number of common initial coordinates.  Take $M\asymp Z$ disjoint copies scaled to diameter $1/16$, put distance $1/4$ between copies, and add an anchor at distance one.  For $d=0$, use $\Theta(Z)$ isolated tie points.  This gives global packing growth $Zr^{-d}$ and local packing growth $(R/r)^d$.
+
+Now fix any space satisfying \cref{ass:regular}. For
+$0<\eps\le r_0$, choose a maximum $4\eps$-packing $V\subset S$.
+Then
+\[
+  |V|=N\ge c_-Z\eps^{-d}.
+\]
+On the null,
+\[
+  \mu_0^1\equiv1/2,
+  \qquad
+  \mu_0^2(a)=g,
+  \qquad
+  \mu_0^2(z)=0\quad(z\in S).
+\]
+For $v\in V$, let
+\[
+  \mu_v^1(x)=\frac12+(\eps-D(x,v))_+,
+  \qquad
+  \mu_v^2=\mu_0^2.
+\]
+The hidden balls $B(v,\eps)$ are disjoint, and $\lambda_\star(\nu_v)=g/\eps$.
+
+\begin{lemma}[Metric costly-search lower bound]
+\label[lemma]{lem:metric-costly}
+There are constants $c_d,c'_d>0$, depending only on $d$ and $c_-$,
+such that, if
+\[
+  0<\eps\le\min\{g,r_0\},\qquad g\le1/8,
+  \qquad
+  T\eps^{d+3}\le c_dgZ,
+\]
+then every policy satisfies
+\[
+  \max\left\{
+  \E_0R_2(T),
+  \max_{v\in V}\E_vR_1(T)
+  \right\}
+  \ge c'_d\eps T.
+\]
+\end{lemma}
+
+\begin{proof}
+Let $N_v(T)$ count pulls in $B(v,\eps)$ and $N_S(T)$ pulls in $S$.  Under the null, $R_2(T)=gN_S(T)$.  If this expectation is below $c'_d\eps T$, disjointness and averaging give a $v$ with
+\[
+  \E_0N_v(T)
+  \le\frac{c'_d\eps T}{gN}.
+\]
+The adaptive Gaussian chain rule gives
+\[
+  \KL(P_0\Vert P_v)
+  \le\frac{\eps^2}{2}\E_0N_v(T)
+  \le C_dc'_d\frac{T\eps^{d+3}}{gZ}.
+\]
+Choose constants so this is small.  Markov plus Pinsker gives
+$P_v(N_v(T)\le T/2)\ge1/2$.  Outside the hidden ball the primary gap is exactly $\eps$, so $\E_vR_1(T)\ge\eps T/4$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:regular-metric}]
+For the upper bound, an $r$-separated subset contains at most one
+point in any ball of radius strictly less than $r/2$. Therefore, for
+every $0<r\le1$,
+\[
+ \Pack(\X,r)
+ \le1+\Cov\!\left(S,\min\{r/3,r_0\}\right)
+ \le C_{d,c_+,r_0}Zr^{-d}.
+\]
+The primary near-optimality profile is bounded by this global packing
+number. Apply \cref{cor:power-upper}, absorbing the fixed regularity
+factor into the constant.
+
+For the lower bound, fix $g=1/8$ and set
+\[
+ \eps=c_1\min\left\{r_0,(Z/T)^{1/(d+3)}\right\},
+\]
+where $c_1\le1$ is sufficiently small, depending only on $d$ and
+$c_-$. Then $\eps\le r_0\le1/16<g$ and
+$T\eps^{d+3}\le c_1^{d+3}Z$. The packing lower bound and
+\cref{lem:metric-costly} give simultaneous regret at least
+$c_2\eps T$. Finally, for $u>0$ and $r_0\le1$,
+\[
+ \min\{r_0,u\}\ge r_0\min\{1,u\}.
+\]
+This yields the stated rate, including the linear cap, with the
+permitted dependence on $r_0$. The constructed null and alternatives
+all have finite local trade-off, so the same lower bound holds on
+that restricted class.
+\end{proof}
+
+\section{Arbitrary Entropy Proofs}
+\label[appendix]{app:entropy}
+
+Throughout this appendix, $\X=\{a\}\cup S$, $D(a,S)=1$,
+$\operatorname{diam}(S)\le1/4$, and
+$r_s=2^{-s-4}$. Write $M_s=\Pack(S,r_s)$ and
+$p_s=1+M_s\le2M_s$. Every $r_s$-separated candidate net in $\X$
+has at most $p_s$ points. The algorithms below use the realized nets;
+neither algorithm is given $(M_s)_s$.
+
+\subsection{Metric filtering with a supplied envelope}
+
+For the unrestricted upper bound, run primary filtering as in
+Algorithm~\ref{alg:pf-etc}, starting at radius $1/16$ instead of $1$.
+For the supplied-envelope bound, set $B=1\vee L$ and
+$q_s=\min\{1,Br_s\}$. The following metric version of robust-score
+filtering gives an explicit implementation for the envelope case.
+
+Initialize $U_{-1}=\X$ and $\Gamma_{-1}=0$. At stage $s$, form a
+maximal $r_s$-separated subset $A_s$ of $U_{s-1}$ and set
+\[
+ n_s=\left\lceil 2r_s^{-2}\log\!\left(
+ \frac{8\pi^2(s+1)^2\max\{2,|A_s|\}}{3\delta}\right)\right\rceil,
+ \qquad
+ \Gamma_s^{\mathrm{pro}}
+ =\Gamma_{s-1}+64q_s|A_s|n_s.
+\]
+If $\Gamma_s^{\mathrm{pro}}>Tr_s$, stop before taking any stage-$s$
+samples. Otherwise take $n_s$ fresh observations at each center, form
+\[
+ \widehat s_{B,s}(x)=2B\widehat\mu_s^1(x)+\widehat\mu_s^2(x),
+\]
+and retain
+\[
+ G_s=\left\{x\in A_s:
+ \widehat s_{B,s}(x)\ge
+ \max_{y\in A_s}\widehat s_{B,s}(y)-12Br_s\right\}.
+\]
+Set
+\[
+ U_s=U_{s-1}\cap\bigcup_{x\in G_s}\overline B(x,r_s),
+ \qquad \Gamma_s=\Gamma_s^{\mathrm{pro}}.
+\]
+After the last completed stage $\tau$, commit to a maximizer of
+$\widehat\mu_\tau^2$ over $G_\tau$. If no stage is completed, use any
+fixed arm. Each active set is nonempty and compact, so the oracle
+continues to be applicable even on a confidence failure.
+
+\begin{lemma}[Metric robust-score invariants]
+\label[lemma]{lem:metric-score-invariants}
+On the simultaneous coordinate-confidence event, a representative
+within distance $r_s$ of $x^\star$ is retained at every completed stage.
+In particular, $x^\star\in U_s$. Moreover,
+\[
+ G_B(x)\le21Br_s\quad(x\in G_s),
+ \qquad
+ G_B(x)\le24Br_s\quad(x\in U_s).
+\]
+Every sampled stage-$s$ arm has maximum positive coordinate gap at
+most $48q_s$. The terminal arm has
+\[
+ \Delta_1(\widehat x_\tau)\le21r_\tau,
+ \qquad
+ \Delta_2(\widehat x_\tau)\le3r_\tau.
+\]
+The number of exploration rounds is at most $T/64$.
+\end{lemma}
+
+\begin{proof}
+The score $s_B=2B\mu^1+\mu^2$ is $(2B+1)$-Lipschitz, and its
+empirical error is at most $(2B+1)r_s\le3Br_s$. If
+$x^\star\in U_{s-1}$, maximality gives a center $\bar x_s$ at distance
+at most $r_s$ from $x^\star$. Its true score gap is at most $3Br_s$,
+so
+\[
+ \widehat s_{B,s}(\bar x_s)\ge s_B(x^\star)-6Br_s,
+ \qquad
+ \max_{x\in A_s}\widehat s_{B,s}(x)
+ \le s_B(x^\star)+3Br_s.
+\]
+Thus $\bar x_s\in G_s$, which proves preservation of $x^\star$.
+Every retained center has empirical score at least
+$s_B(x^\star)-18Br_s$, hence true score gap at most $21Br_s$.
+Expanding its ball by radius $r_s$ increases this bound by at most
+$3Br_s$.
+
+At stage $s\ge1$, the preceding expanded-set bound and
+$r_{s-1}=2r_s$ give $G_B(x)\le48Br_s$. The robust-score sandwich
+implies $\Delta_1(x)\le48r_s$ and
+$[\Delta_2(x)]_+\le48Br_s$. Bounded means therefore give a maximum
+positive gap of at most $48q_s$. At stage zero, $q_0\ge1/16$, so the
+same conclusion follows from the unit bound on the gaps. At the
+terminal stage, the score sandwich gives the primary conclusion,
+and comparison with $\bar x_\tau$ gives
+\[
+ \mu^2(\widehat x_\tau)
+ \ge\mu^2(\bar x_\tau)-2r_\tau
+ \ge\mu^2(x^\star)-3r_\tau.
+\]
+Finally, $q_j\ge q_\tau\ge r_\tau$ for $j\le\tau$, and the completed
+stage condition yields
+\[
+ \sum_{j\le\tau}|A_j|n_j
+ \le\frac{\Gamma_\tau}{64q_\tau}
+ \le\frac{Tr_\tau}{64q_\tau}\le\frac T{64}.
+\]
+This feasibility calculation holds on every sample path.
+\end{proof}
+
+\subsection{Entropy crossing}
+
+Use $\delta=T^{-2}$ for $T\ge2$ and define
+\[
+ \bar n_s=\left\lceil2r_s^{-2}\log\!\left(
+ \frac{8\pi^2(s+1)^2\max\{2,p_s\}}{3\delta}\right)\right\rceil.
+\]
+For $q_s^\infty=1$ and $q_s^B=\min\{1,Br_s\}$, put
+\[
+ H_s^\alpha=64\sum_{j=0}^s q_j^\alpha p_j\bar n_j,
+ \qquad
+ s_*^\alpha=\min\{s:H_s^\alpha>Tr_s\},
+ \qquad \alpha\in\{\infty,B\}.
+\]
+These deterministic costs dominate their realized counterparts.
+Consequently, neither algorithm can stop before $s_*^\alpha$.
+When a stage is completed, its exploration and commitment regrets
+are $O(Tr_\tau)$ on the confidence event, by the primary-filtering or
+robust-score invariants. The last completed index obeys
+$\tau\ge s_*^\alpha-1$. If no stage is completed, then
+$s_*^\alpha=0$ and the fallback regret $T$ equals $16Tr_0$.
+In all cases,
+\begin{equation}
+\label{eq:entropy-crossing-risk}
+ \max_i\E R_i(T)\le CTr_{s_*^\alpha}+\delta T.
+\end{equation}
+The confidence proof is unchanged from
+\cref{lem:stage-confidence}.
+
+The first crossing lies in the range used by the critical entropy
+functional. Indeed, $p_s\ge1$, $\bar n_s\ge r_s^{-2}$ and
+$q_s^\alpha\ge r_s$, so $H_s^\alpha\ge64/r_s$. For
+\[
+ s_T=\left\lceil\log_2(16T)\right\rceil+2
+\]
+we have $r_{s_T}\le(1024T)^{-1}$ and hence
+$H_{s_T}^\alpha>Tr_{s_T}$. Thus $s_*^\alpha\le s_T=O(\log(eT))$.
+
+\begin{lemma}[Entropy crossing, unrestricted]
+\label[lemma]{lem:entropy-cross-inf}
+The unrestricted metric filtering algorithm satisfies
+\[
+ \max_i\E R_i(T)
+ \le C\log^{2/3}(eT)\Psi_T^\infty(S).
+\]
+\end{lemma}
+
+\begin{proof}
+Write $s_*=s_*^\infty$ and $r_*=r_{s_*}$. At the first crossing,
+some $j\le s_*$ satisfies
+\[
+ M_jr_j^{-2}\ell_j\ge\frac{cTr_*}{s_*+1},
+ \qquad
+ \ell_j=\log\bigl(cT^2(j+1)^2M_j\bigr),
+\]
+where universal constants absorb ceilings and $p_j\le2M_j$.
+If $M_j\ge T$, the scale-$j$ term of $\Psi_T^\infty/T$ is
+$r_j\ge r_*$. Otherwise, $\ell_j(s_*+1)\le C\log^2(eT)$, and
+\[
+ \frac{M_j}{T}
+ \ge\frac{cr_*r_j^2}{\log^2(eT)}
+ \ge\frac{cr_*^3}{\log^2(eT)}.
+\]
+Both $r_j$ and $(M_j/T)^{1/3}$ are therefore at least
+$cr_*/\log^{2/3}(eT)$. Apply
+\eqref{eq:entropy-crossing-risk}. The additive $\delta T$ is absorbed
+because $M_0\ge1$ implies
+$\Psi_T^\infty\ge\min\{T/16,T^{2/3}\}$.
+\end{proof}
+
+\begin{lemma}[Entropy crossing, supplied envelope]
+\label[lemma]{lem:entropy-cross-B}
+The metric robust-score algorithm satisfies
+\[
+ \max_i\E R_i(T)
+ \le C\log(eT)\Psi_T^B(S).
+\]
+\end{lemma}
+
+\begin{proof}
+Write $s_*=s_*^B$ and $r_*=r_{s_*}$. Some $j\le s_*$ satisfies
+\[
+ q_j^B M_jr_j^{-2}\ell_j
+ \ge\frac{cTr_*}{s_*+1}.
+\]
+If $M_j\ge T$, both $\sqrt{BM_j/T}$ and $(M_j/T)^{1/3}$ are at
+least one, so the scale-$j$ contribution is $Tr_j\ge Tr_*$.
+Otherwise set $F=C\log^2(eT)$ and obtain
+\[
+ q_j^B\frac{M_j}{T}\ge\frac{cr_*r_j^2}{F}.
+\]
+If $q_j^B=1$, then $Br_j\ge1$, and
+\[
+ \sqrt{\frac{BM_j}{T}}
+ \ge c\sqrt{\frac{r_*r_j}{F}}\ge\frac{cr_*}{\sqrt F},
+ \qquad
+ \left(\frac{M_j}{T}\right)^{1/3}
+ \ge c\left(\frac{r_*r_j^2}{F}\right)^{1/3}
+ \ge\frac{cr_*}{F^{1/3}}.
+\]
+If $q_j^B=Br_j<1$, then
+\[
+ \frac{M_j}{T}\ge\frac{cr_*r_j}{BF}.
+\]
+The square-root term is again at least $cr_*/\sqrt F$.
+Since $1/B>r_j$, the cubic term is at least
+$cr_*/F^{1/3}$. Finally, $r_j\ge r_*$ and $F\ge1$, so all three
+terms in the critical functional are at least
+$cr_*/\sqrt F$. Apply \eqref{eq:entropy-crossing-risk} and absorb
+$\delta T$ using
+$\Psi_T^B\ge\min\{T/16,\sqrt T,T^{2/3}\}$.
+\end{proof}
+
+\subsection{One-scale lower bounds}
+
+\begin{lemma}[One-scale costly-search lower bound]
+\label[lemma]{lem:one-scale}
+Let $V\subset S$ be an $r$-separated set of cardinality $N$.
+If $0<\eps\le\min\{r/4,g\}$, $g\le1/8$, and
+\[
+ T\eps^3\le cgN,
+\]
+then the anchor-versus-hidden-cone family has simultaneous minimax
+regret at least $c'\eps T$.
+\end{lemma}
+
+\begin{proof}
+Use the null and cone alternatives of \cref{lem:metric-costly}.
+The open balls $B(v,\eps)$ are disjoint. If the null-secondary
+regret is smaller than $c'\eps T$, one of these balls receives at
+most $c'\eps T/(gN)$ null-expected pulls. The trajectory KL to its
+alternative is at most $\eps^2/2$ times this number. Choosing the
+constants sufficiently small, Markov's inequality and Pinsker's
+inequality imply that under this alternative at least $T/2$ pulls
+occur outside the ball with probability at least $1/2$. Each such
+pull has primary gap $\eps$.
+\end{proof}
+
+\begin{lemma}[One-scale primary-only lower bound]
+\label[lemma]{lem:one-scale-primary}
+For every $r$-separated set of size $N\ge1$ and every
+$0<\eps\le r/4$ such that $T\eps^2\le cN$, there is a finite
+family of admissible Gaussian instances with identical secondary
+means and $\lambda_\star=0$ on which every policy incurs expected
+primary regret at least $c'\eps T$ on some instance.
+\end{lemma}
+
+\begin{proof}
+For $N\ge2$, use the reference primary mean $1/2$ and one
+alternative $1/2+(\eps-D(\cdot,v))_+$ per packing point.
+Let $N_v$ count pulls in $B(v,\eps)$. The chain rule gives
+$\KL(P_0\Vert P_v)\le\eps^2\E_0N_v/2$, and Pinsker's inequality
+therefore gives
+\[
+ \E_vN_v\le\E_0N_v+
+ \frac{T\eps}{2}\sqrt{\E_0N_v}.
+\]
+Average over $v$ and use disjointness and Cauchy--Schwarz:
+\[
+ \frac1N\sum_v\E_vN_v
+ \le\frac TN+\frac{T\eps}{2}\sqrt{\frac TN}.
+\]
+For a sufficiently small constant in $T\eps^2\le cN$, this is
+at most $3T/4$. Some alternative therefore incurs primary regret
+at least $\eps T/4$ outside its hidden ball.
+
+For $N=1$, let $v$ be the packing point. In one instance the anchor
+has primary mean $1/2+\eps$ and all of $S$ has mean $1/2$; in the
+other, the anchor has mean $1/2$ and $S$ has mean
+$1/2+(\eps-D(\cdot,v))_+$. These are Lipschitz instances, and their
+trajectory KL is at most $T\eps^2/2$. If the anchor is played at
+most $T/2$ times, the first instance incurs at least $\eps T/2$
+regret; otherwise the second does. Bretagnolle--Huber gives a
+constant lower bound on the sum of these two error probabilities.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:entropy}]
+The upper bounds are the two entropy-crossing lemmas.
+For the unrestricted lower bound, choose a scale maximizing
+$\Psi_T^\infty$ and an $r_s$-packing of cardinality $M_s$. Set
+\[
+ \eps=c\min\{r_s,(M_s/T)^{1/3}\}
+\]
+and use \cref{lem:one-scale} with $g=1/8$.
+
+For the supplied-envelope lower bound, choose a scale maximizing
+$\Psi_T^B$ and set
+\[
+ \eps=c\min\{r_s,\sqrt{BM_s/T},(M_s/T)^{1/3}\}.
+\]
+If $L\le1$, then $B=1$ and
+$T\eps^2\le c^2M_s$, so \cref{lem:one-scale-primary} applies.
+If $L\ge1$, set $g=\min\{L\eps,1/8\}$. A sufficiently small
+universal $c$ ensures $\eps\le\min\{r_s/4,g\}$. In the
+unsaturated case, the square-root cap gives
+$T\eps^3\le c^2L\eps M_s=c^2gM_s$; in the saturated case,
+the cubic cap gives $T\eps^3\le c^3M_s$. Thus
+\cref{lem:one-scale} applies in both cases. Every alternative has
+$\lambda_\star=g/\eps\le L$.
+\end{proof}
+
+\paragraph{Covering-tree implementation.}
+A tree implementation requires a supplied hierarchy whose level-$s$
+cells cover the relevant active set, have radius at most
+$c_{\mathrm{cov}}r_s$, and have centers separated by at least
+$c_{\mathrm{sep}}r_s$, with enumerable children. Expanding children
+of retained cells implements the filtering construction after
+adjusting its fixed geometric constants. Its non-sampling work is
+linear in the number of generated nodes. If $W_s$ is the width of a
+full level, packing and covering give
+\[
+ \Pack(S,3c_{\mathrm{cov}}r_s)
+ \le W_s\le\Pack(S,c_{\mathrm{sep}}r_s).
+\]
+Consequently the width and packing descriptions agree up to fixed
+radius rescaling. This statement assumes the hierarchy; it does not
+supply a polynomial-time construction for an arbitrary black-box
+metric.
+
+\section{Pareto and High-Probability Proofs}
+\label[appendix]{app:pareto}
+
+\begin{lemma}[Sequential Bretagnolle--Huber]
+\label[lemma]{lem:seq-bh}
+Let $P,Q$ be laws of two adaptive bandit experiments. Include the policy randomization used to select $X_t$ in the prefix history, and let $A_t$ be measurable with respect to that history.  Then
+\[
+  P(A_t)+Q(A_t^c)
+  \ge\frac12\exp\bigl(-\KL(P^{t-1}\Vert Q^{t-1})\bigr).
+\]
+\end{lemma}
+
+\begin{proof}
+Apply the Bretagnolle--Huber testing inequality to the two prefix-history laws and the test $A_t$. The common action-randomization kernel contributes zero to the relative entropy.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:pareto}]
+For alternative $j$, apply \cref{lem:seq-bh} to $A_t=\{X_t=j\}$.  The prefix KL is bounded by
+\[
+  \KL(P_0^T\Vert P_j^{\eps,T})
+  =\frac{\eps^2}{2}\E_0N_j(T).
+\]
+Summing over $t$ yields
+\[
+  \E_0N_j(T)
+  +\E_j^\eps(T-N_j(T))
+  \ge\frac T2
+  \exp\left(-\frac{\eps^2}{2}\E_0N_j(T)\right).
+\]
+Average over $j$ and use convexity of $e^{-x}$:
+\[
+  \frac1N\sum_j\E_0N_j(T)
+  +\frac1N\sum_j\E_j^\eps(T-N_j(T))
+  \ge\frac T2
+  \exp\left(-\frac{\eps^2}{2N}\sum_j\E_0N_j(T)\right).
+\]
+Substitute $\sum_j\E_0N_j=r_0/g$ and upper-bound the average alternative regret by its maximum.  For the corollary, choose
+\[
+  \eps_0=
+  \min\left\{
+  \frac g2,
+  \sqrt{\frac{gN}{4(r_0+gN)}}
+  \right\}.
+\]
+Then the exponential is bounded below by a constant and $r_0/(gN)\le T/8$, so $r_\star(\eps_0)\ge c\eps_0T$.
+\end{proof}
+
+\section{High-Probability Lower and Upper Bounds}
+\label[appendix]{app:high-prob}
+
+\begin{lemma}[Strict binary-KL inversion]
+\label[lemma]{lem:binary-kl}
+Let $0<\delta\le1/16$.  If $p\ge9/16$ and
+\[
+ \kl(p,q)\le\frac18\log(1/\delta),
+\]
+then $q>\delta$.
+\end{lemma}
+
+\begin{proof}
+Write $\ell=\log(1/\delta)$.  If $q\le\delta$, the binary entropy
+bound gives
+\[
+ \kl(p,q)\ge p\log(1/q)-\log2
+ \ge\frac9{16}\ell-\log2
+ \ge\frac5{16}\ell>\frac18\ell,
+\]
+since $\ell\ge4\log2$.  This is a contradiction.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:hp-lower}]
+Use the Gaussian anchor-and-candidates family from
+\cref{app:finite-lower}, with $g=1/4$, and put
+$\ell=\log(1/\delta)$.  We prove that every policy incurs the claimed
+regret with probability strictly greater than $\delta$ on at least one
+instance.  Strictness is needed because the definition of
+$\mathfrak Q_{T,K}(\delta)$ allows a tail probability equal to $\delta$.
+
+\paragraph{Sublinear regime.}
+Suppose
+\[
+ \eps=\left(\frac{N\ell}{T}\right)^{1/3}\le\frac18,
+ \qquad
+ m=\left\lfloor\frac{\ell}{16\eps^2}\right\rfloor.
+\]
+Then $m\ge\ell/(32\eps^2)\ge1$, while
+\[
+ \frac mT\le\frac{\ell}{16T\eps^2}
+ =\frac{\eps}{16N}\le\frac1{128}.
+\]
+Let $N_S(T)=\sum_{j=1}^N N_j(T)$.  If
+\[
+ P_0\left(N_S(T)\ge\frac{Nm}{4}\right)>\delta,
+\]
+then with probability greater than $\delta$ the null-secondary regret
+satisfies
+\[
+ R_2(T)=gN_S(T)\ge\frac{gNm}{4}
+ \ge\frac{gN\ell}{128\eps^2}
+ =\frac{g\eps T}{128}.
+\]
+Otherwise the event $A=\{N_S(T)<Nm/4\}$ has probability at least
+$1-\delta$.  On every path in $A$, more than three quarters of the
+candidates have been pulled fewer than $m$ times.  Averaging over the
+candidates therefore gives some $j$ such that
+\[
+ p=P_0(E_j)\ge\frac34(1-\delta)\ge\frac9{16},
+ \qquad E_j=\{N_j(T)<m\}.
+\]
+Stop the observation history at the $m$-th pull of arm $j$, or at time
+$T$ if that pull never occurs.  The event $E_j$ is measurable with
+respect to this stopped history.  Only observations from arm $j$ differ
+between the null and alternative $j$, so the chain rule bounds the
+stopped-history KL by
+\[
+ \KL(P_0^{\mathrm{stop}}\Vert P_j^{\mathrm{stop}})
+ \le\frac{m\eps^2}{2}\le\frac{\ell}{32}.
+\]
+The same identity holds for randomized policies because their action
+kernels are identical under both experiments.  By data processing and
+\cref{lem:binary-kl}, $P_j(E_j)>\delta$.  On this event,
+\[
+ R_1(T)=\eps(T-N_j(T))\ge\eps(T-m)\ge\frac{\eps T}{2}.
+\]
+This proves the sublinear lower bound.
+
+\paragraph{Linear regime.}
+Suppose $(N\ell/T)^{1/3}>1/8$.  Set
+\[
+ \eps=\frac1{16},\qquad
+ m=\max\left\{1,\left\lfloor\frac{T}{4096N}\right\rfloor\right\}.
+\]
+For $T\ge2$, one has $m\le T/2$.  Also $Nm\ge T/8192$: if
+$T/(4096N)\ge2$, the floor is at least half its argument; otherwise
+$N>T/8192$ and $m\ge1$.
+Apply the same dichotomy as above.  If the null exploration event has
+probability greater than $\delta$, then on that event
+\[
+ R_2(T)\ge\frac{gNm}{4}\ge\frac{T}{131072}.
+\]
+Otherwise some candidate $j$ has $P_0(E_j)\ge9/16$.  The stopped KL
+satisfies
+\[
+ \KL(P_0^{\mathrm{stop}}\Vert P_j^{\mathrm{stop}})
+ \le\frac m{512}
+ \le\frac1{512}+\frac{T}{2097152N}
+ <\frac{\ell}{8}.
+\]
+The last step uses $\ell>T/(512N)$ and $\ell\ge\log16>1$.
+Again $P_j(E_j)>\delta$, and on $E_j$ the primary regret is at least
+$\eps(T-m)\ge T/32$.
+
+In each regime, choose the claimed regret threshold strictly below the
+corresponding event's regret lower bound.  This proves the lower bound
+for the strict-tail quantile $\mathfrak Q_{T,K}(\delta)$.
+\end{proof}
+
+\begin{lemma}[High-probability explore-filter-commit bound]
+\label[lemma]{lem:hp-etc}
+For $K\ge2$, $T\ge2$, and $0<\delta\le1/16$, there is a policy such
+that
+\[
+ \Pp_\nu\left(
+ \max_{i\le2}R_i^+(T)
+ >C\min\{T,(K\log(4K/\delta))^{1/3}T^{2/3}\}
+ \right)\le\delta
+\]
+uniformly over $\nu\in\F_K$.
+\end{lemma}
+
+\begin{proof}
+Let $\ell=\log(4K/\delta)$ and $A=(K\ell)^{1/3}T^{2/3}$.
+If $8A>T$, use an arbitrary arm.  Its regret is at most $T$, which is
+within a universal factor of $\min\{T,A\}$ in this branch.
+Otherwise set
+\[
+ n=\left\lceil\left(\frac{T^2\ell}{K^2}\right)^{1/3}\right\rceil,
+ \qquad \beta=\sqrt{2\ell/n},
+\]
+sample each arm $n$ times, and apply the empirical primary filter and
+secondary maximization in Algorithm~\ref{alg:lex-etc}.
+The exploration is feasible: $8A\le T$ implies $K\ell\le T/512$,
+so
+\[
+ Kn\le A+K\le T/8+T/512<T/2.
+\]
+A union bound gives
+\[
+ \Pp\left(\exists a,i:
+ |\widehat\mu^i(a)-\mu^i(a)|>\beta\right)
+ \le4K\exp(-n\beta^2/2)=\delta.
+\]
+On its complement, \cref{lem:finite-terminal} yields
+\[
+ \max_{i\le2}R_i^+(T)
+ \le Kn+4T\beta\le C(K\ell)^{1/3}T^{2/3}.
+\]
+Together with the deterministic cap $T$, this proves the claim.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:two-hp}]
+Apply \cref{thm:hp-lower} with $N=1$ for the lower bound and
+\cref{lem:hp-etc} with $K=2$ for the upper bound.  The upper confidence
+factor is then $\log(8/\delta)$, as stated.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:k-hp}]
+Combine \cref{thm:hp-lower,lem:hp-etc} in the confidence and horizon
+range of \cref{thm:hp-lower}.
+\end{proof}
+
+\section{Coefficient-Aware Comparison with Positive-Gap Annuli}
+
+We record the annular coefficients for the explicit ultrametric family
+in \cref{app:metric-lower}, with $\eps\le1/64$. This family has the
+local covering property
+\[
+ \Cov(B(v,R)\cap S,r)\le C_d(R/r)^d,
+ \qquad 0<r\le R<1/8,
+\]
+within the component containing $v$. This additional property is
+needed below; global packing and covering bounds alone do not imply it.  In the notation of \citet{xue2025jmlr}, for a supplied valid parameter $\lambda$,
+\[
+  \X^i(r)
+  =\left\{x:
+  \frac{\Lambda_i(\lambda)r}{2}<\Delta_i(x)
+  \le\Lambda_i(\lambda)r
+  \right\}.
+\]
+Use the valid envelope $L=1$ on the null and the exact envelope on each alternative. On the null, all primary annuli are empty and a nonempty secondary annulus occurs only at $r\asymp g$, with covering coefficient $O_d(Zg^{-d})$.  On alternative $v$, positive secondary annuli are empty; primary annuli at $r<\eps$ lie in $B(v,O(r))$ and have $O_d(1)$ cover, while the $r\asymp\eps$ annulus has coefficient $O_d(Z\eps^{-d})$.  Thus all annular dimensions are zero.
+
+With fixed $g$ and $\eps=(Z/T)^{1/(d+3)}\le1/64$, the known-trade-off annular benchmarks are, up to logarithms,
+\[
+  \sqrt{Zg^{-d}T}
+  \quad\text{and}\quad
+  \sqrt{Z\eps^{-d}T},
+\]
+whereas the adaptation lower bound is $\eps T$.  Their ratios are
+\[
+  \frac{\eps T}{\sqrt{Zg^{-d}T}}
+  \asymp_d
+  (T/Z)^{\frac{d+1}{2(d+3)}},
+  \qquad
+  \frac{\eps T}{\sqrt{Z\eps^{-d}T}}
+  \asymp_d
+  (T/Z)^{\frac{1}{2(d+3)}}.
+\]
+Both are polynomial when $T/Z$ grows polynomially.  Hence retaining the annular coefficient does not remove the separation.
+
+
+
+\begin{thebibliography}{99}
+
+\bibitem[Bubeck and Cesa-Bianchi(2012)]{bubeck2012survey}
+S. Bubeck and N. Cesa-Bianchi.
+\newblock Regret analysis of stochastic and nonstochastic multi-armed bandit problems.
+\newblock \emph{Foundations and Trends in Machine Learning}, 5(1):1--122, 2012.
+
+\bibitem[Bubeck et~al.(2011)Bubeck, Munos, Stoltz, and Szepesv\'ari]{bubeck2011xarmed}
+S. Bubeck, R. Munos, G. Stoltz, and C. Szepesv\'ari.
+\newblock $X$-armed bandits.
+\newblock \emph{Journal of Machine Learning Research}, 12:1655--1695, 2011.
+\newblock \href{https://www.jmlr.org/papers/v12/bubeck11a.html}{JMLR 12}.
+
+\bibitem[Hadiji(2019)]{hadiji2019polynomial}
+H. Hadiji.
+\newblock Polynomial cost of adaptation for $X$-armed bandits.
+\newblock In \emph{Advances in Neural Information Processing Systems 32}, pages 1029--1038, 2019.
+
+\bibitem[H\"uy\"uk and Tekin(2021)]{huyuk2021lexicographic}
+A. H\"uy\"uk and C. Tekin.
+\newblock Multi-objective multi-armed bandit with lexicographically ordered and satisficing objectives.
+\newblock \emph{Machine Learning}, 110:1233--1266, 2021.
+\newblock \href{https://doi.org/10.1007/s10994-021-05956-1}{10.1007/s10994-021-05956-1}.
+
+\bibitem[Kleinberg et~al.(2008)Kleinberg, Slivkins, and Upfal]{kleinberg2008metric}
+R. Kleinberg, A. Slivkins, and E. Upfal.
+\newblock Multi-armed bandits in metric spaces.
+\newblock In \emph{Proceedings of the 40th Annual ACM Symposium on Theory of Computing}, pages 681--690, 2008.
+
+\bibitem[Lattimore and Szepesv\'ari(2020)]{lattimore2020bandit}
+T. Lattimore and C. Szepesv\'ari.
+\newblock \emph{Bandit Algorithms}.
+\newblock Cambridge University Press, 2020.
+
+\bibitem[Locatelli and Carpentier(2018)]{locatelli2018adaptivity}
+A. Locatelli and A. Carpentier.
+\newblock Adaptivity to smoothness in $X$-armed bandits.
+\newblock In \emph{Proceedings of the 31st Conference on Learning Theory}, PMLR 75:1463--1492, 2018.
+\newblock \href{https://proceedings.mlr.press/v75/locatelli18a.html}{PMLR 75}.
+
+\bibitem[Magureanu et~al.(2014)Magureanu, Combes, and Proutiere]{magureanu2014lipschitz}
+S. Magureanu, R. Combes, and A. Proutiere.
+\newblock Lipschitz bandits: Regret lower bound and optimal algorithms.
+\newblock In \emph{Proceedings of the 27th Conference on Learning Theory}, PMLR 35:975--999, 2014.
+\newblock \href{https://proceedings.mlr.press/v35/magureanu14.html}{PMLR 35}.
+
+\bibitem[Skalse et~al.(2022)Skalse, Hammond, Griffin, and Abate]{skalse2022lexicographic}
+J. Skalse, L. Hammond, C. Griffin, and A. Abate.
+\newblock Lexicographic multi-objective reinforcement learning.
+\newblock In \emph{Proceedings of the 31st International Joint Conference on Artificial Intelligence}, pages 3430--3436, 2022.
+
+\bibitem[Slivkins(2011)]{slivkins2011implicit}
+A. Slivkins.
+\newblock Multi-armed bandits on implicit metric spaces.
+\newblock In \emph{Advances in Neural Information Processing Systems 24}, pages 1602--1610, 2011.
+
+\bibitem[Tekin and Turgay(2018)]{tekin2018dominant}
+C. Tekin and E. Turgay.
+\newblock Multi-objective contextual multi-armed bandit with a dominant objective.
+\newblock \emph{IEEE Transactions on Signal Processing}, 66(14):3799--3813, 2018.
+
+\bibitem[Turgay et~al.(2018)Turgay, Oner, and Tekin]{turgay2018similarity}
+E. Turgay, D. Oner, and C. Tekin.
+\newblock Multi-objective contextual bandit problem with similarity information.
+\newblock In \emph{Proceedings of the 21st International Conference on Artificial Intelligence and Statistics}, PMLR 84:1673--1681, 2018.
+
+\bibitem[Xue et~al.(2024)Xue, Cheng, Liu, Wang, and Zhang]{xue2024lipschitz}
+B. Xue, J. Cheng, F. Liu, Y. Wang, and Q. Zhang.
+\newblock Multiobjective Lipschitz bandits under lexicographic ordering.
+\newblock In \emph{Proceedings of the 38th AAAI Conference on Artificial Intelligence}, 38(15):16238--16246, 2024.
+\newblock \href{https://doi.org/10.1609/aaai.v38i15.29558}{10.1609/aaai.v38i15.29558}.
+
+\bibitem[Xue et~al.(2025a)Xue, Cheng, Liu, Wang, Zhang, and Zhang]{xue2025jmlr}
+B. Xue, J. Cheng, F. Liu, Y. Wang, L. Zhang, and Q. Zhang.
+\newblock Lexicographic Lipschitz bandits: New algorithms and a lower bound.
+\newblock \emph{Journal of Machine Learning Research}, 26(223):1--56, 2025.
+\newblock \href{https://www.jmlr.org/papers/v26/24-1047.html}{JMLR 26(223)}.
+
+\bibitem[Xue et~al.(2025b)Xue, Lin, Zhang, and Zhang]{xue2025linear}
+B. Xue, X. Lin, X. Zhang, and Q. Zhang.
+\newblock Multiple trade-offs: An improved approach for lexicographic linear bandits.
+\newblock In \emph{Proceedings of the 39th AAAI Conference on Artificial Intelligence}, 39(20):21850--21858, 2025.
+\newblock \href{https://doi.org/10.1609/aaai.v39i20.35491}{10.1609/aaai.v39i20.35491}.
+
+\bibitem[Xue et~al.(2025c)Xue, Lin, Wan, and Zhang]{xue2025corruptions}
+B. Xue, X. Lin, Y. Wan, and Q. Zhang.
+\newblock Problem-dependent regret for lexicographic multi-armed bandits with adversarial corruptions.
+\newblock In \emph{Proceedings of the 34th International Joint Conference on Artificial Intelligence}, pages 6776--6784, 2025.
+\newblock \href{https://doi.org/10.24963/ijcai.2025/754}{10.24963/ijcai.2025/754}.
+
+\bibitem[Xue et~al.(2026)Xue, Wan, Lu, and Zhang]{xue2026lexelim}
+B. Xue, Y. Wan, Z. Lu, and Q. Zhang.
+\newblock Beyond the lower bound: Bridging regret minimization and best arm identification in lexicographic bandits.
+\newblock In \emph{Proceedings of the 40th AAAI Conference on Artificial Intelligence}, 40(32):27414--27422, 2026.
+\newblock \href{https://doi.org/10.1609/aaai.v40i32.39959}{10.1609/aaai.v40i32.39959}.
+
+\end{thebibliography}
+
+\end{document}

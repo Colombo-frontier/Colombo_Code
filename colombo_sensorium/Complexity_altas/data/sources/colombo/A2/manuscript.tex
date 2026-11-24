@@ -1,0 +1,1052 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{array,booktabs,tabularx,enumitem}
+\usepackage{float}
+\usepackage{needspace}
+\floatstyle{ruled}
+\newfloat{algorithm}{tbp}{loa}
+\floatname{algorithm}{Algorithm}
+\newcounter{algline}
+\newlength{\algindent}
+\newenvironment{algorithmic}[1][]{%
+  \setlength{\algindent}{0pt}\small
+  \begin{list}{\arabic{algline}:}{\usecounter{algline}%
+    \setlength{\leftmargin}{1.9em}\setlength{\labelsep}{0.5em}%
+    \setlength{\itemsep}{2pt}\setlength{\parsep}{0pt}%
+    \setlength{\topsep}{4pt}}}{\end{list}}
+\newcommand{\State}{\item\hspace*{\algindent}}
+\newcommand{\Require}{\item[]\textbf{Input:} }
+\newcommand{\For}[1]{\State\textbf{for} #1 \textbf{do}\addtolength{\algindent}{1em}}
+\newcommand{\EndFor}{\addtolength{\algindent}{-1em}\State\textbf{end for}}
+\newcommand{\If}[1]{\State\textbf{if} #1 \textbf{then}\addtolength{\algindent}{1em}}
+\newcommand{\EndIf}{\addtolength{\algindent}{-1em}\State\textbf{end if}}
+\newcommand{\Return}{\textbf{return} }
+\usepackage{xcolor,hyperref}
+\definecolor{inkblue}{HTML}{185C78}
+\hypersetup{colorlinks=true,linkcolor=inkblue,citecolor=inkblue,urlcolor=inkblue,
+  pdftitle={Near-Optimal Component-Oracle Complexity for Smooth Maximum Minimization},
+  pdfauthor={Colombo Team}}
+\setlength{\emergencystretch}{2em}
+\setlist[enumerate]{leftmargin=*,itemsep=3pt,topsep=4pt}
+\setlist[itemize]{leftmargin=*,itemsep=3pt,topsep=4pt}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+\newcommand{\ip}[2]{\left\langle#1,#2\right\rangle}
+\newcommand{\tO}{\widetilde O}
+\newcommand{\tTheta}{\widetilde\Theta}
+\newcommand{\Q}{Q_{\mathrm{rand}}}
+\DeclareMathOperator{\argmin}{arg\,min}
+\DeclareMathOperator{\proj}{Proj}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\title{Near-Optimal Component-Oracle Complexity\\
+for Smooth Maximum Minimization}
+\author{Colombo Team\\[3pt]
+  \texttt{colombo.2026@outlook.com}}
+\date{November 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study the component-oracle complexity of minimizing the maximum of $n$
+convex, differentiable functions over the Euclidean unit ball. Each component
+is globally $1$-Lipschitz and $1$-smooth, and one oracle call returns the value
+and gradient of one component at a feasible point. We give a randomized
+algorithm with a deterministic query budget of
+$\widetilde O(n\eps^{-1/3}+\sqrt{n/\eps})$ and constant success probability,
+uniformly over the dimension. Together with an existing randomized lower
+bound of Carmon, Jambulapati, Jin, and Sidford, this determines the minimax
+query complexity up to logarithmic factors when the dimension is unrestricted.
+The main ingredient is a local solver that maintains affine minorants of the
+components. A damped importance-sampled update gives expected progress in the minimum
+of a regularized soft-maximum lower model at a rate controlled by
+$n+\lambda^{-1}$, where $\lambda$ is the regularization parameter. A computable
+primal--dual gap and a final full pass yield certified local solutions using
+only finite-accuracy model solves. We provide a complete constrained
+acceleration analysis, including parameter search, failure probabilities,
+and query accounting. At $n=\lceil\eps^{-1}\rceil$, the bound improves the
+established upper envelope from $\widetilde O(\eps^{-3/2})$ to
+$\widetilde O(\eps^{-4/3})$. The result concerns oracle complexity;
+computation on stored data is uncharged.
+\end{abstract}
+
+\noindent\textbf{Keywords.}
+Convex minimax optimization; component first-order oracle; affine minorants;
+randomized algorithms; ball-oracle acceleration; oracle complexity.
+
+\medskip
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:intro}
+Consider the problem
+\begin{equation}\label{eq:problem}
+  \min_{x\in X} F(x),\qquad
+  F(x)=\max_{i\in[n]}f_i(x),\qquad
+  X=\{x\in\R^d:\norm{x}\le1\}.
+\end{equation}
+The maximum introduces nonsmoothness even when every component is smooth.
+It also changes the information cost of optimization: a single component
+evaluation need not identify which function is largest, while an exact
+evaluation of the maximum generally requires a pass over all $n$ components.
+The resulting dependence on the number of components is a central issue in
+the oracle complexity of maximum minimization~\cite{inside,ballgame}.
+
+We assume that each $f_i$ is convex, globally $1$-Lipschitz, and globally
+$1$-smooth. An algorithm may query the value and gradient of any one
+component at any point of $X$. Our goal is to characterize the number of
+such queries needed for an $\eps$-suboptimal feasible point. We work in an
+exact-real oracle model in which computation on previously returned data
+is free. This distinction matters: the algorithm repeatedly optimizes a
+known model, and we do not claim that its arithmetic cost is proportional
+to its component-query count.
+
+\subsection{Main result and contributions}
+Our algorithm has query complexity
+\begin{equation}\label{eq:intro-rate}
+  \tO\!\left(n\eps^{-1/3}+\sqrt{n/\eps}\right).
+\end{equation}
+The polynomial dependence matches the randomized lower bound of
+Carmon et al.~\cite[Theorem~10]{inside}. The upper bound holds in every
+dimension; the matching statement takes the worst case over dimensions.
+The complete theorem, including a deterministic query cap, appears in
+Section~\ref{sec:model}.
+
+The proof has three components. First, we maintain one affine minorant
+for each $f_i$ and use their regularized soft maximum as a certified lower
+model. The cached Gibbs weights determine both which component to query
+and how much of its new tangent to incorporate. The resulting progress
+inequality gives a local cost of $\tO(n+\lambda^{-1})$, with logarithmic
+dependence on the requested objective accuracy. Second, a computable
+primal--dual gap makes every model solve a finite-accuracy computation;
+a full pass over the original components certifies the returned point.
+Third, we combine these local solves with constrained proximal acceleration
+and an explicitly capped search for the regularization parameter. The
+outer argument is deterministic whenever the local certificates succeed.
+
+The radius choice explains the two terms in~\eqref{eq:intro-rate}.
+For a soft-maximum temperature $\tau=\widetilde\Theta(\eps)$, the minorant
+analysis applies on a ball of radius at most $\sqrt\tau$. The outer
+method requires $\widetilde O(r^{-2/3})$ local calls, and its smallest
+regularization parameter is $\lambda_-=\tau r^{-4/3}$. Taking
+\[
+ r=\min\{\sqrt\tau,(n\tau)^{3/4}\}
+\]
+ensures $\lambda_-\ge1/n$, so every local call costs $\tO(n)$ queries.
+Consequently,
+\[
+ nr^{-2/3}=\max\{n\tau^{-1/3},\sqrt{n/\tau}\},
+\]
+which gives the claimed dependence on $n$ and $\eps$.
+
+\subsection{Comparison with previous work}\label{sec:related}
+Table~\ref{tab:literature} places the result in a common normalization.
+Accelerated methods based on component linearizations give
+$O(n\eps^{-1/2})$ queries~\cite[Section~2.3]{nesterov}; see also
+\cite[Table~1 and Appendix~A.3]{inside}.
+Carmon et al.~\cite{inside} developed a ball-oracle method with a
+$\tO(n\eps^{-2/3}+\sqrt n\,\eps^{-1})$ guarantee applicable to this class.
+Their later algorithm~\cite{ballgame} achieves
+$\tO(n\eps^{-1/3}+\eps^{-2})$, together with additional arithmetic-runtime
+guarantees. These bounds and their constrained Euclidean interpretation
+are summarized in~\cite[Table~1]{ballgame}.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.28}
+\begin{tabularx}{\textwidth}{@{}p{0.28\textwidth}p{0.34\textwidth}Y@{}}
+\toprule
+Method or source & Component-query bound & Scope of the comparison\\
+\midrule
+Accelerated linearization\newline
+Nesterov~\cite{nesterov}; \cite{inside}
+& $n\eps^{-1/2}$
+& Smooth components; model subproblems solved from stored data.\\
+Carmon et al.\ (2021)~\cite{inside}
+& $n\eps^{-2/3}+\sqrt n\,\eps^{-1}$
+& Applies to the normalized class; dominated here by the first row.\\
+Carmon et al.\ (2024)~\cite{ballgame}
+& $n\eps^{-1/3}+\eps^{-2}$
+& Matches the lower rate for $n\gtrsim\eps^{-5/3}$; also controls runtime.\\
+This paper, Theorem~\ref{thm:main}
+& $n\eps^{-1/3}+\sqrt{n/\eps}$
+& Every $n,d\ge1$; deterministic query cap; success probability $0.99$.\\
+Randomized lower bound~\cite{inside}
+& $n\eps^{-1/3}+\sqrt{n/\eps}$
+& Arbitrary adaptive algorithms; dimension may grow.\\
+\bottomrule
+\end{tabularx}
+\caption{Comparison for convex, $1$-Lipschitz, $1$-smooth components on the
+Euclidean unit ball, with $0<\eps<1$. Upper-bound entries suppress constants
+and logarithmic factors; the last row is an $\Omega$ bound. One query returns
+$(f_i(x),\nabla f_i(x))$. The comparison concerns component queries, not
+arithmetic runtime, and the displayed upper bounds use constant success
+probability after constant-factor accuracy or budget adjustments when needed.}
+\label{tab:literature}
+\end{table}
+
+For $0<\eps<1$, the 2021 upper bound in Table~\ref{tab:literature} is no
+smaller than $n\eps^{-1/2}$. Thus the established upper envelope relevant
+to this normalization is
+\begin{equation}\label{eq:previous-envelope}
+ \tO\!\left(\min\{n\eps^{-1/2},\;n\eps^{-1/3}+\eps^{-2}\}\right).
+\end{equation}
+Table~\ref{tab:regimes} compares this envelope with~\eqref{eq:intro-rate}
+in each polynomial regime. In particular, at
+$n=\lceil\eps^{-1}\rceil$, the bounds are respectively
+$\tO(\eps^{-3/2})$ and $\tO(\eps^{-4/3})$.
+The lower bound in the comparison is entirely attributed to prior work;
+our contribution is the upper-bound construction and its implementation
+in the stated query model.
+
+\begin{table}[t]
+\centering
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Range of $n$ & Envelope~\eqref{eq:previous-envelope} & This paper / lower bound\\
+\midrule
+$1\le n\le\eps^{-1/3}$
+& $n\eps^{-1/2}$ & $\sqrt n\,\eps^{-1/2}$\\
+$\eps^{-1/3}\le n\le\eps^{-3/2}$
+& $n\eps^{-1/2}$ & $n\eps^{-1/3}$\\
+$\eps^{-3/2}\le n\le\eps^{-5/3}$
+& $\eps^{-2}$ & $n\eps^{-1/3}$\\
+$n\ge\eps^{-5/3}$
+& $n\eps^{-1/3}$ & $n\eps^{-1/3}$\\
+\bottomrule
+\end{tabular}
+\caption{Polynomial orders after suppressing logarithmic factors. Endpoints
+agree up to constants. The previous-envelope column refers specifically to
+the bounds in Table~\ref{tab:literature}; the last column is the matching
+minimax rate with dimension unrestricted.}
+\label{tab:regimes}
+\end{table}
+
+\paragraph{Methodological context.}
+The acceleration mechanism follows the ball-oracle framework of
+Carmon et al.~\cite{ballaccel,inside}; stochastic refinements and
+applications appear in~\cite{stochastic,ballgame}. Maintaining a collection
+of component models also has a substantial history. In particular,
+Mairal~\cite[Section~3.2]{miso} studies randomized lower-surrogate updates
+for strongly convex finite sums. Our local objective is a nonlinear soft
+maximum. Its analysis uses the Gibbs weights of the cached model as a
+dual certificate, together with a specific coupling of importance sampling
+and damping. Section~\ref{sec:local} proves the resulting progress bound
+directly, without assuming that these weights are the Gibbs weights of
+the unknown objective.
+
+\paragraph{Organization.}
+Section~\ref{sec:model} specifies the model and main theorem.
+Section~\ref{sec:local} develops the certified local solver.
+Sections~\ref{sec:search} and~\ref{sec:outer} establish the parameter search
+and constrained acceleration. Section~\ref{sec:combine} completes the
+query and probability analysis, and Section~\ref{sec:lower} explains the
+application of the published lower bound.
+
+\section{Problem formulation and main theorem}\label{sec:model}
+Throughout, $\norm{\cdot}$ and $\ip{\cdot}{\cdot}$ denote the Euclidean
+norm and inner product, $[n]=\{1,\ldots,n\}$, and
+$B_r(y)=\{x:\norm{x-y}\le r\}$. All logarithms are natural unless a base
+is indicated. For a nonempty closed convex set $D$, $\proj_D$ denotes
+Euclidean projection. The simplex is
+$\Delta_n=\{p\in\R_+^n:\sum_i p_i=1\}$, with $0\log0=0$.
+
+For each $i\in[n]$, let $f_i:\R^d\to\R$ be convex and differentiable,
+with
+\begin{equation}\label{eq:regularity}
+ |f_i(x)-f_i(y)|\le\norm{x-y},\qquad
+ \norm{\nabla f_i(x)-\nabla f_i(y)}\le\norm{x-y}
+ \quad(x,y\in\R^d).
+\end{equation}
+The global assumptions in~\eqref{eq:regularity} are part of the function
+class; oracle access is restricted to $X=B_2^d$. One query chooses
+$i\in[n]$ and $x\in X$ and returns $(f_i(x),\nabla f_i(x))$ at unit cost.
+The index and query point may depend on the entire preceding transcript
+and the algorithm's random choices. The output must also belong to $X$.
+
+Arithmetic, storage, elementary functions of stored values, and projections
+onto explicitly known sets are uncharged. In particular, optimizing a
+fully specified model built from queried affine tangents is local
+computation. Evaluating all original components at a new point still
+costs $n$ queries. We prove finite termination of all model solves at
+positive accuracy; no exact optimizer of an unknown function is an
+algorithmic primitive.
+
+Let $\Q(n,\eps)$ be the least integer budget for which, in every finite
+dimension, there is a randomized algorithm using at most that many
+component queries on every run and satisfying
+\[
+ \Pp\!\left(F(\hat x)-\min_{x\in X}F(x)\le\eps\right)\ge\frac23
+\]
+on every admissible instance. This definition takes the worst case over
+dimensions. The notation $\tO$ and $\tTheta$ suppresses logarithmic
+factors in $n$ and $1/\eps$.
+
+\begin{theorem}[Near-optimal component-query complexity]\label{thm:main}
+There are universal constants $c,C>0$ such that, for every integer $n\ge1$
+and every $0<\eps<1$,
+\begin{equation}\label{eq:matching}
+ c\left(n\eps^{-1/3}+\sqrt{n/\eps}\right)
+ \le \Q(n,\eps)
+ \le C\left(n\eps^{-1/3}+\sqrt{n/\eps}\right)
+       \log^6\!\left(\frac{en}{\eps}\right).
+\end{equation}
+More specifically, in every dimension $d\ge1$, the upper-bound algorithm
+returns an $\eps$-suboptimal feasible point with probability at least
+$0.99$ and has the deterministic query cap
+\begin{equation}\label{eq:upper}
+ C\left(n\eps^{-1/3}+\sqrt{n/\eps}\right)
+       \log^6\!\left(\frac{en}{\eps}\right).
+\end{equation}
+The lower bound is an application of Carmon et al.~\cite[Theorem~10]{inside}
+to the present model; it is not asserted in every fixed dimension.
+\end{theorem}
+
+The upper-bound proof is self-contained in
+Sections~\ref{sec:local}--\ref{sec:combine}. It uses no restriction on the
+span of the iterates and no shared-Hessian assumption. For the lower bound,
+Section~\ref{sec:lower} checks the global regularity, query domain,
+randomization, and terminal-output conventions needed to apply the cited
+theorem.
+
+\section{A certified solver from randomized affine minorants}\label{sec:local}
+Fix a temperature $\tau>0$, a center $y\in X$, a radius $0<r\le\sqrt\tau$, and $\lambda>0$. Write
+\begin{equation}\label{eq:soft}
+ f(x)=\tau\log\sum_{i=1}^n e^{f_i(x)/\tau},\quad
+ D=X\cap B_r(y),\quad
+ H(x)=f(x)+\frac\lambda2\norm{x-y}^2\quad(x\in D).
+\end{equation}
+Let $H_* =\min_D H$.
+
+\subsection{Two invariants of the stored affine functions}
+For each component, maintain an affine function $\ell_i$ that is a convex combination of tangent planes to $f_i$ at points in $D$. Initially, one full pass at $y$ gives
+\[
+ \ell_i(x)=f_i(y)+\ip{\nabla f_i(y)}{x-y}.
+\]
+Only the affine coefficients need to be stored; the convex combination is a proof invariant.
+
+\begin{lemma}[Minorant and gradient certificates]\label{lem:minorant}
+For every such $\ell_i$, with affine gradient $b_i=\nabla\ell_i$, and every $x\in D$,
+\begin{equation}\label{eq:minorant}
+ 0\le h_i(x):=f_i(x)-\ell_i(x)\le2r^2,
+ \qquad \norm{\nabla f_i(x)-b_i}^2\le2h_i(x).
+\end{equation}
+Moreover $\norm{b_i}\le1$.
+\end{lemma}
+\begin{proof}
+For a single tangent at $z\in D$, convexity and smoothness imply
+\[
+ 0\le f_i(x)-f_i(z)-\ip{\nabla f_i(z)}{x-z}
+ \le\frac12\norm{x-z}^2\le2r^2.
+\]
+The smooth convex interpolation inequality gives
+\[
+ \frac12\norm{\nabla f_i(x)-\nabla f_i(z)}^2
+ \le f_i(x)-f_i(z)-\ip{\nabla f_i(z)}{x-z}.
+\]
+For completeness, apply the descent lemma to
+$u\mapsto f_i(u)-\ip{\nabla f_i(z)}{u}$ at $x$ with one unit gradient step, and use that $z$ is a global minimizer of this convex function. This is an analytical argument, not a query outside $X$. Averaging the tangent inequalities and applying Jensen to the gradient differences proves \eqref{eq:minorant}. Finally, global 1-Lipschitzness implies $\norm{\nabla f_i(z)}\le1$, which is preserved by convex combinations.
+\end{proof}
+
+Define the known lower model and its minimum by
+\begin{equation}\label{eq:model}
+ m(x)=\tau\log\sum_i e^{\ell_i(x)/\tau}
+       +\frac\lambda2\norm{x-y}^2,\qquad v=\min_Dm.
+\end{equation}
+Then $v\le H_*$. At initialization,
+\begin{equation}\label{eq:initial}
+ 0\le H_*-v_0\le r^2/2,
+\end{equation}
+because all initial tangents are at $y$ and the initial model approximates $H$ from below within $r^2/2$ uniformly on $D$.
+
+\subsection{Progress of a damped coordinate update}
+The central estimate bounds the increase in the minimum of the lower model
+after one component query. We first prove it at an exact model minimizer;
+Section~\ref{sec:finite-model} then gives the finite-accuracy version used
+by the algorithm. Let $x$ minimize $m$ over $D$. Let
+\[
+ p_i=\frac{e^{\ell_i(x)/\tau}}{\sum_j e^{\ell_j(x)/\tau}},\quad
+ h_i=f_i(x)-\ell_i(x),\quad
+ q_i=\nabla f_i(x)-b_i.
+\]
+The probability $p_i$ uses cached affine data only. Let
+\begin{equation}\label{eq:weightslocal}
+ w_i=\min\{p_i,\lambda/4\},\quad
+ \alpha_i=w_i/p_i,\quad
+ Z=\sum_i\frac{p_i}{w_i},\quad
+ s_i=\frac{p_i/w_i}{Z}.
+\end{equation}
+All $p_i,w_i,s_i$ are positive, and
+\begin{equation}\label{eq:Z}
+ Z=\sum_i\max\{1,4p_i/\lambda\}\le n+4/\lambda=:M.
+\end{equation}
+Draw $I\sim s$. Query $(I,x)$ once, and update only
+\begin{equation}\label{eq:update}
+ \ell_I^+(u)=(1-\alpha_I)\ell_I(u)
+   +\alpha_I\bigl(f_I(x)+\ip{\nabla f_I(x)}{u-x}\bigr).
+\end{equation}
+This preserves Lemma~\ref{lem:minorant}. No value of an unqueried $h_i$ is used in sampling or damping.
+
+\begin{lemma}[One-coordinate progress: exact model]\label{lem:exactprogress}
+If $v^+$ denotes the minimum of the updated model, then for each selected coordinate $i$,
+\begin{equation}\label{eq:exactprogress}
+ v^+-v\ge\frac12w_i h_i.
+\end{equation}
+Consequently, conditionally on all previous queries,
+\begin{equation}\label{eq:conditionalprogress}
+ \E[v^+-v]\ge\frac{1}{2M}\sum_i p_i h_i.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The entropy variational formula represents the old model as
+\[
+ m(u)=\max_{p\in\Delta_n}
+ \left\{\sum_i p_i\ell_i(u)-\tau\sum_i p_i\log p_i
+             +\frac\lambda2\norm{u-y}^2\right\}.
+\]
+At the minimizer $x$, the gradient of the affine--quadratic function in
+braces, with $p$ fixed to the displayed Gibbs vector, equals $\nabla m(x)$.
+The constrained first-order condition therefore implies that $x$ also
+minimizes this function over $D$. Its strong convexity gives the lower bound
+$v+\lambda\norm{u-x}^2/2$ for every $u\in D$.
+
+Use this same feasible $p$ as a lower certificate for the new model, without requiring it to remain the new maximizer. The change of its affine part is $w_i(h_i+\ip{q_i}{u-x})$. Thus
+\[
+ v^+\ge v+w_i h_i-\frac{w_i^2\norm{q_i}^2}{2\lambda}
+ \ge v+w_i h_i-\frac{w_i^2 h_i}{\lambda}
+ \ge v+\frac34w_i h_i.
+\]
+The weaker factor $1/2$ in \eqref{eq:exactprogress} leaves room for the finite-accuracy version. Since $s_iw_i=p_i/Z$ and $Z\le M$, averaging proves \eqref{eq:conditionalprogress}. This proof retains the normal cone of $D$; it never assumes an unconstrained model minimizer.
+\end{proof}
+
+The true/model gap at $x$ is
+\begin{equation}\label{eq:gapcomparison}
+ H(x)-m(x)=\tau\log\sum_i p_i e^{h_i/\tau}
+ \le e^2\sum_i p_i h_i,
+\end{equation}
+since $0\le h_i/\tau\le2$, $\log(1+z)\le z$ for $z\ge0$,
+and $e^u-1\le e^2u$ on $[0,2]$. Hence the local rate is controlled by $n+\lambda^{-1}$, not by the gradient variance of a reweighted Gibbs sample.
+
+\subsection{Computable primal--dual stopping certificates}\label{sec:finite-model}
+The implementation replaces exact model minimization by a stopping test
+that uses only stored coefficients. For any candidate $x\in D$, set $p$ to its exact model Gibbs vector and define
+\begin{align}
+ \psi_p(u)&=\sum_i p_i\ell_i(u)-\tau\sum_i p_i\log p_i
+                +\frac\lambda2\norm{u-y}^2,\label{eq:psip}\\
+ x_p&=\proj_D\left(y-\lambda^{-1}\sum_i p_i b_i\right),\qquad
+ d_p=\psi_p(x_p).\label{eq:dualcertificate}
+\end{align}
+Then $d_p\le v\le m(x)$ and $m(x)=\psi_p(x)$. Using only cached data, compute a point satisfying
+\begin{equation}\label{eq:modelaccuracy}
+ m(x)-d_p\le\zeta.
+\end{equation}
+This requires no queries to any $f_i$. It can be obtained with finite local computation: the known function $m$ is $\lambda$-strongly convex and $(\lambda+1/\tau)$-smooth on the known compact set $D$. Projected gradient descent on $m$ converges to its unique minimizer. As $x$ converges to that minimizer, $p$, $x_p$, and the computable gap $m(x)-d_p$ converge continuously to their saddle-point values and zero. Thus any positive tolerance in \eqref{eq:modelaccuracy} is reached after finitely many local steps. Exact minimization of an unknown function is not a primitive of the algorithm.
+
+\begin{lemma}[One-coordinate progress: finite model accuracy]\label{lem:inexactprogress}
+If \eqref{eq:modelaccuracy} holds and the update uses the Gibbs vector at this $x$, the weights \eqref{eq:weightslocal}, and the tangent at $x$, then
+\begin{equation}\label{eq:inexactprogress}
+ v^+\ge v+\frac12w_i h_i-2\zeta.
+\end{equation}
+Define the true, computable-after-a-full-pass certificate
+\begin{equation}\label{eq:cert}
+ C_t=H(x_t)-d_{p_t}\ge H(x_t)-H_*\ge0.
+\end{equation}
+For $c=(2e^2M)^{-1}$, the model minima obey
+\begin{equation}\label{eq:finiteprogress}
+ \E[v_{t+1}-v_t\mid\mathcal F_t]\ge c C_t-3\zeta.
+\end{equation}
+Here $\mathcal F_t$ includes all stored data and all computations selecting $x_t,p_t$, but not the new sampled coordinate.
+\end{lemma}
+\begin{proof}
+Write $\bar x=x_p$. Strong convexity of $\psi_p$ and \eqref{eq:modelaccuracy} imply
+\[
+ \norm{x-\bar x}^2\le2\zeta/\lambda,\qquad d_p\ge v-\zeta.
+\]
+Using the old $p$ as a lower certificate for the updated model, and minimizing its perturbation around $\bar x$, gives
+\[
+ v^+\ge d_p+w_i h_i+w_i\ip{q_i}{\bar x-x}
+                   -\frac{w_i^2\norm{q_i}^2}{2\lambda}.
+\]
+By Lemma~\ref{lem:minorant}, $\norm{q_i}^2\le2h_i$. Moreover,
+\[
+ w_i\norm{q_i}\sqrt{2\zeta/\lambda}
+ \le2w_i\sqrt{h_i\zeta/\lambda}
+ \le\frac{w_i h_i}{4}+\frac{4w_i\zeta}{\lambda}
+ \le\frac{w_i h_i}{4}+\zeta,
+\]
+and $w_i^2h_i/\lambda\le w_i h_i/4$. These bounds prove \eqref{eq:inexactprogress}.
+
+The certificate obeys
+\[
+ C_t=H(x_t)-m_t(x_t)+m_t(x_t)-d_{p_t}
+ \le e^2\sum_i p_{t,i}h_{t,i}+\zeta.
+\]
+Average \eqref{eq:inexactprogress}, use $Z\le M$, and rearrange to obtain
+$\E[v_{t+1}-v_t\mid\mathcal F_t]\ge c C_t-(2+c)\zeta$.
+Since $c<1$, this implies \eqref{eq:finiteprogress}. The quantities $h_{t,i}$ and $C_t$ need not be known when a coordinate is sampled; they are used only in the analysis until the final certification pass.
+\end{proof}
+
+\subsection{A certified local solver with a deterministic query cap}
+\begin{theorem}[Local proximal solver]\label{thm:localsolver}
+For every $\phi>0$ and $\xi\in(0,1)$, the local problem \eqref{eq:soft} has an algorithm with a deterministic component-query cap
+\begin{equation}\label{eq:localcost}
+ O\!\left[
+ (n+\lambda^{-1})
+ \log\!\left(e+\frac{(n+\lambda^{-1})r^2}{\phi}\right)
+ \log\frac{2}{\xi}
+ \right].
+\end{equation}
+It either returns a point $x\in D$ with a valid certificate $H(x)-H_*\le\phi$, or declares failure. The failure probability is at most $\xi$, conditionally on any history preceding the call. Every component query lies in $D$.
+\end{theorem}
+\begin{proof}
+Let $E_t=H_*-v_t\ge0$, $M=n+4/\lambda$, and $c=(2e^2M)^{-1}$.
+Two facts connect the progress estimate to a certificate bound. First,
+$C_t-E_t=H(x_t)-H_*+v_t-d_{p_t}\ge0$. Second,
+$v_{t+1}\le H_*$ implies $v_{t+1}-v_t\le E_t$ on every run.
+Applying Lemma~\ref{lem:inexactprogress} and taking expectations therefore
+gives both inequalities
+\begin{equation}\label{eq:recurrence}
+ \E E_{t+1}\le(1-c)\E E_t+3\zeta,\qquad
+ c\E C_t\le\E E_t+3\zeta.
+\end{equation}
+Together with \eqref{eq:initial}, this implies
+\begin{equation}\label{eq:certbound}
+ \E C_t\le\frac{r^2}{2c}e^{-ct}+\frac{3\zeta}{c^2}
+                                      +\frac{3\zeta}{c}.
+\end{equation}
+To use the second inequality for the last candidate, one may analyze one additional hypothetical coordinate update; it need not be executed.
+
+Choose the positive known-model tolerance and deterministic number of coordinate updates
+\begin{equation}\label{eq:localparameters}
+ \zeta=\frac{\phi c^2}{24},\qquad
+ T=\left\lceil c^{-1}\log\max\left\{e,\frac{2r^2}{c\phi}\right\}\right\rceil.
+\end{equation}
+The first term of \eqref{eq:certbound} is at most $\phi/4$, and its remaining terms total at most $\phi/4$. Thus $\E C_T\le\phi/2$. Query all $n$ original components at $x_T$ to compute $H(x_T)$, and accept only if the valid certificate $C_T\le\phi$. Markov's inequality shows acceptance probability at least $1/2$. The algorithm evaluates $C_T$ only at this final certification pass;
+the preceding $C_t$ are analysis quantities. The full pass is included
+in the query count.
+
+Restart the entire local run with fresh randomness at most $J=\lceil\log_2(1/\xi)\rceil$ times. A run uses $n$ initialization queries, $T$ one-component updates, and $n$ certification queries. Each failed run is explicitly detected. Therefore the total cap is $J(2n+T)$, and the probability of no accepted run is at most $2^{-J}\le\xi$. Every bound above is uniform in the input center and any prior history, proving the conditional statement. This is an exact-real oracle algorithm: the stored coefficients are exact oracle answers, and model arithmetic and projections onto known sets are uncharged. Only optimization of a known model is terminated at positive tolerance; no claim about floating-point stability or bit complexity is made.
+\end{proof}
+
+Algorithm~\ref{alg:local} summarizes the procedure.
+
+\begin{algorithm}[htbp]
+\caption{Certified local affine-minorant solver}\label{alg:local}
+\begin{algorithmic}[1]
+\Require $y\in X$, $\tau>0$, $0<r\le\sqrt\tau$, $\lambda>0$, tolerance $\phi>0$,
+failure allowance $\xi\in(0,1)$.
+\State Set $D=X\cap B_r(y)$, $M=n+4/\lambda$, $c=(2e^2M)^{-1}$,
+$\zeta=\phi c^2/24$.
+\State Set $T$ as in~\eqref{eq:localparameters} and
+$J=\lceil\log_2(1/\xi)\rceil$.
+\For{$j=1,\ldots,J$}
+ \State Query all components at $y$; initialize their affine tangents
+ $\ell_{0,i}$.
+ \For{$t=0,\ldots,T-1$}
+  \State Using the cache, find $x_t\in D$ with
+  $m_t(x_t)-d_{p_t}\le\zeta$.
+  \State Form $w_i,\alpha_i,s_i$ from $p_t$ using~\eqref{eq:weightslocal}.
+  \State Draw $I\sim s$, query $(I,x_t)$, and update $\ell_{t,I}$
+  by~\eqref{eq:update}.
+ \EndFor
+ \State Using the final cache, find $x_T$ with
+ $m_T(x_T)-d_{p_T}\le\zeta$.
+ \State Query all components at $x_T$ and compute $C_T=H(x_T)-d_{p_T}$.
+ \If{$C_T\le\phi$}
+  \State \Return $x_T$ with certificate $H(x_T)-H_*\le\phi$.
+ \EndIf
+\EndFor
+\State \Return \textsc{Failure}.
+\end{algorithmic}
+\end{algorithm}
+
+\begin{remark}[Role of the cached Gibbs weights]
+The cached Gibbs distribution serves as a feasible dual certificate and
+as a computable importance distribution. It can differ from the Gibbs
+distribution of the true components. The nonlinearity enters through the exact inequality $\norm{\nabla f_i(x)-\nabla\ell_i}^2\le2(f_i(x)-\ell_i(x))$. Sampling $s_i\propto\max\{1,4p_i/\lambda\}$ and damping by $\alpha_i=\min\{1,\lambda/(4p_i)\}$ ensure $s_i\alpha_i p_i=p_i/Z$. This is why the rate contains $n+\lambda^{-1}$ rather than $n\lambda^{-1}$ or a Gibbs-gradient variance term.
+\end{remark}
+
+\section{Searching for a feasible proximal step}\label{sec:search}
+We next construct the parameter search used by the outer algorithm.
+Throughout this section and Section~\ref{sec:outer}, let
+$f:\R^d\to\R$ be convex, differentiable, and $1$-Lipschitz.
+The soft maximum in~\eqref{eq:soft} has these properties, since its
+gradient is a convex combination of the component gradients. For that
+objective, Theorem~\ref{thm:localsolver} implements every requested local
+solve provided $r\le\sqrt\tau$. Let $0<\eta\le1/100$ and $\eta\le r\le1$.
+Define
+\begin{equation}\label{eq:lambdas}
+ \lambda_- =\eta r^{-4/3},\qquad \lambda_+=4/r,\qquad \rho=r/100.
+\end{equation}
+For $x,z\in X$, $A\ge1$, and a trial $\lambda\in[\lambda_-,\lambda_+]$, set
+\begin{equation}\label{eq:outerweights}
+ a_\lambda=\frac{1+\sqrt{1+4\lambda A}}{2\lambda},\quad
+ A_\lambda=A+a_\lambda=\lambda a_\lambda^2,\quad
+ y_\lambda=\frac{Ax+a_\lambda z}{A_\lambda}.
+\end{equation}
+The center $y_\lambda$ is feasible. Write $p_\lambda(y)$ for the unique minimizer of
+$f(u)+\lambda\norm{u-y}^2/2$ over $X$, and $p^r_\lambda(y)$ for its
+unique minimizer over $X\cap B_r(y)$. These exact points are used only
+in the analysis.
+
+Use Theorem~\ref{thm:localsolver} with objective tolerance
+\begin{equation}\label{eq:searchtol}
+ \phi_{\mathrm{search}}=\lambda\rho^2/2
+\end{equation}
+to obtain a certified feasible point $\tilde p$. On success,
+$\norm{\tilde p-p^r_\lambda(y_\lambda)}\le\rho$ by strong convexity. A declared local failure aborts the global algorithm; its probability is accounted for later.
+
+\paragraph{Search rule.}
+Test $\lambda_-$. Return it if observed movement $\norm{\tilde p-y_{\lambda_-}}\le0.85r$. Otherwise maintain low endpoint $\lambda_-$ and high endpoint $\lambda_+$. At a geometric midpoint, return if observed movement belongs to $[0.55r,0.85r]$; replace the high endpoint if it is below $0.55r$, and replace the low endpoint if it is above $0.85r$. The initial high endpoint needs no oracle call, because its exact movement is at most $r/4$.
+
+\begin{lemma}[Search guarantee]\label{lem:search}
+If the local calls succeed, the search returns a parameter with
+\begin{equation}\label{eq:movement}
+ \norm{p_\lambda(y_\lambda)-y_\lambda}<r,
+ \qquad \lambda=\lambda_-\text{ or }
+ \norm{p_\lambda(y_\lambda)-y_\lambda}\ge r/2.
+\end{equation}
+The number of geometric midpoint comparisons is at most
+\begin{equation}\label{eq:bis}
+ B=2+\left\lceil\log_2\!\left(
+ \frac{10(4+\lambda_-^{-1})\log(\lambda_+/\lambda_-)}{r}
+ \right)\right\rceil.
+\end{equation}
+The claim does not assume monotonicity of movement along the changing centers $y_\lambda$. For a fully capped implementation, abort and return $0$ if the initial test and $B$ comparisons have not returned a parameter; the proof below shows that this cannot happen when all local calls are certified.
+\end{lemma}
+\begin{proof}
+The prox optimality conditions and $\norm{\nabla f}\le1$ give
+\begin{equation}\label{eq:proxproperties}
+ \norm{p_\lambda(y)-y}\le1/\lambda,\qquad
+ \norm{p_\lambda(y)-p_\mu(y)}\le|\lambda^{-1}-\mu^{-1}|.
+\end{equation}
+For the first statement, test optimality with $y\in X$. For the second, subtract the two monotone optimality conditions and apply the first statement. The prox is nonexpansive in its center.
+
+Writing $y_\lambda=(1-b_\lambda)x+b_\lambda z$ with
+$b_\lambda=2/(1+\sqrt{1+4\lambda A})$ gives
+$\norm{dy_\lambda/d\log\lambda}\le2$. Therefore global movement
+$D(\lambda)=\norm{p_\lambda(y_\lambda)-y_\lambda}$ satisfies
+\begin{equation}\label{eq:modulus}
+ |D(\lambda)-D(\mu)|
+ \le(4+\lambda_-^{-1})|\log\lambda-\log\mu|.
+\end{equation}
+
+Observed movement at most $0.85r$ implies local prox movement at most $0.86r$. A local minimizer strictly inside the radius ball must also minimize
+over $X$: otherwise a sufficiently short segment toward a better point
+of $X$ would stay in the local ball and decrease the objective.
+Thus the local and global proximal points coincide. A returned nonminimal parameter has movement at least $0.54r$, proving \eqref{eq:movement}. Any later high endpoint has global movement at most $0.56r$, while any low endpoint has global movement at least $0.84r$. Indeed, if the global prox were outside the local ball, the local prox would lie on the radius boundary; otherwise the two prox points coincide. The endpoint movement difference is consequently at least $0.28r$. Bisection halves the logarithmic parameter interval. The modulus \eqref{eq:modulus} rules out maintaining this difference for more than \eqref{eq:bis} comparisons without returning a midpoint.
+\end{proof}
+
+\section{Constrained acceleration with certified local solves}\label{sec:outer}
+\suppressfloats[t]
+Initialize $x_0=z_0=0$, $A_0=1$. Given the preceding state, apply Section~\ref{sec:search} to choose $\lambda_k,a_k,A_k,y_{k-1}$. At the accepted center make one further local call, now with
+\begin{equation}\label{eq:maintol}
+ \phi_k=\frac{\eta^2}{2^{20}\lambda_k}.
+\end{equation}
+On success let its returned point be $x_k$, and set
+\begin{equation}\label{eq:outerupdate}
+ \widehat g_k=\lambda_k(y_{k-1}-x_k),\qquad
+ z_k=\proj_X\left(z_{k-1}-\frac{a_k}{2}\widehat g_k\right).
+\end{equation}
+Stop at the first $A_k\ge\eta^{-1}$, or after
+\begin{equation}\label{eq:K}
+ K_{\max}=\left\lceil100r^{-2/3}\log(2/\eta)\right\rceil
+\end{equation}
+outer steps. Abort and return $0$ upon any declared failure of a local call. Algorithm~\ref{alg:outer} collects these steps. Its analysis is pathwise:
+once every local call has returned a valid certificate, the following
+inequalities hold deterministically. Randomness is needed only to ensure
+that the local calls succeed within their prescribed budgets.
+
+
+\begin{algorithm}[htbp]
+\caption{Constrained accelerated outer method}\label{alg:outer}
+\begin{algorithmic}[1]
+\Require $\eta\le r\le1$, $\eta\le1/100$, and a certified local solver.
+\State Set $x_0=z_0=0$, $A_0=1$, $\lambda_-=\eta r^{-4/3}$,
+$\lambda_+=4/r$.
+\For{$k=1,\ldots,K_{\max}$}
+ \State Apply Section~\ref{sec:search} to obtain
+ $\lambda_k,a_k,A_k,y_{k-1}$.
+ \State If the search declares failure or exceeds its cap, return $0$.
+ \State Call the local solver at $y_{k-1}$ with radius $r$,
+ regularization $\lambda_k$, and tolerance
+ $\phi_k=\eta^2/(2^{20}\lambda_k)$.
+ \State If the main local call declares failure, return $0$.
+ \State Let $x_k$ be the certified point and set
+ $\widehat g_k=\lambda_k(y_{k-1}-x_k)$.
+ \State Set $z_k=\proj_X(z_{k-1}-a_k\widehat g_k/2)$.
+ \If{$A_k\ge\eta^{-1}$}
+  \State \Return $x_k$.
+ \EndIf
+\EndFor
+\State \Return $0$.
+\end{algorithmic}
+\end{algorithm}
+
+\Needspace{8\baselineskip}
+\begin{lemma}[One-step energy inequality]\label{lem:energy}
+Let $u\in\argmin_Xf$ and
+\[
+ P_k=A_k(f(x_k)-f(u))+\norm{z_k-u}^2.
+\]
+On every certified step, for $p_k=p_{\lambda_k}(y_{k-1})$,
+\begin{equation}\label{eq:energy}
+ P_k\le P_{k-1}
+ -\frac{\lambda_k A_k}{6}\norm{p_k-y_{k-1}}^2
+ +\frac{\eta a_k}{100}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Suppress step indices and put $g=\lambda(y-p)$ and $e=\widehat g-g$. By the search, the local and global prox points coincide. Thus the certified objective accuracy implies
+\[
+ \norm{e}^2\le2\lambda\phi=2\eta^2/2^{20}.
+\]
+Let $I_X$ be the convex indicator of $X$, equal to zero on $X$
+and $+\infty$ elsewhere. Proximal optimality gives
+$g\in\partial(f+I_X)(p)$. Weight the subgradient inequalities at
+$x_{k-1}$ and $u$ by $A_{k-1}$ and $a_k$, respectively. Since
+$A_ky=A_{k-1}x_{k-1}+a_kz_{k-1}$, this yields
+\[
+ A_k(f(p)-f(u))-A_{k-1}(f(x_{k-1})-f(u))
+ \le-\frac{A_k}{\lambda}\norm{g}^2
+       +a_k\ip{g}{z_{k-1}-u}.
+\]
+The certified proximal objective accuracy also gives
+\[
+ f(x_k)\le f(p)+\frac{\lambda}{2}\norm{p-y}^2
+                    -\frac{\lambda}{2}\norm{x_k-y}^2+\phi.
+\]
+Combining these inequalities and dropping the nonpositive squared-norm
+term gives
+\[
+ A_k(f(x_k)-f(u))-A_{k-1}(f(x_{k-1})-f(u))
+ \le-\frac{A_k}{2\lambda}\norm{g}^2
+      +a_k\ip{g}{z_{k-1}-u}+A_k\phi.
+\]
+Projection in \eqref{eq:outerupdate} gives the change of squared distance at most
+$-a_k\ip{\widehat g}{z_{k-1}-u}+a_k^2\norm{\widehat g}^2/4$.
+Using $A_k/\lambda=a_k^2$ and
+$\norm{\widehat g}^2\le\tfrac43\norm{g}^2+4\norm{e}^2$ yields
+\[
+ P_k\le P_{k-1}-\frac{a_k^2}{6}\norm{g}^2
+           +A_k\phi+a_k^2\norm{e}^2+2a_k\norm{e}.
+\]
+Before a step, $A_{k-1}<1/\eta$. Since $\lambda_k\ge\lambda_-\ge\eta$,
+$a_k<(2/\eta)$ and $A_k<3/\eta$. The positive terms are at most
+\[
+ \left(\frac{6}{2^{20}}+2\sqrt{\frac{2}{2^{20}}}\right)\eta a_k
+ <\frac{\eta a_k}{100}.
+\]
+The negative term equals that in \eqref{eq:energy}.
+\end{proof}
+
+\begin{lemma}[Termination and accuracy]\label{lem:termination}
+If all local calls are certified, the algorithm reaches $A_K\ge1/\eta$ within \eqref{eq:K}, and returns an $x_K\in X$ satisfying $f(x_K)-\min_X f\le3\eta$.
+\end{lemma}
+\begin{proof}
+The initial energy is at most two because $\norm{u}\le1$ and $f(0)-f(u)\le1$. Since $\sum_{k\le K}a_k=A_K-1<3/\eta$, telescoping \eqref{eq:energy} gives
+\begin{equation}\label{eq:totalenergy}
+ P_K+\frac16\sum_{k\le K}\lambda_kA_k\norm{p_k-y_{k-1}}^2<3.
+\end{equation}
+Suppose the iteration cap were reached with $A_K<1/\eta$. Split indices into
+$I=\{k:\lambda_k=\lambda_-\}$ and $J=\{k:\lambda_k>\lambda_-\}$.
+The movement guarantee gives $\sum_{k\in J}\lambda_kA_k<72/r^2$. Also
+\[
+ \frac{a_k}{A_k}=\frac1{\sqrt{\lambda_kA_k}}
+ \le\log\frac{A_k}{A_{k-1}},
+\]
+so $\sum_{k\in J}(\lambda_kA_k)^{-1/2}<\log(1/\eta)$. H\"older's inequality implies
+\[
+ |J|^3\le\left(\sum_{k\in J}\lambda_kA_k\right)
+           \left(\sum_{k\in J}(\lambda_kA_k)^{-1/2}\right)^2,
+\]
+hence $|J|<72^{1/3}r^{-2/3}\log^{2/3}(1/\eta)$. For each $k\in I$,
+\[
+ \sqrt{A_k}-\sqrt{A_{k-1}}
+ =\frac{a_k}{\sqrt{A_k}+\sqrt{A_{k-1}}}
+ \ge\frac1{2\sqrt{\lambda_-}}.
+\]
+Thus $|I|<2\sqrt{\lambda_-/\eta}=2r^{-2/3}$. These bounds contradict \eqref{eq:K}. At the actual stopping time $A_K\ge1/\eta$, \eqref{eq:totalenergy} gives the claimed objective accuracy.
+\end{proof}
+
+\section{Completing the upper-bound proof}\label{sec:combine}
+We now apply the preceding results to $F=\max_i f_i$ and verify the
+claimed accuracy, success probability, and deterministic query budget.
+\subsection{Parameters and success probability}
+ Define
+\begin{equation}\label{eq:parameters}
+ \tau=\eta=\frac{\eps}{100+\log n},\qquad
+ r=\min\{\sqrt\tau,(n\tau)^{3/4}\}.
+\end{equation}
+Then $\eta\le r\le\sqrt\tau<1$ and the crucial inequalities are
+\begin{equation}\label{eq:crucial}
+ \lambda_- =\tau r^{-4/3}\ge1/n,
+ \qquad \lambda\ge\lambda_-\Longrightarrow
+ n+4/\lambda\le5n.
+\end{equation}
+The local solver therefore costs $\tO(n)$ queries at \emph{every trial parameter}, not just at accepted centers.
+
+There are at most $N_{\mathrm{calls}}=K_{\max}(B+2)$ local calls: one initial test per search, at most $B$ midpoint comparisons, and one main-step call. Choose
+\[
+ \xi=\frac1{100N_{\mathrm{calls}}}
+\]
+for each call. The conditional guarantee in Theorem~\ref{thm:localsolver} and a union bound give probability at least $0.99$ that every call is certified. Lemma~\ref{lem:termination} then gives $f(x_K)-\min_Xf\le3\tau$. Since
+\[
+ F(x)\le f(x)\le F(x)+\tau\log n,
+\]
+we obtain
+\[
+ F(x_K)-\min_XF\le3\tau+\tau\log n\le\eps.
+\]
+
+\subsection{Deterministic query accounting}
+Each local call has a deterministic cap $J(2n+T)$, including the initialization and certification full passes in all failed attempts. The number of calls is deterministically bounded. No expected-work truncation or random running-time promise is required.
+
+More explicitly, put $L=\log(en/\tau)$. Since $r\ge\tau$, the parameter range lies in
+$[\tau,4/\tau]$, $B=O(L)$, and $K_{\max}=O(r^{-2/3}L)$. All required local tolerances are at least a constant times $\tau^3$: for the main call use \eqref{eq:maintol} and $\lambda\le4/\tau$, while for the search use $\lambda\ge\lambda_-=\tau r^{-4/3}$ in \eqref{eq:searchtol}. Equations~\eqref{eq:localparameters} and \eqref{eq:crucial} consequently give $T=O(nL)$ and $J=O(L)$ uniformly. Table~\ref{tab:accounting} summarizes these bounds. Total component
+queries are therefore
+\begin{equation}\label{eq:totalwork}
+ O(nr^{-2/3}L^4).
+\end{equation}
+Finally,
+\begin{equation}\label{eq:radiusidentity}
+ nr^{-2/3}
+ =\max\{n\tau^{-1/3},\sqrt{n/\tau}\}
+ \le n\tau^{-1/3}+\sqrt{n/\tau}.
+\end{equation}
+Replacing $\tau$ by $\eps/(100+\log n)$ changes only logarithms. For example, the deliberately loose power six in \eqref{eq:upper} absorbs all the factors just displayed. This proves the upper-bound part of Theorem~\ref{thm:main}.
+
+
+\begin{table}[t]
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Operation & Deterministic upper bound\\
+\midrule
+Coordinate updates per local attempt & $O(nL)$\\
+Attempts per local call & $O(L)$\\
+Component queries per local call & $O(nL^2)$\\
+Local calls per outer step & $O(L)$\\
+Outer steps & $O(r^{-2/3}L)$\\
+\midrule
+Total component queries & $O(nr^{-2/3}L^4)$\\
+\bottomrule
+\end{tabular}
+\caption{Query accounting with $L=\log(en/\tau)$. Initialization and final
+certification passes are included in the cost of every attempt, including
+attempts that fail certification.}
+\label{tab:accounting}
+\end{table}
+
+\paragraph{Computational scope.}
+Every use of an original component, including rejected local runs and endpoint checks, is charged. Every queried point belongs to $X\cap B_r(y)$ for a feasible center $y$. Optimizing $m_t$, computing its Gibbs weights, choosing the importance distribution, and projecting onto known balls use stored coefficients only. Their runtime may be substantial and is not asserted to match the query bound. The proof does not furnish an equally fast arithmetic-runtime algorithm.
+
+
+\section{Applying the published lower bound}\label{sec:lower}
+We record the precise connection to the lower bound of
+Carmon et al.~\cite{inside}. This section applies their result; it does
+not reproduce their randomized hard-instance construction.
+
+\begin{proposition}[Imported randomized lower bound]\label{prop:lower}
+In the model of Section~\ref{sec:model}, for all sufficiently small
+$\eps>0$ and every $n\ge1$,
+\begin{equation}\label{eq:publishedlower}
+ \Q(n,\eps)\ge
+ c_0\left(n\eps^{-1/3}
+       +\min\{\eps^{-2},\sqrt{n/\eps}\}\right)
+\end{equation}
+for a universal constant $c_0>0$. The dimension is allowed to depend on
+$n$ and $\eps$.
+\end{proposition}
+\begin{proof}
+Theorem~10 of the COLT extended version of~\cite{inside}
+(Theorem~3 in its arXiv version) gives~\eqref{eq:publishedlower} after
+setting the function Lipschitz constant, gradient Lipschitz constant,
+and domain radius to one. We check the conventions relevant here.
+
+\paragraph{Oracle and randomization.}
+The protocol in~\cite[Section~5.1]{inside} allows arbitrary adaptive,
+possibly randomized choices of a component and a point in the feasible
+ball, followed by a local-oracle response. A component value--gradient
+query is such a local oracle. The randomized lower bound therefore
+applies to the unrestricted algorithm class of
+Section~\ref{sec:model}, including arbitrary computation between queries.
+
+\paragraph{Global regularity.}
+The linear-in-$n$ hard family in~\cite[Section~5.3, equation~(12)]{inside}
+uses affine compositions of a globally convex, Lipschitz, smooth scalar
+function; rotations and the normalization in its Appendix~D.3 preserve
+these properties. The other term is obtained there from disjoint
+coordinate blocks of a smoothed hard function. The underlying smoothing
+construction is global and preserves Lipschitzness while providing a
+global gradient-Lipschitz bound; see
+Diakonikolas and Guzm\'an~\cite[Theorem~14 and Appendix~A.3,
+Proposition~19]{dg}. Thus the cited hard families can satisfy
+\eqref{eq:regularity} on $\R^d$, with queries restricted to $X$.
+This argument uses those constructions and does not require an extension
+theorem for arbitrary functions specified only on a ball.
+
+\paragraph{Terminal output.}
+The published statement rules out accurate early query points with
+probability at least $1/2$. If an algorithm produces an arbitrary feasible
+output after $q$ queries, append that point as one additional component
+query and keep the output unchanged. The published statement then applies
+to the output as well. Applying it at a constant multiple of $\eps$
+removes any distinction between a strict and a non-strict accuracy
+threshold, and preserves the order of the bound. The additive query and
+constant rescaling are absorbed for sufficiently small $\eps$.
+\end{proof}
+
+\paragraph{Simplifying the minimum.}
+Set $a=n\eps^{-1/3}$ and $b=\sqrt{n/\eps}$. If
+$b\le\eps^{-2}$, the right side of~\eqref{eq:publishedlower} is already
+$c_0(a+b)$. Otherwise $n\ge\eps^{-3}$ and
+\[
+ \frac{a}{b}=\sqrt n\,\eps^{1/6}\ge\eps^{-4/3}\ge1.
+\]
+Hence $a+\min\{\eps^{-2},b\}\ge a\ge(a+b)/2$. This establishes
+the lower bound in~\eqref{eq:matching} at sufficiently small accuracy.
+
+\begin{lemma}[Constant-accuracy lower bound]\label{lem:constant-lower}
+For every $n\ge1$ and every $0<\eps<1$, an algorithm that succeeds
+with probability at least $2/3$ on every admissible instance needs at
+least $n/3$ component queries in the worst case.
+\end{lemma}
+\begin{proof}
+Work in dimension one. Choose $J$ uniformly from $[n]$ and an independent
+uniform sign $U\in\{-1,1\}$. Let $f_J(x)=Ux$ and let every other
+component be the constant $-2$. These functions are globally convex,
+$1$-Lipschitz, and $1$-smooth. On $[-1,1]$, their maximum is $Ux$ and
+its minimum is $-1$.
+
+Before the algorithm queries $J$, its transcript carries no information
+about $U$. For any fixed output $x$, at most one sign can satisfy
+$1+Ux\le\eps<1$. Thus success conditional on not querying $J$ has
+probability at most $1/2$. With a budget of $q$ queries, the probability
+of querying $J$ is at most $q/n$: under the transcript in which every
+reply comes from the constant function, at most $q$ component indices
+are inspected. Overall success is therefore at most
+$1/2+q/(2n)$. Success probability $2/3$ on every instance requires
+$q\ge n/3$.
+\end{proof}
+
+For $\eps$ bounded below by any fixed positive constant,
+$n\eps^{-1/3}+\sqrt{n/\eps}=\Theta(n)$. Lemma~\ref{lem:constant-lower}
+therefore completes the lower-bound part of Theorem~\ref{thm:main} over
+the entire stated interval $0<\eps<1$.
+
+\section{Consequences and further questions}\label{sec:discussion}
+Theorem~\ref{thm:main} gives the two polynomial regimes
+\begin{equation}\label{eq:phase}
+ \Q(n,\eps)=
+ \begin{cases}
+  \tTheta(\sqrt n\,\eps^{-1/2}),&1\le n\le\eps^{-1/3},\\[2pt]
+  \tTheta(n\eps^{-1/3}),&n\ge\eps^{-1/3}.
+ \end{cases}
+\end{equation}
+The crossover in this expression suppresses logarithmic factors;
+the implemented radius switches at $n=\tau^{-1/3}$. The special case
+$n=1$ recovers the familiar smooth convex order $\eps^{-1/2}$, while
+$n=\lceil\eps^{-1}\rceil$ gives $\tTheta(\eps^{-4/3})$.
+
+The proof identifies a useful mechanism for component-oracle algorithms:
+the minimum of a cached lower model can serve as the progress measure,
+even when the objective combines its components nonlinearly. The inequality
+$\norm{\nabla f_i(x)-\nabla\ell_i}^2\le2(f_i(x)-\ell_i(x))$
+couples the error in a tangent gradient to the improvement available from
+refreshing that component. Damping controls the cost of moving the model
+minimizer, and importance sampling converts coordinate progress into a
+bound on the full soft-maximum gap. A separate full pass turns this
+analysis into a verifiable objective certificate.
+
+Two questions remain outside the result proved here. The first is to
+implement the cached-model solves with an arithmetic-runtime guarantee
+comparable to the query bound. The second is to characterize the minimax
+complexity at a prescribed fixed dimension: the upper bound is
+dimension-independent, but the lower bound used for matching allows the
+dimension to grow. We also leave optimization of the logarithmic factors
+to future work.
+
+\begin{thebibliography}{9}
+
+\bibitem{stochastic}
+Hilal Asi, Yair Carmon, Arun Jambulapati, Yujia Jin, and Aaron Sidford.
+\newblock Stochastic bias-reduced gradient methods.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+volume~34, pages 10810--10822, 2021.
+\newblock \href{https://arxiv.org/abs/2106.09481}{arXiv:2106.09481}.
+
+\bibitem{ballaccel}
+Yair Carmon, Arun Jambulapati, Qijia Jiang, Yujia Jin, Yin Tat Lee,
+Aaron Sidford, and Kevin Tian.
+\newblock Acceleration with a ball optimization oracle.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+volume~33, pages 19052--19063, 2020.
+\newblock \href{https://arxiv.org/abs/2003.08078}{arXiv:2003.08078}.
+
+\bibitem{inside}
+Yair Carmon, Arun Jambulapati, Yujia Jin, and Aaron Sidford.
+\newblock Thinking inside the ball: Near-optimal minimization of the maximal loss.
+\newblock In \emph{Proceedings of the Thirty-Fourth Conference on Learning Theory},
+volume~134 of \emph{Proceedings of Machine Learning Research},
+pages 866--882, 2021.
+\newblock \href{https://proceedings.mlr.press/v134/carmon21a/carmon21a-supp.pdf}
+{Extended version with full proofs}.
+\newblock Theorem numbers in this paper refer to that version.
+\newblock \href{https://arxiv.org/abs/2105.01778}{arXiv:2105.01778}.
+
+\bibitem{ballgame}
+Yair Carmon, Arun Jambulapati, Yujia Jin, and Aaron Sidford.
+\newblock A whole new ball game: A primal accelerated method for matrix games
+and minimizing the maximum of smooth functions.
+\newblock In \emph{Proceedings of the 2024 Annual ACM--SIAM Symposium on
+Discrete Algorithms}, pages 3685--3723, 2024.
+\newblock \href{https://doi.org/10.1137/1.9781611977912.130}
+{doi:10.1137/1.9781611977912.130}.
+
+\bibitem{dg}
+Jelena Diakonikolas and Crist\'obal Guzm\'an.
+\newblock Lower bounds for parallel and randomized convex optimization.
+\newblock \emph{Journal of Machine Learning Research}, 21(5):1--31, 2020.
+\newblock \url{https://jmlr.org/papers/v21/19-771.html}.
+
+\bibitem{miso}
+Julien Mairal.
+\newblock Incremental majorization-minimization optimization with application
+to large-scale machine learning.
+\newblock \emph{SIAM Journal on Optimization}, 25(2):829--855, 2015.
+\newblock \href{https://doi.org/10.1137/140957639}{doi:10.1137/140957639}.
+
+\bibitem{nesterov}
+Yurii Nesterov.
+\newblock \emph{Lectures on Convex Optimization}.
+\newblock Second edition, volume~137 of \emph{Springer Optimization and
+Its Applications}. Springer, 2018.
+\newblock \href{https://doi.org/10.1007/978-3-319-91578-4}
+{doi:10.1007/978-3-319-91578-4}.
+
+\end{thebibliography}
+\end{document}

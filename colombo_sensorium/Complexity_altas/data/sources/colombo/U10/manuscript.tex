@@ -1,0 +1,1556 @@
+\documentclass[11pt]{article}
+
+\usepackage[a4paper,margin=27mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{array,tabularx}
+\usepackage{needspace,float,aliascnt}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{pdftitle={Exact-Value Complexity of Nonsmooth Strongly Convex Optimization},
+  pdfauthor={Colombo Team},pdfsubject={Uniform oracle complexity bounds and boundary geometry}}
+\setlength{\emergencystretch}{1.5em}
+\setlength{\parskip}{2pt}
+\setlist{itemsep=3pt,topsep=5pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\logfac}{\mathcal L_\eps}
+\newcommand{\profile}[1]{\mathcal P_d(#1)}
+\usepackage[nameinlink,capitalize]{cleveref}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Pp}{\mathbb{P}}
+\newcommand{\B}{\mathbb{B}}
+\newcommand{\Sph}{\mathbb{S}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cD}{\mathcal{D}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\inner}[2]{\langle #1,#2\rangle}
+\newcommand{\norm}[1]{\lVert #1\rVert_2}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\polylog}{\operatorname{polylog}}
+\newcommand{\Lip}{\operatorname{Lip}}
+\newcommand{\conv}{\operatorname{conv}}
+\newcommand{\val}{\operatorname{val}}
+\newcommand{\err}{\operatorname{err}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+\newcommand{\argmax}{\operatorname*{arg\,max}}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newaliascnt{proposition}{theorem}
+\newtheorem{proposition}[proposition]{Proposition}
+\aliascntresetthe{proposition}
+\newaliascnt{lemma}{theorem}
+\newtheorem{lemma}[lemma]{Lemma}
+\aliascntresetthe{lemma}
+\newaliascnt{corollary}{theorem}
+\newtheorem{corollary}[corollary]{Corollary}
+\aliascntresetthe{corollary}
+\theoremstyle{definition}
+\newaliascnt{definition}{theorem}
+\newtheorem{definition}[definition]{Definition}
+\aliascntresetthe{definition}
+\newaliascnt{remark}{theorem}
+\newtheorem{remark}[remark]{Remark}
+\aliascntresetthe{remark}
+\crefname{proposition}{Proposition}{Propositions}
+\crefname{lemma}{Lemma}{Lemmas}
+\crefname{corollary}{Corollary}{Corollaries}
+\crefname{definition}{Definition}{Definitions}
+\crefname{remark}{Remark}{Remarks}
+
+\title{Exact-Value Complexity of Nonsmooth\\
+Strongly Convex Optimization:\\
+Uniform Bounds and Boundary Geometry}
+\author{Colombo Team\\[0.3em]
+\small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study the number of exact scalar function evaluations needed to minimize
+a possibly nonsmooth, $\mu$-strongly convex, $L$-Lipschitz function on a
+Euclidean ball of radius $R$. The relevant scale is the Lipschitz slack
+$\Delta=L-\mu R$. We prove that the class is nonempty exactly when
+$\Delta\ge0$ and collapses, at $\Delta=0$, to a known quadratic plus an
+unknown constant. For $\Delta>0$, let $S_\Delta$ be the exact minimax
+expected error without queries and set
+\[
+ m_\eps=\min\left\{d,\frac{\Delta^2R^2}{\eps^2},
+                         \frac{\Delta^2}{\mu\eps}\right\}.
+\]
+For every dimension $d\ge1$ and $0<\eps\le c_0S_\Delta$, both expected-error
+and constant-success query complexities lie between
+$c d m_\eps/\log(e m_\eps)$ and
+$C d m_\eps\log(d+1)\log(128S_\Delta/\eps)$.
+The upper bound follows by localizing the unknown convex residual before
+applying two-point estimation or value-oracle convex optimization.
+The lower bound transfers a fixed-prior support-function obstruction
+through quadratic regularization. A spherical family and a separate
+one-dimensional packing complete the finite-dimensional cases. The large-dimensional
+lower profile agrees with the Euclidean specialization of prior
+strong-convexity reductions. Our contribution is a uniform geometric
+and two-sided formulation, including the degenerate boundary, localized
+logarithmic factors, and a direct regularization proof. The bounds
+identify the polynomial dependence on dimension and accuracy; the
+remaining logarithmic factors are not claimed to be sharp.
+\end{abstract}
+
+\paragraph{Keywords.}
+zeroth-order optimization; exact function values; strong convexity;
+nonsmooth optimization; oracle complexity; randomized algorithms.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol. 
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:intro}
+
+How many scalar evaluations are needed to minimize a strongly convex
+function when derivatives are unavailable? In this paper, a query at
+$x$ returns the exact real number $F(x)$ of one fixed objective. The
+algorithm may be randomized and fully adaptive, and its internal
+computation is unrestricted. The function may be nonsmooth. We count
+individual evaluations and require every query and the final output
+to lie in the prescribed Euclidean ball.
+
+For a convex $L$-Lipschitz objective on a ball of radius $R$ and
+$0<\eps\le LR$, two classical upper bounds are complementary.
+The symmetric two-point method of
+Shamir~\cite[Corollary~2]{Shamir2017}, specialized to a fixed objective,
+uses $O(dL^2R^2/\eps^2)$ evaluations. The deterministic value-only method
+of Protasov~\cite{Protasov1996} uses
+$O(d^2\log(d+1)\log(4LR/\eps))$ evaluations. Lee, Sidford, and
+Vempala~\cite{LeeSidfordVempala2018} give a broader evaluation-and-membership
+oracle framework with a quadratic dimension dependence up to logarithms.
+The precise logarithmic factors used here come from Protasov's bound.
+
+Strong convexity suggests replacing the inverse-square accuracy
+dependence by an inverse-linear one. On a fixed ball, however, the
+parameters $L$, $\mu$, and $R$ cannot be treated independently. The
+quadratic $\mu\|x\|_2^2/2$ already has radial slope $\mu R$ at the
+boundary. The residual variation is therefore governed by
+\begin{equation}\label{eq:slack-intro}
+ \Delta:=L-\mu R.
+\end{equation}
+This distinction matters when $L$ approaches $\mu R$: the admissible
+class then becomes progressively easier, and at equality every function
+has the same minimizer, the origin. A uniform complexity statement must
+capture this collapse.
+
+\subsection{Results and proof ideas}
+
+Our main result identifies, up to logarithmic factors, the polynomial
+complexity profile
+\begin{equation}\label{eq:profile-intro}
+ d\min\left\{d,\frac{\Delta^2R^2}{\eps^2},
+                  \frac{\Delta^2}{\mu\eps}\right\}.
+\end{equation}
+The statement holds in every finite dimension and at accuracies below
+a universal constant times the error attainable without any queries.
+Three ingredients make the dependence on $\Delta$ uniform.
+
+\begin{enumerate}[label=(\roman*),leftmargin=2.2em]
+\item \textbf{Geometry of the Lipschitz constraint.}
+Writing $F(x)=h(x)+\mu\|x\|_2^2/2$, we show that each radial restriction
+of $h$ is $\Delta$-Lipschitz, that the minimizer lies within distance
+$\min\{R,\Delta/\mu\}$ of the origin, and that $h$ has an explicit
+local Lipschitz bound. These facts identify the exact zero-query
+expected-risk scale $S_\Delta$ and the rigid boundary $\Delta=0$.
+
+\item \textbf{Localized algorithms.}
+The geometry provides a known ball containing the minimizer on which
+both the residual and the full objective have Lipschitz constants of
+order $\Delta$. Two-point estimation gives the two accuracy-dependent
+branches in \eqref{eq:profile-intro}. Applying Protasov's algorithm on
+the same ball gives the dimension branch with a logarithm depending on
+$S_\Delta/\eps$, rather than on the potentially much larger $LR/\eps$.
+
+\item \textbf{A direct lower-bound transfer and finite-dimensional endpoints.}
+We use the fixed support-function prior of Zhang et
+al.~\cite[Theorem~5]{ZhangEtAl2026}. Subtracting a known quadratic
+preserves its exact scalar transcript. A one-dimensional variational
+profile then converts a poor output direction into objective error.
+A hidden-direction quadratic family supplies the cases in which the
+support-function calibration does not apply; a separate three-function
+packing treats the one-dimensional constant-success endpoint.
+\end{enumerate}
+
+\subsection{Relation to previous lower bounds}\label{sec:related}
+
+Zhang et al.~\cite{ZhangEtAl2026} establish the randomized convex
+profile $d\min\{d,(LR/\eps)^2\}$ up to logarithms using a fixed random
+support function. Kerger~\cite[Theorem~4]{Kerger2026} gives a
+deterministic lower bound of order $d^2/\log(d+1)$ at accuracy
+$cLR/\sqrt d$ and below. The fixed-prior result, rather than a
+transcript-dependent resisting oracle, is the input needed here.
+
+The closest strong-convexity comparison is Dorn et
+al.~\cite[Theorem~K.2]{DornEtAl2026}. Their Euclidean specialization
+already gives the large-dimensional lower profile
+\eqref{eq:profile-intro} with the same slack $L-\mu R$. In their
+notation, set $p=2$, $Q=I_d$, $m=d$, $r=1$, $a=1$, and $M=L$.
+With
+\[
+ \sigma_\eps:=\min\left\{d,\frac49\min\left\{
+       \frac{\Delta^2R^2}{\eps^2},\frac{\Delta^2}{\mu\eps}\right\}\right\},
+\]
+their bound is $c_Zd\sigma_\eps/\log(e\sigma_\eps)$, under
+\begin{equation}\label{eq:dorn-window}
+ d\ge m_Z^\circ,
+ \qquad
+ \frac{3\eps}{2}\le\eps_Z\Delta
+                \min\left\{R,\sqrt{\frac{\eps}{\mu}}\right\}.
+\end{equation}
+Their stated criterion is success probability at least $2/3$.
+The accuracy restriction is equivalent to
+$\eps\le(2\eps_Z/3)\Delta R$ and
+$\eps\le(2\eps_Z/3)^2\Delta^2/\mu$.
+
+Table~\ref{tab:comparison} aligns these lower bounds by class, risk,
+and parameter range. We do not claim a new large-dimensional polynomial
+lower profile. We provide a uniform two-sided theorem, the associated
+boundary geometry and localized upper bound, and an alternative
+homogeneous-regularization proof. The scalar-information obstruction
+continues to come from Zhang et al.
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.22}
+\caption{Comparison of exact-value lower bounds. Every row counts
+individual feasible scalar evaluations. Here
+$m_{\rm cvx}=\min\{d,(LR/\eps)^2\}$,
+$\mathcal P_d(s)=ds/\log(es)$, and $m_\eps$ is defined in
+\eqref{eq:m-eps}. Constants and dimension thresholds are universal.
+Only the last row includes a matching upper bound in this table.}
+\label{tab:comparison}
+\begin{tabularx}{\textwidth}{@{}P{0.19\textwidth}P{0.22\textwidth}P{0.22\textwidth}Y@{}}
+\toprule
+Work & Class and criterion & Lower bound & Dimension and accuracy \\
+\midrule
+Kerger~\cite{Kerger2026}
+& Convex; deterministic
+& $\Omega(d^2/\log(d+1))$
+& $d\ge d_0$, $\eps\le cLR/\sqrt d$ \\
+Zhang et al.~\cite{ZhangEtAl2026}
+& Convex; randomized, success $1/2$
+& $\Omega(\mathcal P_d(m_{\rm cvx}))$
+& $d\ge d_0$, $\eps\le cLR$ \\
+Dorn et al.~\cite{DornEtAl2026}, Euclidean case
+& Strongly convex; randomized, success $2/3$
+& $\Omega(\mathcal P_d(\sigma_\eps))$
+& $d\ge m_Z^\circ$ and \eqref{eq:dorn-window} \\
+This paper
+& Strongly convex; expected error and success $1/2$
+& $\Omega(\mathcal P_d(m_\eps))$;
+upper $O(d m_\eps\logfac)$
+& Every $d\ge1$; $\eps\le c_0S_\Delta$;
+$\Delta=0$ requires no queries \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Organization.}
+Section~\ref{sec:model} states the model and main theorem.
+Section~\ref{sec:geometry} proves the slack geometry, and
+Section~\ref{sec:upper} gives the algorithms.
+Sections~\ref{sec:source}--\ref{sec:transfer} develop the
+support-function reduction. Section~\ref{sec:spherical} handles its
+finite-dimensional endpoints. Section~\ref{sec:calibration} completes
+the parameter calibration and the proof of the main theorem.
+
+\section{Oracle model and main result}\label{sec:model}
+
+\subsection{Function class and information access}
+
+For $R>0$, write
+\[
+ \B_R^d=\{x\in\R^d:\norm{x}\le R\},
+ \qquad \Sph^{d-1}=\{x\in\R^d:\norm{x}=1\}.
+\]
+Given $d\in\mathbb N$ and $L,\mu,R>0$, let
+$\cF^{\mathrm{sc}}_{L,\mu,R}$ consist of all continuous functions
+$F:\B_R^d\to\R$ such that
+\begin{equation}\label{eq:class}
+ F-\frac{\mu}{2}\norm{\cdot}^2\ \text{is convex},
+ \qquad
+ |F(x)-F(y)|\le L\norm{x-y}\quad(x,y\in\B_R^d).
+\end{equation}
+Thus $L$ is an upper bound on the Lipschitz constant of the
+\emph{whole objective}, and $\mu$ is a lower bound on its strong
+convexity modulus. Neither differentiability nor an interior minimizer
+is assumed. The parameters and the ball are known to the algorithm.
+
+The oracle returns only $F(x)$ at a feasible point $x$. The unknown
+objective is fixed before the algorithm's independent random seed is
+drawn. Query and output maps are Borel measurable jointly in that seed
+and the previous scalar responses. The seed may take values in any
+standard Borel probability space. Internal computation and exact real
+arithmetic are free; all scalar evaluations are charged. In particular,
+a two-point estimate costs two queries. The output must lie in
+$\B_R^d$ but need not have been queried.
+
+We use a worst-case budget of at most $T$ queries on every transcript;
+an algorithm can always be padded to exactly $T$ queries. Zero-query
+algorithms are allowed. For the output $\widehat x_T$, set
+\[
+ F^*=\min_{x\in\B_R^d}F(x),
+ \qquad \err_T(F)=F(\widehat x_T)-F^*.
+\]
+The class in \eqref{eq:class} is a closed subset of
+$\mathcal C(\B_R^d)$ in the uniform norm. Evaluation and minimization
+are continuous in the relevant arguments, so induction through the
+query maps makes the transcript and loss jointly measurable.
+Moreover, $0\le\err_T(F)\le2LR$.
+
+\subsection{Risk criteria}
+
+\begin{definition}[Query complexities]\label{def:risks}
+For a function class $\cF$, define
+\begin{align}
+ T^{\mathrm{exp}}_\eps(\cF)
+ &:=\inf\left\{T\in\mathbb N_0:
+     \exists A\ \text{using at most }T\text{ queries},\quad
+     \sup_{F\in\cF}\E_A\err_T(F)\le\eps\right\},
+       \label{eq:exp-risk}\\
+ T^{\mathrm{prob}}_\eps(\cF)
+ &:=\inf\left\{T\in\mathbb N_0:
+     \exists A\ \text{using at most }T\text{ queries},\quad
+     \sup_{F\in\cF}\Pp_A(\err_T(F)>\eps)\le\frac12\right\}.
+       \label{eq:prob-risk}
+\end{align}
+The infimum of an empty set of budgets is $+\infty$.
+\end{definition}
+
+The expectation and probability in these definitions refer only to
+the algorithm's seed. Random objectives appear later solely as a
+device for proving worst-case lower bounds.
+
+\subsection{The uniform complexity theorem}
+
+Let $\Delta=L-\mu R$. For $\Delta\ge0$, define
+\begin{equation}\label{eq:S-delta}
+ S_\Delta:=\max_{0\le\rho\le R}
+       \left\{\Delta\rho-\frac{\mu}{2}\rho^2\right\}
+ =\begin{cases}
+    \Delta^2/(2\mu),&0\le\Delta\le\mu R,\\[2pt]
+    \Delta R-\mu R^2/2,&\Delta>\mu R.
+   \end{cases}
+\end{equation}
+This scale satisfies
+\begin{equation}\label{eq:S-comparison}
+ \frac12\min\{\Delta R,\Delta^2/\mu\}
+ \le S_\Delta\le\min\{\Delta R,\Delta^2/\mu\}.
+\end{equation}
+For $\Delta>0$ and $\eps>0$, put
+\begin{equation}\label{eq:m-eps}
+ m_\eps:=\min\left\{d,\left(\frac{\Delta R}{\eps}\right)^2,
+                           \frac{\Delta^2}{\mu\eps}\right\},
+ \qquad
+ \logfac:=\log(d+1)\log\!\left(\frac{128S_\Delta}{\eps}\right).
+\end{equation}
+The logarithmic factor is used only when $\eps\le S_\Delta$.
+All logarithms are natural. Universal constants do not depend on
+$d,L,\mu,R$, or $\eps$.
+
+\Needspace{18\baselineskip}
+\begin{theorem}[Uniform exact-value complexity]\label{thm:main}
+The class $\cF^{\mathrm{sc}}_{L,\mu,R}$ is nonempty if and only if
+$L\ge\mu R$. At $L=\mu R$, every member satisfies
+$F(x)=F(0)+\mu\norm{x}^2/2$, and both query complexities are zero.
+
+There exist universal $c,C,c_0>0$ such that, for every $d\ge1$,
+$L>\mu R$, and $0<\eps\le c_0S_\Delta$, the following holds for
+$\mathsf{risk}\in\{\mathrm{exp},\mathrm{prob}\}$:
+\begin{equation}\label{eq:main-two-sided}
+ c\frac{d m_\eps}{\log(e m_\eps)}
+ \le T^{\mathsf{risk}}_\eps(\cF^{\mathrm{sc}}_{L,\mu,R})
+ \le C\min\left\{
+       \frac{d\Delta^2R^2}{\eps^2},
+       \frac{d\Delta^2}{\mu\eps},
+       d^2\logfac\right\}.
+\end{equation}
+In particular, the upper bound is at most $C d m_\eps\logfac$.
+For every $\eps\ge S_\Delta$, returning the origin uses zero queries
+and satisfies both criteria. The minimax expected error with zero
+queries is exactly $S_\Delta$.
+\end{theorem}
+
+The proof is completed in Section~\ref{sec:calibration}.
+Equation~\eqref{eq:main-two-sided} is often summarized as
+\begin{equation}\label{eq:tilde-theta}
+ T^{\mathsf{risk}}_\eps(\cF^{\mathrm{sc}}_{L,\mu,R})
+ =\widetilde\Theta(d m_\eps),
+ \qquad 0<\eps\le c_0S_\Delta.
+\end{equation}
+Here the suppressed factors are precisely those bounded by the
+logarithms displayed in \eqref{eq:main-two-sided} and \eqref{eq:m-eps}.
+The theorem determines the polynomial profile, not the optimal
+logarithmic dependence. It also leaves a constant-width relative
+accuracy band $c_0S_\Delta<\eps<S_\Delta$ outside the two-sided estimate.
+
+\subsection{Accuracy regimes and consequences}
+
+Table~\ref{tab:regimes} gives the exact inequalities selecting the
+three branches of $m_\eps$. Each row is intersected with
+$0<\eps\le c_0S_\Delta$, and some rows may be empty for a given
+choice of parameters. The radius and strong-convexity branches meet
+at $\eps=\mu R^2$; either may meet the dimension cap first.
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.35}
+\caption{Branches of the uniform theorem. Write
+$a_\eps=(\Delta R/\eps)^2$ and $b_\eps=\Delta^2/(\mu\eps)$.
+The constants in the lower and upper bounds are universal. Boundary
+equalities may be assigned to either adjacent row.}
+\label{tab:regimes}
+\begin{tabularx}{\textwidth}{@{}P{0.17\textwidth}Y P{0.21\textwidth}P{0.15\textwidth}@{}}
+\toprule
+Active branch & Conditions on $\eps$ & Lower bound & Upper bound \\
+\midrule
+Radius, $m_\eps=a_\eps$
+& $\eps\ge\max\{\mu R^2,\Delta R/\sqrt d\}$
+& $\Omega(d a_\eps/\log(ea_\eps))$
+& $O(d a_\eps)$ \\
+Strong convexity, $m_\eps=b_\eps$
+& $\Delta^2/(\mu d)\le\eps\le\mu R^2$
+& $\Omega(d b_\eps/\log(eb_\eps))$
+& $O(d b_\eps)$ \\
+Dimension, $m_\eps=d$
+& $\eps\le\min\{\Delta R/\sqrt d,\Delta^2/(\mu d)\}$
+& $\Omega(d^2/\log(ed))$
+& $O(d^2\logfac)$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{corollary}[Parameters separated from the boundary]\label{cor:nondegenerate}
+Fix $\vartheta\in(0,1)$. If $\mu R\le(1-\vartheta)L$, then
+$\vartheta L\le\Delta\le L$. Consequently, in the accuracy range
+of \cref{thm:main}, the polynomial complexity profile can equivalently
+be written
+\[
+ d\min\left\{d,\frac{L^2R^2}{\eps^2},\frac{L^2}{\mu\eps}\right\},
+\]
+with constants depending only on $\vartheta$.
+\end{corollary}
+
+This corollary explains when the usual $L$-based expression is valid.
+It does not extend uniformly to $\vartheta\downarrow0$.
+
+\section{Geometry forced by total Lipschitzness}\label{sec:geometry}
+
+Set
+\[
+   h(x):=F(x)-\frac{\mu}{2}\norm{x}^2,
+   \qquad
+   \Delta:=L-\mu R.
+\]
+The next theorem identifies the correct uniform parameter.
+
+\Needspace{19\baselineskip}
+\begin{theorem}[Slack geometry]\label{thm:slack-geometry}
+Let $F\in\cF^{\mathrm{sc}}_{L,\mu,R}$.  Then:
+\begin{enumerate}[label=(\roman*),leftmargin=2.2em]
+\item $L\ge\mu R$, and hence $\Delta\ge0$.
+\item For every $u\in\Sph^{d-1}$, the radial residual
+\[
+   \psi_u(t):=h(tu),\qquad t\in[-R,R],
+\]
+is $\Delta$-Lipschitz.
+\item The unique minimizer $x^*$ satisfies
+\[
+   \norm{x^*}\le \min\left\{R,\frac{\Delta}{\mu}\right\}.
+\]
+\item For every $0\le r<R$, the residual $h$ is
+\[
+   G(r):=L-\mu\sqrt{R^2-r^2}
+\]
+Lipschitz on $\B_r^d$.
+\item If $\Delta=0$, then
+\[
+   F(x)=F(0)+\frac{\mu}{2}\norm{x}^2
+   \qquad(x\in\B_R^d).
+\]
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Fix $u\in\Sph^{d-1}$ and define $\phi_u(t)=F(tu)$ on $[-R,R]$.  The function $\phi_u$ is $L$-Lipschitz and $\mu$-strongly convex.  For $0<\eta<R$, choose
+\[
+  p_+\in\partial\phi_u(R-\eta),
+  \qquad
+  p_-\in\partial\phi_u(-R+\eta).
+\]
+Interior subgradients of an $L$-Lipschitz convex function lie in $[-L,L]$, while strong monotonicity gives
+\[
+  p_+-p_-\ge 2\mu(R-\eta).
+\]
+Thus $2L\ge2\mu(R-\eta)$, and $\eta\downarrow0$ proves $L\ge\mu R$.
+
+Now $\psi_u(t)=\phi_u(t)-\mu t^2/2$ is convex.  Fix $t\in(-R,R)$ and $q\in\partial\psi_u(t)$.  For $t<r<R$, choose $q_r\in\partial\psi_u(r)$.  Monotonicity and the sum rule imply
+\[
+  q\le q_r,
+  \qquad
+  q_r+\mu r\in\partial\phi_u(r),
+\]
+so $q\le L-\mu r$.  Letting $r\uparrow R$ gives $q\le\Delta$.  The symmetric argument toward $-R$ gives $q\ge-\Delta$.  Hence every interior subgradient of $\psi_u$ lies in $[-\Delta,\Delta]$, proving radial $\Delta$-Lipschitzness.
+
+Let $x^*$ be the unique minimizer and write $x^*=\rho u$ when $\rho>0$.  If $0<\rho<R$, then $0\in\partial\phi_u(\rho)$, so $-\mu\rho\in\partial\psi_u(\rho)$ and therefore $\mu\rho\le\Delta$.  If $\rho=R$, then the radial minimum occurs at the right endpoint.  For every $t<R$ and $p_t\in\partial\phi_u(t)$, the subgradient inequality gives $p_t\le0$.  Strong monotonicity between $s<t$ then yields $L\ge\mu(t-s)$.  Sending $t\uparrow R$ and $s\downarrow-R$ gives $L\ge2\mu R$, hence $\Delta\ge\mu R$ and again $R\le\Delta/\mu$.
+
+For the local residual bound, fix $x\in\B_r^d$ and $g\in\partial h(x)$ with $g\ne0$.  Put $u=g/\norm{g}$ and let $y=x+tu$ be the first intersection of the ray $x+\R_+u$ with $\partial\B_R^d$.  Decomposing $x$ along $u$ gives
+\[
+   \inner{y}{u}\ge\sqrt{R^2-r^2}.
+\]
+For $0<\theta<1$, set $y_\theta=(1-\theta)y+\theta x$ and choose $g_\theta\in\partial h(y_\theta)$.  Monotonicity gives $\inner{g_\theta}{u}\ge\norm{g}$, while
+\[
+   g_\theta+\mu y_\theta\in\partial F(y_\theta)
+\]
+has norm at most $L$.  Therefore
+\[
+  L\ge \inner{g_\theta+\mu y_\theta}{u}
+    \ge \norm{g}+\mu\inner{y_\theta}{u}.
+\]
+Letting $\theta\downarrow0$ gives $\norm{g}\le G(r)$.  Bounded subgradients on line segments imply that $h$ is $G(r)$-Lipschitz on $\B_r^d$.
+
+Finally, if $\Delta=0$, every radial restriction $\psi_u$ is constant.  Every point in the ball lies on a radial segment through the origin, so $h(x)=h(0)$ throughout $\B_R^d$.
+\end{proof}
+
+
+\begin{corollary}[The exact zero-query expected-risk scale]\label{cor:zero-query}
+For every $F\in\cF^{\mathrm{sc}}_{L,\mu,R}$,
+$F(0)-F^*\le S_\Delta$. Moreover,
+\begin{equation}\label{eq:zero-minimax}
+ \inf_{A:\,T=0}\ \sup_{F\in\cF^{\mathrm{sc}}_{L,\mu,R}}
+     \E_A\err_0(F)=S_\Delta.
+\end{equation}
+Thus $\eps\ge S_\Delta$ is the exact zero-query threshold for
+the expected-error criterion.
+\end{corollary}
+
+\begin{proof}
+For a minimizer $x^*=\rho u$, radial Lipschitzness gives
+\[
+ F(0)-F(x^*)=h(0)-h(\rho u)-\frac{\mu}{2}\rho^2
+ \le\Delta\rho-\frac{\mu}{2}\rho^2\le S_\Delta.
+\]
+The case $x^*=0$ is immediate. For the reverse minimax inequality,
+let $V$ be uniform on $\Sph^{d-1}$ and consider
+\[
+ Q_V(x)=\frac{\mu}{2}\norm{x}^2-\Delta\inner{V}{x}.
+\]
+Every realization is admissible and has minimum $-S_\Delta$.
+Any zero-query output $X$ is independent of $V$, so symmetry yields
+\[
+ \E_{V,A}[Q_V(X)+S_\Delta]
+ =S_\Delta+\frac{\mu}{2}\E_A\norm{X}^2\ge S_\Delta.
+\]
+At least one fixed realization attains this average lower bound.
+Returning zero attains the upper bound.
+\end{proof}
+
+The exact threshold in \eqref{eq:zero-minimax} concerns expected
+error. We use it as a normalization for both criteria, without
+asserting the same exact zero-query threshold for success probability
+$1/2$.
+
+\section{Localized upper bounds}\label{sec:upper}
+
+The upper bound uses standard value-oracle methods after a geometric
+localization. We give the symmetric estimator of Shamir~\cite{Shamir2017}
+and the projected-iteration estimates
+explicitly to separate their guarantees from the localization step.
+
+\subsection{Two-point estimation and projected iterations}
+
+\begin{lemma}[Symmetric two-point estimator]\label{lem:two-point}
+Let $h$ be convex and $G$-Lipschitz on $\B_S^d$. For
+$0<2\delta<S$, set
+\[
+ X_\delta=\left(1-\frac{2\delta}{S}\right)\B_S^d,
+ \qquad
+ h_\delta(x)=\E_{W\sim\mathrm{Unif}(\B_1^d)}h(x+\delta W).
+\]
+For $U\sim\mathrm{Unif}(\Sph^{d-1})$, define
+\[
+ \widehat g_{h,\delta}(x,U)=
+ \frac{d}{2\delta}\bigl(h(x+\delta U)-h(x-\delta U)\bigr)U.
+\]
+Then $h_\delta$ is convex and continuously differentiable on a
+neighborhood of $X_\delta$, and
+\begin{equation}\label{eq:two-point-properties}
+ \E_U\widehat g_{h,\delta}(x,U)=\nabla h_\delta(x),\qquad
+ |h_\delta(x)-h(x)|\le G\delta,\qquad
+ \E_U\norm{\widehat g_{h,\delta}(x,U)}^2\le2dG^2.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The ball average preserves convexity, and Lipschitzness gives the
+bias bound. Differentiation of the ball integral and symmetry give
+\[
+ \nabla h_\delta(x)=\frac d\delta\E_U[h(x+\delta U)U]
+                  =\E_U\widehat g_{h,\delta}(x,U).
+\]
+For the second moment, the spherical Poincar\'e inequality gives, for $d\ge2$ and
+$q(u)=h(x+\delta u)$,
+\[
+ \operatorname{Var}(q(U))
+ \le\frac{1}{d-1}\E\|\nabla_{\Sph}q(U)\|_2^2
+ \le\frac{G^2\delta^2}{d-1}.
+\]
+The inequality holds for Lipschitz $q$ by approximation. Since
+$q(U)$ and $q(-U)$ have the same mean,
+\[
+ \E(q(U)-q(-U))^2\le4\operatorname{Var}(q(U)).
+\]
+Multiplication by $d^2/(4\delta^2)$ proves the claimed bound because
+$d^2/(d-1)\le2d$. For $d=1$, Lipschitzness directly bounds the
+estimator by $G$. All points used in the argument lie inside $\B_S^d$.
+\end{proof}
+
+\begin{lemma}[Projected iteration bounds]\label{lem:projected}
+Let $X$ be a closed convex subset of $\B_S^d$ containing zero,
+and let $\phi$ be continuous and convex on $X$. Suppose $g_t$ is conditionally
+unbiased for a subgradient at $x_t$ and
+$\E_t\norm{g_t}^2\le\Gamma^2$. Starting at $x_1=0$, use
+\[
+ x_{t+1}=\operatorname{Proj}_X(x_t-\eta_tg_t).
+\]
+For constant $\eta_t=S/(\Gamma\sqrt N)$, the average
+$\bar x_N=N^{-1}\sum_{t=1}^Nx_t$ satisfies
+\[
+ \E\phi(\bar x_N)-\min_X\phi\le S\Gamma/\sqrt N.
+\]
+If $\phi$ is $\mu$-strongly convex, then
+$\eta_t=2/[\mu(t+1)]$ and
+$\bar x_N=2\sum_{t=1}^Ntx_t/[N(N+1)]$ give
+\[
+ \E\phi(\bar x_N)-\min_X\phi\le\frac{2\Gamma^2}{\mu(N+1)}.
+\]
+\end{lemma}
+
+\begin{proof}
+Let $z$ minimize $\phi$ on $X$ and write
+$D_t=\E\norm{x_t-z}^2$. Nonexpansiveness of projection and the
+subgradient inequality give
+\[
+ \E[\phi(x_t)-\phi(z)]
+ \le\frac{D_t-D_{t+1}}{2\eta_t}+\frac{\eta_t\Gamma^2}{2}.
+\]
+Summation, $D_1\le S^2$, and convexity prove the first estimate.
+Under strong convexity, the right side has the additional term
+$-\mu D_t/2$. With the stated decreasing step size, multiplication
+by $t$ yields
+\[
+ t\E[\phi(x_t)-\phi(z)]
+ \le\frac{\mu t(t-1)}4D_t
+     -\frac{\mu t(t+1)}4D_{t+1}
+     +\frac{t\Gamma^2}{\mu(t+1)}.
+\]
+The distance terms telescope, and the remaining sum is at most
+$N\Gamma^2/\mu$. Division by $N(N+1)/2$ and convexity finish the proof.
+\end{proof}
+
+\subsection{Localization and the three algorithmic branches}
+
+\begin{theorem}[Localized exact-value upper bound]\label{thm:upper}
+There is a universal $C>0$ such that, for every $\Delta>0$ and
+$0<\eps\le S_\Delta$, both risk criteria satisfy
+\begin{equation}\label{eq:upper-envelope}
+ T^{\mathsf{risk}}_\eps(\cF^{\mathrm{sc}}_{L,\mu,R})
+ \le C\min\left\{
+       \frac{d\Delta^2R^2}{\eps^2},
+       \frac{d\Delta^2}{\mu\eps},
+       d^2\log(d+1)\log\!\left(\frac{128S_\Delta}{\eps}\right)
+       \right\}.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Write $F=h+\mu\norm{\cdot}^2/2$ and choose the known working radius
+\begin{equation}\label{eq:working-radius}
+ S=\begin{cases}
+      2\Delta/\mu,&0<\Delta<\mu R/2,\\
+      R,&\Delta\ge\mu R/2.
+    \end{cases}
+\end{equation}
+By \cref{thm:slack-geometry}, a minimizer lies in $\B_S^d$.
+In the first case, $S<R$ and the local estimate gives
+\[
+ \Lip_{\B_S^d}(h)
+ \le\Delta+\frac{\mu S^2}{R+\sqrt{R^2-S^2}}
+ \le\Delta+\frac{4\Delta^2}{\mu R}<3\Delta.
+\]
+In the second case,
+$\Lip_{\B_R^d}(h)\le L+\mu R=\Delta+2\mu R\le5\Delta$.
+Thus, in both cases,
+\begin{equation}\label{eq:localized-G}
+ \Lip_{\B_S^d}(h)\le\bar G:=5\Delta,
+ \qquad \mu S\le2\Delta,
+ \qquad S_\Delta\le\Delta S\le4S_\Delta.
+\end{equation}
+The last inequalities follow directly from \eqref{eq:S-delta} and
+\eqref{eq:working-radius}.
+
+Set $\delta=\eps/(32\bar G)$ and use the set $X_\delta$ of
+\cref{lem:two-point}. Equation~\eqref{eq:localized-G} ensures
+$2\delta<S$. Optimize
+\[
+ \Phi_\delta(x)=h_\delta(x)+\frac{\mu}{2}\norm{x}^2
+\]
+on $X_\delta$. Draw $U_t$ independently and uniformly on the unit
+sphere at each iteration. Two exact values of $F$ at $x_t\pm\delta U_t$ reveal
+the corresponding residual values after subtracting the known
+quadratic. The estimator
+\[
+ g_t=\widehat g_{h,\delta}(x_t,U_t)+\mu x_t
+\]
+is unbiased for $\nabla\Phi_\delta(x_t)$ and satisfies
+\begin{equation}\label{eq:gradient-moment}
+ \E_t\norm{g_t}^2
+ \le4d\bar G^2+2\mu^2S^2\le108d\Delta^2=:\Gamma^2.
+\end{equation}
+
+Let $x^*$ minimize $F$ and put $z=(1-2\delta/S)x^*$.
+Then $z\in X_\delta$, $\norm{z-x^*}\le2\delta$, and its quadratic
+term is no larger than that of $x^*$. Therefore
+$\Phi_\delta(z)-F(x^*)\le3\bar G\delta$.
+For any output $\bar x\in X_\delta$,
+\begin{equation}\label{eq:smoothing-total}
+ F(\bar x)-F^*
+ \le\Phi_\delta(\bar x)-\min_{X_\delta}\Phi_\delta
+       +4\bar G\delta.
+\end{equation}
+Thus the smoothing and contraction cost is at most $\eps/8$.
+
+The two schedules in \cref{lem:projected}, run to optimization
+error at most $\eps/4$, require respectively
+\[
+ N=O\left(\frac{d\Delta^2S^2}{\eps^2}\right)
+   \le O\left(\frac{d\Delta^2R^2}{\eps^2}\right),
+ \qquad
+ N=O\left(\frac{d\Delta^2}{\mu\eps}\right).
+\]
+Each iteration uses two feasible evaluations. The resulting expected
+error is below $\eps/2$, so Markov's inequality also gives success
+probability at least $1/2$ at accuracy $\eps$.
+
+For the final branch, $F$ is $M$-Lipschitz on $\B_S^d$ with
+$M=7\Delta$, by \eqref{eq:localized-G}. Protasov's deterministic
+value-only bound~\cite{Protasov1996}, applied to this known ball,
+requires
+\[
+ O\left(d^2\log(d+1)\log\!\frac{4MS}{\eps}\right)
+ \le O\left(d^2\log(d+1)\log\!\frac{128S_\Delta}{\eps}\right)
+\]
+evaluations. Here $4MS\le112S_\Delta$ and
+$\eps\le S_\Delta\le MS$. The minimizer over $\B_S^d$ is also
+a minimizer over the original ball. This deterministic guarantee
+implies both risk criteria. Taking the best of the three algorithms
+proves \eqref{eq:upper-envelope}.
+\end{proof}
+
+The new ingredient in this upper bound is the localization under the
+total Lipschitz constraint. The directional estimator, projected
+updates, and general value-only algorithm are established methods.
+
+\section{The support-function source}\label{sec:source}
+
+Let $B_1,\ldots,B_k$ be independent standard Gaussian vectors conditioned on
+\[
+  \norm{B_i}\le2\sqrt d,
+\]
+and set
+\[
+  a_i:=\frac{B_i}{\sqrt d},
+  \qquad
+  h_\Xi(z):=\max_{1\le i\le k}\inner{a_i}{z},
+  \qquad z\in\R^d.
+\]
+The formula defines the function on all of $\R^d$; the source oracle
+accepts queries only in $\B_1^d$. Every realization is convex,
+positively homogeneous, and $2$-Lipschitz. The induced law on
+$\mathcal C(\B_1^d)$ is a fixed Borel probability measure depending
+only on $(d,k)$.
+
+The following two results are the external information-theoretic
+input. They concern the same prior, which is essential for the
+intersection of events used below. We cite their precise fixed-prior
+form, rather than only the resulting minimax bound.
+
+\begin{theorem}[Source facts: {\cite[Theorems~5 and~40]{ZhangEtAl2026}}]\label{thm:source-facts}
+There are universal constants $c_{\mathrm{dim}},c_{\mathrm{qry}},c_{\mathrm{src}}>0$
+and $d_{\mathrm{src}}\in\mathbb N$ such that, with
+$c_{\mathrm{sv}}=1/4$, whenever
+\[
+   d\ge d_{\mathrm{src}},
+   \qquad
+   1\le k\le c_{\mathrm{dim}}d,
+\]
+the following hold for the common source law above.
+
+\begin{enumerate}[label=(\roman*),leftmargin=2.2em]
+\item For every deterministic adaptive exact-value source algorithm using
+\[
+   T\le c_{\mathrm{qry}}\frac{dk}{\log(ek)}
+\]
+queries,
+\begin{equation}\label{eq:source-lb}
+  \Pp\left(
+      h_\Xi(\widehat z_T)-\min_{z\in\B_1^d}h_\Xi(z)
+      >\frac{c_{\mathrm{src}}}{\sqrt k}
+      \right)\ge\frac34.
+\end{equation}
+The same source prior is used for every deterministic algorithm.
+
+\item Let $A_\Xi\in\R^{k\times d}$ have rows $a_i^\top$.  Then
+\begin{equation}\label{eq:spectral-event}
+  \Pp\left(A_\Xi A_\Xi^\top\succeq c_{\mathrm{sv}}I_k\right)\ge\frac78.
+\end{equation}
+\end{enumerate}
+\end{theorem}
+
+The common-prior clause in \eqref{eq:source-lb} is essential: it permits different source algorithms to be tested on the same seed space and permits integration over an independent random tape.
+
+
+Theorem~40 of the cited source applies when $k\le d/16$, so we
+decrease $c_{\mathrm{dim}}$ if necessary. The zero-query case in
+part~(i) follows by padding with one unused query after increasing
+$d_{\mathrm{src}}$ so that $c_{\mathrm{qry}}d_{\mathrm{src}}\ge1$.
+No posterior-information estimate from that source is reproved or
+claimed as a contribution here.
+
+\section{Quadratic regularization and radial optimization}\label{sec:radial}
+
+Fix $\Delta>0$ and put
+\[
+   \alpha:=\frac{\Delta}{2}.
+\]
+For a source realization $\xi$, define the strongly convex target
+\begin{equation}\label{eq:hard-family}
+   F_\xi(x):=\alpha h_\xi(x)+\frac{\mu}{2}\norm{x}^2,
+   \qquad x\in\B_R^d.
+\end{equation}
+Because $h_\xi$ is $2$-Lipschitz, $F_\xi$ is $L=(\Delta+\mu R)$-Lipschitz and $\mu$-strongly convex.  The seed-to-function map is continuous in the uniform norm, so the induced target law is Borel.
+
+\begin{proposition}[Exact preservation of scalar queries]\label{prop:conjugacy}
+One scalar query to $F_\xi$ is simulated by one scalar query to $h_\xi$ and conversely.  At $x=Rz$,
+\begin{equation}\label{eq:conjugacy}
+  F_\xi(Rz)=\alpha R h_\xi(z)+\frac{\mu R^2}{2}\norm{z}^2,
+  \qquad
+  h_\xi(z)=\frac{F_\xi(Rz)-\mu R^2\norm{z}^2/2}{\alpha R}.
+\end{equation}
+The transformations preserve adaptive Borel transcripts and charge exactly one source query per target query.
+\end{proposition}
+
+\begin{proof}
+The identities use positive homogeneity of $h_\xi$ and $\alpha R>0$.  Given a target history, subtract the known quadratic and divide by the known scale; given a source history, reverse the arithmetic.  Induction through the deterministic query maps gives mutually inverse Borel transformations of the complete scalar histories.
+\end{proof}
+
+For $q\ge0$, define the profile
+\begin{equation}\label{eq:Psi-def}
+  \Psi(q):=\max_{0\le\rho\le R}
+     \left\{\alpha q\rho-\frac{\mu}{2}\rho^2\right\}.
+\end{equation}
+It has the explicit form
+\begin{equation}\label{eq:Psi-form}
+  \Psi(q)=
+  \begin{cases}
+    \dfrac{\alpha^2q^2}{2\mu},&\alpha q\le\mu R,\\[5pt]
+    \alpha Rq-\dfrac{\mu R^2}{2},&\alpha q>\mu R.
+  \end{cases}
+\end{equation}
+The map is convex, increasing, and vanishes at zero.  Moreover,
+\begin{equation}\label{eq:Psi-lower}
+  \Psi(q)\ge\frac12\min\left\{\alpha Rq,\frac{\alpha^2q^2}{\mu}\right\},
+\end{equation}
+and, for $0\le a\le q$,
+\begin{equation}\label{eq:Psi-increment}
+  \Psi(q)-\Psi(q-a)\ge\Psi(a).
+\end{equation}
+Indeed, increments of a convex function over intervals of fixed length are nondecreasing.
+
+Define the negative source depth
+\[
+   q_\xi:=-\min_{z\in\B_1^d}h_\xi(z)\ge0.
+\]
+
+\begin{lemma}[Radial variational formula]\label{lem:radial}
+For every source realization,
+\begin{equation}\label{eq:exact-optimum}
+   \min_{x\in\B_R^d}F_\xi(x)=-\Psi(q_\xi).
+\end{equation}
+If $x=\rho u$ with $0\le\rho\le R$, $\norm{u}=1$, and
+\[
+   y:=(-h_\xi(u))_+,
+\]
+then
+\begin{equation}\label{eq:radial-gap}
+   F_\xi(x)-\min F_\xi\ge \Psi(q_\xi)-\Psi(y).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+If $q_\xi=0$, then $h_\xi\ge0$ on the unit ball and the optimum is zero at the origin.  Suppose $q_\xi>0$.  Positive homogeneity implies that any minimizer of $h_\xi$ lies on the unit sphere: otherwise radial expansion would make its negative value more negative.  Hence there is $u^*$ with $h_\xi(u^*)=-q_\xi$.  Along the ray $\rho u^*$, minimizing $F_\xi$ is exactly the one-dimensional problem defining $-\Psi(q_\xi)$, and no other direction can do better because $h_\xi(u)\ge-q_\xi$.
+
+For the reported direction, $h_\xi(u)\ge-y$, so
+\[
+  F_\xi(\rho u)\ge-\alpha y\rho+\frac{\mu}{2}\rho^2\ge-\Psi(y).
+\]
+Subtract \eqref{eq:exact-optimum}.
+\end{proof}
+
+The depth has an equivalent matrix representation.
+
+\begin{lemma}[Spectral depth]\label{lem:spectral-depth}
+Let $A_\xi$ have rows $a_i^\top$.  Then
+\begin{equation}\label{eq:q-simplex}
+   q_\xi=\min_{p\in\Delta_k}\norm{A_\xi^\top p},
+   \qquad
+   \Delta_k:=\{p\in\R_+^k:\mathbf 1^\top p=1\}.
+\end{equation}
+Consequently, on the event $A_\Xi A_\Xi^\top\succeq c_{\mathrm{sv}}I_k$,
+\begin{equation}\label{eq:q-spectral}
+   q_\Xi\ge\sqrt{\frac{c_{\mathrm{sv}}}{k}}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let $K=\operatorname{conv}\{a_1,\ldots,a_k\}$ and let $b$ be its
+point of minimum norm. If $b=0$, then $h_\xi(z)\ge0$ for every $z$,
+so both sides of \eqref{eq:q-simplex} vanish. Otherwise, the
+projection inequality gives $\inner{a_i-b}{b}\ge0$ for every $i$.
+Consequently,
+\[
+ h_\xi(-b/\norm{b})\le-\norm{b}.
+\]
+Conversely, $h_\xi(z)\ge\inner{b}{z}\ge-\norm{b}$ on the unit
+ball. Thus $q_\xi=\norm{b}=\min_{p\in\Delta_k}\norm{A_\xi^\top p}$.
+On the spectral event,
+\[
+ \norm{A_\xi^\top p}^2
+ =p^\top A_\xi A_\xi^\top p
+ \ge c_{\mathrm{sv}}\norm{p}^2
+ \ge c_{\mathrm{sv}}/k,
+\]
+which proves \eqref{eq:q-spectral}.
+\end{proof}
+
+\section{Transferring source hardness}\label{sec:transfer}
+
+Fix a deterministic $T$-query target algorithm for the family \eqref{eq:hard-family}.  Use \cref{prop:conjugacy} to simulate its queries on the source.  Let $X_\xi$ be its target output and define the Borel direction map
+\[
+   U(x):=
+   \begin{cases}
+      x/\norm{x},&x\ne0,\\
+      u_0,&x=0,
+   \end{cases}
+\]
+for a fixed $u_0\in\Sph^{d-1}$.
+
+Consider two source algorithms with the same simulated queries and scalar transcript:
+\begin{itemize}[leftmargin=2em]
+\item the \emph{zero-output algorithm} always outputs $0$;
+\item the \emph{direction-output algorithm} outputs $U(X_\xi)$.
+\end{itemize}
+The zero-output algorithm has source error $q_\xi$, while the direction-output algorithm has source error
+\[
+   h_\xi(U(X_\xi))+q_\xi.
+\]
+
+\begin{proposition}[Expected-error transfer]\label{prop:expected-transfer}
+Under the assumptions and query budget of \cref{thm:source-facts}, every deterministic target algorithm satisfies
+\begin{equation}\label{eq:expected-fixed-budget}
+  \E_\Xi\bigl[F_\Xi(X_\Xi)-\min F_\Xi\bigr]
+  \ge \frac12\Psi\!\left(\frac{c_{\mathrm{src}}}{\sqrt k}\right)
+  \ge c\min\left\{\frac{\Delta R}{\sqrt k},
+                    \frac{\Delta^2}{\mu k}\right\}.
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+Apply \eqref{eq:source-lb} separately to the zero-output and direction-output algorithms.  On the same source seed space, the events
+\[
+  E_0:=\left\{q_\Xi>\frac{c_{\mathrm{src}}}{\sqrt k}\right\},
+  \qquad
+  E_{\mathrm{dir}}:=\left\{
+       h_\Xi(U(X_\Xi))+q_\Xi>\frac{c_{\mathrm{src}}}{\sqrt k}
+       \right\}
+\]
+each have probability at least $3/4$, hence their intersection has probability at least $1/2$.  Put $\eta=c_{\mathrm{src}}/\sqrt k$ and $y=(-h_\Xi(U(X_\Xi)))_+$.  On the intersection, $q_\Xi>\eta$ and $y<q_\Xi-\eta$.  Therefore \cref{lem:radial} and \eqref{eq:Psi-increment} give
+\[
+  F_\Xi(X_\Xi)-\min F_\Xi
+  >\Psi(q_\Xi)-\Psi(q_\Xi-\eta)
+  \ge\Psi(\eta).
+\]
+The gap is nonnegative elsewhere.  Integrate and use \eqref{eq:Psi-lower} with $\alpha=\Delta/2$.
+\end{proof}
+
+The preceding argument uses only the source optimization theorem.
+Its two failure events have an intersection of probability at least
+$1/2$, which is enough for expected error. For the success criterion
+in \eqref{eq:prob-risk}, we need a failure probability strictly larger
+than $1/2$. The spectral event provides the required margin.
+
+\begin{proposition}[Constant-success transfer]\label{prop:prob-transfer}
+Under the assumptions and query budget of \cref{thm:source-facts}, every deterministic target algorithm satisfies
+\begin{equation}\label{eq:prob-fixed-budget}
+  \Pp_\Xi\left(
+    F_\Xi(X_\Xi)-\min F_\Xi
+    \ge c\min\left\{\frac{\Delta R}{\sqrt k},
+                      \frac{\Delta^2}{\mu k}\right\}
+  \right)\ge\frac58.
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+Let
+\[
+  \gamma:=\sqrt{c_{\mathrm{sv}}},
+  \qquad
+  c_*:=\min\left\{c_{\mathrm{src}},\frac{\gamma}{2}\right\},
+  \qquad
+  \eta:=\frac{c_*}{\sqrt k}.
+\]
+By \cref{thm:source-facts,lem:spectral-depth}, the event
+\[
+  E_{\mathrm{depth}}:=\left\{q_\Xi\ge\frac{\gamma}{\sqrt k}\right\}
+\]
+has probability at least $7/8$.  By applying the source theorem to the direction-output algorithm,
+\[
+  E_{\mathrm{dir}}:=\left\{
+     h_\Xi(U(X_\Xi))+q_\Xi>\frac{c_{\mathrm{src}}}{\sqrt k}
+  \right\}
+\]
+has probability at least $3/4$.  Hence
+\[
+  \Pp(E_{\mathrm{depth}}\cap E_{\mathrm{dir}})
+  \ge\frac78+\frac34-1=\frac58.
+\]
+On this intersection, $q_\Xi\ge2\eta$ and, with $y=(-h_\Xi(U(X_\Xi)))_+$, one has $y<q_\Xi-\eta$.  The same radial increment argument gives a target gap at least $\Psi(\eta)$.  Apply \eqref{eq:Psi-lower}.
+\end{proof}
+
+\begin{remark}[Information and geometry have separate roles]
+The source theorem controls the quality of the reported direction;
+the spectral event controls the depth of the best direction. Their
+intersection is estimated by a union bound, with no independence
+assumption. Quadratic regularization changes the conversion from
+directional error to objective error through $\Psi$, while preserving
+the scalar transcript exactly.
+\end{remark}
+
+\section{Finite-dimensional endpoints}\label{sec:spherical}
+
+When $m_\eps$ is bounded, the target lower bound is only of order
+$d$. A simpler family supplies this endpoint and avoids any lower
+threshold on the ambient dimension.
+
+For $v\in\Sph^{d-1}$, define
+\begin{equation}\label{eq:spherical-family}
+   Q_v(x):=\frac{\mu}{2}\norm{x}^2-\Delta\inner{v}{x},
+   \qquad x\in\B_R^d.
+\end{equation}
+Every $Q_v$ belongs to $\cF^{\mathrm{sc}}_{L,\mu,R}$, since
+\[
+  \norm{\nabla Q_v(x)}\le\mu R+\Delta=L.
+\]
+Its minimizer is
+\begin{equation}\label{eq:spherical-minimizer}
+  x_v^*=\rho_*v,
+  \qquad
+  \rho_*:=\min\left\{R,\frac{\Delta}{\mu}\right\}.
+\end{equation}
+One exact value is equivalent to one adaptive linear measurement of $v$:
+\begin{equation}\label{eq:linear-measurement}
+  \inner{v}{x}=\frac{\mu\norm{x}^2/2-Q_v(x)}{\Delta}.
+\end{equation}
+Moreover,
+\[
+   Q_v(0)-Q_v(x_v^*)=S_\Delta.
+\]
+
+\subsection{Posterior energy and expected risk}
+
+\begin{lemma}[Adaptive spherical posterior energy]\label{lem:spherical-energy}
+Let $V$ be uniform on $\Sph^{d-1}$ and independent of an algorithmic random tape.  Suppose an adaptive strategy observes $T\le d$ exact inner products with $V$.  If $\mathcal H_T$ is generated by the tape, queries, and responses, and
+\[
+   M_T:=\E[V\mid\mathcal H_T],
+\]
+then
+\begin{equation}\label{eq:spherical-energy}
+   \E\norm{M_T}^2\le\frac{T}{d}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+We enlarge the observation history so that exactly one new orthogonal
+coordinate is revealed at each step.  This avoids any assumption that the
+rank of the original adaptive queries is deterministic.
+
+Condition on the independent random tape, and simulate the original
+strategy.  Suppose that the orthonormal vectors $E_1,\ldots,E_{t-1}$ and
+coordinates $C_j=\langle V,E_j\rangle$ have already been observed.  The
+original query $x_t$ is determined by its previously simulated responses.
+Let
+\[
+  w_t=x_t-\sum_{j<t}\langle x_t,E_j\rangle E_j.
+\]
+If $w_t\ne0$, choose $E_t=w_t/\|w_t\|_2$.  Otherwise, choose any Borel
+unit-vector completion of $E_1,\ldots,E_{t-1}$; for example, orthogonalize
+the first standard basis vector with a nonzero residual.  Observe
+$C_t=\langle V,E_t\rangle$.  The original response is then recovered as
+\[
+  \langle V,x_t\rangle
+  =\sum_{j<t}\langle x_t,E_j\rangle C_j+\|w_t\|_2 C_t.
+\]
+Thus the enlarged experiment uses one linear measurement per original
+query and reproduces the entire original transcript.  The extra
+coordinate observed when $w_t=0$ is ignored by the simulated strategy.
+
+Let $\widetilde{\mathcal H}_t$ be the enlarged history, including the
+tape, and put
+\[
+  \widetilde M_t:=\sum_{j=1}^t C_jE_j.
+\]
+Conditional rotational invariance gives
+$\widetilde M_t=\mathbb E[V\mid\widetilde{\mathcal H}_t]$.
+More explicitly, given $\widetilde{\mathcal H}_{t-1}$, the unrevealed
+component is uniform on the sphere of squared radius
+$1-\|\widetilde M_{t-1}\|_2^2$ in a $(d-t+1)$-dimensional orthogonal
+complement.  Hence, for $1\le t\le d$,
+\[
+  \mathbb E[C_t^2\mid\widetilde{\mathcal H}_{t-1}]
+  =\frac{1-\|\widetilde M_{t-1}\|_2^2}{d-t+1}.
+\]
+Writing $a_t=\mathbb E\|\widetilde M_t\|_2^2$ yields
+\[
+  a_0=0,\qquad
+  a_t=a_{t-1}+\frac{1-a_{t-1}}{d-t+1}=\frac{t}{d},
+\]
+where the final equality follows by induction.  Finally,
+$\mathcal H_T\subseteq\widetilde{\mathcal H}_T$, so the tower property
+and conditional Jensen inequality imply
+\[
+  \mathbb E\|M_T\|_2^2
+  =\mathbb E\bigl\|
+      \mathbb E[\widetilde M_T\mid\mathcal H_T]
+    \bigr\|_2^2
+  \le\mathbb E\|\widetilde M_T\|_2^2
+  =\frac{T}{d}.
+\]
+\end{proof}
+
+\begin{proposition}[Unified spherical Bayes-risk curve]\label{prop:spherical-expected}
+For every randomized $T$-query exact-value algorithm with $0\le T\le d$, there is a fixed $v\in\Sph^{d-1}$ such that
+\begin{equation}\label{eq:spherical-Bayes}
+   \E\bigl[Q_v(\widehat X_T)-Q_v(x_v^*)\bigr]
+   \ge S_\Delta\left(1-\sqrt{\frac{T}{d}}\right).
+\end{equation}
+In particular, every $T\le d/4$ algorithm has a fixed objective with expected gap at least $S_\Delta/2$.
+\end{proposition}
+
+\begin{proof}
+Let $V$ be uniform and run the algorithm on $Q_V$.  By \eqref{eq:linear-measurement}, its value transcript is equivalent to an adaptive inner-product transcript, so \cref{lem:spherical-energy} applies.  Let $X$ be the output and $M=M_T$.
+
+If $\Delta\le\mu R$, then $x_V^*=(\Delta/\mu)V$ and
+\[
+  Q_V(X)-Q_V(x_V^*)
+  =\frac{\mu}{2}\left\|X-\frac{\Delta}{\mu}V\right\|^2.
+\]
+Conditioning on $\mathcal H_T$ and using the bias--variance identity gives
+\[
+  \E[Q_V(X)-Q_V(x_V^*)\mid\mathcal H_T]
+  \ge S_\Delta(1-\norm{M}^2).
+\]
+Thus the average risk is at least $S_\Delta(1-T/d)$, which is no smaller than the right side of \eqref{eq:spherical-Bayes}.
+
+If $\Delta\ge\mu R$, then $x_V^*=RV$ and the exact decomposition
+\begin{equation}\label{eq:boundary-gap-decomp}
+ Q_V(X)-Q_V(RV)
+ =\frac{\mu}{2}\norm{X-RV}^2
+   +(\Delta-\mu R)\bigl(R-\inner{V}{X}\bigr)
+\end{equation}
+holds.  Conditionally,
+\[
+  \E\norm{X-RV}^2
+  =\norm{X-RM}^2+R^2(1-\norm{M}^2)
+  \ge R^2(1-\norm{M}^2),
+\]
+and
+\[
+  R-\inner{M}{X}\ge R(1-\norm{M}).
+\]
+Using \cref{lem:spherical-energy} and Cauchy--Schwarz yields
+\[
+  \E[Q_V(X)-Q_V(RV)]
+  \ge\left(\frac{\mu R^2}{2}+(\Delta-\mu R)R\right)
+       \left(1-\sqrt{\frac{T}{d}}\right)
+  =S_\Delta\left(1-\sqrt{\frac{T}{d}}\right).
+\]
+The left side is the average over fixed $v$, so at least one $v$ attains the same lower bound.
+\end{proof}
+
+\subsection{Constant-probability direction estimation}
+
+\begin{lemma}[Direction estimation from few adaptive measurements]\label{lem:direction-estimation}
+Let $d\ge2$, let $V$ be uniform on $\Sph^{d-1}$, and let a deterministic adaptive strategy observe $T$ exact inner products with $V$ before outputting a unit vector $U$.  If
+\[
+   T\le\frac{d}{256},
+\]
+then
+\begin{equation}\label{eq:direction-prob}
+   \Pp\bigl(\inner{V}{U}\le1/2\bigr)\ge\frac23.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Use the enlarged experiment in the proof of
+\cref{lem:spherical-energy}, with history
+$\widetilde{\mathcal H}_T$ and posterior mean
+$M=\E[V\mid\widetilde{\mathcal H}_T]$. The original output $U$
+is measurable with respect to this history. Exactly $T$ orthogonal
+coordinates have been revealed, so the remaining component is
+rotationally invariant in dimension $d-T$. Consequently,
+\begin{equation}\label{eq:residual-variance}
+  \E\bigl[\inner{V-M}{U}^2\mid\widetilde{\mathcal H}_T\bigr]
+  \le\frac{1}{d-T}.
+\end{equation}
+The enlarged experiment has $\E\norm{M}^2=T/d$, so Markov's inequality gives
+\[
+  \Pp(\norm{M}>1/4)\le16\frac{T}{d}\le\frac1{16}.
+\]
+If $d\ge256$, then by \eqref{eq:residual-variance},
+\[
+  \Pp\bigl(\inner{V-M}{U}>1/4\bigr)
+  \le\frac{16}{d-T}\le\frac{16}{255}.
+\]
+Hence
+\[
+  \Pp(\inner{V}{U}>1/2)
+  \le\frac1{16}+\frac{16}{255}<\frac13.
+\]
+
+If $2\le d<256$, the budget condition forces $T=0$, so $U$ is fixed.  Writing $V=G/\norm{G}$ for a standard Gaussian $G$, the event $\inner{V}{U}>1/2$ is nonincreasing in $d$ after rotating $U$ to the first coordinate: it is
+\[
+  \{G_1>0,\;3G_1^2>G_2^2+\cdots+G_d^2\}.
+\]
+At $d=2$, its angular probability is exactly $1/3$, and adding Gaussian coordinates can only decrease it.  This proves \eqref{eq:direction-prob}.
+\end{proof}
+
+\begin{lemma}[Bad direction forces objective error]\label{lem:spherical-gap}
+Let $x\in\B_R^d$.  If $x=0$, or if $x\ne0$ and
+\[
+  \inner{v}{x/\norm{x}}\le\frac12,
+\]
+then
+\begin{equation}\label{eq:spherical-gap}
+  Q_v(x)-Q_v(x_v^*)\ge\frac38 S_\Delta.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+At $x=0$, the gap is exactly $S_\Delta$.  Suppose $x\ne0$ and put $u=x/\norm{x}$, $c=\inner{v}{u}\le1/2$.
+
+If $\Delta\le\mu R$, let $\rho_*=\Delta/\mu$.  Since
+\[
+   Q_v(x)-Q_v(\rho_*v)=\frac{\mu}{2}\norm{x-\rho_*v}^2,
+\]
+the smallest distance from $\rho_*v$ to a ray whose direction has correlation at most $1/2$ is at least $\sqrt{3}\rho_*/2$.  Thus the gap is at least
+\[
+   \frac{3\mu\rho_*^2}{8}=\frac34S_\Delta.
+\]
+
+If $\Delta\ge\mu R$, use \eqref{eq:boundary-gap-decomp}.  Minimizing the first term over the radius on a direction with $c\le1/2$ gives
+\[
+   \norm{x-Rv}^2\ge\frac34R^2,
+\]
+while $\inner{v}{x}\le R/2$ gives $R-\inner{v}{x}\ge R/2$.  Hence
+\[
+  Q_v(x)-Q_v(Rv)
+  \ge \frac{3\mu R^2}{8}+\frac{(\Delta-\mu R)R}{2}
+  \ge\frac38\left(\Delta R-\frac{\mu R^2}{2}\right)
+  =\frac38S_\Delta.
+\]
+\end{proof}
+
+\begin{proposition}[Spherical constant-success endpoint, $d\ge2$]\label{prop:spherical-prob}
+Let $d\ge2$.  Every deterministic algorithm using $T\le d/256$ exact-value queries satisfies, under $V\sim\mathrm{Unif}(\Sph^{d-1})$,
+\begin{equation}\label{eq:spherical-prob-gap}
+  \Pp\left(Q_V(\widehat X_T)-Q_V(x_V^*)\ge\frac38S_\Delta\right)
+  \ge\frac23.
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+The exact values reveal only adaptive inner products with $V$.  Apply \cref{lem:direction-estimation} to the normalized output, using an arbitrary fixed direction when the output is zero, and then apply \cref{lem:spherical-gap}.
+\end{proof}
+
+The one-dimensional constant-success criterion has a minor endpoint peculiarity because the sphere has only two points.  A three-function packing resolves it.
+
+\begin{lemma}[One-dimensional zero-query packing]\label{lem:one-dimensional}
+Let $d=1$ and $\Delta>0$.  Define on $[-R,R]$
+\[
+  Q_+(x)=\frac{\mu}{2}x^2-\Delta x,
+  \qquad
+  Q_-(x)=\frac{\mu}{2}x^2+\Delta x,
+  \qquad
+  Q_0(x)=\frac{\mu}{2}x^2+\Delta|x|.
+\]
+All three functions lie in $\cF^{\mathrm{sc}}_{L,\mu,R}$.  If $0<\eps\le S_\Delta/64$, their $\eps$-optimal sets are pairwise disjoint.  Consequently every randomized zero-query algorithm has one of these three objectives on which
+\[
+  \Pp(\err_0>\eps)\ge\frac23.
+\]
+\end{lemma}
+
+\begin{proof}
+The residuals $-\Delta x$, $\Delta x$, and $\Delta|x|$ are convex and $\Delta$-Lipschitz, so total Lipschitzness is $\Delta+\mu R=L$.
+
+If $\Delta\le\mu R$, put $r_*=\Delta/\mu$.  The minimizers of $Q_+,Q_-,Q_0$ are $r_*,-r_*,0$.  Since $S_\Delta=\mu r_*^2/2$, $\eps\le S_\Delta/64$ implies that the $Q_+$-good set lies inside $[7r_*/8,R]$, the $Q_-$-good set lies inside $[-R,-7r_*/8]$, and the $Q_0$-good set lies inside $[-r_*/128,r_*/128]$.
+
+If $\Delta\ge\mu R$, the minimizers of $Q_+$ and $Q_-$ are $R$ and $-R$.  For every $x\le R/2$,
+\[
+  Q_+(x)-Q_+(R)
+  \ge Q_+(R/2)-Q_+(R)
+  =\frac{\Delta R}{2}-\frac{3\mu R^2}{8}
+  \ge\frac14S_\Delta.
+\]
+Thus the $Q_+$-good set lies in $(R/2,R]$, and symmetrically the $Q_-$-good set lies in $[-R,-R/2)$.  Meanwhile, for $|x|\ge R/2$,
+\[
+  Q_0(x)-Q_0(0)\ge\frac{\Delta R}{2}+\frac{\mu R^2}{8}>\frac14S_\Delta,
+\]
+so the $Q_0$-good set lies in $(-R/2,R/2)$.  The sets are pairwise disjoint in both regimes.
+
+Under the uniform prior on the three functions, any fixed zero-query output belongs to at most one good set, so its average success probability is at most $1/3$.  Integrating over a randomized output and then fixing an objective proves the claim.
+\end{proof}
+
+\section{Calibration and completion of the proof}\label{sec:calibration}
+
+If $\eps\le c_0S_\Delta$ with $c_0\le1/2$, then $m_\eps\ge1$, and $m_\eps\ge2$ whenever $d\ge2$.
+
+We first record the elementary random-tape transfer used in both source branches.  Suppose a fixed prior $\cD$ has the property that every deterministic $T$-query algorithm has prior-averaged expected gap at least $a$.  Fixing each random tape and integrating by Tonelli shows that every randomized algorithm has a fixed objective in the support of $\cD$ with expected gap at least $a$.  Likewise, if every deterministic section has prior failure probability at least $p$, then every randomized algorithm has a fixed objective with failure probability at least $p$.  The common-prior property in \cref{thm:source-facts} is exactly what makes this step valid.
+
+\begin{theorem}[All-dimensional expected-error lower bound]\label{thm:expected-lower}
+There are universal constants $c,c_0>0$ such that, for every $d\in\mathbb N$, $R,\mu>0$, $L>\mu R$, and
+\[
+   0<\eps\le c_0S_\Delta,
+\]
+one has
+\begin{equation}\label{eq:expected-main-lb}
+  T^{\mathrm{exp}}_\eps(\cF^{\mathrm{sc}}_{L,\mu,R})
+  \ge c\frac{d m_\eps}{\log(e m_\eps)}.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Let $b>0$ be a common lower-bound constant for
+\cref{prop:expected-transfer,prop:prob-transfer}. Choose
+$0<\kappa\le\min\{1,c_{\mathrm{dim}},b^2/16,b/4\}$,
+and then fix a universal threshold
+$M_0\ge\max\{d_{\mathrm{src}},2/\kappa,2\}$.
+This choice makes both transferred error scales at least $4\eps$
+in the large-parameter case below. Split into two cases.
+
+\emph{Large effective parameter: $m_\eps\ge M_0$.}
+Set $k=\lfloor\kappa m_\eps\rfloor$.  Since $d\ge m_\eps\ge M_0$, the source dimension threshold is met, and
+\[
+  1\le k\le c_{\mathrm{dim}}d,
+  \qquad
+  \kappa m_\eps/2\le k\le\kappa m_\eps,
+  \qquad
+  \frac{dk}{\log(ek)}\gtrsim\frac{dm_\eps}{\log(em_\eps)}.
+\]
+Moreover, by the definition of $m_\eps$,
+\[
+  \frac{\Delta R}{\sqrt{k}}\ge\frac{\eps}{\sqrt\kappa},
+  \qquad
+  \frac{\Delta^2}{\mu k}\ge\frac{\eps}{\kappa}.
+\]
+The choice of $\kappa$ makes the expected gap in \cref{prop:expected-transfer} larger than $2\eps$.  Hence every deterministic algorithm with
+\[
+  T\le c\frac{dm_\eps}{\log(em_\eps)}
+\]
+has prior-averaged expected error larger than $2\eps$.  The random-tape transfer gives a fixed target objective with randomized expected error larger than $\eps$.
+
+\emph{Bounded effective parameter: $1\le m_\eps<M_0$.}
+Choose the universal constant $c$ small enough that
+\[
+  T\le c\frac{dm_\eps}{\log(em_\eps)}
+  \quad\Longrightarrow\quad
+  T\le\frac d4.
+\]
+Then \cref{prop:spherical-expected} gives a fixed spherical objective with expected gap at least $S_\Delta/2>\eps$, after reducing $c_0$ if necessary.  This includes $d=1$, where the admissible integer budget is zero for a sufficiently small universal $c$.
+\end{proof}
+
+\begin{theorem}[All-dimensional constant-success lower bound]\label{thm:prob-lower}
+There are universal constants $c,c_0>0$ such that, for every $d\in\mathbb N$, $R,\mu>0$, $L>\mu R$, and
+\[
+   0<\eps\le c_0S_\Delta,
+\]
+one has
+\begin{equation}\label{eq:prob-main-lb}
+  T^{\mathrm{prob}}_\eps(\cF^{\mathrm{sc}}_{L,\mu,R})
+  \ge c\frac{d m_\eps}{\log(e m_\eps)}.
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Use the same constants $\kappa,M_0$ and the same split, and take
+$c_0\le1/128$.
+
+If $m_\eps\ge M_0$, choose $k=\lfloor\kappa m_\eps\rfloor$.  The calibration above and \cref{prop:prob-transfer} imply that every deterministic algorithm with
+\[
+  T\le c\frac{dm_\eps}{\log(em_\eps)}
+\]
+has target error larger than $\eps$ with prior probability at least $5/8>1/2$.  Integrating over a randomized algorithm's independent tape yields a fixed objective with failure probability at least $5/8$.
+
+Suppose $m_\eps<M_0$ and $d\ge2$.  Choose $c$ small enough that the displayed budget is at most $d/256$.  By \cref{prop:spherical-prob}, every deterministic section fails with probability at least $2/3$ under the spherical prior, at error threshold $3S_\Delta/8$.  Taking $c_0<3/8$ and integrating over the random tape gives a fixed objective with failure probability greater than $1/2$.
+
+Finally, let $d=1$.  Then $m_\eps=1$.  Choose $c<1$, so the largest integer query budget not exceeding $c d m_\eps/\log(em_\eps)=c$ is zero.  The three-function prior in \cref{lem:one-dimensional} makes every randomized zero-query algorithm fail on a fixed objective with probability at least $2/3$.  This proves the claimed real-valued lower bound because the successful query count is integer.
+\end{proof}
+
+
+\begin{proof}[Proof of \cref{thm:main}]
+Necessity of $L\ge\mu R$ and the boundary rigidity follow from
+\cref{thm:slack-geometry}. Conversely, $F(x)=\mu\norm{x}^2/2$
+is admissible whenever $L\ge\mu R$, proving nonemptiness.
+The zero-query statements follow from \cref{cor:zero-query}.
+Choose $c_0$ small enough for both lower-bound theorems above and
+at most one. Combining them with \cref{thm:upper} proves
+\eqref{eq:main-two-sided}. If an accuracy term attains $m_\eps$,
+the corresponding upper branch is $O(d m_\eps)$; if $m_\eps=d$,
+the value-only branch is $O(d m_\eps\logfac)$. Since $\logfac>1$
+in the stated range, the final envelope follows.
+\end{proof}
+
+\begin{corollary}[A separately specified residual bound]\label{cor:residual}
+For $G,\mu,R>0$, let
+\[
+ \cF^{\mathrm{res}}_{G,\mu,R}
+ =\left\{h+\frac{\mu}{2}\norm{\cdot}^2:
+        h\text{ is convex and }G\text{-Lipschitz on }\B_R^d\right\}.
+\]
+Define $S_G$ and $m_\eps(G)$ by replacing $\Delta$ with $G$ in
+\eqref{eq:S-delta} and \eqref{eq:m-eps}. For every $d\ge1$ and
+$0<\eps\le c_0S_G$, both criteria satisfy
+\[
+ c\frac{d m_\eps(G)}{\log(e m_\eps(G))}
+ \le T_\eps^{\mathsf{risk}}(\cF^{\mathrm{res}}_{G,\mu,R})
+ \le C d m_\eps(G)\log(d+1)\log\!\frac{128S_G}{\eps}.
+\]
+The zero-query minimax expected error is $S_G$.
+\end{corollary}
+
+\begin{proof}
+The residual class is contained in
+$\cF^{\mathrm{sc}}_{G+\mu R,\mu,R}$, whose slack is $G$.
+This gives the upper bound and the zero-query upper guarantee.
+The regularized support functions in \eqref{eq:hard-family}, the
+spherical family in \eqref{eq:spherical-family}, and the
+one-dimensional packing all have residual Lipschitz constant at
+most $G$ when $\Delta=G$. They therefore establish the same lower
+bounds within the residual class. The zero-query spherical argument
+also gives its exact expected-risk threshold.
+\end{proof}
+
+\section{Discussion}\label{sec:discussion}
+
+The total Lipschitz constraint determines both the scale of the
+unknown residual and the part of the domain in which optimization
+needs to take place. This explains why $L-\mu R$, rather than $L$
+alone, controls a theorem that remains valid near the compatibility
+boundary. The same localization improves the accuracy logarithm in
+the dimension branch. At a fixed relative accuracy $\eps/S_\Delta$,
+the upper bound has no additional logarithmic deterioration as
+$L\downarrow\mu R$.
+
+The lower-bound reduction separates the information cost of exact
+values from the geometry of strong convexity. The support-function
+prior supplies the information obstruction. The radial profile
+$\Psi$ supplies the conversion to a strongly convex objective.
+The spherical family has a different role: it gives a direct
+linear-in-dimension obstruction when the effective parameter is
+bounded. Its enlarged-measurement proof explicitly accommodates
+redundant adaptive queries and therefore applies without a rank
+assumption.
+
+Several aspects remain outside the result. The logarithmic factors
+in \eqref{eq:main-two-sided} do not match, especially at very high
+accuracy. The success-$1/2$ criterion does not by itself describe
+optimal dependence on an arbitrary confidence parameter. The
+constant-width accuracy band between $c_0S_\Delta$ and $S_\Delta$
+is also not assigned an exact query complexity here. Finally,
+extensions to other domains require additional geometric information:
+the radial and local residual estimates exploit the Euclidean ball.
+
+Together, the results give a complete uniform description of the
+polynomial complexity profile in the stated accuracy range, with
+the external information-theoretic inputs and the remaining precision
+limitations explicit.
+
+\begin{thebibliography}{9}
+\bibitem{DornEtAl2026}
+Y.~Dorn, D.~Dvinskikh, T.~Loginov, O.~Osmanov, A.~Shestakov,
+N.~Tupitsa, and A.~Gasnikov.
+\newblock Lower bounds for gradient-free convex optimization and convex-concave
+  saddle-point problems.
+\newblock \emph{arXiv preprint arXiv:2610.00345v1}, 2026.
+\newblock \url{https://arxiv.org/abs/2610.00345v1}.
+
+\bibitem{Kerger2026}
+P.~Kerger.
+\newblock Closing the oracle-complexity gap in derivative-free convex
+  optimization: A near-quadratic lower bound from exact function values.
+\newblock \emph{arXiv preprint arXiv:2607.13335v1}, 2026.
+\newblock \url{https://arxiv.org/abs/2607.13335v1}.
+
+\bibitem{LeeSidfordVempala2018}
+Y.~T. Lee, A.~Sidford, and S.~S. Vempala.
+\newblock Efficient convex optimization with membership oracles.
+\newblock In \emph{Proceedings of the 31st Conference on Learning Theory},
+  volume~75 of \emph{Proceedings of Machine Learning Research},
+  pages 1292--1294, 2018.
+\newblock \url{https://proceedings.mlr.press/v75/lee18a.html}.
+
+\bibitem{Protasov1996}
+V.~Yu. Protasov.
+\newblock Algorithms for approximate calculation of the minimum of a convex
+  function from its values.
+\newblock \emph{Mathematical Notes}, 59(1):69--74, 1996.
+\newblock \href{https://doi.org/10.1007/BF02312467}{doi:10.1007/BF02312467}.
+
+\bibitem{Shamir2017}
+O.~Shamir.
+\newblock An optimal algorithm for bandit and zero-order convex optimization
+  with two-point feedback.
+\newblock \emph{Journal of Machine Learning Research}, 18(52):1--11, 2017.
+\newblock \url{https://jmlr.org/papers/v18/16-632.html}.
+
+\bibitem{ZhangEtAl2026}
+H.~Zhang, C.~Zhang, Z.~Qi, and Z.~Lin.
+\newblock Near-optimal lower bounds for randomized algorithms in exact value
+  zeroth-order convex optimization.
+\newblock \emph{arXiv preprint arXiv:2607.16558v2}, 2026.
+\newblock \url{https://arxiv.org/abs/2607.16558v2}.
+
+\end{thebibliography}
+
+\end{document}

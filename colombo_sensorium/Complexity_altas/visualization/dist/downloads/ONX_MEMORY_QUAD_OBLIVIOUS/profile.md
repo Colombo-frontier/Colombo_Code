@@ -6,7 +6,7 @@ Online learning and bandits
 
 The current scalar quadratic loss depends on a window of recent actions, and the learner observes only its value on that window. The comparator uses the same fixed action throughout every window. The complete loss sequence is fixed before interaction.
 
-**Status.** Bounds missing
+**Status.** Logarithmic gap; Bounds missing
 
 **TASK tags.** formulation: Onx memory quad oblivious; task family: Online bandit
 
@@ -154,9 +154,33 @@ $$
 
 **Optimization direction.** minimize
 
-### R1 - SUPPORTED
+### R1 - Two-action memory at fixed regularity budgets
 
-**Region.** The loss sequence is obliviously fixed; a lower bound using a delayed adaptive adversary does not apply.
+**Region.** $m=2$, $T\ge1$; B,L are fixed positive constants independent of T. Scalar action dimension; the loss is a quadratic in exactly two scalar action arguments. The source n observed losses equals the native T; its alternative indexing T_source=n+1 must not shift the native budget. This result makes no claim for growing memory m or delayed-adaptive adversaries.
+
+**Quantity.** Q1
+
+**Resource.** Fixed native online budget, with computational, communication, and privacy resources retained separately.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B2
+
+$$
+\Omega_{B,L}\!\left(T^{3/5}/\log(2T+2)\right)
+$$
+
+**Upper bound.** B1
+
+$$
+O_{B,L}\!\left(T^{3/5}[\log(2T+2)]^{2/5}\right)
+$$
+
+**Gap or comparison.** An $O([\log(2T+2)]^{7/5})$ factor remains for fixed B,L.
+
+### R2 - SUPPORTED — remaining domain
+
+**Region.** The loss sequence is obliviously fixed; a lower bound using a delayed adaptive adversary does not apply. Restricted to the complement of: ($m=2$, $T\ge1$; B,L are fixed positive constants independent of T. Scalar action dimension; the loss is a quadratic in exactly two scalar action arguments. The source n observed losses equals the native T; its alternative indexing T_source=n+1 must not shift the native budget. This result makes no claim for growing memory m or delayed-adaptive adversaries.).
 
 **Quantity.** Q1
 
@@ -170,8 +194,76 @@ $$
 
 ## 4. Bounds and supporting evidence
 
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+**Dimension conditions.** Scalar action dimension; the loss is a quadratic in exactly two scalar action arguments.
+
+### B1 - Finite-feature loss estimation, infrequent endpoint refreshes, and smooth interpolation.
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+O_{B,L}\!\left(T^{3/5}[\log(2T+2)]^{2/5}\right)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q5/manuscript.pdf)
+
+**Conditions.** $m=2$, $T\ge1$; B,L are fixed positive constants independent of T.; For the transformed loss $F(a,b)=f((a+1)/2,(b+1)/2)$, the bounds are $(B,L/2,L/\sqrt2)$ for value, gradient, and Hessian. The source upper theorem handles any fixed positive triple.; The source n observed losses equals the native T; its alternative indexing T_source=n+1 must not shift the native budget.; This result makes no claim for growing memory m or delayed-adaptive adversaries.
+
+**Constants.** Constants may depend on the fixed positive B,L; no sharp joint dependence as either budget vanishes is asserted.
+
+**Logarithmic factors.** All horizon logarithms are displayed.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q5/manuscript.pdf) Theorem thm:main; Remark Other fixed regularity bounds, Section 2; affine normalization z=2x-1
+
+Finite-feature loss estimation, infrequent endpoint refreshes, and smooth interpolation.. All proper scalar one-point policies; a randomized policy attains the upper bound.
+
+For the transformed loss $F(a,b)=f((a+1)/2,(b+1)/2)$, the bounds are $(B,L/2,L/\sqrt2)$ for value, gradient, and Hessian. The source upper theorem handles any fixed positive triple.
+
+### B2 - Multiscale offsets and a fixed quadratic movement penalty.
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+\Omega_{B,L}\!\left(T^{3/5}/\log(2T+2)\right)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q5/manuscript.pdf)
+
+**Conditions.** $m=2$, $T\ge1$; B,L are fixed positive constants independent of T.; Use the source normalized family with initial action z_0=-1, transform z=2x-1, and multiply its losses by s=min(B/2,L/4). Then the native fixed initial x_0=0 and bounds B,L hold.; The source n observed losses equals the native T; its alternative indexing T_source=n+1 must not shift the native budget.; This result makes no claim for growing memory m or delayed-adaptive adversaries.
+
+**Constants.** Constants may depend on the fixed positive B,L; no sharp joint dependence as either budget vanishes is asserted.
+
+**Logarithmic factors.** All horizon logarithms are displayed.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q5/manuscript.pdf) Theorem thm:main; Corollary cor:subclass; fixed-regularity scaling in Section 2
+
+Multiscale offsets and a fixed quadratic movement penalty.. Every randomized causal policy with oblivious losses and feasible actions.
+
+Use the source normalized family with initial action z_0=-1, transform z=2x-1, and multiply its losses by s=min(B/2,L/4). Then the native fixed initial x_0=0 and bounds B,L hold.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
 ## References
 
 [1] Arun Suggala; Y. Jennifer Sun; Praneeth Netrapalli; Elad Hazan. Second Order Methods for Bandit Optimization and Control. 2024. COLT 2024, PMLR 247.
 
 https://proceedings.mlr.press/v247/suggala24a/suggala24a.pdf
+
+[2] Colombo_Q5. Minimax Regret for Oblivious Quadratic Bandits with Two-Action Memory. 2026. Q5_oblivious_quadratic_memory_matching_bounds.tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q5/manuscript.pdf

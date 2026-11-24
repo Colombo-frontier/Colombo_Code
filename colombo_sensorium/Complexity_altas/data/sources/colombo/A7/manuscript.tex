@@ -1,0 +1,1102 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{microtype}
+\usepackage{booktabs,array,tabularx}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\definecolor{linkblue}{HTML}{185C78}
+\hypersetup{colorlinks=true,linkcolor=linkblue,citecolor=linkblue,
+  urlcolor=linkblue,pdftitle={Optimal Communication-Regret Tradeoffs for Federated Two-Point Bandit Optimization},
+  pdfauthor={Colombo Team}}
+\setlength{\parindent}{1.2em}
+\setlength{\parskip}{3pt}
+\setlength{\emergencystretch}{2em}
+\linespread{1.03}
+\numberwithin{equation}{section}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\calR}{\mathfrak R}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\ip}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\B}{\mathbb B_2}
+\newcommand{\Sph}{\mathbb S^{d-1}}
+\newcommand{\ind}{\mathbf 1}
+\DeclareMathOperator{\spanop}{span}
+\DeclareMathOperator{\Unif}{Unif}
+\DeclareMathOperator{\argmin}{argmin}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\title{Optimal Communication--Regret Tradeoffs for\\
+Federated Two-Point Bandit Optimization}
+\author{Colombo Team\\[3pt]
+  \small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We determine the minimax regret of federated two-point bandit convex
+optimization with intermittent communication. There are $M$ workers,
+$T=KR$ time steps, and a communication round after every $K$ steps.
+At each step, each worker selects two query points simultaneously and
+incurs the average of their losses. The losses are differentiable,
+convex, and globally $G$-Lipschitz, and may be chosen by a nonanticipating
+adaptive adversary. Actions are unrestricted, while the workers share a
+Euclidean-ball comparator of radius $B$. We prove that the minimax
+average expected regret is
+\[
+\Theta\!\left(GB\min\left\{1,\sqrt{\frac dT},
+                 \sqrt{\frac1R+\frac d{MT}}\right\}\right),
+\]
+uniformly over all positive integer parameters. The upper bound combines
+independent two-point learning, communication-block batching, and the
+zero action. Its analysis explicitly controls the random hindsight
+comparator under adaptive losses. The lower bound separates two sources
+of difficulty: information that remains local between communications,
+and information that remains unobserved even after pooling all workers'
+feedback. Both constructions use residuals of fresh spherical directions;
+a fixed differentiable radial penalty makes them valid for arbitrary
+unbounded action distributions. The resulting characterization identifies
+when collaboration helps and gives matching bounds throughout the
+communication, dimension, and constant-regret regimes.
+\end{abstract}
+
+\noindent\textbf{Keywords.}
+Bandit convex optimization; federated online learning; intermittent
+communication; minimax regret; adaptive adversaries.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}
+\label{sec:intro}
+
+When several learners observe only function values, communication can
+combine complementary observations held by different workers. This benefit
+must be weighed against the time during which local observations cannot
+be shared. In an online problem, the tradeoff is especially delicate:
+losses continue to arrive between communications, and an adaptive
+adversary can respond to the learners' earlier decisions. The relevant
+question is therefore not only how many evaluations are available, but
+also when their information becomes available to each worker.
+
+We study this question in federated bandit convex optimization. Each of
+$M$ workers makes two simultaneous evaluations per time step, and all
+workers may exchange their histories once every $K$ steps. The horizon
+is $T=KR$, where $R$ is the number of communication rounds. Both
+evaluations incur loss, and performance is measured against one common
+point chosen in hindsight from a Euclidean ball. Losses may differ
+arbitrarily across workers and may depend on the entire past interaction.
+The comparator is bounded, but the query points are not.
+
+\paragraph{Main result.}
+For globally $G$-Lipschitz, differentiable convex losses in $\R^d$ and
+comparator radius $B$, the optimal average expected regret is
+\[
+GB\sqrt{\frac{\min\{T,d,K+d/M\}}{T}}
+\]
+up to universal constants. This formula holds for every positive integer
+$M,K,R,d$. It combines the independent-learning scale $GB\sqrt{d/T}$,
+the collaborative scale $GB\sqrt{1/R+d/(MT)}$, and the trivial cap $GB$.
+In particular, independent learning is optimal when $d\le K$, the number
+of communication rounds controls the rate when $K<d<MK$, and pooled
+bandit information determines the rate when $d\ge MK$, until the regret
+reaches constant scale.
+
+\paragraph{Why the lower bound depends on communication.}
+In our lower-bound family, each worker's two values reveal at most two
+adaptive linear measurements per step.
+Our communication adversary draws a common hidden direction and, at
+each worker, removes only the component already determined by that
+worker's own queries. Every charged linear loss then has conditional
+mean zero, while the residuals across workers retain a substantial
+component in the common hidden direction. Restarting this construction
+before a communication or after order-$d$ local observations produces
+the communication lower bound. A second adversary removes the subspace
+measured by \emph{all} workers, yielding the dimension lower bound even
+with communication after every step. Taking the larger of the two
+bounds recovers the complete minimax rate.
+
+\paragraph{Analytical issues.}
+Two features of the model require care. First, under an adaptive
+adversary, the best comparator in hindsight is random and correlated
+with the gradient-estimation noise. The upper bound keeps this
+comparator inside a pathwise inequality and controls the resulting
+terminal martingale term. Second, unrestricted actions can have
+nonintegrable norms. A common radial penalty, zero on the comparator
+ball, makes every lower-bound loss uniformly bounded below without
+restricting the learner's actions. These arguments allow arbitrary
+measurable randomized protocols, including shared randomization.
+
+\subsection{Prior work and the comparison in this paper}
+
+Multi-point bandit feedback was studied by Agarwal, Dekel, and
+Xiao~\cite{ADX10}. Shamir~\cite{Shamir17} analyzed a symmetric two-point
+estimator whose second moment is linear in dimension for general
+Lipschitz convex losses. We use this standard estimator and projected
+online gradient descent~\cite{Zinkevich03}. Their combination supplies
+the independent-learning baseline; our proof also treats the random
+hindsight comparator explicitly.
+
+Patel, Wang, Saha, and Srebro~\cite{PWSS23} formulated federated online
+and bandit convex optimization against adaptive adversaries. Their
+Theorem~5.1 gives the following general-Lipschitz guarantee for
+\textsc{FedOSGD}, in the same average-regret normalization:
+\begin{equation}
+ O\!\left(GB\left[\frac1{\sqrt T}+\sqrt{\frac d{MT}}
+       +\ind_{\{K>1\}}\frac{d^{1/4}}{\sqrt R}\right]\right).
+ \label{eq:prior}
+\end{equation}
+Their Algorithm~3 uses simultaneous symmetric queries, both of which
+incur loss; the comparator is shared and lies in a Euclidean ball.
+Their conclusion asks whether the communication terms are tight.
+Table~\ref{tab:comparison} aligns this published guarantee with the
+bounds proved here. Our theorem determines the optimal communication
+dependence for the explicitly simultaneous-query model with unrestricted
+heterogeneity. Smoothness-dependent and small-heterogeneity refinements
+are outside its scope.
+
+\begin{table}[t]
+\centering
+\small
+\renewcommand{\arraystretch}{1.35}
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.23\textwidth}p{0.40\textwidth}Y@{}}
+\toprule
+Result or strategy & Average regret divided by $GB$ & Conditions and role\\
+\midrule
+Independent learning
+& $O\!\left(\min\{1,\sqrt{d/T}\}\right)$
+& No communication; standard two-point estimator.\\
+Patel et al.~\cite{PWSS23}\newline Theorem~5.1
+& $O\!\left(\dfrac1{\sqrt T}+\sqrt{\dfrac d{MT}}
+       +\ind_{\{K>1\}}\dfrac{d^{1/4}}{\sqrt R}\right)$
+& General Lipschitz losses; guarantee for local-update \textsc{FedOSGD}.\\
+Block batching\newline (this paper)
+& $O\!\left(\min\{1,\sqrt{1/R+d/(MT)}\}\right)$
+& One common center per communication block.\\
+Minimax rate\newline (this paper)
+& $\Theta\!\left(\min\{1,\sqrt{d/T},
+                 \sqrt{1/R+d/(MT)}\}\right)$
+& Matching bounds for all $M,K,R,d\ge1$ in Section~\ref{sec:model}.\\
+\bottomrule
+\end{tabularx}
+\caption{Comparison for $T=KR$, with no smoothness or small-heterogeneity
+assumption. Both query losses are charged, and all rates are average
+regret. The first and third rows include the zero-action cap. The
+published bound in the second row is an algorithmic upper guarantee;
+the last row is a minimax statement for the precise information and
+timing rules specified below.}
+\label{tab:comparison}
+\end{table}
+
+For a fair quantitative comparison, combine \eqref{eq:prior} with
+independent learning and the zero action. Define the resulting rate
+expression
+\begin{equation}
+ U_{\rm prior}=GB\min\left\{1,\sqrt{\frac dT},
+ \frac1{\sqrt T}+\sqrt{\frac d{MT}}
+       +\ind_{\{K>1\}}\frac{d^{1/4}}{\sqrt R}\right\}.
+ \label{eq:prior-envelope}
+\end{equation}
+For $M=K=s$, $d=R=s^2$, and $T=s^3$, this expression has order
+$GBs^{-1/2}$, whereas our minimax rate is $GBs^{-1}$. This is an
+improvement over the compared upper-bound guarantees; it does not assert
+a lower bound on the actual performance of \textsc{FedOSGD}.
+
+Batching itself is a standard distributed-learning device. Dekel et
+al.~\cite{DGSX12} analyze distributed mini-batches for smooth losses
+with stochastic inputs. Woodworth et al.~\cite{WBSS21} characterize
+distributed stochastic convex optimization with intermittent
+communication and first-order feedback. These works provide useful
+context, but their objectives and information models differ from
+adaptive online regret with exact function values. The lower bounds
+in this paper are consequently proved within the stated bandit model.
+
+\paragraph{Organization.}
+Section~\ref{sec:model} defines the model and states the main theorem
+and its consequences. Section~\ref{sec:upper} proves the upper bound.
+Section~\ref{sec:tools} develops the probability and information lemmas
+used in the lower bounds. Sections~\ref{sec:local} and
+\ref{sec:global} give the communication and dimension constructions;
+Section~\ref{sec:combine} combines them. Section~\ref{sec:discussion}
+discusses the scope of the characterization.
+
+\section{Model, main theorem, and consequences}
+\label{sec:model}
+
+\subsection{Interaction and information}
+
+Let $M,K,R,d$ be positive integers, let $T=KR$, and initially assume
+$G,B>0$. Write $[n]=\{1,\ldots,n\}$, let $\norm{\cdot}$ denote the
+Euclidean norm, and set $\B(B)=\{x\in\R^d:\norm{x}\le B\}$. The
+interaction consists of $T$ synchronous steps. At step $t$:
+\begin{enumerate}
+\item A nonanticipating adversary selects convex, differentiable losses
+  $f_t^m:\R^d\to\R$, $m\in[M]$, each globally $G$-Lipschitz. Its
+  joint choice may depend on all previously played points and returned
+  values, together with its own randomness, but not on the current
+  queries or unrevealed current random choices of the workers.
+\item Worker $m$ selects a pair $(x_t^{m,1},x_t^{m,2})\in(\R^d)^2$.
+  All workers' current pairs are selected before any current function
+  value is returned. The two points in a pair may be equal.
+\item Worker $m$ receives only $f_t^m(x_t^{m,1})$ and
+  $f_t^m(x_t^{m,2})$, and both values count toward its loss. At steps
+  $K,2K,\ldots,RK$, the workers may then exchange their complete
+  histories.
+\end{enumerate}
+Between communications, a worker has access only to its own history,
+its randomization, and information received at earlier communications.
+Other workers' actions and observations are not public within a block.
+The functions themselves are not revealed. In particular, even when
+$K=1$, communication follows the current evaluations.
+
+Private and shared algorithmic randomness are allowed. There are no
+restrictions on computation, message length, the span of the queries,
+or the query norms. All maps defining protocols and adversarial strategies
+are measurable. The
+communication schedule is fixed in advance. The final communication
+does not affect regret, but is included in the convention $T=KR$.
+The parameters are available to the learner.
+
+\subsection{Expected hindsight regret}
+
+For a protocol $A$ and an adversarial strategy $P$, define the sample-path
+average regret by
+\begin{equation}
+ Z_T(A,P)=\frac1{2MT}\left[
+ \sum_{t=1}^T\sum_{m=1}^M\sum_{j=1}^2 f_t^m(x_t^{m,j})
+ -2\min_{u\in\B(B)}\sum_{t=1}^T\sum_{m=1}^M f_t^m(u)
+ \right].
+ \label{eq:path-regret}
+\end{equation}
+Let $\operatorname{Reg}(A,P)=\E Z_T(A,P)$ whenever this extended
+expectation exists. If both the positive and negative parts have
+infinite expectation, set $\operatorname{Reg}(A,P)=+\infty$;
+such a protocol has no finite worst-case guarantee. No moment restriction is imposed
+on its actions. This convention makes the minimax value
+\begin{equation}
+ \calR_{M,K,R,d}(G,B)=\inf_A\sup_P\operatorname{Reg}(A,P)
+ \label{eq:model}
+\end{equation}
+well defined over all measurable protocols.
+
+The expectation is taken \emph{after} forming the complete difference
+in \eqref{eq:path-regret}; arbitrary additive constants in the losses
+therefore cancel pathwise. The minimum exists by continuity and
+compactness and remains inside the expectation. We compare with the
+best fixed point for the realized loss sequence, rather than the losses
+that an adaptive adversary would have generated along a different
+trajectory. Thus \eqref{eq:model} measures expected hindsight regret,
+not policy regret. The ball restricts only the comparator; no
+unconstrained minimizer is assumed to exist.
+
+The expectation convention does not enter the quantitative proof. All
+upper-bound protocols used below have bounded queries and bounded
+sample-path regret. The lower-bound adversaries produce regret with a
+uniformly bounded negative part for every protocol, including those
+with nonintegrable action norms.
+
+\subsection{The minimax characterization}
+
+\begin{theorem}[Optimal communication--regret tradeoff]
+\label{thm:main}
+In the model \eqref{eq:model}, for every $M,K,R,d\ge1$ and $G,B>0$,
+\begin{equation}
+ c\,GB\sqrt{\frac DT}
+ \le \calR_{M,K,R,d}(G,B)
+ \le C\,GB\sqrt{\frac DT},
+ \qquad D=\min\{T,d,K+d/M\},
+ \label{eq:main}
+\end{equation}
+where $c,C>0$ are universal. One may take $c=1/256$ and $C=6$.
+Equivalently,
+\begin{equation}
+ \calR_{M,K,R,d}(G,B)
+ =\Theta\!\left(GB\min\left\{1,\sqrt{\frac dT},
+                     \sqrt{\frac1R+\frac d{MT}}\right\}\right).
+ \label{eq:main-envelope}
+\end{equation}
+If $G=0$ or $B=0$, the minimax value is zero.
+\end{theorem}
+
+The upper bound selects among three simple protocols using the known
+parameters. The lower bound holds for every randomized protocol in the
+model, with unrestricted exact-real queries and no structural
+restriction on its iterates. No logarithmic factors or dimension
+thresholds are hidden in \eqref{eq:main-envelope}.
+
+\begin{table}[t]
+\centering
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\textwidth}{@{}p{0.22\textwidth}p{0.35\textwidth}Y@{}}
+\toprule
+Parameter regime & Minimax average regret & Interpretation\\
+\midrule
+$d\le K$ & $\Theta(GB\sqrt{d/T})$
+& Independent learning is optimal.\\
+$K<d<MK$ & $\Theta(GB/\sqrt R)$
+& Communication controls the rate.\\
+$d\ge MK$ & $\Theta\!\left(GB\min\{1,\sqrt{d/(MT)}\}\right)$
+& Pooled information controls the rate, with a constant cap.\\
+\bottomrule
+\end{tabularx}
+\caption{Interpretation of Theorem~\ref{thm:main} up to universal
+constants. The middle regime is empty when $M=1$. At a shared boundary
+the expressions agree up to constants; the complete minimum in
+\eqref{eq:main} gives the exact rate expression used in the theorem.}
+\label{tab:regimes}
+\end{table}
+
+\subsection{Regimes and quantitative comparisons}
+
+Table~\ref{tab:regimes} follows directly from \eqref{eq:main}. If
+$d\le K$, then $D=d$, since $K\le T$. If $K<d<MK$, then
+$K\le D\le2K$, giving $GB/\sqrt R$. If $d\ge MK$, the term
+$K+d/M$ lies between $d/M$ and $2d/M$, and the rate is
+$GB\min\{1,\sqrt{d/(MT)}\}$ up to constants. These are comparisons
+of rates, not claims about exact switching points of particular
+algorithms.
+
+Several boundary cases help interpret the formula. With communication
+after every step ($K=1$), it becomes
+\begin{equation}
+ \Theta\!\left(GB\min\left\{1,\frac1{\sqrt T}
+                                  +\sqrt{\frac d{MT}}\right\}\right).
+ \label{eq:sync}
+\end{equation}
+With a single worker ($M=1$), or with no useful communication before
+the horizon ends ($R=1$), it becomes
+$\Theta(GB\min\{1,\sqrt{d/T}\})$. In one dimension it is always
+$\Theta(GB/\sqrt T)$. When $d\ge MT$, the regret is
+$\Theta(GB)$. In this regime, the total observation budget is too small
+for the worst-case regret to vanish.
+
+\begin{corollary}[An improvement in the upper-bound guarantee]
+\label{cor:improvement}
+Let $s\ge2$ be an integer, and set $M=K=s$, $d=R=s^2$, and
+$T=s^3$. Then
+\[
+ \calR_{s,s,s^2,s^2}(G,B)=\Theta(GBs^{-1}),
+ \qquad U_{\rm prior}=\Theta(GBs^{-1/2}),
+\]
+where $U_{\rm prior}$ is the explicit expression in
+\eqref{eq:prior-envelope}.
+\end{corollary}
+\begin{proof}
+Here $D=\min\{s^3,s^2,2s\}=2s$. In the prior expression, the
+independent term is $s^{-1/2}$, while the collaborative expression is
+$s^{-3/2}+s^{-1}+s^{-1/2}$. The claims follow.
+\end{proof}
+
+\begin{corollary}[A necessary communication cost]
+\label{cor:witness}
+Let $M=d=K=s$, $R=s^2$, and $T=s^3$, with integer $s\ge2$. Then
+\[
+ \calR_{s,s,s^2,s}(G,B)=\Theta(GBs^{-1}).
+\]
+For the same $M,d,T$ with communication after every step, the minimax
+regret is $\Theta(GBs^{-3/2})$.
+\end{corollary}
+\begin{proof}
+With $K=s$, $D=\min\{s^3,s,s+1\}=s$. With $K=1$ and
+$R=s^3$, $D=\min\{s^3,s,2\}=2$. Apply Theorem~\ref{thm:main}.
+\end{proof}
+
+Independent learning already gives the upper bound in
+Corollary~\ref{cor:witness}. Its content is the matching lower bound:
+the $\sqrt s$ cost of intermittent communication cannot be removed by
+a different protocol in this adaptive model. This is distinct from
+the improvement in an upper-bound guarantee established in
+Corollary~\ref{cor:improvement}.
+
+\section{Upper bound: batching and independent learning}
+\label{sec:upper}
+
+The optimal upper bound is an envelope of three strategies. We first analyze the collaborative strategy, which keeps one center throughout a communication block, and then give the independent and zero-action alternatives.
+
+\subsection{Two-point smoothing and the second moment}
+
+For $\delta>0$ and a convex $G$-Lipschitz loss $f$, define
+\[
+ F_\delta(x)=\E_{V\sim\Unif(\B(1))}f(x+\delta V).
+\]
+The smoothed function averages over the ball, while the estimator samples a direction from the sphere. This standard two-point construction~\cite{ADX10,Shamir17} has the following properties.
+
+\begin{lemma}[Estimator identities]\label{lem:estimator}
+Let $U\sim\Unif(\Sph)$ and
+\[
+ g(x,U)=\frac d{2\delta}
+       \bigl(f(x+\delta U)-f(x-\delta U)\bigr)U.
+\]
+Then
+\begin{align}
+&f(x)\le F_\delta(x)\le f(x)+G\delta,\qquad
+ \norm{\nabla F_\delta(x)}\le G, \label{eq:smoothing}\\
+&\E g(x,U)=\nabla F_\delta(x),\qquad
+ \E\norm{g(x,U)}^2\le 2dG^2. \label{eq:moment}
+\end{align}
+The statements remain valid conditionally when $f$ and $x$ are chosen
+using past information, provided $U$ is fresh and independent of them.
+\end{lemma}
+\begin{proof}
+Convexity, Jensen's inequality, and Lipschitzness give
+\eqref{eq:smoothing}. Differentiation of the ball integral and the
+divergence theorem give
+\[
+ \nabla F_\delta(x)=\frac d\delta
+       \E_{U\sim\Unif(\Sph)} f(x+\delta U)U.
+\]
+Symmetry under $U\mapsto-U$ gives the unbiasedness identity.
+
+For completeness, the second-moment calculation uses the following
+sphere Poincar\'e inequality, with normalized surface measure:
+\begin{equation}
+ \E h(U)^2\le\frac1{d-1}\E\norm{\nabla_{\Sph}h(U)}^2
+ \quad(d\ge2,\ \E h(U)=0).                    \label{eq:poincare}
+\end{equation}
+One way to see its constant is to expand a smooth $h$ in spherical
+harmonics. A degree-$\ell$ harmonic is an eigenfunction of
+$-\Delta_{\Sph}$ with eigenvalue $\ell(\ell+d-2)$, as follows by
+writing the Euclidean Laplacian in polar coordinates. Integration by
+parts gives its contribution
+$\ell(\ell+d-2)\norm{h_\ell}_{L^2}^2$ to the Dirichlet integral.
+The constant component is absent and every remaining eigenvalue is at
+least $d-1$. Summing the orthogonal expansion proves
+\eqref{eq:poincare}. Polynomial restrictions are dense, and decomposing
+homogeneous polynomials into harmonic components yields the expansion;
+smooth approximation extends the inequality to Lipschitz functions.
+
+Apply \eqref{eq:poincare} to the odd, mean-zero function
+\[
+ h(u)=\frac{f(x+\delta u)-f(x-\delta u)}{2\delta}.
+\]
+It is $G$-Lipschitz as a function of $u$, so its tangential gradient has
+norm at most $G$. Therefore
+\[
+ \E\norm{g(x,U)}^2=d^2\E h(U)^2
+ \le\frac{d^2}{d-1}G^2\le2dG^2.
+\]
+For $d=1$, the estimator is a deterministic secant slope with absolute
+value at most $G$. Conditioning on the chosen function and center
+proves the conditional version.
+\end{proof}
+
+\subsection{Communication-block batching}
+
+Let $I_r=\{(r-1)K+1,\ldots,rK\}$. All workers use the same center
+$z_r\in\B(B)$ throughout $I_r$, starting from $z_1=0$. At each time and
+worker, independently sample a fresh sphere direction $U_t^m$ and
+simultaneously query
+\[
+ x_t^{m,1}=z_r+\delta U_t^m,\qquad
+ x_t^{m,2}=z_r-\delta U_t^m,
+ \qquad \delta=B/T.
+\]
+Compute the estimator $g_t^m$ of Lemma~\ref{lem:estimator}. At the next
+permitted communication, form
+\[
+ \bar g_r=\frac1{MK}\sum_{t\in I_r,m\in[M]}g_t^m,
+ \qquad
+ z_{r+1}=\Pi_{\B(B)}(z_r-\eta\bar g_r).
+\]
+No update or message is needed inside the communication block.
+
+Write
+\[
+ h_t^m=\nabla F_{t,\delta}^m(z_r),\quad
+ \xi_t^m=g_t^m-h_t^m,\quad
+ \bar h_r=\frac1{MK}\sum_{t\in I_r,m}h_t^m,\quad
+ \bar\xi_r=\bar g_r-\bar h_r.
+\]
+Condition on all past information and the adversary's current functions
+before revealing the fresh directions. Then $\E[\xi_t^m\mid\cdot]=0$,
+and the estimator errors are conditionally independent across workers.
+Errors from different times are orthogonal in $L^2$ by conditional
+centering. Thus
+\begin{align}
+ \E\norm{\bar\xi_r}^2&\le\frac{2dG^2}{MK},&
+ \E[\bar\xi_r\mid\text{block-start history}]&=0, \label{eq:block-noise}\\
+ \E\norm{\bar g_r}^2
+ &\le2G^2+\frac{4dG^2}{MK}.                 \label{eq:block-moment}
+\end{align}
+For the last inequality use $\norm{\bar h_r}\le G$ and
+$\norm{a+b}^2\le2\norm a^2+2\norm b^2$.
+The use of this inequality accounts for within-block adaptivity: future losses can depend on earlier estimator errors, so $\bar h_r$ and $\bar\xi_r$ need not be uncorrelated.
+
+The projected-gradient inequality~\cite{Zinkevich03} holds pathwise and simultaneously for every
+$u\in\B(B)$,
+\begin{equation}
+ \sum_{r=1}^R\ip{\bar g_r}{z_r-u}
+ \le \frac{B^2}{2\eta}+\frac\eta2
+          \sum_{r=1}^R\norm{\bar g_r}^2.    \label{eq:ogd}
+\end{equation}
+Indeed, expand
+$\norm{z_r-\eta\bar g_r-u}^2$ and use nonexpansiveness of projection;
+the squared distances telescope and $\norm{z_1-u}^2\le B^2$.
+
+\paragraph{Charging both queries.}
+The average queried loss satisfies the pointwise bound
+\begin{align}
+ \frac{f_t^m(z_r+\delta U_t^m)+f_t^m(z_r-\delta U_t^m)}2-f_t^m(u)
+ &\le F_{t,\delta}^m(z_r)-F_{t,\delta}^m(u)+2G\delta \notag\\
+ &\le \ip{h_t^m}{z_r-u}+2G\delta.         \label{eq:charged}
+\end{align}
+\paragraph{The random comparator.}
+Let $u^\star$ be a minimizer of the realized cumulative original losses
+over $\B(B)$. We may substitute this \emph{random} $u^\star$ in
+\eqref{eq:ogd}, because that inequality holds for every $u$ on each
+sample path. The correction from estimated to true gradients is
+\begin{equation}
+ \sum_r\ip{\bar h_r}{z_r-u^\star}
+ =\sum_r\ip{\bar g_r}{z_r-u^\star}
+ -\sum_r\ip{\bar\xi_r}{z_r}
+ +\ip{\sum_r\bar\xi_r}{u^\star}.          \label{eq:comparator-correction}
+\end{equation}
+The middle sum has expectation zero because each $z_r$ is fixed at the start of its block. The final term need not be centered: $u^\star$ can depend on all estimator errors. Its magnitude is controlled by
+\begin{equation}
+ \E\!\left[\sup_{u\in\B(B)}\ip{\sum_r\bar\xi_r}{u}\right]
+ = B\E\norm{\sum_r\bar\xi_r}
+ \le BG\sqrt{\frac{2dR}{MK}}.             \label{eq:terminal}
+\end{equation}
+The bound is uniform over every minimizer on each sample path, so no measurable choice of $u^\star$ is needed: one can equivalently take the supremum over $u\in\B(B)$ before taking expectations. This terminal martingale correction preserves the minimum inside the expectation in \eqref{eq:path-regret}.
+
+Combining \eqref{eq:block-moment}--\eqref{eq:terminal}, and taking
+\[
+ \eta=\frac{B}{G\sqrt{R(2+4d/(MK))}},
+\]
+gives the following bound for the average regret:
+\begin{align}
+ \operatorname{Reg}_{\rm batch}
+ &\le
+ GB\sqrt{\frac2R+\frac{4d}{MT}}
+ +GB\sqrt{\frac{2d}{MT}}+\frac{2GB}{T} \notag\\
+ &\le 6GB\sqrt{\frac1R+\frac d{MT}}.      \label{eq:batch-bound}
+\end{align}
+
+\subsection{The independent and trivial alternatives}
+
+Each worker can instead run projected online gradient descent for all
+$T$ steps with its own two-point estimates, $\delta=B/T$, and
+$\eta=B/(G\sqrt{2dT})$. Sum the $M$ pathwise projection inequalities.
+The initial potential divided by $MT$ is $B^2/(2\eta T)$ and the
+quadratic term in expectation is at most $\eta dG^2$.
+The predictable error pairings again have expectation zero.
+The single common random comparator contributes at most
+\[
+ \frac{B}{MT}\E\norm{\sum_{t,m}\xi_t^m}
+ \le GB\sqrt{\frac{2d}{MT}}.
+\]
+Consequently,
+\begin{equation}
+ \operatorname{Reg}_{\rm independent}
+ \le GB\sqrt{\frac{2d}{T}}+
+       GB\sqrt{\frac{2d}{MT}}+\frac{2GB}{T}
+ \le5GB\sqrt{\frac dT}.                  \label{eq:ind-bound}
+\end{equation}
+Finally, querying the zero point twice gives regret at most $GB$
+pointwise, by Lipschitzness and $\norm{u^\star}\le B$.
+Selecting in advance among these three methods according to the known
+parameters proves the upper bound in Theorem~\ref{thm:main} with $C=6$.
+All three protocols respect the simultaneous-query and communication rules. Their queries have norm at most $B+B/T$, so their sample-path regret has a uniform finite bound under every admissible adversary.
+
+\section{Tools for the lower bounds}\label{sec:tools}
+
+The constructions in the next two sections share three ingredients. A radial penalty controls losses outside the comparator ball. A posterior calculation tracks exactly what adaptive real-valued measurements reveal about a spherical direction. Finally, a martingale estimate converts the energy retained in each episode into a lower bound on the expected norm of the cumulative coefficient.
+
+\subsection{A differentiable penalty for unrestricted actions}
+
+Set $\gamma=G/2$ and, for $r\ge0$, define
+\begin{equation}
+ \rho_B(r)=
+ \begin{cases}
+  0, &0\le r\le B,\\
+  (r-B)^2/(2B), &B<r<2B,\\
+  r-3B/2, &r\ge2B,
+ \end{cases}
+ \qquad
+ \psi(x)=\gamma\rho_B(\norm{x}).          \label{eq:penalty}
+\end{equation}
+This function is convex and continuously differentiable, is zero on
+$\B(B)$, and is $\gamma$-Lipschitz. Its gradient is zero near the
+origin, so differentiability of the Euclidean norm at the origin is
+irrelevant. Moreover, $\rho_B(r)\ge r-3B/2$.
+
+For any $a\in\R^d$ with $\norm a\le\gamma$, the function
+\begin{equation}
+ f_a(x)=\ip a x+\psi(x)                  \label{eq:hard-loss}
+\end{equation}
+is differentiable, convex, and globally $G$-Lipschitz, and
+\begin{equation}
+ f_a(x)\ge-3GB/4\quad\text{for every }x\in\R^d.
+ \label{eq:bounded-below}
+\end{equation}
+On the comparator ball it is exactly linear. The penalty is fixed,
+public, and independent of every hidden direction. Giving its formula
+to the workers only strengthens the information available to them.
+
+\subsection{What adaptive scalar measurements reveal}
+
+\begin{lemma}[Adaptive linear measurements]\label{lem:posterior}
+Let $V\sim\Unif(\Sph)$ be independent of all initial side information, including the observer's random tape.
+An observer may choose each vector $q_i\in\R^d$ as an arbitrary measurable
+function of its preceding scalar measurements and side information,
+then observe $\ip V{q_i}$. Let
+$S=\spanop\{q_1,\ldots,q_q\}$ and let $P_S$ be orthogonal projection.
+Conditionally on the resulting transcript and side information, $P_SV$ is known and
+$(I-P_S)V$ is uniform on the centered sphere of radius
+$\sqrt{1-\norm{P_SV}^2}$ in $S^\perp$; a zero-radius sphere means a point mass at zero. In particular,
+\begin{equation}
+ \E[(I-P_S)V\mid\text{transcript}]=0.     \label{eq:post-center}
+\end{equation}
+For $q\le d$,
+\begin{equation}
+ \E\norm{(I-P_S)V}^2\ge1-\frac qd.       \label{eq:post-energy}
+\end{equation}
+The same statements hold for batches of vectors selected before any
+of their measurements are returned.
+\end{lemma}
+\begin{proof}
+For a fixed current transcript, decompose a new vector into its component
+in $S$ and its component in $S^\perp$. The former gives an already known
+scalar. If the latter is nonzero, its direction is fixed before the
+new residual measurement, so conditioning a uniform sphere on that
+one coordinate leaves a uniform sphere in its orthogonal complement.
+If it is zero, the transcript contains no new information. Induction
+gives the claimed conditional law. Adaptivity adds no extra constraints:
+the selected vectors are themselves functions of the previous transcript.
+
+To prove the energy bound, first consider exactly $q$ linearly
+independent measurement directions, orthogonalizing each against its
+predecessors. At rank $r$, if the residual squared radius is $Q_r$, the
+next removed squared coordinate has conditional expectation
+$Q_r/(d-r)$. Hence
+\[
+ \E[Q_{r+1}\mid\text{rank-}r\text{ transcript}]
+ =Q_r\frac{d-r-1}{d-r},\qquad Q_0=1.
+\]
+Iterating gives $\E Q_q=(d-q)/d$.
+If there are redundant queries or an adaptively chosen smaller rank,
+append measurable orthogonal completion queries until rank $q$ is
+reached. This can only decrease the residual energy and proves
+\eqref{eq:post-energy}. For a simultaneous batch, reveal the prechosen
+vectors one at a time; they are also legal choices in this more
+informative sequential measurement experiment.
+\end{proof}
+
+\begin{lemma}[Equivalence of residual responses and linear measurements]
+\label{lem:transcript}
+Suppose that, before a time step, $S$ is the span of all the observer's
+previous query points in the current episode. The two responses are
+values of
+\[
+ x\longmapsto \gamma\ip{(I-P_S)V}{x}+\psi(x)
+\]
+at a pair selected simultaneously. Starting with $S=\{0\}$, its whole
+local value transcript is equivalent to the corresponding adaptive
+linear measurements of $V$ at all its query points. In particular,
+before a time step the conditional mean of $(I-P_S)V$ is zero.
+\end{lemma}
+\begin{proof}
+Inductively, the preceding responses determine $P_SV$. For a newly
+queried point $x$, subtract the known $\psi(x)$, divide by $\gamma$,
+and add the known scalar $\ip{P_SV}{x}$. The result is precisely
+$\ip Vx$. Conversely, knowledge of $P_SV$ and $\ip Vx$ reconstructs the
+response. Apply Lemma~\ref{lem:posterior}.
+Both points must be chosen before either new scalar is observed to
+conclude that both charged linear losses have conditional mean zero
+against the same current residual.
+\end{proof}
+
+\subsection{From episode energy to expected cumulative norm}
+
+\begin{lemma}[A first-moment bound for vector martingales]\label{lem:mart}
+Let $(X_b)_{b=1}^N$ be vector martingale differences for a filtration
+$(\mathcal F_b)$, and let deterministic numbers $a_b>0$ satisfy
+\[
+ \norm{X_b}\le a_b,\qquad
+ \E[\norm{X_b}^2\mid\mathcal F_{b-1}]\ge a_b^2/4.
+\]
+Then
+\begin{equation}
+ \E\norm{\sum_{b=1}^N X_b}
+ \ge\frac1{16}\sqrt{\sum_{b=1}^Na_b^2}.  \label{eq:mart-lower}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Put $S_n=\sum_{b\le n}X_b$ and $A=\sum_ba_b^2$. Orthogonality gives
+\[
+ \E\norm{S_N}^2\ge A/4,\qquad
+ \E\norm{S_{b-1}}^2\le\sum_{i<b}a_i^2.
+\]
+For fixed $s=S_{b-1}$, expand $\norm{s+X_b}^4$. The term
+$4\norm s^2\ip s{X_b}$ has conditional expectation zero. The other
+mixed terms are at most
+\[
+ 6a_b^2\norm s^2+4a_b^3\norm s
+ \le8a_b^2\norm s^2+2a_b^4.
+\]
+Including $\norm{X_b}^4\le a_b^4$ yields
+\[
+ \E[\norm{S_b}^4\mid\mathcal F_{b-1}]
+ \le\norm{S_{b-1}}^4+8a_b^2\norm{S_{b-1}}^2+3a_b^4.
+\]
+Summing and using the preceding second-moment upper bound gives
+\[
+ \E\norm{S_N}^4
+ \le8\sum_ba_b^2\sum_{i<b}a_i^2+3\sum_ba_b^4
+ \le4A^2.
+\]
+Finally, H\"older's inequality in the form
+\[
+ \E Z\ge\frac{(\E Z^2)^{3/2}}{(\E Z^4)^{1/2}}
+ \quad (Z\ge0)
+\]
+with $Z=\norm{S_N}$ gives \eqref{eq:mart-lower}.
+\end{proof}
+
+\section{Communication lower bound from local information}
+\label{sec:local}
+
+During a communication block, each worker can use only its local measurements. The following adversary exploits this restriction while correlating the remaining directions across workers.
+
+\begin{proposition}[Communication obstruction]\label{prop:local}
+Every randomized protocol in \eqref{eq:model} has an admissible adaptive
+adversary for which
+\begin{equation}
+ \operatorname{Reg}\ge
+ \frac{GB}{64\sqrt2}\sqrt{\frac{\min\{K,d\}}{T}}.
+ \label{eq:local-lower}
+\end{equation}
+\end{proposition}
+\begin{proof}
+Define
+\[
+ L_{\rm loc}=\min\{K,\lceil d/4\rceil\}.
+\]
+Partition each of the $R$ communication blocks into consecutive episodes
+of length $L_{\rm loc}$, except for a possibly shorter final episode.
+Thus no communication occurs in the interior of an episode. Write
+their lengths as $\ell_1,\ldots,\ell_N$.
+
+At the start of episode $b$, sample a fresh
+$V_b\sim\Unif(\Sph)$, independent of all previous randomness and of the
+algorithm's private or shared random tapes. At local time
+$j\in\{1,\ldots,\ell_b\}$ let
+\[
+ S_{b,j}^m=\spanop\{x_{b,i}^{m,1},x_{b,i}^{m,2}:1\le i<j\},
+\qquad
+ a_{b,j}^m=\gamma(I-P_{S_{b,j}^m})V_b,
+\]
+and use
+\begin{equation}
+ f_{b,j}^m(x)=\ip{a_{b,j}^m}{x}+\psi(x).
+ \label{eq:local-adversary}
+\end{equation}
+The adversary uses only its fresh direction and \emph{strictly previous}
+played points. It never inspects a current query pair or current random
+coin. The function belongs to the required class by
+\eqref{eq:hard-loss}--\eqref{eq:bounded-below}.
+
+Represent all algorithmic randomization, including shared randomness,
+by a tape $W$ independent of the adversary's directions. For analysis
+only, condition on $W$ and on every earlier episode's hidden direction.
+This fixes all initial worker states for the current episode without
+changing the uniform prior of $V_b$.
+Because no communication occurs during the episode and
+\eqref{eq:local-adversary} at worker $m$ uses only that worker's earlier
+queries, its transcript is the experiment in
+Lemma~\ref{lem:transcript}.
+
+Let $\mathcal H_{b,j-1}^m$ contain this initial side information and
+worker $m$'s local transcript before the current pair.
+The current residual has conditional mean zero given
+$\mathcal H_{b,j-1}^m$. Since the full algorithmic tape is included for
+analysis, both simultaneously selected points are measurable with
+respect to this sigma field. Therefore
+\begin{equation}
+ \E\bigl[f_{b,j}^m(x_{b,j}^{m,k})\mid\mathcal H_{b,j-1}^m\bigr]
+ =\psi(x_{b,j}^{m,k})\ge0,\qquad k=1,2.
+ \label{eq:nonnegative-charged}
+\end{equation}
+The adversarial rule itself does not use the tape.
+
+This conclusion does not require integrability of the query norms.
+For every fixed finite point, integration over the residual gives the
+finite value $\psi(x)$. The lower bound
+$f_{b,j}^m(x)\ge-3GB/4$ then justifies iterated expectation in the
+extended sense. Thus arbitrary heavy-tailed or unbounded actions
+cannot invalidate the argument.
+
+Before local time $j$, the worker has at most $2(j-1)$ scalar
+measurements. Our episode length ensures
+\[
+ 2(j-1)\le2(\lceil d/4\rceil-1)<d/2.
+\]
+Lemma~\ref{lem:posterior} therefore gives, conditional on the initial
+side information,
+\begin{equation}
+ \E\norm{(I-P_{S_{b,j}^m})V_b}^2\ge\frac12.
+ \label{eq:local-residual-energy}
+\end{equation}
+Define the episode's aggregate linear coefficient
+\[
+ X_b=\sum_{j=1}^{\ell_b}\sum_{m=1}^Ma_{b,j}^m,\qquad
+ a_b=\gamma M\ell_b.
+\]
+Then $\norm{X_b}\le a_b$. Also,
+\[
+ \ip{X_b}{V_b}
+ =\gamma\sum_{j,m}\norm{(I-P_{S_{b,j}^m})V_b}^2.
+\]
+By \eqref{eq:local-residual-energy},
+$\E[\ip{X_b}{V_b}\mid\text{initial side information}]\ge a_b/2$.
+Since $\norm{V_b}=1$, Cauchy--Schwarz and Jensen give
+\begin{equation}
+ \E[\norm{X_b}^2\mid\text{initial side information}]\ge a_b^2/4.
+ \label{eq:episode-energy}
+\end{equation}
+
+Each residual has expectation zero after averaging its local posterior.
+Consequently,
+$\E[X_b\mid W,V_1,\ldots,V_{b-1}]=0$.
+Thus $X_b$ is a martingale difference for
+$\mathcal F_b=\sigma(W,V_1,\ldots,V_b)$.
+\emph{This centering is at episode boundaries.}
+We do not assert centering of a worker's coefficient given the entire
+global transcript within the episode: other workers may have learned
+information it does not possess.
+
+Because $\psi$ vanishes on the comparator ball,
+\[
+ \min_{\norm u\le B}\sum_{b,j,m}f_{b,j}^m(u)
+ =-B\norm{\sum_bX_b}.
+\]
+Equations \eqref{eq:nonnegative-charged} and
+\eqref{eq:mart-lower} now imply
+\begin{equation}
+ \operatorname{Reg}\ge
+ \frac{B}{MT}\E\norm{\sum_bX_b}
+ \ge\frac{GB}{32T}\sqrt{\sum_b\ell_b^2}. \label{eq:episode-regret}
+\end{equation}
+
+For integers $K\ge L\ge1$, splitting $K$ into pieces of length $L$
+and a remainder gives a sum of squared lengths at least $KL/2$:
+there are $\lfloor K/L\rfloor$ full pieces and
+$\lfloor K/L\rfloor\ge K/(2L)$. Hence
+\[
+ \sum_b\ell_b^2\ge\frac{TL_{\rm loc}}2
+ \ge\frac{T\min\{K,d\}}8.
+\]
+Substitute into \eqref{eq:episode-regret} to obtain
+\eqref{eq:local-lower}.
+\end{proof}
+
+\section{Dimension lower bound from pooled information}
+\label{sec:global}
+
+The second adversary removes all previously measured directions, even those held at other workers. It therefore yields a lower bound for a stronger information model in which all past feedback is pooled after every step.
+
+\begin{proposition}[Dimension obstruction, including saturation]
+\label{prop:global}
+Every randomized protocol in \eqref{eq:model} has an admissible adaptive adversary for which
+\begin{equation}
+ \operatorname{Reg}\ge
+ \frac{GB}{64\sqrt2}
+ \sqrt{\frac{\min\{T,d/M\}}{T}}.
+ \label{eq:global-lower}
+\end{equation}
+This lower bound holds even if all past scalar observations are shared
+after every time step.
+\end{proposition}
+\begin{proof}
+Let
+\[
+ L_{\rm glob}=\min\{T,\lceil d/(4M)\rceil\},
+\]
+and partition the whole horizon into consecutive episodes of this
+length and a possible shorter remainder. These episodes need not align
+with the communication blocks.
+
+For each episode $b$, draw a fresh uniform sphere direction $V_b$.
+Before its local time $j$, define the \emph{global} subspace
+\[
+ S_{b,j}^{\rm glob}
+ =\spanop\{x_{b,i}^{m,k}:i<j,\ m\in[M],\ k\in\{1,2\}\}.
+\]
+Use the same coefficient at every worker:
+\begin{equation}
+ a_{b,j}^m=\gamma(I-P_{S_{b,j}^{\rm glob}})V_b,
+ \qquad
+ f_{b,j}^m(x)=\ip{a_{b,j}^m}{x}+\psi(x).
+ \label{eq:global-adversary}
+\end{equation}
+This is again a nonanticipating rule based only on past query points.
+
+Give a hypothetical central observer all previous query pairs and
+responses, as well as the algorithmic tape. Before a time step, its
+information is precisely the corresponding adaptive linear-measurement
+transcript of $V_b$: the response-equivalence argument of
+Lemma~\ref{lem:transcript} works with the global subspace.
+All $2M$ current query points are selected without any current response,
+so every current charged linear term has conditional mean zero even
+for this stronger observer.
+
+At local time $j$, the number of preceding scalar measurements is at most
+$2M(j-1)$, and
+\[
+ 2M(j-1)\le2M(\lceil d/(4M)\rceil-1)<d/2.
+\]
+The residual-energy lower bound is therefore again $1/2$.
+With $X_b=\sum_{j,m}a_{b,j}^m$ and $a_b=\gamma M\ell_b$,
+the same calculations as in \eqref{eq:episode-energy} prove the
+conditional second-moment bound, the bounded increment, and the
+episode-boundary martingale property. Nonnegative expected queried
+losses and the comparator identity consequently give
+\[
+ \operatorname{Reg}\ge
+ \frac{GB}{32T}\sqrt{\sum_b\ell_b^2}.
+\]
+Finally,
+\[
+ \sum_b\ell_b^2\ge\frac{TL_{\rm glob}}2
+ \ge\frac{T\min\{T,d/M\}}8,
+\]
+which proves \eqref{eq:global-lower}. In particular, when $d$ is of
+order $MT$ or larger, the lower bound is of constant scale.
+\end{proof}
+
+\section{Proof of the minimax lower bound}
+\label{sec:combine}
+
+Let
+\[
+ A=\min\{K,d\},\qquad H=\min\{T,d/M\},\qquad
+ D=\min\{T,d,K+d/M\}.
+\]
+We claim
+\begin{equation}
+ D\le2\max\{A,H\}.                       \label{eq:algebra}
+\end{equation}
+If $d\le K$, then $D=d=A$ since $K\le T$.
+If $d>K$ and $d/M\ge T$, then $H=T\ge D$.
+Otherwise $A=K$, $H=d/M$, and
+$D\le K+d/M=A+H\le2\max\{A,H\}$.
+
+For each fixed protocol, both propositions supply admissible adversaries,
+so its worst-case regret is at least the larger of their lower bounds.
+Taking the infimum over protocols, \eqref{eq:algebra} gives
+\[
+ \calR_{M,K,R,d}(G,B)
+ \ge\frac{GB}{64\sqrt2}
+       \sqrt{\frac{\max\{A,H\}}T}
+ \ge\frac{GB}{128}\sqrt{\frac DT}.
+\]
+This proves the claimed lower bound, with the conservative constant $c=1/256$ stated in Theorem~\ref{thm:main}.
+Together with Section~\ref{sec:upper}, this proves
+Theorem~\ref{thm:main}. If $B=0$, querying $0$ twice gives zero regret
+against the only comparator, and zero losses give a zero lower bound.
+If $G=0$, all losses are constant in their argument and regret is
+identically zero.
+
+\section{Discussion}
+\label{sec:discussion}
+
+The minimax rate separates the roles of local learning, communication,
+and total information. Low-dimensional problems can be learned
+independently before a communication becomes useful. At intermediate
+dimensions, the obstruction is the period during which useful
+observations remain local. At larger dimensions, the total number of
+scalar measurements becomes decisive, and collaboration achieves the
+pooled-information scale until the constant-regret cap is reached.
+The optimal upper bound needs only a choice between independent
+learning and block batching, together with the zero-action safeguard.
+
+The two lower bounds also explain why a single centralized information
+argument is insufficient. Such an argument detects the $d/(MT)$ term
+but misses information that exists elsewhere in the network and is
+temporarily unavailable to a worker. The local construction retains
+this distinction throughout each episode and establishes martingale
+centering only at episode boundaries. Its continuous hidden directions
+and exact transcript calculation apply directly to exact real-valued
+feedback and arbitrary measurable randomized protocols.
+
+The characterization is specific to a fixed periodic communication
+schedule, simultaneous charged query pairs, unrestricted heterogeneity,
+and a nonanticipating adaptive adversary. Choosing the second query
+after the first response changes the conditional-centering argument.
+Making other workers' within-block actions public changes the local
+information structure. Likewise, oblivious or stochastic losses,
+restrictions on communication bits, adaptive communication schedules,
+and additional smoothness or heterogeneity assumptions define different
+problems. The present lower bounds do not establish matching rates for
+those variants. Determining which parts of the local-information
+obstruction survive under such changes is a natural direction for
+further work.
+
+\begin{thebibliography}{9}
+
+\bibitem{ADX10}
+Alekh Agarwal, Ofer Dekel, and Lin Xiao.
+\newblock Optimal algorithms for online convex optimization with
+multi-point bandit feedback.
+\newblock In \emph{Proceedings of the 23rd Annual Conference on Learning
+Theory}, pages 28--40, 2010.
+\newblock \url{https://oferdekel.github.io/pdf/2010AgarwalDeXi.pdf}.
+
+\bibitem{DGSX12}
+Ofer Dekel, Ran Gilad-Bachrach, Ohad Shamir, and Lin Xiao.
+\newblock Optimal distributed online prediction using mini-batches.
+\newblock \emph{Journal of Machine Learning Research}, 13(6):165--202, 2012.
+\newblock \url{https://jmlr.org/papers/v13/dekel12a.html}.
+
+\bibitem{PWSS23}
+Kumar Kshitij Patel, Lingxiao Wang, Aadirupa Saha, and Nathan Srebro.
+\newblock Federated online and bandit convex optimization.
+\newblock In \emph{Proceedings of the 40th International Conference on
+Machine Learning}, volume 202 of \emph{Proceedings of Machine Learning
+Research}, pages 27439--27460, 2023.
+\newblock \url{https://proceedings.mlr.press/v202/patel23a.html}.
+
+\bibitem{Shamir17}
+Ohad Shamir.
+\newblock An optimal algorithm for bandit and zero-order convex
+optimization with two-point feedback.
+\newblock \emph{Journal of Machine Learning Research}, 18(52):1--11, 2017.
+\newblock \url{https://jmlr.org/papers/v18/16-632.html}.
+
+\bibitem{WBSS21}
+Blake E. Woodworth, Brian Bullins, Ohad Shamir, and Nathan Srebro.
+\newblock The min-max complexity of distributed stochastic convex
+optimization with intermittent communication.
+\newblock In \emph{Proceedings of the 34th Conference on Learning Theory},
+volume 134 of \emph{Proceedings of Machine Learning Research},
+pages 4386--4437, 2021.
+\newblock \url{https://proceedings.mlr.press/v134/woodworth21a.html}.
+
+\bibitem{Zinkevich03}
+Martin Zinkevich.
+\newblock Online convex programming and generalized infinitesimal
+gradient ascent.
+\newblock In \emph{Proceedings of the 20th International Conference on
+Machine Learning}, pages 928--936, 2003.
+\newblock \url{https://www.cs.cmu.edu/afs/cs.cmu.edu/Web/People/maz/publications/ICML03.pdf}.
+
+\end{thebibliography}
+\end{document}

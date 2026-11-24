@@ -1,0 +1,936 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{microtype,booktabs,tabularx,array,enumitem}
+\usepackage[round,authoryear]{natbib}
+\usepackage{xcolor,hyperref}
+\definecolor{linkblue}{HTML}{174B71}
+\hypersetup{colorlinks=true,linkcolor=linkblue,citecolor=linkblue,
+  urlcolor=linkblue,pdftitle={Optimal Randomized Complexity of Fixed Non-Euclidean Proximal Oracles},
+  pdfauthor={Colombo Team}}
+\urlstyle{same}
+\setlength{\emergencystretch}{2em}
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{1.25em}
+\setlist[enumerate]{leftmargin=*,itemsep=3pt,topsep=5pt}
+\setlist[itemize]{leftmargin=*,itemsep=3pt,topsep=5pt}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\PP}{\mathbb P}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\ip}[2]{\left\langle#1,#2\right\rangle}
+\newcommand{\F}{\mathcal F}
+\newcommand{\D}{\mathcal D}
+\newcommand{\Qrand}{Q_{\mathrm{rand}}}
+\newcommand{\Qdet}{Q_{\mathrm{det}}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\supp}{supp}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\title{Optimal Randomized Complexity of\\
+Fixed Non-Euclidean Proximal Oracles}
+\author{Colombo Team\\[3pt]
+  \texttt{colombo.2026@outlook.com}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study convex minimization using an exact proximal oracle that returns
+$\argmin_x\{f(x)+\lambda\norm{x-c}_p^s\}$ at a queried center $c$, where
+$2<p<s<\infty$ and $\lambda>0$ are fixed. The objective is finite and convex
+and has a minimizer of $p$-norm at most $R$. We prove a lower bound for
+arbitrary randomized algorithms, allowing unbounded query centers and any
+measurable final output. For every query budget $T$, a finite distribution
+of objectives forces error
+$\Omega_s(\lambda R^s/(T+1)^{s+s/p-1})$ with probability at least $11/12$;
+dimension $O_p((T+1)^{p+3})$ suffices. The proof combines randomly hidden
+coordinates with a common radial term and an exact truncation identity for
+proximal responses. Together with the deterministic upper bound of Adil,
+Bullins, Jambulapati, and Sidford, this establishes
+$\Theta_{p,s}(1+(\lambda R^s/\eps)^{1/(s+s/p-1)})$ query complexity in
+sufficiently large dimension. Thus the known rate remains optimal without
+support or span restrictions and without a logarithmic loss. We also verify
+that the upper bound uses only the fixed-coefficient proximal replies,
+including for nonsmooth objectives.
+\end{abstract}
+
+\noindent\textbf{Keywords:} oracle complexity; convex optimization;
+non-Euclidean proximal oracles; randomized lower bounds; acceleration.
+\par\medskip
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:introduction}
+
+A proximal oracle solves a regularized optimization problem at each query.
+The central complexity question is how many such solves are needed to
+minimize the original objective. We consider the non-Euclidean oracle
+\begin{equation}\label{eq:intro-oracle}
+P_f(c)=\argmin_{x\in\R^d}
+\bigl\{f(x)+\lambda\norm{x-c}_p^s\bigr\},
+\qquad 2<p<s<\infty,
+\end{equation}
+where the coefficient $\lambda>0$ is fixed throughout the interaction.
+The algorithm chooses the center $c$ and receives only the minimizer.
+The unknown objective is finite and convex, and at least one of its
+minimizers lies in the $p$-norm ball of radius $R$ about the origin.
+
+For this oracle, \citet[Theorem~4]{ABJS} give a deterministic algorithm
+whose query complexity is
+\begin{equation}\label{eq:intro-rate}
+O_{p,s}\!\left(1+\kappa^{1/\rho}\right),
+\qquad
+\kappa=\frac{\lambda R^s}{\eps},
+\qquad
+\rho=s+\frac{s}{p}-1.
+\end{equation}
+Their lower bound establishes the same accuracy exponent for algorithms
+whose iterates satisfy a support restriction. A general oracle algorithm,
+however, can probe any coordinate, choose centers of arbitrarily large
+norm, and output any measurable function of its transcript and random seed.
+Whether these additional freedoms improve the rate is a separate question.
+
+We show that the rate in \eqref{eq:intro-rate} remains optimal for arbitrary
+randomized algorithms in sufficiently large dimension. The lower bound
+uses a finite distribution of functions fixed before the algorithm's
+random seed is drawn. It therefore applies to adaptive randomized queries
+in the usual black-box model, with no restriction on the support, span,
+or norm of the query centers. A separate argument covers arbitrary final
+outputs. The dimension needed for a $T$-query lower bound is
+$O_p((T+1)^{p+3})$; all constants and quantifiers are given in
+Section~\ref{sec:model}.
+
+\subsection{Comparison with prior work}\label{sec:related}
+
+Table~\ref{tab:comparison} compares the results for the same exact
+proximal oracle and the common parameter range $2<p<s<\infty$.
+The known upper rate and the support-restricted lower rate are due to
+\citet{ABJS}; our contribution is the lower bound for unrestricted
+randomized algorithms. The upper bound holds in every dimension, and
+our lower bound is proved under an explicit dimension condition.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{@{}p{0.22\linewidth}Yp{0.24\linewidth}@{}}
+\toprule
+Result & Algorithmic scope & Query bound\\
+\midrule
+\citet{ABJS}\newline Theorem~4
+& Deterministic upper bound, in every dimension
+& $O_{p,s}(1+\kappa^{1/\rho})$\\
+\citet{ABJS}\newline Theorem~5
+& Lower bound for proximal zero-respecting iterates
+& $\Omega_{p,s}(\kappa^{1/\rho})$\\
+Theorems~\ref{thm:budget} and~\ref{thm:matching}
+& Lower bound for arbitrary randomized algorithms and arbitrary outputs
+& $\Omega_{p,s}(1+\kappa^{1/\rho})$\\
+\bottomrule
+\end{tabularx}
+\caption{Comparison for the fixed oracle \eqref{eq:intro-oracle}.
+The lower bounds are high-dimensional statements. Our sufficient condition
+is $d\ge\lceil C_p(1+\kappa^{(p+3)/\rho})\rceil$.
+The support restriction in the second row is stated explicitly in
+\eqref{eq:prior-support}.}
+\label{tab:comparison}
+\end{table}
+
+The formal restriction in \citet[Definition~22]{ABJS} is
+\begin{equation}\label{eq:prior-support}
+\supp(c_t)\subseteq\bigcup_{j<t}\supp(P_f(c_j)).
+\end{equation}
+Requiring a query to lie in the span of earlier replies implies
+\eqref{eq:prior-support}, but the support condition permits a larger
+algorithm class. We use the latter condition when describing the prior
+result. In contrast, our lower bound imposes neither condition and
+does not require the output to be an iterate.
+
+The construction builds on the shifted maximum of affine functions and
+the radial extension used by \citet[Definition~24 and Eq.~(4)]{ABJS}.
+Randomized hiding arguments for convex optimization in general norms
+were developed by \citet{DG} for local oracles. Their framework supplies
+important context, but a local-oracle lower bound does not directly
+control \eqref{eq:intro-oracle}: its reply is the solution of a global
+minimization problem. The exact equality of proximal replies established
+in Lemma~\ref{lem:exact} addresses this distinction.
+
+Two other related oracle models help delimit the comparison.
+\citet{CJJJLST} study a Euclidean ball optimization oracle, with a query
+returning a minimizer over a ball around its center, and obtain matching
+bounds up to logarithmic factors.
+\citet{CGMR} develop non-Euclidean accelerated methods and lower bounds
+for high-order smooth convex optimization, including randomized and
+parallel local-oracle lower bounds. These results concern local derivative
+information or fixed-radius ball minimization. Neither directly yields a
+lower bound for the fixed exact proximal oracle studied here.
+
+\subsection{Proof overview}\label{sec:overview}
+
+The hard objective is the maximum of $T+1$ affine functions placed on
+randomly chosen signed coordinates, together with a common radial term.
+The affine offsets increase along the sequence. A query can expose the
+next affine function, but, with high probability, its remaining hidden
+coordinates are too small to expose the later ones. Three features make
+this argument valid for the unrestricted exact oracle.
+
+First, the hard objectives are globally Lipschitz. Their proximal replies
+therefore remain within a fixed distance of their centers, even when the
+centers are unbounded. For centers near the minimizer ball, the increasing
+offsets keep all omitted affine functions below a retained one at the
+truncated proximal minimizer. For distant centers, the radial term has
+the same effect. Global majorization then proves that the full and
+truncated objectives have exactly the same proximal minimizer. This
+identity holds for the complete real-valued reply vector.
+
+Second, adaptivity is handled through a surrogate transcript defined for
+every sampled objective. At time $t$, the surrogate answers using only
+the first $t$ hidden coordinates. Each query is consequently measurable
+with respect to the previously exposed prefix. Probability bounds are
+conditioned on that prefix, and the actual and surrogate transcripts are
+coupled afterwards. This order preserves the uniform distribution of the
+unseen coordinates.
+
+Third, one hidden coordinate remains after the last query. The radial
+term rules out outputs outside the radius-$R$ ball. A counting argument
+then shows that an arbitrary output inside the ball has a small component
+on the last hidden coordinate with high probability, which forces a
+nonzero objective gap.
+
+The resulting exponent follows from three scales. With $m=T+1$, the
+offset spacing is $\alpha\asymp R/m^{1+1/p}$. Restricting the proximal
+displacement to a constant multiple of $\alpha$ requires a Lipschitz
+scale $\beta\asymp_s\lambda\alpha^{s-1}$. The comparator improves the
+objective by order $\beta R/m^{1/p}$, giving
+\[
+\frac{\beta R}{m^{1/p}}
+\asymp_s\frac{\lambda R^s}{m^{(s-1)(1+1/p)+1/p}}
+=\frac{\lambda R^s}{m^\rho}.
+\]
+Random coordinate hiding determines the sufficient dimension, while
+these scales determine the accuracy exponent.
+
+\paragraph{Organization.}
+Section~\ref{sec:model} states the model and main results.
+Section~\ref{sec:construction} constructs the hard family and proves
+exact proximal locality. Section~\ref{sec:randomization} establishes
+the randomized lower bound. Section~\ref{sec:upper} verifies the
+compatibility of the known upper bound with our oracle and derives the
+matching minimax rate. Section~\ref{sec:discussion} discusses the scope
+and the remaining dimension question.
+
+\section{Oracle model and main results}\label{sec:model}
+
+Throughout, $2<p<s<\infty$ and $\lambda,R>0$ are fixed.
+We write $p^*=p/(p-1)$ for the dual exponent, $e_j$ for the $j$-th
+coordinate vector, and $[d]=\{1,\ldots,d\}$.
+The notation $O_{p,s}$, $\Omega_{p,s}$, and $\Theta_{p,s}$ suppresses
+positive constants depending only on $p$ and $s$.
+
+\subsection{Functions, queries, and success criterion}
+
+For each integer $d\ge1$, let
+\begin{equation}\label{eq:function-class}
+\F_{p,R}^{d}
+=\bigl\{f:\R^d\to\R:\ f\text{ is convex and }
+\argmin f\cap\{x:\norm{x}_p\le R\}\ne\varnothing\bigr\}.
+\end{equation}
+The functions in this class are finite and continuous; no smoothness or
+uniform Lipschitz constant is assumed. Write $f^\star=\min_x f(x)$.
+The algorithm knows $p,s,\lambda,R,d$, and the target accuracy $\eps>0$.
+Its only access to the unknown objective is through
+\begin{equation}\label{eq:oracle}
+P_f(c)=\argmin_{x\in\R^d}
+\bigl\{f(x)+\lambda\norm{x-c}_p^s\bigr\}.
+\end{equation}
+This minimizer exists and is unique: $f$ is bounded below, while the
+regularizer is coercive and strictly convex. Each call returns the
+minimizer itself, without a separate function value or subgradient.
+The same coefficient $\lambda$ is used in every call.
+
+A randomized algorithm has an independent random seed $U$. Its query
+centers and final output are measurable functions of $U$ and the
+previous oracle replies. Centers may lie anywhere in $\R^d$, and the
+final output need not be a query or a reply. We charge only oracle
+calls, and the query budget is a worst-case bound over instances and
+random seeds.
+
+Let $\Qrand(\eps;d)$ be the smallest budget for which an algorithm
+returns $\widehat x$ satisfying
+\begin{equation}\label{eq:success}
+\PP_U\{f(\widehat x)-f^\star\le\eps\}\ge\frac23
+\qquad\text{for every }f\in\F_{p,R}^{d}.
+\end{equation}
+Define $\Qdet(\eps;d)$ analogously, requiring deterministic success on
+every instance. We suppress $p,s,\lambda,R$ in this notation and use
+$\rho$ and $\kappa$ as defined in \eqref{eq:intro-rate}. In particular,
+$\kappa$ is a scale ratio, not a condition number.
+
+\subsection{A distributional lower bound}
+
+For an integer $T\ge0$, define
+\begin{equation}\label{eq:dimension-T}
+\begin{split}
+D_p(T)
+&=T+\left\lceil
+12\bigl(T(T+1)+1\bigr)64^p(T+1)^{p+1}
+\right\rceil,\\
+c_s&=\frac{s}{4\cdot64^{s-1}},
+\qquad
+\Delta_T=c_s\frac{\lambda R^s}{(T+1)^\rho}.
+\end{split}
+\end{equation}
+Thus $D_p(T)=O_p((T+1)^{p+3})$.
+
+\begin{theorem}[Unrestricted randomized lower bound]\label{thm:budget}
+Let $T\ge0$ be an integer and $d\ge D_p(T)$. There is a finite
+distribution $\D_{T,d}$ supported on $\F_{p,R}^{d}$ such that every
+randomized algorithm $\mathcal A$ making at most $T$ queries satisfies
+\begin{equation}\label{eq:distributional}
+\PP_{f\sim\D_{T,d},\,U}
+\bigl\{f(\mathcal A^{P_f}(U))-f^\star>\Delta_T\bigr\}
+\ge\frac{11}{12}.
+\end{equation}
+The distribution is independent of the algorithm and its seed.
+Consequently, for each such algorithm there is a fixed
+$f\in\F_{p,R}^{d}$ on which its failure probability at accuracy
+$\Delta_T$ is at least $11/12$.
+\end{theorem}
+
+The distribution is given explicitly in \eqref{eq:hard-family}.
+The conclusion concerns a single function drawn before any queries are
+made. In particular, it does not use an adversary that changes the
+objective during the interaction.
+
+\subsection{Matching query complexity}
+
+\begin{theorem}[High-dimensional minimax complexity]\label{thm:matching}
+Let $C_p=2+12\cdot64^p$. If
+\begin{equation}\label{eq:dimension-corollary}
+d\ge\left\lceil C_p\bigl(1+\kappa^{(p+3)/\rho}\bigr)\right\rceil,
+\end{equation}
+then
+\begin{equation}\label{eq:matching}
+\Qrand(\eps;d)=\Theta_{p,s}\!\left(1+\kappa^{1/\rho}\right),
+\qquad
+\Qdet(\eps;d)=\Theta_{p,s}\!\left(1+\kappa^{1/\rho}\right).
+\end{equation}
+The deterministic upper bound holds for every $d\ge1$.
+\end{theorem}
+
+The dimension condition is sufficient for our construction and is not
+claimed to be necessary. The theorem establishes a matching accuracy
+dependence in growing dimension; it does not characterize minimax
+complexity at each fixed dimension. The upper bound is the acceleration
+result of \citet{ABJS}; Section~\ref{sec:upper} explains why its
+implementation conforms to \eqref{eq:oracle} for the entire function
+class \eqref{eq:function-class}.
+
+\section{A hard family with exact proximal locality}\label{sec:construction}
+
+\subsection{Construction and basic properties}
+
+Fix a query budget $T\ge0$, assume $d\ge D_p(T)$, and let $m=T+1$.
+We use the parameters
+\begin{equation}\label{eq:parameters}
+\alpha=\frac{R}{8m^{1+1/p}},
+\qquad
+\delta=\frac{\alpha}{8},
+\qquad
+\beta=s\lambda\delta^{s-1},
+\qquad
+\theta=\frac{\alpha}{8R}.
+\end{equation}
+In particular,
+\begin{equation}\label{eq:B}
+B:=\theta^{-p}=64^p m^{p+1},
+\qquad
+\theta\le\frac1{64},
+\qquad
+\delta\le\frac R{64}.
+\end{equation}
+The offset $\alpha$ separates successive affine functions, and $\delta$
+will bound the distance from a query center to its proximal reply.
+
+Choose $(J_1,\ldots,J_m)$ uniformly from the ordered samples of $m$
+distinct coordinates in $[d]$. Independently, choose
+$\sigma_1,\ldots,\sigma_m$ uniformly from $\{-1,+1\}$. Set
+\begin{equation}\label{eq:hard-family}
+f_{J,\sigma}(x)
+=\beta\max\left\{
+\max_{1\le i\le m}\{\sigma_i x_{J_i}-i\alpha\},\,
+\norm{x}_p-R
+\right\}.
+\end{equation}
+We call the common term $\norm{x}_p-R$ the \emph{radial wall}.
+It belongs to the objective and places no restriction on query centers.
+The resulting finite distribution is $\D_{T,d}$.
+For $1\le t\le m$, define the prefix truncation
+\begin{equation}\label{eq:truncated}
+f^{[t]}(x)
+=\beta\max\left\{
+\max_{1\le i\le t}\{\sigma_i x_{J_i}-i\alpha\},\,
+\norm{x}_p-R
+\right\}.
+\end{equation}
+Then $f^{[m]}=f_{J,\sigma}$ and $f^{[t]}\le f^{[m]}$ everywhere.
+
+\begin{lemma}[Membership in the function class and a comparison point]\label{lem:legal}
+Every $f_{J,\sigma}$ is finite, convex, coercive, and globally
+$\beta$-Lipschitz with respect to $\norm{\cdot}_p$. Every minimizer has $p$-norm
+strictly smaller than $R$. Moreover,
+\begin{equation}\label{eq:optimal-value}
+f_{J,\sigma}^\star\le-\frac{\beta R}{2m^{1/p}}.
+\end{equation}
+The same Lipschitz property holds for every truncated function $f^{[t]}$.
+\end{lemma}
+
+\begin{proof}
+Each affine function in the maximum has Lipschitz constant one, as does
+$\norm{x}_p-R$. The maximum is convex and one-Lipschitz, proving the
+corresponding claims after multiplication by $\beta$.
+The inequality $f_{J,\sigma}(x)\ge\beta(\norm{x}_p-R)$ implies coercivity.
+Since $\alpha<R$,
+\[
+f_{J,\sigma}(0)=-\beta\alpha<0,
+\qquad
+\norm{x}_p\ge R\ \Longrightarrow\ f_{J,\sigma}(x)\ge0.
+\]
+Continuity and coercivity give attainment, and all minimizers lie strictly
+inside the radius-$R$ ball.
+
+Consider
+\begin{equation}\label{eq:comparator}
+\bar x=-\frac{R}{2m^{1/p}}\sum_{i=1}^m\sigma_i e_{J_i}.
+\end{equation}
+The coordinates are distinct, so $\norm{\bar x}_p=R/2$. Every affine face at
+$\bar x$ is at most $-R/(2m^{1/p})$, while the radial wall is $-R/2$,
+which is also at most $-R/(2m^{1/p})$. Evaluating the maximum gives
+\eqref{eq:optimal-value}.
+\end{proof}
+
+\subsection{Uniform displacement and exact truncation}
+
+\begin{lemma}[Uniform displacement]\label{lem:displacement}
+If $h$ is a finite convex $\beta$-Lipschitz function and
+$z=\argmin_x\{h(x)+\lambda\norm{x-c}_p^s\}$, then
+\begin{equation}\label{eq:displacement}
+\norm{z-c}_p\le\left(\frac{\beta}{s\lambda}\right)^{1/(s-1)}.
+\end{equation}
+In particular, the proximal reply of every $f^{[t]}$ is within distance
+$\delta$ of its center, irrespective of the size of that center.
+\end{lemma}
+
+\begin{proof}
+Every $v\in\partial h(z)$ has $\norm{v}_{p^*}\le\beta$: applying the
+subgradient inequality in any direction and the Lipschitz inequality bounds
+the dual pairing in both signs by $\beta$ times the direction's norm.
+If $z=c$ there is nothing to show. Otherwise Fermat's rule gives
+\[
+v=-s\lambda\norm{z-c}_p^{s-p}J_p(z-c)\in\partial h(z),
+\qquad (J_p(u))_j=|u_j|^{p-2}u_j.
+\]
+Its dual norm is
+\[
+s\lambda\norm{z-c}_p^{s-p}\norm{J_p(z-c)}_{p^*}
+=s\lambda\norm{z-c}_p^{s-1},
+\]
+since $\norm{J_p(u)}_{p^*}=\norm{u}_p^{p-1}$. Comparing this with $\beta$
+proves \eqref{eq:displacement}.
+\end{proof}
+
+\begin{lemma}[Equality after truncation]\label{lem:exact}
+Fix $1\le t\le m$ and $c\in\R^d$. Suppose
+\begin{equation}\label{eq:coordinate-event}
+|c_{J_i}|\le\theta\max\{R,\norm{c}_p\}
+\quad\text{for every }i=t,\ldots,m.
+\end{equation}
+Then the exact proximal replies satisfy
+\begin{equation}\label{eq:exact-reply}
+P_{f^{[m]}}(c)=P_{f^{[t]}}(c).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let $z=P_{f^{[t]}}(c)$ and $C=\norm{c}_p$. Lemma~\ref{lem:displacement}
+gives $\norm{z-c}_p\le\delta$. We show that every omitted affine face lies
+below one of the retained terms at $z$.
+
+\emph{Case 1: $C\le2R$.}
+The coordinate condition and $\theta=\alpha/(8R)$ imply
+$|c_{J_i}|\le\alpha/4$ for all $i\ge t$. Therefore
+\[
+|z_{J_i}|\le\frac{\alpha}{4}+\delta=\frac{3\alpha}{8}
+\quad(i\ge t).
+\]
+The retained $t$-th affine face obeys
+\[
+\sigma_tz_{J_t}-t\alpha\ge-t\alpha-\frac{3\alpha}{8},
+\]
+whereas every omitted face $i\ge t+1$ obeys
+\[
+\sigma_i z_{J_i}-i\alpha
+\le\frac{3\alpha}{8}-(t+1)\alpha
+=-t\alpha-\frac{5\alpha}{8}.
+\]
+The retained face exceeds every omitted face by at least $\alpha/4$.
+
+\emph{Case 2: $C>2R$.}
+For every omitted face, the coordinate condition gives
+\[
+\sigma_i z_{J_i}-i\alpha\le|z_{J_i}|\le\theta C+\delta.
+\]
+The radial wall, which is retained in every truncation, satisfies
+\[
+\norm{z}_p-R\ge C-\delta-R.
+\]
+Its difference from the upper bound on any omitted face is at least
+\begin{align*}
+(1-\theta)C-R-2\delta
+&>(1-2\theta)R-2\delta\\
+&\ge\frac{15R}{16}>0,
+\end{align*}
+where \eqref{eq:B} was used. This case includes centers of arbitrarily
+large norm.
+
+In either case $f^{[m]}(z)=f^{[t]}(z)$. Since $f^{[m]}\ge f^{[t]}$ globally,
+for every $x$ we have
+\begin{align*}
+f^{[m]}(x)+\lambda\norm{x-c}_p^s
+&\ge f^{[t]}(x)+\lambda\norm{x-c}_p^s\\
+&\ge f^{[t]}(z)+\lambda\norm{z-c}_p^s\\
+&=f^{[m]}(z)+\lambda\norm{z-c}_p^s.
+\end{align*}
+Uniqueness of the proximal minimizer proves \eqref{eq:exact-reply}.
+\end{proof}
+
+\begin{remark}[Exact responses]
+The identity in Lemma~\ref{lem:exact} holds for the full real-valued
+response vector. The argument uses equality of the two objectives at the
+truncated minimizer and global majorization elsewhere. It therefore
+controls the exact global minimization in the oracle without any
+finite-precision assumption.
+\end{remark}
+
+\section{Adaptive indistinguishability and the lower bound}\label{sec:randomization}
+
+\subsection{A surrogate transcript}
+
+Fix a deterministic algorithm with at most $T$ queries. If it stops early,
+retain its output and pad the run with queries at zero until the budget is
+exactly $T$. This does not change its output or its guarantee.
+
+Define a \emph{surrogate experiment} on the entire probability space of
+$(J,\sigma)$ as follows. At time $t=1,\ldots,T$, let $c_t$ be the query
+chosen by the algorithm from the preceding surrogate replies, and answer with
+\begin{equation}\label{eq:surrogate}
+z_t=P_{f^{[t]}}(c_t).
+\end{equation}
+Let $y$ be its final output and let
+\[
+\mathcal H_t=\sigma(J_1,\ldots,J_t,\sigma_1,\ldots,\sigma_t).
+\]
+The query $c_t$ is $\mathcal H_{t-1}$-measurable, the reply $z_t$ is
+$\mathcal H_t$-measurable, and $y$ is $\mathcal H_T$-measurable. The
+surrogate functions need not equal the full function away from the points
+used in Lemma~\ref{lem:exact}.
+
+\subsection{Uniform control of hidden coordinates}
+
+For any vector $c$, define its set of large coordinates
+\[
+\mathcal B(c)=\{j:|c_j|>\theta\max\{R,\norm{c}_p\}\}.
+\]
+A deterministic counting inequality gives
+\begin{equation}\label{eq:count}
+|\mathcal B(c)|
+\le\frac{\norm{c}_p^p}{\theta^p\max\{R,\norm{c}_p\}^p}
+\le\theta^{-p}=B.
+\end{equation}
+This bound is uniform over all norms and all directions of $c$.
+
+Let $E_t$ be the event
+\[
+E_t=\bigl\{|(c_t)_{J_i}|\le\theta\max\{R,\norm{c_t}_p\}
+\text{ for every }i=t,\ldots,m\bigr\}.
+\]
+Conditional on $\mathcal H_{t-1}$, the remaining coordinates are a uniform
+ordered sample without replacement from $d-t+1$ positions. Hence
+\begin{equation}\label{eq:stage-prob}
+\PP(E_t^c\mid\mathcal H_{t-1})
+\le\frac{(m-t+1)B}{d-t+1}.
+\end{equation}
+
+The final output needs its own event:
+\begin{equation}\label{eq:output-event}
+H=\{\norm{y}_p\ge R\}\ \cup\ \{|y_{J_m}|\le\alpha/8\}.
+\end{equation}
+Conditional on $\mathcal H_T$, either $\norm{y}_p\ge R$ and $H$ is
+certain, or $\norm{y}_p<R$. In the latter case at most
+\[
+\left(\frac{8R}{\alpha}\right)^p=B
+\]
+coordinates of $y$ have absolute value larger than $\alpha/8$. The final
+coordinate $J_m$, with $m=T+1$, is uniform on the remaining $d-T$ positions.
+Therefore
+\begin{equation}\label{eq:output-prob}
+\PP(H^c\mid\mathcal H_T)\le\frac{B}{d-T}.
+\end{equation}
+
+Let $G=H\cap\bigcap_{t=1}^T E_t$. Taking expectations in
+\eqref{eq:stage-prob} and \eqref{eq:output-prob}, and then applying a union
+bound, gives
+\begin{align}
+\PP(G^c)
+&\le B\sum_{t=1}^T\frac{m-t+1}{d-t+1}+\frac{B}{d-T}\notag\\
+&\le\frac{(Tm+1)B}{d-T}\le\frac1{12}.
+\label{eq:good-prob}
+\end{align}
+The last inequality is exactly the dimension requirement
+\eqref{eq:dimension-T}.
+
+The conditioning in this calculation is essential. Each probability
+bound is conditioned only on the revealed coordinate and sign prefix,
+not on the earlier events $E_1,\ldots,E_{t-1}$. Those events can reveal
+information about the unexposed coordinates. Defining the surrogate
+experiment on the whole sample space allows us to establish the
+prefix-conditional bounds first and intersect the events afterwards.
+
+\subsection{Coupling the transcripts}
+
+On $\bigcap_{t=1}^T E_t$, the actual transcript obtained from the one fixed
+function $f^{[m]}$ equals the surrogate transcript. This follows by induction:
+identical earlier replies imply identical next queries, and
+Lemma~\ref{lem:exact} then gives identical next replies. Consequently, on $G$
+the actual output equals the surrogate output $y$ as well.
+
+\subsection{Error of the final output}
+
+\begin{lemma}[The final hidden coordinate]\label{lem:terminal}
+On the event $H$ of \eqref{eq:output-event},
+\begin{equation}\label{eq:terminal-gap}
+f_{J,\sigma}(y)-f_{J,\sigma}^\star
+>\frac{\beta R}{4m^{1/p}}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+If $\norm{y}_p\ge R$, the wall gives $f_{J,\sigma}(y)\ge0$, and
+\eqref{eq:optimal-value} gives a gap of at least
+$\beta R/(2m^{1/p})$.
+
+Otherwise $|y_{J_m}|\le\alpha/8$. The last affine face yields
+\[
+f_{J,\sigma}(y)
+\ge\beta(\sigma_m y_{J_m}-m\alpha)
+\ge-\beta(m+1/8)\alpha.
+\]
+Combining this with \eqref{eq:optimal-value} and the choice of $\alpha$,
+\begin{align*}
+f_{J,\sigma}(y)-f_{J,\sigma}^\star
+&\ge\frac{\beta R}{m^{1/p}}
+\left(\frac12-\frac18-\frac1{64m}\right)\\
+&\ge\frac{23}{64}\frac{\beta R}{m^{1/p}}
+>\frac{\beta R}{4m^{1/p}}.
+\end{align*}
+No property of $y$ other than its norm and one hidden coordinate is used.
+\end{proof}
+
+\subsection{Completing the distributional argument}
+
+\begin{proof}[Proof of Theorem~\ref{thm:budget}]
+For a fixed deterministic algorithm, \eqref{eq:good-prob}, equality of the
+actual and surrogate transcripts on $G$, and
+Lemma~\ref{lem:terminal} show that the probability of error exceeding
+$\beta R/(4m^{1/p})$ is at least $11/12$. The parameters satisfy
+\begin{align*}
+\frac{\beta R}{4m^{1/p}}
+&=\frac{s\lambda}{4}
+\left(\frac{R}{64m^{1+1/p}}\right)^{s-1}
+\frac{R}{m^{1/p}}\\
+&=\frac{s}{4\cdot64^{s-1}}
+\frac{\lambda R^s}{m^{(s-1)(1+1/p)+1/p}}
+=\Delta_T,
+\end{align*}
+because $(s-1)(1+1/p)+1/p=s+s/p-1=\rho$.
+
+For a randomized algorithm, condition on any fixed seed. All of the preceding
+inequalities hold with the same distribution $\D_{T,d}$ and the same constants,
+regardless of that seed. Integrating over the independent seed proves
+\eqref{eq:distributional}. Since $\D_{T,d}$ is finite, at least one function
+in its support has failure probability at least the average $11/12$. The selected instance is fixed for that randomized algorithm and does
+not depend on the realized seed.
+\end{proof}
+
+\section{The upper bound and matching complexity}\label{sec:upper}
+
+The lower bound is self-contained. To obtain the matching characterization,
+we use the acceleration theorem of \citet{ABJS}. This section verifies
+the information supplied by our oracle, the use of a known radius bound,
+and the constant-query regime.
+
+\subsection{Implementing the known acceleration method}
+
+\begin{proposition}[Upper bound of \citet{ABJS} in the present model]
+\label{prop:upper}
+For every $d\ge1$, the oracle \eqref{eq:oracle} suffices to achieve
+\begin{equation}\label{eq:upper}
+\Qdet(\eps;d)
+\le C_{p,s}\left(1+\left(\frac{\lambda R^s}{\eps}\right)^{1/\rho}\right)
+\end{equation}
+for a constant $C_{p,s}>0$ depending only on $p$ and $s$.
+\end{proposition}
+
+\begin{proof}[Verification of oracle and radius compatibility]
+We use \citet[Theorems~4 and~14, Algorithm~2, and Appendix~C]{ABJS}.
+Let $z=P_f(c)$ and $u=z-c$. The proximal optimality condition gives
+the explicitly computable subgradient
+\begin{equation}\label{eq:recover-g}
+g=-s\lambda\norm{u}_p^{s-p}J_p(u)\in\partial f(z),
+\qquad
+(J_p(u))_j=|u_j|^{p-2}u_j.
+\end{equation}
+If $u=0$, then $0\in\partial f(z)$ and $z$ is a global minimizer.
+Otherwise, set $r=\norm{u}_p$ and $\eta=s\lambda r^{s-p}$. Then
+\begin{equation}\label{eq:gms}
+\ip{g}{u}=-\eta r^p,
+\qquad
+\norm{g}_{p^*}=\eta r^{p-1},
+\qquad
+r=\left(\frac{\eta}{s\lambda}\right)^{1/(s-p)}.
+\end{equation}
+These identities satisfy the exact generalized Monteiro--Svaiter
+conditions used in \citet[Lemma~39]{ABJS}, with movement parameter
+$\mu^s=s\lambda$. The algorithm uses the returned point, its associated
+parameter $\eta$, and linear terms involving $g$. Each is determined
+by the proximal reply. Its potential proof uses the subgradient
+inequality for the objective, so \eqref{eq:recover-g} also makes the
+argument valid for finite nonsmooth convex functions. Function values
+are not used to choose queries or to stop the method. The changing
+estimates of $\eta$ in that algorithm leave the coefficient $\lambda$
+of every proximal call unchanged.
+
+For the radius bound, normalize the objective as
+\begin{equation}\label{eq:normalization}
+h(v)=\frac{f(Rv)}{\lambda R^s}.
+\end{equation}
+It has a minimizer $v^\star$ of norm at most one. Its unit-coefficient
+proximal oracle is simulated exactly by
+$P_h(u)=R^{-1}P_f(Ru)$. With mirror function
+$\psi(v)=\norm{v}_p^p$ and initial point zero, the initial Bregman
+potential is $\Psi_0=\norm{v^\star}_p^p\le1$.
+Thus the phase analysis in \citet[Appendix~C.3]{ABJS} can use the
+known upper bound $1$ in both its parameter schedule and its potential
+budget; it does not need the actual minimizer distance.
+
+For clarity, this substitution can be read directly from the phase
+bounds. Put $D=ps-p+s=p\rho$ and $\mu^s=s$. During a phase starting
+at a positive accumulated weight $A$, take the parameter estimate
+\begin{equation}\label{eq:phase-parameter}
+\bar\eta=A^{-(s-p)(p+1)/D}\mu^{sp^2/D}.
+\end{equation}
+The two types of iterations in the cited potential analysis require at
+most
+\begin{equation}\label{eq:phase-count}
+K_p\left(1+(A\bar\eta)^{1/p}
++\frac{\mu^{sp/(s-p)}}{A\bar\eta^{s/(s-p)}}\right)
+\le K_{p,s}(1+A^{p/D})
+\end{equation}
+calls to double the weight. Here the numerator of the last term uses
+$\Psi_0\le1$. Both nonconstant terms have exponent $p/D$ in $A$.
+
+The initialization also has a uniform bound. If $z=P_h(0)\ne0$,
+convexity and \eqref{eq:recover-g} give
+$\ip{J_p(z)}{z-v^\star}\le0$, whence
+$\norm{z}_p\le\norm{v^\star}_p\le1$ by H\"older's inequality.
+The first oracle parameter is therefore at most $s$.
+Algorithm~2 of \citet{ABJS}, initialized with parameter estimate one,
+then has first positive weight at least $3^{-p}/s$.
+If $z=0$, the objective is already minimized.
+Summing \eqref{eq:phase-count} over the doubling phases until the
+weight reaches $\kappa$ gives
+$O_{p,s}(1+\kappa^{p/D})$ calls. The potential guarantee is
+$h(x)-h^\star\le\Psi_0/A\le1/A$, so stopping at $A\ge\kappa$
+attains error at most $1/\kappa$ for $h$, or $\eps$ for $f$.
+Since $p/D=1/\rho$, this gives \eqref{eq:upper}.
+\end{proof}
+
+\subsection{The constant-query regime}
+
+If $\eps\ge\lambda R^s$, one query is sufficient: for any minimizer
+$x^\star$ with $\norm{x^\star}_p\le R$,
+\begin{equation}\label{eq:one-query}
+f(P_f(0))+\lambda\norm{P_f(0)}_p^s
+\le f(x^\star)+\lambda\norm{x^\star}_p^s
+\le f^\star+\lambda R^s.
+\end{equation}
+The additive constant in \eqref{eq:matching} is also necessary because
+the function class has no uniform scale bound on the objective.
+
+\begin{lemma}[At least one query is necessary]\label{lem:zero}
+For every $\eps,\lambda,R>0$ and every $d\ge1$,
+$\Qrand(\eps;d)\ge1$.
+\end{lemma}
+
+\begin{proof}
+Choose $M>\eps/R$ and consider
+\[
+f_+(x)=M|x_1-R|,
+\qquad f_-(x)=M|x_1+R|.
+\]
+Both are finite convex functions with a minimizer at norm $R$. Their
+$\eps$-sublevel sets are disjoint, because the corresponding intervals for
+$x_1$ have half-width $\eps/M<R$. A zero-query output has the same
+distribution on both instances. Its success probabilities on the two
+instances therefore sum to at most one, so one of them has success probability
+at most $1/2$.
+\end{proof}
+
+Combining Lemma~\ref{lem:zero} with \eqref{eq:one-query} gives the exact
+constant-query conclusion
+\[
+\Qrand(\eps;d)=\Qdet(\eps;d)=1
+\qquad\text{if }\eps\ge\lambda R^s,
+\]
+in every dimension $d\ge1$.
+
+\subsection{From the budget bound to the minimax rate}
+
+\begin{proof}[Proof of Theorem~\ref{thm:matching}]
+Proposition~\ref{prop:upper} gives the upper bound. For the lower bound, write
+\[
+b=\left(\frac{c_s}{2}\right)^{1/\rho},
+\qquad A=b\kappa^{1/\rho},
+\qquad N=\lfloor A\rfloor.
+\]
+Here $0<b<1$. If $N\ge2$, take $T=N-1$. Then
+\[
+\Delta_T=c_s\frac{\lambda R^s}{N^\rho}
+\ge c_s\frac{\lambda R^s}{A^\rho}=2\eps.
+\]
+Theorem~\ref{thm:budget} rules out a $T$-query algorithm with success
+probability $2/3$ at accuracy $\eps$. Thus
+$\Qrand(\eps;d)\ge N\ge A/2$, provided $d\ge D_p(N-1)$.
+
+This dimension requirement follows from \eqref{eq:dimension-corollary}:
+since $N\ge2$ and $N\le A\le\kappa^{1/\rho}$,
+\begin{align*}
+D_p(N-1)
+&\le \left\lceil(1+12\cdot64^p)N^{p+3}\right\rceil\\
+&\le \left\lceil(1+12\cdot64^p)\kappa^{(p+3)/\rho}\right\rceil.
+\end{align*}
+
+If $N<2$, then $A<2$, and Lemma~\ref{lem:zero} gives
+$\Qrand(\eps;d)\ge1>A/2$. In both cases,
+\[
+\Qrand(\eps;d)
+\ge\max\left\{1,\frac b2\kappa^{1/\rho}\right\}
+\ge\frac b4\left(1+\kappa^{1/\rho}\right).
+\]
+Finally $\Qrand\le \Qdet$, so the same lower bound and the
+deterministic upper bound prove both statements in \eqref{eq:matching}.
+\end{proof}
+
+\section{Discussion}\label{sec:discussion}
+
+Theorem~\ref{thm:matching} shows that unrestricted randomization does
+not improve the accuracy exponent of fixed non-Euclidean proximal
+optimization in sufficiently large dimension. The conclusion includes
+arbitrary query centers and outputs, and it holds for exact responses.
+The central step is the truncation identity: although the oracle solves
+a global optimization problem, a common radial wall and a uniform
+displacement bound make its reply depend only on a prefix of the hidden
+affine functions with high probability.
+
+The dimension bound has a transparent origin. Each query has at most
+$B=64^p(T+1)^{p+1}$ coordinates above the normalized hiding threshold.
+Controlling all query--hidden-coordinate pairs contributes a further
+factor of order $(T+1)^2$. This yields the sufficient dimension
+$O_p((T+1)^{p+3})$ without changing the objective-error exponent.
+Table~\ref{tab:examples} illustrates the resulting scales for several
+fixed choices of $p$ and $s$.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+$p$ & $s$ & $\rho$ & Query complexity & Sufficient dimension\\
+\midrule
+$3$ & $4$ & $13/3$ & $\Theta(\eps^{-3/13})$ & $O(\eps^{-18/13})$\\
+$3$ & $6$ & $7$ & $\Theta(\eps^{-1/7})$ & $O(\eps^{-6/7})$\\
+$4$ & $8$ & $9$ & $\Theta(\eps^{-1/9})$ & $O(\eps^{-7/9})$\\
+\bottomrule
+\end{tabular}
+\caption{Small-accuracy consequences for $\lambda=R=1$.
+The last column gives a sufficient construction size with an appropriately
+large constant; it is not a necessary dimension threshold.}
+\label{tab:examples}
+\end{table}
+
+Several questions remain outside the present result. The proof does
+not determine the smallest dimension supporting the lower bound, or
+the minimax complexity when $d$ stays fixed as $\eps$ decreases.
+It also treats $p$ and $s$ as fixed and does not optimize constants
+as these parameters vary. Finally, the model counts exact proximal
+calls; it does not measure the computational cost of implementing
+one such call or impose additional smoothness on the objective.
+Reducing the dimension needed for unrestricted lower bounds is a
+natural next problem.
+
+\begin{thebibliography}{9}
+
+\bibitem[Adil et~al.(2026)Adil, Bullins, Jambulapati, and Sidford]{ABJS}
+Deeksha Adil, Brian Bullins, Arun Jambulapati, and Aaron Sidford.
+\newblock Convex optimization with $p$-norm oracles.
+\newblock In \emph{Proceedings of the 37th International Conference on
+Algorithmic Learning Theory}, volume 313 of \emph{Proceedings of Machine
+Learning Research}, pages 1--38, 2026.
+\newblock \url{https://proceedings.mlr.press/v313/adil26b.html}.
+
+\bibitem[Carmon et~al.(2020)Carmon, Jambulapati, Jiang, Jin, Lee, Sidford, and Tian]{CJJJLST}
+Yair Carmon, Arun Jambulapati, Qijia Jiang, Yujia Jin, Yin Tat Lee,
+Aaron Sidford, and Kevin Tian.
+\newblock Acceleration with a ball optimization oracle.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+volume 33, pages 19052--19063, 2020.
+\newblock \url{https://arxiv.org/abs/2003.08078}.
+
+\bibitem[Contreras et~al.(2025)Contreras, Guzm\'an, and Mart\'inez-Rubio]{CGMR}
+Juan Pablo Contreras, Crist\'obal Guzm\'an, and David Mart\'inez-Rubio.
+\newblock Non-Euclidean high-order smooth convex optimization.
+\newblock Extended abstract in \emph{Proceedings of the 38th Annual
+Conference on Learning Theory}, volume 291 of \emph{Proceedings of
+Machine Learning Research}, page 1330, 2025.
+\newblock Full version: arXiv:2411.08987.
+\newblock \url{https://proceedings.mlr.press/v291/contreras25a.html}.
+\newblock \url{https://arxiv.org/abs/2411.08987}.
+
+\bibitem[Diakonikolas and Guzm\'an(2020)]{DG}
+Jelena Diakonikolas and Crist\'obal Guzm\'an.
+\newblock Lower bounds for parallel and randomized convex optimization.
+\newblock \emph{Journal of Machine Learning Research}, 21(5):1--31, 2020.
+\newblock \url{https://jmlr.org/papers/v21/19-771.html}.
+
+\end{thebibliography}
+\end{document}

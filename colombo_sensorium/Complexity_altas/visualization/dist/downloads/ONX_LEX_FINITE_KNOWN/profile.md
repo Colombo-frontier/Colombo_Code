@@ -6,7 +6,7 @@ Online learning and bandits
 
 The learner faces multiple reward objectives ordered by priority. Each round selects one arm and observes its complete reward vector. The comparator is the lexicographically optimal arm. Known tradeoff coefficients control improvements in lower-priority objectives relative to losses in higher-priority ones; performance is retained as signed regret for each objective.
 
-**Status.** Bounds missing
+**Status.** Logarithmic gap; Bounds missing
 
 **TASK tags.** formulation: Onx lex finite known; task family: Online bandit
 
@@ -20,7 +20,7 @@ The learner faces multiple reward objectives ordered by priority. Each round sel
 
 **METRIC tags.** criterion: Signed vector regret
 
-**GUARANTEE tags.** randomness: Algorithm private seed; randomness: Oracle samples
+**GUARANTEE tags.** mode: Expectation; quantifier: Algorithm before instance; randomness: Algorithm private seed; randomness: Oracle samples
 
 **RESOURCE tags.** accounting: Joint coordinates retained; measure: Native feedback; measure: Rounds; setup: Initialization included
 
@@ -74,11 +74,51 @@ Exploration, initialization, and system identification all consume the stated on
 
 ### Algorithm views and success guarantees
 
+#### Main
+
 All measurable causal randomized algorithms obeying the stated information protocol are allowed. No linear-span, zero-support, or specific iteration restriction is added implicitly. Internal computation and memory are unrestricted except for the explicit computation, communication, or privacy constraints.
 
 Private randomization is allowed, with the seed independent of the fixed instance and future external samples. Internal arithmetic, memory, linear spans, and iteration forms are unrestricted except for the stated computation, communication, privacy, and within-round interaction limits.
 
 These are signed cumulative regrets for individual objectives. No primary-objective tie indicator or positive part is applied. The stated tradeoff controls all objectives simultaneously with probability at least $1-\delta_{\mathrm{conf}}$, uniformly over the specified instance class. This vector guarantee is not automatically a scalarized regret bound.
+
+#### Two objectives: simultaneous expected signed regret
+
+All measurable randomized causal policies may use K,T and the supplied tradeoff bound lambda. No mean reward or optimal arm is known.
+
+$$
+\forall\nu:\quad\max_{i\le2}\mathbb E_\nu R_i(T)\le r
+$$
+
+Expected signed coordinate regret is controlled simultaneously; The expected signed-regret criterion is distinct from the high-probability criterion.
+
+Task: Minimize the worst-instance simultaneous expected signed coordinate regret $\max_{i\in\{1,2\}}\mathbb E_\nu R_i(T)$ for two lexicographic objectives with a supplied tradeoff upper bound.
+
+Model: The public action set is $\mathcal X=[K]$ with $K\ge2$ and the discrete metric $D(x,y)=\mathbf1\{x\ne y\}$.
+
+Model: There are exactly two fixed mean functions $\mu^1,\mu^2$, each 1-Lipschitz in D and each with oscillation at most one. Common additive offsets may differ between the two coordinates and are unrestricted; the gaps, local tradeoff, and regret are invariant under these offsets.
+
+Model: The primary optimum set is $\mathcal X_1^*=\operatorname{argmax}_{x\in\mathcal X}\mu^1(x)$, and a lexicographic optimum $x^*\in\operatorname{argmax}_{x\in\mathcal X_1^*}\mu^2(x)$ exists. Primary ties are permitted.
+
+Model: The finite local tradeoff is $\lambda_*=\inf\{b\ge0:\mu^2(x)-\mu^2(x^*)\le b[\mu^1(x^*)-\mu^1(x)]\ \forall x\in\mathcal X\}$. A finite upper bound $\lambda\ge\lambda_*\ge0$ is supplied to the policy.
+
+Oracle: At round t, choose one arm $X_t\in\mathcal X$ using past observations and independent internal randomness, then receive both coordinates $(Y_t^1,Y_t^2)$. Conditional on the past and current arm, $\mathbb E[\exp(\theta(Y_t^i-\mu^i(X_t)))\mid\mathcal H_{t-1},X_t]\le\exp(\theta^2/2)$ for all real theta and i=1,2. Cross-coordinate independence is not required. No unselected-arm feedback, same-round second pull, or historical requery is provided.
+
+Oracle: Public inputs are K,T, the fact m=2, and the finite supplied upper bound lambda. No external confidence parameter is required by this expected-regret view.
+
+Oracle: Mean functions, the primary-optimal arm set, and the lexicographic optimum are hidden.
+
+Output: Output the executed causal arm trajectory; each round contributes to both signed coordinate regrets against the same lexicographic optimum.
+
+Metric: Define $R_i(T)=\sum_t[\mu^i(x^*)-\mu^i(X_t)]$ for i=1,2. The comparison uses $\ell(\pi,\nu)=\max_{i\in\{1,2\}}\mathbb E_\nu R_i(T)$.
+
+Metric: Take the expectation of each signed coordinate regret first and then the maximum over the two coordinates. This is not $\mathbb E\max_iR_i(T)$, a positive-part regret, a weighted sum, or a high-probability threshold. Secondary signed regret may be negative; primary regret is nonnegative.
+
+Resource: One selected-arm pull is made per round. The fixed horizon T is the reward-query budget N=T, and exactly 2T scalar reward coordinates are observed. All exploration and initialization pulls are included.
+
+Resource: Internal arithmetic and storage are unrestricted and are not reward observations.
+
+**Budget convention.** fixed_horizon
 
 ## 2. Notation and parameters
 
@@ -166,6 +206,8 @@ The quantity $N=T$ counts arm pulls. Each pull returns the current arm’s m obj
 
 #### Q1 - native performance
 
+**View.** Main
+
 $$
 R_i(T)=T\mu_i(x^\star)-\sum_{t=1}^{T}\mu_i(x_t),\qquad i=1,\ldots,m.
 $$
@@ -174,9 +216,25 @@ $$
 
 **Optimization direction.** minimize
 
+#### Q2 - minimax metric resource quantity
+
+**View.** Two objectives: simultaneous expected signed regret
+
+$$
+\mathfrak M_{T,K}(\lambda)=\inf_{\pi(\lambda)}\sup_{\nu:\lambda_*\le\lambda}\max_{i\le2}\mathbb E_\nu R_i(T)
+$$
+
+**Scope.** The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+**Optimization direction.** minimize
+
+**Resource contract.** expression: $T$; description: Each played round and its prescribed feedback are charged.
+
 ### R1 - SUPPORTED
 
 **Region.** Finite $K$; known $\lambda\ge\lambda_\star$; arbitrary $\delta_{\mathrm{conf}}$; simultaneous guarantees for all vector coordinates.
+
+**Views.** Main
 
 **Quantity.** Q1
 
@@ -192,19 +250,41 @@ $$
 \begin{gathered}R_i(T)\le16\Lambda_i(\lambda)\sqrt{\alpha_TKT},\\ \Lambda_i(\lambda)=\sum_{j=0}^{i-1}\lambda^j,\qquad \alpha_T=4\log\!\left(\frac{mKT}{\delta_{\mathrm{conf}}}\right).\end{gathered}
 $$
 
+### R2 - Two-objective supplied-envelope phase diagram
+
+**Region.** $K,T\ge2$, exactly two objectives, and public $\lambda\ge0$ with $\lambda_*\le\lambda$. Finite arm count K. The upper strategy uses reward-coordinate differences, so common additive shifts allowed by the existing profile do not change its decisions or guarantee.
+
+**Views.** Two objectives: simultaneous expected signed regret
+
+**Quantity.** Q2
+
+**Resource.** Each played round and its prescribed feedback are charged.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B3
+
+$$
+\Omega\!\left(\min\{T,\sqrt{(1\vee\lambda)(K-1)T},(K-1)^{1/3}T^{2/3}\}\right)
+$$
+
+**Upper bound.** B2
+
+$$
+\widetilde O\!\left(\min\{T,\sqrt{(1\vee\lambda)KT},K^{1/3}T^{2/3}\}\right)
+$$
+
+**Gap or comparison.** Only logarithmic factors in the displayed parameters remain.
+
 ## 4. Bounds and supporting evidence
-
-The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
-
-**Conditions.** The quantity $K$ is finite, and $\lambda\ge\lambda_*$ is known. The stated guarantees hold simultaneously for $i=1,\ldots,m$ with probability at least $1-\delta_{\mathrm{conf}}$.; The quantity $R_i(T)=T\mu_i(x^\star)-\sum_{t=1}^T\mu_i(x_t)$ is signed regret for objective $i$. The factor $\Lambda_i$ is an explicit geometric sum, not a logarithm of the horizon.; Multiple arms may maximize the primary objective. This upper bound does not prove the catalog's proposed lower bound for unknown tradeoffs with exact ties.
-
-**Oracle mapping.** Retain the specified feedback type, sample coupling, public information, and environment permissions.
 
 ### B1 - SDLO: lexicographic UCB with a known tradeoff coefficient.
 
 **Admission.** Included in the bracket
 
 **Direction.** upper
+
+**View.** Main
 
 **Witness or lower-bound scope.** Deterministic witness
 
@@ -214,10 +294,82 @@ $$
 
 **Sources.** [1](https://jmlr.org/papers/volume26/24-1047/24-1047.pdf)
 
+**Conditions.** The quantity $K$ is finite, and $\lambda\ge\lambda_*$ is known. The stated guarantees hold simultaneously for $i=1,\ldots,m$ with probability at least $1-\delta_{\mathrm{conf}}$.; The quantity $R_i(T)=T\mu_i(x^\star)-\sum_{t=1}^T\mu_i(x_t)$ is signed regret for objective $i$. The factor $\Lambda_i$ is an explicit geometric sum, not a logarithm of the horizon.; Multiple arms may maximize the primary objective. This upper bound does not prove the catalog's proposed lower bound for unknown tradeoffs with exact ties.
+
+**Oracle correspondence.** Retain the specified feedback type, sample coupling, public information, and environment permissions.
+
 **Source location.** [1](https://jmlr.org/papers/volume26/24-1047/24-1047.pdf) Theorem 1 with covering radius 0, Remark 1, PDF pp.10–11
+
+### B2 - Robust-score multiscale elimination with secondary-objective commitment.
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Two objectives: simultaneous expected signed regret
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+\widetilde O\!\left(\min\{T,\sqrt{(1\vee\lambda)KT},K^{1/3}T^{2/3}\}\right)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U07/manuscript.pdf)
+
+**Conditions.** $K,T\ge2$, exactly two objectives, and public $\lambda\ge0$ with $\lambda_*\le\lambda$.; The upper strategy uses reward-coordinate differences, so common additive shifts allowed by the existing profile do not change its decisions or guarantee.
+
+**Dimension conditions.** Finite arm count K.
+
+**Constants.** Universal constants.
+
+**Logarithmic factors.** Source tilde-O hides logarithms in K, T, and the supplied envelope, but no polynomial dependence.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U07/manuscript.pdf) Theorem thm:finite-envelope; Section sec:envelope
+
+Robust-score multiscale elimination with secondary-objective commitment.. Causal policies given the supplied envelope.
+
+### B3 - Primary-only and hidden-candidate constructions across envelope sizes.
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Two objectives: simultaneous expected signed regret
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+\Omega\!\left(\min\{T,\sqrt{(1\vee\lambda)(K-1)T},(K-1)^{1/3}T^{2/3}\}\right)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U07/manuscript.pdf)
+
+**Conditions.** $K,T\ge2$, exactly two objectives, and public $\lambda\ge0$ with $\lambda_*\le\lambda$.; The upper strategy uses reward-coordinate differences, so common additive shifts allowed by the existing profile do not change its decisions or guarantee.
+
+**Dimension conditions.** Finite arm count K.
+
+**Constants.** Universal constants.
+
+**Logarithmic factors.** Source tilde-O hides logarithms in K, T, and the supplied envelope, but no polynomial dependence.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U07/manuscript.pdf) Theorem thm:finite-envelope; Appendix app:envelope
+
+Primary-only and hidden-candidate constructions across envelope sizes.. Every randomized causal policy given the same envelope.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 
 [1] Bo Xue; Ji Cheng; Fei Liu; Yimu Wang; Lijun Zhang; Qingfu Zhang. Lexicographic Lipschitz Bandits: New Algorithms and a Lower Bound. 2025. JMLR 26 (2025), published September 2025.
 
 https://jmlr.org/papers/volume26/24-1047/24-1047.pdf
+
+[2] Colombo_U07. Primary Ties and the Price of Unknown Trade-offs in Lexicographic Bandits. primary_ties_unknown_tradeoffs.tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U07/manuscript.pdf

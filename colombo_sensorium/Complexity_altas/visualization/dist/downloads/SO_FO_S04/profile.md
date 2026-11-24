@@ -6,11 +6,9 @@ Single-objective optimization
 
 Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.
 
-**Status.** Other quantified gap present
+**Status.** Logarithmic gap; Other quantified gap
 
-**Gap classes present.** Other quantified gap; Logarithmic gap
-
-The regional bracket below specifies the quantified gaps and their parameter dependence.
+**Gap classes present.** Logarithmic gap; Other quantified gap
 
 **TASK tags.** formulation: Global minimization; task family: Single objective
 
@@ -218,6 +216,18 @@ $\Pr,\mathbb{P}$: Event probability after the instance and admissible response l
 
 $\log$: Natural logarithm; changing to another fixed base affects only a constant
 
+$\Delta_s$: Stage gap target **Domain:** $s=0,\ldots,S-1$.
+
+$\Delta_s=2^{-s}\Delta$
+
+$q_s$: Stage noise-to-gap ratio **Domain:** $q_s\ge0$.
+
+$q_s=\sigma^2/(\mu\Delta_s)$
+
+$\mathcal P(\varepsilon)$: Stagewise complexity profile **Domain:** $\mathcal P(\varepsilon)>0$.
+
+$\mathcal P(\varepsilon)=\sum_{s=0}^{S-1}\min\{\kappa(1+q_s),\kappa^{3/2}+\sqrt\kappa\,q_s\}$
+
 ## 3. Complexity bracket
 
 ### Compared quantities
@@ -306,21 +316,21 @@ Here v is the selected algorithm view, G_v its complete success guarantee, I an 
 
 **Region.** $\kappa\ge\kappa_{\rm hd},\quad d\ge d_{\rm hd},\quad0<\varepsilon\le c_{0,\alpha}\Delta$
 
-**Views.** Deterministic / Expected loss; Randomized / Expected loss
+**Views.** Deterministic / Expected loss
 
-**Quantity.** Q1; Q2
+**Quantity.** Q1
 
 **Resource.** One full stochastic-gradient sample costs one call; a batch of $b$ samples costs $b$ calls.
 
 **Status.** Optimal
 
-**Lower bound.** B2, B4
+**Lower bound.** B2
 
 $$
 c_\alpha\kappa(S+V)
 $$
 
-**Upper bound.** B1, B3
+**Upper bound.** B1
 
 $$
 C_\alpha\kappa(S+V)
@@ -328,7 +338,33 @@ $$
 
 **Gap or comparison.** $O_\alpha(1)$
 
-### R2 - High-dimensional regime with fixed confidence
+### R2 - Native high-dimensional theorem window
+
+**Region.** $\kappa\ge\kappa_{\rm hd},\quad d\ge d_{\rm hd},\quad0<\varepsilon\le c_{0,\alpha}\Delta$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q2
+
+**Resource.** One full stochastic-gradient sample costs one call; a batch of $b$ samples costs $b$ calls.
+
+**Status.** Optimal
+
+**Lower bound.** B4
+
+$$
+c_\alpha\kappa(S+V)
+$$
+
+**Upper bound.** B3
+
+$$
+C_\alpha\kappa(S+V)
+$$
+
+**Gap or comparison.** $O_\alpha(1)$
+
+### R3 - High-dimensional regime with fixed confidence
 
 **Region.** $\theta\in\Theta_{\rm hd},\quad\delta=1/4$
 
@@ -354,7 +390,7 @@ $$
 
 **Gap or comparison.** $O_\alpha(\log(64\kappa S))$
 
-### R3 - High-dimensional regime with fixed confidence
+### R4 - High-dimensional regime with fixed confidence
 
 **Region.** $\theta\in\Theta_{\rm hd},\quad\delta=1/4$
 
@@ -380,7 +416,7 @@ $$
 
 **Gap or comparison.** $O_\alpha(\log(64\kappa S))$
 
-### R4 - Fixed-dimensional branch d=1
+### R5 - Fixed-dimensional branch d=1
 
 **Region.** $d=1,\quad\theta\in\Theta_{\rm fixed}$
 
@@ -408,7 +444,7 @@ $$
 
 **Comparison argument.** Compare on the intersection of S04.probability-R.parameter-domain and S04.d1. In one dimension the gap is logarithmic. In other dimensions, retain the explicit interaction between $\kappa$ and the statistical term. Constants allowed to depend on fixed $d$ cannot establish joint optimality in $d$.
 
-### R5 - Fixed-dimensional branch d=2
+### R6 - Fixed-dimensional branch d=2
 
 **Region.** $d=2,\quad\theta\in\Theta_{\rm fixed}$
 
@@ -436,7 +472,7 @@ $$
 
 **Comparison argument.** Compare on the intersection of S04.probability-R.parameter-domain and S04.d2. In one dimension the gap is logarithmic. In other dimensions, retain the explicit interaction between $\kappa$ and the statistical term. Constants allowed to depend on fixed $d$ cannot establish joint optimality in $d$.
 
-### R6 - Fixed-dimensional statistically dominated regime
+### R7 - Fixed-dimensional statistically dominated regime
 
 **Region.** $V\ge \kappa^{2/3}S$
 
@@ -464,7 +500,7 @@ $$
 
 **Comparison argument.** Compare on the intersection of S04.probability-R.parameter-domain and S04.d2-statistics. Statistical dominance allows $V$ to absorb the optimization term. Constants retain the stated fixed-dimension convention.
 
-### R7 - Fixed-dimensional branch d=3
+### R8 - Fixed-dimensional branch d=3
 
 **Region.** $d=3,\quad\theta\in\Theta_{\rm fixed}$
 
@@ -492,7 +528,7 @@ $$
 
 **Comparison argument.** Compare on the intersection of S04.probability-R.parameter-domain and S04.d3. In one dimension the gap is logarithmic. In other dimensions, retain the explicit interaction between $\kappa$ and the statistical term. Constants allowed to depend on fixed $d$ cannot establish joint optimality in $d$.
 
-### R8 - Fixed-dimensional statistically dominated regime
+### R9 - Fixed-dimensional statistically dominated regime
 
 **Region.** $V\ge \kappa S$
 
@@ -520,7 +556,7 @@ $$
 
 **Comparison argument.** Compare on the intersection of S04.probability-R.parameter-domain and S04.d3-statistics. Statistical dominance allows $V$ to absorb the optimization term. Constants retain the stated fixed-dimension convention.
 
-### R9 - Fixed-dimensional branch $d>3,\ \alpha/(\alpha-1)\ge d-1$
+### R10 - Fixed-dimensional branch $d>3,\ \alpha/(\alpha-1)\ge d-1$
 
 **Region.** $d>3,\ \alpha/(\alpha-1)\ge d-1,\quad\theta\in\Theta_{\rm fixed}$
 
@@ -548,7 +584,7 @@ $$
 
 **Comparison argument.** Compare on the intersection of S04.probability-R.parameter-domain and S04.dplus-heavy. In one dimension the gap is logarithmic. In other dimensions, retain the explicit interaction between $\kappa$ and the statistical term. Constants allowed to depend on fixed $d$ cannot establish joint optimality in $d$.
 
-### R10 - Fixed-dimensional statistically dominated regime
+### R11 - Fixed-dimensional statistically dominated regime
 
 **Region.** $V\ge \kappa^{(d-1)/2}S$
 
@@ -575,34 +611,6 @@ $$
 **Gap or comparison.** $\operatorname{polylog}(\kappa,\Delta/\varepsilon)$
 
 **Comparison argument.** Compare on the intersection of S04.probability-R.parameter-domain and S04.dplus-heavy-statistics. Statistical dominance allows $V$ to absorb the optimization term. Constants retain the stated fixed-dimension convention.
-
-### R11 - Fixed-dimensional branch $d>3,\ \alpha/(\alpha-1)<d-1$
-
-**Region.** $d>3,\ \alpha/(\alpha-1)<d-1,\quad\theta\in\Theta_{\rm fixed}$
-
-**Views.** Randomized / Probability guarantee
-
-**Quantity.** Q5
-
-**Resource.** One full stochastic-gradient sample costs one call; a batch of $b$ samples costs $b$ calls.
-
-**Status.** Other quantified gap
-
-**Lower bound.** B9
-
-$$
-c_\alpha(S+V)
-$$
-
-**Upper bound.** B14, B7
-
-$$
-\widetilde{O}_{\alpha,d}(\min\{\kappa(S+V),\kappa^{(d-1)/2}S+\kappa^{[d-1-\alpha/(\alpha-1)]/2}V\})
-$$
-
-**Gap or comparison.** $\widetilde{O}_{\alpha,d}\!\left({\min\{\kappa(S+V),\kappa^{(d-1)/2}S+\kappa^{[d-1-\alpha/(\alpha-1)]/2}V\}\over S+V}\right)$
-
-**Comparison argument.** Compare on the intersection of S04.probability-R.parameter-domain and S04.dplus-light. In one dimension the gap is logarithmic. In other dimensions, retain the explicit interaction between $\kappa$ and the statistical term. Constants allowed to depend on fixed $d$ cannot establish joint optimality in $d$.
 
 ### R12 - Fixed dimension four, $1<\alpha\le3/2$
 
@@ -632,9 +640,63 @@ $$
 
 **Comparison argument.** Compare on the intersection of S04.probability-R.parameter-domain and S04.d4-heavy. Retain the complete ratio of the two bounds. For fixed $\kappa$, the leading accuracy and noise dependence differs only logarithmically; this does not imply closure when $\kappa$ grows jointly.
 
-### R13 - Fixed dimension four, $3/2<\alpha\le2$
+### R13 - Four-dimensional comparison at constant confidence
 
-**Region.** $d=4,\quad 3/2<\alpha\le2$
+**Region.** $d=4$, $\alpha=2$, $\kappa\ge6$, $\delta=1/4$, $0<\varepsilon\le c_0\Delta$ with the small constant in Corollary optimization-comparison, and $\sigma\ge0$. Both bounds hold in fixed dimension four.
+
+**Views.** Randomized / Probability guarantee
+
+**Quantity.** Q5
+
+**Resource.** One full stochastic-gradient sample costs one call; a batch of $b$ samples costs $b$ calls.
+
+**Status.** Other quantified gap
+
+**Lower bound.** B18
+
+$$
+\Omega(S+V)
+$$
+
+**Upper bound.** B17
+
+$$
+O\!\left(\left[1+\log\frac{(2+\kappa)(S+1)}{\delta}\right]^4\mathcal P(\varepsilon)\right)
+$$
+
+**Gap or comparison.** The recorded ratio is at most $O([1+\log(4(2+\kappa)(S+1))]^4\mathcal P(\varepsilon)/(S+V))$. For sigma=0 the bounds are Omega(S) versus tilde O(kappa S); in a statistically dominated regime V>=kappa S they are Omega(V) versus tilde O(sqrt(kappa)V).
+
+### R14 - Fixed-dimensional branch $d>3,\ \alpha/(\alpha-1)<d-1$ — remaining domain
+
+**Region.** $d>3,\ \alpha/(\alpha-1)<d-1,\quad\theta\in\Theta_{\rm fixed}$ Restricted to the complement of: ($d=4$, $\alpha=2$, $\kappa\ge6$, $\delta=1/4$, $0<\varepsilon\le c_0\Delta$ with the small constant in Corollary optimization-comparison, and $\sigma\ge0$. Both bounds hold in fixed dimension four.).
+
+**Views.** Randomized / Probability guarantee
+
+**Quantity.** Q5
+
+**Resource.** One full stochastic-gradient sample costs one call; a batch of $b$ samples costs $b$ calls.
+
+**Status.** Other quantified gap
+
+**Lower bound.** B9
+
+$$
+c_\alpha(S+V)
+$$
+
+**Upper bound.** B14, B7
+
+$$
+\widetilde{O}_{\alpha,d}(\min\{\kappa(S+V),\kappa^{(d-1)/2}S+\kappa^{[d-1-\alpha/(\alpha-1)]/2}V\})
+$$
+
+**Gap or comparison.** $\widetilde{O}_{\alpha,d}\!\left({\min\{\kappa(S+V),\kappa^{(d-1)/2}S+\kappa^{[d-1-\alpha/(\alpha-1)]/2}V\}\over S+V}\right)$
+
+**Comparison argument.** Compare on the intersection of S04.probability-R.parameter-domain and S04.dplus-light. In one dimension the gap is logarithmic. In other dimensions, retain the explicit interaction between $\kappa$ and the statistical term. Constants allowed to depend on fixed $d$ cannot establish joint optimality in $d$.
+
+### R15 - Fixed dimension four, $3/2<\alpha\le2$ — remaining domain
+
+**Region.** $d=4,\quad 3/2<\alpha\le2$ Restricted to the complement of: ($d=4$, $\alpha=2$, $\kappa\ge6$, $\delta=1/4$, $0<\varepsilon\le c_0\Delta$ with the small constant in Corollary optimization-comparison, and $\sigma\ge0$. Both bounds hold in fixed dimension four.).
 
 **Views.** Randomized / Probability guarantee
 
@@ -662,12 +724,6 @@ $$
 
 ## 4. Bounds and supporting evidence
 
-The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
-
-**Output mapping.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
-
-**Resource mapping.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
-
 ### B1 - Deterministic multistage gradient descent with robust batches
 
 **Admission.** Included in the bracket
@@ -690,7 +746,11 @@ $$
 
 **Guarantee conversion.** After fixing the instance and admissible response law, take expectation over the declared randomness and control the underlying error. Query policies and postprocessing use no private random numbers; all randomness comes from observations.
 
-**Local argument.** A1
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_ROBUST_BATCH
 
 ### B2 - OW26 high-dimensional lower bound for arbitrary randomized algorithms
 
@@ -716,6 +776,10 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: arXiv2609.03990v2 (26 September 2026), Thm3.1, Eq.(166); PDF p.7, AppendixB.5
 
 ### B3 - Deterministic multistage gradient descent with robust batches
@@ -740,7 +804,11 @@ $$
 
 **Guarantee conversion.** After fixing the instance and admissible response law, take expectation over the declared randomness and control the underlying error. Query policies and postprocessing use no private random numbers; all randomness comes from observations.
 
-**Local argument.** A1
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_ROBUST_BATCH
 
 ### B4 - OW26 high-dimensional lower bound for arbitrary randomized algorithms
 
@@ -765,6 +833,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: stochastic full gradients. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: arXiv2609.03990v2 (26 September 2026), Thm3.1, Eq.(166); PDF p.7, AppendixB.5
 
@@ -792,6 +864,10 @@ $$
 
 **Guarantee conversion.** After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region. Query policies and postprocessing use no private random numbers; all randomness comes from observations.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: Theorem4.3; AppendixC.2, Eq.(192); PDF pp.9,46
 
 ### B6 - High-dimensional regime with constant failure probability
@@ -817,6 +893,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: stochastic full gradients. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: arXiv2609.03990v2 (26 September 2026), Thm3.1, Eq.(166); PDF p.7, AppendixB.5
 
@@ -844,6 +924,10 @@ $$
 
 **Guarantee conversion.** After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region. Query policies and postprocessing use no private random numbers; all randomness comes from observations.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: Theorem4.3; AppendixC.2, Eq.(192); PDF pp.9,46
 
 ### B8 - High-dimensional regime with constant failure probability
@@ -869,6 +953,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: stochastic full gradients. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: arXiv2609.03990v2 (26 September 2026), Thm3.1, Eq.(166); PDF p.7, AppendixB.5
 
@@ -896,6 +984,10 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10–12,53–65
 
 ### B10 - Robust stochastic bisection
@@ -921,6 +1013,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10–12,53–65
 
@@ -948,6 +1044,10 @@ $$
 
 **Guarantee conversion.** After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10–12,53–65
 
 ### B12 - Three-dimensional gradient-flow traps
@@ -973,6 +1073,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10–12,53–65
 
@@ -1000,6 +1104,10 @@ $$
 
 **Guarantee conversion.** After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10–12,53–65
 
 ### B14 - Additional surface-entropy factor at fixed $d$
@@ -1025,6 +1133,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10–12,53–65
 
@@ -1052,6 +1164,10 @@ $$
 
 **Guarantee conversion.** After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10–12,53–65
 
 ### B16 - OW26 fixed-dimensional result evaluated at $d=4$
@@ -1078,15 +1194,91 @@ $$
 
 **Guarantee conversion.** After fixing the instance and admissible response law, require the declared success probability for the specified residual event. The failure-probability parameter remains subject to the stated validity region.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [1](https://arxiv.org/pdf/2609.03990) theorem: Theorems5.1,5.3; AppendixD.2,D.5; CorollaryD.13, Eq.(260); PDF pp.10–12,53–65
 
-## 5. Local arguments
+### B17 - Stagewise switching between robust gradient descent and a gradient-flow trapping routine
 
-### A1 - Heavy-tailed gradient estimation and PL stages
+**Admission.** Included in the bracket
 
-**Scope.** Conditionally independent fresh samples in each same-point batch, with centered norm moment of order greater than one.
+**Direction.** upper
 
-**Algorithm scope.** PL upper witness has deterministic policies; nonconvex stationarity output uses private randomization.
+**View.** Randomized / Probability guarantee
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+O\!\left(\left[1+\log\frac{(2+\kappa)(S+1)}{\delta}\right]^4\mathcal P(\varepsilon)\right)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N13/manuscript.pdf)
+
+**Conditions.** $d=4$, $\alpha=2$, $\kappa\ge6$, $\delta=1/4$, $0<\varepsilon\le c_0\Delta$ with the small constant in Corollary optimization-comparison, and $\sigma\ge0$.; Use robust descent when q_s<=sqrt(kappa) and trapping otherwise. Both stage contracts preserve the same gap invariant.
+
+**Dimension conditions.** Both bounds hold in fixed dimension four.
+
+**Constants.** Numerical constants only.
+
+**Logarithmic factors.** The upper logarithmic overhead is displayed; no matching lower logarithm is asserted.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N13/manuscript.pdf) Theorem upper; equation main-upper; equation switching-threshold; verified labels: sec:upper (line 303), thm:upper (line 413), eq:main-upper (line 420), eq:switching-threshold (line 439)
+
+Stagewise switching between robust gradient descent and a gradient-flow trapping routine. Adaptive randomized algorithms with deterministic sample caps.
+
+Use robust descent when q_s<=sqrt(kappa) and trapping otherwise. Both stage contracts preserve the same gap invariant.
+
+### B18 - Previously known fixed-dimensional PL lower bound and statistical estimation obstruction
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Probability guarantee
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+\Omega(S+V)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N13/manuscript.pdf)
+
+**Conditions.** $d=4$, $\alpha=2$, $\kappa\ge6$, $\delta=1/4$, $0<\varepsilon\le c_0\Delta$ with the small constant in Corollary optimization-comparison, and $\sigma\ge0$.; This is the existing lower benchmark cited by the manuscript, not a new matching lower bound from its discrete path construction.
+
+**Dimension conditions.** Both bounds hold in fixed dimension four.
+
+**Constants.** Numerical constants only.
+
+**Logarithmic factors.** The upper logarithmic overhead is displayed; no matching lower logarithm is asserted.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N13/manuscript.pdf) Corollary optimization-comparison, equation remaining-gap; cited Ou-Wang Theorem 5.1; verified labels: cor:optimization-comparison (line 1254), eq:remaining-gap (line 1261)
+
+Previously known fixed-dimensional PL lower bound and statistical estimation obstruction. All randomized adaptive algorithms.
+
+This is the existing lower benchmark cited by the manuscript, not a new matching lower bound from its discrete path construction.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 20a741e96cf37cd9152a8fa1e61d3f77c659fbcc8928bec3e48c614fdcdb8ffb
+
+### Native proof: FO_ROBUST_BATCH
+
+Native pointer: /proofs/0; canonical SHA-256: 537e26a876834fc81f0d7b3f2ec72df31dad4a48b2be0eaae49fc1484ca65634
+
+#### Native field: title
+
+Native pointer: /proofs/0/title; canonical SHA-256: cf22a51abcf94b0416fbba314e71fd7d3d6bf0065fd53e7e0d0085ca470ffa6d
+
+Heavy-tailed gradient estimation and PL stages
+
+#### Native field: body
+
+Native pointer: /proofs/0/body; canonical SHA-256: 7a5b0fbf1ba571cfa50babf1ef9c36238d4a8b32bb4c0434986120c8051adac8
 
 Condition on the history at an adaptively selected point. Fresh samples are conditionally independent, have mean $g$, and obey
 $\mathbb E\|G-g\|^\alpha\le\sigma^\alpha$, $1<\alpha\le2$.
@@ -1128,10 +1320,30 @@ For general nonconvex stationarity, choose
 $b=C_\alpha[1+(\sigma/\epsilon)^{\alpha/(\alpha-1)}]$,
 run $C\beta\Delta/\epsilon^2$ updates, and return a uniformly random iterate. Summing descent gives expected squared gradient norm at most $\epsilon^2$, hence expected norm at most $\epsilon$. This output rule is private randomization.
 
-**Limits of the argument.** The proof does not apply to arbitrarily dependent samples within a batch.
+#### Native field: scope
+
+Native pointer: /proofs/0/scope; canonical SHA-256: 48fb721959267317cd997270600a1b8753916d6da7f35c8c959a71d86ebccbc9
+
+Conditionally independent fresh samples in each same-point batch, with centered norm moment of order greater than one.
+
+#### Native field: limitations
+
+Native pointer: /proofs/0/limitations; canonical SHA-256: c1fc043557dcc6f0a5ddb74960084f7459a35e11fc01499db8440ad780ed0f1b
+
+The proof does not apply to arbitrarily dependent samples within a batch.
+
+#### Native field: algorithm_scope
+
+Native pointer: /proofs/0/algorithm_scope; canonical SHA-256: 137dc3ae51f91aa2f571d1fc653abf5993b48c7a42e891cb201d6923602d224f
+
+PL upper witness has deterministic policies; nonconvex stationarity output uses private randomization.
 
 ## References
 
 [1] Weiming Ou; Xiao Wang. Tight Heavy-Tailed Complexity Bounds for Optimizing Polyak–Łojasiewicz Objectives. 2026-09-26; preprintv2; Theorem 3.1; Theorems 4.3,5.1,5.3; Appendix B Lemmas B.13–B.15; Eq.(166),(192)..
 
 https://arxiv.org/pdf/2609.03990
+
+[2] Colombo_N13. Four-Dimensional Stochastic PL Optimization: Stagewise Bounds and Limits of Recursive Constructions. 2026. N13_revised_manuscript.tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N13/manuscript.pdf

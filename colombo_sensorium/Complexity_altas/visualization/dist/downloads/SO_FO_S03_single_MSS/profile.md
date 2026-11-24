@@ -6,7 +6,7 @@ Single-objective optimization
 
 Find a point satisfying the stationarity criterion specified under the accuracy measure.
 
-**Status.** Other quantified gap present
+**Status.** Other quantified gap
 
 **TASK tags.** formulation: First order stationarity; task family: Single objective
 
@@ -160,6 +160,18 @@ $$
 
 Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
 
+#### Q2 - minimax metric resource quantity
+
+$$
+T^\star_\infty=\inf_A\{N:\forall d,I,\ \mathbb E\|\nabla F(\widehat x)\|_2\le\varepsilon,\ N_A\le N\text{ on every run}\}
+$$
+
+**Scope.** The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+**Optimization direction.** minimize
+
+**Resource contract.** expression: $N_{\rm sample}$; description: Fixed pathwise cap on single-use gradient responses.
+
 ### R1 - Two-point access with low noise in sufficiently high dimension
 
 **Region.** $0\le\sigma\le\varepsilon,\ d\ge d_{\rm pair}$
@@ -208,13 +220,31 @@ $$
 
 **Gap or comparison.** ${\beta\Delta/\varepsilon^2+\beta\Delta\sigma^2/\varepsilon^4\over\beta\Delta/\varepsilon^2+\beta\Delta\sigma/\varepsilon^3+\sigma^2/\varepsilon^2}$
 
+### R3 - Dimension-uniform single-query MSS complexity
+
+**Region.** $\Delta,\beta>0$, $\sigma\ge0$, $\alpha=2$, $0<\varepsilon\le c_0\sqrt{\beta\Delta}$, where $c_0$ is the universal constant of Theorem main. The upper bound holds for every finite $d$. For a proposed cap $N$, the lower construction uses $d=(T_0+1)D_0$, where $T_0=\lfloor c_T\beta\Delta/\varepsilon^2\rfloor$, $n_0=1+\lfloor c\sigma^2/\varepsilon^2\rfloor$, and $D_0\ge2T_0+C\rho_0^{-2}[n_0+\log(24T_0(N+1))]$, enlarged for Lemma side-channel. Here $c_T,c,\rho_0>0$ are source-fixed universal constants. See equations scales, n0, dimension-choice and Theorem lower. This is not a lower bound uniform over each fixed small dimension.
+
+**Quantity.** Q2
+
+**Resource.** Fixed pathwise cap on single-use gradient responses.
+
+**Status.** Optimal
+
+**Lower bound.** B4
+
+$$
+\Omega\!\left(\frac{\beta\Delta}{\varepsilon^2}+\frac{\beta\Delta\sigma^2}{\varepsilon^4}\right)
+$$
+
+**Upper bound.** B3
+
+$$
+O\!\left(\frac{\beta\Delta}{\varepsilon^2}+\frac{\beta\Delta\sigma^2}{\varepsilon^4}\right)
+$$
+
+**Gap or comparison.** Upper/lower ratio is bounded by a universal constant.
+
 ## 4. Bounds and supporting evidence
-
-The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
-
-**Output mapping.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
-
-**Resource mapping.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 ### B1 - RSG with randomized output selection
 
@@ -237,6 +267,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: stochastic full gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** After fixing the instance and admissible response law, take expectation over the randomness declared by the target contract and control the underlying error.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [1](https://arxiv.org/pdf/1309.5549) theorem: Corollary 2.2, Eq.(2.14); PDF p.8
 
@@ -262,9 +296,77 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [2](https://arxiv.org/pdf/1912.02365) theorem: Theorem 3, Eqs.(23)–(24); PDF pp.14–15
 
 **Source location.** [2](https://arxiv.org/pdf/1912.02365) theorem: Section 5.1, Proposition 1, Lemma 8; Theorem 3
+
+### B3 - Stochastic gradient descent with randomized output selection
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+O\!\left(\frac{\beta\Delta}{\varepsilon^2}+\frac{\beta\Delta\sigma^2}{\varepsilon^4}\right)
+$$
+
+**Sources.** [3](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/0902/manuscript.pdf)
+
+**Conditions.** $\Delta,\beta>0$, $\sigma\ge0$, $\alpha=2$, $0<\varepsilon\le c_0\sqrt{\beta\Delta}$, where $c_0$ is the universal constant of Theorem main.; The samplewise MSS model implies population smoothness; the upper proof gives a squared-norm estimate and then the required expected norm.
+
+**Dimension conditions.** The upper bound holds for every finite $d$. For a proposed cap $N$, the lower construction uses $d=(T_0+1)D_0$, where $T_0=\lfloor c_T\beta\Delta/\varepsilon^2\rfloor$, $n_0=1+\lfloor c\sigma^2/\varepsilon^2\rfloor$, and $D_0\ge2T_0+C\rho_0^{-2}[n_0+\log(24T_0(N+1))]$, enlarged for Lemma side-channel. Here $c_T,c,\rho_0>0$ are source-fixed universal constants. See equations scales, n0, dimension-choice and Theorem lower. This is not a lower bound uniform over each fixed small dimension.
+
+**Constants.** All unmarked constants are universal.
+
+**Logarithmic factors.** None.
+
+**Source location.** [3](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/0902/manuscript.pdf) Theorem main, equation main-rate; Section upper; verified labels: thm:main (line 408), eq:main-rate (line 414), sec:upper (line 476)
+
+Stochastic gradient descent with randomized output selection. An unrestricted randomized algorithm with a fixed query cap.
+
+The samplewise MSS model implies population smoothness; the upper proof gives a squared-norm estimate and then the required expected norm.
+
+### B4 - Smooth gated scalar sample losses with additive Gaussian noise and sequential information accounting
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+\Omega\!\left(\frac{\beta\Delta}{\varepsilon^2}+\frac{\beta\Delta\sigma^2}{\varepsilon^4}\right)
+$$
+
+**Sources.** [3](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/0902/manuscript.pdf)
+
+**Conditions.** $\Delta,\beta>0$, $\sigma\ge0$, $\alpha=2$, $0<\varepsilon\le c_0\sqrt{\beta\Delta}$, where $c_0$ is the universal constant of Theorem main.; The hard dimension may depend on the proposed cap. The hard sample losses can be chosen individually gradient-Lipschitz with the same beta.
+
+**Dimension conditions.** The upper bound holds for every finite $d$. For a proposed cap $N$, the lower construction uses $d=(T_0+1)D_0$, where $T_0=\lfloor c_T\beta\Delta/\varepsilon^2\rfloor$, $n_0=1+\lfloor c\sigma^2/\varepsilon^2\rfloor$, and $D_0\ge2T_0+C\rho_0^{-2}[n_0+\log(24T_0(N+1))]$, enlarged for Lemma side-channel. Here $c_T,c,\rho_0>0$ are source-fixed universal constants. See equations scales, n0, dimension-choice and Theorem lower. This is not a lower bound uniform over each fixed small dimension.
+
+**Constants.** All unmarked constants are universal.
+
+**Logarithmic factors.** None.
+
+**Source location.** [3](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/0902/manuscript.pdf) Theorems main and lower; equation lower-rate; verified labels: thm:main (line 408), sec:lower (line 1529), thm:lower (line 1571), eq:lower-rate (line 1573)
+
+Smooth gated scalar sample losses with additive Gaussian noise and sequential information accounting. Arbitrary adaptive randomized queries and arbitrary measurable outputs.
+
+The hard dimension may depend on the proposed cap. The hard sample losses can be chosen individually gradient-Lipschitz with the same beta.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 
@@ -275,3 +377,7 @@ https://arxiv.org/pdf/1309.5549
 [2] Yossi Arjevani, Dylan J. Foster, Yair Carmon, Nathan Srebro, John Duchi and Blake Woodworth. Lower Bounds for Non-Convex Stochastic Optimization. 2023; Mathematical Programming 199:165–214; arXiv v2, Theorem 3, Eq.(23)–(24), Section 5.2 Proposition 2, pp.14–15,18.
 
 https://arxiv.org/pdf/1912.02365
+
+[3] Colombo_0902. Sharp Single-Query Complexity of Nonconvex Optimization under Mean-Squared Smoothness. 0902_revised.tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/0902/manuscript.pdf

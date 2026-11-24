@@ -1,0 +1,1448 @@
+% Self-contained manuscript. Compile with pdfLaTeX twice or latexmk -pdf.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{microtype,booktabs,tabularx,array,enumitem}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{needspace}
+\usepackage[round,authoryear]{natbib}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+  pdftitle={Near-Optimal Proper Bandit Optimization with Smooth Strongly Convex Losses},
+  pdfauthor={Colombo Team},
+  pdfkeywords={Bandit convex optimization, one-point feedback, strong convexity, log-concave exploration, minimax regret},
+  pdfsubject={One-point adversarial bandit convex optimization on general convex domains}}
+\numberwithin{equation}{section}
+\allowdisplaybreaks[1]
+\setlength{\parindent}{1.25em}
+\setlength{\parskip}{2pt}
+\setlength{\emergencystretch}{1.5em}
+\setlength{\textfloatsep}{15pt plus 3pt minus 3pt}
+\setlength{\floatsep}{12pt plus 2pt minus 2pt}
+\renewcommand{\arraystretch}{1.15}
+\setlist[itemize]{leftmargin=1.5em,itemsep=3pt,topsep=4pt}
+\setlist[enumerate]{leftmargin=1.8em,itemsep=4pt,topsep=5pt}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\Reg}{\operatorname{Reg}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\TV}{\operatorname{TV}}
+\newcommand{\vol}{\operatorname{vol}}
+\newcommand{\ip}[2]{\langle #1,#2\rangle}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+\newcommand{\cK}{\mathcal K}
+\newcommand{\cF}{\mathcal F}
+\newcommand{\cA}{\mathcal A}
+\newcommand{\B}{B_2^d}
+\newcommand{\diam}{\operatorname{diam}}
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+\newcounter{algorithm}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\title{Near-Optimal Proper Bandit Optimization\\with Smooth Strongly Convex Losses}
+\author{Colombo Team\\[3pt]\texttt{colombo.2026@outlook.com}}
+\date{}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study one-point adversarial bandit convex optimization with bounded,
+$\mu$-strongly convex, $\beta$-smooth losses on a known convex body
+$(4d)^{-1}B_2^d\subseteq K\subseteq B_2^d$. Every played action must lie in
+$K$, and the learner observes only the loss at that action. Writing
+$\kappa=\beta/\mu$, we give an information-theoretic algorithm with expected
+static regret $\widetilde O(d\sqrt{\kappa T})$, capped by $T$, uniformly over
+comparators on the boundary as well as in the interior. The construction uses
+the Gaussian--gauge comparison of Bizeul and Klartag to obtain a feasible
+exploration distribution in covariance coordinates. A compactly supported
+smoothing density and a separate play density yield a one-point estimator
+whose squared covariance-local norm is bounded by $O(d\log^2(ed))$ almost
+surely at every round. Combined with quadratic exponential weights, a centered
+averaged-tangent inequality preserves the full strong-convexity term and gives
+the stated condition-number dependence. We also adapt the classical quadratic
+regret lower bound to exact bounded feedback by using compactly supported
+random offsets and an adaptive Hellinger argument. This construction applies
+even when $\beta=\mu$. For every fixed positive curvature pair, the worst-case
+dimension--horizon rate over the nondegenerate admissible domain family is
+$\widetilde\Theta(\min\{T,d\sqrt T\})$. All logarithmic factors and parameter
+restrictions are explicit. The algorithm uses exact geometric operations;
+polynomial-time implementation and matching dependence on a varying condition
+number remain open.
+\end{abstract}
+
+\noindent\textbf{Keywords.}
+Bandit convex optimization; one-point feedback; strong convexity;
+log-concave exploration; minimax regret.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol. 
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:intro}
+In bandit convex optimization, an action has two roles: it incurs a loss and
+provides the learner's only information about that loss. Smoothness and strong
+convexity help control the cost of exploration, but a constrained domain can
+restrict which directions are available. This issue is most apparent near the
+boundary, where a symmetric perturbation may leave the feasible set. An
+algorithm that queries outside the domain uses a different information
+interface; an algorithm that moves the comparator inward must account for the
+resulting approximation error. We study the original constrained problem:
+every action is feasible, every round supplies one loss value, and the best
+fixed comparator may lie anywhere in the domain.
+
+For smooth, strongly convex losses, the barrier method of
+\citet{HL14} and the general-domain membership-oracle method of
+\citet{Ito20} achieve $\widetilde O(d^{3/2}\sqrt T)$ regret at fixed
+curvature parameters. The classical lower bound is
+$\Omega(\min\{T,d\sqrt T\})$ \citep{Shamir13}. The smaller dimension
+dependence is already attainable on domains with a constant-parameter
+self-concordant barrier, such as a Euclidean ball, and under an appropriate
+interior-comparator condition \citep{HL14,Ito20}. The remaining issue is
+uniformity over general convex bodies without an interior-margin promise.
+
+We obtain this uniform guarantee. For losses in $[0,1]$ that are
+$\mu$-strongly convex and $\beta$-smooth, let $\kappa=\beta/\mu$. On the
+normalized domain class specified in Section~\ref{sec:model}, our algorithm
+satisfies
+\begin{equation}\label{eq:intromain}
+ \E\Reg_T(x_T^*)
+ \leq\min\!\left\{T,\;C d\sqrt{T\left[
+ \log^2(ed)\log(edT\kappa)+\kappa\log(eT)\right]}\right\}.
+\end{equation}
+Here $x_T^*$ is the best fixed action in hindsight, and $C$ is universal.
+Together with a bounded quadratic lower bound, this establishes
+$\widetilde\Theta_{\mu,\beta}(\min\{T,d\sqrt T\})$ for every fixed
+positive curvature pair whenever the admissible domain family is
+nondegenerate. The lower bound is attained on a ball; the upper bound is
+uniform over the whole domain family.
+
+\paragraph{Contributions.}
+The proof has three components.
+\begin{enumerate}
+ \item \textbf{Feasible exploration with a bounded local estimator.}
+ Let $m$ and $\Sigma$ be the mean and covariance of the current log-concave
+ state. The Gaussian--gauge comparison of \citet{BK26} identifies a substantial
+ Gaussian mass inside a symmetric part of $\Sigma^{-1/2}(K-m)$ at scale
+ $O(\log(ed))$. We use this region to construct two densities: one for smoothing,
+ and one for play. The play density is proportional to an envelope for the
+ smoothing density's gradient, giving a one-point estimator with
+ $\widehat g^{\top}\Sigma\widehat g=O(d\log^2(ed))$ pathwise.
+ \item \textbf{A regret comparison that preserves curvature.}
+ Averaging upper and lower tangent inequalities about the same centered
+ smoothing distribution keeps the full strong-convexity term. With quadratic
+ exponential weights, this produces \eqref{eq:intromain}. A homothetic
+ comparison distribution handles boundary comparators at a logarithmic
+ entropy cost.
+ \item \textbf{A lower bound in the exact bounded-feedback model.}
+ We retain the quadratic regret--information mechanism of \citet{Shamir13}
+ while replacing unbounded observation noise by bounded offsets within
+ preselected loss functions. An energy-weighted Hellinger argument gives an
+ explicit lower bound in curvature and domain radius, including $\beta=\mu$.
+ We also characterize the endpoint at which boundedness forces zero regret.
+\end{enumerate}
+
+The algorithm builds on the quadratic exponential-weights and covariance
+adaptation framework of \citet{Ito20}. The new ingredient is the feasible
+pair of densities and its analysis. It replaces a requirement that an entire
+exploration ellipsoid remain inside the domain by a distribution whose support
+is feasible and whose estimator has a small local norm. The geometric input is
+an established external theorem, stated explicitly in
+Section~\ref{sec:geometry}.
+
+\paragraph{Scope and organization.}
+We prove expected static regret against an oblivious adversary. The known
+domain is available for exact integration and sampling, and geometric
+computation is uncharged. Thus the result concerns information complexity;
+it does not provide a polynomial-time implementation. Section~\ref{sec:model}
+states the model and main theorems, and Section~\ref{sec:related} compares them
+with prior guarantees. Sections~\ref{sec:geometry}--\ref{sec:algorithm}
+construct the exploration rule and online algorithm.
+Section~\ref{sec:analysis} proves the upper bound, and
+Section~\ref{sec:lower} introduces the lower-bound construction. The appendices
+provide the analytic details and complete lower-bound proof.
+
+\section{Model and main results}\label{sec:model}
+\subsection{Domain, losses, and feedback}
+Let $d,T\geq1$ be integers. All norms are Euclidean, all logarithms are natural,
+and $B_2^d$ is the closed unit ball. Consider the domain class
+\begin{equation}\label{eq:domain}
+ \cK_d=\left\{K\subset\R^d:K\text{ is compact and convex},\quad
+                 (4d)^{-1}B_2^d\subseteq K\subseteq B_2^d\right\}.
+\end{equation}
+The learner knows $K$, $T$, and the regularity constants. The inball fixes
+conditioning and supplies a known interior point, but says nothing about the
+location of a minimizer.
+
+For $0<\mu\leq\beta$, let $\cF(K;\mu,\beta)$ be the restrictions to $K$ of
+functions that are continuously differentiable on a neighborhood of $K$, take
+values in $[0,1]$ on $K$, and satisfy, for all $x,y\in K$,
+\begin{align}
+ f(y)&\geq f(x)+\ip{\nabla f(x)}{y-x}
+                   +\frac\mu2\norm{y-x}_2^2,\label{eq:sc}\\
+ f(y)&\leq f(x)+\ip{\nabla f(x)}{y-x}
+                   +\frac\beta2\norm{y-x}_2^2.\label{eq:sm}
+\end{align}
+The bounds are required only on $K$. In particular, no globally bounded,
+globally strongly convex extension is assumed. Write $\kappa=\beta/\mu$.
+
+An oblivious adversary fixes $f_{1:T}\in\cF(K;\mu,\beta)^T$ before play. At
+round $t$, the learner selects $X_t\in K$ based on past observations and its
+private randomness, incurs $f_t(X_t)$, and observes exactly that scalar. There
+are no gradient observations, additional loss evaluations, or loss queries
+outside $K$. Computation on the known domain is uncharged. We call such a
+strategy \emph{proper and one-point}.
+
+\subsection{Regret and admissible parameters}
+For $u\in K$, define
+\[
+ \Reg_T(u)=\sum_{t=1}^T\bigl(f_t(X_t)-f_t(u)\bigr),\qquad
+ x_T^*=\argmin_{u\in K}\sum_{t=1}^Tf_t(u).
+\]
+Strong convexity makes $x_T^*$ unique. For a fixed oblivious sequence, it is
+also deterministic, a fact used in the boundary-comparator analysis. Let
+$\cA(K)$ be the class of measurable proper one-point strategies. The minimax
+quantity of interest is taken only over domains with a nonempty loss class.
+Set $\cK_d(\mu,\beta)=\{K\in\cK_d:\cF(K;\mu,\beta)\neq\varnothing\}$. Then
+\begin{equation}\label{eq:minimax}
+ \mathfrak R^*_{T,\mathrm{sc}}(d;\mu,\beta)
+ =\sup_{K\in\cK_d(\mu,\beta)}\inf_{\mathcal A\in\cA(K)}
+   \sup_{f_{1:T}\in\cF(K;\mu,\beta)^T}
+      \E_{\mathcal A}\Reg_T(x_T^*).
+\end{equation}
+Thus the strategy can depend on the known domain before the loss sequence is
+selected.
+
+\begin{proposition}[Compatibility with bounded losses]\label{prop:admissibility}
+For any nonempty $\cF(K;\mu,\beta)$,
+\begin{equation}\label{eq:diamcurvature}
+ \mu\diam(K)^2\leq8,\qquad \mu\leq32d^2.
+\end{equation}
+The domain family $\cK_d(\mu,\beta)$ is nonempty if and only if
+$\mu\leq32d^2$. At $\mu=32d^2$, it contains only
+$K=(4d)^{-1}B_2^d$, and the only admissible loss on this body is
+$f(x)=\mu\norm{x}_2^2/2$. Consequently the minimax regret is zero at this endpoint.
+\end{proposition}
+\begin{proof}
+Strong convexity at a midpoint and $0\leq f\leq1$ imply
+$\mu\norm{x-y}_2^2/8\leq1$ for all $x,y\in K$. Taking the diameter and then
+using the inball gives \eqref{eq:diamcurvature}. Conversely, the quadratic
+$\mu\norm{x}_2^2/2$ on $(4d)^{-1}B_2^d$ is admissible when $\mu\leq32d^2$.
+At equality, put $r_0=(4d)^{-1}$. Applying strong convexity to $\pm r_0v$ for
+any unit vector $v$ forces $f(0)=0$ and $f(\pm r_0v)=1$. The first-order
+inequalities at zero imply $\nabla f(0)=0$, hence
+$f(x)\geq\mu\norm{x}_2^2/2$ throughout $K$. No point of norm exceeding $r_0$
+can belong to $K$. On $r_0B_2^d$, the convex function
+$f(x)-\mu\norm{x}_2^2/2$ is nonnegative and vanishes on the boundary, so it
+vanishes everywhere. Playing zero has zero regret.
+\end{proof}
+
+\subsection{Upper and lower bounds}
+\begin{theorem}[Uniform proper one-point upper bound]\label{thm:main}
+There is a universal constant $C>0$ such that, for every $0<\mu\leq\beta$,
+every $d,T\geq1$ with $\mu\leq32d^2$, and $\kappa=\beta/\mu$,
+\begin{equation}\label{eq:generalupper}
+ \mathfrak R^*_{T,\mathrm{sc}}(d;\mu,\beta)
+ \leq\min\!\left\{T,\;C d\sqrt{T\left[
+ \log^2(ed)\log(edT\kappa)+\kappa\log(eT)\right]}\right\}.
+\end{equation}
+In particular this is $\widetilde O(d\sqrt{\kappa T})$, capped by $T$.
+The strategy is proper and one-point on every admissible $K\in\cK_d$, and its
+bound has no comparator-margin parameter.
+
+More precisely, take the scale $s=16(1+C_{\mathrm g}\log(ed))$ from
+Theorem~\ref{thm:gauge}, and set
+\begin{align}
+ L&=\log\!\bigl(T(8d+2\beta+6\mu+1)\bigr),\qquad h_T=1+\log T,
+       \label{eq:generalL}\\
+ \Psi&=s^2L+(20\kappa-4)h_T.\label{eq:Psi}
+\end{align}
+For every fixed comparator $u\in K$, the strategy of
+Theorem~\ref{thm:parameter} satisfies the all-horizon bound
+\begin{equation}\label{eq:precisegeneral}
+ \E\Reg_T(u)\leq\min\!\left\{T,\;5+2d\sqrt{512e\,T\Psi}\right\}.
+\end{equation}
+No polynomial dependence on a varying parameter is hidden in this formula.
+\end{theorem}
+
+\begin{theorem}[Bounded quadratic lower bound]\label{thm:lowergeneral}\label{prop:lower}
+Let $0<\mu\leq\beta$ and choose $R\in[(4d)^{-1},1]$ with
+\begin{equation}\label{eq:lowerparams}
+ M=\mu R^2<2,\qquad \Delta=1-M/2>0,\qquad
+ Q=\min\{M,\Delta^2/M\}.
+\end{equation}
+For every proper one-point strategy on $K=RB_2^d$, there is an admissible
+deterministic oblivious loss sequence such that
+\begin{equation}\label{eq:lowergeneral}
+ \E\Reg_T(x_T^*)\geq\frac{1}{1024\pi}
+                  \min\{QT,\;\Delta d\sqrt T\}.
+\end{equation}
+Each constructed loss has Hessian exactly $\mu I_d$ and values in $[0,1]$ on
+$K$, and the common minimizer is interior. Thus the statement includes
+$\beta=\mu$. The quantity $\Delta$ is the bounded-loss headroom left by the quadratic
+term. An admissible radius exists whenever $\mu<32d^2$.
+\end{theorem}
+
+\begin{corollary}[Minimax rate at fixed curvature]\label{cor:fixed}
+For every fixed pair $0<\mu\leq\beta<\infty$, there are constants
+$c_{\mu}>0$ and $C_{\mu,\beta}<\infty$, independent of $d,T$, such that for
+all integers $d,T\geq1$ satisfying $\mu<32d^2$,
+\begin{equation}\label{eq:fixedmatching}
+ \begin{split}
+ c_{\mu}\min\{T,d\sqrt T\}
+ &\leq\mathfrak R^*_{T,\mathrm{sc}}(d;\mu,\beta)\\
+ &\leq\min\!\left\{T,\;C_{\mu,\beta}d\log(ed)
+                                     \sqrt{T\log(edT)}\right\}.
+ \end{split}
+\end{equation}
+Equivalently,
+$\mathfrak R^*_{T,\mathrm{sc}}(d;\mu,\beta)
+ =\widetilde\Theta_{\mu,\beta}(\min\{T,d\sqrt T\})$
+on this nondegenerate domain family. In the simple regime $0<\mu\leq1$,
+Theorem~\ref{thm:lowergeneral} with $R=1$ gives, for all $d,T\geq1$,
+\begin{equation}\label{eq:unitlower}
+ \mathfrak R^*_{T,\mathrm{sc}}(d;\mu,\beta)
+ \geq\frac1{4096\pi}\min\{\mu T,d\sqrt T\}.
+\end{equation}
+\end{corollary}
+\paragraph{Interpretation.}
+The constants in \eqref{eq:fixedmatching} may depend on the fixed curvature
+pair, but not on $d$ or $T$. Appendix~\ref{app:fixed} proves this uniformity
+also for large fixed $\mu$. The result matches the dimension and horizon
+dependence up to logarithms; a lower bound growing as $\sqrt{\kappa}$ is
+not established. Moreover, the lower bound concerns the worst admissible
+body, whereas the upper bound applies to every admissible body and every
+fixed comparator, including boundary points.
+
+
+\paragraph{Coordinates and notation.}
+For symmetric matrices, $A\preceq B$ denotes the Loewner order; $\tr(A)$ and
+$\Cov(V)$ denote trace and covariance. Matrix square roots are the symmetric
+positive-definite roots. Affine normalization below is a device for sampling
+only: it does not replace the Euclidean assumptions in
+\eqref{eq:sc}--\eqref{eq:sm} by assumptions in a transformed norm. We write
+$\E_t$ for conditional expectation given the history before round $t$.
+
+\section{Comparison with prior work}\label{sec:related}
+\subsection{The closest proper one-point guarantees}
+Table~\ref{tab:comparison} keeps the condition number, domain geometry, and
+comparator assumptions visible. The rates concern expected static regret;
+the prior upper bounds are shown in their stated tuning regimes. Throughout
+the table, $D_K=\diam(K)$, $\nu$ is a self-concordant barrier parameter, and
+$K'$ denotes a chosen benchmark region.
+
+\begin{table}[!htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Expected regret with proper one-point feedback. Loss magnitudes are
+bounded by one and $\kappa=\beta/\mu$. All regret guarantees may be capped
+by $T$ in our $[0,1]$ normalization. Conditions below the table specify the
+prior horizon and tuning restrictions.}
+\label{tab:comparison}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}
+ >{\raggedright\arraybackslash}p{0.42\textwidth}
+ >{\raggedright\arraybackslash}X@{}}
+\toprule
+Reference & Regret bound & Geometry and comparator \\
+\midrule
+\citet[Thm.~10]{HL14}
+& $4d\sqrt{(\nu+2\kappa)T\log T}$\newline
+  $\quad+2+\beta D_K^2/2$
+& Supplied $\nu$-barrier; comparator anywhere in $K$. \\[5pt]
+\citet[Cor.~2]{Ito20}
+& $O\!\left(d^{3/2}\sqrt{\kappa T\log T}\right)$
+& Membership oracle for $K$; comparator anywhere in $K$. \\[5pt]
+\citet[Cor.~1]{Ito20}
+& $O\!\left(d\sqrt{\kappa T\log T}
+           +\dfrac{d^2\log(ed)}{\mu\rho^2}\right)$
+& Membership oracle for $K'$; $K'+\rho B_2^d\subseteq K$, $\rho>0$;
+  comparator in $K'$. \\[5pt]
+Theorem~\ref{thm:main}
+& $\widetilde O(d\sqrt{\kappa T})$\newline
+  Full logarithms: \eqref{eq:generalupper}.\newline
+  Explicit constants: \eqref{eq:precisegeneral}.
+& Every admissible $K\in\cK_d$; comparator anywhere in $K$;
+  exact geometric operations. \\
+\bottomrule
+\end{tabularx}
+\vspace{6pt}
+\begin{minipage}{\textwidth}
+\footnotesize
+\textit{Tuning and access.}
+For Hazan--Levy, $T>1$ and $T/\log T\geq2(\nu+2\kappa)$.
+For Ito ($T>1$), use
+$\alpha_t=\min\{1/9+\rho\sqrt{t\eta\mu/2},\sqrt d\}$ and require
+$\eta\leq\alpha_1/[2d\log(50T)]$.
+Corollary~2 takes $\rho=0$ and
+$\eta=\sqrt{\kappa\log T/(dT)}$; Corollary~1 takes
+$\eta=\sqrt{\kappa\log T/T}$.
+Ito provides a membership-oracle implementation. Our theorem holds at every
+horizon through the explicit switch in Theorem~\ref{thm:parameter}, without
+a running-time guarantee. Hazan--Levy state regularity on all of $\R^d$;
+our assumptions impose the curvature inequalities only on $K$.
+\end{minipage}
+\end{table}
+
+For a general body with a $\nu=O(d)$ barrier, the first row has scale
+$\widetilde O(d\sqrt{(d+\kappa)T})$. At fixed curvature, both general-domain
+prior bounds therefore have dimension dependence $d^{3/2}$, compared with
+$d$ up to logarithms here. On a ball, a constant-parameter barrier already
+gives the latter dependence. The improvement is uniform over bodies, and does
+not assert a better polynomial rate on every individual domain. The interior
+guarantee has the desired leading term but carries an additive cost that
+diverges as $\rho\downarrow0$.
+
+Quadratic exponential weights and covariance-based exploration already appear
+in \citet{Ito20}. Our feasible sampling construction supplies the missing
+local estimator bound without a comparator margin. At varying $\kappa$, the
+explicit expressions should be compared directly: in particular, Hazan--Levy
+have additive dependence on $\nu$ and $\kappa$ inside the square root. None of
+our lower bounds establishes optimal condition-number dependence.
+
+\subsection{Other settings and geometric ingredients}
+\paragraph{Barrier parameters in compact rate statements.}
+The single-agent analysis of \citet{Ba25} is often summarized as
+$\widetilde O(d\sqrt T)$. Their preprint's Appendix~B, Eq.~(B.7), retains
+$dL\sqrt T(1+2\nu\log T)$, where $L$ bounds reward magnitudes. A
+dimension-dependent barrier parameter must therefore remain visible when
+comparing guarantees over general domains. This distinction concerns the
+single-agent regret rate; their multi-agent equilibrium results address a
+different objective.
+
+\paragraph{Broader loss classes and alternative feedback.}
+One-point smoothing is a classical tool in bandit optimization \citep{FKM05}.
+For general convex losses, kernel methods give polynomial-time
+$\widetilde O(\operatorname{poly}(d)\sqrt T)$ regret \citep{BEL21}, while
+\citet{Lat20} gives an information-theoretic
+$O(d^{5/2}\sqrt T\log T)$ bound. The online Newton method of
+\citet{Fokkema24} obtains an efficient high-probability
+$\widetilde O(d^{7/2}\sqrt T)$ adversarial guarantee without positive strong
+convexity. The core Bandit Newton Step guarantee of \citet{Suggala24}
+permits actions outside the comparator domain. These results concern a broader
+loss class, a stronger computational or probabilistic guarantee, or a different
+feasibility requirement.
+
+The strongly convex adaptive-regret theorem of \citet[Theorem~1]{Liu25}
+assumes that each loss has an unconstrained minimizer in the feasible set.
+Their analysis identifies an additional gradient term when that condition is
+dropped. The dimension improvements of \citet{Yu26} primarily use two-point
+feedback; their one-point extension concerns linear losses on hyperrectangles.
+Neither assumption is part of our model.
+
+\paragraph{Lower bounds and convex geometry.}
+\citet[Theorem~6]{Shamir13} establishes the quadratic regret--information
+tradeoff underlying our lower bound. We adapt it to bounded realized losses
+under exact feedback, retaining curvature and radius. This is distinct from
+an optimization-error bound for a single quadratic: informative exploration
+itself incurs cumulative regret. The newer lower bounds of \citet{RH26}
+concern general Lipschitz convex functions with Gaussian observation noise,
+rather than our fixed-curvature class of bounded per-round losses.
+Finally, the Gaussian--gauge comparison of \citet{BK26} supplies the geometric
+input for the upper bound. We use its unconditional $O(\log(ed))$ expectation
+comparison for nonsymmetric gauges and general log-concave measures.
+
+\section{A feasible core from Gaussian--gauge comparison}\label{sec:geometry}
+This section isolates the geometric input. The aim is to place substantial
+Gaussian mass inside a symmetric feasible region after covariance
+normalization, without requiring a Euclidean ball of comparable radius to
+lie entirely inside that region.
+
+A gauge is a nonnegative convex positively homogeneous function on $\R^d$;
+it need not be even. If a convex body $L$ contains the origin in its interior,
+its Minkowski gauge is
+\[
+ \gamma_L(z)=\inf\{a>0:z\in aL\}.
+\]
+A random vector is isotropic if it has mean zero and covariance $I_d$.
+We use the following external result.
+
+\begin{theorem}[Gaussian--gauge comparison, \citealp{BK26}]\label{thm:gauge}
+There is a universal $C_{\mathrm g}>0$ such that, for every isotropic
+log-concave random vector $Y$ in $\R^d$, every gauge $\varphi$, and
+$G\sim N(0,I_d)$,
+\begin{equation}\label{eq:gaugecomparison}
+ \E\varphi(G)\leq A_d\E\varphi(Y),
+ \qquad A_d=C_{\mathrm g}\log(ed).
+\end{equation}
+\end{theorem}
+
+For $d\geq2$, this is Corollary~1.6 of \citet{BK26}, with its Gaussian
+covariance scale converted to a standard-deviation scale by homogeneity.
+The nonsymmetric formulation is stated with their Theorem~1.5 and proved in
+Theorem~3.5. It applies to general log-concave laws, not only uniform measures.
+For $d=1$, apply the two-dimensional statement to $(Y,G')$, with an independent
+standard Gaussian $G'$, and to $(x,z)\mapsto\varphi(x)$; the definition permits
+this gauge to vanish in some directions. Thus a larger universal constant
+covers every dimension. No KLS conjecture is assumed.
+\begin{lemma}[A Gaussian-sized symmetric core]\label{lem:coregeometry}
+Let $\pi$ be a full-dimensional log-concave probability on $K$, with mean $m$
+and covariance $\Sigma\succ0$. Put
+\[
+ L=\Sigma^{-1/2}(K-m),\qquad
+ S=L\cap(-L),\qquad \gamma=\gamma_S=\max\{\gamma_L,\gamma_L(-\cdot)\}.
+\]
+Fix the deterministic exploration scale
+\begin{equation}\label{eq:s}
+ s=16(1+A_d).
+\end{equation}
+Then
+\begin{equation}\label{eq:coregeom}
+ \E\gamma(G/s)\leq\frac18,
+ \qquad \operatorname{Lip}_2(\gamma)\leq s.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The mean is in $\operatorname{int}K$: otherwise a supporting hyperplane
+through the mean would force a full-dimensional probability onto that
+hyperplane. The covariance is positive definite for the same reason. Hence
+$L,S$ are compact convex bodies with the origin in their interior.
+For $V\sim\pi$, $Y=\Sigma^{-1/2}(V-m)$ is isotropic and log-concave, and
+$\gamma_L(Y)\leq1$ almost surely. Thus Theorem~\ref{thm:gauge} gives
+$\E\gamma_L(G)\leq A_d$. Gaussian symmetry implies
+\[
+ \E\gamma(G)
+ \leq\E\gamma_L(G)+\E\gamma_L(-G)\leq2A_d.
+\]
+This proves the first assertion. Since $\gamma$ is a norm, it is the support
+function of the symmetric polar $S^\circ$. For each $v\in S^\circ$,
+$\gamma(G)\geq|\ip vG|$, whence
+\[
+ \operatorname{Lip}_2(\gamma)
+ =\sup_{v\in S^\circ}\norm v_2
+ \leq\sqrt{\pi/2}\,\E\gamma(G)\leq s.
+\]
+No Euclidean regularity assumption on the loss was changed in this argument.
+\end{proof}
+
+\section{Score-dominating proper exploration}\label{sec:sampler}
+A smoothing density supplies a gradient identity, while a play density
+determines which action is observed. We choose the play density proportional
+to an envelope for the gradient of the smoothing density.
+This controls the importance weight even near the boundary and gives a
+pathwise bound on the estimator.
+
+For the objects in Lemma~\ref{lem:coregeometry}, let $\phi_s$ be the density of
+$N(0,s^{-2}I_d)$, and define
+\begin{align}
+ h(z)&=(1-\gamma(z))_+,\label{eq:h}\\
+ Z&=\int_{\R^d}\phi_s(z)h(z)^2\,dz,\qquad
+ p(z)=\frac{\phi_s(z)h(z)^2}{Z},\label{eq:p}\\
+ N&=\int_{\R^d}\phi_s(z)h(z)(s^2\norm z_2+2s)\,dz,\qquad
+ q(z)=\frac{\phi_s(z)h(z)(s^2\norm z_2+2s)}{N}.\label{eq:q}
+\end{align}
+Here $p$ is a smoothing density and $q$ is the play density. Both are determined by the known domain and the current mean and covariance.
+The taper $h$ vanishes at the boundary; its square in $p$ makes the
+integration-by-parts identity compatible with a nonsmooth support.
+Draw $z\sim q$, play $X=m+\Sigma^{1/2}z$, and, after observing $f(X)$, set
+\begin{equation}\label{eq:estimator}
+ \widehat g=\frac NZ f(X)\Sigma^{-1/2}
+ \frac{s^2 z h(z)+2\nabla\gamma(z)}{s^2\norm z_2+2s}.
+\end{equation}
+The gradient of the gauge exists Lebesgue almost everywhere. We set $\nabla\gamma=0$ on its
+null nondifferentiability set. This is a
+\emph{domain-geometric} derivative, not a loss-gradient oracle.
+
+\begin{lemma}[Sampler guarantees]\label{lem:sampler}
+The above sampler has all the following properties:
+\begin{align}
+ &X\in K\quad\text{almost surely},\qquad \E_p[z]=\E_q[z]=0;\label{eq:feasible}\\
+ &\E_p[zz^\top]\preceq\frac8{s^2}I_d,
+ \qquad \E_q[zz^\top]\preceq\frac{32}{s^2}I_d;\label{eq:explorecov}\\
+ &\E_q[\widehat g]
+     =\E_{z\sim p}[\nabla f(m+\Sigma^{1/2}z)];\label{eq:unbiased}\\
+ &\norm{\Sigma^{1/2}\widehat g}_2\leq16s\sqrt d
+   \quad\text{almost surely, whenever }0\leq f\leq1.\label{eq:boundedlocal}
+\end{align}
+Every term used by the sampler can be specified using domain geometry and one
+loss evaluation at the played point.
+\end{lemma}
+\begin{proof}
+All densities in \eqref{eq:p}--\eqref{eq:q} vanish outside $S$, and
+$m+\Sigma^{1/2}S\subseteq K$. They are even, so both centered perturbations
+have mean zero. This proves \eqref{eq:feasible}.
+
+Let $G\sim N(0,I_d)$. Markov's inequality and \eqref{eq:coregeom} give
+\[
+ \Pp(\gamma(G/s)\leq1/2)\geq3/4,
+ \qquad Z\geq\frac{3}{16}.
+\]
+Also
+\[
+ N=s\E\bigl[h(G/s)(\norm G_2+2)\bigr]\leq3s\sqrt d.
+\]
+For a lower bound, denote the event $\{\gamma(G/s)>1/2\}$ by $B$. Then
+\[
+ \E[\norm G_2\mathbf1_B]\leq\sqrt{d\Pp(B)}\leq\tfrac12\sqrt d,
+ \qquad \E\norm G_2\geq\sqrt{2/\pi}\sqrt d.
+\]
+The latter follows from $\norm G_2\geq d^{-1/2}\sum_i|G_i|$. Consequently,
+\begin{equation}\label{eq:Nlower}
+ N\geq b\,s\sqrt d,
+ \qquad b=\tfrac12\bigl(\sqrt{2/\pi}-\tfrac12\bigr)>0.
+\end{equation}
+Since $h\leq1$ and $Z\geq3/16$, the $p$ covariance bound is immediate.
+For any $A\succeq0$, Gaussian moments imply
+\[
+ \E[(G^\top A G)^2]\leq3(\tr A)^2,
+ \qquad \E[(G^\top A G)\norm G_2]\leq\sqrt{3d}\,\tr A.
+\]
+Thus
+\[
+ \E_q[z^\top A z]
+ \leq\frac{(\sqrt{3d}+2)\tr A}{sN}
+ \leq\frac{\sqrt3+2}{b}\frac{\tr A}{s^2}
+ \leq\frac{32\tr A}{s^2},
+\]
+which proves \eqref{eq:explorecov}.
+
+The gauge is globally Lipschitz. Therefore $h=(1-\gamma)_+$ is
+Lipschitz and compactly supported, and $p\in W^{1,1}(\R^d)$ (indeed it is
+Lipschitz with compact support). This is a \emph{global} zero-extension statement,
+not an appeal to a smooth boundary of $S$. In particular, its distributional
+gradient is an $L^1$ vector field and has no singular boundary measure.
+Almost everywhere in $S$,
+\begin{equation}\label{eq:scoreidentity}
+ -\nabla p(z)=\frac{\phi_s(z)}{Z}
+       \bigl(s^2z h(z)^2+2h(z)\nabla\gamma(z)\bigr).
+\end{equation}
+For $q$-almost every $z$, the estimator \eqref{eq:estimator} is exactly
+\[
+ f(m+\Sigma^{1/2}z)\Sigma^{-1/2}\frac{-\nabla p(z)}{q(z)}.
+\]
+Integration by parts therefore gives
+\[
+ \int q(z)\widehat g(z)\,dz
+ =\Sigma^{-1/2}\int p(z)\nabla_z f(m+\Sigma^{1/2}z)\,dz
+ =\int p(z)\nabla f(m+\Sigma^{1/2}z)\,dz.
+\]
+For complete justification, multiply the $C^1$ function
+$z\mapsto f(m+\Sigma^{1/2}z)$ on a neighborhood of $S$ by a smooth compactly
+supported cutoff equal to one near $S$, and extend by zero. Apply the weak
+integration-by-parts identity to this test function. Only its values and
+first derivatives on $S$ survive. No loss evaluation outside $K$ is used.
+All of $m,\Sigma,p,q$ are held fixed in this identity: we are \emph{not}
+differentiating a family of distributions depending on $m$.
+
+Finally, $\norm{\nabla\gamma(z)}_2\leq s$ almost everywhere, and $h\leq1$.
+The vector fraction in \eqref{eq:estimator} has Euclidean norm at most one.
+Since $N/Z\leq16s\sqrt d$, \eqref{eq:boundedlocal} follows.
+\end{proof}
+
+\begin{remark}[Sampling before evaluating the loss]
+The play law is a genuine probability kernel. For example, propose from the
+normalized density proportional to
+$\phi_s(z)(s^2\norm z_2+2s)$, then accept with probability $h(z)$.
+Its acceptance probability is $N/[s(\E\norm G_2+2)]\geq b/3>0$.
+The radial proposal is a mixture of a Gaussian radius and its radius-biased
+law. Rejected proposals require geometry only; the single loss evaluation is
+made \emph{after} acceptance. The ratio $N/Z$ and the mean and covariance
+remain exact geometric integrals here. This observation does not establish
+an efficient finite-precision implementation of the complete algorithm.
+\end{remark}
+
+
+\paragraph{The role of the play density.}
+The score $-\nabla\log p$ contains a term proportional to
+$\nabla\gamma/h$, which can diverge as $h$ approaches zero. Direct sampling
+from $p$ would not provide \eqref{eq:boundedlocal}. In contrast, $q$ has only
+one power of $h$ and includes a radial upper bound on the remaining score.
+Consequently $(-\nabla p)/q$ has bounded Euclidean norm. The construction does
+not identify $p$ and $q$: the smoothing bias below uses $p$, while the cost of
+the action actually played uses $q$. Exact support in $S$ is also stronger
+than a high-probability feasibility argument.
+
+\section{The online algorithm}\label{sec:algorithm}
+Set $\lambda=\mu$ and fix a learning rate $\eta>0$. We maintain quadratic
+potentials and their exponential-weights distributions:
+\begin{align}
+ F_1(x)&=\frac\lambda2\norm{x}_2^2,\label{eq:F1}\\
+ \pi_t(dx)&=\frac{e^{-\eta F_t(x)}\,dx}{\int_K e^{-\eta F_t(v)}\,dv},
+ \qquad m_t=\E_{\pi_t}x,\quad\Sigma_t=\Cov_{\pi_t}(x),\label{eq:pi}\\
+ \widehat\ell_t(x)&=\ip{\widehat g_t}{x-m_t}
+                  +\frac\lambda2\norm{x-m_t}_2^2,
+ \qquad F_{t+1}=F_t+\widehat\ell_t.\label{eq:update}
+\end{align}
+Only a single tilt vector needs to be updated: up to an irrelevant
+additive constant,
+\[
+ F_t(x)=\frac{\lambda t}{2}\norm{x}_2^2+\ip{b_t}x,
+ \qquad b_{t+1}=b_t+\widehat g_t-\lambda m_t.
+\]
+Algorithm~\ref{alg:main} specifies the complete interaction protocol. Its inputs
+include $s$ from \eqref{eq:s}. The learning-rate selection and the option of
+using a trivial strategy at small horizons are specified in
+Theorem~\ref{thm:parameter} below.
+
+\begin{figure}[tbp]
+\begin{minipage}{\textwidth}
+\small
+\hrule\vspace{6pt}
+\refstepcounter{algorithm}\label{alg:main}
+\noindent\textbf{Algorithm \thealgorithm. Proper Gaussian-core exponential weights}
+\par\vspace{5pt}\hrule\vspace{6pt}
+\noindent\textbf{Input:} Known $K\in\cK_d$, horizon $T$, $\lambda=\mu$,
+scale $s$, learning rate $\eta$.\par
+\noindent\textbf{Initialize:} $b_1=0$.\par
+\noindent\textbf{For each round $t=1,\ldots,T$:}
+\begin{enumerate}[label=\arabic*.,leftmargin=1.8em,itemsep=3pt,topsep=4pt]
+ \item Form $\pi_t(dx)\propto
+   \exp\!\left(-\eta[\lambda t\norm{x}_2^2/2+\ip{b_t}x]\right)\mathbf1_K(x)\,dx$.
+ \item Compute its mean $m_t$ and covariance $\Sigma_t$.
+ \item Set $L_t=\Sigma_t^{-1/2}(K-m_t)$, $S_t=L_t\cap(-L_t)$,
+   and $\gamma_t=\gamma_{S_t}$.
+ \item Define $h_t,Z_t,N_t,p_t,q_t$ by \eqref{eq:h}--\eqref{eq:q}.
+ \item Draw $z_t\sim q_t$ and play $X_t=m_t+\Sigma_t^{1/2}z_t\in K$.
+ \item Observe the single scalar $y_t=f_t(X_t)$.
+ \item Form $\widehat g_t$ by \eqref{eq:estimator}, using $y_t$.
+ \item Set $b_{t+1}=b_t+\widehat g_t-\lambda m_t$.
+\end{enumerate}
+\vspace{2pt}\hrule
+\end{minipage}
+\end{figure}
+
+The history $\mathcal H_{t-1}$ contains all previous actions, observations, and
+internal state. For a fixed oblivious loss sequence, $f_t$ is deterministic,
+and $\pi_t,m_t,\Sigma_t,p_t,q_t$ are $\mathcal H_{t-1}$-measurable. Conditional
+on this history, Lemma~\ref{lem:sampler} applies with no random parameters left
+unconditioned. Its integrals, rejected proposals, and gauge derivatives are
+geometric operations, not additional observations of $f_t$.
+
+The next two lemmas connect this state to the regret proof.
+The proofs, including finite-horizon integrability, appear in
+Appendix~\ref{app:analytic}.
+
+\begin{lemma}[Covariance contraction and well-definedness]\label{lem:state}
+Algorithm~\ref{alg:main} defines a measurable proper one-point strategy.
+For each fixed finite horizon its estimators and surrogates are integrable.
+Moreover,
+\begin{equation}\label{eq:covcontraction}
+ \Sigma_t\preceq\frac1{\eta\lambda t}I_d,
+ \qquad \sum_{t=1}^T\tr\Sigma_t
+       \leq\frac{d(1+\log T)}{\eta\lambda}.
+\end{equation}
+These statements hold on arbitrary convex bodies, including nonsmooth ones.
+\end{lemma}
+
+\begin{lemma}[Local exponential moments]\label{lem:mgf}
+For a log-concave probability $\pi$ with mean $m$ and covariance $\Sigma$, if
+$v^\top\Sigma v\leq1/4$, then
+\begin{equation}\label{eq:mgfexplicit}
+ \log\E_{U\sim\pi} e^{\ip v{U-m}}\leq2e\,v^\top\Sigma v.
+\end{equation}
+\end{lemma}
+
+This local inequality is sufficient even when $\widehat g_t$ has a large
+ordinary Euclidean norm. By \eqref{eq:boundedlocal}, every realized estimator
+satisfies the hypothesis for $v=-\eta\widehat g_t$ as soon as
+\begin{equation}\label{eq:etarestriction}
+ \eta\leq\frac1{32s\sqrt d}.
+\end{equation}
+
+\section{Regret analysis}\label{sec:analysis}
+The proof has two separate steps: an exponential-weights bound for the quadratic
+surrogates, including boundary comparators, and a smoothness-based comparison
+between those surrogates and the actual incurred losses.
+
+\subsection{Surrogate regret with boundary comparators}
+A simple consequence of the loss assumptions is
+\begin{equation}\label{eq:globalG}
+ \sup_{x\in K}\norm{\nabla f_t(x)}_2\leq G_0:=4d+\beta.
+\end{equation}
+Indeed, convexity and the inball bound $\norm{\nabla f_t(0)}_2$ by $4d$, and
+smoothness controls the variation away from zero. Appendix~\ref{app:regularity}
+justifies the gradient-Lipschitz consequence of \eqref{eq:sm} on the closed
+domain. This gradient bound is used only in the comparison-distribution error;
+its dimension dependence enters the regret bound through a logarithm.
+\begin{lemma}[Expected surrogate bound including boundary comparators]
+\label{lem:surreg}
+Put $G_0=4d+\beta$ and
+\begin{equation}\label{eq:delta}
+ \delta=\frac1{T(2G_0+6\lambda+1)}.
+\end{equation}
+If $\eta\leq1/(32s\sqrt d)$, then, for every fixed $u\in K$,
+\begin{equation}\label{eq:surreg}
+ \E\left[-\sum_{t=1}^T\widehat\ell_t(u)\right]
+ \leq5+\frac{d\log(1/\delta)}\eta+C_1\eta d s^2T,
+\end{equation}
+where one may take $C_1=512e$.
+\end{lemma}
+\begin{proof}
+Let $U_K$ be uniform on $K$, and let
+$\mathcal Z_t=\int e^{-\eta F_t(x)}U_K(dx)$. For every realized estimator,
+\begin{align*}
+ \frac{\mathcal Z_{t+1}}{\mathcal Z_t}
+ &=\E_{V\sim\pi_t}
+     \exp\left(-\eta\ip{\widehat g_t}{V-m_t}
+                     -\frac{\eta\lambda}2\norm{V-m_t}_2^2\right)\\
+ &\leq\E_{V\sim\pi_t}e^{-\eta\ip{\widehat g_t}{V-m_t}}.
+\end{align*}
+Lemma~\ref{lem:sampler} and Lemma~\ref{lem:mgf} imply
+\[
+ \log\mathcal Z_{T+1}-\log\mathcal Z_1
+ \leq 2e\eta^2\sum_{t=1}^T\widehat g_t^\top\Sigma_t\widehat g_t
+ \leq512e\eta^2ds^2T.
+\]
+The integration variable $V$ is an auxiliary draw used only to evaluate the
+partition-function ratio, not an extra loss query. This step is pathwise:
+the exponential-moment inequality holds for every
+vector of the prescribed local norm, even though $\widehat g_t$ is random.
+Since $F_1\geq0$, $\log\mathcal Z_1\leq0$.
+
+For any deterministic comparison probability $Q\ll U_K$, the variational
+inequality for the log partition function gives
+\[
+ \log\mathcal Z_{T+1}\geq-\eta\E_Q F_{T+1}-\KL(Q\Vert U_K).
+\]
+Therefore,
+\begin{equation}\label{eq:Qbound}
+ -\sum_{t=1}^T\E_Q\widehat\ell_t
+ \leq\E_QF_1+\frac{\KL(Q\Vert U_K)}\eta+C_1\eta ds^2T.
+\end{equation}
+Use $Q=Q_{u,\delta}$, the uniform law on $(1-\delta)u+\delta K$. This set is
+contained in $K$ even for $u\in\partial K$, and
+\[
+ \KL(Q_{u,\delta}\Vert U_K)=d\log(1/\delta).
+\]
+All $x$ in its support satisfy $\norm{x-u}_2\leq2\delta$. Since $m_t,u\in K$,
+\[
+ \left|\frac\lambda2
+ (\norm{x-m_t}_2^2-\norm{u-m_t}_2^2)\right|\leq6\lambda\delta.
+\]
+By \eqref{eq:globalG}, the loss gradients satisfy
+$\norm{\nabla f_t(x)}_2\leq G_0$ on $K$. By \eqref{eq:unbiased},
+$\norm{\E_t\widehat g_t}_2\leq G_0$. Consequently,
+\[
+ \E\left[\E_Q\widehat\ell_t(x)-\widehat\ell_t(u)\right]
+ \leq(2G_0+6\lambda)\delta.
+\]
+The comparison law $Q_{u,\delta}$ is deterministic. Lemma~\ref{lem:state}
+justifies Fubini and the tower property in this calculation. Sum the inequality,
+take expectations in \eqref{eq:Qbound}, and use
+$\E_QF_1\leq4$ and \eqref{eq:delta}. Indeed, $\lambda=\mu$, $0\in K$,
+and Proposition~\ref{prop:admissibility} imply
+$F_1(x)=\mu\norm{x}_2^2/2\leq\mu\diam(K)^2/2\leq4$.
+This proves
+\eqref{eq:surreg}. Comparator smoothing is used only in this analysis;
+it does not add a loss-oracle call or impose a margin on $u$.
+\end{proof}
+
+
+\subsection{An averaged-tangent comparison}
+The following centered comparison avoids a norm bound on the gradient bias.
+It retains the full strong-convexity term, so we may use
+$\lambda=\mu$ rather than sacrifice part of the curvature in Young's inequality.
+
+\begin{lemma}[Centered averaged tangents]\label{lem:tangent}
+Let $f$ be $\mu$-strongly convex and $\beta$-smooth on $K$. Let $Y$ be a
+$K$-valued random vector with $\E Y=m\in K$, write
+$S_Y=\E\norm{Y-m}_2^2$ and $g_Y=\E\nabla f(Y)$. Then for every $u\in K$,
+\begin{equation}\label{eq:tangent}
+ f(m)-f(u)\leq\ip{g_Y}{m-u}-\frac\mu2\norm{m-u}_2^2
+                         +\frac{\beta-\mu}{2}S_Y.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Apply the smooth upper inequality from $Y$ to $m$ and the strongly convex
+lower inequality from $Y$ to $u$, then subtract:
+\[
+ f(m)-f(u)\leq\ip{\nabla f(Y)}{m-u}
+            +\frac\beta2\norm{m-Y}_2^2
+            -\frac\mu2\norm{u-Y}_2^2.
+\]
+Take expectations and use
+$\E\norm{u-Y}_2^2=\norm{u-m}_2^2+S_Y$. All points in these inequalities
+belong to $K$, even when $u\in\partial K$.
+\end{proof}
+
+\begin{lemma}[True regret from the two densities]\label{lem:regtransfer}
+For every fixed $u\in K$ and every round, Algorithm~\ref{alg:main} with
+$\lambda=\mu$ satisfies
+\begin{equation}\label{eq:regtransfer}
+ \E_t[f_t(X_t)-f_t(u)]
+ \leq-\E_t\widehat\ell_t(u)
+          +(20\beta-4\mu)\frac{\tr\Sigma_t}{s^2}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Condition on the past. Write $m=m_t$, $\Sigma=\Sigma_t$,
+$\bar g=\E_t\widehat g_t$, and let $Y=m+\Sigma^{1/2}z$ with $z\sim p$ as an
+auxiliary integration variable, not a played action. Define
+\[
+ S_p=\E_p\norm{\Sigma^{1/2}z}_2^2,\qquad
+ S_q=\E_q\norm{\Sigma^{1/2}z}_2^2.
+\]
+The sampler guarantees $\E Y=\E_tX_t=m$,
+$\bar g=\E_p\nabla f_t(Y)$, and
+$S_p\leq8\tr\Sigma/s^2$, $S_q\leq32\tr\Sigma/s^2$.
+By smoothness of the actual play and Lemma~\ref{lem:tangent},
+\begin{align*}
+ \E_t[f_t(X_t)-f_t(u)]
+ &\leq f_t(m)-f_t(u)+\frac\beta2S_q\\
+ &\leq\ip{\bar g}{m-u}-\frac\mu2\norm{m-u}_2^2
+                +\frac{\beta-\mu}{2}S_p+\frac\beta2S_q\\
+ &=-\E_t\widehat\ell_t(u)
+                +\frac{\beta-\mu}{2}S_p+\frac\beta2S_q.
+\end{align*}
+Substitution of the two second-moment bounds yields
+$4(\beta-\mu)+16\beta=20\beta-4\mu$.
+\end{proof}
+
+A direct bound on $\norm{\bar g-\nabla f_t(m)}$ followed by Young's inequality
+would instead introduce a $\beta^2/\mu$ term before covariance contraction.
+Lemma~\ref{lem:tangent} avoids that unnecessary loss. The two densities remain
+distinct: $p$ supplies the averaged tangent and $q$ supplies the incurred cost.
+No translated distribution around the comparator is required.
+
+\Needspace{16\baselineskip}
+\subsection{Parameter-explicit guarantee and horizon tuning}
+\begin{theorem}[Explicit upper bound and legal tuning]\label{thm:parameter}
+Fix $0<\mu\leq\beta$, $K\in\cK_d(\mu,\beta)$, and an oblivious admissible
+loss sequence. Set $\lambda=\mu$, $\kappa=\beta/\mu$, $G_0=4d+\beta$, and
+\begin{align}
+ \delta&=\frac1{T(2G_0+6\mu+1)},\nonumber\\
+ H&=\log(1/\delta)+\frac{(20\kappa-4)(1+\log T)}{s^2},\label{eq:H}\\
+ U&=5+2ds\sqrt{512e\,HT}.\label{eq:U}
+\end{align}
+If $U<T$, run Algorithm~\ref{alg:main} with
+$\eta=\sqrt{H/(512e\,s^2T)}$; otherwise play $0$ at every round. Then, for
+every deterministic $u\in K$ and every horizon,
+\begin{equation}\label{eq:explicitupper}
+ \E\Reg_T(u)\leq\min\{T,U\}.
+\end{equation}
+\end{theorem}
+\begin{proof}
+Combine Lemmas~\ref{lem:surreg} and~\ref{lem:regtransfer} with covariance
+contraction \eqref{eq:covcontraction}. Since $\lambda=\mu$, every
+$\eta\leq1/(32s\sqrt d)$ gives the master inequality
+\begin{equation}\label{eq:master}
+ \E\Reg_T(u)\leq5+
+ \frac d\eta\left[\log(1/\delta)
+                  +\frac{(20\kappa-4)(1+\log T)}{s^2}\right]
+                 +512e\,\eta ds^2T.
+\end{equation}
+In particular, the curvature coefficient is exactly
+$(20\beta-4\mu)/\mu=20\kappa-4$, with all traces measured in the original
+Euclidean coordinates.
+
+If $U<T$, then $T>4(512e)d^2s^2H$. This implies $T\geq(2/e)dH$, which is
+precisely sufficient for
+$\eta=\sqrt{H/(512e\,s^2T)}\leq1/(32s\sqrt d)$.
+Substitution in \eqref{eq:master} gives $\E\Reg_T(u)\leq U$.
+Otherwise the fixed action zero gives regret at most $T$. Thus no hidden
+large-horizon condition is needed.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+The identity $s^2H=\Psi$ makes \eqref{eq:precisegeneral} exactly the conclusion
+of Theorem~\ref{thm:parameter}. To derive \eqref{eq:generalupper}, note that
+Proposition~\ref{prop:admissibility} gives $\mu\leq32d^2$, and therefore
+$\beta=\kappa\mu\leq32\kappa d^2$. Consequently
+\[
+ 8d+2\beta+6\mu+1\leq265\kappa d^2,
+ \qquad L\leq C\log(edT\kappa).
+\]
+Since $s=O(\log(ed))$, $20\kappa-4\leq20\kappa$, and $d,T,\kappa\geq1$,
+a universal constant absorbs the additive five in \eqref{eq:precisegeneral}.
+This proves \eqref{eq:generalupper} for each fixed $u\in K$. Set $u=x_T^*$,
+which is deterministic for an oblivious sequence, and take the minimax extrema.
+\end{proof}
+
+\paragraph{Where the dimension improvement occurs.}
+The partition-function argument pays an entropy cost of
+$O(d\log(edT))/\eta$ and an estimation cost of $O(\eta ds^2T)$.
+The exploration error contributes
+$O(d\kappa(1+\log T)/(\eta s^2))$. At fixed curvature, the balance is $d s\sqrt{T\log(edT)}$.
+The only nonconstant geometric scale is $s=O(\log(ed))$; no barrier parameter,
+comparator margin, or inverse covariance eigenvalue enters this final bound.
+The finite-horizon eigenvalue bounds needed for integrability are deliberately
+kept out of the rate calculation.
+
+\section{Quadratic lower bound under exact bounded feedback}\label{sec:lower}
+We use quadratic losses to retain the curvature parameters without imposing a
+positive gap $\beta-\mu$. The argument adapts the regret--information tradeoff of
+\citet[Theorem~6]{Shamir13} to exact bounded feedback. Compactly supported
+offsets keep every realized loss admissible. Since shifted compact supports
+need not be mutually absolutely continuous, we control Hellinger distance
+instead of Kullback--Leibler divergence.
+
+Fix the radius and bounded-loss headroom in \eqref{eq:lowerparams}, and put
+\begin{equation}\label{eq:quadscale}
+ \sigma=\Delta/8,\qquad
+ a^2=\min\!\left\{\frac{\mu^2R^2}{64d},\;
+                   \frac{\Delta^2}{64dR^2},\;
+                   \frac{\mu\sigma}{16\pi\sqrt T}\right\}.
+\end{equation}
+Let $\theta$ be uniform on $\{-1,1\}^d$, and presample independent offsets
+$\xi_t$ with density
+$q_0(z)=\cos^2(\pi z/2)\mathbf1_{\{|z|\leq1\}}$. Define
+\begin{equation}\label{eq:lowerfamily}
+ f_t(x)=b_0+\frac\mu2\norm{x}_2^2-a\ip{\theta}x+\sigma\xi_t,
+ \qquad b_0=\sigma+aR\sqrt d.
+\end{equation}
+The Hessian is exactly $\mu I_d$, so these losses belong to every smoothness
+class with $\beta\geq\mu$. The scale in \eqref{eq:quadscale} keeps all values
+inside $[0,1]$ and places the common minimizer
+$x_\theta^*=(a/\mu)\theta$ inside $(R/8)B_2^d$.
+
+A single sign flip changes the observation location by $2a x_i$. In contrast
+to a nonlinear testing family with uniformly small value differences, this
+difference can be larger at informative exploration points. The correct
+argument therefore tracks \emph{query energy}: the average Hellinger distance
+is controlled by $a^2\sum_t\E\norm{X_t}_2^2$, while the quadratic regret
+controls that same energy. A learner cannot acquire the signs cheaply by
+moving away from the minimizer. Appendix~\ref{app:lower} supplies the complete
+weighted recursion and contradiction argument, yielding
+\eqref{eq:lowergeneral}. The offsets cancel from regret and are part of a
+sequence fixed before play, not an additional noise channel.
+
+\section{Discussion}\label{sec:discussion}
+The fixed-curvature dimension--horizon rate of proper one-point bandit
+optimization is $\widetilde\Theta(\min\{T,d\sqrt T\})$ on the nondegenerate
+admissible domain family. The upper bound is uniform at the boundary and
+requires no dimension-dependent barrier parameter. Its main geometric feature
+is a feasible distribution with substantial mass, rather than a fully contained
+exploration ellipsoid. Separating the smoothing and play densities converts
+this feature into a pathwise local estimator bound.
+
+Three questions remain. First, the algorithm uses exact moments, gauge
+geometry, and normalizing integrals. The constant-acceptance sampler handles
+only the final draw; an efficient implementation would also need to approximate
+the state and its geometry while controlling feasibility and estimation error.
+Second, the upper and lower bounds leave logarithmic factors and the dependence
+on varying curvature parameters unmatched. The lower construction includes
+$\beta=\mu$, but does not yield a growing condition-number factor. The
+zero-regret endpoint further rules out a positive lower constant uniform over
+all feasible curvature choices.
+
+Third, the theorem is an expected-regret statement for an oblivious loss
+sequence. The boundary-comparator step controls the conditional mean of the
+estimator, rather than a uniformly small Euclidean magnitude of every
+realization. High-probability regret and a fully adaptive adversary require
+additional arguments. The present proof establishes the information-theoretic
+rate under the stated protocol, with these computational and probabilistic
+extensions left open.
+
+\clearpage
+\begin{thebibliography}{14}
+\small
+\setlength{\itemsep}{5pt}
+\raggedright
+
+\bibitem[Ba et~al.(2025)]{Ba25}
+Wenjia Ba, Tianyi Lin, Jiawei Zhang, and Zhengyuan Zhou.
+\newblock Doubly optimal no-regret online learning in strongly monotone games
+with bandit feedback.
+\newblock \emph{Operations Research}, 73(6):3219--3244, 2025.
+\newblock doi:10.1287/opre.2021.0445.
+\newblock Parameter-explicit comparison uses Appendix~B, Eq.~(B.7), of the
+accompanying preprint, \url{https://arxiv.org/abs/2112.02856v4}.
+
+\bibitem[Bizeul and Klartag(2026)]{BK26}
+Pierre Bizeul and Boaz Klartag.
+\newblock Distances between non-symmetric convex bodies: optimal bounds up to
+polylog.
+\newblock arXiv:2510.20511v3, July 1, 2026. First circulated in 2025.
+\newblock \url{https://arxiv.org/abs/2510.20511v3}.
+
+\bibitem[Bubeck et~al.(2021)]{BEL21}
+S\'ebastien Bubeck, Ronen Eldan, and Yin Tat Lee.
+\newblock Kernel-based methods for bandit convex optimization.
+\newblock \emph{Journal of the ACM}, 68(4), Article 25:1--35, 2021.
+\newblock doi:10.1145/3453721.
+\newblock \url{https://arxiv.org/abs/1607.03084}.
+
+\bibitem[Flaxman et~al.(2005)]{FKM05}
+Abraham D. Flaxman, Adam Tauman Kalai, and H. Brendan McMahan.
+\newblock Online convex optimization in the bandit setting: gradient descent
+without a gradient.
+\newblock In \emph{Proceedings of the Sixteenth Annual ACM--SIAM Symposium on
+Discrete Algorithms}, pages 385--394, 2005.
+\newblock \url{https://arxiv.org/abs/cs/0408007}.
+
+\bibitem[Fokkema et~al.(2024)]{Fokkema24}
+Hidde Fokkema, Dirk van der Hoeven, Tor Lattimore, and Jack J. Mayo.
+\newblock Online Newton method for bandit convex optimisation (extended abstract).
+\newblock In \emph{Proceedings of the 37th Conference on Learning Theory},
+volume 247 of \emph{Proceedings of Machine Learning Research}, pages 1713--1714,
+2024.
+\newblock \url{https://proceedings.mlr.press/v247/fokkema24a.html}.
+\newblock Full version: arXiv:2406.06506.
+
+\bibitem[Hazan and Levy(2014)]{HL14}
+Elad Hazan and Kfir Y. Levy.
+\newblock Bandit convex optimization: towards tight bounds.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+volume 27, pages 784--792, 2014.
+\newblock \url{https://proceedings.neurips.cc/paper_files/paper/2014/hash/3ce3c4f8183442957d051dc8ebed2668-Abstract.html}.
+
+\bibitem[Ito(2020)]{Ito20}
+Shinji Ito.
+\newblock An optimal algorithm for bandit convex optimization with
+strongly-convex and smooth loss.
+\newblock In \emph{Proceedings of the Twenty Third International Conference on
+Artificial Intelligence and Statistics}, volume 108 of \emph{Proceedings of
+Machine Learning Research}, pages 2229--2239, 2020.
+\newblock \url{https://proceedings.mlr.press/v108/ito20a.html}.
+
+\bibitem[Lattimore(2019)]{Lat20}
+Tor Lattimore.
+\newblock Improved regret for zeroth-order adversarial bandit convex optimisation.
+\newblock \emph{Mathematical Statistics and Learning}, 2(3/4):311--334, 2019.
+\newblock doi:10.4171/MSL/17. Published online in 2020.
+\newblock \url{https://ems.press/journals/msl/articles/17218}.
+
+\bibitem[Liu et~al.(2025)]{Liu25}
+Xiaoqi Liu, Dorian Baudry, Julian Zimmert, Patrick Rebeschini, and Arya Akhavan.
+\newblock Non-stationary bandit convex optimization: a comprehensive study.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+volume 38, 2025.
+\newblock doi:10.52202/085713-2198.
+\newblock \url{https://arxiv.org/abs/2506.02980}.
+
+\bibitem[Lov\'asz and Vempala(2007)]{LV07}
+L\'aszl\'o Lov\'asz and Santosh Vempala.
+\newblock The geometry of logconcave functions and sampling algorithms.
+\newblock \emph{Random Structures \& Algorithms}, 30(3):307--358, 2007.
+\newblock \url{https://faculty.cc.gatech.edu/~vempala/papers/logcon.pdf}.
+
+\bibitem[Rajaraman and Han(2026)]{RH26}
+Nived Rajaraman and Yanjun Han.
+\newblock The price of hidden curvature: improved lower bounds for bandit convex
+optimization.
+\newblock arXiv:2607.18652v3, August 20, 2026.
+\newblock \url{https://arxiv.org/abs/2607.18652v3}.
+
+\bibitem[Shamir(2013)]{Shamir13}
+Ohad Shamir.
+\newblock On the complexity of bandit and derivative-free stochastic convex
+optimization.
+\newblock In \emph{Proceedings of the 26th Annual Conference on Learning Theory},
+volume 30 of \emph{Proceedings of Machine Learning Research}, pages 3--24, 2013.
+\newblock \url{https://proceedings.mlr.press/v30/Shamir13.html}.
+
+\bibitem[Suggala et~al.(2024)]{Suggala24}
+Arun Suggala, Y. Jennifer Sun, Praneeth Netrapalli, and Elad Hazan.
+\newblock Second order methods for bandit optimization and control.
+\newblock In \emph{Proceedings of the 37th Conference on Learning Theory},
+volume 247 of \emph{Proceedings of Machine Learning Research}, pages 4691--4763,
+2024.
+\newblock \url{https://proceedings.mlr.press/v247/suggala24a.html}.
+
+\bibitem[Yu et~al.(2026)]{Yu26}
+Hang Yu, Yu-Hu Yan, and Peng Zhao.
+\newblock Improved dimension dependence for bandit convex optimization with
+gradient variation.
+\newblock In \emph{Proceedings of the 43rd International Conference on Machine
+Learning}, volume 306 of \emph{Proceedings of Machine Learning Research},
+pages 151442--151483, 2026.
+\newblock \url{https://proceedings.mlr.press/v306/yu26bh.html}.
+\end{thebibliography}
+
+\clearpage
+\appendix
+\section{Analytic details and well-definedness}\label{app:analytic}
+\subsection{Regularity on the closed domain}\label{app:regularity}
+The assumptions \eqref{eq:sc}--\eqref{eq:sm} imply
+\begin{equation}\label{eq:gradlip}
+ \norm{\nabla f(x)-\nabla f(y)}_2\leq\beta\norm{x-y}_2
+ \qquad(x,y\in K).
+\end{equation}
+To see this using only regularity on $K$, proceed as follows. On
+$\operatorname{int}K$, both $f$ and $\beta\norm{x}_2^2/2-f(x)$ are convex.
+Convolve locally with a smooth mollifier along a compact interior line segment.
+The resulting Hessians are between $0$ and $\beta I_d$, so integrating the
+Hessian along the segment gives \eqref{eq:gradlip} for the mollifications.
+Pass to the $C^1$ limit, and then approach boundary points from the interior.
+The $C^1$ neighborhood assumption ensures continuity of the gradients there.
+If $r_0=(4d)^{-1}$, convexity and $0\leq f\leq1$ give, for every unit vector $v$,
+\[
+ r_0\ip{\nabla f(0)}v\leq f(r_0v)-f(0)\leq1.
+\]
+Taking a supremum and applying \eqref{eq:gradlip} yields
+\begin{equation}\label{eq:globalGappendix}
+ \sup_{x\in K}\norm{\nabla f(x)}_2\leq G_0:=4d+\beta.
+\end{equation}
+This bound is used only for the comparator-distribution error, where its
+polynomial dimension dependence enters a logarithm.
+
+
+\subsection{Covariance contraction on arbitrary convex supports}
+\begin{proof}[Covariance part of Lemma~\ref{lem:state}]
+The Hessian of $F_t$ is $\lambda tI_d$. To justify the covariance bound without
+assuming a smooth boundary, consider for $a>0$ the log-partition function
+\[
+ \Lambda_a(v)=\log\int_K\exp(-a\norm{x}_2^2/2+\ip vx)\,dx.
+\]
+Completing the square gives
+\[
+ \Lambda_a(v)-\frac{\norm v_2^2}{2a}
+ =\log\int_K\exp\bigl(-a\norm{x-v/a}_2^2/2\bigr)\,dx.
+\]
+The right side is concave in $v$ by preservation of log-concavity under
+marginalization (Pr\'ekopa's theorem; see~\cite[Theorem 5.1]{LV07}).
+All derivatives exist by differentiation of a compactly supported integral,
+and $\nabla^2\Lambda_a(v)$ is the covariance under the corresponding tilted
+truncated Gaussian. Thus $\nabla^2\Lambda_a\preceq I_d/a$.
+Apply this with $a=\eta\lambda t$, then sum $1/t\leq1+\log T$.
+The same covariance contraction is used in~\cite[Lemma 2]{Ito20}.
+\end{proof}
+
+
+\subsection{Finite-horizon integrability and measurable kernels}
+\begin{proof}[Well-definedness and integrability in Lemma~\ref{lem:state}]
+Write $F_t(x)=\lambda t\norm{x}_2^2/2+\ip{b_t}x+c_t$, where
+$b_1=0$ and $b_{t+1}=b_t+\widehat g_t-\lambda m_t$.
+For a fixed $t$, the covariance of the density proportional to
+$\exp(-\eta\lambda t\norm{x}_2^2/2-\eta\ip bx)$ on $K$ is continuous in $b$
+and positive definite at every finite $b$. Consequently, on every compact
+set of $b$ its minimum eigenvalue has a strictly positive minimum.
+Induct on $t$. If $\norm{b_t}_2\leq B_t$ holds uniformly over all histories,
+there is a deterministic $\epsilon_t>0$ such that
+$\Sigma_t\succeq\epsilon_t I_d$ for all those histories. Then
+\eqref{eq:boundedlocal} implies
+\[
+ \norm{\widehat g_t}_2\leq16s\sqrt{d/\epsilon_t},\qquad
+ \norm{b_{t+1}}_2\leq B_t+16s\sqrt{d/\epsilon_t}+\lambda.
+\]
+This starts from $B_1=0$ and supplies finite deterministic bounds at every
+finite $t$. Since $K$ is bounded, the surrogates and additive constants are
+also bounded on every finite run. These bounds may be extremely large;
+they are used only for integrability, not for a regret or runtime estimate.
+
+The integrals defining the means and covariances are measurable functions
+of the finite-dimensional tilt. The gauge is measurable in its parameters,
+and one may choose Borel versions of its a.e. partial derivatives by taking
+limits of difference quotients and assigning zero where they do not exist.
+Thus the displayed densities and estimator are measurable kernels. Since
+$q_t$ is absolutely continuous, the exceptional nondifferentiability set
+has conditional probability zero at every round. Finite unions remain null.
+\end{proof}
+
+
+\subsection{Proof of the local exponential-moment inequality}
+\begin{proof}[Proof of Lemma~\ref{lem:mgf}]
+Set $W=\ip v{U-m}$ and $\sigma^2=\E W^2=v^\top\Sigma v$.
+If $\sigma=0$ then $W=0$ a.s. Otherwise $W/\sigma$
+is a centered one-dimensional log-concave random variable of variance one.
+Lov\'asz--Vempala~\cite[Lemma 5.7]{LV07} gives
+$\Pp(|W|/\sigma>r)\leq e^{1-r}$ for $r>1$. The same upper bound is valid for
+$0\leq r\leq1$ because its right side is then at least one. Hence
+\[
+ \E|W|^k
+ =k\int_0^\infty t^{k-1}\Pp(|W|>t)\,dt
+ \leq e\,k!\sigma^k\qquad(k\geq1).
+\]
+For $\sigma\leq1/2$, the exponential series is absolutely integrable. As
+$\E W=0$,
+\[
+ \E e^W\leq1+\sum_{k=2}^{\infty}\frac{\E|W|^k}{k!}
+ \leq1+\frac{e\sigma^2}{1-\sigma}\leq1+2e\sigma^2.
+\]
+Take logarithms. Log-concavity of linear marginals follows from
+\cite[Theorem 5.1]{LV07}.
+\end{proof}
+
+
+\section{Proof of the quadratic lower bound}\label{app:lower}
+We use the convention $H^2(P,Q)=\int(\sqrt p-\sqrt q)^2$ for squared Hellinger
+distance. Its affinity is $\mathcal A(P,Q)=1-H^2(P,Q)/2$.
+
+\begin{lemma}[Energy-weighted adaptive Hellinger recursion]\label{lem:hellinger}
+Consider two experiments $P,Q$ with the same initial private-randomness law
+and the same adaptive action rule. Suppose that at every common history $h$
+and current action $x$, the squared Hellinger distance between the conditional
+observation laws is at most $\varepsilon_t(h,x)\geq0$. Then the laws of the
+augmented histories after $T$ observations satisfy
+\begin{equation}\label{eq:weightedhellinger}
+ H^2(P_{1:T},Q_{1:T})\leq\frac12\sum_{t=1}^T
+ \left\{\E_P\varepsilon_t(\mathcal H_{t-1},X_t)
+        +\E_Q\varepsilon_t(\mathcal H_{t-1},X_t)\right\}.
+\end{equation}
+Including the next action does not increase the distance.
+\end{lemma}
+\begin{proof}
+Include the private random seed in the history, so both experiments use a
+common action kernel at a common history. If $p,q$ denote the history
+densities relative to a common dominating measure, the exact affinity
+recursion gives
+\[
+ H^2(P_{t},Q_{t})-H^2(P_{t-1},Q_{t-1})
+ =\int\sqrt{p(h)q(h)}\!\int A_t(dx\mid h)
+        H^2(P_t(\cdot\mid h,x),Q_t(\cdot\mid h,x))\,dh.
+\]
+Bound the inner distance by $\varepsilon_t(h,x)$, then use
+$\sqrt{pq}\leq(p+q)/2$. Summing the resulting inequalities proves
+\eqref{eq:weightedhellinger}; the initial seed has zero distance. Common
+action kernels preserve affinity when the previous history is retained.
+No mutual absolute continuity of the conditional laws is needed.
+\end{proof}
+
+\Needspace{5\baselineskip}
+\begin{proof}[Proof of Theorem~\ref{thm:lowergeneral}]
+Use the parameters and random loss sequence in
+\eqref{eq:quadscale}--\eqref{eq:lowerfamily}.
+
+\paragraph{Admissibility and exact regret identity.}
+For every $x\in RB_2^d$, $|a\ip{\theta}x|\leq aR\sqrt d\leq\Delta/8$.
+Thus
+\[
+ 0\leq f_t(x)\leq\frac{\mu R^2}{2}+2aR\sqrt d+2\sigma
+ \leq1-\Delta+\frac\Delta4+\frac\Delta4
+ =1-\frac\Delta2\leq1.
+\]
+Every realized loss is smooth on all of $\R^d$ with Hessian exactly $\mu I_d$.
+Moreover,
+$\norm{x_\theta^*}_2^2=da^2/\mu^2\leq R^2/64$.
+The common minimizer is therefore feasible and strictly interior. Pointwise,
+\begin{equation}\label{eq:quadregret}
+ f_t(x)-f_t(x_\theta^*)=\frac\mu2\norm{x-x_\theta^*}_2^2.
+\end{equation}
+All offsets are presampled independently of the learner's randomness, and
+observations are exact values of these selected loss functions.
+
+\paragraph{One-step distinguishability.}
+Let $\theta^{(i)}$ flip sign $i$. The difference between the observation
+locations at a common $x$ is $2a x_i$ in absolute value. The square root
+$\sqrt{q_0(z)}=\cos(\pi z/2)\mathbf1_{\{|z|\leq1\}}$, extended by
+zero, belongs to the Sobolev space $H^1(\R)$ of square-integrable functions
+with square-integrable weak derivative. Its
+squared derivative norm is $\pi^2/4$. The translation inequality for $H^1$
+functions, obtained by integrating the weak derivative and applying
+Cauchy--Schwarz, gives
+\[
+ H^2(q_0(\cdot-u),q_0(\cdot-v))\leq\frac{\pi^2}{4}(u-v)^2.
+\]
+After scaling the offset by $\sigma$, the one-step squared distance is at most
+$\pi^2a^2x_i^2/\sigma^2$. If $P_\theta$ is the full augmented-history law,
+Lemma~\ref{lem:hellinger} yields
+\begin{equation}\label{eq:pairenergy}
+ H^2(P_\theta,P_{\theta^{(i)}})
+ \leq\frac{\pi^2a^2}{2\sigma^2}\sum_{t=1}^T
+   \left(\E_\theta X_{t,i}^2+\E_{\theta^{(i)}}X_{t,i}^2\right).
+\end{equation}
+
+\paragraph{Regret controls query energy.}
+Let $\E$ also average over the uniform prior on $\theta$, and put
+\[
+ \mathsf R=\E\Reg_T(x_\theta^*),\qquad
+ \mathsf D=\frac1d\sum_{i=1}^d2^{-d}\sum_\theta
+                    H^2(P_\theta,P_{\theta^{(i)}}).
+\]
+Averaging \eqref{eq:pairenergy}, and using the sign-flip bijection, gives
+\[
+ \mathsf D\leq\frac{\pi^2a^2}{d\sigma^2}
+                     \sum_{t=1}^T\E\norm{X_t}_2^2.
+\]
+Since $\norm{X_t}_2^2\leq2\norm{X_t-x_\theta^*}_2^2
++2\norm{x_\theta^*}_2^2$, \eqref{eq:quadregret} implies
+\begin{equation}\label{eq:energyregret}
+ \mathsf D\leq\frac{\pi^2a^2}{d\sigma^2}
+       \left(\frac{4\mathsf R}{\mu}
+                          +\frac{2dTa^2}{\mu^2}\right).
+\end{equation}
+
+\paragraph{Testing the signs.}
+For each coordinate, condition on all other signs and pair the two full
+history laws. The uniform-prior binary error is at least $(1-\TV)/2$.
+Although the action at time $t$ uses less than the full history, the same
+lower bound holds for a sign prediction extracted from that action, by data
+processing. For example, predict $+1$ when $X_{t,i}\geq0$ and $-1$ otherwise.
+Its error event is contained in $\{\theta_iX_{t,i}\leq0\}$, so ties
+cause no difficulty. As $\TV(P,Q)\leq H(P,Q)$, Cauchy--Schwarz gives
+\begin{equation}\label{eq:signsum}
+ \sum_{t=1}^T\sum_{i=1}^d\Pp(\theta_iX_{t,i}\leq0)
+ \geq\frac{dT}{2}\bigl(1-\sqrt{\mathsf D}\bigr).
+\end{equation}
+Each wrong-sign coordinate contributes at least $a^2/(2\mu)$ in
+\eqref{eq:quadregret}. Hence
+\begin{equation}\label{eq:testingregret}
+ \mathsf R\geq\frac{dTa^2}{4\mu}\bigl(1-\sqrt{\mathsf D}\bigr).
+\end{equation}
+
+\paragraph{Closing the tradeoff.}
+Write $\mathsf B=dTa^2/\mu$. If $\mathsf R<\mathsf B/8$, then
+\eqref{eq:energyregret} and \eqref{eq:quadscale} imply
+\[
+ \mathsf D<\frac{5\pi^2Ta^4}{2\mu^2\sigma^2}
+ \leq\frac5{512}<\frac14.
+\]
+Equation~\eqref{eq:testingregret} would then give
+$\mathsf R\geq\mathsf B/8$, a contradiction. Therefore
+\begin{align*}
+ \mathsf R\geq\frac{dTa^2}{8\mu}
+ &=\min\!\left\{\frac{MT}{512},\;
+                 \frac{\Delta^2T}{512M},\;
+                 \frac{\Delta d\sqrt T}{1024\pi}\right\}\\
+ &\geq\frac1{1024\pi}\min\{QT,\Delta d\sqrt T\}.
+\end{align*}
+Finally, the supremum over admissible deterministic preselected sequences is
+at least this average over $\theta,\xi_{1:T}$ for any fixed randomized learner.
+This proves the theorem under the same exact one-point feedback model.
+\end{proof}
+
+\section{Uniformity at fixed curvature}\label{app:fixed}
+\begin{proof}[Proof of Corollary~\ref{cor:fixed}]
+First suppose $0<\mu\leq1$ and use $R=1$. Then $M=\mu$,
+$\Delta=1-\mu/2\geq1/2$, and
+$Q=\min\{\mu,\Delta^2/\mu\}\geq\mu/4$. It follows that
+\[
+ \min\{QT,\Delta d\sqrt T\}
+ \geq\frac14\min\{\mu T,d\sqrt T\},
+\]
+which gives \eqref{eq:unitlower}. At fixed $\mu>0$ this implies a positive
+constant multiple of $\min\{T,d\sqrt T\}$.
+
+For completeness, arbitrary fixed $\mu>0$ can be treated uniformly over all
+integer dimensions satisfying $\mu<32d^2$. Define the integer
+\[
+ D_\mu=\lfloor\sqrt{\mu/32}\rfloor+1
+\]
+and the fixed radius
+\[
+ R_\mu=\max\!\left\{\frac1{4D_\mu},\;
+                               \min\{1,\mu^{-1/2}\}\right\}.
+\]
+For every such $d$, $d\geq D_\mu$ and
+$R_\mu\in[(4d)^{-1},1]$. Moreover,
+$M_\mu=\mu R_\mu^2<2$: the first radius term gives
+$\mu/(16D_\mu^2)<2$, and the second gives $\min\{\mu,1\}\leq1$.
+Let $\Delta_\mu=1-M_\mu/2$ and
+$Q_\mu=\min\{M_\mu,\Delta_\mu^2/M_\mu\}$. The constant
+\[
+ c_\mu=\frac1{1024\pi}\min\{Q_\mu,\Delta_\mu\}>0
+\]
+depends on $\mu$ alone. Theorem~\ref{thm:lowergeneral} on $R_\mu B_2^d$ then
+proves the lower inequality of \eqref{eq:fixedmatching}.
+
+For fixed $\kappa=\beta/\mu$, the bracket in \eqref{eq:generalupper} is at
+most $C_\kappa\log^2(ed)\log(edT)$. This proves the upper inequality.
+\end{proof}
+
+\paragraph{What is and is not matched.}
+The fixed-pair statement allows constants depending on $\mu,\beta$, but not
+on $d,T$; only logarithms of $d,T$ are suppressed. It is not obtained by
+silently scaling all losses: such a scaling would also change their range and
+the signal-to-offset ratio. The general lower construction instead retains
+curvature, radius, and bounded-loss headroom simultaneously. It stays
+nontrivial when $\beta=\mu$, but does not establish a growing $\kappa$ lower
+factor. Joint optimality in $(d,T,\mu,\beta)$ remains distinct from
+\eqref{eq:fixedmatching}. The zero-regret endpoint of
+Proposition~\ref{prop:admissibility} also prevents a uniform positive lower
+constant over all feasible curvature parameters.
+
+\end{document}

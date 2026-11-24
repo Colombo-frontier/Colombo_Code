@@ -188,9 +188,33 @@ $$
 
 **Optimization direction.** minimize
 
-### R1 - SUPPORTED
+### R1 - All communication and dimension regimes with unrestricted heterogeneity
 
-**Region.** Assume $T=L_{\rm comm} R_{\rm comm}$; both queried points of every client incur loss each round, and the criterion is average regret.
+**Region.** $d,M,L_{\mathrm{comm}},R_{\mathrm{comm}}\ge1$ integers; $T=L_{\mathrm{comm}}R_{\mathrm{comm}}$, $G,B>0$, and $\zeta\ge G$. All positive finite dimensions; no growing-dimension threshold. The source constants can be taken as $c=1/256$ and $C=6$. The result is independent learning when $d\le L_{\mathrm{comm}}$, communication limited when $L_{\mathrm{comm}}<d<ML_{\mathrm{comm}}$, and pooled-information limited when $d\ge ML_{\mathrm{comm}}$, with the global constant-regret cap retained.
+
+**Quantity.** Q1
+
+**Resource.** Fixed native online budget, with computational, communication, and privacy resources retained separately.
+
+**Status.** Optimal
+
+**Lower bound.** B3
+
+$$
+\Omega\!\left(GB\min\{1,\sqrt{d/T},\sqrt{1/R_{\mathrm{comm}}+d/(MT)}\}\right)
+$$
+
+**Upper bound.** B2
+
+$$
+O\!\left(GB\min\{1,\sqrt{d/T},\sqrt{1/R_{\mathrm{comm}}+d/(MT)}\}\right)
+$$
+
+**Gap or comparison.** Upper and lower bounds differ by universal constant factors.
+
+### R2 - SUPPORTED — remaining domain
+
+**Region.** Assume $T=L_{\rm comm} R_{\rm comm}$; both queried points of every client incur loss each round, and the criterion is average regret. Restricted to the complement of: ($d,M,L_{\mathrm{comm}},R_{\mathrm{comm}}\ge1$ integers; $T=L_{\mathrm{comm}}R_{\mathrm{comm}}$, $G,B>0$, and $\zeta\ge G$. All positive finite dimensions; no growing-dimension threshold. The source constants can be taken as $c=1/256$ and $C=6$. The result is independent learning when $d\le L_{\mathrm{comm}}$, communication limited when $L_{\mathrm{comm}}<d<ML_{\mathrm{comm}}$, and pooled-information limited when $d\ge ML_{\mathrm{comm}}$, with the global constant-regret cap retained.).
 
 **Quantity.** Q1
 
@@ -208,12 +232,6 @@ $$
 
 ## 4. Bounds and supporting evidence
 
-The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
-
-**Conditions.** Assume $T=L_{\mathrm{comm}}R_{\mathrm{comm}}$; step sizes depend on public parameters. The displayed quantity is average regret per actual evaluation point. Multiplication by $2MT$ gives the total two-point regret.; The quantity $\mathbf1\{L_{\mathrm{comm}}>1\}$ is an event indicator. The source explicitly leaves tightness of the final intermittent-communication term unresolved, so matching bounds are not asserted for every synchronization count.
-
-**Oracle mapping.** Retain the specified feedback type, sample coupling, public information, and environment permissions.
-
 ### B1 - FedOSGD: two-point stochastic gradient estimation and periodic averaging.
 
 **Admission.** Included in the bracket
@@ -228,10 +246,78 @@ $$
 
 **Sources.** [1](https://proceedings.mlr.press/v202/patel23a/patel23a.pdf)
 
+**Conditions.** Assume $T=L_{\mathrm{comm}}R_{\mathrm{comm}}$; step sizes depend on public parameters. The displayed quantity is average regret per actual evaluation point. Multiplication by $2MT$ gives the total two-point regret.; The quantity $\mathbf1\{L_{\mathrm{comm}}>1\}$ is an event indicator. The source explicitly leaves tightness of the final intermittent-communication term unresolved, so matching bounds are not asserted for every synchronization count.
+
+**Oracle correspondence.** Retain the specified feedback type, sample coupling, public information, and environment permissions.
+
 **Source location.** [1](https://proceedings.mlr.press/v202/patel23a/patel23a.pdf) Theorem 5.1, PDF p.7
+
+### B2 - Minimum of independent two-point learning, communication-block batching, and the zero action.
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+O\!\left(GB\min\{1,\sqrt{d/T},\sqrt{1/R_{\mathrm{comm}}+d/(MT)}\}\right)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/A7/manuscript.pdf)
+
+**Conditions.** $d,M,L_{\mathrm{comm}},R_{\mathrm{comm}}\ge1$ integers; $T=L_{\mathrm{comm}}R_{\mathrm{comm}}$, $G,B>0$, and $\zeta\ge G$.; The source constants can be taken as $c=1/256$ and $C=6$.; The result is independent learning when $d\le L_{\mathrm{comm}}$, communication limited when $L_{\mathrm{comm}}<d<ML_{\mathrm{comm}}$, and pooled-information limited when $d\ge ML_{\mathrm{comm}}$, with the global constant-regret cap retained.
+
+**Dimension conditions.** All positive finite dimensions; no growing-dimension threshold.
+
+**Constants.** Universal constants.
+
+**Logarithmic factors.** None.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/A7/manuscript.pdf) Theorem thm:main; equations eq:main and eq:main-envelope; Sections 2 and 3
+
+Minimum of independent two-point learning, communication-block batching, and the zero action.. Randomized protocols with exact simultaneous two-point feedback.
+
+### B3 - Local and pooled residual-spherical-information constructions with a differentiable radial penalty.
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+\Omega\!\left(GB\min\{1,\sqrt{d/T},\sqrt{1/R_{\mathrm{comm}}+d/(MT)}\}\right)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/A7/manuscript.pdf)
+
+**Conditions.** $d,M,L_{\mathrm{comm}},R_{\mathrm{comm}}\ge1$ integers; $T=L_{\mathrm{comm}}R_{\mathrm{comm}}$, $G,B>0$, and $\zeta\ge G$.; The source constants can be taken as $c=1/256$ and $C=6$.; The result is independent learning when $d\le L_{\mathrm{comm}}$, communication limited when $L_{\mathrm{comm}}<d<ML_{\mathrm{comm}}$, and pooled-information limited when $d\ge ML_{\mathrm{comm}}$, with the global constant-regret cap retained.
+
+**Dimension conditions.** All positive finite dimensions; no growing-dimension threshold.
+
+**Constants.** Universal constants.
+
+**Logarithmic factors.** None.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/A7/manuscript.pdf) Theorem thm:main; Sections 5–7
+
+Local and pooled residual-spherical-information constructions with a differentiable radial penalty.. Every measurable randomized adaptive protocol with unrestricted queries.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 
 [1] Kumar Kshitij Patel; Lingxiao Wang; Aadirupa Saha; Nati Srebro. Federated Online and Bandit Convex Optimization. 2023. ICML 2023, PMLR 202.
 
 https://proceedings.mlr.press/v202/patel23a/patel23a.pdf
+
+[2] Colombo_A7. Optimal Communication--Regret Tradeoffs for Federated Two-Point Bandit Optimization. A7_matching_bounds_proof.tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/A7/manuscript.pdf

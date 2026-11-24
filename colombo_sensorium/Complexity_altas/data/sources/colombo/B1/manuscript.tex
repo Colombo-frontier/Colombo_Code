@@ -1,0 +1,1231 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{booktabs,array,tabularx}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\definecolor{linkblue}{HTML}{185C78}
+\hypersetup{colorlinks=true,linkcolor=linkblue,citecolor=linkblue,urlcolor=linkblue,
+  pdftitle={Randomized Oracle Lower Bounds for Smooth Nondual Convex Optimization},
+  pdfauthor={Colombo Team}}
+\setlength{\parindent}{1.2em}
+\setlength{\parskip}{2pt}
+\setlength{\emergencystretch}{2em}
+\setlist[itemize]{leftmargin=*,itemsep=3pt,topsep=4pt}
+\setlist[enumerate]{leftmargin=*,itemsep=3pt,topsep=4pt}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\ip}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\tO}{\widetilde O}
+\newcommand{\tOmega}{\widetilde\Omega}
+\newcommand{\tTheta}{\widetilde\Theta}
+\DeclareMathOperator{\Exp}{Exp}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\err}{err}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\title{Randomized Oracle Lower Bounds for\\Smooth Nondual Convex Optimization}
+\author{Colombo Team\\[3pt]
+  \small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{November 23, 2026}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study convex minimization over an $\ell_p$ ball when gradient regularity is
+measured in an $\ell_q$ norm. For $1\le p<\min\{q,2\}$ and
+$1<\kappa\le2$, we prove lower bounds against arbitrary randomized algorithms
+with access to exact function values and gradients. Let
+$\rho=1/p-(1/q-1/2)_+$ and $a=\kappa(1+\rho)-1$.
+In dimension $d\ge32(T+1)$, a single distribution of globally admissible
+objectives forces error
+$\Omega_{p,q,\kappa}(LR^\kappa/((T+1)^a[\log(e(T+1))]^{\kappa-1}))$
+with probability at least $4/5$ after at most $T$ oracle queries.
+For fixed $2\le q<\infty$, the logarithmic factor is absent.
+Combined with the upper bound of Mart\'inez-Rubio, Bullins, Guzm\'an, and
+Molina, this identifies the randomized oracle exponent throughout this
+nondual regime. The proof transfers a signed interpolation margin into a
+smooth lower bound. A simplex regularizer gives exact support locality,
+while exponential offsets permit each smooth oracle reply to be simulated
+with at most three hidden-sign queries in expectation, even after arbitrary
+adaptive histories. Coordinate and Hadamard constructions supply the
+required margins using only $O(T)$ dimensions. Every hard objective is sampled
+before the interaction and has a global minimizer in the feasible ball;
+the lower bound also allows queries outside that ball. The construction
+extends the exponential-shift approach of Loginov et al., whose work already
+establishes the matching randomized rate for $p=1,q=2$.
+\end{abstract}
+
+\noindent\textbf{Keywords.}
+Oracle complexity; convex optimization; nondual geometry; randomized lower
+bounds; H\"older-continuous gradients.
+
+\medskip
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:intro}
+
+The geometry of a feasible set and the geometry in which an objective is
+smooth need not coincide. This distinction is central to the nonstandard
+oracle-complexity question posed by Guzm\'an~\cite{Guz15}: how quickly can a
+convex function be minimized over $RB_p^d$ when its gradient is H\"older
+continuous in $\ell_q$? In the regime $p<\min\{q,2\}$, the interaction of the
+two norms leads to rates that are faster than those suggested by treating the
+domain only through its radius in the smoothness norm.
+
+Recent work of Mart\'inez-Rubio, Bullins, Guzm\'an, and
+Molina~\cite{MBGM26} obtains the upper error rate
+\begin{equation}\label{eq:intro-rate}
+  \tO_{p,q,\kappa}\!\left(\frac{LR^\kappa}{T^a}\right),
+  \qquad
+  a=\kappa\left(1+\frac1p-
+                 \left(\frac1q-\frac12\right)_+\right)-1,
+\end{equation}
+for $T\le d$. Its agreement with deterministic lower bounds leaves a separate
+information question: can arbitrary randomization improve this exponent?
+A deterministic resisting construction does not by itself answer that
+question, because the objective in a randomized lower bound must be fixed
+independently of the algorithm's realized random choices.
+
+This paper proves that the exponent in~\eqref{eq:intro-rate} remains necessary
+for randomized first-order algorithms throughout
+$1\le p<\min\{q,2\}$ and $1<\kappa\le2$. The proof uses a distribution of
+smooth objectives chosen before any query is made. It permits exact real
+oracle answers, arbitrary adaptive queries, and unrestricted computation.
+The dimension requirement is linear in the query budget.
+
+\subsection{Contribution and relation to previous work}
+
+Our main contribution is a smooth reduction based on a signed interpolation
+condition. Given public directions $g_1,\ldots,g_m$, suppose that every sign
+pattern can be realized with margin $\gamma$ by a feasible point. We show that
+this condition yields a distribution of smooth functions for which optimization
+requires recovering most of the hidden signs. The reduction quantitatively
+controls the information in the entire exact oracle reply, including its
+function value and all real-valued gradient coefficients.
+
+The reduction combines three ingredients. A squared-norm penalty on a simplex
+smooths a maximum while making sufficiently submaximal affine pieces exactly
+inactive. Independent exponential offsets then allow the active information
+to be exposed at a constant expected cost per query. Finally, coordinate
+directions for $q\ge2$ and Hadamard directions for $q<2$ provide the margin
+$\gamma=Rm^{-\rho}$, where
+$\rho=1/p-(1/q-1/2)_+$. For finite $q\ge2$, a penalty adapted to the coordinate
+map removes the logarithmic loss in the lower bound.
+
+These ingredients have substantial antecedents. Smoothing by a strongly
+convex dual penalty is classical~\cite{Nes05}; its use in smooth oracle lower
+bounds includes Guzm\'an and Nemirovski~\cite{GN15}.
+Braun, Guzm\'an, and Pokutta~\cite{BGP17} develop information-theoretic
+reductions based on hidden discrete information. The signed interpolation
+setup and a constant floor also appear in the nonsmooth nondual lower bounds
+of Mart\'inez-Rubio and Guzm\'an~\cite[Appendix H]{MG26}.
+Contreras, Guzm\'an, and Mart\'inez-Rubio~\cite[Theorem 26]{CGM25} establish
+randomized smooth lower bounds in general norms using both margin and
+concentration assumptions. The reduction here assumes only the stated signed
+margin and constructs the additional randomness through offsets.
+
+The closest overlapping smooth result is due to Loginov et
+al.~\cite[Propositions D.7--D.8]{LG26}. For $p=1,q=2$, they obtain the
+randomized lower rate $\Omega_\kappa(LR^\kappa/T^{2\kappa-1})$ in dimension
+linear in $T$, using exponential shifts, conditional memorylessness, and exact
+smoothing locality. We build on that mechanism. Our contribution is its
+transfer to signed public directions and the resulting treatment of the full
+parameter regime above. In particular, the cubic rate at
+$(p,q,\kappa)=(1,2,2)$ and the exponential-shift mechanism are already present
+in prior work. Table~\ref{tab:literature} separates these overlapping statements
+from the general result proved here. Appendix~\ref{app:probability} compares
+the probability conventions.
+
+\subsection{Why the exponent has this form}\label{sec:roadmap}
+
+The proof separates the rate into a geometric margin and a smoothing cost.
+For $m$ hidden signs, the geometry gives
+$\gamma=Rm^{-\rho}$. The exponential offsets have scale proportional to
+$\gamma$, while the smoothing width is proportional to $\gamma/m$.
+If $\sigma$ is the strong-convexity modulus of the simplex penalty in the
+relevant norm, H\"older rescaling produces the error threshold
+\begin{equation}\label{eq:rate-roadmap}
+  \eps_m\asymp_\kappa
+  L\gamma^\kappa\left(\frac{\sigma}{m}\right)^{\kappa-1}
+  =\frac{LR^\kappa\sigma^{\kappa-1}}
+         {m^{\kappa\rho+\kappa-1}}.
+\end{equation}
+Each oracle reply requires at most three new sign queries in expectation.
+Taking $m$ proportional to $T$ therefore leaves too many signs unknown for a
+successful output. The power of $T$ in~\eqref{eq:rate-roadmap} is exactly
+$a=\kappa(1+\rho)-1$. A universal penalty has
+$\sigma\gtrsim1/\log m$, whereas the coordinate-adapted penalty has
+$\sigma=1/(q-1)$ for fixed $2\le q<\infty$.
+
+Section~\ref{sec:results} states the model and the bounds.
+Section~\ref{sec:smoothing} constructs the smooth maximum.
+Sections~\ref{sec:family}--\ref{sec:reduction} prove the signed-margin
+reduction, including its adaptive information estimate.
+Section~\ref{sec:geometry} supplies the norm geometry and completes the main
+proof. Section~\ref{sec:discussion} discusses the scope of the result.
+
+\section{Oracle model and main results}\label{sec:results}
+
+For $1\le r\le\infty$, write
+$B_r^d=\{x\in\R^d:\norm{x}_r\le1\}$ and let $r^\star$ be its conjugate
+exponent, with $1/r+1/r^\star=1$ and $1/\infty=0$.
+The feasible region is $Q=RB_p^d$. We consider convex continuously
+differentiable functions on a neighborhood of $Q$ satisfying
+\begin{equation}\label{eq:class}
+  \norm{\nabla f(x)-\nabla f(y)}_{q^\star}
+  \le L\norm{x-y}_q^{\kappa-1},
+  \qquad x,y\in Q,
+\end{equation}
+where $L,R>0$ and $1<\kappa\le2$. Every hard function constructed below
+satisfies~\eqref{eq:class} on all of $\R^d$.
+
+An exact first-order query at $x$ returns $(f(x),\nabla f(x))$.
+An algorithm may choose each query and its final output using its entire
+transcript and an independent random seed. We assume these rules are
+measurable and impose no restriction on computation between queries.
+The budget $T$ is an upper bound on the number of queries on every run.
+Queries and the output are feasible in the basic model. For our globally
+defined hard instances, the lower bound remains valid when queries may lie
+anywhere in $\R^d$.
+The output need not be one of the queried points.
+
+Let $\err_Q(f,x)=f(x)-\min_Q f$. The randomized minimax error at confidence
+$2/3$ is
+\[
+  e_T^{\rm rand}
+  =\inf_{\mathcal A}\inf\left\{\eps\ge0:
+    \sup_f\Prb_{\mathcal A}
+       [\err_Q(f,\widehat x)>\eps]\le\frac13\right\},
+\]
+where the infimum ranges over algorithms with budget $T$ and the supremum
+ranges over the stated class. For deterministic algorithms, write
+$e_T^{\rm det}=\inf_{\mathcal A}\sup_f\err_Q(f,\widehat x)$.
+Their inverse query complexities are denoted by
+$Q_{\rm rand}(\eps;d)$ and $Q_{\rm det}(\eps;d)$.
+
+Throughout the paper,
+\begin{equation}\label{eq:rho}
+  1\le p<\min\{q,2\},\qquad
+  \rho=\frac1p-\left(\frac1q-\frac12\right)_+,
+  \qquad a=\kappa(1+\rho)-1.
+\end{equation}
+All logarithms are natural. Constants with subscripts $p,q,\kappa$ may depend
+on these fixed parameters. In comparisons with upper bounds,
+$\widetilde O$ and $\widetilde\Theta$ suppress polylogarithmic factors in the
+dimension, query budget, and accuracy; they suppress no polynomial factor in
+the dimension.
+
+\begin{theorem}[Randomized lower bound]\label{thm:main}
+Fix~\eqref{eq:rho}, $L,R>0$, and an integer $T\ge1$.
+Suppose $d\ge32(T+1)$. There is a probability distribution $\nu_T$ on
+globally convex $C^1$ functions satisfying~\eqref{eq:class} globally such that
+every randomized algorithm with at most $T$ exact first-order queries on
+every run satisfies
+\begin{equation}\label{eq:main}
+  \Prb_{f\sim\nu_T,\mathcal A}
+       [\err_Q(f,\widehat x)>\tau_T]\ge\frac45,
+\end{equation}
+where, for a constant $c_{p,q,\kappa}>0$,
+\begin{equation}\label{eq:threshold}
+\tau_T=
+\begin{cases}
+\displaystyle
+ \frac{c_{p,q,\kappa}LR^\kappa}
+      {(T+1)^{\kappa(1+1/p)-1}},
+ & 2\le q<\infty,\\[10pt]
+\displaystyle
+ \frac{c_{p,q,\kappa}LR^\kappa}
+      {(T+1)^a[\log(e(T+1))]^{\kappa-1}},
+ & p<q<2\ \text{or}\ q=\infty.
+\end{cases}
+\end{equation}
+The distribution is independent of the algorithm and its random seed.
+Every objective in its support is bounded below and has a global minimizer
+in $Q$. The assertion remains valid when query points are unrestricted.
+\end{theorem}
+
+The theorem is distributional: the same $\nu_T$ works for all algorithms
+with the prescribed budget. Averaging~\eqref{eq:main} over the sampled
+objective gives, for each randomized algorithm, a fixed admissible objective
+on which its failure probability is at least $4/5$. That objective may depend
+on the algorithm, but not on its realized random seed.
+
+\begin{corollary}[Matching oracle exponent]\label{cor:matching}
+In the parameter range~\eqref{eq:rho}, for $T\ge1$ and
+$d\ge32(T+1)$,
+\begin{equation}\label{eq:error-sandwich}
+  \tau_T\le e_T^{\rm rand}\le e_T^{\rm det}
+  \le\tO_{p,q,\kappa}\!\left(\frac{LR^\kappa}{(T+1)^a}\right).
+\end{equation}
+Consequently, write $Z=LR^\kappa/\eps$ and let
+$U(\eps,d)=\tO_{p,q,\kappa}(1+Z^{1/a})$ be a query budget attaining accuracy
+$\eps$ in the cited deterministic upper bound.
+For sufficiently large $Z$, whenever $32(U(\eps,d)+1)\le d$,
+\begin{equation}\label{eq:query}
+  Q_{\rm rand}(\eps;d)=\tTheta_{p,q,\kappa}(Z^{1/a}),
+  \qquad
+  Q_{\rm det}(\eps;d)=\tTheta_{p,q,\kappa}(Z^{1/a}).
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+The lower inequality is Theorem~\ref{thm:main}, and a deterministic algorithm
+is a special case of a randomized one. The upper rate is
+\cite[Theorem 1 and the discussion on p.~3]{MBGM26}. That work gives a
+polynomial-time randomized implementation and also a deterministic algorithm
+using deterministic stable selectors, for which computational efficiency is
+not claimed. Both are applicable to the oracle model used here.
+Inverting these error bounds gives~\eqref{eq:query} when the required budgets
+are within their dimensional ranges.
+\end{proof}
+
+More explicitly, inversion of the lower bound gives
+\begin{equation}\label{eq:query-lower}
+Q_{\rm rand}(\eps;d)\ge
+\begin{cases}
+ c_{p,q,\kappa}Z^{1/a},&2\le q<\infty,\\[3pt]
+ \displaystyle c_{p,q,\kappa}
+ \frac{Z^{1/a}}{[\log(eZ)]^{(\kappa-1)/a}},
+ &p<q<2\ \text{or}\ q=\infty,
+\end{cases}
+\end{equation}
+provided $d$ is at least a sufficiently large constant multiple of the
+displayed lower-bound budget. The condition in
+Corollary~\ref{cor:matching} ensures that both budgets fit.
+
+\begin{table}[t]
+\centering
+\caption{Rates in the common regime $T\ge1$, $d\ge32(T+1)$, and
+$1<\kappa\le2$. Entries are normalized by $LR^\kappa$.
+Each lower bound holds with failure probability at least $4/5$ under one
+fixed distribution. The upper bounds are from~\cite{MBGM26}.}
+\label{tab:regimes}
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.45}
+\begin{tabularx}{\textwidth}{@{}P{0.21\textwidth}P{0.23\textwidth}P{0.30\textwidth}Y@{}}
+\toprule
+Parameter regime & Error exponent $a$ & Randomized lower bound & Upper bound\\
+\midrule
+$1\le p<q<2$
+& $\kappa(\frac32+\frac1p-\frac1q)-1$
+& $\displaystyle\frac{c_{p,q,\kappa}}{(T+1)^a[\log(e(T+1))]^{\kappa-1}}$
+& $\widetilde O((T+1)^{-a})$\\
+$1\le p<2\le q<\infty$
+& $\kappa(1+1/p)-1$
+& $c_{p,q,\kappa}(T+1)^{-a}$
+& $\widetilde O((T+1)^{-a})$\\
+$1\le p<2$, $q=\infty$
+& $\kappa(1+1/p)-1$
+& $\displaystyle\frac{c_{p,\kappa}}{(T+1)^a[\log(e(T+1))]^{\kappa-1}}$
+& $\widetilde O((T+1)^{-a})$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Comparison with the closest bounds. All displayed bounds apply to
+exact value-and-gradient access; $a$ is defined in~\eqref{eq:rho}.
+``Expected'' refers to expectation over the algorithm's random seed.
+The present lower bound also implies an expected-error lower bound.}
+\label{tab:literature}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\textwidth}{@{}P{0.21\textwidth}P{0.18\textwidth}P{0.265\textwidth}Y@{}}
+\toprule
+Work & Parameter range & Error rate after $T$ queries & Guarantee and dimension\\
+\midrule
+Guzm\'an~\cite{Guz15}\newline (2015), Table 1
+& $1\le p<q<2$; $1<\kappa\le2$
+& Lower bound\newline $\displaystyle\Omega\!\left(\frac{LR^\kappa}{T^a(\log d)^{\kappa-1}}\right)$
+& Deterministic local-oracle lower bound; $T\le d$.\\
+Guzm\'an~\cite{Guz15}\newline (2015), Table 1
+& $1\le p<2$,\newline $2\le q\le\infty$;\newline $1<\kappa\le2$
+& Lower bound\newline $\displaystyle\Omega\!\left(\frac{LR^\kappa}{T^a\min\{q,\log d\}^{\kappa-1}}\right)$
+& Deterministic local-oracle lower bound; $T\le d$.\\
+Mart\'inez-Rubio et al.~\cite{MBGM26}\newline (2026), Theorem 1
+& $1\le p<\min\{q,2\}$; $1<\kappa\le2$
+& Upper bound\newline $\widetilde O_{p,q,\kappa}(LR^\kappa/T^a)$
+& Feasible queries; success $1-\delta$; $T\le d$. Deterministic oracle variant also available.\\
+Loginov et al.~\cite{LG26}\newline (2026), Propositions D.7--D.8
+& $p=1$, $q=2$; $1<\kappa\le2$
+& Lower bound\newline $\Omega_\kappa(LR^\kappa/T^{2\kappa-1})$
+& Expected error; $d\ge32T+1$. Arbitrary randomized global queries.\\
+This paper, Theorem~\ref{thm:main}
+& $1\le p<\min\{q,2\}$; $1<\kappa\le2$
+& Lower bound\newline $\tau_T$ in~\eqref{eq:threshold}; no logarithmic loss for fixed $2\le q<\infty$
+& Failure $\ge4/5$; $d\ge32(T+1)$. Arbitrary randomized global queries.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Tables~\ref{tab:regimes} and~\ref{tab:literature} compare error rates at the
+same query budget. The bounds identify the exponent up to logarithmic factors;
+they do not establish exact logarithmic optimality. The constant in the
+finite-$q$ lower bound depends on $q$: its explicit smoothing factor is
+$(q-1)^{1-\kappa}$. Thus the log-free statement is for fixed finite $q$ and
+does not extend uniformly to $q=\infty$.
+
+\section{Smoothing with exact support locality}\label{sec:smoothing}
+
+An approximate smooth maximum is not sufficient for an exact-oracle lower
+bound: an inactive affine piece could still leave a small, detectable trace
+in the gradient. We use a simplex penalty whose derivatives are bounded.
+The resulting optimality conditions eliminate every piece more than a
+specified distance below the maximum, with no error in either the value or
+the gradient.
+
+\subsection{Squared-norm penalties on the simplex}
+
+For an integer $m\ge1$, set $n=m+1$ and define
+\[
+  \Delta_n=\left\{\lambda\in\R_+^{m+1}:
+                     \sum_{i=0}^m\lambda_i=1\right\}.
+\]
+The coordinate indexed by zero will later represent a constant affine piece.
+
+\begin{lemma}[Properties of the penalty]\label{lem:regularizer}
+For $1<r\le2$, the function
+$\phi_r(\lambda)=\tfrac12\norm{\lambda}_r^2$ is
+$(r-1)$-strongly convex in $\ell_r$. On $\Delta_n$ it satisfies
+\begin{equation}\label{eq:penalty-bounds}
+  0\le\phi_r(\lambda)\le\frac12,\qquad
+  0\le\partial_i\phi_r(\lambda)\le1,\qquad
+  \partial_i\phi_r(\lambda)=0\quad\text{if }\lambda_i=0.
+\end{equation}
+In particular, the choice
+\begin{equation}\label{eq:regularizer}
+  \ell=\log(en),\qquad r=1+\ell^{-1},\qquad \phi=\phi_r
+\end{equation}
+is strongly convex in $\ell_1$ with modulus
+\begin{equation}\label{eq:sigma}
+  \sigma=(r-1)n^{2/r-2}\ge\frac{e^{-2}}{\log(en)}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+For positive coordinates,
+\[
+  \partial_i\phi_r(\lambda)
+     =\norm{\lambda}_r^{2-r}\lambda_i^{r-1}.
+\]
+On the simplex both factors are at most one, and the formula extends
+continuously to the boundary. Also $\norm{\lambda}_r\le\norm{\lambda}_1=1$,
+which gives the bound on $\phi_r$.
+Direct differentiation yields, for any direction $h$,
+\begin{align*}
+ h^\top\nabla^2\phi_r(\lambda)h
+ &\ge(r-1)\norm{\lambda}_r^{2-r}
+                  \sum_i\lambda_i^{r-2}h_i^2\\
+ &\ge(r-1)\norm{h}_r^2.
+\end{align*}
+For $r<2$, the last step follows by applying H\"older's inequality to
+\[
+  \sum_i|h_i|^r
+  =\sum_i(\lambda_i^{r-2}h_i^2)^{r/2}
+              \lambda_i^{r(2-r)/2}.
+\]
+For $r=2$ the assertion is immediate. Integration along segments gives the
+strong-convexity inequality, and continuity extends it to boundary points.
+The same argument with absolute values, or approximation across coordinate
+hyperplanes, gives the usual squared-norm statement on the whole space.
+Since $\norm{h}_r\ge n^{1/r-1}\norm{h}_1$, the $\ell_1$ modulus is
+$(r-1)n^{2/r-2}$. For~\eqref{eq:regularizer},
+\[
+ n^{2/r-2}
+ =\exp\!\left(-\frac{2\log n}{\ell+1}\right)\ge e^{-2},
+\]
+which proves~\eqref{eq:sigma}.
+\end{proof}
+
+The strong convexity used here is the standard squared-norm property;
+see, for example,~\cite[Section 7.2]{DSSST10}. The explicit derivative bounds
+in~\eqref{eq:penalty-bounds} will provide locality.
+
+\subsection{The smooth maximum}
+
+Let $a_i(x)=\ip{v_i}{x}+b_i$, $0\le i\le m$, with
+$\norm{v_i}_{q^\star}\le1$. For $\mu>0$, use the penalty
+in~\eqref{eq:regularizer} to define
+\begin{equation}\label{eq:smoothmax}
+ H(x)=\max_{\lambda\in\Delta_n}
+       \left\{\sum_{i=0}^m\lambda_i a_i(x)-\mu\phi(\lambda)\right\}.
+\end{equation}
+
+\begin{lemma}[Smoothness and exact elimination]\label{lem:smoothing}
+The function $H$ is globally convex and continuously differentiable.
+Its unique maximizing weight vector $\lambda(x)$ satisfies
+\begin{align}
+ \nabla H(x)&=\sum_{i=0}^m\lambda_i(x)v_i,\label{eq:grad}\\
+ \norm{\nabla H(x)}_{q^\star}&\le1,\qquad
+ \norm{\nabla H(x)-\nabla H(y)}_{q^\star}
+       \le\frac{\norm{x-y}_q}{\mu\sigma}.\label{eq:lipgrad}
+\end{align}
+If $M(x)=\max_i a_i(x)$, then
+\begin{equation}\label{eq:approx}
+  M(x)-\frac\mu2\le H(x)\le M(x).
+\end{equation}
+Every index with $\lambda_i(x)>0$ obeys
+\begin{equation}\label{eq:active}
+  a_i(x)\ge M(x)-\mu.
+\end{equation}
+Consequently, deleting any indices with scores strictly below $M(x)-\mu$
+changes neither $H(x)$ nor $\nabla H(x)$, provided the penalty is restricted
+to the corresponding face of the original simplex.
+\end{lemma}
+
+\begin{proof}
+Strong convexity makes the maximizing weights unique. The maximum
+differentiation rule on the compact simplex gives~\eqref{eq:grad} and
+continuous differentiability. Let $A$ be the matrix with rows $v_i^\top$.
+Adding the optimality inequalities at $x$ and $y$ gives
+\[
+ \mu\sigma\norm{\lambda(x)-\lambda(y)}_1^2
+ \le\ip{A(x-y)}{\lambda(x)-\lambda(y)}
+ \le\norm{x-y}_q\norm{\lambda(x)-\lambda(y)}_1.
+\]
+Together with $\norm{A^\top z}_{q^\star}\le\norm{z}_1$, this proves the
+Lipschitz gradient bound. The gradient norm bound follows from convexity of
+the dual unit ball. The inequalities in~\eqref{eq:approx} follow from
+$\phi\ge0$ and evaluation at a simplex vertex, where $\phi=1/2$.
+
+The simplex optimality conditions give a scalar $\theta$ such that
+\[
+ a_i(x)-\mu\partial_i\phi(\lambda(x))\le\theta,
+ \qquad\text{with equality if }\lambda_i(x)>0.
+\]
+At an index attaining $M(x)$, the derivative bound in
+Lemma~\ref{lem:regularizer} implies $\theta\ge M(x)-\mu$.
+For an active index,
+$a_i(x)=\theta+\mu\partial_i\phi(\lambda(x))\ge M(x)-\mu$.
+All deleted weights therefore vanish at the unique maximizer. The maximizer
+belongs to the retained face, which proves exact equality of both oracle
+components.
+\end{proof}
+
+This is a particular instance of dual-penalty smoothing~\cite{Nes05}.
+Its relevant feature for the reduction is the exact cutoff
+in~\eqref{eq:active}, rather than the approximation bound alone.
+
+\begin{lemma}[A coordinate-adapted penalty]\label{lem:coordinate-penalty}
+Suppose $2\le q<\infty$, $v_0=0$, and $v_i=s_i e_i$ for
+$i\in[m]$, where $s_i\in\{-1,1\}$ and $d\ge m$.
+Then every conclusion of Lemma~\ref{lem:smoothing} holds with
+\begin{equation}\label{eq:qpenalty}
+  \phi_q(\lambda)=\frac12\norm{\lambda}_{q^\star}^2,
+  \qquad \sigma_q=q^\star-1=\frac1{q-1}
+\end{equation}
+in place of $\phi$ and $\sigma$.
+\end{lemma}
+
+\begin{proof}
+Since $1<q^\star\le2$, Lemma~\ref{lem:regularizer} gives
+$\sigma_q$-strong convexity in $\ell_{q^\star}$ and the same derivative and
+vertex bounds. Here
+\[
+  Ax=(0,s_1x_1,\ldots,s_mx_m),\qquad
+  \norm{Ax}_q\le\norm{x}_q,
+  \qquad \norm{A^\top z}_{q^\star}\le\norm{z}_{q^\star}.
+\]
+The preceding optimality argument becomes
+\[
+ \mu\sigma_q\norm{\lambda(x)-\lambda(y)}_{q^\star}^2
+ \le\ip{A(x-y)}{\lambda(x)-\lambda(y)}
+ \le\norm{x-y}_q\norm{\lambda(x)-\lambda(y)}_{q^\star}.
+\]
+Thus the gradient Lipschitz constant is $1/(\mu\sigma_q)$. The approximation
+and elimination statements use only~\eqref{eq:penalty-bounds}, so their
+proofs are unchanged.
+\end{proof}
+
+\begin{lemma}[H\"older rescaling]\label{lem:holder}
+For either of the preceding smooth maxima, let $\sigma$ denote its respective
+modulus and set
+\begin{equation}\label{eq:beta}
+  \beta=\frac{L(\mu\sigma)^{\kappa-1}}{2^{2-\kappa}}.
+\end{equation}
+Then $f=\beta H$ satisfies~\eqref{eq:class} globally.
+\end{lemma}
+
+\begin{proof}
+The bounded-gradient and Lipschitz estimates imply
+\begin{align*}
+ \norm{\nabla H(x)-\nabla H(y)}_{q^\star}
+ &\le\min\left\{2,\frac{\norm{x-y}_q}{\mu\sigma}\right\}\\
+ &\le2^{2-\kappa}(\mu\sigma)^{1-\kappa}
+                  \norm{x-y}_q^{\kappa-1}.
+\end{align*}
+Multiplication by~\eqref{eq:beta} gives the required H\"older constant.
+\end{proof}
+
+\section{A hard distribution from signed interpolation}\label{sec:family}
+
+We now isolate the geometric property needed by the information argument.
+For Sections~\ref{sec:family}--\ref{sec:reduction}, $Q$ may be any nonempty
+compact convex subset of $\R^d$.
+
+\begin{definition}[Signed interpolation margin]\label{def:margin}
+Public vectors $g_1,\ldots,g_m\in\R^d$ have signed interpolation margin
+$\gamma>0$ on $Q$ if
+\begin{equation}\label{eq:margin}
+ \norm{g_i}_{q^\star}\le1\quad(i\in[m]),\qquad
+ \forall s\in\{-1,1\}^m\ \exists x_s\in Q:\quad
+ s_i\ip{g_i}{x_s}\le-\gamma\quad(i\in[m]).
+\end{equation}
+\end{definition}
+
+This condition requires a feasible witness for every sign string, but no
+formula for the constrained minimizer. The directions are known to the
+algorithm; only their signs and the offsets introduced next are hidden.
+Section~\ref{sec:geometry} constructs the directions explicitly for $RB_p^d$.
+
+\subsection{Sampling and the constant floor}
+
+Independently sample all signs and offsets before the interaction:
+\begin{equation}\label{eq:random}
+ S_i\stackrel{\rm iid}{\sim}\operatorname{Unif}\{-1,1\},\qquad
+ E_i\stackrel{\rm iid}{\sim}\Exp(\text{mean }\eta),\qquad
+ \eta=\frac{\gamma}{64},\quad
+ \mu=\frac{\eta}{m}=\frac{\gamma}{64m}.
+\end{equation}
+Our exponential convention is $\Prb(E_i>z)=e^{-z/\eta}$ for $z\ge0$.
+Define
+\begin{equation}\label{eq:scores}
+ c=-\frac\gamma2,\qquad
+ a_0(x)=c,\qquad a_i(x)=S_i\ip{g_i}{x}-E_i\quad(i\in[m]),
+\end{equation}
+and let $H_{S,E}$ be the smooth maximum~\eqref{eq:smoothmax} of these scores.
+The objective is
+\begin{equation}\label{eq:family}
+  f_{S,E}=\beta H_{S,E},
+\end{equation}
+with $\beta$ from~\eqref{eq:beta}. We use the universal penalty unless the
+coordinate penalty in Lemma~\ref{lem:coordinate-penalty} is specified.
+All penalty parameters are fixed before the interaction.
+The offsets are never resampled.
+
+The constant score $a_0=c$ has two purposes. It makes the objective globally
+bounded below, and it gives every sign realization a known optimal value.
+The signed witness attains that value regardless of the offsets.
+
+\begin{lemma}[Minimum and sign recovery]\label{lem:packing}
+Every objective in~\eqref{eq:family} is globally admissible, bounded below,
+and has a global minimizer in $Q$. More precisely,
+\begin{equation}\label{eq:minimum}
+  \min_{x\in Q}H_{S,E}(x)
+  =\min_{x\in\R^d}H_{S,E}(x)=c-\frac\mu2.
+\end{equation}
+Set $\eps_m=\beta\gamma/4$. Any point $\widehat x$ with
+$\err_Q(f_{S,E},\widehat x)\le\eps_m$ recovers every sign whose offset
+satisfies $E_i\le\gamma/8$ through
+\begin{equation}\label{eq:decoder}
+  \widehat S_i=-\sgn\ip{g_i}{\widehat x}.
+\end{equation}
+The number of exceptional indices satisfies
+\begin{equation}\label{eq:badcount}
+  B=\#\{i:E_i>\gamma/8\},\qquad \E B=me^{-8}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Lemma~\ref{lem:holder} gives global regularity. Evaluating the simplex
+objective at the floor vertex gives $H_{S,E}(x)\ge c-\mu/2$ for all $x$.
+At the signed witness $x_S$, every nonconstant score is at most $-\gamma$,
+while $a_0=c=-\gamma/2$. Since $\mu<\gamma/2$,
+Lemma~\ref{lem:smoothing} eliminates all other coordinates. Hence
+$H_{S,E}(x_S)=c-\mu/2$, proving~\eqref{eq:minimum} for every realization of
+the offsets.
+
+If the objective error is at most $\eps_m$, then
+$H_{S,E}(\widehat x)\le c-\mu/2+\gamma/4$.
+The vertex lower bound
+$H_{S,E}(\widehat x)\ge a_i(\widehat x)-\mu/2$ therefore implies
+\[
+  S_i\ip{g_i}{\widehat x}-E_i
+  \le c+\gamma/4=-\gamma/4.
+\]
+For $E_i\le\gamma/8$, it follows that
+$S_i\ip{g_i}{\widehat x}\le-\gamma/8<0$.
+This proves~\eqref{eq:decoder}; any fixed sign convention at zero is harmless
+because success excludes zero at all such indices.
+Finally,
+$\Prb(E_i>\gamma/8)=\exp(-\gamma/(8\eta))=e^{-8}$,
+which gives~\eqref{eq:badcount}.
+\end{proof}
+
+We keep the full exponential law rather than conditioning the hard
+distribution on bounded offsets. Large offsets contribute only the expected
+exceptional count in~\eqref{eq:badcount}. This preserves the conditional
+memorylessness required by the adaptive simulation.
+
+\section{Exact oracle simulation under adaptivity}\label{sec:simulation}
+
+The auxiliary information problem is recovery of
+$S\in\{-1,1\}^m$ through queries that reveal one coordinate $S_i$ at a time.
+The offsets are auxiliary randomness independent of $S$.
+We simulate a smooth oracle reply by reading only those signs that could
+influence it. The analysis charges a sign at most once during the entire
+execution.
+
+\subsection{The simulation procedure}
+
+Let $J\subseteq[m]$ be the set of signs already read. At a query point $x$,
+write
+\begin{equation}\label{eq:potentials}
+ y_i=\ip{g_i}{x},\qquad
+ u_i=|y_i|-E_i,\qquad
+ M=\max\bigl(\{c\}\cup\{S_i y_i-E_i:i\in J\}\bigr).
+\end{equation}
+For every unread index, $u_i$ bounds its actual score from above without using
+$S_i$. Repeat the following actions:
+\begin{enumerate}
+\item If $J=[m]$, terminate. Otherwise, if
+      $\max_{i\notin J}u_i<M-\mu$, terminate and record only
+      $\mathsf{STOP}$, without recording an unread maximum or its index.
+\item If the stopping condition fails, choose an unread index $i$ of largest
+      potential $u_i$. Record the selected index and offset, read $S_i$, and
+      add $i$ to $J$.
+\item Update $M\leftarrow\max\{M,S_i y_i-E_i\}$ and repeat.
+\end{enumerate}
+At termination, compute the smooth maximum over the face of $\Delta_n$
+supported on $\{0\}\cup J$ and return its value and gradient, multiplied by
+$\beta$. A deterministic rule resolves ties; the conditional distributions
+below show that ties between unread potentials have probability zero.
+
+\begin{lemma}[Exactness of the simulation]\label{lem:exact}
+For every realization, the procedure returns the exact value and gradient of
+the single sampled function $f_{S,E}$ at every query point.
+\end{lemma}
+
+\begin{proof}
+At termination, each unread actual score is bounded by a potential strictly
+below $M-\mu$. Thus $M$ is the maximum of all actual scores, and
+Lemma~\ref{lem:smoothing} eliminates all unread indices exactly.
+The restricted problem uses the original penalty, with zeros in omitted
+coordinates; its exponent is not recomputed for the smaller face.
+\end{proof}
+
+\subsection{The exposed transcript and conditional residuals}
+
+The simulator is a device for analyzing information cost. Its underlying
+randomness includes all sampled offsets, but the proof conditions on a
+smaller, exposed transcript. This transcript contains the algorithm's random
+seed, its queries and replies, and the complete loop actions
+\[
+   \mathsf{STOP}
+   \quad\text{or}\quad
+   \mathsf{REVEAL}(i,E_i,S_i).
+\]
+There is no intermediate transcript boundary containing only a positive
+decision to continue. A reveal includes the selected potential through the
+selected exact offset. A stop does not disclose the numerical maximum of
+the unread potentials. The optimization algorithm itself receives only the
+ordinary first-order oracle replies.
+
+\begin{lemma}[Conditional exponential residuals]\label{lem:memoryless}
+At every complete action boundary, for almost every exposed history, the
+unread signs are conditionally independent fair signs. The unread offsets
+have conditional product law
+\begin{equation}\label{eq:posterior}
+   E_i=b_i+Z_i,\qquad
+   Z_i\stackrel{\rm independent}{\sim}\Exp(\text{mean }\eta),
+\end{equation}
+where the lower endpoints $b_i\ge0$ are determined by the history.
+The residuals are independent of all unread signs.
+\end{lemma}
+
+\begin{proof}
+Initially $b_i=0$, and the assertion follows from~\eqref{eq:random}.
+Condition on an exposed history satisfying the assertion. The next query
+$x$ is fixed by this history, which includes the algorithm's seed.
+
+For a stop at threshold $D=M-\mu$, the new information about unread variables
+is precisely
+\[
+  u_i<D\quad\text{for all unread }i,
+  \qquad\text{equivalently}\qquad E_i>|y_i|-D.
+\]
+These are separate lower-bound constraints on the offsets, independent of
+the unread signs. Memorylessness preserves~\eqref{eq:posterior}, replacing
+$b_i$ by $\max\{b_i,|y_i|-D\}$.
+
+For a reveal of index $j$ with potential $U$, conditioning on the selected
+index and its exact offset imposes on every other unread index only
+\[
+  u_i\le U,
+  \qquad\text{equivalently}\qquad E_i\ge|y_i|-U.
+\]
+The continuation condition $U\ge M-\mu$ involves only the selected value
+and the previous history. Thus it places no additional constraint on the
+remaining variables. Their lower endpoints become
+$\max\{b_i,|y_i|-U\}$, independently. The selected sign is still fair when
+it is read, and disclosing it does not change the laws of the other signs
+or offsets.
+
+Formally, the conditional density of the remaining offsets has the form
+\[
+  C\prod_{i\notin J}e^{-E_i/\eta}\mathbf1\{E_i\ge b_i\},
+\]
+which factorizes and normalizes to~\eqref{eq:posterior}.
+Conditioning on an exact selected real value is understood through regular
+conditional densities. The oracle reply gives no additional restriction:
+by Lemma~\ref{lem:exact}, it is a deterministic function of the already
+revealed variables and the query. This completes the induction.
+\end{proof}
+
+\subsection{A constant expected cost per oracle reply}
+
+\begin{lemma}[Simulation cost]\label{lem:cost}
+Conditional on any exposed history before a query, the expected number of
+newly read signs is at most
+\begin{equation}\label{eq:cost}
+  2+\frac{m\mu}{\eta}=3.
+\end{equation}
+Consequently, the number $N$ of distinct signs read in at most $T$ oracle
+calls satisfies $\E N\le3T$.
+\end{lemma}
+
+\begin{proof}
+Call a newly read sign favorable if $S_i y_i=|y_i|$.
+Conditional on its selection history, a sign is favorable with probability
+$1/2$ when $y_i\ne0$ and with probability one when $y_i=0$.
+The number of reads up to the first favorable sign, or earlier termination,
+is therefore dominated in its tail by a geometric random variable of mean
+two.
+
+If a favorable sign is read, let $U$ be its selected potential. Its actual
+score equals $U$, so the updated known maximum satisfies $M\ge U$.
+By Lemma~\ref{lem:memoryless}, immediately after this reveal, every unread
+$j$ has
+\[
+ E_j=b'_j+Z_j,\qquad b'_j\ge|y_j|-U,
+ \qquad Z_j\sim\Exp(\text{mean }\eta).
+\]
+Hence
+\begin{align*}
+ \Prb(u_j\ge U-\mu\mid\text{current history})
+ &=\Prb(Z_j\le |y_j|-b'_j-U+\mu\mid\text{current history})\\
+ &\le1-e^{-\mu/\eta}\le\frac\mu\eta.
+\end{align*}
+The potential values do not change during a query. Every subsequent read
+must have potential at least $M-\mu\ge U-\mu$, so the number of such reads
+is bounded by the number of remaining potentials in that interval. Its
+conditional expectation is at most $m\mu/\eta$.
+If the query terminates before a favorable sign is reached, this second
+contribution is zero. Adding the two estimates proves~\eqref{eq:cost}.
+Summing conditional expectations over at most $T$ calls gives $\E N\le3T$.
+\end{proof}
+
+Repeated adaptive queries can raise the lower endpoints $b_i$, but they leave
+the exponential residual scale $\eta$ unchanged. This is the feature that
+makes the estimate valid throughout the interaction. The construction uses
+lazy exposure of one sampled objective, rather than changes to the objective
+after queries are observed.
+
+\section{From information cost to optimization error}\label{sec:reduction}
+
+It remains to connect the number of revealed signs to the accuracy of an
+arbitrary final output. The decoding lemma requires correctness only at
+indices with small offsets. The following estimate accounts for the others
+without requiring independence between their count and the number of queries.
+
+\begin{lemma}[Guessing the remaining signs]\label{lem:guess}
+Let $N$ be the number of signs read during the simulation, and let $B$ be
+the exceptional count in~\eqref{eq:badcount}. Any estimator based on the
+terminal transcript has probability at most
+\begin{equation}\label{eq:guess}
+ \E\,2^{-(m-N-B)_+}
+ \le\frac{\E N+\E B+1}{m+1}
+\end{equation}
+of correctly guessing every sign with $E_i\le\gamma/8$.
+\end{lemma}
+
+\begin{proof}
+For this final decoding step, condition on the terminal exposed transcript
+and on all offset values. The unread signs remain independent fair signs.
+Indeed, for fixed offsets and a fixed algorithm seed, the simulation is an
+adaptive decision tree that reads individual signs. Each completed leaf
+depends only on the signs that it has read. The output and the set of unread
+small-offset indices are fixed at that leaf; neither a potential comparison
+nor a stopping decision tests an unread sign. There are at least
+$(m-N-B)_+$ such indices, so their conditional probability of all being
+guessed correctly is at most $2^{-(m-N-B)_+}$.
+
+This additional conditioning is used only for the decision-tree argument.
+The exponential-residual law and the estimate $\E N\le3T$ were proved with
+the smaller filtration of Section~\ref{sec:simulation}. We do not assert an
+exponential residual law after revealing every offset.
+
+For integers $0\le k\le m$,
+\[
+  2^{k-m}\le\frac{k+1}{m+1}.
+\]
+To see this, note that $2^{m-k}\ge m-k+1$ and therefore
+$(k+1)2^{m-k}\ge(k+1)(m-k+1)\ge m+1$.
+Apply the inequality with $k=\min\{m,N+B\}$ and take expectations.
+No independence assumption on $N$ and $B$ is needed.
+\end{proof}
+
+\begin{theorem}[Smooth signed-margin reduction]\label{thm:transfer}
+Suppose $g_1,\ldots,g_m$ satisfy~\eqref{eq:margin} on $Q$.
+Use the distribution~\eqref{eq:random}--\eqref{eq:family} with the universal
+penalty and modulus~\eqref{eq:sigma}. Every randomized algorithm making at
+most $T$ exact first-order queries on every run satisfies
+\begin{equation}\label{eq:prob}
+ \Prb\bigl[\err_Q(f_{S,E},\widehat x)\le\eps_m\bigr]
+ \le\frac{3T+me^{-8}+1}{m+1},
+\end{equation}
+where
+\begin{equation}\label{eq:epsilon-margin}
+ \eps_m=
+ \frac{L\gamma^\kappa\sigma^{\kappa-1}}
+      {2^{5\kappa-2}m^{\kappa-1}}.
+\end{equation}
+All functions in the distribution satisfy~\eqref{eq:class} globally and
+attain their global minimum in $Q$. Queries may lie anywhere in $\R^d$.
+If $g_i=e_i$ and $2\le q<\infty$, the same assertions hold using the
+coordinate penalty~\eqref{eq:qpenalty} and replacing $\sigma$ by
+$\sigma_q=1/(q-1)$.
+\end{theorem}
+
+\begin{proof}
+By Lemma~\ref{lem:packing}, success at error $\eps_m=\beta\gamma/4$
+recovers every small-offset sign. Lemmas~\ref{lem:cost} and~\ref{lem:guess}
+give
+\[
+ \Prb(\text{success})
+ \le\frac{\E N+\E B+1}{m+1}
+ \le\frac{3T+me^{-8}+1}{m+1}.
+\]
+Substituting $\mu=\gamma/(64m)$ into
+$\eps_m=\beta\gamma/4$ gives~\eqref{eq:epsilon-margin}.
+Global regularity and the existence of a feasible global minimizer were
+proved in Lemma~\ref{lem:packing}. The simulation used no bound on the
+query location. Its analysis includes the algorithm's independent seed in
+the transcript, so the probability estimate applies directly to randomized
+algorithms. In the coordinate case,
+Lemma~\ref{lem:coordinate-penalty} supplies the same locality and smoothness
+properties with modulus $\sigma_q$; all information estimates are unchanged.
+\end{proof}
+
+Theorem~\ref{thm:transfer} is the reusable part of the argument. Geometry
+enters only through the signed margin; the information estimate is uniform
+over the directions and over all query strategies. It also handles an
+unqueried final output without charging an additional oracle call.
+
+\section{Norm geometry and proof of the main theorem}\label{sec:geometry}
+
+We construct the signed interpolation system using only $m$ coordinates.
+When $d>m$, every vector is padded with zeros.
+
+\subsection{Coordinate and Hadamard designs}
+
+\begin{lemma}[Coordinate design for $q\ge2$]\label{lem:coords}
+Let $1\le p<2$, $q\ge2$, and $d\ge m$. The choices
+\[
+   g_i=e_i\quad(i\in[m]),\qquad \gamma=Rm^{-1/p}
+\]
+satisfy~\eqref{eq:margin} on $RB_p^d$.
+\end{lemma}
+
+\begin{proof}
+Each $e_i$ has dual norm one. For a sign string $s$, let
+$x_s=-\gamma\sum_{i=1}^m s_i e_i$.
+Then $\norm{x_s}_p=\gamma m^{1/p}=R$ and
+$s_i\ip{g_i}{x_s}=-\gamma$ for every $i$.
+\end{proof}
+
+\begin{lemma}[Hadamard design for $p<q<2$]\label{lem:hadamard}
+Let $1\le p<q<2$, let $m$ be a power of two, and suppose $d\ge m$.
+There are directions satisfying~\eqref{eq:margin} on $RB_p^d$ with
+\[
+   \gamma=Rm^{-\rho},\qquad
+   \rho=\frac1p-\frac1q+\frac12.
+\]
+\end{lemma}
+
+\begin{proof}
+Let $W$ be the Sylvester Hadamard matrix of order $m$, so its entries are
+$\pm1$ and $WW^\top=W^\top W=mI_m$. For completeness, these matrices are
+defined by
+\[
+  W_1=(1),\qquad
+  W_{2m}=\begin{pmatrix}W_m&W_m\\W_m&-W_m\end{pmatrix}.
+\]
+Let $g_i$ be row $i$ of $m^{-1/q^\star}W$. Then
+$\norm{g_i}_{q^\star}=1$.
+For $s\in\{-1,1\}^m$, set
+\[
+   x_s=-\gamma m^{1/q^\star-1}W^\top s.
+\]
+Matrix multiplication gives $\ip{g_i}{x_s}=-\gamma s_i$.
+Moreover, $\norm{W^\top s}_2=m$, and hence
+\begin{align*}
+ \norm{x_s}_p
+ &\le m^{1/p-1/2}\norm{x_s}_2\\
+ &=\gamma m^{1/p-1/2+1/q^\star}
+ =\gamma m^\rho=R.
+\end{align*}
+Thus every sign pattern has a feasible witness at the claimed margin.
+\end{proof}
+
+The Hadamard construction gains the factor $m^{1/q-1/2}$ in the margin
+relative to the coordinate design when $q<2$. That factor is needed to obtain
+the exponent in~\eqref{eq:rho}. The construction is explicit and requires
+neither random rotations nor a dimension-dependent concentration estimate.
+
+\paragraph{Why the directions carry hidden signs.}
+An unsigned composition with a Hadamard matrix does not suffice. For example,
+take $p=1$ and a Hadamard matrix whose first column is identically one.
+For $g_i=m^{-1/q^\star}W_i$ and $x\in RB_1^m$,
+\[
+ \ip{g_i}{x}\ge-Rm^{-1/q^\star},
+\]
+with equality for every $i$ at the single public point $x=-Re_1$.
+This point minimizes every coordinatewise nondecreasing smooth maximum of
+the scores $\ip{g_i}{x}-E_i$, regardless of the offsets. Hidden row signs
+remove this common minimizer. The simulation in
+Section~\ref{sec:simulation} accounts for exactly how those signs become
+visible to the oracle.
+
+\subsection{Completing the lower bound}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Let $m$ be the smallest power of two at least $16(T+1)$. Then
+\begin{equation}\label{eq:dimension}
+   16(T+1)\le m<32(T+1)\le d.
+\end{equation}
+Use the coordinate design if $q\ge2$ and the Hadamard design if $q<2$.
+Both have $\gamma=Rm^{-\rho}$.
+By Theorem~\ref{thm:transfer},
+\begin{equation}\label{eq:success-constant}
+ \Prb[\err_Q(f_{S,E},\widehat x)\le\eps_m]
+ \le\frac{3T+me^{-8}+1}{m+1}
+ \le\frac3{16}+e^{-8}<\frac15.
+\end{equation}
+The construction of the objective is fixed independently of the algorithm.
+
+For $p<q<2$ or $q=\infty$, use the universal penalty. Its error threshold is
+\begin{align}
+ \eps_m
+ &=\frac{LR^\kappa\sigma^{\kappa-1}}
+          {2^{5\kappa-2}m^{\kappa\rho+\kappa-1}}
+   \label{eq:exactrate}\\
+ &\ge\frac{e^{-2(\kappa-1)}LR^\kappa}
+ {2^{5\kappa-2}m^a[\log(e(m+1))]^{\kappa-1}}.\nonumber
+\end{align}
+Since $m<32(T+1)$ and $m+1\le33(T+1)$, this is at least the second
+threshold in~\eqref{eq:threshold}, for example with
+\[
+ c_{p,q,\kappa}
+ =\frac{e^{-2(\kappa-1)}}
+ {2^{5\kappa-2}32^a(1+\log33)^{\kappa-1}}.
+\]
+
+For $2\le q<\infty$, use the coordinate penalty. Now $\rho=1/p$ and
+$\sigma_q=1/(q-1)$, so
+\begin{equation}\label{eq:finiteq-rate}
+ \eps_m=
+ \frac{LR^\kappa}
+ {2^{5\kappa-2}(q-1)^{\kappa-1}m^{\kappa(1+1/p)-1}}.
+\end{equation}
+This implies the first threshold in~\eqref{eq:threshold}, for example with
+$c_{p,q,\kappa}=[2^{5\kappa-2}(q-1)^{\kappa-1}32^a]^{-1}$.
+Taking complements in~\eqref{eq:success-constant} proves~\eqref{eq:main}.
+All remaining assertions follow from Theorem~\ref{thm:transfer}.
+\end{proof}
+
+\subsection{Example: Euclidean smoothness over the \texorpdfstring{$\ell_1$}{l1} ball}
+
+The specialization $p=1,q=2,\kappa=2$ makes the construction especially
+transparent. With $m$ as in~\eqref{eq:dimension}, take
+\[
+  g_i=e_i,\qquad
+  \gamma=\frac Rm,\qquad
+  \eta=\frac{R}{64m},\qquad
+  \mu=\frac{R}{64m^2},\qquad
+  \phi(\lambda)=\frac12\norm{\lambda}_2^2.
+\]
+Here $\sigma=1$ and $\beta=L\mu$. The hard objective is
+\begin{equation}\label{eq:example}
+ f_{S,E}(x)=L\mu\max_{\lambda\in\Delta_{m+1}}
+ \left\{-\frac{R}{2m}\lambda_0+
+     \sum_{i=1}^m\lambda_i(S_i x_i-E_i)
+     -\frac\mu2\norm{\lambda}_2^2\right\}.
+\end{equation}
+It has an $L$-Lipschitz Euclidean gradient and a feasible global minimizer
+\[
+    x_S=-\frac Rm(S_1,\ldots,S_m,0,\ldots,0).
+\]
+The error threshold is
+\begin{equation}\label{eq:cubic}
+    \eps_m=\frac{LR^2}{256m^3}.
+\end{equation}
+The success probability at this threshold is less than $1/5$ for every
+algorithm with budget $T$. Together with the known upper bound, this yields
+the cubic error exponent and the query exponent $1/3$.
+As noted in Section~\ref{sec:intro}, the matching randomized rate in this
+special case was already obtained in~\cite{LG26}.
+
+\section{Discussion}\label{sec:discussion}
+
+\paragraph{Scope of the matching statement.}
+Theorem~\ref{thm:main} treats the full class of convex objectives with the
+stated gradient regularity in the regime $1\le p<\min\{q,2\}$.
+It applies to arbitrary randomized first-order algorithms, and its dimension
+requirement is $d\ge32(T+1)$. Corollary~\ref{cor:matching} combines this lower
+bound with an existing upper bound; the present paper does not introduce a
+new optimization algorithm. Because the dimension must accommodate the
+query budget, the corollary does not describe the limit $\eps\downarrow0$
+at a fixed dimension.
+
+\paragraph{Exact information and global regularity.}
+The lower bound uses the full value-and-gradient oracle without a precision
+restriction. Exact elimination is what prevents unread affine pieces from
+being encoded in small gradient coefficients. The floor also ensures that
+every sampled function has a global minimizer inside the ball. Consequently,
+allowing an algorithm to query outside the feasible set does not avoid the
+information bound.
+
+\paragraph{Remaining logarithmic factors.}
+For fixed finite $q\ge2$, the coordinate map allows a penalty with a
+dimension-independent modulus. At $q=\infty$, its conjugate exponent is one,
+and $\tfrac12\norm{\lambda}_1^2$ is constant on the simplex, so that choice
+cannot provide strong convexity. The universal penalty supplies the stated
+logarithmic loss. For $p<q<2$, the Hadamard map recovers the required margin,
+and the same universal penalty controls smoothness. Whether the remaining
+logarithmic gaps can be removed is not settled by this argument.
+
+\appendix
+\section{A probability-convention comparison}\label{app:probability}
+
+An expected-error lower bound alone does not generally imply a lower bound
+at constant failure probability. A bounded witness for the error does permit
+such a conclusion. If $0\le D\le2R$ and $\E D\ge cR$, then
+\[
+  \E D\le\frac{cR}{2}
+         +2R\Prb\!\left(D\ge\frac{cR}{2}\right)
+  \quad\Longrightarrow\quad
+  \Prb\!\left(D\ge\frac{cR}{2}\right)\ge\frac c4.
+\]
+For the overlapping $p=1,q=2$ construction,
+\cite[Sections D.5.2--D.5.3, in particular equation (38)]{LG26} uses
+$D=\norm{\widehat x-x^\star}_1$ and a sufficiently small smoothing error.
+The resulting comparison gives a fixed positive failure probability at the
+same order of objective error.
+
+To compare that convention with success probability $2/3$, suppose an
+algorithm achieves the target error on every fixed objective with that
+success probability. Run it independently $k$ times, query the objective
+at each output, and return the best one. Its failure probability is at most
+$3^{-k}$ and its query count is at most $k(T+1)$. For any fixed positive
+failure threshold, a constant $k$ makes this probability smaller than the
+threshold. Both the query budget and the required linear dimension change
+only by constant factors. This explains why the two probability conventions
+give the same exponent in the overlapping special case.
+
+Conversely, the present distributional lower bound directly implies an
+expected-error bound. Since a feasible output has nonnegative error,
+\[
+  \E_{f\sim\nu_T,\mathcal A}\err_Q(f,\widehat x)
+       \ge\frac45\tau_T.
+\]
+Averaging again yields a fixed hard objective for each randomized algorithm.
+
+\begin{thebibliography}{9}
+\small
+\setlength{\itemsep}{4pt}
+
+\bibitem{BGP17}
+G\'abor Braun, Crist\'obal Guzm\'an, and Sebastian Pokutta.
+Lower bounds on the oracle complexity of nonsmooth convex optimization via
+information theory.
+\emph{IEEE Transactions on Information Theory}, 63(7):4709--4724, 2017.
+Updated author version, arXiv:1407.5144v3, 2023.
+\url{https://arxiv.org/abs/1407.5144}.
+
+\bibitem{CGM25}
+Juan Pablo Contreras, Crist\'obal Guzm\'an, and David Mart\'inez-Rubio.
+Non-Euclidean high-order smooth convex optimization.
+Full version, arXiv:2411.08987v2, 2025.
+\url{https://arxiv.org/abs/2411.08987v2}.
+Extended abstract in \emph{Proceedings of the 38th Conference on Learning
+Theory}, Proceedings of Machine Learning Research 291:1330, 2025.
+
+\bibitem{DSSST10}
+John C. Duchi, Shai Shalev-Shwartz, Yoram Singer, and Ambuj Tewari.
+Composite objective mirror descent.
+In \emph{Proceedings of the 23rd Annual Conference on Learning Theory},
+pages 14--26, 2010.
+\url{https://www.ambujtewari.com/research/duchi10composite.pdf}.
+
+\bibitem{Guz15}
+Crist\'obal Guzm\'an.
+Open problem: The oracle complexity of smooth convex optimization in
+nonstandard settings.
+In \emph{Proceedings of the 28th Conference on Learning Theory},
+Proceedings of Machine Learning Research 40:1761--1763, 2015.
+\url{https://proceedings.mlr.press/v40/Guzman15.html}.
+
+\bibitem{GN15}
+Crist\'obal Guzm\'an and Arkadi Nemirovski.
+On lower complexity bounds for large-scale smooth convex optimization.
+\emph{Journal of Complexity}, 31(1):1--14, 2015.
+\url{https://arxiv.org/abs/1307.5001}.
+
+\bibitem{LG26}
+Timofei Loginov, Alexander Gasnikov, Yuriy Dorn, Aleksandr Shestakov,
+Nazarii Tupitsa, Osman Osmanov, and Darina Dvinskikh.
+The complexity of convex optimization with mismatched geometry.
+arXiv:2609.32910v1, 2026.
+\url{https://arxiv.org/abs/2609.32910v1}.
+
+\bibitem{MBGM26}
+David Mart\'inez-Rubio, Brian Bullins, Crist\'obal Guzm\'an, and Mathieu Molina.
+Near-optimal acceleration for smooth $\ell_p/\ell_q$ nondual convex
+first-order oracle optimization.
+arXiv:2609.21880v1, 2026.
+\url{https://arxiv.org/abs/2609.21880v1}.
+
+\bibitem{MG26}
+David Mart\'inez-Rubio and Crist\'obal Guzm\'an.
+Stable movement for nondual Lipschitz convex optimization: Efficiency and
+nearly optimal oracle rates.
+arXiv:2609.20701v2, 2026.
+\url{https://arxiv.org/abs/2609.20701v2}.
+
+\bibitem{Nes05}
+Yurii Nesterov.
+Smooth minimization of non-smooth functions.
+\emph{Mathematical Programming}, 103(1):127--152, 2005.
+\href{https://doi.org/10.1007/s10107-004-0552-5}{doi:10.1007/s10107-004-0552-5}.
+
+\end{thebibliography}
+\end{document}
+
+

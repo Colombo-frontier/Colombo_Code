@@ -83,7 +83,7 @@ def paragraphs(value):
 
 
 def normalize_math_text(source):
-    """Unwrap redundant nested \\text using balanced TeX groups.
+    """Normalize TeX text groups while preserving literal text and math tokens.
 
     This browser-only normalization leaves every text character and every
     surrounding mathematical token in place. Escaped braces and control
@@ -152,7 +152,7 @@ def normalize_math_text(source):
                     continue
             if within_text and char == '$':
                 inline_math = not inline_math
-            out.append(char)
+            out.append(r'\_' if within_text and not inline_math and char == '_' else char)
             i += 1
         return ''.join(out)
     return walk(str(source))
@@ -513,7 +513,8 @@ class ProfileRenderer:
     def evidence(self):
         out = ['<section class="document-section" id="evidence"><div class="section-heading"><span>04</span><h2>Evidence</h2></div><ol class="paper-list">']
         for r in self.p.get("references", []):
-            out.append(f'<li><a href="{esc(r.get("url", "#"))}" target="_blank" rel="noopener">{self.rich(r.get("title", r["id"]))}<span aria-hidden="true"> ↗</span></a></li>')
+            signature = ('<strong>' + esc(', '.join(r.get('authors', []))) + '.</strong> ') if r['id'].startswith('COLOMBO_') else ''
+            out.append(f'<li>{signature}<a href="{esc(r.get("url", "#"))}" target="_blank" rel="noopener">{self.rich(r.get("title", r["id"]))}<span aria-hidden="true"> ↗</span></a></li>')
         out.append('</ol></section>')
         return "".join(out)
 
@@ -706,7 +707,8 @@ def build_profile(p, index, total, previous, following, classification, human_ta
     out.append(f'</nav></main></div><footer class="footer">Complexity Atlas <span>{total} profiles</span><a href="#">Back to top ↑</a></footer></body></html>')
     if normalization_report is not None and (r.math_normalizations or r.literal_signature_normalizations):
         normalizations = [
-            {'rule': 'unwrap_redundant_nested_text', 'before': before, 'after': after,
+            {'rule': ('escape_literal_text_underscores' if after.count(r'\_') > before.count(r'\_')
+                      else 'unwrap_redundant_nested_text'), 'before': before, 'after': after,
              'source_pointers': source_pointers_containing(p, before)}
             for before, after in r.math_normalizations.items()]
         normalizations += [

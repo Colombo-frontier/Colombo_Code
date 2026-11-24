@@ -1,0 +1,1188 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{enumitem}
+\usepackage{xcolor,booktabs,array,tabularx}
+\usepackage{caption}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!40!black,citecolor=blue!40!black,
+urlcolor=blue!40!black,pdftitle={Optimal Sample Complexity of Stochastic Weak-Minty Root Finding},
+pdfauthor={Colombo Team}}
+\captionsetup{font=small,labelfont=bf}
+\setlength{\parskip}{0.18em}
+\setlist[itemize]{leftmargin=*,itemsep=0.25em,topsep=0.3em}
+\setlist[enumerate]{leftmargin=*,itemsep=0.25em,topsep=0.3em}
+\emergencystretch=2em
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\inner}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\tO}{\widetilde{\mathcal O}}
+\newcommand{\one}{\mathbf 1}
+\newcommand{\cV}{\mathcal V}
+\newcommand{\Cexp}{\mathfrak C_{\rm exp}}
+\DeclareMathOperator{\Lip}{Lip}
+\DeclareMathOperator{\proj}{proj}
+\DeclareMathOperator{\TV}{TV}
+\DeclareMathOperator{\KL}{KL}
+\DeclareMathOperator{\gap}{gap}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\title{Optimal Sample Complexity of\\Stochastic Weak-Minty Root Finding}
+\author{Colombo Team\\[3pt]
+\small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+\begin{document}
+\maketitle
+\begin{abstract}
+We determine the dimension-uniform sample complexity of finding an approximate
+zero of a Lipschitz operator under the weak-Minty condition. The operator has
+a designated root within distance $R$ of a known initial point, and each oracle
+call returns a conditionally unbiased vector with conditional variance at most
+$\sigma^2$. For $\rho L\le1/4$ and sufficiently small $\eps/(LR)$, the minimax
+worst-case expected number of calls required to achieve
+$\E\|G(\widehat Z)\|\le\eps$ is
+\[
+\Theta\!\left(\frac{L^2R^2}{\eps^2}
+       +\frac{L^2R^2\sigma^2}{\eps^4}\right).
+\]
+A minibatch damped-extragradient method attains the upper bound in every
+dimension. For the lower bound, we construct a globally Lipschitz operator
+whose small residuals reveal an entire sequence of hidden codewords. A
+Bernoulli oracle masks the last nonzero block, while localized gates prevent
+arbitrary exact-real queries from revealing the remaining sequence.
+The hard operators have a unique root and satisfy the stronger Minty condition
+with $\rho=0$. The lower bound applies to randomized algorithms with arbitrary
+queries, outputs, and stopping times, and requires dimension only
+$O(N_\eps\log(2+N_\eps A_\eps))$, where
+$N_\eps=(LR/\eps)^2$ and $A_\eps=1+\sigma^2/\eps^2$.
+We also obtain a dimension-budget lower bound and show that the same rate
+persists for smooth mean operators and for squared-residual or constant-success
+guarantees.
+\end{abstract}
+
+\noindent\textbf{Keywords.} Weak Minty condition; stochastic root finding;
+oracle complexity; minimax lower bounds; extragradient methods.
+\par\medskip
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:introduction}
+
+Finding an approximate zero of an operator is a basic task in variational
+inequalities and equilibrium computation. For a globally Lipschitz map
+$G:\R^d\to\R^d$, a small residual $\|G(x)\|$ provides a direct measure of
+approximate stationarity. Lipschitz continuity alone, however, supplies little
+geometric guidance toward a root. The weak-Minty condition adds such guidance
+at one designated root $z_\star$:
+\begin{equation}\label{eq:wm-intro}
+ \inner{G(x)}{x-z_\star}\ge-\rho\norm{G(x)}^2
+ \qquad\text{for every }x\in\R^d.
+\end{equation}
+It permits nonmonotone operators while supporting convergent extragradient
+methods~\cite{ddj2021}. When $\rho=0$, this is the Minty condition relative to
+$z_\star$; it still does not require pairwise monotonicity.
+
+Stochastic upper bounds under this geometry are well developed. The more
+delicate issue is whether their sample requirements are unavoidable for the
+same operator class and information interface. A lower bound for general
+nonconvex minimization does not answer this question: its hard gradients need
+not satisfy~\eqref{eq:wm-intro} at a root within a prescribed radius. Likewise,
+an argument for algorithms whose queries remain in the span of previous
+responses does not automatically cover arbitrary adaptive queries. These
+distinctions matter when one oracle call returns an exact real vector and
+the algorithm may choose both its output and its stopping time freely.
+
+This paper gives matching bounds for a fresh, finite-variance oracle. For
+$0\le\rho L\le1/4$ and sufficiently small $\eps/(LR)$, the
+dimension-uniform complexity is
+\begin{equation}\label{eq:intro-rate}
+ \Theta(N_\eps A_\eps),\qquad
+ N_\eps:=\left(\frac{LR}{\eps}\right)^2,
+ \qquad A_\eps:=1+\frac{\sigma^2}{\eps^2}.
+\end{equation}
+Here dimension-uniform means that the upper bound holds in every dimension,
+whereas the lower bound is attained in a finite dimension that may grow as
+the tolerance decreases. All constants in~\eqref{eq:intro-rate} are numerical.
+
+The main contribution is a lower-bound construction compatible with the
+Minty geometry. Its root is a sequence of $T$ independent hidden codewords.
+Each block of the operator points toward its own codeword, but a localized
+gate activates it only when the preceding block is close to its target.
+Consequently, the field satisfies a global one-point inequality, yet every
+small-residual output must identify the whole sequence. A fresh Bernoulli
+sample reveals the next block with probability $p$. We choose the scales so
+that
+\[
+ \underbrace{T\asymp (LR/\eps)^2}_{\text{sequential stages}}
+ \quad\times\quad
+ \underbrace{p^{-1}\asymp1+\sigma^2/\eps^2}_{\text{samples per stage}}
+ \;=\;\Theta(N_\eps A_\eps).
+\]
+Separated codewords control accidental guesses even for unbounded queries.
+The masking rule preserves the conditional variance bound, and a deferred
+decisions argument accounts for all information in the responses. Finally,
+an event-based truncation argument extends the lower bound to expected work.
+
+For completeness, we give an elementary upper-bound proof with explicit
+parameters. The algorithm is a standard damped-extragradient variant; we do
+not claim a new algorithmic principle. The proof works under conditional
+second-moment bounds, without requiring independence of successive noise
+terms. Supplementary results quantify the lower bound under a dimension
+budget, establish an estimation obstruction in every dimension, and smooth
+the hard mean without changing the sample-complexity order.
+
+\paragraph{Organization.}
+Section~\ref{sec:model} states the model and main results.
+Section~\ref{sec:related} compares the theorem with related work.
+Section~\ref{sec:upper} proves the upper bound.
+Sections~\ref{sec:construction}--\ref{sec:mainproof} develop the hard family,
+its information bound, and the lower-bound parameter choices.
+Section~\ref{sec:discussion} discusses the remaining scope.
+The appendices contain the statistical baseline and extensions.
+
+\section{Model and main results}\label{sec:model}
+
+\subsection{Operator class and oracle}
+By translation, take the initial point to be $z_0=0$. Fix an integer $d\ge1$,
+$L,R>0$, $\sigma\ge0$, and $\rho\ge0$. The unknown mean operator and a
+designated root satisfy
+\begin{equation}\label{eq:model-geometry}
+ \Lip(G)\le L,\qquad G(z_\star)=0,\qquad \norm{z_\star}\le R,
+ \qquad
+ \inner{G(x)}{x-z_\star}\ge-\rho\norm{G(x)}^2
+ \quad(x\in\R^d).
+\end{equation}
+The parameters are public, but $G$ and $z_\star$ are unknown.
+The designated root need not be the only root in the class.
+
+At each individual call, let $\mathcal F$ contain the complete preceding
+history and the private randomness used to select the query $x$.
+The returned vector $Y$ obeys, almost surely,
+\begin{equation}\label{eq:oracle-model}
+ \E[Y\mid\mathcal F,x]=G(x),\qquad
+ \E[\norm{Y-G(x)}^2\mid\mathcal F,x]\le\sigma^2.
+\end{equation}
+Each returned vector counts as one sample. The conditional law may depend
+on the past, subject to~\eqref{eq:oracle-model}; independent noise is not
+required. There is no guarantee of sample-wise Lipschitz continuity,
+mean-square smoothness, or evaluations at several points using the same
+random sample. Queries and outputs may be arbitrary points of $\R^d$.
+All algorithmic operations are measurable, and computation between calls
+is unrestricted.
+
+\subsection{Complexity and quantifiers}
+An admissible algorithm terminates almost surely, at a stopping time $\tau$,
+and returns $\widehat Z$ satisfying
+\begin{equation}\label{eq:target}
+ \E\norm{G(\widehat Z)}\le\eps
+\end{equation}
+for every mean and oracle in the class. Expectations include private
+randomness and oracle responses. Let
+$\Cexp^{(d)}(\eps;L,R,\sigma,\rho)$ be the infimum, over such algorithms,
+of the worst-case expected number of calls. Define
+\begin{equation}\label{eq:NA}
+ \Cexp^{(\infty)}:=\sup_{d\ge1}\Cexp^{(d)}.
+\end{equation}
+We use $N_\eps$ and $A_\eps$ from~\eqref{eq:intro-rate} throughout.
+The upper algorithm is explicitly specified for every $d$. On the lower
+side, the dimension and instance may depend on the public parameters,
+including $\eps$, but are fixed before the run and independently of the
+algorithm's private seed.
+
+For $\eps\ge LR$, returning the initial point uses no samples, since
+$\|G(0)\|\le L\|z_\star\|\le LR$. The nontrivial range is therefore
+$0<\eps<LR$. Unless stated otherwise, asymptotic notation hides only
+numerical constants; $\widetilde O$ also hides logarithmic factors.
+
+\subsection{Matching complexity}
+\begin{theorem}[Dimension-uniform minimax complexity]\label{thm:matching}
+There are numerical constants $c_0,c_1,C_1,C_2>0$ such that, for all
+$L,R>0$, $\sigma\ge0$, $0\le\rho L\le1/4$, and
+$0<\eps\le c_0LR$,
+\begin{equation}\label{eq:matching}
+ c_1N_\eps A_\eps
+ \le\Cexp^{(\infty)}(\eps;L,R,\sigma,\rho)
+ \le C_1N_\eps A_\eps.
+\end{equation}
+The upper bound uses a deterministic sample budget in every dimension.
+The lower bound already holds in some dimension
+\begin{equation}\label{eq:main-dimension}
+ d_\eps\le C_2N_\eps\log(2+N_\eps A_\eps).
+\end{equation}
+Its hard means have a unique root and satisfy the global Minty inequality
+\begin{equation}\label{eq:coherent}
+ \inner{G(x)}{x-z_\star}\ge0\qquad\text{for every }x.
+\end{equation}
+In particular, the lower-bound assertion is valid for every declared
+$\rho\ge0$.
+\end{theorem}
+
+For example, $c_0=1/(256\sqrt{514})$, $c_1=1/(2^{30}\cdot514)$,
+and $C_1=26780$ are valid. We do not optimize these constants.
+
+\begin{corollary}[Noise regimes]\label{cor:exponent}
+The bound in Theorem~\ref{thm:matching} has the following two regimes:
+\[
+\Cexp^{(\infty)}=
+\begin{cases}
+ \Theta\big((LR/\eps)^2\big),&0\le\sigma\le\eps,\\[2pt]
+ \Theta\big(L^2R^2\sigma^2/\eps^4\big),&\sigma\ge\eps.
+\end{cases}
+\]
+Thus the noiseless rate is quadratic in inverse accuracy, while for fixed
+$L,R,\sigma>0$ the small-tolerance rate is quartic.
+\end{corollary}
+
+\begin{theorem}[Lower bound under a dimension budget]\label{thm:dimension}
+There are numerical constants $c,C>0$ such that, with
+\begin{equation}\label{eq:dimension-scale}
+ D_{d,\eps}:=\min\left\{N_\eps,
+                 \frac{d}{\log(2+dA_\eps)}\right\},
+\end{equation}
+the conditions $0<\eps\le cLR$ and $D_{d,\eps}\ge C$ imply
+\begin{equation}\label{eq:dimension-frontier}
+ \Cexp^{(d)}(\eps;L,R,\sigma,\rho)
+ \ge cA_\eps D_{d,\eps}
+\end{equation}
+for every $\rho\ge0$. The hard means may again be chosen with a unique root
+and with~\eqref{eq:coherent} holding globally.
+\end{theorem}
+The threshold on $D_{d,\eps}$ is part of the statement. Theorem~\ref{thm:dimension}
+does not give a matching characterization for each fixed dimension.
+In particular, the logarithm in~\eqref{eq:main-dimension} is a cost in
+dimension, not a logarithmic loss in~\eqref{eq:matching}.
+
+\section{Comparison with related work}\label{sec:related}
+
+\subsection{Stochastic upper bounds and oracle assumptions}
+Table~\ref{tab:upper-comparison} separates the weak-Minty range, stochastic
+access, and sample bound. All parameters use the convention
+in~\eqref{eq:model-geometry}. For rates stated only as
+$\widetilde O(\eps^{-4})$, the other problem parameters and a positive
+margin from the boundary of the stated range are fixed. Such entries compare
+accuracy exponents, not the full joint dependence on $L,R,\sigma,\rho$.
+
+Diakonikolas, Daskalakis, and Jordan~\cite{ddj2021} introduced a generalized
+extragradient method for weak-Minty problems. Their stochastic
+Theorem~4.4 uses $-\rho_D\|G(x)\|^2/2$ in the defining inequality, so
+$\rho_D=2\rho$ here. With
+\begin{equation}\label{eq:ddj-conversion}
+ \delta_D=\frac{1}{4\sqrt2}-2\rho L>0,
+ \qquad
+ \mathcal U_D=\frac{N_\eps}{\delta_D}
+        \left(1+\frac{\sigma^2}{\delta_D\eps^2}\right),
+\end{equation}
+their sample bound is $O(\mathcal U_D)$; at $\rho=0$ it is
+$O(N_\eps A_\eps)$. The upper rate in our theorem thus builds on an
+established algorithmic principle.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\caption{Stochastic upper bounds, compared using the operator-norm tolerance
+$\eps$. ``One point'' means one evaluation per fresh sample. The starred
+resolvent criterion is converted below. $O_{\rm marg}$ allows constants
+depending on a fixed positive weak-Minty margin.}
+\label{tab:upper-comparison}
+\begin{tabularx}{\textwidth}{@{}P{0.25\textwidth}P{0.15\textwidth}YP{0.20\textwidth}@{}}
+\toprule
+Reference & Range of $\rho L$ & Stochastic access and assumptions & Sample bound\\
+\midrule
+Diakonikolas et al.\ \cite{ddj2021}, Thm.~4.4
+& $<1/(8\sqrt2)$
+& One point; unbiased, bounded variance; minibatches
+& $O(\mathcal U_D)$\\[4pt]
+Choudhury et al.\ \cite{cgl2023}, Thm.~4.5 and App.~E
+& $<1/2$
+& One point; bounded-variance specialization; minibatches
+& $O_{\rm marg}(N_\eps A_\eps)$\\[4pt]
+Pethick et al.\ \cite{pethick2023}, Thm.~6.1
+& $<1/2$
+& Two points with the same sample; bounded variance and mean-square Lipschitzness
+& $\widetilde O(\eps^{-4})$\\[4pt]
+Alacaoglu et al.\ \cite{akw2024}, Cor.~4.5
+& $<1$
+& One point; bounded variance; resolvent residual$^{*}$
+& $\widetilde O(\eps^{-4})$;\newline expected work\\[4pt]
+Alacaoglu--Kim\ \cite{ak2026}, Thm.~3.1
+& $<1$
+& One point; variance may grow quadratically with distance
+& $\widetilde O(\eps^{-4})$;\newline expected work\\[4pt]
+This paper, Thm.~\ref{thm:matching}
+& $\le1/4$
+& Conditional unbiasedness and bounded conditional variance
+& $\Theta(N_\eps A_\eps)$; matching lower bound\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Choudhury, Gorbunov, and Loizou~\cite{cgl2023} analyze stochastic past
+extragradient under a broader second-moment condition. In the bounded-variance
+specialization, their analysis gives the displayed rate for a fixed margin.
+Although the theorem is phrased through the best expected squared residual,
+the weighted-average estimate in its proof permits randomized output.
+Pethick et al.~\cite{pethick2023} avoid growing batch sizes using an oracle
+with same-sample evaluations at two points and mean-square Lipschitzness.
+Those additional guarantees are outside our oracle model.
+
+Alacaoglu, Donghwan Kim, and Wright~\cite{akw2024} obtain an expected
+$\widetilde O(\eps^{-4})$ bound over the broader range $\rho L<1$.
+Their scaled resolvent residual also controls our target in the
+unconstrained specialization. Indeed, for $y=J_{\eta G}(x)$ and $\eta L<1$,
+the identity $x-y=\eta G(y)$ gives
+\begin{equation}\label{eq:resolvent-conversion}
+ \|G(x)\|\le(1+\eta L)\eta^{-1}\|x-J_{\eta G}(x)\|.
+\end{equation}
+Alacaoglu and Junhyun Kim~\cite{ak2026} extend the stochastic analysis to
+variance bounds of the form $B^2\|x-z_0\|^2+\sigma^2$, as well as constrained
+inclusions. Their broader theorem and our constant-explicit specialization
+address different scopes. We retain $\rho L\le1/4$ so that both sides of the
+matching result have short, self-contained proofs.
+
+\subsection{Stochastic lower-bound techniques}
+Arjevani et al.~\cite{arjevani2019} establish an
+$\Omega(\Delta L\sigma^2/\eps^4)$ stochastic-gradient lower bound for smooth
+nonconvex minimization with initial objective gap at most $\Delta$.
+Their probabilistic zero-chains are an important precedent for sequential
+Bernoulli revelation. A direct transfer to our problem would also have to
+verify a global Minty root and the radius normalization; substituting
+$\Delta=LR^2$ does not supply those properties. Our construction enforces
+the geometry block by block and uses a finite separated codebook to cover
+arbitrary queries. Its masking oracle requires only the variance guarantee
+of~\eqref{eq:oracle-model}.
+
+\subsection{A direct comparison of noiseless lower bounds}
+The public LongTails theorem record of Tyurin et al.~\cite{longtails2026}
+provides a closely related exact-oracle lower bound. It reports
+nonconvergence up to the integer budget
+\begin{equation}\label{eq:longtails-budget}
+ \left\lfloor\min\left\{
+       \left(\frac{LR}{28\eps}\right)^2,
+       \left(\frac d{257}\right)^{1/3}\right\}\right\rfloor_+-1,
+\end{equation}
+with subtraction in the nonnegative integers, for $d\ge257$,
+$28\eps\le LR$, and $0\le\rho L\le1/20$. The target is an expected
+operator norm, and algorithms may be randomized.
+Table~\ref{tab:lower-comparison} compares the dimension dependence on this
+shared noiseless range. The source is an online theorem record with a linked
+formal statement; we make no claim about priority between the two results.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.22}
+\caption{Noiseless lower bounds on the common range
+$\rho L\le1/20$. Both use expected residual norm and unrestricted randomized
+queries. Bounds are asymptotic and require the respective accuracy and
+nontriviality conditions stated in the text. The last column gives a
+sufficient dimension for each displayed bound to attain order $N_\eps$.}
+\label{tab:lower-comparison}
+\begin{tabularx}{\textwidth}{@{}P{0.23\textwidth}YP{0.19\textwidth}P{0.22\textwidth}@{}}
+\toprule
+Result & Query lower bound & Budget notion & Sufficient dimension\\
+\midrule
+LongTails record\ \cite{longtails2026}
+& $\Omega\!\left(\min\{N_\eps,d^{1/3}\}\right)$
+& Fixed cap
+& Order $N_\eps^3$\\[5pt]
+This paper, Thm.~\ref{thm:dimension}
+& $\Omega\!\left(\min\left\{N_\eps,\frac d{\log(2+d)}\right\}\right)$
+& Expected work; also fixed cap
+& $O(N_\eps\log(2+N_\eps))$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Theorem~\ref{thm:dimension} strengthens this dimension dependence and adds the
+noise factor $A_\eps$ in the finite-variance model. The comparison concerns
+the stated bounds; it does not assert that either dimension requirement is
+necessary for every possible hard construction.
+
+\section{A stochastic extragradient upper bound}\label{sec:upper}
+We analyze a minibatch version of damped extragradient. Projection keeps
+the anchor points in a public ball containing the root, while the predictor
+remains unconstrained. This distinction permits a direct residual guarantee
+for the full-space problem.
+
+\begin{lemma}[A batch under conditional second-moment bounds]\label{lem:batch}
+At a point $x$ selected from the past and then held fixed, let $\widehat G(x)$ be the arithmetic mean of $b$ fresh responses. Conditional on the history before this batch,
+\[
+ \E[\widehat G(x)]=G(x),\qquad
+ \E\norm{\widehat G(x)-G(x)}^2\le\frac{\sigma^2}{b}.
+\]
+The same holds for a second batch at a point selected using the first batch, conditional on all information preceding the second batch.
+\end{lemma}
+\begin{proof}
+Write each response as $G(x)+\xi_i$. For $i<j$, iterated conditional expectation gives $\E[\inner{\xi_i}{\xi_j}]=0$, because $\xi_i$ is known before sample $j$ and $\xi_j$ has conditional mean zero. Expanding the square of the batch average and summing the diagonal bounds proves the result. Full independence between noise samples is unnecessary.
+\end{proof}
+
+\paragraph{Algorithm.}
+Let $\mathcal B=\overline B(0,R)$ and choose
+\begin{equation}\label{eq:upper-params}
+ \eta=\frac{3}{4L},\qquad \omega=\frac14,\qquad
+ b=\max\left\{1,\left\lceil\frac{78\sigma^2}{\eps^2}\right\rceil\right\},
+ \qquad
+ K=\max\left\{1,\left\lceil\frac{512L^2R^2}{3\eps^2}\right\rceil\right\}.
+\end{equation}
+Initialize $X_0=0$. For $t=0,\ldots,K-1$, perform two fresh batches:
+\begin{align}
+ U_t&=\frac1b\sum_{j=1}^b Y_{t,j}(X_t),
+ &Z_t&=X_t-\eta U_t,\label{eq:predictor}\\
+ V_t&=\frac1b\sum_{j=1}^b Y'_{t,j}(Z_t),
+ &X_{t+1}&=\Pi_{\mathcal B}(X_t-\omega\eta V_t).
+ \label{eq:corrector}
+\end{align}
+After these iterations, draw $I$ uniformly from $\{0,\ldots,K-1\}$ using fresh private randomness, and output $\widehat Z=Z_I$. Each predictor $Z_t$ is stored. The procedure uses no residual evaluation beyond its charged samples. The predictor points need not be bounded on every noise history; all are allowed by the full-space oracle model and have finite second moments. The anchor points $X_t$ remain in the public ball.
+
+\begin{lemma}[Explicit stochastic descent]\label{lem:upper-descent}
+If $\rho L\le1/4$, one step of \eqref{eq:predictor}--\eqref{eq:corrector} satisfies, conditional on the history before its first batch,
+\begin{equation}\label{eq:upper-descent}
+ \E\norm{X_{t+1}-z_\star}^2
+ \le \norm{X_t-z_\star}^2
+ -\frac{3}{256L^2}\E\norm{G(Z_t)}^2
+ +\frac{117}{256L^2}\frac{\sigma^2}{b}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Fix the starting history, and abbreviate $x=X_t$, $u=U_t$, $y=Z_t$, $g=G(y)$, $\xi=u-G(x)$, and $v_b=\sigma^2/b$. Conditional on the entire first batch, the corrector batch has mean $g$ and centered second moment at most $v_b$. Nonexpansiveness of projection relative to $z_\star\in\mathcal B$ gives
+\[
+ \E[\norm{X_{t+1}-z_\star}^2\mid\text{first batch}]
+ \le \norm{x-z_\star}^2
+      -2\omega\eta\inner{g}{x-z_\star}
+      +\omega^2\eta^2(\norm g^2+v_b).
+\]
+As $x-z_\star=(y-z_\star)+\eta u$, weak Minty yields
+\[
+ \inner g{x-z_\star}\ge-\rho\norm g^2+\eta\inner g u.
+\]
+The identity $-2\inner gu=-\norm g^2-\norm u^2+\norm{g-u}^2$ therefore implies
+\begin{align}\label{eq:upper-before}
+ \E[\norm{X_{t+1}-z_\star}^2\mid\text{first batch}]
+ &\le \norm{x-z_\star}^2
+ -\omega\eta\big((1-\omega)\eta-2\rho\big)\norm g^2\nonumber\\
+ &\quad-\omega\eta^2\norm u^2
+       +\omega\eta^2\norm{g-u}^2+\omega^2\eta^2v_b.
+\end{align}
+There is no assumption that the predictor noise is independent of $g$. Instead, the deterministic inequality
+\begin{align*}
+ \norm{g-u}^2
+ &=\norm{G(y)-G(x)-\xi}^2\\
+ &\le\tfrac32\norm{G(y)-G(x)}^2+3\norm{\xi}^2\\
+ &\le\tfrac32L^2\eta^2\norm u^2+3\norm{\xi}^2
+\end{align*}
+handles precisely that dependence. Take expectation over the first batch and apply Lemma~\ref{lem:batch}. We obtain
+\begin{align*}
+ \E\norm{X_{t+1}-z_\star}^2
+ &\le\norm{x-z_\star}^2
+ -\omega\eta\big((1-\omega)\eta-2\rho\big)\E\norm g^2\\
+ &\quad-\omega\eta^2\big(1-\tfrac32L^2\eta^2\big)\E\norm u^2
+ +(3\omega+\omega^2)\eta^2v_b.
+\end{align*}
+For the parameters in \eqref{eq:upper-params},
+\[
+ 1-\tfrac32L^2\eta^2=\frac5{32}>0,
+\]
+\[
+ \omega\eta\big((1-\omega)\eta-2\rho\big)
+ \ge\frac3{256L^2},\qquad
+ (3\omega+\omega^2)\eta^2=\frac{117}{256L^2}.
+\]
+Drop the nonpositive $\E\norm u^2$ term to prove \eqref{eq:upper-descent}. The expectations are well defined: anchors are bounded, predictors have finite second moments, and $G$ is globally Lipschitz.
+\end{proof}
+
+\begin{theorem}[Deterministic-budget upper bound]\label{thm:upper}
+For every dimension and every oracle satisfying \eqref{eq:oracle-model}, if $\rho L\le1/4$, the algorithm above obeys
+\begin{equation}\label{eq:upper-res}
+ \E\norm{G(\widehat Z)}^2
+ \le\frac{256L^2R^2}{3K}+\frac{39\sigma^2}{b}
+ \le\eps^2.
+\end{equation}
+It uses exactly $2bK$ original samples, hence at most $C N_\eps A_\eps$ when $0<\eps\le LR$. In particular it meets the expected-norm target by Cauchy--Schwarz.
+\end{theorem}
+\begin{proof}
+Telescope \eqref{eq:upper-descent}, use $\norm{X_0-z_\star}^2\le R^2$, and discard the nonnegative final squared distance. Independent uniform choice of $I$ turns the average predictor residual into the left side of \eqref{eq:upper-res}. The choices of $K$ and $b$ make its two terms at most $\eps^2/2$ each (the noise term is zero when $\sigma=0$). For $N_\eps\ge1$, we have $b\le78A_\eps$ and $K\le(515/3)N_\eps$, hence $2bK\le26780N_\eps A_\eps$. Every batch is charged and the number of batches is deterministic.
+\end{proof}
+
+\paragraph{Why the shorter corrector matters.}
+If one set $\omega=1$ in \eqref{eq:upper-before}, the displayed coefficient would not be positive for a general weak-Minty operator. The proof uses the damped corrector, not an unproved application of ordinary extragradient outside its parameter range. This is the same basic asymmetry between predictor and corrector steps that underlies extragradient methods for weak-Minty problems~\cite{ddj2021}.
+
+
+\section{The hard family and its oracle}\label{sec:construction}
+The construction separates two requirements. Each block must point toward
+its hidden target to preserve Minty geometry, while access to that target
+must depend on progress through the preceding blocks. Bounded radial maps
+provide the first property, and localized gates provide the second.
+
+\subsection{A separated codebook}\label{sec:code}
+
+\begin{lemma}[Elementary spherical code]\label{lem:code}
+For every integer $M\ge2$ and every $h>0$, there exist an integer $m\le C\log(2M)$ and a set $\cV\subset h\mathbb S^{m-1}$ with $|\cV|=M$ such that
+\[
+ \norm{u-v}\ge\frac h2
+ \qquad\text{for all distinct }u,v\in\cV.
+\]
+Consequently, every Euclidean ball of radius $h/8$ contains at most one point of $\cV$.
+\end{lemma}
+
+\begin{proof}
+Choose exactly $M$ independent uniform sign vectors in $\{\pm1\}^m$, where $m=\lceil32\log(2M)\rceil$. For a pair, its Hamming distance $D$ is a sum of $m$ independent Bernoulli-$1/2$ variables. Exponential Markov with $t=\log3$ gives
+\[
+ \Pp(D\le m/8)\le e^{tm/8}\left(\frac{1+e^{-t}}2\right)^m
+ =\left(3^{1/8}\frac23\right)^m\le e^{-m/8}.
+\]
+A union bound over the fewer than $M^2/2$ pairs bounds the probability of any bad pair by $M^2e^{-m/8}/2<1$. Thus a deterministic realization with all Hamming distances greater than $m/8$ exists. Scale each selected sign vector by $h/\sqrt m$. The resulting code has exactly $M$ elements, each of norm $h$, and any two have Euclidean distance greater than $h/\sqrt2>h/2$. Two codewords in one radius-$h/8$ ball would be at distance at most $h/4$, a contradiction.
+\end{proof}
+
+\subsection{A gated sequence of hidden codewords}
+
+Fix $T,m\ge1$, a scale $h>0$, and hidden codewords
+\[
+ v=(v_1,\ldots,v_T)\in\cV^T.
+\]
+Write $x=(x_1,\ldots,x_T)\in(\R^m)^T$.  Define the radial clipping map
+\begin{equation}
+ \Phi_h(u):=\proj_{h\mathbb B_2^m}(u)
+ =\begin{cases}
+ u,&\norm u\le h,\\
+ h u/\norm u,&\norm u>h,
+ \end{cases}
+ \label{eq:clip}
+\end{equation}
+and the gate
+\begin{equation}
+ q_h(r):=
+ \begin{cases}
+ 1,&0\le r\le h/16,\\
+ 2-16r/h,&h/16<r<h/8,\\
+ 0,&r\ge h/8.
+ \end{cases}
+ \label{eq:gate}
+\end{equation}
+Set
+\begin{align}
+ H_1^v(x)&:=\Phi_h(x_1-v_1),\label{eq:H1}\\
+ H_i^v(x)&:=q_h(\norm{x_{i-1}-v_{i-1}})\Phi_h(x_i-v_i),
+ \qquad 2\le i\le T.\label{eq:Hi}
+\end{align}
+The designated root is
+\begin{equation}
+ x_\star^v=(v_1,\ldots,v_T),
+ \qquad \norm{x_\star^v}=h\sqrt T.
+ \label{eq:root}
+\end{equation}
+
+\begin{lemma}[Global geometry]\label{lem:geometry}
+Let $C_0:=\sqrt{514}<23$.  For every $v\in\cV^T$:
+\begin{enumerate}[label=(\roman*)]
+\item $H^v$ is $C_0$-Lipschitz and $\norm{H^v(x)}\le h\sqrt T$;
+\item $x_\star^v$ is the unique root of $H^v$;
+\item globally,
+\begin{equation}
+ \inner{H^v(x)}{x-x_\star^v}\ge\norm{H^v(x)}^2\ge0;
+ \label{eq:star-coco}
+\end{equation}
+\item small residual forces recovery of every hidden codeword:
+\begin{equation}
+ \norm{H^v(x)}<\frac h{16}
+ \quad\Longrightarrow\quad
+ \norm{x_i-v_i}<\frac h{16}
+ \quad(1\le i\le T).
+ \label{eq:decode}
+\end{equation}
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+The projection $\Phi_h$ is nonexpansive and bounded by $h$.  For $i\ge2$,
+\[
+ \norm{H_i^v(x)-H_i^v(y)}
+ \le \norm{x_i-y_i}+16\norm{x_{i-1}-y_{i-1}}.
+\]
+Using $(a+16b)^2\le2a^2+512b^2$ and summing over blocks gives
+$\norm{H^v(x)-H^v(y)}^2\le514\norm{x-y}^2$.
+
+For every $u$, projection onto the radius-$h$ ball satisfies
+\[
+ \inner{\Phi_h(u)}{u}\ge\norm{\Phi_h(u)}^2.
+\]
+Writing $e_i=x_i-v_i$ and using $0\le q_h\le1$,
+\begin{align*}
+ \inner{H^v(x)}{x-x_\star^v}
+ &\ge \norm{\Phi_h(e_1)}^2
+ +\sum_{i=2}^T q_h(\norm{e_{i-1}})\norm{\Phi_h(e_i)}^2\\
+ &\ge \norm{\Phi_h(e_1)}^2
+ +\sum_{i=2}^T q_h(\norm{e_{i-1}})^2\norm{\Phi_h(e_i)}^2
+ =\norm{H^v(x)}^2.
+\end{align*}
+This proves \eqref{eq:star-coco}.  Uniqueness follows recursively: $H_1^v(x)=0$ gives $x_1=v_1$, which turns on the second gate; then $H_2^v(x)=0$ gives $x_2=v_2$, and so on.
+
+Finally, if $\norm{H^v(x)}<h/16$, then $\norm{\Phi_h(e_1)}<h/16$, hence $\norm{e_1}<h/16$ and the second gate equals one.  Induction yields $\norm{e_i}<h/16$ for every block.
+\end{proof}
+
+\begin{remark}[Arbitrary large queries]
+The gate is localized around a hidden codeword.  Regardless of the norm of a query block, it can lie within distance $h/8$ of at most one codeword.  Thus a query can test at most one candidate for each still-hidden block.  No bounded-query assumption or random-rotation reduction is used.
+\end{remark}
+
+Scale the mean operator by
+\begin{equation}
+ s:=\frac{L}{C_0},
+ \qquad
+ G^v:=sH^v.
+ \label{eq:scale}
+\end{equation}
+Then $G^v$ is $L$-Lipschitz and satisfies~\eqref{eq:coherent}.
+In fact, \eqref{eq:star-coco} gives the stronger one-point inequality
+$\langle G^v(x),x-x_\star^v\rangle\ge s^{-1}\|G^v(x)\|^2$.
+
+\begin{remark}[The field need not be monotone]\label{rem:nonmonotone}
+To see that the construction is outside pairwise monotonicity, take $h=1$
+and two scalar blocks. In coordinates relative to the root, let
+$e=(-1/4,-2)$ and $f=(0,-1)$. The corresponding field values are
+$(-1/4,0)$ and $(0,-1)$, whose difference has inner product $-15/16$
+with $e-f$. This example embeds along one direction in each vector block;
+additional blocks can be set at their roots.
+\end{remark}
+
+\subsection{Masking the last nonzero block}
+
+For a query $x$, define the last nonzero block
+\begin{equation}
+ \ell_v(x):=\max\{i\in\{1,\ldots,T\}:H_i^v(x)\ne0\},
+ \label{eq:ell}
+\end{equation}
+with $\ell_v(x)=0$ if $H^v(x)=0$.  Given $p\in(0,1]$ and a fresh $B\sim\operatorname{Bernoulli}(p)$, define
+\begin{equation}
+ \widetilde H_i^v(x;B):=
+ \begin{cases}
+ (B/p)H_i^v(x),&i=\ell_v(x)>0,\\
+ H_i^v(x),&i\ne\ell_v(x),
+ \end{cases}
+ \qquad
+ \widetilde G^v(x;B):=s\widetilde H^v(x;B).
+ \label{eq:masked-oracle}
+\end{equation}
+
+\begin{lemma}[Measurability and oracle validity]\label{lem:oracle}
+For each fixed $b\in\{0,1\}$, the map $x\mapsto\widetilde G^v(x;b)$ is Borel measurable.  If independent Bernoulli variables are used across calls, \eqref{eq:masked-oracle} is a fresh i.i.d. random-operator oracle and, for every $x$,
+\begin{equation}
+ \E_B[\widetilde G^v(x;B)]=G^v(x),
+ \qquad
+ \E_B\norm{\widetilde G^v(x;B)-G^v(x)}^2
+ \le s^2h^2\left(\frac1p-1\right).
+ \label{eq:oracle-valid}
+\end{equation}
+Consequently,
+\begin{equation}
+ p:=\frac{s^2h^2}{s^2h^2+\sigma^2}
+ \label{eq:p}
+\end{equation}
+ensures variance at most $\sigma^2$ at every query.
+\end{lemma}
+
+\begin{proof}
+Each block $H_i^v$ is continuous.  Hence
+\[
+ \{x:\ell_v(x)=i\}
+ =\{H_i^v(x)\ne0\}\cap\bigcap_{j>i}\{H_j^v(x)=0\}
+\]
+is Borel, as is the set $\{\ell_v=0\}$.  Formula \eqref{eq:masked-oracle} is therefore Borel for each $b$.  Drawing independent $B_t$ gives a fixed random map $x\mapsto\widetilde G^v(x;B_t)$ on each call, so the oracle is specified before any interaction with the algorithm.
+
+Conditional on $x$, the only random difference is
+\[
+ \left(\frac Bp-1\right)sH_{\ell_v(x)}^v(x),
+\]
+interpreted as zero when $\ell_v(x)=0$.  It has mean zero and second moment at most $(1/p-1)s^2h^2$, proving \eqref{eq:oracle-valid} and \eqref{eq:p}.
+\end{proof}
+
+The use of the \emph{last} nonzero block is essential.  Perturbing an already learned early block cannot move the next hidden block out of the masked position.
+
+\section{Information revealed by adaptive queries}\label{sec:information}
+
+Draw $V_1,\ldots,V_T$ independently and uniformly from $\cV$.  The algorithm knows the codebook, all parameters, and the formulas above, but not the selected codewords.  We analyze an augmented experiment that can only help the algorithm:
+\begin{itemize}
+\item every Bernoulli bit $B_t$ is revealed;
+\item whenever $B_t=1$, a genie reveals the next unrevealed codeword in prefix order, whether or not the actual response would reveal it.
+\end{itemize}
+Let $K_t$ be the revealed prefix length after query $t$, with $K_0=0$. Thus $K_t=\min\{T,\sum_{s\le t}B_s\}$ for this genie. The original oracle responses remain available in this augmented experiment. We stop the information analysis at the first accidental hit; before that stopping event, Lemma~\ref{lem:oneblock} below proves that responses contain no additional future information beyond the genie prefix.
+
+At a query $x_t$, an unrevealed block $V_i$, $i>K_{t-1}$, is called \emph{accidentally hit} if
+\begin{equation}
+ \norm{x_{t,i}-V_i}<h/8.
+ \label{eq:hit}
+\end{equation}
+The same terminology is used for the final output.
+
+\begin{lemma}[One success exposes at most one new block]\label{lem:oneblock}
+Suppose the revealed prefix before a query has length $0\le k<T$, and the current query accidentally hits no unrevealed block.  Then:
+\begin{enumerate}[label=(\roman*)]
+\item $H_i^V(x_t)=0$ for all $i\ge k+2$;
+\item if $B_t=0$, the response is a function only of the query and the revealed prefix $V_1,\ldots,V_k$;
+\item if $B_t=1$, the response can depend on at most the single additional codeword $V_{k+1}$, which the genie then reveals.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+For $i\ge k+2$, the gate of block $i$ is controlled by the unrevealed block $V_{i-1}$.  The no-hit condition gives $\norm{x_{t,i-1}-V_{i-1}}\ge h/8$, so this gate is zero.  Only block $k+1$ can depend on an unrevealed codeword. When $k=0$, its gate is interpreted as identically one.  If its gate is positive, the no-hit condition implies $x_{t,k+1}\ne V_{k+1}$, so this is the last nonzero block and is removed when $B_t=0$.  If its gate is zero, the response is already independent of $V_{k+1}$.  The claim follows. If $k=T$, all codewords are already revealed and the assertion about future information is vacuous.
+\end{proof}
+
+The next lemma states the deferred-decisions invariant with all conditioning made explicit.
+
+\begin{lemma}[Adaptive deferred decisions]\label{lem:deferred}
+Fix the algorithm's private random seed and run the augmented experiment. Stop the analysis at the first accidental hit. A safe transcript means the observed transcript together with the analytical event that all previous queries avoided unrevealed codewords; the algorithm need not be told that event.  Conditional on any safe transcript through time $t$ having positive probability for the fixed seed, every still-unrevealed $V_i$ is independent and uniform on a survivor set $S_{i,t}\subseteq\cV$ obtained by deleting at most one codeword for each previous query at which block $i$ was unrevealed.  In particular,
+\begin{equation}
+ |S_{i,t}|\ge M-t.
+ \label{eq:survivor}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+We argue by induction.  Initially the claim holds with $S_{i,0}=\cV$.  Suppose it holds before query $t+1$.  Conditional on the safe past, the query is fixed.  For each unrevealed block, the event of no current hit excludes at most one codeword because a radius-$h/8$ ball contains at most one element of $\cV$.  These exclusions factor blockwise.
+
+By Lemma~\ref{lem:oneblock}, when $B_{t+1}=0$ the oracle response is independent of all unrevealed codewords.  When $B_{t+1}=1$, it depends on at most $V_{K_t+1}$, and the genie reveals that variable exactly; the laws of all codewords that remain unrevealed are not reweighted.  Thus the remaining variables stay independent and uniform on their updated survivor sets.  At most one candidate has been removed per prior query, which gives \eqref{eq:survivor}.
+\end{proof}
+
+\begin{lemma}[Probability of any adaptive accidental hit]\label{lem:hit-bound}
+Let an algorithm make at most $n$ calls and then output $\widehat x$, possibly at an earlier stopping time. The final-output opportunity is evaluated at that actual stopping time, before any unused genie revelations. If $M\ge2(n+1)$, then
+\begin{equation}
+ \Pp(\text{some query or }\widehat x\text{ accidentally hits an unrevealed block})
+ \le \frac{2(n+1)T}{M}.
+ \label{eq:hit-bound}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+At each query, conditional on a safe past, Lemma~\ref{lem:deferred} implies that a fixed query block hits its corresponding unrevealed codeword with probability at most $(M-n)^{-1}\le2/M$.  The same applies to every coordinate of the final output after conditioning on the terminal transcript and private randomness.  A union bound over at most $T$ unrevealed blocks and $n+1$ query/output opportunities gives \eqref{eq:hit-bound}.
+\end{proof}
+
+\begin{proposition}[Fixed-budget event lower bound]\label{prop:fixed}
+Suppose
+\begin{equation}
+ n\le\frac{T}{8p},
+ \qquad
+ M\ge32(n+1)T.
+ \label{eq:fixed-conditions}
+\end{equation}
+Then every randomized algorithm making at most $n$ calls satisfies, under the random hard instance,
+\begin{equation}
+ \Pp\left(\norm{G^V(\widehat x)}\ge\frac{sh}{16}\right)
+ \ge\frac{13}{16}.
+ \label{eq:event-lb}
+\end{equation}
+In particular,
+\begin{equation}
+ \E\norm{G^V(\widehat x)}\ge\frac{13sh}{256}.
+ \label{eq:expected-fixed}
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+Let $S_n=\sum_{t=1}^nB_t$, with unused future Bernoulli bits sampled independently for analysis if the algorithm stops before time $n$.  Since the genie reveals at most one new prefix codeword per successful bit, fewer than $T$ codewords are revealed whenever $S_n<T$.  Markov's inequality and \eqref{eq:fixed-conditions} give
+\[
+ \Pp(S_n\ge T)\le\frac{np}{T}\le\frac18.
+\]
+Lemma~\ref{lem:hit-bound} and the second condition in \eqref{eq:fixed-conditions} bound the accidental-hit probability by $1/16$.  Hence with probability at least $13/16$, at least one codeword is unrevealed and the final output is at distance at least $h/8$ from every unrevealed codeword.  The contrapositive of \eqref{eq:decode} gives $\norm{H^V(\widehat x)}\ge h/16$, proving \eqref{eq:event-lb}; \eqref{eq:expected-fixed} follows.
+\end{proof}
+
+The bounds hold for every fixed private seed and therefore also after
+averaging over that seed. Averaging over the finite hard distribution then
+shows that each randomized algorithm has a deterministic codeword instance
+on which the corresponding lower bound holds. The instance is not chosen
+adaptively from the algorithm's transcript.
+
+\section{Scaling and expected-work lower bounds}\label{sec:mainproof}
+
+\subsection{Calibrating accuracy, noise, and dimension}
+Set $C_0=\sqrt{514}$, $s=L/C_0$, and choose
+\begin{equation}\label{eq:parameters}
+ h=\frac{64\eps}{s},\qquad
+ p=\frac{s^2h^2}{s^2h^2+\sigma^2}
+   =\frac{4096\eps^2}{4096\eps^2+\sigma^2}.
+\end{equation}
+For any integer
+\begin{equation}\label{eq:T-range}
+ 16\le T\le R^2/h^2,
+\end{equation}
+the root lies within the prescribed radius. Define
+\begin{equation}\label{eq:nM}
+ n_0=\left\lfloor\frac{T}{8p}\right\rfloor,
+ \qquad M=32(n_0+1)T.
+\end{equation}
+Proposition~\ref{prop:fixed} gives, for every algorithm using at most $n_0$
+calls,
+\begin{equation}\label{eq:fixed-scaled}
+ \Pp\{\norm{G^V(\widehat x)}\ge4\eps\}\ge\frac{13}{16}.
+\end{equation}
+The probability includes the hard instance, oracle samples, and private seed.
+Since $T/(8p)\ge2$,
+\begin{equation}\label{eq:n-lower}
+ n_0\ge\frac{T}{16p},\qquad
+ p^{-1}=1+\frac{\sigma^2}{4096\eps^2}\ge\frac{A_\eps}{4096}.
+\end{equation}
+
+The codebook size depends on the fixed budget $n_0$, not on the subsequent
+realized stopping time. Lemma~\ref{lem:code} gives a block dimension
+\begin{equation}\label{eq:block-dimension}
+ m\le C\log(2M)\le C\log(2+T^2A_\eps),
+\end{equation}
+because $p^{-1}\le A_\eps$. Consequently, the total dimension satisfies
+\begin{equation}\label{eq:total-dimension}
+ d_0=mT\le CT\log(2+T^2A_\eps).
+\end{equation}
+
+\subsection{From a fixed budget to expected work}
+The next elementary transfer isolates the role of random stopping. It uses
+an event lower bound and does not require a bound on the residual of the
+point returned after a timeout.
+
+\begin{lemma}[Truncation of a residual event]\label{lem:stopping}
+Fix a distribution over instances and a threshold $r>0$. Suppose every
+algorithm making at most $n\ge1$ calls has
+$\Pp\{\|G(\widehat Z)\|\ge r\}\ge\beta$ under this distribution.
+If an almost surely terminating algorithm satisfies
+$\Pp\{\|G(\widehat Z)\|\ge r\}\le\alpha$ under the same distribution,
+where $\alpha<\beta$, then
+\begin{equation}\label{eq:stopping-lb}
+ \E\tau\ge n(\beta-\alpha).
+\end{equation}
+In particular, under~\eqref{eq:fixed-scaled}, every algorithm satisfying
+the expected-norm target on each hard instance obeys
+\begin{equation}\label{eq:stopping-chain}
+ \sup_v\E_v\tau\ge\E_{V,\mathrm{oracle},\mathrm{seed}}\tau
+ \ge\frac9{16}n_0\ge\frac12n_0.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Run the algorithm for at most $n$ calls and, if it has not terminated,
+return any fixed point. Couple the truncated and original runs using the
+same randomness. Their outputs agree on $\{\tau\le n\}$, so
+\[
+ \beta\le\Pp\{\|G(\widehat Z_{\rm trunc})\|\ge r\}
+ \le\alpha+\Pp\{\tau>n\}
+ \le\alpha+\frac{\E\tau}{n}.
+\]
+This proves~\eqref{eq:stopping-lb}; an infinite expectation is immediate.
+For the final assertion, average the correctness guarantee over the hard
+instances and apply Markov's inequality to obtain
+$\Pp\{\|G(\widehat Z)\|\ge4\eps\}\le1/4$.
+Use $\beta=13/16$ and $\alpha=1/4$.
+\end{proof}
+
+\subsection{Completing the main theorem}
+\begin{proof}[Proof of the lower bound in Theorem~\ref{thm:matching}]
+Choose
+\[
+ T=\left\lfloor\frac{R^2}{h^2}\right\rfloor
+  =\left\lfloor\frac{N_\eps}{4096C_0^2}\right\rfloor.
+\]
+The condition $\eps\le LR/(256C_0)$ ensures $R^2/h^2\ge16$,
+so~\eqref{eq:T-range} holds and
+$T\ge N_\eps/(8192C_0^2)$. Combining~\eqref{eq:n-lower} with
+Lemma~\ref{lem:stopping} yields
+\[
+ \sup_v\E_v\tau
+ \ge\frac{T}{32p}
+ \ge\frac{N_\eps A_\eps}{2^{30}C_0^2}.
+\]
+The geometric and oracle assumptions follow from
+Lemmas~\ref{lem:geometry} and~\ref{lem:oracle}.
+Since $T\le N_\eps$ and
+$\log(2+T^2A_\eps)\le2\log(2+N_\eps A_\eps)$,
+equation~\eqref{eq:total-dimension} gives~\eqref{eq:main-dimension}.
+The upper half of the theorem is Theorem~\ref{thm:upper}.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:dimension}]
+Let $T=\lfloor\gamma D_{d,\eps}\rfloor$, for a sufficiently small
+numerical constant $\gamma>0$. The threshold $D_{d,\eps}\ge C$ ensures
+$T\ge16$ and $T\ge\gamma D_{d,\eps}/2$.
+Taking $\gamma\le1/(4096C_0^2)$ gives $T\le R^2/h^2$.
+
+To fit the codebook within dimension $d$, use $T\le d$ and $A_\eps\ge1$
+to obtain
+\[
+ \log(2+T^2A_\eps)\le2\log(2+dA_\eps).
+\]
+Together with $T\le\gamma d/\log(2+dA_\eps)$ and
+\eqref{eq:total-dimension}, this gives $d_0\le d$ when $\gamma$ is small
+enough. Equations~\eqref{eq:n-lower} and~\eqref{eq:stopping-chain} then
+give the desired lower bound in dimension $d_0$.
+
+If $d_0<d$, extend the mean and oracle by a public exact linear block:
+\[
+ \overline G^v(x,y)=(G^v(x),Ly),\qquad
+ \overline Y(x,y)=(Y(x),Ly).
+\]
+The Lipschitz constant remains at most $L$, the noise variance is unchanged,
+and the unique root is $(x_\star^v,0)$. The additional inner product
+$L\|y\|^2$ preserves the Minty inequality. Since the new coordinates are
+known exactly and the full residual dominates $\|G^v(x)\|$, any algorithm
+for the extended problem would yield one with the same cost for the
+original hard family. This proves the bound in dimension $d$.
+\end{proof}
+
+\section{Discussion}\label{sec:discussion}
+
+\paragraph{What the matching theorem establishes.}
+The combination of the two proofs identifies the full sample-complexity
+product $N_\eps A_\eps$ in the dimension-uniform model. The hard family
+already satisfies Minty with $\rho=0$, so the lower bound does not arise
+from allowing a positive violation parameter. It persists under unique-root
+and smooth-mean restrictions. The source of difficulty is sequentially
+hidden information: reducing the residual below the threshold requires
+recovering every codeword, and each additional revelation costs order
+$A_\eps$ fresh samples.
+
+\paragraph{Dimension-dependent algorithms and fixed dimension.}
+The lower-bound dimension grows with the target accuracy and the noise
+level. This leaves room for algorithms whose dependence on $d$ is larger
+but whose dependence on $\eps$ is smaller. Anagnostides et al.~\cite{afsz2026}
+give a polynomial-time algorithm for compact-domain variational inequalities
+under the Minty condition, with polynomial dependence on dimension and
+polylogarithmic dependence on inverse gap tolerance, under their representation
+and oracle assumptions. Its relevance to the noiseless $\rho=0$ subclass
+can be seen directly. On $\mathcal X=\overline B(0,2R)$, the Stampacchia gap
+satisfies
+\begin{align}\label{eq:gap-conversion}
+ \gap_{\mathcal X}(x)
+ &:=\sup_{y\in\mathcal X}\langle G(x),x-y\rangle\nonumber\\
+ &=\langle G(x),x\rangle+2R\|G(x)\|
+ \ge R\|G(x)\|.
+\end{align}
+The last inequality uses Minty and $\|z_\star\|\le R$.
+Thus gap tolerance $R\eps$ implies residual tolerance $\eps$.
+This dimension-dependent perspective is consistent with our lower bound.
+The noisy fixed-dimensional minimax problem for the full class
+in~\eqref{eq:model-geometry}--\eqref{eq:oracle-model} is not resolved here.
+
+\paragraph{Weak-Minty margins and stochastic access.}
+The elementary upper proof is uniform over $\rho L\le1/4$.
+Bounds over the wider range $\rho L<1$ appear in the works discussed in
+Section~\ref{sec:related}; the dependence on a vanishing margin is a separate
+question. Our lower bound also does not settle the complexity under
+mean-square smoothness or same-sample multipoint access. Appendix~\ref{app:smooth}
+smooths the mean operator, while leaving the stochastic access assumptions
+unchanged.
+
+\paragraph{Operator fields and saddle gradients.}
+A general vector field satisfying Minty need not be the gradient operator
+of a min-max objective. The construction in this paper is an operator
+construction; a saddle-gradient realization would require an additional
+argument. The results therefore concern root finding for the operator class
+as stated, without an integrability restriction.
+
+\appendix
+\section{A statistical lower bound in every dimension}\label{app:statistical}
+\begin{theorem}[Affine estimation obstruction]\label{thm:stat}
+For every $d\ge1$, $\sigma\ge0$, and $0<\eps\le LR/4$,
+\[
+ \Cexp^{(d)}(\eps;L,R,\sigma,\rho)
+ \ge c\left(1+\frac{\sigma^2}{\eps^2}\right)
+\]
+for a numerical $c>0$. Affine monotone means suffice.
+\end{theorem}
+\begin{proof}
+Let $a=4\eps/L$, $z_\pm=\pm a e_1$, and $G_\pm(x)=L(x-z_\pm)$. Give the oracle independent Gaussian noise of variance $\sigma^2$ in coordinate one, with the other coordinates exact. A wrong sign of the first output coordinate entails residual at least $4\eps$. Thus the expected-norm target implies a sign test with error at most $1/4$ in each instance, and the two stopped transcript distributions have total variation at least $1/2$.
+
+When $\sigma>0$, at every query the mean difference is exactly $8\eps e_1$. The conditional Gaussian divergence is $32\eps^2/\sigma^2$. The stopped chain rule and data processing consequently give
+\[
+ \frac12\le\KL(P_+\Vert P_-)
+ \le\frac{32\eps^2}{\sigma^2}\E_+\tau,
+\]
+so $\E_+\tau\ge\sigma^2/(64\eps^2)$. To justify stopping, first pad the experiment after its stopping time by a deterministic symbol, apply the ordinary chain rule through time $n$, and let $n\to\infty$. The expected number of active steps tends to $\E_+\tau$; the stopped transcript is generated by the increasing finite transcripts. If that expectation is infinite, the lower bound is immediate. The output is a measurable function of the transcript and private seed, so it adds no divergence.
+
+There is also a constant lower bound, including at zero noise. The probability $q_0$ of taking no observations is the same under both instances. Conditional on that event the output is independent of the hidden sign. For every fixed output $x$, the prior-average residual is at least $La=4\eps$, by the triangle inequality. Hence the average risk is at least $4\eps q_0$, and correctness requires $q_0\le1/4$. Therefore $\sup_\pm\E_\pm\tau\ge3/4$. Combining the two bounds proves the claim.
+\end{proof}
+
+\section{Alternative accuracy criteria}\label{app:criteria}
+\begin{proposition}\label{prop:criteria}
+The high-dimensional and dimension-budget lower bounds hold, up to numerical
+constants, when~\eqref{eq:target} is replaced by either
+\begin{equation}\label{eq:other-criteria}
+ \Pp\{\norm{G(\widehat Z)}\le\eps\}\ge2/3,
+ \qquad\text{or}\qquad
+ \E\norm{G(\widehat Z)}^2\le\eps^2.
+\end{equation}
+They apply to deterministic sample budgets and to worst-case expected work.
+For $\rho L\le1/4$, the dimension-uniform complexity under either criterion
+is $\Theta(N_\eps A_\eps)$ in the same small-tolerance range.
+\end{proposition}
+\begin{proof}
+For a deterministic budget, the event~\eqref{eq:fixed-scaled} precludes both
+guarantees. For random stopping, the constant-success criterion implies
+$\Pp\{\|G(\widehat Z)\|\ge4\eps\}\le1/3$ on every instance.
+Lemma~\ref{lem:stopping} therefore gives
+\[
+ \sup_v\E_v\tau\ge
+ \left(\frac{13}{16}-\frac13\right)n_0=\frac{23}{48}n_0.
+\]
+Under the squared-residual criterion, the corresponding probability is
+at most $1/16$, giving the stronger constant $3n_0/4$.
+The dimension and scaling calculations are unchanged.
+
+For the upper bound, Theorem~\ref{thm:upper} already guarantees a squared
+residual at most $\eps^2$. Running that algorithm at tolerance
+$\eps/\sqrt3$ gives squared residual at most $\eps^2/3$, and Markov's
+inequality yields the constant-success guarantee. This changes the sample
+budget by only a numerical factor.
+\end{proof}
+
+\section{Smooth hard mean operators}\label{app:smooth}
+\begin{proposition}\label{prop:smooth}
+The lower bounds in Theorems~\ref{thm:matching} and~\ref{thm:dimension} remain valid, up to numerical constants, with every hard mean required to be $C^\infty$. This does not impose smoothness on individual sampled maps or a uniform higher-derivative bound independent of accuracy.
+\end{proposition}
+
+We now remove the nonsmooth clipping and piecewise-linear gate from the mean operator.  Define
+\begin{equation}
+ \Psi_h(u):=\frac{u}{\sqrt{1+\norm{u}^2/h^2}}.
+ \label{eq:smooth-clip}
+\end{equation}
+The tangential and radial eigenvalues of its derivative are
+$(1+\|u\|^2/h^2)^{-1/2}$ and $(1+\|u\|^2/h^2)^{-3/2}$, respectively.
+Thus $\Psi_h$ is $C^\infty$, $1$-Lipschitz, bounded by $h$, and
+\begin{equation}
+ \inner{\Psi_h(u)}{u}\ge\norm{\Psi_h(u)}^2.
+ \label{eq:smooth-inner}
+\end{equation}
+Moreover,
+\begin{equation}
+ \norm{\Psi_h(u)}<h/32
+ \quad\Longrightarrow\quad
+ \norm u<h/16.
+ \label{eq:smooth-invert}
+\end{equation}
+Indeed, with $t=\norm u/h$, the premise gives $t/\sqrt{1+t^2}<1/32$, hence $t<1/\sqrt{1023}<1/16$.
+
+Let $\eta(t)=0$ for $t\le0$ and $\eta(t)=e^{-1/t}$ for $t>0$, and define a smooth decreasing step
+\[
+ \vartheta(t):=
+ \begin{cases}
+ 1,&t\le0,\\
+ \displaystyle\frac{\eta(1-t)}{\eta(t)+\eta(1-t)},&0<t<1,\\
+ 0,&t\ge1.
+ \end{cases}
+\]
+Set
+\begin{equation}
+ q_h^{\rm sm}(r):=\vartheta(16r/h-1).
+ \label{eq:smooth-gate}
+\end{equation}
+This function equals one on $[0,h/16]$, vanishes on $[h/8,\infty)$, takes values in $[0,1]$, and has derivative bounded by $C/h$.  Because it is constant near the origin and flat at the transition endpoints, $u\mapsto q_h^{\rm sm}(\norm u)$ is $C^\infty$ on $\R^m$.
+
+Define $H^{v,{\rm sm}}$ by replacing $\Phi_h$ with $\Psi_h$ and $q_h$ with $q_h^{\rm sm}$ in \eqref{eq:H1}--\eqref{eq:Hi}.
+
+\begin{lemma}[Smooth-chain properties]\label{lem:smooth-chain}
+There is a universal $C_{\rm sm}$ such that every $H^{v,{\rm sm}}$ is $C_{\rm sm}$-Lipschitz and $C^\infty$, has unique root $x_\star^v$, and satisfies
+\[
+ \inner{H^{v,{\rm sm}}(x)}{x-x_\star^v}
+ \ge\norm{H^{v,{\rm sm}}(x)}^2.
+\]
+Furthermore,
+\[
+ \norm{H^{v,{\rm sm}}(x)}<h/32
+ \quad\Longrightarrow\quad
+ \norm{x_i-v_i}<h/16
+ \quad(1\le i\le T).
+\]
+\end{lemma}
+
+\begin{proof}
+Smoothness follows from the preceding observations.  The derivative bound on the gate, the bound $\norm{\Psi_h}\le h$, and the $1$-Lipschitz property of $\Psi_h$ give a universal block-bidiagonal Lipschitz constant.  Inequality \eqref{eq:smooth-inner} and $0\le q_h^{\rm sm}\le1$ give the one-point inequality exactly as in Lemma~\ref{lem:geometry}.  Since $\Psi_h(u)=0$ only at $u=0$, uniqueness is recursive.  Finally, \eqref{eq:smooth-invert} and the unit plateau of the gate give the decoding statement by induction.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:smooth}]
+Use $G^{v,{\rm sm}}=s_{\rm sm}H^{v,{\rm sm}}$, where $s_{\rm sm}=L/C_{\rm sm}$, and the same last-nonzero-block masking rule. Set
+\[
+ h=128\eps/s_{\rm sm},\qquad
+ p=\frac{s_{\rm sm}^2h^2}{s_{\rm sm}^2h^2+\sigma^2},\qquad
+ T=\lfloor R^2/h^2\rfloor,
+\]
+and take $\eps\le LR/(512C_{\rm sm})$ to ensure $T\ge16$. Put $n_0=\lfloor T/(8p)\rfloor$ and $M=32(n_0+1)T$ as before. The information proof uses only bounded block outputs, a gate vanishing outside radius $h/8$, a unit gate within radius $h/16$, and nonvanishing of the radial map away from its center. All these properties remain true. With the smooth decoding threshold $h/32$, the fixed-budget bad event has residual at least $s_{\rm sm}h/32=4\eps$ and probability at least $13/16$.
+
+Lemma~\ref{lem:stopping} applies directly to this event, giving
+$\sup_v\E_v\tau\ge n_0/2$ under the expected-norm criterion.
+Finally, $p^{-1}=1+\sigma^2/(16384\eps^2)$, $T=\Theta(N_\eps)$, and the same codebook calculation gives the same dimension and work orders. For the dimension-budget version choose $T$ using the same sufficiently small-constant minimum as in Theorem~\ref{thm:dimension}.
+\end{proof}
+
+\begin{remark}
+Proposition~\ref{prop:smooth} smooths the \emph{mean} operator.  The masking oracle does not impose sample-wise continuity or mean-square smoothness; with nontrivial masking, the sampled maps can be discontinuous. At $\sigma=0$, the oracle returns the smooth mean exactly.  Thus the proposition does not establish the same lower bound under stronger sample-wise regularity or same-sample multi-point oracle assumptions.
+\end{remark}
+
+
+\begin{thebibliography}{10}
+
+\bibitem{ddj2021}
+J. Diakonikolas, C. Daskalakis, and M. I. Jordan.
+\newblock Efficient methods for structured nonconvex-nonconcave min-max optimization.
+\newblock In \emph{Proceedings of AISTATS}, PMLR 130:2746--2754, 2021.
+\newblock \url{https://proceedings.mlr.press/v130/diakonikolas21a.html}.
+
+\bibitem{cgl2023}
+S. Choudhury, E. Gorbunov, and N. Loizou.
+\newblock Single-call stochastic extragradient methods for structured non-monotone
+variational inequalities: Improved analysis under weaker conditions.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume 36, 2023.
+\newblock \href{https://papers.neurips.cc/paper_files/paper/2023/hash/ccf02786d28730e8311676ffa842e216-Abstract-Conference.html}{NeurIPS proceedings}.
+
+\bibitem{pethick2023}
+T. Pethick, O. Fercoq, P. Latafat, P. Patrinos, and V. Cevher.
+\newblock Solving stochastic weak Minty variational inequalities without increasing batch size.
+\newblock In \emph{International Conference on Learning Representations}, 2023.
+\newblock \url{https://arxiv.org/abs/2302.09029}.
+
+\bibitem{akw2024}
+A. Alacaoglu, D. Kim, and S. J. Wright.
+\newblock Revisiting inexact fixed-point iterations for min-max problems:
+Stochasticity and structured nonconvexity.
+\newblock In \emph{Proceedings of ICML}, PMLR 235:840--878, 2024.
+\newblock \url{https://proceedings.mlr.press/v235/alacaoglu24a.html}.
+
+\bibitem{ak2026}
+A. Alacaoglu and J. Kim.
+\newblock Solving stochastic variational inequalities without the bounded variance assumption.
+\newblock In \emph{Proceedings of ICML}, PMLR 306:1647--1679, 2026.
+\newblock \url{https://proceedings.mlr.press/v306/alacaoglu26a.html}.
+
+\bibitem{arjevani2019}
+Y. Arjevani, Y. Carmon, J. C. Duchi, D. J. Foster, N. Srebro, and B. Woodworth.
+\newblock Lower bounds for non-convex stochastic optimization.
+\newblock \emph{Mathematical Programming}, 199:165--214, 2023.
+\newblock \href{https://doi.org/10.1007/s10107-022-01822-7}{doi:10.1007/s10107-022-01822-7}.
+\newblock Preprint: \url{https://arxiv.org/abs/1912.02365}.
+
+\bibitem{longtails2026}
+A. Tyurin, Q. Pham, V. Khrulkov, and I. Oseledets.
+\newblock \emph{LongTails: Automated Research in Optimization}, 2026.
+\newblock Public theorem record: Euclidean Weak Minty Lower Bound.
+\newblock \href{https://k3nfalt.github.io/longtails/results/EuclideanWeakMintyLowerBound/}{Theorem record and linked formal statement};
+\href{https://github.com/k3nfalt/longtails}{project repository}.
+\newblock Accessed November 23, 2026.
+
+\bibitem{afsz2026}
+I. Anagnostides, G. Farina, T. Sandholm, and B. H. Zhang.
+\newblock A polynomial-time algorithm for variational inequalities under the Minty condition.
+\newblock arXiv:2504.03432, version 4, 2026; to appear in FOCS 2026.
+\newblock \url{https://arxiv.org/abs/2504.03432v4}.
+
+\end{thebibliography}
+\end{document}

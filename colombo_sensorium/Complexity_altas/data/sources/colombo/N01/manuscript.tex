@@ -1,0 +1,1495 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{booktabs,array,tabularx}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{caption,needspace}
+\captionsetup{font=small,labelfont=bf}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!55!black,citecolor=blue!55!black,urlcolor=blue!55!black}
+\setlength{\parindent}{1.25em}
+\setlength{\parskip}{0.15em}
+\setlist[itemize]{leftmargin=*,itemsep=0.2em,topsep=0.2em}
+\setlist[enumerate]{leftmargin=*,itemsep=0.2em,topsep=0.2em}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\one}{\mathbf 1}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\abs}[1]{\left\lvert #1\right\rvert}
+\newcommand{\inner}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\tO}{\widetilde{\mathcal O}}
+\newcommand{\cF}{\mathcal F}
+\newcommand{\cO}{\mathcal O}
+\newcommand{\cQ}{\mathcal Q}
+\newcommand{\cW}{\mathcal W}
+\newcommand{\cK}{\mathcal K}
+\newcommand{\cY}{\mathcal Y}
+\newcommand{\cI}{\mathcal I}
+\newcommand{\cE}{\mathcal E}
+\newcommand{\cC}{\mathcal C}
+\newcommand{\cA}{\mathcal A}
+\newcommand{\Borel}{\mathcal B}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\prox}{prox}
+\DeclareMathOperator{\supp}{supp}
+\DeclareMathOperator{\conv}{conv}
+\DeclareMathOperator{\spanop}{span}
+\DeclareMathOperator{\lev}{lev}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{claim}[theorem]{Claim}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\emergencystretch=2em
+\numberwithin{equation}{section}
+\hypersetup{pdftitle={A Measurable Random-Rotation Framework for Weakly Convex Optimization},
+pdfauthor={Colombo Team},bookmarksnumbered=true}
+\newcommand{\rate}{\mathsf S}
+\newcommand{\St}{\operatorname{St}}
+\newcommand{\Lip}{\operatorname{Lip}}
+
+
+\title{A Measurable Random-Rotation Framework\\for Weakly Convex Optimization}
+\author{Colombo Team\\[4pt]
+\small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{November 23, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+An exact oracle that returns the entire subdifferential can disclose more
+information than a selected-subgradient oracle. Lower bounds for randomized
+algorithms must therefore preserve the complete set-valued response under
+small perturbations of hidden coordinates. We give a self-contained
+random-rotation construction for globally $G$-Lipschitz, $\rho$-weakly convex
+functions with initial gap at most $\Delta$, measuring stationarity by
+$\|\nabla f_{1/(2\rho)}\|$. For every fixed success probability $q\in(0,1)$
+and $\eps^2\le c\min\{G^2,\rho\Delta\}$, the construction proves the lower bound
+\[
+ \Omega\!\left(\frac{G^2\min\{\rho\Delta,G^2\}}{\eps^4}\right)
+\]
+in an explicitly bounded ambient dimension
+$\widetilde O_q((G/\eps)^{10})$. The bound permits arbitrary adaptive queries
+of unbounded norm and an arbitrary measurable output, whether queried or not.
+Together with the standard subgradient upper bound, it recovers the optimal
+dimension-free rate $\Theta_q(\rho G^2\Delta/\eps^4)$ when
+$\rho\Delta\le G^2$. Building on the coupled tilted-block construction of
+Li and Pan, the proof combines a negative bias that preserves full-set
+locality, a smooth radial compression with convex compensation, and a
+measurable canonical-transcript argument. The randomized query rate is
+already known. The contribution is an alternative complete construction and
+transfer framework, with a smaller sufficient embedding dimension in the
+common small-gap regime.
+\end{abstract}
+
+\noindent\textbf{Keywords.} Weakly convex optimization; oracle complexity;
+randomized lower bounds; full subdifferential; Moreau envelope.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:introduction}
+
+Weak convexity provides a useful setting for nonsmooth nonconvex optimization:
+adding a quadratic makes the objective convex, while the objective itself may
+remain nonsmooth. For a $\rho$-weakly convex function, the Moreau envelope with
+parameter $1/(2\rho)$ is differentiable and supplies a quantitative stationarity
+measure. Subgradient methods attain an $O(\eps^{-4})$ query bound for this
+measure under a Lipschitz assumption and an initial-gap bound
+\cite{DavisDrusvyatskiy2019}. Determining when this rate is unavoidable requires
+specifying exactly what information each query reveals.
+
+We study the exact oracle
+\[
+ x\longmapsto \bigl(f(x),\partial f(x)\bigr),
+\]
+where $\partial f(x)$ is returned as a complete compact convex set.
+This oracle allows the algorithm to inspect all active subgradients at once.
+Accordingly, a hard instance must conceal future directions from the whole
+set, including its faces and their affine relations. Controlling one
+selected subgradient is insufficient for that purpose.
+
+Randomization introduces two further requirements. A random rotation makes
+unrevealed coordinates small with high probability, but generally does not
+make them zero. The hard family must retain its oracle locality throughout
+a neighborhood of the hidden-coordinate subspace. Moreover, algorithms may
+query arbitrarily far from the origin and may return a point that was never
+queried. Both possibilities must be covered by the same fixed hard instance.
+We address these requirements with an explicit construction and a general
+measurable transfer theorem.
+
+\subsection{Results and proof components}
+
+Write
+\begin{equation}\label{eq:intro-rate}
+ \rate=\frac{\rho G^2\Delta}{\eps^4},
+ \qquad r=\frac{\rho\Delta}{G^2}.
+\end{equation}
+For fixed success probability, the construction gives the lower bound
+$\Omega(G^2\min\{\rho\Delta,G^2\}/\eps^4)$, with a sufficient dimension of
+$\widetilde O((G/\eps)^{10})$. Hence it matches the dimension-free subgradient
+upper bound when $r\le1$. Theorem~\ref{thm:general-lower} states the accuracy
+and dimension conditions explicitly; Theorem~\ref{thm:matching} records the
+matching conclusion.
+
+Three components make the construction work.
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Robustness of the entire oracle response.}
+A small negative translation places hidden coordinates in the flat part of
+the progress function. Strictly ordered affine facets then reveal at most
+one additional layer, while preserving both the function value and the
+complete subdifferential.
+\item \textbf{Control of unbounded queries and outputs.}
+A smooth radial map compresses every query into a ball. A convex radial
+term preserves global Lipschitz continuity and prevents cancellation of
+active subgradients. A proximal-point argument converts the resulting
+separation into a Moreau-gradient obstruction at arbitrary outputs.
+\item \textbf{A measurable transfer to randomized algorithms.}
+Canonical responses are defined on every partial transcript, including
+outside the favorable projection event. Deferred exposure of a random
+orthonormal frame then gives a distributional lower bound. Averaging over
+private randomness produces one fixed hard instance for each algorithm.
+\end{enumerate}
+
+Section~\ref{sec:base} derives all properties of the base function from its
+explicit formula, making the lower-bound argument self-contained.
+
+\subsection{Relation to previous work}\label{sec:related}
+
+The tilted blocks, coupled relay, and diagonal filtration originate in
+Li and Pan's deterministic construction~\cite{LiPan2026v1}. Their later
+revision~\cite[Theorem~3.1]{LiPan2026v3} already establishes the randomized
+query rate over a broader gap range. Table~\ref{tab:rates} aligns the
+relevant guarantees. We make no priority claim for the randomized rate.
+
+\begin{table}[t]
+\centering
+\caption{Query bounds for globally $G$-Lipschitz, $\rho$-weakly convex
+objectives with $f(0)-\inf f\le\Delta$ and stationarity criterion
+$\|\nabla f_{1/(2\rho)}\|\le\eps$. Here $\rate=\rho G^2\Delta/\eps^4$
+and $q\in(0,1)$ is fixed. All lower bounds use sufficiently large dimension.
+The common accuracy condition is $\eps^2\le c\min\{G^2,\rho\Delta\}$ for a
+sufficiently small universal $c$; the exact constants for the present
+construction appear in Theorem~\ref{thm:general-lower}.}
+\label{tab:rates}
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\textwidth}{@{}p{0.22\textwidth}p{0.24\textwidth}p{0.18\textwidth}Y@{}}
+\toprule
+Source & Algorithm / oracle & Query bound & Initial-gap range\\
+\midrule
+Davis--Drusvyatskiy~\cite{DavisDrusvyatskiy2019}
+& Randomized output; selected subgradient
+& $O_q(\rate)$
+& All $\Delta>0$\\
+Liao--Zheng~\cite{LiaoZheng2025}
+& Deterministic; value and selected subgradient
+& $O(\rate)$
+& All $\Delta>0$\\
+Li--Pan, v1~\cite{LiPan2026v1}
+& Deterministic; value and full subdifferential
+& $\Omega(\rate)$
+& $\rho\Delta\le G^2$\\
+Li--Pan, v3~\cite{LiPan2026v3}
+& Randomized; value and full subdifferential
+& $\Omega(\rate)$
+& $\rho\Delta\le G^2\exp\!\bigl(\frac{G^2}{200\eps^2}\bigr)$\\
+Theorem~\ref{thm:general-lower}, small gap
+& Randomized; value and full subdifferential
+& $\Omega(\rate)$
+& $\rho\Delta\le G^2$\\
+Theorem~\ref{thm:general-lower}, large gap
+& Randomized; value and full subdifferential
+& $\Omega(G^4/\eps^4)$
+& $\rho\Delta>G^2$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The upper bounds use weaker information than the lower-bound oracle.
+The first row specializes the stochastic subgradient analysis of
+Davis and Drusvyatskiy~\cite[Theorem~3.1]{DavisDrusvyatskiy2019} to exact
+subgradients; Section~\ref{sec:upper} gives a direct proof with explicit
+confidence dependence. Liao and Zheng~\cite[Theorem~2 and Corollary~4.2]{LiaoZheng2025}
+give a deterministic proximal descent method. In the common accuracy regime,
+its lower-order $G^2/\eps^2$ term is absorbed into $\rate$.
+
+Table~\ref{tab:dimension} compares the sufficient embedding dimensions of
+the two randomized constructions. With $G,\rho,\Delta$ fixed and
+$0<r\le1$, their stated bound is $\widetilde O((G/\eps)^{16})$,
+whereas ours is $\widetilde O((G/\eps)^{10})$. This compares explicit
+constructions; it does not identify the optimal dimension needed for a
+lower bound.
+
+\begin{table}[t]
+\centering
+\caption{Sufficient ambient dimensions in the common small-gap regime,
+with $G,\rho,\Delta,q$ fixed and $\eps\to0$. In both constructions
+$N=\Theta((G/\eps)^2)$, $M=\Theta(N)$, and $K=MN=\Theta(N^2)$.
+Logarithmic factors and fixed constants are suppressed. The Li--Pan row
+is obtained from their explicit radius and margin in Lemma~6.2 and
+Remark~6.1~\cite{LiPan2026v3}.}
+\label{tab:dimension}
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\textwidth}{@{}Yccc@{}}
+\toprule
+Construction & Effective radius & Hidden margin & Sufficient dimension\\
+\midrule
+Li--Pan, v3 & $\Theta(N)$ & $\Theta(N^{-3})$ & $\widetilde O(N^8)$\\
+Present construction & $\Theta(\sqrt N)$ & $\Theta(N^{-2})$ & $\widetilde O(N^5)$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Random rotations and deferred-decision arguments are established tools in
+oracle lower bounds; see Carmon et al.~\cite{CarmonEtAl2020}, Woodworth and
+Srebro~\cite{WoodworthSrebro2017}, and Diakonikolas and
+Guzm\'an~\cite{DiakonikolasGuzman2020}. Our transfer theorem isolates the
+measurability and full-response agreement needed here. These methodological
+connections are separate from the directly comparable weakly convex rates
+in Table~\ref{tab:rates}.
+
+\paragraph{Organization and notation.}
+Section~\ref{sec:model} defines the model and states the main results.
+Section~\ref{sec:upper} proves the upper bound.
+Sections~\ref{sec:base} and~\ref{sec:compression} develop the hard family.
+Section~\ref{sec:abstractrotation} proves and applies the random-rotation
+theorem. Section~\ref{sec:scaling} completes the scaling argument.
+All norms are Euclidean unless a subscript is shown. We write
+$[n]=\{1,\ldots,n\}$, use $[v]_+$ for the coordinatewise positive part,
+and let $\St(d,p)=\{U\in\R^{d\times p}:U^\top U=I_p\}$ denote the
+Stiefel manifold. The notation $\widetilde O$ suppresses logarithmic factors;
+a subscript $q$ allows dependence on the fixed success probability.
+
+\section{Problem formulation and main results}\label{sec:model}
+
+\subsection{Function class and exact oracle}
+
+Fix $G,\rho,\Delta>0$. For $d\in\N$, let $\cF_d(G,\rho,\Delta)$ be the class of finite-valued functions $f:\R^d\to\R$ satisfying
+\[
+ f+\frac\rho2\norm{\cdot}^2\ \text{is convex},\qquad
+ \abs{f(x)-f(y)}\le G\norm{x-y},\qquad
+ f(0)-\inf f\le\Delta.
+\]
+For $\lambda=1/(2\rho)$, the proximal point is unique and
+\[
+ f_\lambda(x)=\min_z\left\{f(z)+\rho\norm{z-x}^2\right\},
+ \qquad
+ \nabla f_\lambda(x)=2\rho\bigl(x-\prox_{\lambda f}(x)\bigr).
+\]
+
+Let $\cK_{d,G}$ be the space of nonempty compact convex subsets of the closed Euclidean ball $G\mathbb B_d$, equipped with the Hausdorff metric.  It is a compact metric space.  Put
+\[
+ \cY_{d,G}=\R\times\cK_{d,G}
+\]
+with its product Borel $\sigma$-field.  The exact oracle is the map
+\[
+ \cO_f(x)=(f(x),\partial f(x))\in\cY_{d,G}.
+\]
+
+\begin{lemma}[The oracle response is a compact-set response]\label{lem:compactresponse}
+For every $f\in\cF_d(G,\rho,\Delta)$ and every $x\in\R^d$, the limiting, Clarke, and Fr\'echet subdifferentials coincide.  Their common value $\partial f(x)$ is a nonempty compact convex subset of $G\mathbb B_d$. The oracle map $x\mapsto\cO_f(x)$ is Borel.
+\end{lemma}
+
+\begin{proof}
+The function $h(x)=f(x)+(\rho/2)\norm{x}^2$ is finite convex on all of $\R^d$.  Hence it is continuous, subdifferentially regular, and has a nonempty closed convex subdifferential at every point.  The smooth sum rule gives
+\[
+ \partial f(x)=\partial h(x)-\rho x,
+\]
+so the standard first-order subdifferentials coincide and the set is nonempty, closed, and convex.  Global $G$-Lipschitz continuity implies $\norm g\le G$ for every $g\in\partial f(x)$, hence compactness.
+
+The graph of $x\mapsto\partial f(x)$ is closed, by the displayed convex
+subdifferential identity. Since every value is contained in the fixed
+compact ball $G\mathbb B_d$, the function
+$x\mapsto\dist(a,\partial f(x))$ is lower semicontinuous for every $a$:
+nearest points along a converging sequence have convergent subsequences,
+and their limits belong to the limiting subdifferential. Distance
+evaluations at a countable dense subset of $G\mathbb B_d$ generate the
+Hausdorff Borel structure. Hence $x\mapsto\partial f(x)$, and therefore
+$\cO_f$, is Borel.
+\end{proof}
+
+\subsection{Algorithms and query complexity}
+
+A deterministic fixed-budget $T$-query algorithm in dimension $d$ is a collection of Borel maps
+\[
+ A_0\in\R^d,
+ \qquad
+ A_t:\cY_{d,G}^{\,t}\to\R^d\quad(1\le t<T),
+ \qquad
+ A_{\rm out}:\cY_{d,G}^{\,T}\to\R^d.
+\]
+The query $x_t$ is $A_t$ applied to the first $t$ responses, and the final output is $A_{\rm out}$ applied to the complete transcript.  Thus the output need not be a queried point.  A randomized algorithm additionally receives a seed $\xi$ in a standard Borel probability space; the maps above are jointly Borel in the seed and transcript.  This formulation includes private random bits and arbitrary exact-real computation.
+
+The initial point $0$ is used only to measure the objective gap; the first
+query is unrestricted. For $T=0$, an algorithm returns a point determined
+only by its seed. Oracle calls are the sole cost measure. In particular,
+the model does not charge for representing a compact set or for measurable
+computation on an exact response. Algorithm maps may depend on the dimension
+and stated parameters, but not on the unknown objective.
+
+For $q\in(0,1)$, define $\cQ^{\rm rand}_{q,d}(G,\rho,\Delta,\eps)$ as the least $T$ for which a randomized $T$-query algorithm satisfies
+\[
+ \inf_{f\in\cF_d(G,\rho,\Delta)}
+ \Prob_\xi\!\left(
+   \norm{\nabla f_{1/(2\rho)}(\widehat x)}\le\eps
+ \right)\ge q.
+\]
+The dimension-free complexity is
+\[
+ \cQ^{\rm rand}_q(G,\rho,\Delta,\eps)
+ :=\sup_{d\ge1}\cQ^{\rm rand}_{q,d}(G,\rho,\Delta,\eps).
+\]
+
+\subsection{Main results and parameter range}
+
+\begin{theorem}[General randomized lower bound]\label{thm:general-lower}
+Fix $q\in(0,1)$. Set
+\[
+ c_N=640^{-2},\qquad c_*=\frac{c_N}{256},\qquad
+ c_-=\frac{c_N^2}{23040}.
+\]
+There is a universal constant $C_{\rm dim}>0$ with the following property. Suppose
+\[
+ 0<\eps^2\le c_*\min\{G^2,\rho\Delta\}.
+\]
+Set
+\[
+ N=\left\lfloor \frac{1}{640^2}\frac{G^2}{\eps^2}\right\rfloor,
+ \qquad
+ \bar r=\min\left\{\frac{\rho\Delta}{G^2},1\right\},
+ \qquad
+ M=\left\lfloor\frac{\bar rN}{24}\right\rfloor,
+\]
+let $p=MN$, and put $\delta_q=\min\{q/2,1/8\}$.  There is a threshold
+\[
+ d_0\le C_{\rm dim}N^5\log\frac{2N}{\delta_q}
+ =\tO_q\!\left(\left(\frac G\eps\right)^{10}\right)
+\]
+such that, for every $d\ge d_0$,
+\[
+ \cQ^{\rm rand}_{q,d}(G,\rho,\Delta,\eps)
+ \ge c_-\frac{G^2\min\{\rho\Delta,G^2\}}{\eps^4}.
+\]
+The bound permits arbitrary unbounded queries and arbitrary transcript-dependent outputs, and the oracle returns the entire subdifferential.
+\end{theorem}
+
+\begin{theorem}[Small-gap matching complexity]\label{thm:matching}
+Fix $q\in(0,1)$.  Under the assumptions of Theorem~\ref{thm:general-lower}, if additionally
+\[
+ \Delta\le\frac{G^2}{\rho},
+\]
+then there are constants $0<c_-(q)\le c_+(q)<\infty$ such that
+\[
+ c_-(q)\frac{\rho G^2\Delta}{\eps^4}
+ \le
+ \cQ^{\rm rand}_q(G,\rho,\Delta,\eps)
+ \le
+ c_+(q)\frac{\rho G^2\Delta}{\eps^4}.
+\]
+More explicitly, in every dimension the upper bound is
+\[
+ \cQ^{\rm rand}_{q,d}(G,\rho,\Delta,\eps)
+ \le\left\lceil\frac{64}{(1-q)^2}
+               \frac{\rho G^2\Delta}{\eps^4}\right\rceil.
+\]
+For $q=3/4$, the coefficient inside the ceiling is $1024$.
+\end{theorem}
+
+
+\begin{remark}[What is and is not matched]\label{rem:scope}
+The lower bound holds for every $d$ above the stated threshold. Taking the
+supremum over dimensions gives the matching dimension-free conclusion;
+the theorem does not give the same rate in an arbitrary fixed dimension.
+When $\rho\Delta>G^2$, this particular construction yields
+$\Omega(G^4/\eps^4)$, so its gap dependence no longer matches the upper
+bound. This limitation concerns the construction used here; the broader
+result in Table~\ref{tab:rates} already covers part of that range.
+\end{remark}
+
+The accuracy assumption excludes easy parameter regimes. Indeed, proximal
+optimality and the gap bound imply
+\begin{equation}\label{eq:zero-query}
+ \|\nabla f_{1/(2\rho)}(0)\|
+ \le\min\{G,2\sqrt{\rho\Delta}\}.
+\end{equation}
+To see this, let $z=\prox_{f/(2\rho)}(0)$. Then $-2\rho z\in\partial f(z)$
+and $\rho\|z\|^2\le f(0)-f(z)\le\Delta$.
+Thus sufficiently large tolerances need no oracle calls. Our matching
+statement concerns the nontrivial small-accuracy regime.
+
+\paragraph{Parameter choices behind the lower bound.}
+The block length determines the stationarity threshold; the number of blocks
+determines how much initial gap is used. Their product determines the query
+horizon. The following estimates summarize this balance:
+\[
+ \begin{aligned}
+ N&=\Theta(G^2/\eps^2),
+ &M&=\Theta\!\left(N\min\{\rho\Delta/G^2,1\}\right),\\
+ H&=\Theta(MN),
+ &d_0&=O_q(N^5\log N).
+ \end{aligned}
+\]
+All floors, constants, and the call-for-call oracle simulation are checked
+in Section~\ref{sec:scaling}.
+
+\section{The upper bound}\label{sec:upper}
+
+The upper bound uses only one subgradient from each response. We include
+the argument to make the comparison independent of convention changes in
+the Moreau parameter or success criterion.
+
+\begin{proposition}[Subgradient upper bound at confidence $q$]\label{prop:upper}
+For every $d$, $G,\rho,\Delta,\eps>0$, and $q\in(0,1)$, there is a single randomized algorithm using any integer number of calls
+\[
+ T\ge \frac{64}{(1-q)^2}\frac{\rho G^2\Delta}{\eps^4}
+\]
+and satisfying, for every $f\in\cF_d(G,\rho,\Delta)$,
+\[
+ \Prob\!\left(\norm{\nabla f_{1/(2\rho)}(\widehat x)}\le\eps\right)\ge q.
+\]
+\end{proposition}
+
+\begin{proof}
+For a nonempty compact convex set $K$, let $s(K)$ be its unique minimum-norm point.  The map $K\mapsto s(K)$ is continuous under Hausdorff convergence: any convergent subsequence of minimizers has a limit in the limiting set, and uniqueness identifies the limit.  Hence it is a legal Borel selection from the full-set response.
+
+Initialize $x_0=0$.  Choose $g_t=s(\partial f(x_t))$ and set
+\[
+ x_{t+1}=x_t-\gamma g_t,
+ \qquad
+ \gamma=\sqrt{\frac{\Delta}{\rho G^2T}}.
+\]
+Write
+\[
+ z_t=\prox_{f/(2\rho)}(x_t),
+ \qquad
+ d_t=\nabla f_{1/(2\rho)}(x_t)=2\rho(x_t-z_t).
+\]
+Weak convexity and proximal optimality give
+\[
+ \inner{g_t}{x_t-z_t}
+ \ge f(x_t)-f(z_t)-\frac\rho2\norm{x_t-z_t}^2
+ \ge\frac\rho2\norm{x_t-z_t}^2
+ =\frac1{8\rho}\norm{d_t}^2.
+\]
+Using $z_t$ as a competitor for the envelope at $x_{t+1}$ and $\norm{g_t}\le G$,
+\[
+ f_{1/(2\rho)}(x_{t+1})
+ \le f_{1/(2\rho)}(x_t)
+ -\frac\gamma4\norm{d_t}^2+\rho\gamma^2G^2.
+\]
+After summing,
+\[
+ \frac1T\sum_{t=0}^{T-1}\norm{d_t}^2
+ \le \frac{4\Delta}{\gamma T}+4\rho\gamma G^2
+ =8\sqrt{\frac{\rho G^2\Delta}{T}}.
+\]
+Output a uniformly random queried iterate.  The displayed choice of $T$ makes
+\[
+ \E\norm{d_{\widehat t}}^2\le(1-q)\eps^2.
+\]
+Markov's inequality proves the claim.
+\end{proof}
+
+\section{A robust full-subdifferential chain}\label{sec:base}
+
+We use the tilted-block and diagonal-relay architecture of
+Li and Pan~\cite{LiPan2026v1}, and verify all properties needed here
+directly from its explicit formula.
+
+\subsection{Coupled tilted blocks}
+
+Fix an admissible pair
+\[
+ N\ge60,
+ \qquad
+ 2\le M\le\frac N{12},
+\]
+and identify $\R^{MN}$ with blocks $z=(z^1,\ldots,z^M)$, where $z^m\in\R^N$.  For $j\in[N]$, set
+\[
+ c_j=1+\frac{N-j}{16N},
+ \qquad
+ \phi(u)=\max\left\{0,\max_{j\in[N]}\left(c_j-\frac N8u_j\right)\right\}.
+\]
+Let
+\[
+ \theta(t)=
+ \begin{cases}
+ 0,&t\le0,\\
+ 3t^2-2t^3,&0<t<1,\\
+ 1,&t\ge1,
+ \end{cases}
+ \qquad
+ \psi(u)=\frac1N\sum_{j=1}^N\theta\!\left(\frac N4u_j\right).
+\]
+With the convention $\psi(z^0)=1$, define
+\[
+ \sigma_m(z)=\phi(z^m)+\psi(z^{m-1})-\frac54,
+ \qquad
+ \mathcal R(z)=\norm{[\sigma(z)]_+},
+\]
+and
+\begin{equation}\label{eq:basef}
+ \bar f(z)=\frac2N\left(\mathcal R(z)-\sum_{m=1}^M\psi(z^m)\right).
+\end{equation}
+
+Let
+\[
+ L=\left\lfloor\frac{3N}{16}\right\rfloor,
+ \qquad
+ \lev(m,j)=(m-1)L+j-1,
+\]
+and let $V_t$ be the span of the coordinate vectors $e_{m,j}$ with $\lev(m,j)\le t$, with $V_{-1}=\{0\}$.  Put
+\[
+ r_N=\left\lfloor\frac N2\right\rfloor,
+ \qquad
+ H=(M-1)L+r_N.
+\]
+
+
+
+
+
+\subsection{Subdifferentials and base estimates}
+
+We first derive the full subdifferential. The compact weight set is defined by
+\[
+ \cW=\{\omega\in\R_+^M:\norm\omega\le1\},
+ \qquad
+ \omega_{M+1}=0,
+ \qquad
+ a_m(\omega)=1-\omega_{m+1}.
+\]
+For $\omega\in\cW$, put
+\[
+ B_\omega(z)=\frac2N\left[
+ \sum_{m=1}^M\omega_m\phi(z^m)
+ -\sum_{m=1}^M a_m(\omega)\psi(z^m)
+ +\omega_1-\frac54\sum_{m=1}^M\omega_m\right].
+\]
+The variational formula for the positive-part norm gives
+\begin{equation}\label{eq:base-max}
+ \bar f(z)=\max_{\omega\in\cW}B_\omega(z).
+\end{equation}
+The gate satisfies $|\theta'|\le3/2$ and $\Lip(\theta')\le6$, whence
+\begin{equation}\label{eq:psi-derivatives}
+ \|\nabla\psi(u)\|\le\frac{3\sqrt N}{8},
+ \qquad \Lip(\nabla\psi)\le\frac{3N}{8}.
+\end{equation}
+Because $0\le a_m(\omega)\le1$, each $B_\omega$ is $3/4$-weakly convex.
+Adding $(3/8)\|z\|^2$ makes the entire family convex. Applying the
+subdifferential rule for a compact maximum of finite convex functions,
+and then removing this quadratic, gives the following formula
+\cite[Chapter~10]{RockafellarWets}.
+
+If $\cI(z)=\argmax_{\omega\in\cW}\inner{\omega}{\sigma(z)}$, then
+\begin{equation}\label{eq:subdiffformula}
+ \partial\bar f(z)
+ =\conv\bigcup_{\omega\in\cI(z)}G(\omega,z),
+\end{equation}
+where $g=(g^1,\ldots,g^M)\in G(\omega,z)$ exactly when
+\begin{equation}\label{eq:blockg}
+ g^m=\frac2N\left(\omega_m u_m-a_m(\omega)\nabla\psi(z^m)\right),
+ \qquad
+ u_m\in\partial\phi(z^m).
+\end{equation}
+When $\mathcal R(z)>0$, the active weight is unique and equals $[\sigma(z)]_+/\mathcal R(z)$.
+
+
+\begin{proposition}[Properties of the base chain]\label{prop:base}
+The function $\bar f$ has the following properties.
+\begin{enumerate}[label=(B\arabic*)]
+\item $\bar f$ is finite, bounded below, $1$-Lipschitz, and $1$-weakly convex.
+\item $\bar f(0)-\inf\bar f\le3M/N$.
+\item Each layer $V_t/V_{t-1}$ has dimension at most $6$, and $H\ge MN/120$.
+\item If $\psi(z^M)<27/32$, then $\mathcal R(z)>0$.
+\item If $\mathcal R(z)>0$, then every $g\in\partial\bar f(z)$ satisfies
+\[
+ \norm g\ge\frac1{4\sqrt N}.
+\]
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+\emph{Regularity and gap.}
+For $\omega\in\cW$, the Lipschitz modulus of
+$\sum_m\omega_m\phi(z^m)$ is at most $N/8$; use the block structure and
+$\|\omega\|\le1$. By \eqref{eq:psi-derivatives}, the remaining
+nonconstant sum has Lipschitz modulus at most $3\sqrt{MN}/8$.
+Consequently,
+\[
+ \Lip(B_\omega)\le\frac14+\frac34\sqrt{\frac MN}\le1.
+\]
+The pointwise maximum in \eqref{eq:base-max} preserves this uniform
+Lipschitz bound and the $3/4$ weak-convexity modulus. Also,
+$\bar f\ge-2M/N$ because $\mathcal R\ge0$ and $0\le\psi\le1$.
+Equality is attained when every coordinate equals $8c_1/N$: then
+$\phi=0$, $\psi=1$ in every block, and $\mathcal R=0$.
+At the origin only the first score is positive. Therefore
+\[
+ \inf\bar f=-\frac{2M}{N},\qquad
+ \bar f(0)=\frac2N\left(c_1-\frac14\right),\qquad
+ \bar f(0)-\inf\bar f\le\frac{3M}{N},
+\]
+where the last inequality uses $M\ge2$. This proves (B1)--(B2).
+
+\emph{Width and horizon.}
+Since $N\ge60$, one has $L\ge N/6$. At any fixed level, eligible
+block starts are spaced by $L$ in an interval of length $N-1$, so
+at most six coordinates occur. Moreover,
+\[
+ H=(M-1)L+\lfloor N/2\rfloor\ge MN/6\ge MN/120.
+\]
+This proves (B3).
+
+\emph{Terminal activation.}
+If $\mathcal R(z)=0$, then $\sigma_1(z)\le0$, so $\phi(z^1)\le1/4$.
+For every $j$, this implies $z_j^1\ge6/N>4/N$ and hence
+$\psi(z^1)=1$. Repeating the argument block by block gives
+$\psi(z^m)=1$ for every $m$. Its contrapositive proves (B4).
+
+\emph{Separation of the full subdifferential.}
+Suppose $\mathcal R(z)>0$. The active weight $\omega$ is unique and
+has norm one. If $\omega_m>0$, then $\sigma_m(z)>0$ and
+$\phi(z^m)>1/4$, so the zero branch of $\phi$ is inactive.
+Every $u_m\in\partial\phi(z^m)$ then has nonpositive coordinates and
+$\|u_m\|_1=N/8$. The coordinates of $\nabla\psi$ are nonnegative,
+and $a_m(\omega)\ge0$. There is thus no coordinate cancellation in
+\eqref{eq:blockg}, and every $g\in\partial\bar f(z)$ satisfies
+\[
+ \|g^m\|\ge\frac{\|g^m\|_1}{\sqrt N}
+          \ge\frac{\omega_m}{4\sqrt N}.
+\]
+Summing the squared block bounds proves (B5).
+\end{proof}
+
+The linear tilt in $c_j$ distinguishes otherwise identical hidden facets.
+The progress term $\psi(z^{m-1})$ delays the activation of the next block.
+The diagonal filtration measures their overlapping progress while keeping
+the number of directions revealed per layer uniformly bounded.
+
+\subsection{Robustness from a negative coordinate bias}\label{sec:robust}
+
+Define
+\begin{equation}\label{eq:betaeta}
+ \beta=\frac1{64N^2},
+ \qquad
+ \eta=\frac\beta8=\frac1{512N^2},
+ \qquad
+ h_\beta(s)=\bar f(s-\beta\one).
+\end{equation}
+Let $\Pi_t$ denote orthogonal projection onto $V_t$.
+
+\begin{lemma}[Robust full-set locality]\label{lem:robust}
+Fix $t\ge-1$ and $s\in\R^{MN}$.  Suppose
+\[
+ \abs{s_{m,j}}\le\eta
+ \qquad\text{whenever }\lev(m,j)>t.
+\]
+Then
+\begin{equation}\label{eq:locality}
+ h_\beta(s)=h_\beta(\Pi_{t+1}s),
+ \qquad
+ \partial h_\beta(s)=\partial h_\beta(\Pi_{t+1}s)
+ \subseteq V_{t+1}.
+\end{equation}
+Thus the value and the entire subdifferential are determined by layers at most $t+1$.
+\end{lemma}
+
+\begin{proof}
+Write $z=s-\beta\one$.  Every coordinate with level greater than $t$ lies in
+\[
+ z_{m,j}\in[-\beta-\eta,-\beta+\eta]\subset(-\infty,0),
+\]
+so both $\theta(Nz_{m,j}/4)$ and $\theta'(Nz_{m,j}/4)$ vanish on such coordinates.
+
+For a fixed block $m$, let $k_m$ be the largest index whose level is at most $t$, with $k_m=0$ if the block has not entered the filtration. If $k_m=N$, the block is fully revealed and needs no truncation. Otherwise, among the affine pieces with index $j>k_m$, the first one is uniquely largest.  Indeed, for $j>k_m+1$,
+\begin{align*}
+ &\left(c_{k_m+1}-\frac N8z_{m,k_m+1}\right)
+ -\left(c_j-\frac N8z_{m,j}\right)\\
+ &\qquad\ge\frac1{16N}-\frac N8\abs{s_{m,k_m+1}-s_{m,j}}
+ \ge\frac1{16N}-\frac{N\eta}{4}>0.
+\end{align*}
+Consequently, every active affine branch of $\phi(z^m)$ is either revealed or is the first hidden branch $k_m+1$; the latter, when the block is partially revealed, has level exactly $t+1$.  The zero branch is unchanged by deleting later hidden coordinates.
+
+We next exclude blocks that have not entered the filtration.  Suppose $m\ge2$ and $k_m=0$.  At most $L$ coordinates of block $m-1$ have level at most $t$, and all its other coordinates contribute zero to $\psi$.  Hence
+\[
+ \psi(z^{m-1})\le\frac LN\le\frac3{16}.
+\]
+Moreover,
+\[
+ \phi(z^m)\le c_1+\frac N8(\beta+\eta),
+\]
+and therefore
+\[
+ \sigma_m(z)
+ \le-\frac1{16N}+\frac{9N\beta}{64}
+ =-\frac1{16N}+\frac9{4096N}<0.
+\]
+Every active outer weight has $\omega_m=0$, while $\nabla\psi(z^m)=0$.  Thus this block contributes neither to the value nor to any vector in \eqref{eq:subdiffformula}.
+
+The only boundary case is $t=-1$, $m=1$.  Here $\psi(z^0)=1$, the first tilted facet is uniquely largest, and every contribution of the first block is supported on $(1,1)$, whose level is $0=t+1$.  Every later block is excluded by the preceding paragraph.
+
+Now replace $s$ by $\Pi_{t+1}s$.  The values and gradients of $\psi$ are unchanged: every deleted coordinate was in the flat negative region.  In every reached block, all revealed affine pieces and the possible first hidden piece are retained, while every deleted affine piece is strictly below that first hidden piece.  Hence the value of $\phi$ and its complete active-facet set are unchanged there.
+
+For an unreached block whose first coordinate is itself deleted, the numerical value of its negative score $\sigma_m$ may change; what matters is that the same strict estimate $\sigma_m<0$ holds before and after deletion.  Such a coordinate has zero positive part, every active outer weight satisfies $\omega_m=0$, and $\nabla\psi(z^m)=0$ on both sides.  Consequently $[\sigma]_+$ is unchanged.  If $[\sigma]_+\neq0$, the maximizing outer weight is uniquely $[\sigma]_+/\norm{[\sigma]_+}$; if $[\sigma]_+=0$, every maximizing weight can be supported only on zero-score coordinates, while all unreached coordinates are strictly negative on both sides.  Thus the active outer-weight set $\cI(z)$ is unchanged in either case, as are the function value and every nonzero block of every generating vector in \eqref{eq:subdiffformula}.  The retained generating vectors are supported in $V_{t+1}$.  Taking their convex hull proves both equalities and the support inclusion in \eqref{eq:locality}.
+\end{proof}
+
+\begin{lemma}[Gap after the shift]\label{lem:shiftgap}
+For every admissible $(M,N)$,
+\[
+ h_\beta(0)-\inf h_\beta\le\frac{4M}{N}.
+\]
+\end{lemma}
+
+\begin{proof}
+Translation preserves the infimum.  Proposition~\ref{prop:base} and $1$-Lipschitz continuity give
+\[
+ h_\beta(0)-\inf h_\beta
+ \le\frac{3M}{N}+\beta\sqrt{MN}.
+\]
+For $M\ge2$ and $M\le N/12$, the last term is less than $M/N$.
+\end{proof}
+
+\section{Compactification and Moreau stationarity}\label{sec:compression}
+
+Random rotations control bounded vectors. To handle unrestricted queries,
+we compress the ambient space smoothly and add a radial term that maintains
+subgradient separation.
+
+\subsection{Radial compression and exact subdifferentials}
+
+Fix
+\[
+ \alpha=\frac18,
+ \qquad
+ R=64\sqrt N.
+\]
+For $r\ge0$, define
+\[
+ a_R(r)=
+ \begin{cases}
+ r,&0\le r\le R,\\
+ 2R-Re^{-(r-R)/R},&r>R,
+ \end{cases}
+\]
+and
+\[
+ P_R(0)=0,
+ \qquad
+ P_R(x)=a_R(\norm x)\frac{x}{\norm x}\quad(x\ne0).
+\]
+The radial compensation is
+\begin{equation}\label{eq:Hdef}
+ H_R(x)=4\alpha\bigl(\norm x-a_R(\norm x)\bigr).
+\end{equation}
+
+\begin{lemma}[Properties of the compression]\label{lem:compression}
+The map $P_R$ is a $C^1$ diffeomorphism from $\R^d$ onto the open ball $B(0,2R)$, is $1$-Lipschitz, equals the identity on $B(0,R)$, and satisfies
+\[
+ \norm{P_R(x)}<2R,
+ \qquad
+ \operatorname{Lip}(JP_R)\le\frac9R.
+\]
+The function $H_R$ is convex, continuously differentiable, nonnegative, zero on $B(0,R)$, and $4\alpha$-Lipschitz.
+\end{lemma}
+
+\begin{proof}
+For $r>R$, put $e=e^{-(r-R)/R}$ and $b=a_R(r)/r$.  The radial and tangential eigenvalues of $JP_R(x)$ are $e$ and $b$.  Both lie in $(0,1]$, because $b\le1$ is equivalent to $1-e^{-(r-R)/R}\le(r-R)/R$.  Hence $P_R$ is injective, $1$-Lipschitz, and has range $B(0,2R)$.
+
+Writing $n=x/r$,
+\[
+ JP_R(x)=bI+(e-b)nn^\top.
+\]
+For $r>R$, one has $\abs{b'}\le3/R$, $\abs{e'}\le1/R$, and the derivative of $nn^\top$ has operator norm at most $2/r$.  This yields $\operatorname{Lip}(JP_R)\le9/R$; the Jacobian matches continuously at $r=R$.
+
+Finally, $r-a_R(r)$ is zero on $[0,R]$, and above $R$ it has derivative $1-e\in[0,1]$ and second derivative $e/R\ge0$.  It is convex and nondecreasing, so its radial lift is convex.  The remaining assertions follow from \eqref{eq:Hdef}.
+\end{proof}
+
+\begin{lemma}[Weak convexity under a smooth map]\label{lem:composition}
+Let $g$ be $L$-Lipschitz and $\mu$-weakly convex, and let $Q$ be $C^{1,1}$ with $\operatorname{Lip}(Q)\le1$ and $\operatorname{Lip}(JQ)\le L_Q$.  Then $g\circ Q$ is $(\mu+LL_Q)$-weakly convex.
+\end{lemma}
+
+\begin{proof}
+For $v\in\partial g(Q(x))$, weak convexity gives
+\[
+ g(Q(y))\ge g(Q(x))+\inner{v}{Q(y)-Q(x)}
+ -\frac\mu2\norm{Q(y)-Q(x)}^2.
+\]
+Taylor's theorem gives
+\[
+ \norm{Q(y)-Q(x)-JQ(x)(y-x)}
+ \le\frac{L_Q}{2}\norm{y-x}^2,
+\]
+and $\norm v\le L$.  Substitution gives a global affine lower support at every point for
+$g\circ Q+(\mu+LL_Q)\|\cdot\|^2/2$. A finite function admitting such
+supports equals their supremum and is convex. This proves the claim.
+\end{proof}
+
+Let $p=MN$, let $U\in\R^{d\times p}$ have orthonormal columns, and define
+\begin{equation}\label{eq:FU}
+ F_U(x)=\alpha\bar f\bigl(U^\top P_R(x)-\beta\one\bigr)+H_R(x).
+\end{equation}
+
+\begin{proposition}[Admissibility and exact chain rule]\label{prop:admissible}
+For every $U\in\St(d,p)$, the function $F_U$ is finite, bounded below, $1$-Lipschitz, and $1$-weakly convex.  Moreover,
+\[
+ F_U(0)-\inf F_U\le\frac{M}{2N}.
+\]
+At every $x$, with $w=U^\top P_R(x)-\beta\one$,
+\begin{equation}\label{eq:chainrule}
+ \partial F_U(x)
+ =\alpha JP_R(x)^\top U\,\partial\bar f(w)+\nabla H_R(x).
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+The Lipschitz modulus is at most $\alpha+4\alpha=5/8$.  Lemmas~\ref{lem:compression} and~\ref{lem:composition} show that the first term is $\alpha(1+9/R)$-weakly convex, which is less than $1$ for $N\ge60$; the second term is convex.  Boundedness below is immediate.
+
+Since $H_R(0)=0$ and $H_R\ge0$, Lemma~\ref{lem:shiftgap} gives
+\[
+ F_U(0)-\inf F_U
+ \le\alpha\bigl(h_\beta(0)-\inf h_\beta\bigr)
+ \le\frac{M}{2N}.
+\]
+For the chain rule, finite weakly convex functions are subdifferentially regular.  The map
+\[
+ Q(x)=U^\top P_R(x)-\beta\one
+\]
+is $C^1$, and $JQ(x)=U^\top JP_R(x)$ is surjective because $JP_R(x)$ is invertible and $U^\top$ has full row rank.  The exact limiting-subdifferential chain rule for a regular function composed with a $C^1$ submersion gives
+\[
+ \partial(\bar f\circ Q)(x)=JQ(x)^\top\partial\bar f(Q(x)).
+\]
+Adding the smooth function $H_R$ proves \eqref{eq:chainrule}.
+\end{proof}
+
+\begin{lemma}[Borel dependence of the full-set response]\label{lem:response-borel}
+The map
+\[
+ (U,x)\longmapsto \bigl(F_U(x),\partial F_U(x)\bigr)
+\]
+from $\St(d,p)\times\R^d$ into $\R\times\cK_{d,1}$ is Borel.
+\end{lemma}
+
+\begin{proof}
+The value map is continuous.  The graph of $z\mapsto\partial\bar f(z)$ is closed: indeed,
+$\partial\bar f(z)=\partial(\bar f(z)+\norm z^2/2)-z$, and the convex subdifferential on the right has closed graph.  All values lie in the compact unit ball.  Formula \eqref{eq:chainrule} then shows that the graph of $(U,x)\mapsto\partial F_U(x)$ is closed: from a convergent sequence of graph points, extract a convergent subsequence of the corresponding latent subgradients and pass to the limit.
+
+For completeness, let $(a_k)_{k\ge1}$ be a countable dense subset of the closed unit ball.  Closed graph and compact values imply that
+\[
+ (U,x)\longmapsto \dist(a_k,\partial F_U(x))
+\]
+is lower semicontinuous for every $k$: choose nearest points along a convergent sequence and use compactness plus closed graph.  The Borel $\sigma$-field of the Hausdorff hyperspace is generated by these distance evaluations.  Hence $(U,x)\mapsto\partial F_U(x)$ is Borel as a $\cK_{d,1}$-valued map, proving the claim.
+\end{proof}
+
+\begin{lemma}[Joint measurability of the Moreau-gradient predicate]\label{lem:moreau-borel}
+The map
+\[
+ (U,y)\longmapsto \nabla(F_U)_{1/2}(y)
+\]
+is Borel.  In particular, every predicate of the form
+$\norm{\nabla(F_U)_{1/2}(y)}>c$ is Borel in $(U,y)$.
+\end{lemma}
+
+\begin{proof}
+For fixed $(U,y)$, the proximal point is the unique minimizer of
+\[
+ z\longmapsto F_U(z)+\norm{z-y}^2.
+\]
+The objective is jointly continuous in $(U,y,z)$ and is $1$-strongly convex in $z$, because $F_U$ is $1$-weakly convex.  It is also coercive, uniformly on compact sets of $(U,y)$.  In fact, proximal optimality and the Lipschitz bound give
+$\|z-y\|\le1/2$ at every minimizer. For a convergent sequence of parameters,
+the minimizers therefore lie in a fixed compact set; every subsequential
+limit minimizes the limiting objective. Uniqueness then proves that
+$(U,y)\mapsto\prox_{F_U/2}(y)$ is continuous.  Since
+$\nabla(F_U)_{1/2}(y)=2(y-\prox_{F_U/2}(y))$, the conclusion follows.
+\end{proof}
+
+\subsection{Separation after compactification}\label{sec:separation}
+
+\begin{lemma}[Radial correlation of active base subgradients]\label{lem:correlation}
+If $\mathcal R(z)>0$, then every $g\in\partial\bar f(z)$ satisfies
+\begin{equation}\label{eq:corr}
+ \norm g\le1,
+ \qquad
+ \norm g_1\le M,
+ \qquad
+ \inner{g}{z+\beta\one}\ge-\frac{5M}{N}.
+\end{equation}
+Here $\norm\cdot_1$ is the coordinatewise $\ell_1$ norm.
+\end{lemma}
+
+\begin{proof}
+The Euclidean bound follows from $1$-Lipschitz continuity.  Since $\mathcal R(z)>0$, the active weight $\omega$ is unique, nonnegative, and has $\norm\omega=1$.
+Every $u\in\partial\phi(v)$ is a convex combination of $0$ and vectors $-(N/8)e_j$, so
+\[
+ \norm u_1\le\frac N8,
+ \qquad
+ \inner{u}{v}\ge-c_1\ge-\frac{17}{16}.
+\]
+Also
+\[
+ \nabla_j\psi(v)=\frac14\theta'\!\left(\frac N4v_j\right),
+ \qquad
+ \norm{\nabla\psi(v)}_1\le\frac{3N}{8},
+\]
+and, writing $t_j=Nv_j/4$,
+\[
+ 0\le\inner{\nabla\psi(v)}{v}
+ =\frac1N\sum_jt_j\theta'(t_j)\le\frac89.
+\]
+Using \eqref{eq:blockg}, $\sum_m\omega_m\le\sqrt M$, and $\sum_ma_m(\omega)\le M$, we obtain
+\[
+ \norm g_1\le\frac14\sqrt M+\frac34M\le M
+\]
+and
+\[
+ \inner{g}{z}
+ \ge-\frac2N\left(\frac{17}{16}\sqrt M+\frac89M\right)
+ \ge-\frac{4M}{N}.
+\]
+All coordinates of $g$ are nonpositive, because $u_m\le0$, $a_m(\omega)\ge0$, and $\nabla\psi\ge0$.  Thus
+\[
+ \inner{g}{\beta\one}\ge-\beta\norm g_1\ge-\beta M,
+\]
+and $N\ge60$ gives \eqref{eq:corr}.
+\end{proof}
+
+\begin{lemma}[Global separation]\label{lem:separation}
+Let $x\in\R^d$ and put $z=U^\top P_R(x)-\beta\one$.  If $\mathcal R(z)>0$, then every $v\in\partial F_U(x)$ satisfies
+\begin{equation}\label{eq:sep}
+ \norm v\ge\frac{\alpha}{20\sqrt N}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+By \eqref{eq:chainrule}, write
+\[
+ v=\alpha JP_R(x)^\top Ug+\nabla H_R(x),
+ \qquad
+ g\in\partial\bar f(z).
+\]
+Proposition~\ref{prop:base}(B5) gives $\norm g\ge1/(4\sqrt N)$.  If $\norm x\le R$, then $JP_R=I$ and $\nabla H_R=0$, so the result follows.
+
+Now let $r=\norm x>R$, $n=x/r$, $e=e^{-(r-R)/R}$, $a=a_R(r)$, $b=a/r$, and
+\[
+ \xi=Ug,
+ \qquad
+ s=\inner{\xi}{n}.
+\]
+The radial and tangential components of $v/\alpha$ are
+\begin{equation}\label{eq:radialcomponents}
+ e s+4(1-e),
+ \qquad
+ b(\xi-sn),
+\end{equation}
+respectively.
+
+If $e\le1/2$, then $\norm g\le1$ and the radial component is at least
+\[
+ 4(1-e)-e\ge\frac32.
+\]
+Suppose $e>1/2$.  Then $r<(1+\log2)R$ and
+\[
+ b\ge\frac1{1+\log2}>\frac12.
+\]
+If $s\ge0$, the two orthogonal components in \eqref{eq:radialcomponents} yield
+\[
+ \norm v\ge\alpha\min\{e,b\}\norm g
+ \ge\frac{\alpha}{8\sqrt N}.
+\]
+If $s<0$, Lemma~\ref{lem:correlation} gives
+\[
+ as=\inner{g}{U^\top P_R(x)}
+ =\inner{g}{z+\beta\one}\ge-\frac{5M}{N}.
+\]
+Since $a\ge R=64\sqrt N$ and $M\le N/12$,
+\[
+ \abs s\le\frac{5}{768\sqrt N}
+ \le\frac1{16}\norm g.
+\]
+The tangential component alone is therefore greater than
+\[
+ \alpha\frac12\sqrt{1-16^{-2}}\frac1{4\sqrt N}
+ >\frac{\alpha}{20\sqrt N}.
+\]
+\end{proof}
+
+\subsection{A Moreau obstruction at arbitrary outputs}\label{sec:moreau}
+
+\begin{lemma}[Hidden terminal tail forces nonstationarity]\label{lem:moreau}
+Let $y\in\R^d$.  Suppose
+\begin{equation}\label{eq:tailhidden}
+ \abs{\inner{u_{M,j}}{P_R(y)}}\le\eta
+ \qquad\text{for every }j>r_N,
+\end{equation}
+where $u_{M,j}$ is the column of $U$ associated with coordinate $(M,j)$.  Then
+\begin{equation}\label{eq:moreaulower}
+ \norm{\nabla(F_U)_{1/2}(y)}
+ >\frac{\alpha}{40\sqrt N}
+ =\frac1{320\sqrt N}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let
+\[
+ z=\prox_{F_U/2}(y),
+ \qquad
+ d=2(y-z)=\nabla(F_U)_{1/2}(y).
+\]
+Proximal optimality gives $d\in\partial F_U(z)$.  Suppose for contradiction that
+$\norm d\le\alpha/(40\sqrt N)$.  Set
+\[
+ w=U^\top P_R(z)-\beta\one.
+\]
+For $j>r_N$, \eqref{eq:tailhidden}, $\eta<\beta$, and the $1$-Lipschitz property of $P_R$ imply
+\[
+ [w_{M,j}]_+
+ \le\abs{\inner{u_{M,j}}{P_R(z)-P_R(y)}}.
+\]
+Using $\theta(t)\le3(t_+)^2$, $\theta\le1$, and orthonormality of the terminal columns,
+\begin{align*}
+ \psi(w^M)
+ &\le\frac{r_N}{N}
+ +\frac1N\sum_{j>r_N}3\left(\frac N4[w_{M,j}]_+\right)^2\\
+ &\le\frac12+\frac{3N}{16}\norm{P_R(z)-P_R(y)}^2\\
+ &\le\frac12+\frac{3N}{64}\norm d^2
+ <\frac{27}{32}.
+\end{align*}
+Proposition~\ref{prop:base}(B4) gives $\mathcal R(w)>0$, and Lemma~\ref{lem:separation} gives
+$\norm d\ge\alpha/(20\sqrt N)$, a contradiction.
+\end{proof}
+
+\section{Measurable random rotation and the lower bound}\label{sec:abstractrotation}
+
+The next theorem separates the probabilistic argument from the analytic
+construction. Its key hypothesis is exact agreement of complete oracle
+responses whenever hidden projections are small.
+
+\subsection{An abstract transfer theorem}
+
+Let $[p]$ be partitioned into ordered layers $\cI_0,\cI_1,\ldots$.  For a frame $U=(u_1,\ldots,u_p)\in\St(d,p)$, write $U_{<t}$ and $U_{\le t}$ for the columns in layers below $t$ and at most $t$.
+
+\begin{theorem}[Set-valued random-rotation transfer]\label{thm:transfer}
+Let $\cY$ be a standard Borel response space.  Let
+$(U,x)\mapsto\cO_U(x)$ be a jointly Borel oracle on
+$\St(d,p)\times\R^d$, and let $P:\R^d\to\R^d$ be Borel with $\norm{P(x)}\le B$ for some $B>0$.  Fix a budget $T\le p$, a margin $\eta>0$, a number $\delta\in(0,1)$, and a Borel bad-output predicate $\mathsf{Bad}(U,y)$.
+
+Assume that for every $t=0,\ldots,T-1$ there is a jointly Borel canonical response
+\[
+ \cC_t(U_{\le t},x)\in\cY
+\]
+such that
+\begin{equation}\label{eq:canonical-agreement}
+ \left[
+ \abs{\inner{u_i}{P(x)}}\le\eta
+ \ \text{for every column with layer at least }t
+ \right]
+ \Longrightarrow
+ \cO_U(x)=\cC_t(U_{\le t},x).
+\end{equation}
+Assume also that
+\begin{equation}\label{eq:tail-obstruction-abstract}
+ \left[
+ \abs{\inner{u_i}{P(y)}}\le\eta
+ \ \text{for every column with layer at least }T
+ \right]
+ \Longrightarrow
+ \mathsf{Bad}(U,y).
+\end{equation}
+
+There is a universal constant $C_{\rm rot}$ such that, if
+\begin{equation}\label{eq:abstract-dim}
+ d\ge2p+C_{\rm rot}\left(\frac B\eta\right)^2
+ \log\frac{2p(T+1)}{\delta},
+\end{equation}
+then every deterministic Borel $T$-query algorithm satisfies
+\[
+ \Prob_U\bigl(\mathsf{Bad}(U,\widehat x)\bigr)\ge1-\delta,
+\]
+where $U$ is Haar-uniform on $\St(d,p)$.
+\end{theorem}
+
+\begin{proof}
+Run the deterministic algorithm counterfactually using the canonical responses.  Before layer $t$ is exposed, the resulting query $x_t^*$ is a Borel function of $U_{<t}$ only.  After exposing layer $t$, feed the algorithm the response $\cC_t(U_{\le t},x_t^*)$.  After $T$ such responses, the counterfactual output $x_{\rm out}^*$ is a Borel function of $U_{<T}$.  Put
+\[
+ q_t^*=P(x_t^*),
+ \qquad
+ q_{\rm out}^*=P(x_{\rm out}^*).
+\]
+All these vectors have norm at most $B$.
+
+Condition on $U_{<t}$.  Every individual column in layer $t$ or later has the uniform spherical marginal in the orthogonal complement of the exposed columns, whose dimension is at least $d-p$.  For a fixed vector $v$ of norm at most $B$, the standard spherical tail bound gives
+\[
+ \Prob\bigl(\abs{\inner{u}{v}}>\eta\mid U_{<t}\bigr)
+ \le2\exp\left(-c(d-p)\frac{\eta^2}{B^2}\right).
+\]
+A union bound over at most $p$ current and future columns gives the same bound multiplied by $p$.  Apply this at each of the $T$ counterfactual queries and once to the counterfactual output, conditioned on $U_{<T}$.  Under \eqref{eq:abstract-dim}, the probability of any violation is at most $\delta$.
+
+On the complementary event, an induction identifies the actual and counterfactual transcripts.  Before round $t$ they agree by the induction hypothesis, hence the actual query equals $x_t^*$.  The projection inequalities at round $t$ and \eqref{eq:canonical-agreement} make the actual response equal the canonical response, closing the induction.  Therefore the actual output equals $x_{\rm out}^*$, and its tail projections obey the premise of \eqref{eq:tail-obstruction-abstract}.  Thus $\mathsf{Bad}(U,\widehat x)$ holds.
+\end{proof}
+
+\begin{corollary}[Randomized algorithms]\label{cor:transfer-randomized}
+Under the hypotheses of Theorem~\ref{thm:transfer}, every randomized $T$-query algorithm has a fixed frame $U$ for which
+\[
+ \Prob_\xi\bigl(\mathsf{Bad}(U,\widehat x)\bigr)\ge1-\delta.
+\]
+\end{corollary}
+
+\begin{proof}
+Condition on the private seed.  Theorem~\ref{thm:transfer} applies to the resulting deterministic Borel algorithm.  Tonelli's theorem gives joint bad probability at least $1-\delta$ over $(U,\xi)$, so averaging over $U$ yields a fixed frame with seed-wise bad probability at least $1-\delta$.
+\end{proof}
+
+\subsection{Canonical responses for the hard family}\label{sec:application}
+
+The levels are those of Section~\ref{sec:base}.  At round $t$, the relevant layer is
+\[
+ \cI_t=\{(m,j):\lev(m,j)=t\}.
+\]
+We now define the canonical response on \emph{every} partial frame, including off the good event.  This is the point at which a merely eventwise definition would be insufficient.
+
+Fix $t\ge0$, a partial frame $U_{\le t}$, and a query $x$.  Put $q_x=P_R(x)$.  If
+\begin{equation}\label{eq:current-layer-test}
+ \max_{(m,j)\in\cI_t}\abs{\inner{u_{m,j}}{q_x}}>\eta,
+\end{equation}
+where the maximum over an empty layer is defined as $0$,
+set
+\[
+ \cC_t(U_{\le t},x)=(0,\{0\}).
+\]
+Otherwise form $s^{(t)}\in\R^{MN}$ by
+\[
+ s^{(t)}_{m,j}=
+ \begin{cases}
+ \inner{u_{m,j}}{q_x},&\lev(m,j)\le t,\\
+ 0,&\lev(m,j)>t.
+ \end{cases}
+\]
+Since the current layer satisfies the threshold and future coordinates are zero, Lemma~\ref{lem:robust} with index $t-1$ gives
+\[
+ \partial h_\beta(s^{(t)})\subseteq V_t.
+\]
+Thus the following set uses only exposed columns:
+\begin{align}\label{eq:canonical-response}
+ \cC_t(U_{\le t},x)
+ :=\Bigl(&\alpha h_\beta(s^{(t)})+H_R(x),\\
+ &\alpha JP_R(x)^\top U_{\le t}\,
+       \partial h_\beta(s^{(t)})+\nabla H_R(x)\Bigr).
+\end{align}
+Here $U_{\le t}$ denotes the isometry from $V_t$ into $\R^d$ (equivalently, the full $d\times p$ frame with unexposed columns replaced by zero).  The multifunction $s\mapsto\partial h_\beta(s)$ has closed graph and compact values and is therefore Borel by the distance-function argument used in Lemma~\ref{lem:response-borel}.  The current-layer test and $(U_{\le t},x)\mapsto s^{(t)}$ are Borel, while linear images and Minkowski translation are continuous in the Hausdorff metric.  Hence $\cC_t$ is jointly Borel on every partial-frame space.
+Its set component is nonempty, compact, and convex, and every vector in it
+has norm at most $\alpha+4\alpha=5/8$. Thus both branches of the definition
+are legitimate elements of $\cY_{d,1}$.
+
+\begin{lemma}[Canonical agreement]\label{lem:canonical-agreement}
+If
+\[
+ \abs{\inner{u_{m,j}}{P_R(x)}}\le\eta
+ \qquad\text{for every }(m,j)\text{ with }\lev(m,j)\ge t,
+\]
+then
+\[
+ \cO_{F_U}(x)=\cC_t(U_{\le t},x).
+\]
+\end{lemma}
+
+\begin{proof}
+The current-layer test passes.  Let $s=U^\top P_R(x)$.  Lemma~\ref{lem:robust}, used with index $t-1$, gives
+\[
+ h_\beta(s)=h_\beta(\Pi_t s)=h_\beta(s^{(t)}),
+ \qquad
+ \partial h_\beta(s)=\partial h_\beta(s^{(t)})\subseteq V_t.
+\]
+Apply the exact chain rule \eqref{eq:chainrule}.  Since the latent subdifferential is supported in $V_t$, multiplication by the full frame $U$ equals multiplication by $U_{\le t}$.  Both the oracle value and its entire subdifferential set therefore equal \eqref{eq:canonical-response}.
+\end{proof}
+
+\subsection{Distributional and fixed-instance lower bounds}
+
+\begin{proposition}[Distributional normalized lower bound]\label{prop:distlower}
+Fix admissible $(M,N)$ and $\delta\in(0,1/4)$.  Draw $U$ Haar-uniformly from $\St(d,MN)$.  If
+\begin{equation}\label{eq:Dapplication}
+ d\ge2MN+C_0N^5\log\frac{2MN(H+1)}{\delta},
+\end{equation}
+then every deterministic algorithm making at most $H$ full-subdifferential calls satisfies
+\[
+ \Prob_U\!\left(
+ \norm{\nabla(F_U)_{1/2}(\widehat x)}
+ >\frac1{320\sqrt N}
+ \right)\ge1-\delta
+\]
+for every Borel transcript-dependent output $\widehat x$.
+\end{proposition}
+
+\begin{proof}
+An algorithm making fewer than $H$ calls can be padded to exactly $H$ calls by repeating a fixed query and defining its final output to ignore the dummy responses.  Apply Theorem~\ref{thm:transfer} with
+\[
+ p=MN,
+ \qquad
+ T=H,
+ \qquad
+ P=P_R,
+ \qquad
+ B=2R=128\sqrt N,
+ \qquad
+ \eta=\frac1{512N^2}.
+\]
+Canonical agreement is Lemma~\ref{lem:canonical-agreement}.  Since $M\le N/12$, one has $p\le N^2$, $H\le p$, and
+\[
+ \left(\frac B\eta\right)^2\le C N^5,
+\]
+so \eqref{eq:Dapplication} implies the dimension requirement of Theorem~\ref{thm:transfer}.
+
+Every terminal coordinate $(M,j)$ with $j>r_N$ has level
+\[
+ \lev(M,j)=(M-1)L+j-1\ge H.
+\]
+Thus the abstract tail event implies \eqref{eq:tailhidden}.  Take
+\[
+ \mathsf{Bad}(U,y)=
+ \left\{\norm{\nabla(F_U)_{1/2}(y)}>\frac1{320\sqrt N}\right\}.
+\]
+This predicate is Borel by Lemma~\ref{lem:moreau-borel}, and Lemma~\ref{lem:moreau} verifies the required tail obstruction.  The transfer theorem completes the proof.
+\end{proof}
+
+\begin{corollary}[Fixed-instance randomized normalized lower bound]\label{cor:yao}
+Under the assumptions of Proposition~\ref{prop:distlower}, every randomized algorithm making at most $H$ calls has a fixed instance $F_U$ on which
+\[
+ \Prob_\xi\!\left(
+ \norm{\nabla(F_U)_{1/2}(\widehat x)}
+ \le\frac1{320\sqrt N}
+ \right)\le\delta.
+\]
+\end{corollary}
+
+\begin{proof}
+Apply Corollary~\ref{cor:transfer-randomized} to the bad event in Proposition~\ref{prop:distlower}.
+\end{proof}
+
+\section{Scaling and consequences}\label{sec:scaling}
+
+For a normalized instance $F_U$, define
+\begin{equation}\label{eq:scaling}
+ f_U(x)=\frac{G^2}{\rho}
+ F_U\!\left(\frac{\rho}{G}x\right).
+\end{equation}
+
+\begin{lemma}[Exact scaling and oracle simulation]\label{lem:scaling}
+The function $f_U$ is $G$-Lipschitz and $\rho$-weakly convex, and
+\begin{align}
+ \partial f_U(x)
+ &=G\,\partial F_U\!\left(\frac{\rho}{G}x\right),\label{eq:scalesubdiff}\\
+ \nabla(f_U)_{1/(2\rho)}(x)
+ &=G\nabla(F_U)_{1/2}\!\left(\frac{\rho}{G}x\right).\label{eq:scalegrad}
+\end{align}
+Moreover, an exact full-subdifferential transcript for $f_U$ can be simulated, call for call, from the corresponding transcript for $F_U$ under the change of variables $y=(\rho/G)x$.
+\end{lemma}
+
+\begin{proof}
+The Lipschitz and weak-convexity moduli scale as $ab$ and $ab^2$ for $aF(bx)$; here $a=G^2/\rho$ and $b=\rho/G$.  The smooth linear chain rule gives \eqref{eq:scalesubdiff}.  In the proximal problem, the substitution $w=(\rho/G)z$ factors out $G^2/\rho$ and turns the quadratic term into $\norm{w-(\rho/G)x}^2$, proving \eqref{eq:scalegrad}.  Function values scale by $G^2/\rho$ and subdifferentials by $G$, so every response can be reconstructed exactly in either direction.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:general-lower}]
+Let
+\[
+ c_N=\frac1{640^2},
+ \qquad
+ \bar r=\min\left\{\frac{\rho\Delta}{G^2},1\right\},
+ \qquad
+ N=\left\lfloor c_N\frac{G^2}{\eps^2}\right\rfloor,
+ \qquad
+ M=\left\lfloor\frac{\bar rN}{24}\right\rfloor.
+\]
+For the stated choice $c_*=c_N/256$, the condition
+$\eps^2\le c_*\min\{G^2,\rho\Delta\}=c_*G^2\bar r$ gives $\bar rN\ge256-\bar r\ge255$ and therefore guarantees
+\[
+ N\ge60,
+ \qquad
+ \bar rN\ge72,
+ \qquad
+ 2\le M\le\frac N{12}.
+\]
+Thus $(M,N)$ is admissible.  Proposition~\ref{prop:admissible} and \eqref{eq:scaling} give
+\[
+ f_U(0)-\inf f_U
+ \le\frac{G^2}{\rho}\frac{M}{2N}
+ \le\frac{G^2}{\rho}\frac{\bar r}{48}
+ \le\Delta.
+\]
+Choose $\delta=\delta_q=\min\{q/2,1/8\}$ and take
+\[
+ d_0:=\left\lceil
+ 2MN+C_0N^5\log\frac{2MN(H+1)}{\delta_q}
+ \right\rceil.
+\]
+For every $d\ge d_0$, Proposition~\ref{prop:distlower} applies.  Since $N\le c_NG^2/\eps^2$,
+\[
+ \frac{G}{320\sqrt N}\ge2\eps.
+\]
+Corollary~\ref{cor:yao}, Lemma~\ref{lem:scaling}, and $\delta_q<q$ show that no randomized algorithm making at most $H$ calls can guarantee success probability $q$ on the scaled class.
+
+Finally, $\bar rN\ge72$ gives $M\ge\bar rN/48$, while
+$N\ge c_NG^2/(2\eps^2)$. Hence
+\[
+ H\ge\frac{MN}{120}
+  \ge\frac{\bar rN^2}{5760}
+  \ge\frac{c_N^2}{23040}
+       \frac{G^2\min\{\rho\Delta,G^2\}}{\eps^4}.
+\]
+In fact, the argument gives $\cQ^{\rm rand}_{q,d}>H$, so this proves
+the asserted bound with the displayed universal $c_-$.
+Since $MN\le N^2$ and $H\le MN$, the displayed choice satisfies
+\[
+ d_0\le C_{\rm dim}N^5\log\frac{2N}{\delta_q},
+\]
+which is the dimension estimate in the theorem.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:matching}]
+When $\Delta\le G^2/\rho$,
+\[
+ G^2\min\{\rho\Delta,G^2\}=\rho G^2\Delta.
+\]
+Theorem~\ref{thm:general-lower} gives the lower bound in a sufficiently large dimension, hence for the supremum over dimensions.  Proposition~\ref{prop:upper} gives the matching upper bound in every dimension.
+\end{proof}
+
+\subsection{Expectation, stopping times, and weaker responses}
+
+\begin{corollary}[Expectation and expected stopping time]\label{cor:variants}
+Use the hard horizon $H$ and dimension threshold from the proof of
+Theorem~\ref{thm:general-lower}, with fixed $q\in(0,1)$.
+The following statements hold.
+\begin{enumerate}[label=(\roman*)]
+\item Every randomized algorithm using at most $H$ calls has a fixed instance for which
+\[
+ \E\norm{\nabla f_{1/(2\rho)}(\widehat x)}\ge c\eps,
+ \qquad
+ \E\norm{\nabla f_{1/(2\rho)}(\widehat x)}^2\ge c\eps^2.
+\]
+\item If an algorithm with a measurable stopping time $\tau$ succeeds with
+probability at least $q$ on every instance, then
+$\sup_f\E_f\tau\ge(q/2)H$. Thus the same rate lower bound holds for
+uniform expected query cost.
+\item The lower bound continues to hold for every response obtainable by Borel postprocessing of the exact full-set response, including a prescribed Borel subgradient selection.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+For (i), the hard instance constructed at confidence $q$ has
+$\|\nabla f_{1/(2\rho)}(\widehat x)\|>2\eps$ with probability at least
+$1-\delta_q\ge7/8$. Integrating on this event proves both bounds.
+
+For (ii), suppose $\sup_f\E_f\tau<(q/2)H$.
+Truncate the algorithm after $H$ calls, keeping its original output if it
+has stopped and returning a fixed point otherwise. Markov's inequality gives
+$\Prob_f(\tau>H)<q/2$, so the truncated algorithm succeeds with probability
+strictly greater than $q/2$ on every instance. This contradicts the
+fixed-instance success cap $\delta_q\le q/2$ at horizon $H$.
+
+For (iii), any oracle whose response is a Borel function of $(f(x),\partial f(x))$ can be simulated from the full-set oracle.  In particular, a selected-subgradient algorithm would induce a full-set algorithm by applying the same prescribed selection, so the stronger-oracle lower bound applies.
+\end{proof}
+
+
+\section{Discussion}\label{sec:discussion}
+
+The proof identifies three quantities governing the dimension cost of this
+randomized hard family: the effective query radius $B$, the hidden-coordinate
+margin $\eta$, and the number of exposure events. Here
+$B=\Theta(\sqrt N)$ and $\eta=\Theta(N^{-2})$, so spherical concentration
+costs $O(N^5)$ dimensions, up to a logarithm. The negative bias and the
+radial correlation estimate are useful together: the first preserves exact
+set-valued locality, while the second permits compression at radius
+$\Theta(\sqrt N)$ without introducing a stationary escape.
+
+The query-rate conclusion is strongest for $\rho\Delta\le G^2$. The
+restriction $M\le N/12$ keeps the base Lipschitz constant uniformly bounded
+and controls the radial correlation. Increasing $M$ beyond this range is
+therefore not a harmless repetition of the same block. Extending the
+present dimension bound while retaining a linear dependence on larger
+$\Delta$ would require a further construction or estimate. The general
+large-gap question should be distinguished from this limitation, in view
+of the broader range already covered by Li and Pan.
+
+Several issues remain outside the present result. We do not determine the
+optimal dimension needed for the lower bound, or the minimax rate at a
+prescribed small dimension. Confidence is fixed in our statements. The
+$(1-q)^{-2}$ factor in Proposition~\ref{prop:upper} comes from Markov's
+inequality and is not a necessary query cost: the deterministic upper
+bound in Table~\ref{tab:rates} avoids this loss. Finally, noisy, finite-sum, constrained, and
+parallel oracles require their own response models and simulation
+arguments. The full-set theorem supplies a precise reference point for
+those comparisons.
+
+
+\clearpage
+\begin{thebibliography}{99}
+\small
+\setlength{\itemsep}{0.35em}
+\setlength{\parskip}{0pt}
+
+\bibitem{CarmonEtAl2020}
+Y.~Carmon, J.~C.~Duchi, O.~Hinder, and A.~Sidford.
+\newblock Lower bounds for finding stationary points I.
+\newblock \emph{Mathematical Programming}, 184:71--120, 2020.
+\newblock \href{https://doi.org/10.1007/s10107-019-01406-y}{doi:10.1007/s10107-019-01406-y}.
+
+\bibitem{DavisDrusvyatskiy2019}
+D.~Davis and D.~Drusvyatskiy.
+\newblock Stochastic model-based minimization of weakly convex functions.
+\newblock \emph{SIAM Journal on Optimization}, 29(1):207--239, 2019.
+\newblock \href{https://doi.org/10.1137/18M1178244}{doi:10.1137/18M1178244}.
+
+\bibitem{DiakonikolasGuzman2020}
+J.~Diakonikolas and C.~Guzm\'an.
+\newblock Lower bounds for parallel and randomized convex optimization.
+\newblock \emph{\href{https://jmlr.org/papers/v21/19-771.html}{Journal of Machine Learning Research}}, 21(5):1--31, 2020.
+
+\bibitem{LiPan2026v1}
+J.~Li and S.~Pan.
+\newblock Optimal deterministic oracle complexity for weakly convex optimization.
+\newblock \href{https://arxiv.org/abs/2608.03246v1}{arXiv:2608.03246v1}, August 2026.
+
+\bibitem{LiPan2026v3}
+J.~Li and S.~Pan.
+\newblock Optimal oracle complexity for weakly convex optimization.
+\newblock \href{https://arxiv.org/abs/2608.03246v3}{arXiv:2608.03246v3}, November 2026.
+
+\bibitem{LiaoZheng2025}
+F.-Y.~Liao and Y.~Zheng.
+\newblock A proximal descent method for minimizing weakly convex optimization.
+\newblock \href{https://arxiv.org/abs/2509.02804}{arXiv:2509.02804}, 2025.
+
+\bibitem{RockafellarWets}
+R.~T.~Rockafellar and R.~J.-B.~Wets.
+\newblock \emph{Variational Analysis}.
+\newblock Grundlehren der mathematischen Wissenschaften, vol.~317.
+\newblock Springer, 1998.
+\newblock \href{https://doi.org/10.1007/978-3-642-02431-3}{doi:10.1007/978-3-642-02431-3}.
+
+\bibitem{WoodworthSrebro2017}
+B.~Woodworth and N.~Srebro.
+\newblock Lower bound for randomized first order convex optimization.
+\newblock \href{https://arxiv.org/abs/1709.03594}{arXiv:1709.03594}, 2017.
+
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,746 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools}
+\usepackage{microtype,enumitem,booktabs,tabularx,array}
+\usepackage{xcolor}
+\definecolor{linkblue}{RGB}{27,67,111}
+\usepackage[colorlinks=true,linkcolor=linkblue,citecolor=linkblue,urlcolor=linkblue]{hyperref}
+\hypersetup{pdftitle={Minimax Regret for Oblivious Quadratic Bandits with Two-Action Memory},
+pdfauthor={Colombo Team},
+pdfsubject={Bandit optimization with memory and minimax regret},
+pdfkeywords={bandit convex optimization, memory, quadratic losses, policy regret, minimax bounds}}
+\setlength{\parindent}{1.25em}
+\setlength{\parskip}{3pt}
+\setlength{\emergencystretch}{2em}
+\setlist[enumerate]{leftmargin=*,itemsep=5pt,topsep=5pt}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\R}{\mathbb R}
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\TV}{\operatorname{TV}}
+\newcommand{\Reg}{\operatorname{Reg}}
+\newcommand{\la}{\langle}
+\newcommand{\ra}{\rangle}
+\newcommand{\dd}{\,\mathrm d}
+\newcommand{\Mcal}{\mathcal M}
+\title{Minimax Regret for Oblivious Quadratic Bandits\\
+with Two-Action Memory}
+\author{Colombo Team\\[2pt]
+\small\texttt{colombo.2026@outlook.com}}
+\date{November 23, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study bandit optimization on an interval when each loss is a jointly convex quadratic function of the current and preceding actions. The loss sequence is fixed before play, and the learner observes only the scalar loss incurred at its chosen actions. For uniformly bounded losses, gradients, and Hessians, we establish minimax expected regret of order $\widetilde\Theta(n^{3/5})$ against the best constant action, where $n$ is the number of observed losses. More precisely, under the normalization $B=L=2$ and $\beta=1$, the lower bound is $n^{3/5}/(4096\log(2n+2))$ and the upper bound is $O(n^{3/5}(\log(2n+2))^{2/5})$. The upper bound combines finite-feature loss estimation with infrequent endpoint refreshes and smooth interpolation. Mutually exclusive estimation events align delayed unbiasedness with exponential weights, while marginal stability controls the losses incurred during every transition. The lower bound uses multiscale Gaussian noise and a quadratic movement penalty. A tree-energy inequality relates information to squared movement, and clipping only the additive coefficient preserves bounded quadratic losses. The result identifies the minimax exponent for this scalar oblivious model without assuming strong convexity or permitting actions outside the feasible interval.
+\end{abstract}
+
+\noindent\textbf{Keywords.} Bandit convex optimization; memory; quadratic losses; policy regret; minimax regret; movement costs.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:intro}
+
+When a decision affects both the current loss and the next loss, exploration has a cost beyond the loss of the action being tested. A learner may need to move to distinguish favorable actions, yet the movement itself changes the observations and incurs additional loss. Bandit optimization with memory makes this tension explicit: the learner observes one realized loss, while the benchmark evaluates the counterfactual losses of a fixed action played throughout.
+
+This paper studies a basic continuous instance of this problem. The action set is $[-1,1]$, and round $i$ incurs $F_i(z_{i-1},z_i)$, where $F_i$ is a bounded jointly convex quadratic polynomial. All functions are selected before the learner draws its private random seed. The learner must remain in the interval and observes neither gradients nor loss coefficients. We use \emph{two-action memory} to mean that each loss depends on the current action and one preceding action; this convention avoids ambiguity about whether the current action counts toward the memory length.
+
+Let $n$ denote the number of observed losses. Our main result identifies the minimax exponent:
+\begin{equation}\label{eq:intro-rate}
+ \mathcal R_{n+1}^*
+ =\widetilde\Theta(n^{3/5}).
+\end{equation}
+The subscript accommodates the prescribed initial action, so that the total number of actions is $T=n+1$. Theorem~\ref{thm:main} gives explicit logarithmic factors and a lower-bound constant. The hard instances already have affine diagonal losses $q_i(x)=F_i(x,x)$ and the same rank-one Hessian in every round. Thus the lower bound arises from the interaction between bandit information and quadratic movement, even when the diagonal objectives have no curvature.
+
+\subsection{Contributions and proof ideas}
+
+The upper bound rests on three compatible ingredients. First, diagonal quadratic losses are linear in the three features $(1,x,x^2)$, allowing an exponential-weights estimator with a bounded integrated second moment. Second, independent refresh coins create whole blocks in which the played action is constant. An observation is used only when the preceding endpoint was refreshed and the current endpoint is retained. Consecutive estimation events are therefore disjoint, which makes the estimator's two-block conditional unbiasedness compatible with the weight update. Third, the learner moves between endpoints according to a smooth schedule. A quadratic interpolation inequality isolates a signed linear term, whose expectation is controlled by changes in the endpoint mean, and leaves a curvature cost of order $h^{-2}$ per round for blocks of length $h$.
+
+These steps give the principal upper-bound balance
+\begin{equation}\label{eq:intro-upper-balance}
+ \underbrace{\sqrt{nh\log(2n+2)}}_{\text{statistical and tracking terms}}
+ \; + \;
+ \underbrace{\frac{n}{h^2}}_{\text{curvature cost}}.
+\end{equation}
+Choosing $h\asymp(n/\log(2n+2))^{1/5}$ yields the exponent $3/5$. The proof charges every played round, including transitions that produce no loss estimate.
+
+The lower bound uses a hidden sign, an oblivious random additive baseline, and the movement penalty $(z_i-z_{i-1})^2/8$. If the learner makes little squared movement, a multiscale Gaussian process conceals the sign. The key deterministic estimate is
+\begin{equation}\label{eq:intro-tree}
+ \sum_{i=1}^n(y_i-y_{\rho(i)})^2
+ \leq 8\sqrt{n(1+M)},
+ \qquad M=\sum_{i=1}^n(z_i-z_{i-1})^2,
+\end{equation}
+where $\rho$ is a binary-tree parent map, $y_0=0$, and $y_i=z_i$ for $i\geq1$. This bounds the information in the full adaptive transcript. If squared movement is large instead, its direct contribution to regret is already sufficient. Clipping only the additive baseline ensures that every sampled loss sequence satisfies the model assumptions.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.28}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.29\textwidth}>{\raggedright\arraybackslash}X>{\centering\arraybackslash}p{0.18\textwidth}>{\centering\arraybackslash}p{0.18\textwidth}@{}}
+\toprule
+\textbf{Setting and source} & \textbf{Adversary and restrictions} & \textbf{Upper bound} & \textbf{Lower bound}\\
+\midrule
+Memoryless scalar quadratics; finite-feature EXP2~\cite{bubeck}
+& Oblivious; proper actions in $[-1,1]$
+& $O(\sqrt{n\Lambda_n})$ & $\Omega(\sqrt n)$\\
+Present class; generic batching~\cite{arora,bubeck}
+& Oblivious; scalar; two-action memory; proper
+& $O(n^{2/3}\Lambda_n^{1/3})$ & ---\\
+Quadratic losses with memory~\cite{suggala}
+& Delayed-adaptive; fixed dimension and memory
+& $\widetilde O(n^{2/3})$ & $\widetilde\Omega(n^{2/3})$\\
+Unit switching costs~\cite{dekel}
+& Oblivious; a fixed finite set of at least two arms
+& $\widetilde O(n^{2/3})$ & $\widetilde\Omega(n^{2/3})$\\
+\textbf{This paper}
+& \textbf{Oblivious; scalar; two-action memory; proper}
+& $O(n^{3/5}\Lambda_n^{2/5})$ & $\Omega(n^{3/5}/\Lambda_n)$\\
+\bottomrule
+\end{tabularx}
+\caption{Regret rates with one realized scalar loss per round, where $\Lambda_n=\log(2n+2)$ and regularity constants are fixed. The first two upper bounds are direct specializations explained in the text. The memoryless lower bound follows already from independent signed linear losses. The delayed-adaptive row uses the frozen-older-history benchmark discussed in the text; its lower bound already holds for scalar actions and a two-action window. Unit switching costs have different action geometry and no quadratic smoothness. A dash means that the row presents an upper-bound baseline only.}
+\label{tab:comparison}
+\end{table}
+
+\subsection{Related work and comparable guarantees}\label{sec:related}
+
+\paragraph{Bandit estimation and batching.}
+The covariance-inverse estimator used here is a specialization of finite-action linear-bandit exponential weights~\cite{bubeck}. For memoryless scalar quadratics, the feature map $(1,x,x^2)$ and a grid of mesh $1/n$ give an $O(\sqrt{n\log(2n+2)})$ guarantee. Arora, Dekel, and Tewari~\cite{arora} developed policy regret and a general mini-batching reduction for adversaries with bounded memory. Applied to the present class, batching gives the direct baseline in Table~\ref{tab:comparison}.
+
+To see that baseline under exactly our assumptions, use blocks of length $h\geq2$, repeat each sampled action throughout a block, and estimate the average diagonal loss from its last $h-1$ rounds. The first round of each block costs at most a constant relative to the comparator. Finite-feature estimation therefore gives
+\begin{equation}\label{eq:batching-baseline}
+ O\!\left(\sqrt{nh\log(2n+2)}+\frac{n}{h}\right)
+ =O\!\left(n^{2/3}(\log(2n+2))^{1/3}\right)
+\end{equation}
+after optimizing $h$. This is a specialization of existing methods, rather than a separate published theorem in the displayed notation. The improvement in~\eqref{eq:intro-upper-balance} comes from reducing the transition contribution from $n/h$ to $n/h^2$.
+
+\paragraph{Randomized update schedules.}
+Cassel and Koren~\cite{cassel} use occasional updates to obtain constant action windows in bandit optimization with memory. Our algorithm builds on that principle. Its specific estimation event has probability $1/4$ and cannot occur in consecutive blocks. We use this support property together with smooth endpoint interpolation and unconditional marginal tracking; the full analysis is given below.
+
+\paragraph{The adversary model.}
+The closest quadratic-memory result is due to Suggala, Sun, Netrapalli, and Hazan~\cite{suggala}: their Theorem~6 and Proposition~47 give matching $\widetilde\Theta(n^{2/3})$ rates in a delayed-adaptive model. Their lower construction contains an additive coefficient depending on the learner's action two rounds earlier (Appendix~H, equation~(11)); it is therefore not oblivious. Their Section~6 asks separately about an oblivious lower bound. The present theorem determines the exponent for the scalar, two-action specialization.
+
+For this comparison, the benchmark also requires care. In their adaptive model, the diagonal comparator freezes the realized older history (Appendix~H, equation~(12)); it does not replace that entire history counterfactually. In our oblivious model, the functions are fixed, so the diagonal comparator is the constant-history policy comparator. The two results consequently concern different adversary classes.
+
+
+
+\paragraph{Lower-bound construction.}
+Dekel, Ding, Koren, and Peres~\cite{dekel} establish the $\widetilde\Theta(n^{2/3})$ rate for finite-arm bandits with unit switching costs and introduce the multiscale Gaussian process used in our proof. We retain their binary parent map and noise construction. The continuous-action argument replaces switch counting with~\eqref{eq:intro-tree}, and clips the additive coefficient rather than the action-dependent loss. These changes yield the squared-movement lower bound while preserving the quadratic loss class.
+
+\paragraph{Organization.}
+Section~\ref{sec:model} specifies the model and states the main theorem. Section~\ref{sec:interpolation} establishes the interpolation inequality. Sections~\ref{sec:algorithm} and~\ref{sec:upper} present and analyze the algorithm. Section~\ref{sec:lower} proves the lower bound, and Section~\ref{sec:discussion} discusses the scope of the result.
+
+\section{Model and main result}\label{sec:model}
+
+Fix $n\geq1$ and an initial action $z_0\in[-1,1]$. A loss sequence consists of quadratic polynomials $F_i:[-1,1]^2\to\R$, $1\leq i\leq n$, satisfying
+\begin{equation}\label{eq:model}
+ |F_i(a,b)|\leq B,\qquad
+ \|\nabla F_i(a,b)\|_2\leq L,\qquad
+ 0\preceq\nabla^2F_i\preceq\beta I_2
+ \quad\text{for all }(a,b)\in[-1,1]^2.
+\end{equation}
+The last condition imposes joint convexity and an upper curvature bound. It allows singular Hessians and does not impose strong convexity.
+
+An \emph{oblivious} adversary fixes the entire sequence before the learner's private seed is drawn. At round $i$, a causal learner chooses $z_i$ as a measurable function of that seed and its previous actions and observations, and then observes only the scalar $F_i(z_{i-1},z_i)$. A learner is \emph{proper} if $z_i\in[-1,1]$ on every round. It knows the horizon and the regularity bounds but has no access to gradients, Hessians, loss coefficients, or additional queries. Computation and storage are unrestricted.
+
+Write $q_i(x)=F_i(x,x)$ for the diagonal loss and define
+\begin{equation}\label{eq:regret-definition}
+ \Reg(A;F)
+ =\E_A\!\left[\sum_{i=1}^nF_i(z_{i-1},z_i)\right]
+   -\min_{x\in[-1,1]}\sum_{i=1}^n q_i(x),
+ \qquad
+ \mathcal R_T^*=\inf_A\sup_F\Reg(A;F),
+\end{equation}
+where $T=n+1$, the infimum is over randomized causal proper learners, and the supremum is over deterministic admissible oblivious sequences. The dependence on $B,L,\beta,z_0$ is suppressed. In the alternative indexing $x_1,\ldots,x_T$ with losses $f_2,\ldots,f_T$, this is exactly $z_i=x_{i+1}$, $F_i=f_{i+1}$, and $z_0=x_1$.
+
+\begin{theorem}[Minimax regret]\label{thm:main}
+Suppose $B=L=2$ and $\beta=1$. There exists a universal constant $C<\infty$ such that, for every $T\geq2$ and every fixed initial action $z_0\in[-1,1]$,
+\begin{equation}\label{eq:main}
+ \frac{1}{4096}\frac{(T-1)^{3/5}}{\log(2T)}
+ \ \leq\ \mathcal R_T^*
+ \ \leq\ C(T-1)^{3/5}\bigl(\log(2T)\bigr)^{2/5}.
+\end{equation}
+The upper bound is attained by the proper algorithm of Section~\ref{sec:algorithm}, which uses one realized loss observation per round. The lower bound holds for every randomized causal proper learner and is witnessed by a distribution over admissible oblivious loss sequences, sampled independently of the learner's seed.
+\end{theorem}
+
+The theorem matches the power of the horizon; the stated bounds retain a logarithmic gap. Neither the action dimension nor the memory length grows with $T$.
+
+\begin{corollary}[A fixed quadratic movement penalty suffices]\label{cor:subclass}
+The lower bound in~\eqref{eq:main} already holds on the subclass
+\begin{equation}\label{eq:subclass}
+ F_i(a,b)=c_i+\theta b+\frac{(a-b)^2}{8},
+ \qquad c_i\in[1/4,3/4],\quad \theta\in[-1/4,1/4],
+\end{equation}
+where the unknown coefficient $\theta$ is fixed across rounds and the sequence $(c_i)$ is oblivious. This subclass therefore has the same minimax exponent $3/5$.
+\end{corollary}
+
+\begin{proof}
+Every function in~\eqref{eq:subclass} satisfies~\eqref{eq:model} with $B=L=2$ and $\beta=1$, so the upper bound applies. The construction in Section~\ref{sec:lower} has $c_i=1/2+\overline W_i\in[1/4,3/4]$ and $\theta=\varepsilon\sigma\in[-1/4,1/4]$, giving the asserted lower bound.
+\end{proof}
+
+\begin{remark}[Other fixed regularity bounds]
+The upper-bound analysis is stated for arbitrary $B,L,\beta>0$ and yields a constant depending on these parameters. Scaling the normalized lower construction by $\min\{B/2,L/2,\beta\}$ gives the same exponent for every fixed positive triple. We do not claim sharp joint dependence on these parameters, or a uniform lower bound as any of them tends to zero.
+\end{remark}
+
+\paragraph{Notation.}
+All logarithms are natural unless a base is displayed. For a distribution $p$ and a function $g$ on a finite set, $\la p,g\ra=\sum_xp(x)g(x)$. For signed measures on $[-1,1]$, $\|\mu\|_1$ denotes the total mass of the absolute measure; thus $\|P-Q\|_1=2\TV(P,Q)$ for probability measures. This measure convention includes initial actions outside the algorithm's finite grid.
+
+\section{A quadratic interpolation inequality}\label{sec:interpolation}
+
+The main geometric step compares the loss along a transition with a convex combination of the diagonal losses at its two endpoints. Joint convexity absorbs the mixed quadratic term. The remaining first-order term must retain its sign, because its expectation will be bounded through marginal stability rather than absolute path length.
+
+Set $e=(1,1)^\top$ and $d=(-1/2,1/2)^\top$.
+
+\begin{lemma}[Quadratic interpolation]\label{lem:interp}
+Let
+\[
+ F(y)=c+\ell^\top y+\tfrac12y^\top H y,
+ \qquad 0\preceq H\preceq\beta I_2,
+ \qquad q(x)=F(x,x).
+\]
+For endpoints $u,v\in[-1,1]$ and $0\leq\lambda_-<\lambda_+\leq1$, define
+\[
+ D=v-u,\quad \omega=(\lambda_-+\lambda_+)/2,\quad
+ \delta=\lambda_+-\lambda_-,\quad
+ a=u+\lambda_-D,\quad b=u+\lambda_+D.
+\]
+Then, with $r=\ell^\top d$,
+\begin{equation}\label{eq:interp}
+ F(a,b)\leq(1-\omega)q(u)+\omega q(v)+r\delta(v-u)
+       +\frac{\beta\delta^2}{4\omega(1-\omega)}+\beta\delta^2.
+\end{equation}
+If $\|\nabla F(0,0)\|_2\leq L$, then $|r|\leq L/\sqrt2$.
+\end{lemma}
+
+\begin{proof}
+Put $z=u+\omega D$ and introduce the scalar curvatures
+\[
+ \alpha=e^\top H e,\qquad \kappa=d^\top H d,\qquad
+ \chi=e^\top H d.
+\]
+Positive semidefiniteness implies $\chi^2\leq\alpha\kappa$, and $0\leq\kappa\leq\beta/2$. Since $(a,b)^\top=ze+\delta Dd$, quadratic expansion gives
+\begin{align*}
+ F(a,b)&=q(z)+r\delta D+\chi z\delta D+\tfrac12\kappa\delta^2D^2,\\
+ (1-\omega)q(u)+\omega q(v)-q(z)
+ &=\tfrac12\alpha\omega(1-\omega)D^2.
+\end{align*}
+If $\alpha>0$, Young's inequality and $|z|\leq1$ yield
+\[
+ \chi z\delta D
+ \leq\tfrac12\alpha\omega(1-\omega)D^2
+       +\frac{\chi^2z^2\delta^2}{2\alpha\omega(1-\omega)}
+ \leq\tfrac12\alpha\omega(1-\omega)D^2
+       +\frac{\kappa\delta^2}{2\omega(1-\omega)}.
+\]
+If $\alpha=0$, positive semidefiniteness gives $\chi=0$, so the same conclusion holds without division by $\alpha$. Combining these relations, using $D^2\leq4$ and $\kappa\leq\beta/2$, proves~\eqref{eq:interp}. Finally, $\ell=\nabla F(0,0)$ and $\|d\|_2=1/\sqrt2$ give the bound on $r$.
+\end{proof}
+
+The denominator in~\eqref{eq:interp} requires a schedule that slows down near the endpoints. The following choice makes the remainder uniformly quadratic in the inverse block length.
+
+\begin{lemma}[Smooth interpolation schedule]\label{lem:schedule}
+For an integer $h\geq1$, let
+\[
+ \lambda_r=\sin^2\!\left(\frac{\pi r}{2h}\right),\quad 0\leq r\leq h,
+ \qquad
+ \delta_r=\lambda_r-\lambda_{r-1},\quad
+ \omega_r=(\lambda_r+\lambda_{r-1})/2.
+\]
+For $1\leq r\leq h$,
+\[
+ \frac{\delta_r^2}{\omega_r(1-\omega_r)}\leq\frac{\pi^2}{h^2},
+ \qquad \delta_r^2\leq\frac{\pi^2}{4h^2},
+ \qquad \sum_{r=1}^h\delta_r=1.
+\]
+Consequently, the last two terms of~\eqref{eq:interp} sum to at most $\beta\pi^2/(2h^2)$ at each round.
+\end{lemma}
+
+\begin{proof}
+Let $\vartheta=\pi/(2h)$ and $\alpha_r=(2r-1)\vartheta$. Trigonometric identities give
+\[
+ \delta_r=\sin\alpha_r\sin\vartheta,\qquad
+ \omega_r=\frac{1-\cos\alpha_r\cos\vartheta}{2},\qquad
+ \omega_r(1-\omega_r)\geq\frac{\sin^2\alpha_r}{4}.
+\]
+The ratio is therefore at most $4\sin^2\vartheta\leq\pi^2/h^2$, and $\delta_r^2\leq\sin^2\vartheta\leq\pi^2/(4h^2)$. The increments telescope from $\lambda_0=0$ to $\lambda_h=1$. These bounds also hold when $h=1$.
+\end{proof}
+
+\section{The bandit algorithm}\label{sec:algorithm}
+
+The learner maintains a distribution over candidate endpoints and moves between endpoints within blocks. Only certain constant blocks are used for estimation; all blocks are included in the regret analysis.
+
+Fix an integer block length $h\geq1$, and set $N=\lceil n/h\rceil$. For analysis, append known zero losses until round $Nh$; this changes neither the comparator nor the original regret. The actual learner simply stops at round $n$. Any dummy values used to describe a completed final block are zeros, not additional oracle queries.
+
+Use the finite grid
+\[
+ \mathcal G_n=\{-1,-1+1/n,\ldots,1\},\qquad K=2n+1,
+ \qquad \phi(x)=(1,x,x^2)^\top.
+\]
+Let $\nu$ assign probability $1/3$ to each of $-1,0,1$. Choose
+\begin{equation}\label{eq:eta}
+ 0<\eta\leq1/48,\qquad \gamma=24\eta\leq1/2.
+\end{equation}
+Initialize $\widehat\ell_1\equiv0$ and $U_0=z_0$. For blocks $j=1,\ldots,N$, perform the following steps.
+
+\begin{enumerate}[leftmargin=*,itemsep=5pt]
+\item \textbf{Compute the sampling distribution.} Form exponential weights and mix in exploration:
+\[
+ w_j(x)=\frac{\exp(-\eta\sum_{s<j}\widehat\ell_s(x))}
+ {\sum_{y\in\mathcal G_n}\exp(-\eta\sum_{s<j}\widehat\ell_s(y))},
+ \qquad p_j=(1-\gamma)w_j+\gamma\nu.
+\]
+For $j=1$, the empty sum is zero.
+\item \textbf{Refresh or retain the endpoint.} Draw a fair coin $C_j\in\{0,1\}$ independently of the past. Conditional on the past, draw $Z_j\sim p_j$ independently of $C_j$. Set
+\[
+ U_j=\begin{cases}Z_j,&C_j=1,\\ U_{j-1},&C_j=0.\end{cases}
+\]
+\item \textbf{Play the interpolation path.} In round $i=(j-1)h+r$, $1\leq r\leq h$, play
+\begin{equation}\label{eq:physical}
+ z_i=(1-\lambda_r)U_{j-1}+\lambda_r U_j,
+ \qquad \lambda_r=\sin^2\!\left(\frac{\pi r}{2h}\right),
+\end{equation}
+and receive the single realized value $F_i(z_{i-1},z_i)$.
+\item \textbf{Estimate a diagonal loss on a constant block.} If $j\geq2$, define the observable event
+\[
+ G_j=\{C_{j-1}=1,\ C_j=0\}.
+\]
+On $G_j$, the entire block is constant at $Z_{j-1}$. Hence its observations give
+\[
+ \ell_j(Z_{j-1}),\qquad
+ \ell_j(x)=\frac{B+h^{-1}\sum_{r=1}^h q_{(j-1)h+r}(x)}{2B}\in[0,1].
+\]
+Write $\Sigma_{j-1}=\E_{X\sim p_{j-1}}\phi(X)\phi(X)^\top$, and set, for every $x\in\mathcal G_n$,
+\begin{equation}\label{eq:estimator}
+ \widehat\ell_j(x)=
+ \begin{cases}
+ 4\ell_j(Z_{j-1})\phi(x)^\top\Sigma_{j-1}^{-1}\phi(Z_{j-1}),&G_j,\\
+ 0,&G_j^c.
+ \end{cases}
+\end{equation}
+At block $1$ the estimator remains zero.
+\end{enumerate}
+
+The event $G_j$ means that the endpoint was freshly sampled in block $j-1$ and retained in block $j$. Since the previous interpolation ends exactly at that endpoint, every observed value in block $j$ is a diagonal value. The factor $4$ in the estimator compensates for the probability of this event.
+
+Only observed bandit values enter \eqref{eq:estimator}. In particular, $\Sigma_{j-1}$ is a Gram matrix of the learner's \emph{known sampling distribution}, not an unknown loss Hessian. Formula \eqref{eq:physical} is proper because it is a convex combination of two points in $[-1,1]$.
+
+\section{Proof of the upper bound}\label{sec:upper}
+
+We first analyze the diagonal loss estimates, then relate the actual endpoint distributions to the sampling distributions. The interpolation inequality converts those two bounds into regret for every played round.
+
+\subsection{Delayed unbiasedness and second moments}
+
+Let $\mathcal H_j$ be the sigma-field generated by the random draws revealed through block $j$ and the observations obtained through that block. The initial sigma-field $\mathcal H_0$ contains only the deterministic initialization. The loss sequence is fixed throughout this section.
+
+\begin{lemma}[Estimation events and delayed unbiasedness]\label{lem:gate}
+For $j\geq2$, conditionally on $\mathcal H_{j-2}$,
+\[
+ \E[\widehat\ell_j(x)\mid\mathcal H_{j-2}]=\ell_j(x)
+ \quad\text{for every }x\in\mathcal G_n.
+\]
+Moreover, pointwise on $G_j$ one has
+\begin{equation}\label{eq:gate-equality}
+ \widehat\ell_{j-1}\equiv0,\qquad w_j=w_{j-1},\qquad p_j=p_{j-1}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The distributions $w_{j-1},p_{j-1}$ are $\mathcal H_{j-2}$-measurable. Given this history, $C_{j-1}$ is fair, $Z_{j-1}\sim p_{j-1}$, and the next coin $C_j$ is again independent and fair. Thus $G_j$ has probability $1/4$ with the indicated fresh-sample law. Since $\ell_j$ is a quadratic polynomial, there is a vector $\vartheta_j\in\R^3$ such that $\ell_j(x)=\phi(x)^\top\vartheta_j$. Taking conditional expectations in \eqref{eq:estimator} gives
+\[
+ \phi(x)^\top\Sigma_{j-1}^{-1}
+ \E_{Z\sim p_{j-1}}[\phi(Z)\phi(Z)^\top]\vartheta_j=\ell_j(x).
+\]
+For $j\geq3$, event $G_{j-1}$ requires $C_{j-1}=0$, whereas $G_j$ requires $C_{j-1}=1$. They are disjoint. For $j=2$, the initialization already gives $\widehat\ell_1=0$. The weight identities now follow from the update formula.
+\end{proof}
+
+\begin{lemma}[Estimator magnitude and second moment]\label{lem:moments}
+For all $j\geq2$ and $x\in\mathcal G_n$,
+\[
+ |\widehat\ell_j(x)|\leq12/\gamma,
+ \qquad
+ \E\la w_j,\widehat\ell_j^2\ra\leq24.
+\]
+\end{lemma}
+
+\begin{proof}
+The exploration Gram matrix and its inverse are
+\[
+ \Sigma_\nu=
+ \begin{pmatrix}1&0&2/3\\0&2/3&0\\2/3&0&2/3\end{pmatrix},
+ \qquad
+ \Sigma_\nu^{-1}=
+ \begin{pmatrix}3&0&-3\\0&3/2&0\\-3&0&9/2\end{pmatrix}.
+\]
+For $|x|\leq1$,
+\[
+ \phi(x)^\top\Sigma_\nu^{-1}\phi(x)
+ =3-\tfrac92x^2+\tfrac92x^4\leq3.
+\]
+Since $\Sigma_{j-1}\succeq\gamma\Sigma_\nu$, Cauchy--Schwarz in the $\Sigma_{j-1}^{-1}$ metric bounds the kernel in \eqref{eq:estimator} by $3/\gamma$. This proves the magnitude bound.
+
+On the support of $\widehat\ell_j$, Lemma~\ref{lem:gate} allows $w_j$ to be replaced by $w_{j-1}$. Condition on $\mathcal H_{j-2}$, abbreviate $p=p_{j-1}$, $w=w_{j-1}$, and $\Sigma=\Sigma_{j-1}$. Then
+\begin{align*}
+ \E[\la w_j,\widehat\ell_j^2\ra\mid\mathcal H_{j-2}]
+ &=4\E_{Z\sim p}\left[\ell_j(Z)^2
+      \phi(Z)^\top\Sigma^{-1}\Sigma_w\Sigma^{-1}\phi(Z)\right]\\
+ &\leq4\operatorname{tr}(\Sigma^{-1}\Sigma_w)
+ \leq\frac{12}{1-\gamma}\leq24.
+\end{align*}
+Here $\Sigma\succeq(1-\gamma)\Sigma_w$ was used, and the feature dimension is $3$.
+\end{proof}
+
+\subsection{Exponential weights and distribution stability}
+
+The estimator need not be unbiased conditional on the immediately preceding block. Lemma~\ref{lem:gate} supplies the replacement identity needed to use the earlier conditioning history in the exponential-weights calculation.
+
+\begin{proposition}[Diagonal regret and distribution stability]\label{prop:ew}
+For every fixed $x\in\mathcal G_n$,
+\begin{equation}\label{eq:diagonal-regret}
+ \sum_{j=2}^N\E\la p_{j-1},\ell_j\ra-\sum_{j=2}^N\ell_j(x)
+ \leq\frac{\log K}{\eta}+48\eta(N-1).
+\end{equation}
+With
+\[
+ d_j=\E\|p_j-p_{j-1}\|_1\quad(j\geq2),
+ \qquad S=\sum_{j=2}^N d_j,
+\]
+one also has
+\begin{equation}\label{eq:stability}
+ S\leq30\eta N.
+\end{equation}
+
+\end{proposition}
+
+\begin{proof}
+By \eqref{eq:eta} and Lemma~\ref{lem:moments}, $|\eta\widehat\ell_j(x)|\leq1/2$. The inequalities $e^{-u}\leq1-u+u^2$ for $|u|\leq1/2$ and $\log(1+a)\leq a$ give the usual pathwise potential bound, here derived directly from the normalizing constants:
+\[
+ \sum_{j=2}^N\la w_j,\widehat\ell_j\ra
+ -\sum_{j=2}^N\widehat\ell_j(x)
+ \leq\frac{\log K}{\eta}
+       +\eta\sum_{j=2}^N\la w_j,\widehat\ell_j^2\ra.
+\]
+The lower potential estimate uses the weight of $x$, which initially is $1/K$. On the left, \eqref{eq:gate-equality} permits replacement of $w_j$ by $w_{j-1}$ in the product with $\widehat\ell_j$. Conditional unbiasedness is then applicable because $w_{j-1}$ is $\mathcal H_{j-2}$-measurable. Lemma~\ref{lem:moments} gives
+\[
+ \sum_{j=2}^N\E\la w_{j-1},\ell_j\ra-\sum_{j=2}^N\ell_j(x)
+ \leq\frac{\log K}{\eta}+24\eta(N-1).
+\]
+Since $0\leq\ell_j\leq1$, replacing $w_{j-1}$ by $p_{j-1}$ costs at most $\gamma$ per block. This proves \eqref{eq:diagonal-regret}.
+
+For stability, let $r^+(x)=r(x)e^{-\eta a(x)}/Z$ with $|\eta a(x)|\leq1/2$. Since $Z\geq e^{-1/2}$ and $|e^{-u}-1|\leq e^{1/2}|u|$ on this interval,
+\[
+ \|r^+-r\|_1
+ \leq2e\eta\la r,|a|\ra
+ \leq6\eta\sqrt{\la r,a^2\ra}.
+\]
+Apply this to the update from $w_{j-1}$ to $w_j$, and note that mixing with the same $\nu$ does not increase the distance. Jensen's inequality and Lemma~\ref{lem:moments}, applied to estimator $j-1$, give
+\[
+ S\leq6\eta\sum_{j=2}^N
+        \E\sqrt{\la w_{j-1},\widehat\ell_{j-1}^2\ra}
+ \leq6\sqrt{24}\eta(N-1)\leq30\eta N.
+\]
+The term with $\widehat\ell_1$ is zero.
+\end{proof}
+
+\subsection{Tracking the endpoint marginals}
+
+The random distribution $p_j$ can depend on the previous endpoint, so conditional tracking would be insufficient. Unconditional marginals satisfy an exact contraction recursion because the refresh coin is independent of the past.
+
+\begin{lemma}[Marginal tracking]\label{lem:tracking}
+Let $Q_j$ be the unconditional law of $U_j$ and $\overline p_j=\E p_j$. Then
+\[
+ Q_j=\tfrac12Q_{j-1}+\tfrac12\overline p_j.
+\]
+If $E_j=\|Q_j-\overline p_j\|_1$, then $E_1\leq1$ and
+\[
+ E_j\leq\tfrac12E_{j-1}+\tfrac12d_j\quad(j\geq2),
+ \qquad
+ \sum_{j=2}^N E_{j-1}\leq2+S.
+\]
+For every $\omega\in[0,1]$,
+\begin{equation}\label{eq:marginal-mix}
+ \|(1-\omega)Q_{j-1}+\omega Q_j-\overline p_{j-1}\|_1
+ \leq E_{j-1}+\tfrac12d_j,
+\end{equation}
+and
+\begin{equation}\label{eq:mean-movement}
+ \sum_{j=2}^N|\E U_j-\E U_{j-1}|\leq1+S.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The marginal recursion follows by conditioning on the fresh independent coin, even though $p_j$ and $U_{j-1}$ may be dependent. The triangle inequality and
+$\|\overline p_j-\overline p_{j-1}\|_1\leq d_j$ prove the recurrence for $E_j$. Summing its geometric expansion gives $\sum_{j=2}^N E_{j-1}\leq2+S$.
+For \eqref{eq:marginal-mix}, use the exact signed-measure identity
+\[
+ (1-\omega)Q_{j-1}+\omega Q_j-\overline p_{j-1}
+ =(1-\omega/2)(Q_{j-1}-\overline p_{j-1})
+       +(\omega/2)(\overline p_j-\overline p_{j-1}).
+\]
+Finally,
+$\|Q_j-Q_{j-1}\|_1\leq(E_{j-1}+d_j)/2$; integrating $x\in[-1,1]$ and summing proves \eqref{eq:mean-movement}.
+\end{proof}
+
+\subsection{Regret on all played rounds}
+
+We now combine the diagonal guarantee with the interpolation and tracking bounds. In particular, the estimate below includes blocks outside the estimation event $G_j$.
+
+\begin{proposition}[Regret before parameter tuning]\label{prop:physical}
+For every $x\in\mathcal G_n$, the algorithm satisfies
+\begin{align}\label{eq:raw-upper}
+ &\E\sum_{i=1}^{Nh}F_i(z_{i-1},z_i)-\sum_{i=1}^{Nh}q_i(x)\notag\\
+ &\quad\leq
+ 2Bh\left(\frac{\log K}{\eta}+48\eta(N-1)\right)
+ +4Bh+\frac32BhS+\frac{L}{\sqrt2}(1+S)
+ +\frac{\beta\pi^2(N-1)}{2h}.
+\end{align}
+\end{proposition}
+
+\begin{proof}
+The first block has regret at most $2Bh$ against $x$, by boundedness. Fix $j\geq2$ and a physical round $i=(j-1)h+r$. Apply Lemmas~\ref{lem:interp}--\ref{lem:schedule} to $F_i$, $u=U_{j-1}$, and $v=U_j$. Taking expectations gives
+\begin{align*}
+ \E F_i(z_{i-1},z_i)
+ &\leq(1-\omega_r)\E q_i(U_{j-1})+\omega_r\E q_i(U_j)\\
+ &\qquad+r_i\delta_r(\E U_j-\E U_{j-1})
+       +\frac{\beta\pi^2}{2h^2},
+\end{align*}
+where $r_i=(\partial_2 F_i(0,0)-\partial_1 F_i(0,0))/2$ is fixed and $|r_i|\leq L/\sqrt2$. This is the precise use of obliviousness: the coefficients of $q_i$ and $r_i$ are deterministic when averaging over the learner.
+
+By \eqref{eq:marginal-mix}, the first two terms are at most
+\[
+ \E\la p_{j-1},q_i\ra+B(E_{j-1}+d_j/2).
+\]
+Sum the tracking error over $r$ and $j$ to obtain at most $Bh(2+3S/2)$. The signed linear terms sum to at most $(L/\sqrt2)(1+S)$, because $\sum_r\delta_r=1$ and \eqref{eq:mean-movement} holds. The remaining curvature error is $\beta\pi^2(N-1)/(2h)$.
+
+It remains to bound
+\[
+ \sum_{j=2}^N\sum_{r=1}^h
+  \bigl(\E\la p_{j-1},q_{(j-1)h+r}\ra-q_{(j-1)h+r}(x)\bigr).
+\]
+By the definition of $\ell_j$, this is exactly $2Bh$ times the left side of \eqref{eq:diagonal-regret}. Combining all terms proves \eqref{eq:raw-upper}.
+\end{proof}
+
+\subsection{Tuning and the continuous comparator}
+
+Choose
+\begin{equation}\label{eq:tuning}
+ \Lambda=\log(2n+2),\qquad
+ h=\max\{1,\lceil(n/\Lambda)^{1/5}\rceil\},\qquad
+ \eta=\min\left\{\frac1{48},\sqrt{\frac{\log K}{48N}}\right\},
+ \qquad\gamma=24\eta.
+\end{equation}
+Equations \eqref{eq:raw-upper} and \eqref{eq:stability} imply, for a universal $C_0$,
+\begin{equation}\label{eq:upper-before-tune}
+ \Reg_{\mathcal G_n}
+ \leq C_0\left[(Bh+L)\bigl(\sqrt{N\log K}+\log K+1\bigr)
+                 +\beta N/h\right].
+\end{equation}
+For $n\geq2$, $\Lambda\leq n$, $h\leq2(n/\Lambda)^{1/5}$, $N\leq2n/h$, and $\log K\leq\Lambda$. These inequalities show
+\[
+ h\sqrt{N\log K}+h\log K+N/h
+ \leq C_1 n^{3/5}\Lambda^{2/5}.
+\]
+Here $\Reg_{\mathcal G_n}$ denotes regret against the best fixed grid point. The case $n=1$ is absorbed by enlarging the universal constant.
+
+Since $q_i'(x)=e^\top\nabla F_i(x,x)$, its absolute value is at most $\sqrt2L$. A continuous minimizer is within $1/(2n)$ of a grid point. Therefore replacing it by that grid point increases the comparator cost by at most $L/\sqrt2$, including the zero padding. This proves the upper half of Theorem~\ref{thm:main}.
+
+\section{Proof of the lower bound}\label{sec:lower}
+
+We construct an oblivious distribution of losses for which every learner either pays substantial quadratic movement or obtains too little information about the best constant action. The multiscale Gaussian process is the one introduced by Dekel et al.~\cite{dekel}; the argument below controls its information through continuous path energy.
+
+\subsection{An admissible quadratic family}
+
+Set
+\begin{equation}\label{eq:lower-parameters}
+ \Lambda=\log(2n+2),\quad
+ D_n=\lceil\log_2(n+1)\rceil,\quad
+ s^2=\frac1{512D_n\Lambda},\quad
+ \varepsilon=\frac1{1024\Lambda n^{2/5}}.
+\end{equation}
+Draw a fair sign $\sigma\in\{-1,1\}$ and independent $\xi_i\sim N(0,s^2)$ before the learner's seed. Define
+\[
+ \rho(i)=i-2^{v_2(i)},\qquad W_0=0,\qquad W_i=W_{\rho(i)}+\xi_i,
+\]
+where $v_2(i)$ is the exponent of $2$ dividing $i$. Thus $\rho(i)$ removes the lowest nonzero bit of $i$. Let
+\[
+ \overline W_i=\max\{-1/4,\min\{W_i,1/4\}\},
+ \qquad
+ F_i(a,b)=\frac12+\overline W_i+\varepsilon\sigma b+\frac{(a-b)^2}{8}.
+\]
+Clipping changes only the additive coefficient. In particular, it changes neither the action dependence nor the Hessian of any loss.
+
+Every realization gives an oblivious sequence of quadratic polynomials. Its Hessian is
+\[
+ \nabla^2F_i=\frac14\begin{pmatrix}1&-1\\-1&1\end{pmatrix},
+\]
+with eigenvalues $0,1/2$. Since $\varepsilon<1/4$, the losses belong to $[0,3/2]$ on the square. Moreover,
+\[
+ \|\nabla F_i(a,b)\|_2
+ \leq\sqrt{(1/2)^2+(1/2+\varepsilon)^2}<2.
+\]
+Thus all realizations satisfy the original numerical bounds. The optimal constant comparator is $x=-\sigma$.
+
+For any action path, write $M=\sum_{i=1}^n(z_i-z_{i-1})^2$. Its realized regret on these losses is exactly
+\begin{equation}\label{eq:path-regret}
+ R=\varepsilon\sum_{i=1}^n(1+\sigma z_i)+\frac18M,
+ \qquad 0\leq R\leq n.
+\end{equation}
+The same identity holds for the auxiliary unclipped losses using $W_i$ in place of $\overline W_i$.
+
+\subsection{Tree energy and squared movement}
+
+The parent map connects observations across several time scales. At a fixed scale, either the path energy or the diameter of the action interval controls the sum of squared endpoint differences. Summing the better bound at each scale produces the geometric mean below.
+
+\begin{lemma}[Tree information versus path energy]\label{lem:tree}
+For $y_0=0$ and $y_i\in[-1,1]$, $1\leq i\leq n$,
+\begin{equation}\label{eq:tree-energy}
+ \sum_{i=1}^n(y_i-y_{\rho(i)})^2
+ \leq8\sqrt{n\sum_{i=1}^n(y_i-y_{i-1})^2}.
+\end{equation}
+In particular, for an action path with its actual fixed initial point $z_0\in[-1,1]$, setting $y_0=0$ and $y_i=z_i$ for $i\geq1$ gives
+\begin{equation}\label{eq:tree-physical}
+ \sum_{i=1}^n(y_i-y_{\rho(i)})^2\leq8\sqrt{n(1+M)}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Write $E_0=\sum_i(y_i-y_{i-1})^2$. At scale $l=2^k$, the intervals $(i-l,i]$ with $v_2(i)=k$ are pairwise disjoint. Cauchy--Schwarz bounds their total squared endpoint difference by $lE_0$. There are at most $n/l$ such intervals and each squared endpoint difference is at most $4$, giving the alternative bound $4n/l$. Therefore
+\[
+ \sum_i(y_i-y_{\rho(i)})^2
+ \leq\sum_{k:2^k\leq n}\min\{2^kE_0,4n/2^k\}.
+\]
+If $E_0=0$ there is nothing to prove. Otherwise split the dyadic sum at $a=\sqrt{4n/E_0}$. The part $2^k\leq a$ is at most $2aE_0=4\sqrt{nE_0}$; the other part is at most $8n/a=4\sqrt{nE_0}$. This proves \eqref{eq:tree-energy}. Finally, with the stated convention at zero,
+$E_0=z_1^2+\sum_{i=2}^n(z_i-z_{i-1})^2\leq1+M$.
+\end{proof}
+
+\subsection{Information in an adaptive transcript}
+
+Temporarily use the unclipped process. Extend any proper learner to all real-valued observation histories, if necessary, by assigning an arbitrary feasible action on histories outside its original specification. Include its independent private seed in the transcript. Let $P_+$ and $P_-$ denote the transcript laws for the two values of $\sigma$.
+
+Subtracting the known algebraic movement term and constant from the observed value is an invertible transcript transformation, giving
+\[
+ Y_i=W_i+\varepsilon\sigma z_i.
+\]
+This transformation is for the analysis; no extra observation is supplied. If $\rho(i)>0$, conditional on the past and the seed,
+\[
+ Y_i=Y_{\rho(i)}+\varepsilon\sigma(z_i-z_{\rho(i)})+\xi_i.
+\]
+If $\rho(i)=0$, the conditional mean is $\varepsilon\sigma z_i$. At a common past history the learner chooses the same current action under both hypotheses. The conditional variance is $s^2$. The Gaussian relative-entropy formula and the chain rule therefore give
+\begin{equation}\label{eq:KL}
+ \KL(P_+\|P_-)
+ =\frac{2\varepsilon^2}{s^2}\E_+\sum_{i=1}^n(y_i-y_{\rho(i)})^2
+ \leq\frac{16\varepsilon^2}{s^2}\sqrt{n(1+\E_+M)},
+\end{equation}
+where $y_0=0$, $y_i=z_i$ for $i\geq1$. The reversed relative entropy has the analogous bound with $\E_-M$.
+
+For completeness, the form of Pinsker's inequality used here follows by applying the log-sum inequality to any event and its complement: the resulting Bernoulli relative entropy is at least twice the squared difference of the two event probabilities, because its second derivative in the first probability is at least $4$. Taking the supremum over events yields $\TV(P,Q)\leq\sqrt{\KL(P\|Q)/2}$.
+
+Let $\E=\tfrac12(\E_++\E_-)$ denote expectation under the uniform mixture of the two signs. Put $m=\E M=(\E_+M+\E_-M)/2$ and $V=\TV(P_+,P_-)$. Apply Pinsker in both directions, average the two bounds, and use concavity of $u^{1/4}$ to obtain
+\begin{equation}\label{eq:TV}
+ V\leq\frac{\sqrt8\varepsilon}{s}\,n^{1/4}(m+1)^{1/4}.
+\end{equation}
+On the other hand, \eqref{eq:path-regret} and the fact that $\sum_i z_i\in[-n,n]$ imply
+\begin{equation}\label{eq:reg-TV}
+ \E R\geq\varepsilon n(1-V)+\frac18m.
+\end{equation}
+Also $\E R\geq m/8$ directly, without using \eqref{eq:reg-TV}.
+
+\subsection{Balancing information and movement}
+
+If $m\geq4\varepsilon n$, this last observation gives $\E R\geq\varepsilon n/2$. Suppose instead that $m<4\varepsilon n$. Since $D_n\leq\Lambda/\log2$, \eqref{eq:lower-parameters} gives
+\[
+ \varepsilon/s\leq28c_0 n^{-2/5},\qquad c_0=1/1024.
+\]
+Using $\Lambda\geq1$, $(a+b)^{1/4}\leq a^{1/4}+b^{1/4}$, and \eqref{eq:TV},
+\begin{align*}
+ V&\leq80c_0n^{-3/20}
+       \left(4c_0n^{3/5}/\Lambda+1\right)^{1/4}\\
+  &\leq80c_0\left((4c_0)^{1/4}+n^{-3/20}\right)
+   \leq100/1024<1/2.
+\end{align*}
+Thus \eqref{eq:reg-TV} again yields
+\begin{equation}\label{eq:unclipped-lower}
+ \E R\geq\varepsilon n/2
+\end{equation}
+for every randomized causal proper learner in the unclipped experiment.
+
+\subsection{Clipping and minimax quantifiers}
+
+The depth of node $i$ in the parent tree is the number of ones in its binary expansion, at most $D_n$. Hence $\operatorname{Var}(W_i)\leq D_ns^2=1/(512\Lambda)$. The Gaussian tail bound and a union bound give
+\[
+ p_{\rm bad}:=\Pr\{\max_i|W_i|>1/4\}
+ \leq2n e^{-16\Lambda}
+ \leq2^{-15}n^{-15}.
+\]
+For $n\geq1$, $\Lambda\leq2\sqrt n$, so
+\[
+ \varepsilon/4\geq2^{-13}n^{-9/10}\geq p_{\rm bad}.
+\]
+Couple the clipped and unclipped experiments with the same Gaussian variables, sign, and learner seed. On the complement of the bad event, all observations and actions coincide. Each realized regret lies in $[0,n]$ by \eqref{eq:path-regret}. Therefore their expected regrets differ by at most $np_{\rm bad}$. Combining this fact with \eqref{eq:unclipped-lower} proves
+\[
+ \E R_{\rm clipped}\geq\frac{\varepsilon n}{2}-np_{\rm bad}
+ \geq\frac{\varepsilon n}{4}
+ =\frac1{4096}\frac{n^{3/5}}{\log(2n+2)}.
+\]
+All random loss coefficients were drawn before and independently of the learner's seed. Averaging over this distribution shows that, for each randomized learner, the supremum over deterministic admissible oblivious sequences is at least the displayed quantity. This proves the lower half of Theorem~\ref{thm:main}.
+
+\section{Discussion}\label{sec:discussion}
+
+The two sides of the proof identify the same obstruction from complementary directions. For the upper bound, blocks reduce the number of statistically distinct decisions, while smooth interpolation spreads each endpoint change over time. Positive semidefiniteness controls the quadratic cross term even if the diagonal curvature vanishes. The signed linear remainder is controlled only after taking expectation over the learner, through the stability of the endpoint marginals. For the lower bound, the multiscale process limits how quickly the learner can identify a favorable endpoint without paying squared movement.
+
+The signal calculation makes the lower exponent transparent. When regret is small, the movement penalty forces $m=O(\varepsilon n)$. Ignoring logarithmic noise scaling and the harmless initialization term,~\eqref{eq:TV} then becomes
+\[
+ V\lesssim \frac{\varepsilon}{s}n^{1/4}(\varepsilon n)^{1/4}
+ =\frac{\varepsilon^{5/4}}{s}\,n^{1/2}.
+\]
+Choosing a signal of order $n^{-2/5}$, up to logarithmic factors, keeps the two signs difficult to distinguish in this construction. Its cumulative regret is therefore of order $n^{3/5}$. This is the continuous squared-movement counterpart of the tradeoff between exploration and switching costs.
+
+Several boundaries of the theorem remain relevant. Obliviousness is used when fixed loss coefficients are averaged against unconditional endpoint marginals. The result does not extend the upper bound to losses whose coefficients adapt to the learner's history. The matching bounds are confined to scalar actions and a two-action memory window. The algorithm is designed to establish an information-theoretic rate: a direct implementation maintains $2n+1$ grid weights and processes that grid at each block, so no optimal computational complexity is asserted. Finally, the logarithmic factors in~\eqref{eq:main} do not match. Removing that gap, or replacing the exact quadratic representation by broader smoothness assumptions, requires further analysis.
+
+\begin{thebibliography}{9}
+
+\bibitem{arora}
+Raman Arora, Ofer Dekel, and Ambuj Tewari.
+\newblock Online bandit learning against an adaptive adversary: From regret to policy regret.
+\newblock In \emph{Proceedings of the 29th International Conference on Machine Learning}, 2012.
+\newblock \url{https://icml.cc/2012/papers/749.pdf}.
+
+\bibitem{bubeck}
+S\'ebastien Bubeck, Nicol\`o Cesa-Bianchi, and Sham M. Kakade.
+\newblock Towards minimax policies for online linear optimization with bandit feedback.
+\newblock In \emph{Proceedings of the 25th Annual Conference on Learning Theory},
+volume 23 of \emph{Proceedings of Machine Learning Research}, pages 41.1--41.14, 2012.
+\newblock \url{https://proceedings.mlr.press/v23/bubeck12a.html}.
+
+\bibitem{cassel}
+Asaf Cassel and Tomer Koren.
+\newblock Bandit linear control.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume 33, 2020.
+\newblock \url{https://papers.nips.cc/paper/2020/hash/64a08e5f1e6c39faeb90108c430eb120-Abstract.html}.
+
+\bibitem{dekel}
+Ofer Dekel, Jian Ding, Tomer Koren, and Yuval Peres.
+\newblock Bandits with switching costs: $T^{2/3}$ regret.
+\newblock In \emph{Proceedings of the 46th Annual ACM Symposium on Theory of Computing},
+pages 459--467, 2014.
+\newblock \url{https://arxiv.org/abs/1310.2997}.
+
+\bibitem{suggala}
+Arun Suggala, Y. Jennifer Sun, Praneeth Netrapalli, and Elad Hazan.
+\newblock Second order methods for bandit optimization and control.
+\newblock In \emph{Proceedings of the 37th Conference on Learning Theory},
+volume 247 of \emph{Proceedings of Machine Learning Research}, pages 4691--4763, 2024.
+\newblock \url{https://proceedings.mlr.press/v247/suggala24a.html}.
+
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,1863 @@
+% Self-contained manuscript. Compile twice with pdfLaTeX.
+% All proofs and bibliography entries are included in this file.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools}
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{enumitem,booktabs,tabularx,array}
+\usepackage{caption}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\ip}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Lb}{\bar L}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\Tstar}{\mathsf T_1^\star}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\setlength{\parindent}{15pt}
+\setlength{\parskip}{3pt}
+\setlength{\emergencystretch}{2em}
+\setlist[itemize]{leftmargin=*,topsep=4pt,itemsep=3pt}
+\setlist[enumerate]{leftmargin=*,topsep=4pt,itemsep=3pt}
+\captionsetup{font=small,labelfont=bf}
+\allowdisplaybreaks[2]
+\hypersetup{
+  pdftitle={Sharp Single-Query Complexity of Nonconvex Optimization under Mean-Squared Smoothness},
+  pdfauthor={Colombo Team},
+  pdfsubject={Minimax oracle complexity of stochastic nonconvex optimization},
+  pdfkeywords={stochastic nonconvex optimization, mean-squared smoothness, oracle complexity, sample reuse}
+}
+
+\title{\textbf{Sharp Single-Query Complexity of Nonconvex Optimization under Mean-Squared Smoothness}}
+\author{Colombo Team\\[0.4em]
+\small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Mean-squared smoothness supports variance reduction when the same random
+sample can be evaluated at two points. We show that, when each fresh sample
+is evaluated at only one point, stochastic gradient descent is minimax
+optimal despite this additional regularity. For initial objective gap
+$\Delta$, mean-squared smoothness constant $\bar L$, and gradient-noise
+variance bound $\sigma^2$, the dimension-uniform query complexity of finding
+$\widehat x$ with $\E\|\nabla F(\widehat x)\|\le\eps$ is
+\[
+ \mathsf T_1^\star(\Delta,\bar L,\sigma,\eps)
+ =\Theta\!\left(
+   \frac{\Delta\bar L}{\eps^2}
+   +\frac{\Delta\bar L\sigma^2}{\eps^4}
+ \right),
+ \qquad 0<\eps\le c_0\sqrt{\Delta\bar L},
+\]
+with universal constants. The lower bound holds for arbitrary adaptive
+randomized queries and unqueried outputs on an unbounded domain. It is
+realized by scalar sample losses whose gradients are globally
+$\bar L$-Lipschitz. The construction combines a sequence of smooth gates
+with additive Gaussian noise in a shared variable block. Completing each
+stage requires learning a hidden direction. Exact gradients in earlier
+blocks can reveal scalar projections of that direction, so the information
+argument controls both these projections and the noisy vector response.
+A sequential coupling then charges a separate estimation cost at every
+stage. Together with the classical SGD upper bound, the result establishes
+a separation between $\Theta(\eps^{-4})$ single-query complexity and
+$\Theta(\eps^{-3})$ complexity with two evaluations per sample, for fixed
+positive problem parameters.
+\end{abstract}
+
+\noindent\textbf{Keywords:} Stochastic nonconvex optimization; oracle
+complexity; mean-squared smoothness; randomized lower bounds; sample reuse.
+\par\medskip
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:intro}
+
+Stochastic optimization guarantees depend on both the regularity of the
+problem and the information available to the algorithm. A particularly
+important distinction is whether a random sample may be evaluated more than
+once. Under mean-squared smoothness, two gradients computed from the same
+sample provide an accurate estimate of a gradient difference. If every
+evaluation instead uses a fresh independent sample, that difference is not
+directly available. This paper determines the minimax cost of this
+single-query restriction for smooth nonconvex optimization.
+
+We consider a differentiable, bounded-below objective
+$F(x)=\E_\xi f(x;\xi)$ on $\R^d$, an initial point $x_0$, and the stationarity
+criterion
+\begin{equation}\label{eq:intro-target}
+ \E\|\nabla F(\widehat x)\|\le\eps.
+\end{equation}
+The initial gap is at most $\Delta$, and the stochastic gradient
+$g(x;\xi)=\nabla f(x;\xi)$ is unbiased with variance at most $\sigma^2$.
+Mean-squared smoothness requires
+\begin{equation}\label{eq:intro-mss}
+ \E_\xi\|g(x;\xi)-g(y;\xi)\|^2
+ \le \bar L^2\|x-y\|^2
+ \qquad\text{for all }x,y\in\R^d.
+\end{equation}
+The same latent sample $\xi$ appears in both terms. Jensen's inequality
+implies that $F$ is $\bar L$-smooth, but~\eqref{eq:intro-mss} places additional
+structure on the stochastic gradients themselves.
+
+\paragraph{The role of sample access.}
+At each call, our oracle returns one stochastic gradient at the selected
+point and then discards the sample. This is the $K=1$ model. In the $K=2$
+model, the algorithm may evaluate a fresh sample at two points selected
+before observing that sample's replies. We count individual gradient
+evaluations in both cases. SPIDER~\cite{spider} uses $K=2$ access and attains
+cubic dependence on $1/\eps$ when the other positive parameters are fixed.
+Arjevani et al.~\cite[Theorem~3 and Proposition~1]{arjevani} prove a matching
+cubic lower bound, including for gradients of scalar sample losses.
+Their Section~6 asks whether the fourth-order SGD rate is optimal when
+mean-squared smoothness is retained but access is restricted to $K=1$.
+
+\paragraph{Main result.}
+We answer this question by proving
+\begin{equation}\label{eq:intro-rate}
+ \mathsf T_1^\star(\Delta,\bar L,\sigma,\eps)
+ =\Theta\!\left(
+   \frac{\Delta\bar L}{\eps^2}
+   +\frac{\Delta\bar L\sigma^2}{\eps^4}
+ \right),
+ \qquad 0<\eps\le c_0\sqrt{\Delta\bar L}.
+\end{equation}
+Here $\mathsf T_1^\star$ is the smallest deterministic query budget that
+guarantees~\eqref{eq:intro-target} uniformly over finite dimensions, and
+$c_0>0$ is universal. The new contribution is the lower bound. The upper
+bound follows from classical stochastic gradient descent~\cite{ghadimi}.
+Our lower bound has three features:
+\begin{itemize}
+ \item It applies to arbitrary adaptive randomized algorithms, with
+ unrestricted query norms, memory, and computation. The output need not be a
+ previously queried point.
+ \item It holds in the smaller class of scalar sample losses with globally
+ $\bar L$-Lipschitz gradients, and therefore also in the mean-squared-smooth
+ class.
+ \item It includes every variance level $\sigma\ge0$ in the stated accuracy
+ regime, recovering the deterministic rate at $\sigma=0$ and the stochastic
+ rate when $\sigma$ is larger than $\eps$.
+\end{itemize}
+The dimension of the hard instance may depend on the query budget. The
+theorem is therefore a dimension-uniform characterization; it does not
+assert the same rate in each fixed dimension.
+
+\begin{table}[t]
+\centering
+\small
+\renewcommand{\arraystretch}{1.35}
+\setlength{\tabcolsep}{4pt}
+\caption{Complexity for $\E\|\nabla F(\widehat x)\|\le\eps$, counting
+individual gradient evaluations. All rows allow dimensions to grow and use
+a variance bound $\sigma^2$. MSS denotes~\eqref{eq:intro-mss}; samplewise
+smoothness means that every sample gradient is $\bar L$-Lipschitz. All rows
+hold for $0<\eps\le c\sqrt{\Delta\bar L}$ and $\sigma\ge0$, with universal
+constants that may differ. The earlier lower bound includes the
+deterministic baseline; the last row combines SPIDER with SGD in the
+low-noise regime, as explained in the text.}
+\label{tab:comparison}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.255\textwidth}
+ >{\centering\arraybackslash}p{0.065\textwidth}
+ >{\centering\arraybackslash}p{0.36\textwidth}
+ >{\raggedright\arraybackslash}X@{}}
+\toprule
+Result and regularity & Access & Query bound & Accuracy regime\\
+\midrule
+SGD upper bound~\cite{ghadimi}\newline
+$\bar L$-smooth population
+ & $K=1$
+ & $\displaystyle O\!\left(\frac{\Delta\bar L}{\eps^2}
+             +\frac{\Delta\bar L\sigma^2}{\eps^4}\right)$
+ & $0<\eps\le c\sqrt{\Delta\bar L}$; $\sigma\ge0$\\[4pt]
+Earlier lower bounds~\cite{arjevani,carmon}\newline
+MSS; scalar sample gradients
+ & $K=1$
+ & $\displaystyle\Omega\!\left(\frac{\Delta\bar L}{\eps^2}
+                   +\frac{\Delta\bar L\sigma}{\eps^3}
+                   +\frac{\sigma^2}{\eps^2}\right)$
+ & $0<\eps\le c\sqrt{\Delta\bar L}$; $\sigma\ge0$\\[4pt]
+\textbf{This work}\newline
+MSS; lower bound already under samplewise smoothness
+ & $K=1$
+ & $\displaystyle\Theta\!\left(\frac{\Delta\bar L}{\eps^2}
+                  +\frac{\Delta\bar L\sigma^2}{\eps^4}\right)$
+ & $0<\eps\le c_0\sqrt{\Delta\bar L}$; $\sigma\ge0$\\[4pt]
+SPIDER/SGD and matching lower bounds~\cite{spider,ghadimi,arjevani,carmon}\newline
+MSS; scalar sample gradients
+ & $K=2$
+ & $\displaystyle\Theta\!\left(\frac{\Delta\bar L}{\eps^2}
+                   +\frac{\Delta\bar L\sigma}{\eps^3}
+                   +\frac{\sigma^2}{\eps^2}\right)$
+ & $0<\eps\le c\sqrt{\Delta\bar L}$; $\sigma\ge0$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The full-parameter comparisons in~\Cref{tab:comparison} combine existing
+bounds rather than quoting a single theorem verbatim. Adding the
+deterministic lower bound changes the maximum of the deterministic and
+stochastic terms by at most a constant factor. For $\sigma\le\eps$, SGD
+achieves $O(\Delta\bar L/\eps^2)$ in the stated regime. For
+$\sigma\ge\eps$, the SPIDER rate
+$O(\Delta\bar L\sigma/\eps^3+\sigma^2/\eps^2)$ also dominates the
+deterministic term. This gives the uniform $K=2$ expression in the table.
+
+\paragraph{Why the lower bound requires a different construction.}
+The stochastic cost must remain large while the sample gradients satisfy
+the common-sample constraint~\eqref{eq:intro-mss}. We ensure this regularity
+by adding a linear Gaussian perturbation to a deterministic potential:
+\[
+ f_U(X,z;\xi)=F_U(X,z)+\langle\xi,z\rangle.
+\]
+The perturbation contributes the same vector at every evaluation point, so
+it cancels from every same-sample gradient difference. Thus the sample
+smoothness constant equals the population smoothness constant. All
+statistical difficulty must be encoded in the geometry of $F_U$.
+
+The potential consists of a sequence of gates associated with hidden
+orthogonal directions. A point with small gradient must complete every
+gate. Each unfinished gate exposes its direction through the same noisy
+variable block, keeping the total variance independent of the number of
+stages. The main complication is that a scalar potential also produces
+exact gradients in the other blocks. By changing previously visited
+coordinates, an algorithm can use these gradients to obtain information
+about the current direction. The gates are designed so that, before a
+stage is discovered, all such information reduces to one scalar projection
+per response. A spherical information bound controls these exact
+projections together with the noisy vector observation.
+
+The resulting construction has
+$\Theta(\Delta\bar L/\eps^2)$ stages, each requiring
+$\Omega(1+\sigma^2/\eps^2)$ responses. A deferred-decision interaction
+keeps future directions unexposed, and disjoint response counts allow the
+stage costs to be added. A bounded radial encoding and a coercive guard
+make the argument valid for arbitrarily large query and output norms.
+
+\paragraph{Organization.}
+\Cref{sec:related} places the result in the literature.
+\Cref{sec:model,sec:upper} formalize the model and prove the upper bound.
+\Cref{sec:construction} constructs the hard sample losses and establishes
+their regularity and gradient barrier. \Cref{sec:information,sec:lower}
+prove the information bounds and combine them into the lower bound.
+\Cref{sec:discussion} discusses the scope of the characterization.
+\Cref{app:probability,app:yao} collect the probability estimates and the
+fixed-instance randomized conclusion.
+
+\section{Related Work}\label{sec:related}
+
+\paragraph{Stochastic descent.}
+Ghadimi and Lan~\cite{ghadimi} analyze stochastic gradient methods for
+nonconvex objectives and obtain stationarity guarantees by returning a
+randomly selected iterate. We include the corresponding fixed-budget
+argument in~\Cref{sec:upper}, so that the output rule and the expected-norm
+criterion agree exactly with our minimax formulation. This upper bound
+requires only population smoothness and bounded variance.
+
+\paragraph{Variance reduction and common-sample differences.}
+SPIDER~\cite{spider} and SNVRG~\cite{snvrg} improve the online accuracy
+dependence using recursive or nested gradient estimators. STORM~\cite{storm}
+and PAGE~\cite{page} provide further estimator designs. Their correction
+steps evaluate the same sample at two points. Such corrections are
+compatible with $K=2$ access, whereas a $K=1$ oracle supplies an independent
+sample for each evaluation. The comparison in~\Cref{tab:comparison} keeps
+this distinction explicit.
+
+Fradin et al.~\cite{fradin2026} study bounded central moments and weak average
+smoothness. Their $p=q=2$ specialization recovers bounded variance and
+mean-squared smoothness, with cubic accuracy dependence using
+common-sample differences. Their Algorithm~1 uses two evaluations of each
+sample in its recursive correction, and their general-moment lower bounds
+are formulated for zero-respecting algorithms. These results concern a
+different access model from the unrestricted single-query problem studied
+here.
+
+\paragraph{Lower bounds for stationarity.}
+Carmon et al.~\cite{carmon} develop smooth chain constructions and random
+embeddings for stationary-point lower bounds; their first-order
+specialization supplies the deterministic
+$\Omega(\Delta\bar L/\eps^2)$ benchmark. Arjevani et
+al.~\cite{arjevani} extend stochastic lower bounds to unrestricted
+randomized algorithms and scalar sample gradients. Our proof also hides
+successive directions, while its additive noise and exact-projection
+analysis preserve samplewise smoothness at the fourth-order single-query
+rate.
+
+For comparisons with oracle conventions in this literature, a lower bound
+that permits function values also applies when only gradients are returned.
+A requirement that the output be queried can be met by one additional
+call at an otherwise unqueried output. Moreover, for fixed $K\in\{1,2\}$,
+counting rounds or individual gradient evaluations changes complexity by
+only a universal factor. These observations align the cited lower bounds
+with the conventions in~\Cref{sec:model}.
+
+\paragraph{Recent results under different oracle assumptions.}
+Peng, Tang, and Jia~\cite{peng2026} establish an
+$\Omega(n+\sqrt n\,\Delta L_{\max}/\eps^2)$ lower bound for
+unrestricted randomized finite-sum algorithms under individual smoothness,
+for $n$ above a universal threshold and
+$\eps^2\le c\Delta L_{\max}$. Their incremental oracle lets an algorithm
+select and revisit a component index. Our oracle instead draws a fresh
+sample, and our class specifies a uniform variance budget $\sigma^2$.
+The finite-sum rate therefore does not directly identify the complexity
+studied here.
+
+Jin~\cite{jin2026} proves the fourth-order single-query lower bound under
+an almost-sure bound on the gradient error, in the regime
+$\eps\le c\min\{\sigma,\sqrt{L\Delta}\}$. That oracle class allows
+discontinuous and nonconservative replies, as stated in Remark~3.2 of that
+paper. Our hard oracle has conservative, globally Lipschitz sample
+gradients, but its Gaussian error has unbounded support and bounded
+variance. The two results thus establish the same accuracy exponent under
+different structural restrictions; neither lower-bound construction
+provides the combined restriction of samplewise smoothness and uniformly
+bounded noise.
+
+\paragraph{Additional derivative information.}
+Arjevani et al.~\cite{secondorder} show that stochastic Hessian-vector
+information can support cubic accuracy complexity with fresh-sample
+access under appropriate higher-order regularity and noise assumptions.
+Their result identifies another way to obtain useful information about
+gradient changes. Our characterization concerns first-order access under
+mean-squared smoothness, with a lower bound that already holds for
+samplewise Lipschitz gradients.
+
+\section{Model and Main Result}\label{sec:model}
+
+Throughout, $\|\cdot\|$ is the Euclidean norm and $\|\cdot\|_{\rm op}$ is
+the associated operator norm. A function is smooth when its gradient is
+globally Lipschitz. Constants denoted by $c,C,K$ are positive and universal
+unless stated otherwise; their values may change from one occurrence to
+the next.
+
+\subsection{Problem class and oracle access}
+Fix $\Delta,\Lb,\eps>0$ and $\sigma\ge0$. For a finite dimension $d$, let
+\[
+ F(x)=\E_{\xi\sim P} f(x;\xi),\qquad x\in\R^d,
+\]
+where each sample loss is differentiable, the displayed expectations are
+well-defined, and $g(x;\xi):=\nabla_x f(x;\xi)$. The problem class consists
+of all such triples $(F,f,P)$, in every finite dimension, satisfying the
+following conditions for all $x,y\in\R^d$:
+\begin{align}
+ \E_\xi g(x;\xi)&=\nabla F(x),\label{eq:unbiased}\\
+ \E_\xi\norm{g(x;\xi)-\nabla F(x)}^2&\le\sigma^2,\label{eq:variance}\\
+ \E_\xi\norm{g(x;\xi)-g(y;\xi)}^2&\le\Lb^2\norm{x-y}^2
+ \qquad\forall x,y.\label{eq:mss}
+\end{align}
+The population objective $F$ is bounded below, and the supplied initial
+point $x_0$ obeys
+\begin{equation}\label{eq:initial-gap}
+ F(x_0)-\inf_xF(x)\le\Delta.
+\end{equation}
+Condition~\eqref{eq:mss} is mean-squared smoothness with a common latent
+sample. Jensen's inequality gives
+$\|\nabla F(x)-\nabla F(y)\|\le\Lb\|x-y\|$. Only the population objective
+is required to be bounded below. The oracle access rule is specified
+separately from these function-class assumptions.
+
+\begin{definition}[Fresh single-query oracle]\label[definition]{def:oracle}
+At call $t$, after observing its internal random seed and the preceding
+query--response transcript, the algorithm selects an arbitrary measurable
+query $x_t\in\R^d$.  The oracle draws a fresh independent $\xi_t\sim P$ and
+returns only $g(x_t;\xi_t)$.  The sample handle is then discarded.  In
+particular, the algorithm cannot request $g(y;\xi_t)$ at another point, choose
+a sample index, inspect $f(\cdot;\xi_t)$, or obtain a Hessian-vector product.
+This is the $K=1$ model.
+\end{definition}
+
+The dimension, initial point, and bounds $\Delta,\Lb,\sigma$, together with
+$\eps$, are public inputs. Algorithms may use arbitrary measurable
+adaptive query rules and unlimited computation and memory. Query norms
+are unrestricted, and the final output need not be a queried point. A
+query budget is a deterministic cap that must hold on every realization.
+
+\begin{definition}[Dimension-uniform minimax complexity]\label[definition]{def:complexity}
+Let $\Tstar(\Delta,\Lb,\sigma,\eps)$ be the least integer $N$ for which a
+single algorithmic rule, accepting the dimension as an input and using at most $N$ calls on every run to the oracle in
+\Cref{def:oracle} satisfies
+\[
+ \sup_{d<\infty}\ \sup_{(F,f,P)\text{ admissible in }\R^d}
+ \E\norm{\nabla F(\widehat x)}\le\eps.
+\]
+The expectation includes the algorithm's seed and all oracle samples.  If no
+such $N$ exists, the complexity is $+\infty$.
+\end{definition}
+
+\subsection{Minimax characterization}
+\begin{theorem}[Sharp single-query complexity]\label[theorem]{thm:main}
+There are universal constants $c,C,c_0>0$ such that, whenever
+\[
+ 0<\eps\le c_0\sqrt{\Lb\Delta},
+\]
+one has
+\begin{equation}\label{eq:main-rate}
+ c\left(
+   \frac{\Delta\Lb}{\eps^2}
+   +\frac{\Delta\Lb\sigma^2}{\eps^4}
+ \right)
+ \le \Tstar(\Delta,\Lb,\sigma,\eps)
+ \le
+ C\left(
+   \frac{\Delta\Lb}{\eps^2}
+   +\frac{\Delta\Lb\sigma^2}{\eps^4}
+ \right).
+\end{equation}
+The lower bound holds against arbitrary adaptive randomized algorithms.
+For each proposed finite horizon, the hard distribution is supported in
+one finite dimension. It remains valid when the class is restricted to
+scalar sample losses satisfying, almost surely,
+\[
+ \|\nabla f(x;\xi)-\nabla f(y;\xi)\|
+ \le\Lb\|x-y\|\qquad\text{for every }x,y.
+\]
+\end{theorem}
+
+\begin{corollary}[Precision exponent]\label[corollary]{cor:precision}
+For fixed positive $\Delta,\Lb,\sigma$, as $\eps\downarrow0$ through the
+nontrivial regime,
+\[
+ \Tstar(\Delta,\Lb,\sigma,\eps)=\Theta(\eps^{-4}).
+\]
+When $\sigma=0$, the same theorem reduces to the deterministic
+$\Theta(\Delta\Lb/\eps^2)$ rate.
+\end{corollary}
+
+\begin{remark}[Scope]\label[remark]{rem:scope}
+The characterization uses an expected gradient norm and a deterministic
+query cap. Its lower-bound dimension may grow with the parameters and the
+cap. The accuracy restriction isolates the nontrivial regime: smoothness
+and the gap bound imply
+$\|\nabla F(x_0)\|^2\le2\Lb\Delta$, so the supplied point is already
+acceptable without an oracle call when $\eps\ge\sqrt{2\Lb\Delta}$.
+The theorem does not specify the transition between this zero-query
+regime and its stated accuracy range.
+\end{remark}
+
+\subsection{Proof strategy}
+The upper bound is fixed-step stochastic gradient descent. The lower
+bound combines an optimization barrier with a statistical cost. The hard
+potential has
+\[
+ T=\Theta(\Delta\Lb/\eps^2)
+\]
+sequential stages. The construction in~\Cref{sec:construction} ensures
+that every small-gradient output completes all of them, while preserving
+a smoothness constant independent of $T$. The information analysis
+in~\Cref{sec:information} shows that, before a stage is discovered, its
+hidden direction can influence a reply only through one exact scalar
+projection and a Gaussian vector with signal norm $O(\eps)$ and total
+noise variance $\sigma^2$. This implies a response cost of
+$\Omega(1+\sigma^2/\eps^2)$ for each stage. Finally, an auxiliary interaction
+keeps the next direction conditionally uniform until its stage starts.
+\Cref{sec:lower} assigns disjoint responses to stages and multiplies the
+number of stages by their individual cost.
+
+\section{The Upper Bound}\label{sec:upper}
+The upper half of~\Cref{thm:main} is the standard SGD
+guarantee~\cite{ghadimi}. The proof below records a deterministic query cap
+and a directly implementable output rule.
+
+\begin{lemma}[Fixed-budget SGD]\label[lemma]{lem:sgd}
+In the accuracy regime of \Cref{thm:main}, there is a fresh-gradient algorithm with
+\[
+ N\le C\left(
+  \frac{\Delta\Lb}{\eps^2}
+  +\frac{\Delta\Lb\sigma^2}{\eps^4}
+ \right)
+\]
+that returns \(\widehat x\) satisfying
+\(\E\norm{\nabla F(\widehat x)}\le\eps\).
+\end{lemma}
+\begin{proof}
+Condition~\eqref{eq:mss} and Jensen imply that \(F\) is \(\Lb\)-smooth.  Take
+\[
+ \eta=\frac1{2\Lb}\min\left\{1,\frac{\eps^2}{\sigma^2}\right\},
+ \qquad
+ N=\left\lceil\frac{4\Delta}{\eta\eps^2}\right\rceil,
+\]
+where the minimum is interpreted as $1$ when $\sigma=0$. Run
+\(x_{t+1}=x_t-\eta g(x_t;\xi_t)\) and return an independent uniformly selected iterate from \(x_0,\ldots,x_{N-1}\).  Let $\mathcal F_t$ contain the internal seed and all samples before call $t$, so $x_t$ is $\mathcal F_t$-measurable and $\xi_t$ is independent of $\mathcal F_t$. Smoothness and conditional unbiasedness give
+\[
+ \E[F(x_{t+1})\mid\mathcal F_t]
+ \le F(x_t)-\frac\eta2\norm{\nabla F(x_t)}^2
+       +\frac{\Lb\eta^2\sigma^2}{2}.
+\]
+Telescoping yields
+\[
+ \frac1N\sum_{t<N}\E\norm{\nabla F(x_t)}^2
+ \le\frac{2\Delta}{\eta N}+\Lb\eta\sigma^2\le\eps^2.
+\]
+The random output rule makes the left-hand side equal to
+$\E\|\nabla F(\widehat x)\|^2$. Jensen's inequality gives the
+expected-norm guarantee. Finally,
+\[
+ N\le 1+\frac{8\Delta\Lb}{\eps^2}
+                 \max\left\{1,\frac{\sigma^2}{\eps^2}\right\},
+\]
+and the additive $1$ is absorbed by the claimed bound in the accuracy
+regime of~\Cref{thm:main}.
+\end{proof}
+
+\section{A Smooth Hard Family}\label{sec:construction}
+The hard family must satisfy three requirements at once. Its sample gradients
+must be globally Lipschitz; an unfinished stage must keep the population
+gradient bounded away from zero; and the oracle must reveal little about the
+direction needed to complete that stage. We establish the first two
+properties in this section and analyze the third in
+\Cref{sec:information}.
+
+The construction has two components. A bounded radial map limits the effect
+of queries with large norm, while a radial penalty prevents those queries
+from producing small gradients. A sequence of scalar gates then makes
+stationarity require completion of every stage. The derivative bounds for
+this sequence are independent of its length, which is essential for the
+final scaling. Throughout, smoothness means a globally Lipschitz gradient:
+the scalar switches are $C^{1,1}$, and Hessian identities are used almost
+everywhere. No $C^2$ regularity is required.
+
+\subsection{A bounded radial encoding}
+For \(w\in\R^D\), define
+\begin{equation}\label{eq:rho}
+ \rho(w)=\frac{w}{\sqrt{1+\norm w^2}},
+ \qquad J(w)=D\rho(w)
+ =aI-a^3ww^\top,
+ \quad a=(1+\norm w^2)^{-1/2}.
+\end{equation}
+The map and its first two derivatives satisfy the dimension-independent
+bounds
+\begin{equation}\label{eq:rho-bounds}
+ \norm{\rho(w)}<1,
+ \qquad \norm{J(w)}_{\rm op}\le1,
+ \qquad \norm{D^2\rho(w)}_{\rm op}\le K
+\end{equation}
+for a universal \(K\).  The scalar guard
+\begin{equation}\label{eq:guard}
+ R(w)=\sqrt{1+\norm w^2}-1
+\end{equation}
+is nonnegative and coercive, with $\nabla R(w)=\rho(w)$ and
+$\nabla^2R(w)=J(w)$. In particular, its gradient is globally Lipschitz.
+
+\subsection{A radial gradient barrier}
+The following lemma identifies the only possible cancellation between the
+encoded hidden direction and the radial penalty. Such cancellation requires
+a nontrivial correlation with the hidden direction.
+
+\begin{lemma}[Radial hidden-direction coercivity]\label[lemma]{lem:radial-coercive}
+Fix \(0<a_0\le a_1<\infty\) and \(\gamma>0\).  There are constants
+\(q_*,\delta_*>0\), depending only on \((a_0,a_1,\gamma)\), with the following property.  For every unit vector \(u\), every \(w\in\R^D\), and every \(a\in[a_0,a_1]\),
+\begin{align}
+ \ip{u}{\rho(w)}\le q_*/2
+ &\quad\Longrightarrow\quad
+ \norm{-aJ(w)u+\gamma\rho(w)}\ge\delta_*,\label{eq:x-coercive}\\
+ \ip{u}{\rho(w)}\ge-q_*/2
+ &\quad\Longrightarrow\quad
+ \norm{ aJ(w)u+\gamma\rho(w)}\ge\delta_*.
+ \label{eq:z-coercive}
+\end{align}
+\end{lemma}
+\begin{proof}
+We first locate the zeros of the first vector field. Write
+$w=tu+v$, where $v\perp u$. Its component orthogonal to $u$ is
+\[
+ a_w\bigl(\gamma+a a_w^2t\bigr)v,
+ \qquad a_w=(1+\norm w^2)^{-1/2}.
+\]
+For $t\ge0$, the coefficient is positive, so a zero requires $v=0$.
+For $t<0$, both terms in the component along $u$ are strictly negative.
+The case $t=0$ also cannot give a zero. Thus every zero has
+$w=tu$ with $t>0$. With
+\(q=t/\sqrt{1+t^2}\), the zero equation is
+\begin{equation}\label{eq:radial-root}
+ a(1-q^2)^{3/2}=\gamma q.
+\end{equation}
+The left-hand side decreases strictly with $q\in(0,1)$, while the
+right-hand side increases strictly. Equation~\eqref{eq:radial-root}
+therefore has a unique solution $q_a\in(0,1)$, which increases with $a$.
+Set $q_*=\min_{a\in[a_0,a_1]}q_a>0$. The zeros of the second vector
+field are obtained by reflection, and have encoded correlation $-q_a$.
+
+We next obtain a lower bound on the norm that is uniform in the ambient
+dimension. Each norm depends only on the three scalar variables
+$a,t,\|v\|$. On a bounded set of these variables, continuity and the
+absence of zeros in the stated regions give a positive minimum. Moreover,
+$\|J(w)\|_{\rm op}\le(1+\|w\|^2)^{-1/2}\to0$ and
+$\|\rho(w)\|\to1$ as $\|w\|\to\infty$. Both vector-field norms
+therefore tend to $\gamma$, uniformly for $a\in[a_0,a_1]$.
+Combining the bounded and unbounded regions proves
+\eqref{eq:x-coercive}--\eqref{eq:z-coercive}.
+\end{proof}
+
+\subsection{The smooth sequential latch}
+We now choose the scalar coefficients to which the radial lemma will be
+applied. Each stage has a completion coordinate $q_j$ and a readout
+coordinate $s_j$. The completion gates select the first unfinished stage;
+the readout at that stage determines whether progress can be made in
+$q_j$. Flat portions of the gates will later ensure that undiscovered
+directions remain absent from the oracle response.
+
+All scalar functions introduced below are fixed independently of the stage
+count and the optimization parameters. Only their stated bounds enter the
+proof.
+
+Choose once and for all constants
+\[
+ 0<d_0<d_1<d_2<\tfrac14,
+ \qquad 0<h_0<h_1<\tfrac14.
+\]
+Let the basic switch be
+\[
+ \vartheta(t)=
+ \begin{cases}
+ 0,&t\le0,\\
+ 3t^2-2t^3,&0<t<1,\\
+ 1,&t\ge1.
+ \end{cases}
+\]
+This nondecreasing $C^{1,1}$ switch satisfies, for a universal $K$,
+\begin{equation}\label{eq:switch-energy}
+ (\vartheta')^2\le K\vartheta(1-\vartheta),
+ \qquad |\vartheta''|\le K\quad\text{a.e.}
+\end{equation}
+Indeed, on $(0,1)$,
+\[
+ \vartheta=t^2(3-2t),\qquad
+ 1-\vartheta=(1-t)^2(1+2t),\qquad
+ \vartheta'=6t(1-t),
+\]
+so $(\vartheta')^2/[\vartheta(1-\vartheta)]
+=36/[(3-2t)(1+2t)]\le36$, while $|\vartheta''|\le6$.
+Define
+\begin{align}
+ C(q)&=\vartheta\!\left(\frac{q-d_1}{d_2-d_1}\right),
+ &B(q)&=1-C(q),\label{eq:C-gate}\\
+ A(s)&=1-\vartheta\!\left(\frac{s+h_1}{h_1-h_0}\right).
+ \label{eq:A-gate}
+\end{align}
+Thus a stage is fully open when $q\ge d_2$ and fully closed when
+$q\le d_1$. The readout switch satisfies $A=1$ on
+$(-\infty,-h_1]$ and $A=0$ on $[-h_0,\infty)$. Absorbing the fixed
+transition widths into $K$ gives
+\begin{equation}\label{eq:C-energy}
+ (C')^2\le KCB,
+ \qquad |C''|+|A'|+|A''|\le K\quad\text{a.e.}
+\end{equation}
+
+Set $Q=2$ and $\eta=1$.  Choose
+\[
+ \alpha>1+\eta\|A'\|_\infty(Q+1),
+ \qquad
+ M_0>1+\alpha+\eta(Q+1),
+\]
+and put
+\begin{equation}\label{eq:L-def}
+ L(q,s)=M_0+\alpha s+\eta A(s)(Q-q).
+\end{equation}
+The choice of $\alpha$ ensures that the payoff increases with $s$, even
+through the transition of $A$, while the choice of $M_0$ makes the payoff
+positive. Specifically, on $[-1,1]^2$,
+\begin{equation}\label{eq:L-properties}
+ L\ge1,
+ \qquad 1\le L_s(q,s)\le C_z,
+ \qquad L_q(q,s)=-\eta A(s)\le0
+\end{equation}
+for a universal $C_z<\infty$.
+
+The remaining local potential maintains a descent direction while a
+completion gate is in transition. Define $V$ by $V(0)=0$ and
+\begin{equation}\label{eq:V-properties}
+ V'(q)=-\nu\,
+ \vartheta\!\left(\frac{q-d_0}{d_1-d_0}\right).
+\end{equation}
+Here $\nu>0$ is a universal constant chosen after $C,A,L$ below.
+Hence $V'=0$ on $(-\infty,d_0]$, $V'=-\nu$ on
+$[d_1,\infty)$, $-\nu\le V'\le0$, and $V'$ is globally Lipschitz.
+
+For \(q,s\in[-1,1]^T\), set
+\begin{equation}\label{eq:prefixes}
+ P_0=1,
+ \qquad P_j=\prod_{i=1}^jC(q_i),
+ \qquad w_j=P_{j-1}B(q_j),
+\end{equation}
+and define
+\begin{equation}\label{eq:core}
+ \mathcal J_T(q,s)
+ =\sum_{j=1}^TV(q_j)
+  +\sum_{j=1}^T w_jL(q_j,s_j).
+\end{equation}
+The weight $w_j$ represents the probability of reaching stage $j$ and
+stopping there in a sequence of gates with continuation probabilities
+$C(q_i)$. These weights telescope:
+\begin{equation}\label{eq:hazard}
+ \sum_{j=1}^Tw_j=1-P_T\le1.
+\end{equation}
+
+\begin{lemma}[Uniform calculus of the latch]\label[lemma]{lem:latch-calculus}
+The fixed scalar functions above satisfy, uniformly over \(T\),
+\begin{enumerate}
+ \item \(|\mathcal J_T(q,s)|\le K(T+1)\);
+ \item every coordinate of \(\nabla_q\mathcal J_T\) is bounded by \(K\),
+       \(\norm{\nabla_s\mathcal J_T}_1\le K\), and
+       \(\norm{\nabla^2\mathcal J_T}_{\rm op}\le K\) almost everywhere;
+ \item if \(j\) is the first index with \(q_j<d_2\), then all earlier gates satisfy \(C(q_i)=1\), and:
+ \begin{enumerate}
+  \item if \(q_j<d_1\), then \(C(q_j)=C'(q_j)=0\), the only nonzero hidden-readout coefficient among stages \(j,j+1,\ldots\) is
+  \[
+    c_j:=\partial_{s_j}\mathcal J_T=L_s(q_j,s_j)\in[1,C_z],
+  \]
+  and
+  \[
+    b_j:=\partial_{q_j}\mathcal J_T=V'(q_j)-\eta A(s_j);
+  \]
+  \item if \(d_1\le q_j<d_2\), then \(b_j\le-b_0\) for a universal constant \(b_0>0\).
+ \end{enumerate}
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+Separate the weighted payoff from the local potentials:
+\[
+ H(q,s)=\sum_{j=1}^Tw_jL(q_j,s_j).
+\]
+Boundedness of $V$ and $L$ on their coordinate domains, together with
+\eqref{eq:hazard}, gives the value bound. To control derivatives without
+introducing a factor of $T$, interpret $H$ as the expectation of a bounded
+payoff. Add an outcome $\infty$, corresponding to passage through all gates,
+and define
+\[
+ \Pp(J=j)=w_j,
+ \qquad
+ \Pp(J=\infty)=P_T,
+ \qquad L_\infty=0.
+\]
+Then $H=\E L_J$.
+
+Fix a direction $h\in\R^T$ in the $q$ coordinates. Conditional on reaching
+stage $i$, the experiment continues with probability $C_i=C(q_i)$ and stops
+with probability $B_i=1-C_i$. The corresponding directional derivative of
+the log transition probability is
+\[
+ \Delta_i(h)=
+ \begin{cases}
+ (C_i'/C_i)h_i,&\text{on continuation},\\
+ -(C_i'/B_i)h_i,&\text{on stopping}.
+ \end{cases}
+\]
+Branches of probability zero are omitted, and the realized increment is
+zero at a flat endpoint. We first work away from the transition endpoints
+and extend the resulting estimates below. The increments have conditional
+mean zero and satisfy
+\[
+ \E[\Delta_i(h)^2\mid\text{stage $i$ is reached}]
+ =\frac{(C_i')^2}{C_iB_i}h_i^2.
+\]
+Let $S_h$ be their sum up to the stopping outcome. Orthogonality of the
+martingale differences gives
+\begin{equation}\label{eq:fisher-hazard}
+ \E S_h^2
+ =\sum_{i=1}^TP_{i-1}
+   \frac{(C_i')^2}{C_iB_i}h_i^2
+ \le K\norm{h}^2.
+\end{equation}
+
+For a joint direction $d=(h,k)$ in $(q,s)$, differentiation of the finite sum
+$H=\sum_j\Pp(J=j)L_j$ gives
+\begin{equation}\label{eq:latch-first-directional}
+ DH[d]=\E\bigl[DL_J[h_J,k_J]+L_JS_h\bigr].
+\end{equation}
+Because the first derivatives of $L$ are bounded,
+\[
+ \E|DL_J[h_J,k_J]|^2
+ \le K\sum_jw_j(h_j^2+k_j^2)
+ \le K\norm{d}^2.
+\]
+Equation~\eqref{eq:fisher-hazard} therefore bounds $\nabla H$ in Euclidean
+norm. For the readout coordinates, the more explicit identity
+\[
+ \partial_{s_j}H=w_jL_s(q_j,s_j),
+\]
+and~\eqref{eq:hazard} give
+$\|\nabla_sH\|_1\le K$.  The local term $\sum_jV(q_j)$ adds at most $\nu$ to
+each $q$ coordinate, proving the stated first-derivative bounds.
+
+Differentiating~\eqref{eq:latch-first-directional} once more in the same
+direction yields
+\begin{equation}\label{eq:latch-second-directional}
+ D^2H[d,d]
+ =\E\bigl[
+ D^2L_J[d_J,d_J]+2DL_J[d_J]S_h
+ +L_J(S_h^2+\dot S_h)
+ \bigr],
+\end{equation}
+where $\dot S_h$ is the directional derivative of $S_h$. The terms involving
+$D^2L_J$, $DL_J S_h$, and $L_JS_h^2$ have absolute expectation at most
+$K\|d\|^2$, by the bounded payoff derivatives, Cauchy--Schwarz, and
+\eqref{eq:fisher-hazard}. To bound the remaining term, observe that the two
+possible second log transition derivatives at a reached stage are
+\[
+ \left(\frac{C_i''}{C_i}-\frac{(C_i')^2}{C_i^2}\right)h_i^2,
+ \qquad
+ \left(-\frac{C_i''}{B_i}-\frac{(C_i')^2}{B_i^2}\right)h_i^2.
+\]
+Consequently
+\[
+ \E|\dot S_h|
+ \le\sum_iP_{i-1}
+ \left(2|C_i''|+\frac{(C_i')^2}{C_i}
+                    +\frac{(C_i')^2}{B_i}\right)h_i^2
+ \le K\norm{h}^2
+\]
+by~\eqref{eq:C-energy}. Thus
+$|D^2H[d,d]|\le K\|d\|^2$, and polarization gives
+$\|\nabla^2H\|_{\rm op}\le K$. Adding the diagonal Hessian of
+$\sum_jV(q_j)$ preserves a bound independent of $T$.
+
+For each fixed $T$, the core is a finite sum of products of $C^{1,1}$
+functions, so its gradient is locally Lipschitz with some finite bound.
+The almost-everywhere estimate just proved makes this bound uniform in $T$:
+mollify on the interior of the coordinate cube, integrate the bounded
+Hessian along segments, and pass to the limit. Continuity extends the
+result to the boundary. This also justifies the derivative estimates at
+the flat transition endpoints.
+
+Finally let $j$ be the first index with $q_j<d_2$.  Then $C(q_i)=1$ for every
+$i<j$, so $P_{j-1}=1$.  If $q_j<d_1$, then $C(q_j)=C'(q_j)=0$ and every future
+prefix vanishes.  Direct differentiation gives
+\[
+ c_j=L_s(q_j,s_j)\in[1,C_z],
+ \qquad
+ b_j=V'(q_j)-\eta A(s_j),
+\]
+while all later $c_i$ vanish.  If $d_1\le q_j<d_2$, write
+\[
+ R_{j+1}=\sum_{i>j}
+ \left(\prod_{\ell=j+1}^{i-1}C(q_\ell)\right)
+ B(q_i)L(q_i,s_i),
+ \qquad |R_{j+1}|\le\sup|L|.
+\]
+Then
+\[
+ b_j=-\nu-C'(q_j)L(q_j,s_j)
+     -B(q_j)\eta A(s_j)+C'(q_j)R_{j+1}.
+\]
+The other terms are uniformly bounded by constants that do not depend on
+$\nu$. Choose, for example,
+\[
+ \nu>1+2\|C'\|_\infty\|L\|_\infty+\eta,
+\]
+where the norm of $L$ is over $[-1,1]^2$. This fixes $V$ and gives
+$b_j\le-b_0$ with $b_0=1$.
+\end{proof}
+
+\subsection{Scalar sample losses and admissibility}
+We now embed the scalar construction into Euclidean space. A separate block
+$x_j$ records completion of stage $j$, while a shared block $z$ carries the
+noisy readout used to unlock the current stage. Placing all noise in this
+shared block keeps its total variance independent of the number of stages.
+Fix integers \(T\ge1\) and \(D\ge T\).  Let
+\(U=(u_1,\ldots,u_T)\in\R^{D\times T}\) be a Haar-uniform orthonormal frame.  The optimization variable is $v=(X,z)\in\R^{(T+1)D}$, where
+\[
+ X=(x_1,\ldots,x_T)\in(\R^D)^T,
+ \qquad z\in\R^D.
+\]
+For a scale \(r>0\), define
+\begin{equation}\label{eq:encoded-coordinates}
+ q_j(X)=\ip{u_j}{\rho(x_j/r)},
+ \qquad
+ s_j(z)=\ip{u_j}{\rho(z/r)}.
+\end{equation}
+Thus \(|q_j|,|s_j|<1\).  Let \(\gamma_x,\gamma_z>0\) be fixed guards and define
+\begin{equation}\label{eq:population-objective}
+ F_U(X,z)
+ =\lambda\mathcal J_T(q(X),s(z))
+ +\gamma_x\lambda\sum_{j=1}^T R(x_j/r)
+ +\gamma_z\lambda R(z/r).
+\end{equation}
+The initial point is the origin.
+
+At each oracle call, draw an independent
+$\xi\sim N(0,\sigma^2I_D/D)$ and return the gradient of
+\begin{equation}\label{eq:sample-loss}
+ f_U(X,z;\xi)=F_U(X,z)+\ip{\xi}{z}.
+\end{equation}
+
+Write $w_i=x_i/r$, $w_z=z/r$, and let
+\[
+ b_i=\partial_{q_i}\mathcal J_T(q,s),
+ \qquad c_i=\partial_{s_i}\mathcal J_T(q,s),
+ \qquad c=(c_1,\ldots,c_T).
+\]
+Since $J(w)=D\rho(w)$ is symmetric, the population-gradient blocks are
+\begin{align}
+ \nabla_{x_i}F_U(X,z)
+ &=\frac{\lambda}{r}
+   \bigl[b_iJ(w_i)u_i+\gamma_x\rho(w_i)\bigr],
+ \label{eq:all-x-gradients}\\
+ \nabla_zF_U(X,z)
+ &=\frac{\lambda}{r}
+   \bigl[J(w_z)Uc+\gamma_z\rho(w_z)\bigr].
+ \label{eq:all-z-gradient}
+\end{align}
+The sample gradient has the same $x_i$ blocks; its $z$ block is
+$\nabla_zF_U+\xi$.
+
+\begin{lemma}[Admissibility and scaling]\label[lemma]{lem:admissible}
+There is a universal \(K\) such that
+\begin{align}
+ \operatorname{Lip}(\nabla F_U)&\le K\lambda/r^2,\label{eq:smooth-scale}\\
+ F_U(0)-\inf F_U&\le K\lambda(T+1).\label{eq:gap-scale}
+\end{align}
+For the oracle \eqref{eq:sample-loss},
+\begin{align}
+ \E\nabla f_U(X,z;\xi)&=\nabla F_U(X,z),\\
+ \E\norm{\nabla f_U-\nabla F_U}^2&=\sigma^2,\\
+ \E\norm{\nabla f_U(v;\xi)-\nabla f_U(v';\xi)}^2
+ &=\norm{\nabla F_U(v)-\nabla F_U(v')}^2.
+ \label{eq:samplewise-cancel}
+\end{align}
+Consequently, after choosing \(K\lambda/r^2\le\Lb\), every sample gradient is itself \(\Lb\)-Lipschitz and the instance satisfies \eqref{eq:unbiased}--\eqref{eq:mss}.
+\end{lemma}
+\begin{proof}
+Let $\Phi(X,z)=(q(X),s(z))$. The $q$-Jacobian is block diagonal, with
+operator norm at most $1/r$, while
+\[
+ Ds(z)=\frac1rU^\top J(z/r)
+\]
+has operator norm at most $1/r$. Since $q$ depends only on $X$ and $s$
+only on $z$, the full Jacobian satisfies $\|D\Phi\|_{\rm op}\le1/r$.
+The first term in the Hessian chain rule is
+\[
+ D\Phi^\top\nabla^2\mathcal J_TD\Phi,
+\]
+whose norm is at most $K/r^2$ by
+\Cref{lem:latch-calculus}.
+
+The remaining chain-rule terms account for the curvature of the coordinate
+maps. The $q_i$ terms occupy disjoint $x_i$ blocks and have coefficients
+$|b_i|\le K$, so
+$\|\sum_i b_i\nabla^2q_i\|_{\rm op}\le K/r^2$.  In the shared block, hold the coefficient vector $c$ fixed at the point where the Hessian chain rule is evaluated. Then
+\[
+ \sum_i c_i\nabla^2s_i(z)
+ =\nabla^2\ip{Uc}{\rho(z/r)},
+\]
+and its norm is at most
+$K\|c\|_2/r^2\le K\|c\|_1/r^2\le K/r^2$.
+The guard Hessians are bounded by a universal multiple of $\lambda/r^2$.
+Multiplying the core bounds by $\lambda$ therefore gives the required
+almost-everywhere Hessian estimate. The objective is locally $C^{1,1}$;
+mollification on bounded open sets, followed by integration along segments
+and passage to the limit, gives the global Lipschitz-gradient bound
+\eqref{eq:smooth-scale}. This argument includes segments lying on a
+switching hypersurface.
+
+For the gap estimate, the core is bounded below by $-K(T+1)$: the weighted
+payoff is nonnegative because
+$w_j,L\ge0$, and each $V(q_j)$ is bounded on $[-1,1]$.  At the origin,
+$V(0)=0$, $C(0)=0$, $A(0)=0$, and hence
+$\mathcal J_T(0,0)=L(0,0)=M_0$.  The nonnegative guards are coercive in every
+block, so $F_U$ is bounded below and
+\[
+ F_U(0)-\inf F_U\le K\lambda(T+1),
+\]
+which is~\eqref{eq:gap-scale}.
+
+Finally, the sample perturbation is linear and centered.  Its gradient has
+only a $z$-block, equal to $\xi$, so its second moment is
+$\operatorname{tr}(\sigma^2I_D/D)=\sigma^2$. At two points evaluated with
+the same latent sample, the vector $\xi$ cancels exactly. These observations
+prove the three oracle identities. Equation~\eqref{eq:smooth-scale} then
+gives the asserted samplewise $\Lb$-smoothness after rescaling.
+\end{proof}
+
+\begin{lemma}[Global stationarity barrier]\label[lemma]{lem:stationarity-barrier}
+There are universal choices of the guard coefficients $\gamma_x,\gamma_z>0$
+and a universal $\delta>0$ such that
+\begin{equation}\label{eq:unscaled-barrier}
+ \min_jq_j(X)<d_2
+ \quad\Longrightarrow\quad
+ \norm{\nabla F_U(X,z)}\ge2\delta\frac{\lambda}{r}
+\end{equation}
+for every frame and every $(X,z)$, including unbounded query or output norms.
+Consequently, if $\lambda/r\ge4\eps/\delta$, then
+\begin{equation}\label{eq:barrier}
+ \min_j q_j(X)<d_2
+ \quad\Longrightarrow\quad
+ \norm{\nabla F_U(X,z)}>4\eps.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The order of the constant choices is important. The scalar functions,
+including $\nu$, are already fixed. Let $K_b$ and $b_0$ be the resulting
+coefficient bounds from \Cref{lem:latch-calculus}, and let $C_z$ be the
+constant in~\eqref{eq:L-properties}. We now choose the guards using
+\Cref{lem:radial-coercive}.
+
+First choose $\gamma_x>0$ sufficiently small that, for coefficients in
+\[
+ [a_x^-,a_x^+]=[\min\{b_0,\eta\},K_b],
+\]
+the root threshold $q_x$ satisfies $q_x>2d_2$.
+Second choose $\gamma_z>0$ sufficiently small that, for coefficients in
+$[1,C_z]$, the corresponding threshold $q_z$ satisfies $q_z>2h_1$.
+These choices are possible because the positive root of
+\eqref{eq:radial-root} tends to $1$ as $\gamma\downarrow0$, uniformly
+over either fixed coefficient interval. Let $\delta>0$ be half the smaller
+of the two resulting coercivity constants.
+
+Let $j$ be the first index with $q_j<d_2$.  Every earlier gate is complete, so
+$C(q_i)=1$ for $i<j$.
+
+If $d_1\le q_j<d_2$, the completion gate is in transition and
+$b_j\le-b_0$. Writing $a=-b_j$, the $x_j$ block is
+\begin{equation}\label{eq:x-block-gradient}
+ \nabla_{x_j}F_U
+ =\frac\lambda r\left[-aJ(x_j/r)u_j
+                 +\gamma_x\rho(x_j/r)\right],
+ \qquad a\in[b_0,K_b].
+\end{equation}
+Because $q_j<d_2<q_x/2$, the first part of
+\Cref{lem:radial-coercive} gives norm at least
+$2\delta\lambda/r$.
+
+If instead $q_j<d_1$, the completion gate is closed. Then $C(q_j)=0$,
+all later prefixes vanish, and
+all earlier readout coefficients vanish because their gates have $B(q_i)=0$.
+Thus the shared block contains exactly one hidden direction:
+\begin{equation}\label{eq:z-block-gradient}
+ \nabla_zF_U
+ =\frac\lambda r\left[c_jJ(z/r)u_j
+                 +\gamma_z\rho(z/r)\right],
+ \qquad c_j\in[1,C_z].
+\end{equation}
+If $s_j(z)\ge-q_z/2$, the second part of
+\Cref{lem:radial-coercive} gives the desired lower bound in the $z$-block.
+Otherwise $s_j<-q_z/2<-h_1$, so $A(s_j)=1$.  The latch identity then gives
+\[
+ b_j=V'(q_j)-\eta\le-\eta.
+\]
+With $a=-b_j\in[\eta,K_b]$ and
+$q_j<d_1<d_2<q_x/2$, the first part of the radial lemma gives the same lower
+bound in the $x_j$-block.
+
+In every case, one gradient block has norm at least
+$2\delta\lambda/r$, proving~\eqref{eq:unscaled-barrier}. Under the
+stated scaling this lower bound is at least $8\eps$, so
+\eqref{eq:barrier} holds with a strict margin. The radial lemma applies on
+all of $\R^D$, and thus the same conclusion holds for queries and outputs
+of arbitrarily large norm.
+\end{proof}
+
+\section{The Information Cost of a Stage}\label{sec:information}
+
+The hard family exposes a hidden direction through two different channels.
+The shared block returns a noisy vector, while exact gradients in earlier
+blocks may reveal a noiseless scalar projection.  Both must be accounted for:
+ignoring the exact channel would leave open a way to bypass the statistical
+cost.  We first prove an information bound for adaptive access to both
+channels.  We then show that the gradient oracle has precisely this form
+until a stage is discovered, and formalize the sequential interaction needed
+to apply the bound repeatedly.
+
+\subsection{An adaptive spherical channel with exact projections}
+
+\begin{lemma}[Adaptive posterior after exact linear measurements]\label[lemma]{lem:adaptive-posterior}
+Let $W_0\subseteq\R^M$ have dimension $m$, and let $u$ be uniform on its unit
+sphere. An adaptive procedure makes $K$ exact linear measurements, where $0\le K\le m/2$.  Before
+measurement $\ell$, it chooses $a_\ell\in\R^M$ from the preceding transcript
+and independent auxiliary randomness, and then observes $\ip{a_\ell}{u}$.
+Additional observations are allowed between measurements, provided that their
+conditional laws depend on $u$ only through the transcript and the exact
+projections already revealed.  In particular, these observations contain no
+information about the remaining orientation of $u$.
+
+Let $S_K=\operatorname{span}\{P_{W_0}a_1,\ldots,P_{W_0}a_K\}$ and let
+$r=\dim S_K$.  Conditional on the entire transcript,
+\begin{equation}\label{eq:posterior-decomposition}
+ u=p+\sqrt{1-\norm{p}^2}\,v,
+ \qquad p=P_{S_K}u,
+\end{equation}
+where $v$ is uniform on the unit sphere of $W_0\cap S_K^\perp$.  Moreover,
+for every $K\le m/2$ and every $\rho\in(0,1)$,
+\begin{equation}\label{eq:adaptive-projection-tail}
+ \Pp\!\left(\norm{P_{S_K}u}>\frac\rho2\right)
+ \le 2\exp(-c\rho^2m)
+ \qquad\text{whenever }K\le c\rho^2m,
+\end{equation}
+for a universal constant $c>0$.
+\end{lemma}
+
+\begin{proof}
+\noindent\textbf{Conditional rotational invariance.}
+Orthogonalize each selected vector against the preceding measurement span and
+ignore a measurement whose residual component is zero.  Enumerate only the
+rank-increasing measurements.  Normalize the new residual direction.  If $d$
+is the current residual dimension, rotational invariance implies that the
+newly observed normalized residual coordinate has the law of the first
+coordinate of a uniform point on $\mathbb S^{d-1}$.  Conditional on that
+coordinate, the remaining normalized residual is uniform on the corresponding
+$(d-2)$-sphere.  Any extra observation allowed in the statement does not
+change this conditional law.  Induction proves
+\eqref{eq:posterior-decomposition}.
+
+\noindent\textbf{The energy captured by adaptive measurements.}
+Suppose the original interaction has only $r\le K$ rank-increasing
+measurements.  After the interaction is over, append $K-r$ canonical exact
+projections in the final residual subspace, without returning them to the
+algorithm or changing any of its previous choices.  The enlarged measured
+subspace contains the original one, so its projected energy dominates
+$\norm{P_{S_K}u}^2$.  At each of the resulting $K$ effective rank increments,
+whether it came from the algorithm or from this terminal padding, the squared
+normalized residual coordinate has law
+$\operatorname{Beta}(1/2,(d-1)/2)$ when the current residual dimension is $d$,
+and this conditional law is independent of the preceding history.  These are
+exactly the neutral stick-breaking ratios obtained from independent
+$G_1^2,\ldots,G_m^2\sim\chi_1^2$:
+\[
+ Z_\ell^2=\frac{G_\ell^2}{G_\ell^2+\cdots+G_m^2},
+ \qquad 1\le\ell\le K.
+\]
+Therefore the enlarged measured energy has the exact law
+\begin{equation}\label{eq:adaptive-beta}
+ \frac{X}{X+Y},
+ \qquad X=\sum_{\ell\le K}G_\ell^2\sim\chi_K^2,
+ \quad Y=\sum_{\ell>K}G_\ell^2\sim\chi_{m-K}^2,
+\end{equation}
+with $X,Y$ independent.  This is the same law as the energy in a fixed
+$K$-dimensional subspace and yields an upper tail bound for the original,
+possibly rank-deficient, adaptive measurement sequence.
+
+For $K=0$, the tail bound is immediate.  Otherwise, assume
+$K\le\rho^2m/128$.  The upper-tail estimate in \Cref{lem:chi-square} applies
+at $\rho^2m/32\ge4K$.  For the independent variable $Y$, Chernoff's
+inequality gives
+\[
+ \Pp(Y<m/2)\le e^{m/4}2^{-(m-K)/2}\le e^{-m/16}.
+\]
+Consequently,
+\[
+ \Pp(X>\rho^2m/32)+\Pp(Y<m/2)
+ \le e^{-\rho^2m/256}+e^{-m/16}
+ \le 2e^{-\rho^2m/256}.
+\]
+Outside these events, $X/(X+Y)\le\rho^2/16<\rho^2/4$.  Renaming constants
+proves~\eqref{eq:adaptive-projection-tail}.
+\end{proof}
+
+\begin{lemma}[Adaptive exact-projection/Gaussian channel]\label[lemma]{lem:side-channel}
+Let $u$ be uniform on the unit sphere of a fixed $m$-dimensional subspace of
+$\R^M$, where $M\le2m$.  In each of $n$ adaptive rounds an algorithm may:
+\begin{enumerate}
+ \item obtain at most $k$ exact scalar projections of $u$, with the measurement
+ vectors chosen adaptively; and
+ \item observe a vector that, conditional on $u$ and the transcript so far, is Gaussian with covariance $\sigma^2 I_M/M$.
+\end{enumerate}
+Suppose that a reference experiment uses the same prior, exact-measurement
+kernels, and adaptive query rules.  Its Gaussian mean must be determined by
+the observed history and current exact projections, without further dependence
+on $u$.  Assume that the true and reference Gaussian means differ in norm by
+at most $a>0$ at every round and history.
+
+The algorithm also selects at most $b(n+1)$ test vectors, collected in
+$\mathcal V$, each of norm at most one; here $b$ is a fixed universal
+constant.  Each vector is measurable with respect to the transcript and
+independent auxiliary randomness.  Its true correlation with $u$, or the
+outcome of a correlation test, is not supplied as an additional observation.
+For every $\rho\in(0,1)$ there are constants $c,C>0$, depending only on $b$,
+such that
+\begin{equation}\label{eq:side-conditions}
+ kn\le c\rho^2m,
+ \qquad m\ge C\rho^{-2}\log(2n+2),
+ \qquad n\le c\rho^2\frac{\sigma^2}{a^2}
+\end{equation}
+imply
+\begin{equation}\label{eq:side-conclusion}
+ \Pp\left(\max_{v\in\mathcal V}|\ip{u}{v}|\ge\rho\right)\le\frac18.
+\end{equation}
+When $\sigma=0$, the last condition is interpreted as $n=0$.
+\end{lemma}
+
+\begin{proof}
+If $\sigma=0$, the stated convention forces $n=0$; the conclusion is then the
+spherical-cap bound (and the rank condition has $K=0$).  Assume henceforth
+that $\sigma>0$.
+
+\noindent\textbf{Divergence between the two experiments.}
+Let $P$ and $Q$ denote the joint laws of $u$ and the entire transcript in the
+true and reference experiments.  We include the latent $u$ in both probability
+spaces.  The prior and all exact-measurement kernels are identical.  At a fixed
+history, the conditional KL divergence between the two Gaussian kernels is at
+most
+\[
+ \frac{M}{2\sigma^2}\norm{\mu_t(u)-\bar\mu_t}^2
+ \le \frac{Ma^2}{2\sigma^2}.
+\]
+The adaptive chain rule therefore yields
+\begin{equation}\label{eq:side-kl}
+ \KL(P\|Q)\le\frac{nMa^2}{2\sigma^2}
+ \le\frac{nma^2}{\sigma^2}.
+\end{equation}
+
+\noindent\textbf{A rare event under the reference law.}
+Under $Q$, the Gaussian observations provide no information about the remaining
+orientation of $u$ beyond the exact projections.  Apply \Cref{lem:adaptive-posterior} after all
+at most $K=kn$ exact measurements.  On an event of $Q$-probability at least
+$1-2e^{-c\rho^2m}$, the measured component $p$ in
+\eqref{eq:posterior-decomposition} has norm at most $\rho/2$.  Conditional on
+the full reference transcript, all test vectors are fixed and the residual
+$v$ is uniform on a sphere of dimension at least $m-K\ge m/2$.  Hence the
+spherical-cap bound and a union bound give, for the event $A$ in
+\eqref{eq:side-conclusion},
+\begin{equation}\label{eq:reference-small-event}
+ Q(A)\le 2e^{-c\rho^2m}+2b(n+1)e^{-c\rho^2m}
+ \le \exp(-c'\rho^2m),
+\end{equation}
+after increasing the constant in the dimensional condition.
+
+\noindent\textbf{Transfer to the true law.}
+For $p=P(A)$ and $q=Q(A)$, binary data processing gives
+\[
+ \KL(P\|Q)\ge \operatorname{kl}(p\|q)
+ \ge p\log(1/q)-\log2.
+\]
+If $p>1/8$, the right-hand side is at least $c''\rho^2m$ under the same
+dimensional condition.  This contradicts~\eqref{eq:side-kl} when the last
+inequality in~\eqref{eq:side-conditions} has a sufficiently small universal
+constant.  Thus $p\le1/8$.
+\end{proof}
+
+\subsection{What the exact gradient reveals}
+
+The following calculation isolates all dependence on an undiscovered direction.
+It also explains why returning to earlier gates does not create independent
+exact measurements of that direction within a single call.  Define the tail
+payoff
+\begin{equation}\label{eq:tail-payoff}
+ R_{i+1}(q,s)
+ =\sum_{\ell>i}\left(\prod_{h=i+1}^{\ell-1}C(q_h)\right)
+ B(q_\ell)L(q_\ell,s_\ell).
+\end{equation}
+Direct differentiation of~\eqref{eq:core} gives
+\begin{align}
+ c_i:=\partial_{s_i}\mathcal J_T
+ &=P_{i-1}B(q_i)L_s(q_i,s_i),\label{eq:ci-formula}\\
+ b_i:=\partial_{q_i}\mathcal J_T
+ &=V'(q_i)+P_{i-1}\bigl[
+ B(q_i)L_q(q_i,s_i)
+ +C'(q_i)(R_{i+1}-L(q_i,s_i))\bigr].
+ \label{eq:bi-formula}
+\end{align}
+
+\begin{lemma}[Locality at the current and next stages]\label[lemma]{lem:front-locality}
+Fix an index $j$ and a query.  Suppose every $i>j$ satisfies
+\begin{equation}\label{eq:future-flat}
+ q_i\le d_0,\qquad s_i\ge-h_0.
+\end{equation}
+Then the following hold.
+\begin{enumerate}
+ \item If also $q_j\le d_0$ and $s_j\ge-h_0$, the entire exact part of the
+ gradient depends on the unknown $u_j$ only through the single scalar
+ $s_j=\ip{u_j}{\rho(z/r)}$, except for the shared-block vector
+ \begin{equation}\label{eq:current-vector-channel}
+  \frac\lambda r\,c_jJ(z/r)u_j,
+  \qquad |c_j|\le K.
+ \end{equation}
+ No direction $u_i$ with $i>j$ occurs in the gradient.
+ \item If the query discovers stage $j$, meaning
+ $q_j>d_0$ or $s_j<-h_0$, then the gradient can involve unknown frame columns
+ only through $u_j$ and, when $j<T$, $u_{j+1}$; no column $u_i$ with
+ $i>j+1$ occurs.
+\end{enumerate}
+These statements remain true when any subset of the earlier blocks is moved
+back into a transition region.
+\end{lemma}
+
+\begin{proof}
+In the first case, flatness gives
+\[
+ C(q_j)=C'(q_j)=V'(q_j)=A(s_j)=A'(s_j)=0.
+\]
+Equations~\eqref{eq:ci-formula}--\eqref{eq:bi-formula} yield
+$b_j=0$ and $c_j=P_{j-1}\alpha$.  Since $C(q_j)=0$, every later prefix
+$P_{i-1}$ vanishes.  Under~\eqref{eq:future-flat}, also $V'(q_i)=0$; hence
+$b_i=c_i=0$ for $i>j$.
+
+For $i<j$, the only term in the tail~\eqref{eq:tail-payoff} containing the
+current hidden column is the payoff at the first flat stage $j$.  Before
+discovery,
+\[
+ L(q_j,s_j)=M_0+\alpha s_j,
+\]
+so every earlier exact block gradient depends on $u_j$ only through the same
+scalar $s_j$.  The $x_j$-block has no hidden component because $b_j=0$.  The
+shared $z$-block is the sum of known earlier directions, the vector in
+\eqref{eq:current-vector-channel}, the radial guard, and the additive Gaussian
+noise.  This proves the first assertion, including simultaneous resets of any
+number of old gates.
+
+For the second assertion, the case $j=T$ has no later columns and is
+immediate.  If $j<T$, the flat coordinate $q_{j+1}\le d_0$ has
+$C(q_{j+1})=C'(q_{j+1})=0$.  Thus every prefix and every derivative reaching
+past $j+1$ vanishes.  Local terms at $i>j+1$ also have zero derivative by
+\eqref{eq:future-flat}.  Hence at most the two consecutive columns $u_j$ and
+$u_{j+1}$ occur.
+\end{proof}
+
+\begin{lemma}[Stage discovery cost]\label[lemma]{lem:stage-cost}
+Fix the scalar functions and let $\lambda/r=c_*\eps$, where $c_*>0$ is
+universal.  At the start of stage $j$, suppose that, conditional on the entire
+stage-start history and all earlier frame columns, $u_j$ is uniform on the
+unit sphere of an orthogonal complement of dimension $m\ge D/2$.
+Before discovery, all later columns are suppressed as in
+\Cref{lem:sequential-coupling}.  A query selected while stage $j$ is current
+discovers it when
+\begin{equation}\label{eq:discover-events}
+ q_j(X)>d_0
+ \qquad\text{or}\qquad
+ s_j(z)<-h_0.
+\end{equation}
+The algorithm receives every exact gradient block and the noisy shared block.
+A stage may begin after a query has been selected but before its response is
+returned; in this case, its first assigned response is the flat-extension
+response specified in \Cref{lem:sequential-coupling}.
+
+There are constants $c,C>0$ such that, with
+\begin{equation}\label{eq:n0}
+ n_0=1+\left\lfloor c\frac{\sigma^2}{\eps^2}\right\rfloor
+\end{equation}
+and $m\ge C(n_0+\log(N+2))$, the conditional probability of discovering the
+stage after fewer than $n_0$ assigned responses is at most $1/8$.
+The bound is uniform over the stage-start history and all admissible query
+rules, including rules that use the earlier revealed directions.
+\end{lemma}
+
+\begin{proof}
+\noindent\textbf{Reduction to one exact projection and one noisy vector.}
+Condition on a stage-start history that includes all earlier frame columns.  Before discovery, \Cref{lem:front-locality} shows that the full
+collection of exact $x$-block gradients depends on $u_j$ only through
+\[
+ s_j=\ip{u_j}{\rho(z/r)}.
+\]
+Even if many old blocks are simultaneously reset, they produce only known
+functions of this same scalar.  We therefore reveal $s_j$ itself after every
+response; this is a single exact linear measurement and can only strengthen
+the algorithm.
+
+After subtracting the known earlier-direction and radial-guard parts, the
+noisy $z$-block has conditional form
+\[
+ Y_t=\frac{\lambda}{r}c_{j,t}J(z_t/r)u_j+\xi_t,
+ \qquad
+ \xi_t\sim N(0,\sigma^2I_D/D),
+ \qquad |c_{j,t}|\le K.
+\]
+The reference experiment deletes the displayed hidden-direction term and
+keeps the same query policy, exact projections, known gradient blocks, and
+Gaussian noise.  Conditional on the exact projection and the preceding
+reference transcript, its Gaussian mean contains no residual information
+about $u_j$.  The true and reference means differ by at most
+\[
+ a\le K\lambda/r\le K'\eps.
+\]
+
+\noindent\textbf{A continuation that does not report discovery.}
+We apply the channel bound to a fixed-length experiment, preserving the
+spherical prior at stage start.  In this experiment, the current column always
+uses its undiscovered-stage values:
+\[
+ C=C'=V'=A=A'=0,\qquad
+ L=M_0+\alpha s_j,\qquad L_s=\alpha,\qquad L_q=0.
+\]
+Earlier columns retain their actual values.  In this experiment,
+$c_{j,t}=\alpha P_{j-1}$ is uniformly bounded and every exact reply depends
+on $u_j$ only through $s_j$, for every query point.
+
+Run the original query rule while always supplying the ``not yet discovered''
+state.  In particular, this continuation supplies neither the outcomes of the
+discovery tests nor the free revelation of $u_j$, even if a test succeeds.
+On histories that the original interaction would not reach, extend the rule
+arbitrarily as a measurable function of the available transcript.  Before the
+first successful test, the continued and original responses and state
+registers agree.  Their first successful test therefore occurs at the same
+selected query.  This comparison uses the original spherical prior at stage
+start, without conditioning it on previous test failures.
+
+If the stage begins at a half-step, also test the query that was already
+selected before $u_j$ was sampled.  This only enlarges the event being bounded;
+it does not cause a second stage advance at that query.  Its response is the
+flat-extension response in both interactions until the first successful test.
+
+\noindent\textbf{Application of the channel bound.}
+The alternatives in~\eqref{eq:discover-events} are one-sided correlation
+tests against $\rho(x_j/r)$ and $\rho(z/r)$, whose norms are at most one.
+Either alternative implies an absolute correlation of at least
+$\rho_0=\min\{d_0,h_0\}$.  Apply \Cref{lem:side-channel} to the continued
+experiment with one exact projection per response, two test vectors per
+selected query, ambient dimension $M=D$, and residual dimension $m\ge D/2$.
+There are at most $n+1$ selected test points after $n=n_0-1$ responses;
+pad a shorter continuation without returning the padding to the original
+algorithm.  The assumption $m\ge C(n_0+\log(N+2))$ ensures the rank and
+spherical-cap conditions.  Choosing the constant in~\eqref{eq:n0} sufficiently
+small also ensures $n\le c\rho_0^2\sigma^2/a^2$.  The probability of any
+successful test in this continuation is therefore at most $1/8$, which bounds
+the probability of a discovery after fewer than $n_0$ assigned responses.
+
+If the integer in~\eqref{eq:n0} is $n_0=1$, no response is needed in the
+comparison experiment.  The conclusion then follows directly from the
+spherical-cap bound for the initial query, including a query selected before a
+half-step stage start.  This covers $\sigma=0$ as well.
+\end{proof}
+
+\subsection{A sequential interaction with deferred directions}
+
+A discovery query may already contain information about the next direction in
+its response.  We assign this response to the next stage and sample that
+stage's direction only after the query has been fixed.  The following
+interaction formalizes this convention on every trajectory, including those
+where the eventual coupling to the true oracle fails.
+
+\begin{lemma}[Sequential truncation coupling]\label[lemma]{lem:sequential-coupling}
+Fix a horizon $N$ and a deterministic adaptive algorithm.  There is an
+auxiliary interaction and an augmented copy of the algorithm that executes
+the original query rule on the ordinary response component and ignores extra
+revelations.  At each selected query, only the current stage is tested for
+discovery.  A success advances the current index by one, and the next stage
+is not tested again at the same query.  The following properties hold.
+\begin{enumerate}
+ \item After a stage is discovered, its hidden direction is revealed to the
+ algorithm for free, after the discovery query is selected.  The algorithm may
+ use all revealed directions and may reset arbitrary old blocks in later
+ queries.
+ \item Before a response, if $j$ is the current stage and the selected query
+ does not discover it, the auxiliary gradient is evaluated from the same
+ formulas as the true gradient with every hidden-core contribution from
+ columns after $j$ suppressed; all radial-guard gradients, which are known from
+ the query and contain no hidden frame, are retained.  If the
+ query discovers $j<T$, the next column is sampled from the deferred Haar
+ completion after the query has been selected, and its contribution is
+ inserted through the \emph{flat extension}: irrespective of the query's
+ actual next-stage correlations, the auxiliary response uses
+ \[
+ C=C'=V'=A=A'=0,\qquad
+ L=M_0+\alpha s_{j+1},\quad L_s=\alpha,\quad L_q=0
+ \]
+ for that newly introduced column. More explicitly, compute the core-gradient coefficients by differentiating the latch formulas with these substituted scalar values and derivatives; a zero gate kills every later prefix. This retains the tail values that occur in derivatives of earlier gates. Retain all radial guards.  The same fresh additive
+ Gaussian noise is used.  Thus, on every auxiliary trajectory, the first
+ response involving $u_{j+1}$ depends on it only through the exact scalar
+ $s_{j+1}$ and one Gaussian mean shift of norm $O(\lambda/r)$.  This response is
+ assigned to the next stage.  If $j=T$, reveal the final column and return the full gradient from then on; all next-column clauses are omitted.
+ \item With
+ \begin{equation}\label{eq:dimension-choice}
+ D\ge 2T+C\rho_0^{-2}
+ \bigl(n_0+\log(24T(N+1))\bigr),
+ \qquad \rho_0=\min\{d_0,h_0\},
+ \end{equation}
+ the original algorithm's queries and ordinary oracle-response transcript
+ coincide with those of its augmented auxiliary copy, including the final
+ output as a response-free query, with probability at least $11/12$.
+\end{enumerate}
+The stage-cost and counting bounds also hold for query rules that use the
+extra revelations.  The transcript coupling is invoked for the augmented copy
+that ignores them.  All conditional-Haar calculations and probability bounds
+use the unstopped auxiliary law, before any restriction to the coupling event.
+\end{lemma}
+
+\begin{proof}
+\noindent\textbf{Conditional law of the unused columns.}
+Sample the orthonormal frame by deferred decisions.  When stage $j$ is
+current, every preceding auxiliary response depends on the frame only through
+its first $j$ columns.  This is true on every auxiliary trajectory.
+Conditional on the exposed prefix and on the latent current column, the
+remaining frame is Haar on the unused orthogonal complement.  If the query discovers $j$, the column $u_{j+1}$ is sampled only
+after the query is fixed and enters that response solely through the flat
+extension specified in the statement.  Consequently the single-stage channel
+description of \Cref{lem:front-locality} holds on every auxiliary
+trajectory, including trajectories on which the later coupling event fails.
+
+\noindent\textbf{A coupling event under the auxiliary law.}
+For each query, impose the good projections
+\begin{equation}\label{eq:future-good}
+ |\ip{u_i}{\rho(x_i/r)}|\le\rho_0,
+ \qquad
+ |\ip{u_i}{\rho(z/r)}|\le\rho_0
+ \quad\text{for every }i>j.
+\end{equation}
+Impose the same tests on the final output.  Their outcomes are used only in
+this analysis and are not returned to the algorithm.  Each vector has norm
+at most one and is fixed before the corresponding future column is exposed.
+Conditional on the current prefix, each future column is marginally uniform
+on a sphere of dimension at least $D-T$.  The spherical-cap bound and a union
+bound over at most $2T(N+1)$ tests show that some inequality
+in~\eqref{eq:future-good} fails with probability at most $1/12$ under
+\eqref{eq:dimension-choice}.  No conditioning on success of previous tests is
+used in this calculation.
+
+\noindent\textbf{Equality of the ordinary transcripts.}
+On the good event, every later column lies in both flat regions.  If the current
+query does not discover $j$, the first part of
+\Cref{lem:front-locality} says that the true response contains no later
+column.  If it does discover $j$, the second part says that at most the next
+column $u_{j+1}$ occurs.  On the good event that next column is itself in the
+undiscovered plateau, so its true derivatives are exactly the flat-extension
+values.  Hence the true and truncated auxiliary responses are identical.  Using the same frame, noises, and algorithm seed, induction gives identity
+of the original queries and ordinary responses with those of the augmented
+copy until the first violation of~\eqref{eq:future-good}.  The extra revealed
+directions are placed in a separate side-information register and are ignored
+by this copy when it executes the original query rule.  \Cref{lem:stage-cost}
+is uniform over the larger class of rules that do use this register, so the
+revelation can safely be retained in the stage analysis.
+\end{proof}
+
+\section{The Lower Bound}\label{sec:lower}
+
+We now combine the analytic and information bounds.  The normalization
+produces $\Theta(\Delta\Lb/\eps^2)$ stages while keeping the signal in each
+noisy response of order $\eps$.  The sequential interaction then forces the
+cost $\Omega(1+\sigma^2/\eps^2)$ to be paid separately at each stage.
+
+\paragraph{Choice of constants and scales.}
+Choose the scalar constants and scales in the following order.  First
+choose $d_0<d_1<d_2$ and $h_0<h_1$, then choose $C,A,L,V$ and the transition
+slope $\nu$.  Their derivative bounds determine finite coefficient
+intervals in \Cref{lem:stationarity-barrier}.  Finally choose the fixed
+guard coefficients $\gamma_x,\gamma_z>0$ sufficiently small that the roots in
+\Cref{lem:radial-coercive} lie above $2d_2$ and $2h_1$, respectively.
+All these numbers are universal and are now frozen.  Let $K_0$ dominate the universal
+smoothness and gap constants in \Cref{lem:latch-calculus,lem:admissible}, as well as $4/\delta$ from
+\Cref{lem:stationarity-barrier}.  Choose constants $c_r,c_\lambda$ so that
+\begin{equation}\label{eq:constant-hierarchy}
+ \frac{c_\lambda}{c_r}\ge K_0,
+ \qquad
+ K_0\frac{c_\lambda}{c_r^2}\le1.
+\end{equation}
+For example, take $c_r\ge K_0^2$ and set $c_\lambda=K_0c_r$.
+Put
+\begin{equation}\label{eq:scales}
+ r=c_r\frac{\eps}{\Lb},
+ \qquad
+ \lambda=c_\lambda\frac{\eps^2}{\Lb},
+ \qquad
+ T=\left\lfloor c_T\frac{\Delta\Lb}{\eps^2}\right\rfloor,
+\end{equation}
+where $c_T=(4K_0c_\lambda)^{-1}$. Choose the constant in \Cref{thm:main} so that $c_0^2\le c_T/2$. Writing $A_0=\Delta\Lb/\eps^2$, we then have $c_TA_0\ge2$ and
+\[
+ \tfrac12c_TA_0\le T\le c_TA_0,
+ \qquad T+1\le2c_TA_0,
+ \qquad K_0\lambda(T+1)\le\Delta/2.
+\]
+It follows that $T\ge1$, the initial gap is at most $\Delta$, every sample
+gradient is $\Lb$-Lipschitz, and the stationarity barrier is greater than
+$4\eps$.  Moreover, $\lambda/r=K_0\eps$, as required by
+\Cref{lem:stage-cost}.
+
+\begin{theorem}[Conservative $K=1$ lower bound]\label[theorem]{thm:lower}
+Fix $\Delta,\Lb>0$, $\sigma\ge0$, and $0<\eps\le c_0\sqrt{\Delta\Lb}$. In the model of \Cref{def:oracle}, every adaptive randomized algorithm that guarantees $\E\|\nabla F(\widehat x)\|\le\eps$ on all instances satisfying \eqref{eq:unbiased}--\eqref{eq:initial-gap} requires
+\begin{equation}\label{eq:lower-rate}
+ \Omega\!\left(
+   \frac{\Delta\Lb}{\eps^2}
+   +\frac{\Delta\Lb\sigma^2}{\eps^4}
+ \right)
+\end{equation}
+fresh single-point sample-gradient calls. More precisely, with the preceding scales, every deterministic cap $N<Tn_0/2$ admits a finite-dimensional fixed frame $U$ for which $\E\|\nabla F_U(\widehat x)\|>\eps$.
+\end{theorem}
+
+\begin{proof}
+\noindent\textbf{A common hard distribution.}
+First fix a deterministic algorithm and draw a Haar frame.  Let $n_0$ be
+given by~\eqref{eq:n0}.  Choose a finite $D$ satisfying
+\eqref{eq:dimension-choice}, enlarged if necessary for
+\Cref{lem:side-channel}.  This choice depends only on the public parameters
+and $N$, and therefore works for every query policy and every realization of
+an internal random seed.  An algorithm that stops early can be padded to
+exactly $N$ calls while retaining its stored output and ignoring all padding
+responses.  Run the auxiliary interaction of
+\Cref{lem:sequential-coupling}.
+
+\noindent\textbf{Assigning each response to one stage.}
+Append the final output as a response-free selected query with index $N+1$.
+Let $\tau_j$ be the first query index that discovers stage $j$ while it is
+current, and let $\tau_j=\infty$ if no such query is selected.  The state
+advances by at most one stage at each selected query.
+
+Stage $1$ begins before query $1$.  For $j\ge2$, stage $j$ begins at the
+half-step after query $\tau_{j-1}$ is selected and $u_{j-1}$ is revealed,
+but before that query's response is returned.  At this half-step, $u_j$ is
+uniform in the unused orthogonal complement, conditional on all earlier
+columns and the complete history.  Indeed, the query was fixed before any
+observation involving $u_j$, and the auxiliary construction samples $u_j$
+only afterward.  If $\tau_{j-1}=N+1$, no response remains and the new stage
+cannot be discovered.
+
+Set $L_j=\infty$ for a stage not discovered by the output.  For a discovered
+stage, let $L_j$ be the number of responses assigned to it before its
+discovery query is selected:
+\begin{equation}\label{eq:stage-lengths}
+ L_1=\tau_1-1,
+ \qquad
+ L_j=\tau_j-\tau_{j-1}\quad(2\le j\le T).
+\end{equation}
+The response to the discovery query of stage $j-1$ is thus charged to
+stage $j$.  It has the flat-extension form used in
+\Cref{lem:stage-cost}, even though its query was selected before stage $j$
+began.  The already selected point may be included among that lemma's test
+vectors, without advancing the state twice.  Distinct stages receive disjoint
+responses.  If all stages are discovered by the final output, telescoping gives
+\begin{equation}\label{eq:length-telescope}
+ \sum_{j=1}^TL_j=\tau_T-1\le N.
+\end{equation}
+\noindent\textbf{Few stages can be discovered quickly.}
+Call a stage \emph{fast} if it starts and $L_j<n_0$, and set its fast
+indicator to zero if it never starts.  At its start, the unused orthogonal
+complement has dimension $m\ge D-T\ge D/2$.  Conditional on the complete
+stage-start history, \Cref{lem:stage-cost} gives
+\begin{equation}\label{eq:fast-prob}
+ \Pp(L_j<n_0\mid\text{stage-$j$ start history})\le\frac18.
+\end{equation}
+Therefore the expected number of fast stages is at most $T/8$.  If every stage
+is discovered with $N<Tn_0/2$ oracle responses, then
+\eqref{eq:length-telescope} forces at least $T/2$ stages to be fast.  Markov's
+inequality yields
+\begin{equation}\label{eq:all-stages-prob}
+ \Pp(\text{all $T$ stages are discovered by the output})\le\frac14.
+\end{equation}
+This counting argument applies to the dependent stage lengths generated by the adaptive interaction.
+
+\noindent\textbf{From incomplete discovery to a gradient lower bound.}
+On the coupling event in \Cref{lem:sequential-coupling}, an output satisfying
+$q_i\ge d_2$ for every $i$ requires every stage to have been discovered.
+Otherwise, either the current stage fails its discovery test, giving
+$q_i\le d_0<d_2$, or a later stage obeys the future-flat bound
+\eqref{eq:future-good}, again giving $q_i<d_2$.
+Combining~\eqref{eq:all-stages-prob} with the coupling error, for every
+$N<Tn_0/2$ the final output therefore satisfies $\min_iq_i<d_2$ with
+probability at least
+\[
+ 1-\frac14-\frac1{12}=\frac23.
+\]
+The stationarity barrier in \Cref{lem:stationarity-barrier} yields
+\[
+ \E_{U,\xi}\norm{\nabla F_U(\widehat v)}
+ \ge \frac23\,4\eps>\eps.
+\]
+
+\noindent\textbf{Randomization and the final rate.}
+The same distribution and dimension work for every deterministic policy.
+Conditioning a randomized algorithm on its independent seed and then averaging
+therefore preserves this strict lower bound.  Consequently, some fixed frame
+$U$ satisfies $\E_{R,\xi}\|\nabla F_U(\widehat v)\|>\eps$, as detailed in
+\Cref{app:yao}.  Finally, the nontrivial-regime condition and the choice of
+$c_T$ imply
+$T=\Theta(\Delta\Lb/\eps^2)$, while~\eqref{eq:n0} gives
+$n_0=\Theta(1+\sigma^2/\eps^2)$.  Hence
+\[
+ Tn_0
+ =\Theta\!\left(
+   \frac{\Delta\Lb}{\eps^2}
+   \left(1+\frac{\sigma^2}{\eps^2}\right)
+ \right),
+\]
+which is equivalent up to universal constants to~\eqref{eq:lower-rate}.
+For every horizon $N$, the hard ambient dimension $d=(T+1)D$ is finite.
+\end{proof}
+
+Combining \Cref{thm:lower} with \Cref{lem:sgd} proves
+\Cref{thm:main}.
+
+\section{Discussion}\label{sec:discussion}
+
+The sharp single-query rate separates regularity of the sample losses from
+access to a shared sample. Mean-squared smoothness guarantees an accurate
+common-sample gradient difference, but the single-query oracle does not
+provide that difference. The lower bound shows that this restriction has a
+minimax cost even when every sample gradient is globally Lipschitz.
+Together with the classical upper bound, it establishes the optimality of
+SGD in both the mean-squared-smooth class and its samplewise-smooth
+subclass, under the same deterministic query cap and expected-stationarity
+criterion.
+
+Two features of the construction explain the stochastic factor. Additive
+noise preserves sample smoothness without increasing the variance as the
+number of stages grows. The sequential potential then requires the
+algorithm to learn a new direction at every stage. Because the oracle
+returns gradients of scalar losses, it also exposes exact information in
+other variable blocks. The proof accounts for this information through
+adaptive scalar measurements rather than treating the noisy vector as
+the entire transcript. The resulting information cost can therefore be
+summed across stages for unrestricted adaptive queries.
+
+The characterization is dimension-uniform and uses only a variance bound
+on the noise. Its finite-dimensional hard instances may grow with the
+query horizon, and their Gaussian perturbations have unbounded support.
+Dependence on a prescribed dimension or confidence level, and guarantees
+formulated using expected stopping budgets, are outside the stated
+characterization. Another question is whether the same rate can be
+realized by samplewise-smooth losses with uniformly bounded gradient
+noise. The present construction leaves this joint restriction unresolved.
+
+\appendix
+\section{Elementary Probability Facts}\label[appendix]{app:probability}
+
+\begin{lemma}[Spherical cap]\label[lemma]{lem:spherical-cap}
+Let $u$ be uniform on the unit sphere of an $m$-dimensional Euclidean space.
+For every fixed vector $v$ with $\|v\|\le1$ and every $t\in(0,1)$,
+\[
+ \Pp(|\ip{u}{v}|\ge t)
+ \le 2\exp\!\left(-\frac{(m-1)t^2}{2}\right).
+\]
+The same bound holds conditionally whenever $u$ is conditionally uniform on a
+specified $m$-dimensional residual subspace and $v$ is measurable before $u$'s
+remaining orientation is exposed.
+\end{lemma}
+\begin{proof}
+Project $v$ onto the sphere's ambient subspace. Its norm is at most one,
+so rotational invariance reduces the claim to $v=e_1$. Write
+$u=g/\|g\|$ with $g\sim N(0,I_m)$, and set
+$S^2=\sum_{i=2}^m g_i^2$. The variables $g_1$ and $S$ are independent.
+The Gaussian tail bound and the chi-square Laplace transform give
+\begin{align*}
+ \Pp(|u_1|\ge t)
+ &=\Pp\!\left(|g_1|\ge\frac{tS}{\sqrt{1-t^2}}\right)\\
+ &\le 2\E\exp\!\left(-\frac{t^2S^2}{2(1-t^2)}\right)\\
+ &=2(1-t^2)^{(m-1)/2}
+ \le2\exp\!\left(-\frac{(m-1)t^2}{2}\right).
+\end{align*}
+The conditional statement is the same calculation in the specified
+residual subspace.
+\end{proof}
+
+\begin{lemma}[Chi-square concentration]\label[lemma]{lem:chi-square}
+If $X\sim\chi_k^2$, then for every $x\ge4k$,
+\[
+ \Pp(X\ge x)\le e^{-x/8}.
+\]
+If $Y\sim\chi_m^2$, then
+\[
+ \Pp(Y\le m/2)\le e^{-m/16}.
+\]
+\end{lemma}
+\begin{proof}
+Both inequalities follow from the chi-square moment-generating function and Chernoff's method. For the upper tail, $t=1/4$ gives $\Pp(X\ge x)\le 2^{k/2}e^{-x/4}\le e^{-x/8}$ when $x\ge4k$. For the lower tail, $\E e^{-Y/2}=2^{-m/2}$ gives $\Pp(Y\le m/2)\le e^{m/4}2^{-m/2}\le e^{-m/16}$.
+\end{proof}
+
+\begin{lemma}[Binary data processing bound]\label[lemma]{lem:binary-kl}
+For probability measures $P,Q$ and an event $A$, writing
+$p=P(A)$ and $q=Q(A)$,
+\[
+ \KL(P\|Q)\ge \operatorname{kl}(p\|q)
+ \ge p\log(1/q)-\log2.
+\]
+\end{lemma}
+\begin{proof}
+The first inequality is data processing under the map $\omega\mapsto
+\mathbf1_A(\omega)$.  For the second, expand binary relative entropy and use
+$p\log p+(1-p)\log(1-p)\ge-\log2$
+and $(1-p)\log(1-q)\le0$.
+\end{proof}
+
+\section{The Fixed-Instance Randomized Conclusion}\label[appendix]{app:yao}
+The lower-bound proof first fixes a deterministic query rule and averages
+over the Haar frame. The hard dimension and all construction parameters
+depend only on the public parameters and the proposed query cap. They are
+therefore the same for every realization of an algorithm's random seed.
+
+Let a randomized algorithm have seed $R$, independent of the frame and the
+oracle noise. Conditioning on $R=r$ gives a deterministic rule to which
+the same distributional lower bound applies. Tonelli's theorem and the
+uniform strict margin in~\Cref{thm:lower} imply
+\[
+ \E_U\E_{R,\xi}\|\nabla F_U(\widehat v)\|>\eps.
+\]
+Consequently, at least one fixed frame $U$ satisfies
+$\E_{R,\xi}\|\nabla F_U(\widehat v)\|>\eps$.  Thus the distributional argument
+yields the worst-case randomized lower bound in~\Cref{def:complexity}.
+This averaging step fixes the entire instance before the algorithm's
+internal randomness and oracle samples are drawn.
+
+\begin{thebibliography}{99}
+\bibitem{ghadimi}
+S. Ghadimi and G. Lan.
+\newblock Stochastic first- and zeroth-order methods for nonconvex stochastic programming.
+\newblock \emph{SIAM Journal on Optimization}, 23(4):2341--2368, 2013.
+\newblock \url{https://doi.org/10.1137/120880811}.
+
+\bibitem{spider}
+C. Fang, C. J. Li, Z. Lin, and T. Zhang.
+\newblock SPIDER: Near-optimal non-convex optimization via stochastic path-integrated differential estimator.
+\newblock \emph{Advances in Neural Information Processing Systems}, 31, 2018.
+\newblock \url{https://arxiv.org/abs/1807.01695}.
+
+\bibitem{arjevani}
+Y. Arjevani, Y. Carmon, J. C. Duchi, D. J. Foster, N. Srebro, and B. E. Woodworth.
+\newblock Lower bounds for non-convex stochastic optimization.
+\newblock \emph{Mathematical Programming}, 199:165--214, 2023.
+\newblock \url{https://doi.org/10.1007/s10107-022-01822-7}.
+
+\bibitem{snvrg}
+D. Zhou, P. Xu, and Q. Gu.
+\newblock Stochastic nested variance reduction for nonconvex optimization.
+\newblock \emph{Advances in Neural Information Processing Systems}, 31, 2018.
+\newblock \url{https://arxiv.org/abs/1806.07811}.
+
+\bibitem{storm}
+A. Cutkosky and F. Orabona.
+\newblock Momentum-based variance reduction in non-convex SGD.
+\newblock \emph{Advances in Neural Information Processing Systems}, 32, 2019.
+\newblock \url{https://proceedings.neurips.cc/paper/2019/hash/b8002139cdde66b87638f7f91d169d96-Abstract.html}.
+
+\bibitem{page}
+Z. Li, H. Bao, X. Zhang, and P. Richt\'arik.
+\newblock PAGE: A simple and optimal probabilistic gradient estimator for nonconvex optimization.
+\newblock \emph{Proceedings of the 38th International Conference on Machine Learning}, PMLR 139:6286--6295, 2021.
+\newblock \url{https://proceedings.mlr.press/v139/li21a.html}.
+
+\bibitem{fradin2026}
+A. Fradin, A. Sadiev, L. Condat, and P. Richt\'arik.
+\newblock Tight lower bounds and optimal algorithms for stochastic nonconvex optimization with heavy-tailed noise.
+\newblock \emph{Proceedings of the 29th International Conference on Artificial Intelligence and Statistics}, PMLR 300:2548--2556, 2026.
+\newblock \url{https://proceedings.mlr.press/v300/fradin26a.html}.
+\newblock Extended version: \url{https://arxiv.org/abs/2512.18713v2}.
+
+\bibitem{carmon}
+Y. Carmon, J. C. Duchi, O. Hinder, and A. Sidford.
+\newblock Lower bounds for finding stationary points I.
+\newblock \emph{Mathematical Programming}, 184:71--120, 2020.
+\newblock \url{https://arxiv.org/abs/1710.11606}.
+
+\bibitem{peng2026}
+Y. Peng, Z. Tang, and W. Jia.
+\newblock Dense weak hiding: Closing complexity gaps in nonconvex and PL finite-sum optimization under individual smoothness.
+\newblock arXiv preprint arXiv:2609.00045, version 3, 2026.
+\newblock \url{https://arxiv.org/abs/2609.00045v3}.
+
+\bibitem{jin2026}
+J. Jin.
+\newblock A tight lower bound for smooth nonconvex stochastic optimization with bounded gradient noise.
+\newblock arXiv preprint arXiv:2608.09004, 2026.
+\newblock \url{https://arxiv.org/abs/2608.09004}.
+
+\bibitem{secondorder}
+Y. Arjevani, Y. Carmon, J. C. Duchi, D. J. Foster, A. Sekhari, and K. Sridharan.
+\newblock Second-order information in non-convex stochastic optimization: Power and limitations.
+\newblock \emph{Proceedings of the 33rd Conference on Learning Theory}, PMLR 125:242--299, 2020.
+\newblock \url{https://proceedings.mlr.press/v125/arjevani20a.html}.
+\end{thebibliography}
+
+\end{document}

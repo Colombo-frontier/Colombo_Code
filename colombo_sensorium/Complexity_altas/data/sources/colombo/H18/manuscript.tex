@@ -1,0 +1,764 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in,headheight=14pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{enumitem,booktabs,array,tabularx}
+\usepackage[font=small,labelfont=bf,skip=7pt]{caption}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,capitalise,noabbrev]{cleveref}
+\usepackage{fancyhdr}
+
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\PP}{\mathbb P}
+\newcommand{\Z}{\mathbb Z}
+\newcommand{\B}{\mathbb B}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\ip}[2]{\langle #1,#2\rangle}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\newcommand{\abs}[1]{\lvert #1\rvert}
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\kl}{\operatorname{kl}}
+\newcommand{\Cr}{C_{\mathrm{rand}}}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\tr}{tr}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\setlength{\emergencystretch}{2em}
+\setlength{\parskip}{2pt}
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\setlist[enumerate]{leftmargin=1.8em,itemsep=3pt,topsep=4pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Optimal Precision Cost for Linear Reconstruction}
+\fancyhead[R]{\small Colombo Team}
+\fancyfoot[C]{\thepage}
+
+\title{\textbf{Optimal Precision Cost for\\Randomized Linear Reconstruction}}
+\author{Colombo Team\\[0.35em]
+\small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+\hypersetup{
+ pdftitle={Optimal Precision Cost for Randomized Linear Reconstruction},
+ pdfauthor={Colombo Team},
+ pdfsubject={Randomized linear reconstruction with precision-dependent costs and causal bounded errors},
+ pdfkeywords={linear reconstruction, precision-dependent costs, randomized lower bounds, bounded errors, adaptive information}
+}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+We determine the optimal precision cost of reconstructing a linear function on the Euclidean unit ball from bounded-error evaluations. An unknown fixed vector $\theta\in\B_2^d$ defines $f_\theta(x)=\langle\theta,x\rangle$. A query at $x\in\B_2^d$ with tolerance $0<\delta\le1$ returns a value within $\delta$ of $f_\theta(x)$ and costs $\delta^{-a}$, where $a>0$ is fixed. For every $d\ge1$ and $0<\eps<1/4$, the minimum budget that guarantees uniform error at most $\eps$ with probability at least $2/3$ is
+\[
+ \Theta_a\!\left(d^{1+a/2}\eps^{-a}\right).
+\]
+The budget must hold on every execution, and the errors may depend causally on the public interaction history. The lower bound allows private randomness, adaptive directions and tolerances, and arbitrary prediction functions; deterministic coordinate measurements attain the matching upper bound. The proof fixes a truncated-Gaussian target prior and a single deterministic causal oracle, both independent of the algorithm's private seed. Quantization centered at the conditional mean bounds each reply's entropy by its precision cost, while every accurate output covers exponentially small prior mass. A standard volumetric-spanner construction gives the same upper order on every known compact spanning domain, so the Euclidean ball also attains the worst-domain rate. All constants depend only on $a$.
+\end{abstract}
+\noindent\textbf{Keywords:} linear reconstruction; precision-dependent costs; randomized lower bounds; bounded errors; adaptive information.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:intro}
+When measurement accuracy has a price, the number of observations alone does not describe the cost of learning an unknown object. A procedure can buy a few accurate measurements, collect many coarse measurements, or choose their precision as information arrives. Linear reconstruction provides a basic setting in which to ask whether adaptivity and randomization can reduce this total cost.
+
+We consider an unknown fixed vector $\theta\in\B_2^d$, where
+$\B_2^d=\{x\in\R^d:\norm{x}_2\le1\}$. The learner queries the linear function $f_\theta(x)=\ip{\theta}{x}$ at points in the same ball. Each query specifies a tolerance $\delta\in(0,1]$, incurs cost $\delta^{-a}$, and receives a reply with absolute error at most $\delta$. The goal is to output a prediction function $\widehat f$ such that
+\begin{equation}\label{eq:intro-target}
+ \sup_{x\in\B_2^d}\abs{\widehat f(x)-\ip{\theta}{x}}\le\eps.
+\end{equation}
+The learner may use private randomness and adapt both the query directions and their tolerances. Its output need not be linear.
+
+\subsection{Main result and comparison with previous bounds}
+Paes Leme and Schneider~\cite{Cost20} introduced costly linear reconstruction for general cost functions $c$. They gave an $O(d\,c(\eps/d))$ upper bound on general domains, observed the ball upper bound $O(d\,c(\eps/\sqrt d))$, and proved a deterministic nonadaptive lower bound $\Omega(d\,c(10\eps))$ in Lemma~19. Their Section~5, Question~3 asks whether adaptivity or randomization improves reconstruction cost. For the fixed-power cost $c(\delta)=\delta^{-a}$, the ball upper bound is simply obtained by measuring all $d$ coordinates to tolerance $\eps/\sqrt d$.
+
+Our main contribution is a lower bound that matches this coordinate scheme even for adaptive randomized learners. Under the causal bounded-error model specified in \Cref{sec:model},
+\begin{equation}\label{eq:intro-rate}
+ \Cr(d,\eps,a)
+ =\Theta_a\!\left(d^{1+a/2}\eps^{-a}\right),
+ \qquad d\ge1,\quad 0<\eps<1/4.
+\end{equation}
+Here the success probability is at least $2/3$ for every fixed target and every legal causal oracle, and the total cost is bounded on every execution. The oracle may use previous public queries and replies, but not unobserved private random bits. \Cref{thm:main} proves~\eqref{eq:intro-rate} for both linear and unrestricted prediction outputs. Thus the known deterministic upper bound is optimal in this larger algorithmic class.
+
+\begin{table}[t]
+\centering
+\caption{Bounds on the Euclidean ball after specializing to query cost $\delta^{-a}$. The common comparison regime is fixed $a>0$, $d\ge1$, and $0<\eps<1/10$; our theorem holds throughout $0<\eps<1/4$. Costs are worst-case total costs. The randomized row uses the causal oracle and per-target success convention of \Cref{sec:model}; deterministic rows require success for every legal reply sequence.}
+\label{tab:comparison}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.17}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.255\textwidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{0.255\textwidth}@{}}
+\toprule
+Result and reference & Algorithms and outputs & Precision cost\\
+\midrule
+Coordinate upper bound;\newline Paes Leme--Schneider~\cite[Section~5]{Cost20}
+& Deterministic, nonadaptive;\newline linear output; success $1$
+& $d^{1+a/2}\eps^{-a}$\\[4pt]
+Paes Leme--Schneider~\cite[Lemma~19]{Cost20}
+& Deterministic, nonadaptive;\newline arbitrary prediction output;\newline success $1$
+& $\Omega_a(d\eps^{-a})$\\[4pt]
+Plaskota--Siedlecki~\cite[Section~3, Lemma~1]{PS23}; identity specialization
+& Deterministic, adaptive;\newline vector output; success $1$
+& $\Omega_a(d\eps^{-a})$\\[4pt]
+This work\newline (\Cref{thm:main})
+& Adaptive, randomized;\newline arbitrary prediction output;\newline success at least $2/3$
+& $\Omega_a(d^{1+a/2}\eps^{-a})$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\Cref{tab:comparison} separates the existing upper construction from the lower-bound contribution. In the deterministic setting, the bounded-noise analysis of Plaskota and Siedlecki~\cite[Section~3, Lemma~1]{PS23} also yields a lower bound of order $d\eps^{-a}$ for adaptive vector reconstruction. Our result recovers the additional factor $d^{a/2}$ while allowing private randomness and unrestricted outputs. It settles the fixed-power ball specialization of the randomized question above under our explicit causal convention.
+
+Two consequences clarify the scope of the result. First, the same rate holds for every required success probability between $2/3$ and $1$, because the coordinate scheme succeeds deterministically. Second, a standard volumetric-spanner design~\cite{HKM14,BMV23} gives the upper cost
+\[
+ (2d-1)^{1+a/2}\eps^{-a}
+\]
+on every known compact spanning domain. The ball therefore realizes the worst-domain rate. This is a statement about the supremum over domains; individual domains can be easier.
+
+\subsection{Proof idea}
+A deterministic zero-reply argument can follow a learner's queries and then select a compatible hard target. Repeating that construction separately for each private seed need not produce any single target on which a randomized learner fails. Our proof fixes the target distribution before the seed is drawn and uses one deterministic causal oracle for every learner.
+
+The target prior is a Gaussian with coordinate scale $\sigma=4\eps/\sqrt d$, restricted to a cube inside the unit ball. At each query, the oracle rounds the target projection in bins of width $2\delta$ centered at the conditional mean. Each answer imposes one convex slab, so the posterior, conditional on a fixed private tape, remains a Gaussian restricted to a convex set. This family has a uniform centered sub-Gaussian bound, irrespective of how small the conditioning set becomes.
+
+At each fixed history and private tape, let $K$ be the integer index of the next reply's quantization bin and let $\delta$ be the current tolerance. The central estimate is
+\[
+ H(K)
+ \le A_a(\sigma/\delta)^a.
+\]
+Fine bins have logarithmic entropy in their inverse width; coarse bins have exponentially small entropy. Together these bounds apply to every fixed $a>0$. A budget $B$ therefore permits at most $A_a\sigma^a B$ nats of information. Conversely, each fixed prediction function is accurate on a set of prior mass at most $e^{-d/2}$, even when the function is nonlinear. Constant-probability success requires order $d$ information, giving $B=\Omega_a(d\sigma^{-a})$ and hence~\eqref{eq:intro-rate}.
+
+\subsection{Related work}\label{sec:related}
+\paragraph{Precision-dependent information.}
+Plaskota and Siedlecki~\cite{PS23} study linear problems in Hilbert spaces when the cost of a linear observation depends on its accuracy. Their bounded-noise model allows adaptive functionals and adaptive precision, and their zero-record arguments give deterministic lower bounds. Their separate Gaussian-noise model concerns random observation errors. In our proof, Gaussian randomness is used only to choose the target prior: the hard oracle itself is deterministic and its errors are bounded. The distinction between a deterministic zero record and a single hard distribution for a private-coin learner is central to the present lower bound.
+
+\paragraph{Fixed-tolerance linear reconstruction.}
+Filmus, Moran, and Nesterova~\cite{FMN26} study a closely related geometric variant: reconstructing a vector in $\R^d$ from linear queries with one fixed error tolerance $\delta$. Their strategies are deterministic and the resource is the number of queries. As this number tends to infinity, the optimal error approaches $\sqrt{2d/(d+1)}\,\delta$ for vector outputs and $\delta$ for unrestricted prediction outputs. Their results describe the error--query tradeoff at fixed precision. Our theorem instead minimizes total precision cost at a prescribed accuracy, allows the tolerances to vary adaptively, and includes private randomization. \Cref{tab:model-comparison} records these model differences; the bounds are not interchangeable.
+
+\begin{table}[t]
+\centering
+\caption{Model comparison with fixed-tolerance linear reconstruction~\cite{FMN26}. A vector output induces a linear predictor. In both models, an unrestricted output may be a nonlinear prediction function.}
+\label{tab:model-comparison}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+Model feature & Filmus--Moran--Nesterova~\cite{FMN26} & This work\\
+\midrule
+Target & Any vector in $\R^d$ & A fixed $\theta\in\B_2^d$\\
+Query directions & Unit vectors & Vectors in $\B_2^d$\\
+Tolerance & One fixed $\delta$ & Adaptively chosen $\delta_t\in(0,1]$\\
+Resource & Number of queries & $\sum_t\delta_t^{-a}$ on every execution\\
+Learner & Deterministic, adaptive & Private-coin, adaptive\\
+Objective & Minimize worst-case error for a given query count & Achieve error $\eps$ with per-target success at least $2/3$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Adaptivity and the geometry of information.}
+Krieg, Novak, and Ullrich~\cite{KNU25} compare adaptive, randomized, and deterministic approximation with exact linear measurements under a measurement-count budget and a worst-case expected-error criterion. Krieg, Novak, Plaskota, and Ullrich~\cite{KNPU26} study deterministic reconstruction from bounded noisy nonlinear measurements using entropy numbers. Those models illuminate the power of information, but their resource and success criteria differ from the variable-precision, private-coin model considered here.
+
+\paragraph{Volumetric designs.}
+Hazan, Karnin, and Meka~\cite{HKM14} introduced volumetric spanners as exploration bases for learning. Bhaskara, Mahabadi, and Vakilian~\cite{BMV23} obtained nearly optimal spanner sizes for $\ell_p$ norms using determinant-based local search. An $O(d)$-point Euclidean spanner represents each domain point with coefficients of bounded Euclidean norm, so bounded measurement errors are amplified by only $O(\sqrt d)$. We use this existing geometric principle for the general-domain upper bound and include the compact-domain determinant-exchange proof in Appendix~\ref{app:design}. The design theorem is not a new contribution of this paper.
+
+\paragraph{Information lower bounds.}
+Continuum and distance-based Fano inequalities relate estimation accuracy to the information needed to localize a parameter~\cite{DW13}. We use a direct binary relative-entropy argument applied to the success set of each output. The analytic input is Gaussian log-concavity under convex conditioning, derived from the Pr\'ekopa--Leindler inequality~\cite{Prekopa73}. The lower-bound construction combines these facts with quantization centered at the conditional mean, which preserves convex conditioning and controls the information revealed at every adaptively chosen precision.
+
+\paragraph{Organization.}
+\Cref{sec:model} defines the oracle model and states the matching theorem. \Cref{sec:lower} proves the randomized lower bound. \Cref{sec:consequences} gives the confidence and worst-domain consequences, and \Cref{sec:discussion} discusses the remaining scope. The appendices contain complete proofs of the analytic and geometric ingredients.
+
+\section{Model and main theorem}\label{sec:model}
+\subsection{Queries, causal errors, and total cost}
+The public parameters are an integer $d\ge1$, a fixed exponent $a>0$, and an accuracy $0<\eps<1/4$. The unknown target is one vector $\theta\in\B_2^d$, fixed throughout the interaction. At round $t$, the learner chooses $(x_t,\delta_t)$ with $\norm{x_t}_2\le1$ and $0<\delta_t\le1$. The oracle returns a real number $Y_t$ satisfying
+\begin{equation}\label{eq:oracle}
+ \abs{Y_t-\ip{\theta}{x_t}}\le\delta_t,
+ \qquad\text{at cost }\delta_t^{-a}.
+\end{equation}
+All replies concern the same target.
+
+The learner has a private random tape $R$, independent of the target. Its queries, stopping decision, and output may depend on $R$ and the observed replies. A \emph{deterministic causal oracle} is a rule that may depend on $\theta$, the public history $(x_s,\delta_s,Y_s)_{s<t}$, and the current query. It cannot depend on future queries or on private random bits that the learner has not revealed. Repeated queries may therefore receive different errors; the model does not require a memoryless reply map.
+
+The output is any prediction function $\widehat f:\B_2^d\to\R$ determined by the tape and transcript. A \emph{linear output} has the form $\widehat f(x)=\ip{\widehat\theta}{x}$ for some $\widehat\theta\in\R^d$; the dependence of $\widehat\theta$ on the data may be nonlinear. The success requirement is
+\begin{equation}\label{eq:success}
+ \inf_{\theta\in\B_2^d}\ \inf_{\mathcal O\,\mathrm{legal\ causal}}
+ \PP_R\!\left(
+   \sup_{x\in\B_2^d}\abs{\widehat f(x)-\ip{\theta}{x}}\le\eps
+ \right)\ge\frac23.
+\end{equation}
+Thus the probability is taken over the learner's tape after the target and the oracle rule have been fixed. The lower bound will use only one deterministic oracle rule. The upper bound holds for every legal sequence of replies, and in particular also permits randomized oracle errors.
+
+A \emph{pathwise budget} $B$ requires
+\begin{equation}\label{eq:budget}
+ \sum_{t=1}^{N}\delta_t^{-a}\le B
+\end{equation}
+for every legal execution and every private tape. Since each query costs at least one, $N\le\lfloor B\rfloor$. Computation other than oracle evaluations is free. Write $\Cr^{\mathrm{all}}(\B_2^d,\eps,a)$ for the infimum of such budgets among learners satisfying~\eqref{eq:success}, and $\Cr^{\mathrm{lin}}$ when the output must be linear.
+
+\paragraph{Measurability.}
+The random tape is a random element of a standard Borel space, and all query, stopping, output, and oracle maps are measurable. If a complete output record $t$ specifies a prediction $g_t$, we assume that
+\[
+ \left\{(\theta,t):
+ \sup_{x\in\B_2^d}\abs{g_t(x)-\ip{\theta}{x}}\le\eps\right\}
+\]
+is jointly measurable. This assumption allows unrestricted predictions while making both the success probability and the product-measure argument below well defined.
+
+\subsection{The matching bound}
+\begin{theorem}[Optimal randomized precision cost]\label[theorem]{thm:main}
+For every fixed $a>0$, there exists $c_a>0$ such that, for all $d\ge1$ and $0<\eps<1/4$,
+\begin{equation}\label{eq:main}
+ c_a d^{1+a/2}\eps^{-a}
+ \le \Cr^{\mathrm{all}}(\B_2^d,\eps,a)
+ \le \Cr^{\mathrm{lin}}(\B_2^d,\eps,a)
+ \le d^{1+a/2}\eps^{-a}.
+\end{equation}
+The lower bound allows adaptive query counts, directions, and tolerances, private randomness, and arbitrary prediction outputs. For each $(d,\eps)$, one deterministic causal oracle rule witnesses the lower bound for every learner. The upper bound is attained by a deterministic nonadaptive algorithm that succeeds on every legal reply sequence. The same asymptotic rate therefore holds when randomization is allowed but adaptivity is not.
+\end{theorem}
+
+An explicit admissible constant is
+\begin{equation}\label{eq:ca}
+ c_a=\frac{1}{600\,4^a A_a},
+\end{equation}
+where $A_a$ is given in~\eqref{eq:Aa}. We do not optimize this constant or claim uniform dependence as $a$ varies.
+
+\subsection{The coordinate upper bound}\label{sec:upper}
+Query each standard basis vector $e_j$ at tolerance $\delta=\eps/\sqrt d$, and return $\widehat\theta=(Y_1,\ldots,Y_d)$. Every legal reply sequence satisfies
+\[
+ \norm{\widehat\theta-\theta}_2^2
+ =\sum_{j=1}^d\abs{Y_j-\theta_j}^2
+ \le d\delta^2=\eps^2.
+\]
+By Euclidean duality, this is exactly the required uniform error bound for the linear predictor $\ip{\widehat\theta}{x}$. The total cost is
+\[
+ d\delta^{-a}=d^{1+a/2}\eps^{-a}.
+\]
+This proves the upper bound in \Cref{thm:main}; the rest of the paper establishes its optimality.
+
+\section{The randomized lower bound}\label{sec:lower}
+The proof compares the information needed for accurate prediction with the information that a precision budget can purchase. For a suitable fixed prior $\pi$, a deterministic causal oracle $\mathcal O_\pi$, and the complete transcript $T$ of any successful learner with budget $B$, we will prove
+\begin{equation}\label{eq:proof-roadmap}
+ \frac d{600}\le I(\Theta;T)
+ \le A_a\left(\frac{4\eps}{\sqrt d}\right)^a B.
+\end{equation}
+Rearranging already gives the desired rate. The upper information bound comes from convex conditioning and centered quantization; the lower information bound comes from the small prior mass of every output's success set. Entropy and mutual information are measured in natural logarithms throughout.
+
+\subsection{A fixed prior and concentration under convex conditioning}\label{sec:prior}
+Let $\gamma_\sigma$ denote the centered Gaussian probability measure with covariance $\sigma^2 I_d$. Set
+\begin{equation}\label{eq:prior}
+ \sigma=\frac{4\eps}{\sqrt d},\qquad
+ C_0=[-\sigma,\sigma]^d,\qquad
+ \pi=\gamma_\sigma(\,\cdot\mid C_0).
+\end{equation}
+Every $\theta\in C_0$ has $\norm{\theta}_2\le4\eps<1$. Thus $\pi$ is an admissible distribution on fixed target vectors. It is selected before the private seed and does not depend on an algorithm. With
+\begin{equation}\label{eq:q0}
+ q_0=\PP(|Z|\le1),\qquad Z\sim\mathcal N(0,1),
+\end{equation}
+the normalizing mass is $\gamma_\sigma(C_0)=q_0^d$. The following facts are proved in Appendix~\ref{app:PL}.
+
+\begin{lemma}[Two log-concavity facts]\label[lemma]{lem:gaussian-concavity}
+Let $\sigma>0$.
+\begin{enumerate}
+\item For a nonempty compact convex set $C$ of positive Gaussian mass, the function
+\[
+ F_C(v)=\int_C\exp\left(-\frac{\norm{z-v}_2^2}{2\sigma^2}\right)\,dz
+\]
+is positive, differentiable, and log-concave in $v\in\R^d$.
+\item For compact convex sets $A,B\subset\R^d$,
+\begin{equation}\label{eq:gaussian-set-concavity}
+ \gamma_\sigma\bigl((A+B)/2\bigr)
+ \ge\sqrt{\gamma_\sigma(A)\gamma_\sigma(B)}.
+\end{equation}
+Zero measure or empty sets are included by the trivial zero right-hand side.
+\end{enumerate}
+\end{lemma}
+
+\begin{lemma}[Uniform sub-Gaussianity after convex conditioning]\label[lemma]{lem:conditional-subgaussian}
+Suppose $\Theta\sim\gamma_\sigma(\,\cdot\mid C)$ for a compact convex $C$ of positive mass. For every $x\in\R^d$ and every real $t$,
+\begin{equation}\label{eq:subgaussian}
+ \E\exp\bigl(t\ip{x}{\Theta-\E\Theta}\bigr)
+ \le\exp\left(\frac{\sigma^2t^2\norm{x}_2^2}{2}\right).
+\end{equation}
+In particular, if $\norm{x}_2\le1$, the centered projection has variance at most $\sigma^2$ and two-sided tails at most $2e^{-u^2/(2\sigma^2)}$.
+\end{lemma}
+\begin{proof}
+Completing the square gives
+\[
+ \E e^{t\ip{x}{\Theta}}
+ =e^{\sigma^2t^2\norm{x}_2^2/2}
+   \frac{F_C(\sigma^2tx)}{F_C(0)}.
+\]
+The function $\ell(t)=\log F_C(\sigma^2tx)$ is concave by \Cref{lem:gaussian-concavity}. Differentiation under the integral is valid because $C$ is compact, and
+\[
+ \ell'(0)=\E\ip{x}{\Theta}.
+\]
+A differentiable concave function lies below its tangent, so $\ell(t)\le\ell(0)+t\ell'(0)$. Substitution proves~\eqref{eq:subgaussian}. Expanding at zero yields the variance bound. Exponential Markov inequality, optimized in $t$, gives each one-sided tail; adding them gives the two-sided statement.
+\end{proof}
+
+The variance proxy in this lemma does not deteriorate with the number of conditioning slabs or with their Gaussian probability. This uniformity is essential for adaptive queries.
+
+\subsection{Charging reply entropy to precision cost}\label{sec:entropy}
+We next convert concentration into a legal reply with controlled entropy. Centering the quantization bins at the conditional mean makes the central bin overwhelmingly likely when the tolerance is coarse. This is the key to treating every fixed power in the precision cost.
+
+\begin{lemma}[Entropy of centered quantization]\label[lemma]{lem:quantization}
+Let $V$ be a centered real random variable satisfying $\E e^{tV}\le e^{\sigma^2t^2/2}$ for every $t\in\R$, with $\sigma>0$. For $\delta>0$, define
+\begin{equation}\label{eq:round}
+ K=\left\lfloor\frac{V}{2\delta}+\frac12\right\rfloor\in\Z.
+\end{equation}
+Then $|V-2\delta K|\le\delta$. Moreover, for every $a>0$,
+\begin{equation}\label{eq:quant-entropy}
+ H(K)\le A_a(\sigma/\delta)^a,
+\end{equation}
+where one possible explicit choice is
+\begin{equation}\label{eq:Aa}
+ A_a=1+\log3+\frac{1}{ae}
+ +6\left[\left(\frac ae\right)^{a/2}
+         +\left(\frac{a+2}{e}\right)^{(a+2)/2}\right].
+\end{equation}
+\end{lemma}
+\begin{proof}
+Write $s=\delta/\sigma$. For $\lambda>0$ consider the two-sided geometric mass function
+\[
+ Q_\lambda(k)=\frac{e^{-\lambda|k|}}{Z_\lambda},\qquad
+ Z_\lambda=1+\frac{2}{e^\lambda-1}.
+\]
+Nonnegativity of relative entropy gives
+\begin{equation}\label{eq:crossentropy}
+ H(K)\le\log Z_\lambda+\lambda\E|K|.
+\end{equation}
+For completeness, this follows from
+$\sum_k p_k\log(p_k/Q_\lambda(k))\ge0$, which follows by Jensen applied to $-\log$ (or by the log-sum inequality). For countable support, first use the finite partition with singleton cells $-n,\ldots,n$ and one tail cell, applying the same partition to $Q_\lambda$. Its cross entropy is at most $\E[-\log Q_\lambda(K)]$, because the reference mass of the tail cell is at least that of each of its points. The partition entropies increase to $H(K)$, proving the inequality whenever its right-hand side is finite without first assuming finite entropy.
+
+\paragraph{Fine precision: $0<s\le1$.} The variance bound and rounding imply
+\[
+ \E|K|\le\frac{\E|V|}{2\delta}+\frac12
+ \le\frac{1}{2s}+\frac12\le\frac1s.
+\]
+Choose $\lambda=s$ in~\eqref{eq:crossentropy}. Since $e^s-1\ge s$, one has $Z_s\le3/s$, and hence
+\begin{equation}\label{eq:fine-entropy}
+ H(K)\le1+\log(3/s).
+\end{equation}
+Multiplying by $s^a$ and using $\sup_{0<s\le1}s^a\log(1/s)=1/(ae)$ bounds this expression by the first three terms in~\eqref{eq:Aa}.
+
+\paragraph{Coarse precision: $s\ge1$.} For each integer $j\ge1$, nearest-integer rounding and the sub-Gaussian tail give
+\[
+ \PP(|K|\ge j)\le 2\exp\left(-\frac{(2j-1)^2s^2}{2}\right).
+\]
+As $(2j-1)^2\ge1+8(j-1)$,
+\[
+ \E|K|\le\frac{2e^{-s^2/2}}{1-e^{-4s^2}}
+ \le\frac{2e^{-s^2/2}}{1-e^{-4}}.
+\]
+Take $\lambda=s^2/2$. The inequalities $\log(1+u)\le u$ and~\eqref{eq:crossentropy} yield
+\begin{align}
+ H(K)
+ &\le\left(\frac{2}{1-e^{-1/2}}+\frac{s^2}{1-e^{-4}}\right)e^{-s^2/2}\notag\\
+ &\le6(1+s^2)e^{-s^2/2}.\label{eq:coarse-entropy}
+\end{align}
+Finally $\sup_{s>0}s^b e^{-s^2/2}=(b/e)^{b/2}$ for $b>0$. Apply this with $b=a$ and $b=a+2$ to~\eqref{eq:coarse-entropy}. Combining both regimes proves~\eqref{eq:quant-entropy}. The rounding-error claim is immediate from~\eqref{eq:round}.
+\end{proof}
+
+The exponentially small coarse-bin entropy bound~\eqref{eq:coarse-entropy}, rather than a merely quadratic information estimate, is what makes the same proof work for \emph{every} fixed $a>0$, including $a>2$.
+
+\subsection{A causal quantizer and its posterior invariant}\label{sec:oracle}
+We now define a single deterministic oracle rule $\mathcal O_\pi$. It uses the public parameters, the fixed prior~\eqref{eq:prior}, the true target, and the public history. Its definition does not involve the learner or its private tape.
+
+\paragraph{The public-state rule.} Initially the state is $C=C_0$. At a query $(x,\delta)$, while the state has positive Gaussian mass, compute
+\begin{equation}\label{eq:mu}
+ \mu=\E_{\gamma_\sigma(\cdot\mid C)}\ip{x}{\Theta}.
+\end{equation}
+Reply using the integer
+\begin{equation}\label{eq:oracle-quantizer}
+ K=\left\lfloor\frac{\ip{x}{\theta}-\mu}{2\delta}+\frac12\right\rfloor,
+ \qquad Y=\mu+2\delta K,
+\end{equation}
+and intersect the current state with the half-open slab
+\begin{equation}\label{eq:posterior-update}
+ \mu+(2K-1)\delta\le\ip{x}{u}<\mu+(2K+1)\delta.
+\end{equation}
+For integration, one can replace this state by its closure. Nontrivial slab boundaries have Gaussian mass zero. A zero query vector always yields $\mu=K=Y=0$ and adds no constraint.
+
+\paragraph{Exceptional histories.} To obtain a legal rule for all targets and histories, use exact replies forever if $\theta\notin C_0$ initially, or if a zero-mass state is reached. When interpreting an arbitrary public history, replay the state updates; if a recorded reply is incompatible with an integer label in~\eqref{eq:oracle-quantizer}, use exact replies forever from that point. These fallbacks make the rule a total legal map, including off-protocol histories. Along its own executions under the prior, fallback occurs with probability zero in any finite run.
+
+\begin{lemma}[Legality and the posterior invariant]\label[lemma]{lem:invariant}
+The rule $\mathcal O_\pi$ has the following properties.
+\begin{enumerate}
+\item It is legal for every fixed target and every execution: $|Y-\ip{x}{\theta}|\le\delta$.
+\item Its quantization state, center $\mu$, and update are determined by the public history and the current query. The private tape is not used.
+\item Fix any private tape $R=r$, thereby fixing a deterministic adaptive policy. At every positive-probability node, the conditional law of $\Theta$ given its preceding integer labels is $\gamma_\sigma(\cdot\mid C)$, where $C$ is the oracle state at that node, up to null boundaries.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+The first assertion follows from nearest-integer rounding, with exact fallback automatically legal. Given public $(x,\delta,Y)$ and the previous state, the center in~\eqref{eq:mu} is known and the label is recovered from $K=(Y-\mu)/(2\delta)$. Thus the state can be updated from the public record. No algorithm-dependent information is needed to define the rule. The rule is also measurable: at each finite depth, its state is a cube intersected with finitely many slabs whose endpoints are measurable functions of the record. Integrating their Borel indicator and its product with $\ip{x}{u}$ against the fixed Gaussian gives measurable mass and first-moment functions. Division on the positive-mass set, rounding, and the exact-reply fallback preserve measurability.
+
+For the invariant, initially the law is exactly~\eqref{eq:prior}. Suppose it holds at a node for the fixed tape. The next query and stopping decision are deterministic functions of the previous labels, because the replies, centers, and queries can be recursively reconstructed from those labels and the tape. Conditional on a query being made, observing $K=k$ is precisely the slab event~\eqref{eq:posterior-update}. It therefore restricts the existing Gaussian density to one further convex slab. This proves the induction.
+
+Each positive-probability node has a full-dimensional conditioning region of positive Gaussian mass. For a nonzero $x$, the boundary hyperplanes have measure zero. For any fixed tape there are countably many label histories and finitely many levels under a bounded budget, so all exceptional nodes and boundaries have total prior probability zero. Averaging over tapes preserves this null statement. The fallback makes the rule legal even on those exceptional executions.
+\end{proof}
+
+\begin{remark}[Exact real centers do not create extra information]
+A reply $Y=\mu+2\delta K$ is a real number, but conditional on the preceding record and a fixed tape, both $\mu$ and $\delta$ are deterministic. Its only new information is the discrete label $K$. Conversely, the oracle never needs to reconstruct the private tape: the center comes from its public convex state. We may condition on the tape in the analysis without disclosing it to the adversary.
+\end{remark}
+
+\subsection{From precision cost to transcript information}\label{sec:info-upper}
+\begin{proposition}[Information bound under a cost budget]\label[proposition]{prop:info-upper}
+Let a private-coin learner with pathwise budget $B$ interact with $\mathcal O_\pi$ on a target $\Theta\sim\pi$ independent of its tape $R$. Set $M=\lfloor B\rfloor$, pad the labels by zeros after stopping or fallback, and put $T=(R,K_1,\ldots,K_M)$. The output is almost surely determined by $T$, and
+\begin{equation}\label{eq:info-upper}
+ I(\Theta;T)
+ \le A_a\sigma^a\E\sum_{t=1}^N\delta_t^{-a}
+ \le A_a\left(\frac{4\eps}{\sqrt d}\right)^a B.
+\end{equation}
+\end{proposition}
+\begin{proof}
+For $B<1$ there are no queries. For $B\ge1$, every active tolerance satisfies $\delta_t\ge B^{-1/a}$. On prior executions before fallback, $|\ip{x_t}{\Theta}|\le4\eps$ and $|\mu_t|\le4\eps$, so $|K_t|\le4\eps B^{1/a}+1/2$. Thus all label entropies below are finite. Replaying the quantization rule reconstructs the actual output almost surely; choose the zero predictor on records for which this replay fails. Independence gives $I(\Theta;R)=0$. Conditional on $R$, the complete label vector is a deterministic function of $\Theta$ under the oracle, including our null-event convention. Hence
+\[
+ I(\Theta;T)=H(K_1,\ldots,K_M\mid R)
+ =\sum_{t=1}^M H(K_t\mid R,K_1,\ldots,K_{t-1}).
+\]
+The conditional entropy chain rule follows by factorizing the joint conditional probabilities and taking expected negative logarithms. Padding contributes no conditional entropy, since the stopping decision is determined by the tape and the previous labels.
+
+At each active node, \Cref{lem:invariant} identifies the conditional target law. \Cref{lem:conditional-subgaussian}, with $\norm{x_t}_2\le1$, shows that $\ip{x_t}{\Theta}-\mu_t$ is $\sigma$-sub-Gaussian. \Cref{lem:quantization} then bounds the node's reply entropy by $A_a\sigma^a\delta_t^{-a}$. Average over the nodes and tape, sum, and use the budget. Null fallback executions have no effect on these conditional entropies or on success probability.
+\end{proof}
+
+\subsection{Information required for accurate prediction}\label{sec:info-lower}
+The preceding information bound holds for every adaptive policy. To finish the argument, we show that accurate prediction cannot occur with constant probability unless the transcript conveys order $d$ information about the fixed target.
+
+\subsubsection{Every fixed output is accurate on a small prior set}
+For any fixed prediction rule $g:\B_2^d\to\R$, define
+\[
+ A_g=\left\{\theta\in C_0:
+       \sup_{x\in\B_2^d}|g(x)-\ip{\theta}{x}|\le\eps\right\}.
+\]
+Even if $g$ is nonlinear, $A_g$ is an intersection of closed affine slabs and the compact cube, hence is compact and convex. It may be empty.
+
+\begin{lemma}[Small prior mass of each success set]\label[lemma]{lem:success-mass}
+For every fixed prediction rule $g$,
+\begin{equation}\label{eq:success-mass}
+ \pi(A_g)\le e^{-d/2}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+If $\theta,\theta'\in A_g$, then for every $x\in\B_2^d$,
+$|\ip{\theta-\theta'}{x}|\le2\eps$. Thus $\norm{\theta-\theta'}_2\le2\eps$, or
+\[
+ (A_g-A_g)/2\subseteq\eps\B_2^d.
+\]
+By \Cref{lem:gaussian-concavity} and symmetry of the Gaussian,
+\[
+ \gamma_\sigma(A_g)
+ \le\gamma_\sigma((A_g-A_g)/2)
+ \le\gamma_\sigma(\eps\B_2^d).
+\]
+This avoids assuming that an arbitrary prediction rule has a linear parameter estimate.
+
+Since $\sigma=4\eps/\sqrt d$, exponential Markov inequality with parameter $15/2$ gives
+\begin{align*}
+ \gamma_\sigma(\eps\B_2^d)
+ &=\PP\left(\sum_{j=1}^d Z_j^2\le d/16\right)\\
+ &\le e^{15d/32}\prod_{j=1}^d\E e^{-15Z_j^2/2}
+ =e^{15d/32}4^{-d},
+\end{align*}
+where the $Z_j$ are independent standard normals and each expectation is $1/4$. Dividing by $q_0^d$ yields
+\begin{equation}\label{eq:kappa}
+ \pi(A_g)\le e^{-\kappa d},\qquad
+ \kappa=\log(4q_0)-15/32>1/2.
+\end{equation}
+For an explicit check of the numerical constant, the inequality $e^{-t^2/2}\ge1-t^2/2$ on $[0,1]$ gives
+\[
+ q_0\ge\sqrt{2/\pi}\int_0^1(1-t^2/2)\,dt
+ =\tfrac56\sqrt{2/\pi}>0.66.
+\]
+The elementary bounds $e<2.72$ and $e^{1/32}>33/32$ imply
+$e^{31/32}<2.72\cdot32/33<2.64<4q_0$.
+This is exactly $\kappa>1/2$. This proves the claim.
+\end{proof}
+
+\subsubsection{From success probability to information}
+\begin{lemma}[Information required for successful prediction]\label[lemma]{lem:info-lower}
+Let $\Theta\sim\pi$ and let $T$ be any transcript from which a prediction rule $g_T$ is determined. If
+\[
+ \PP(\Theta\in A_{g_T})\ge2/3,
+\]
+then
+\begin{equation}\label{eq:info-lower}
+ I(\Theta;T)\ge d/600.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Let $P$ be the joint law of $(\Theta,T)$ and $Q=\pi\otimes P_T$ the product of its marginals. Let $E=\{(\theta,t):\theta\in A_{g_t}\}$. Set $p=P(E)$ and $q=Q(E)$. By assumption $p\ge2/3$, whereas \Cref{lem:success-mass} implies $q\le e^{-d/2}$.
+
+Partitioning the integral defining relative entropy into $E$ and its complement gives
+\begin{equation}\label{eq:binary-DPI}
+ I(\Theta;T)=\KL(P\Vert Q)
+ \ge \kl(p\Vert q)
+ :=p\log\frac pq+(1-p)\log\frac{1-p}{1-q}.
+\end{equation}
+Indeed, on a cell of masses $p,q$, Jensen's inequality for $u\log u$ gives contribution at least $p\log(p/q)$; sum over the two cells. If absolute continuity fails, the divergence is infinite and the inequality is automatic. In particular, if $q=0$, then $p>0$ makes the desired lower bound immediate; below assume $0<q<1$.
+
+For $d\ge3$, binary entropy is at most $\log2$, so
+\[
+ \kl(p\Vert q)\ge p\log(1/q)-\log2
+ \ge d/3-\log2\ge d/10.
+\]
+The last inequality follows from $\log2<0.7$ and $d\ge3$.
+
+For $d=1,2$, use $q\le e^{-1/2}<5/8$ and hence $p-q\ge1/24$. For fixed $q$, the second derivative of $u\mapsto\kl(u\Vert q)$ is $1/(u(1-u))\ge4$, and the function and its first derivative vanish at $u=q$. Therefore
+\[
+ \kl(p\Vert q)\ge2(p-q)^2\ge1/288\ge d/600.
+\]
+Combining the two cases proves~\eqref{eq:info-lower}.
+\end{proof}
+
+\subsection{Completion of the lower bound}\label{sec:main-proof}
+\begin{proof}[Proof of \Cref{thm:main}]
+The upper bound was proved in Section~\ref{sec:upper}. For the lower bound, consider any algorithm satisfying~\eqref{eq:success} and~\eqref{eq:budget}. Use the fixed deterministic causal rule $\mathcal O_\pi$ and draw $\Theta\sim\pi$ independently of the private tape. Since the success guarantee holds for every fixed $\theta$ against this same legal rule, averaging over $\pi$ gives success probability at least $2/3$.
+
+\Cref{prop:info-upper} and \Cref{lem:info-lower} therefore imply
+\[
+ \frac d{600}\le I(\Theta;T)
+ \le A_a\left(\frac{4\eps}{\sqrt d}\right)^a B.
+\]
+Rearranging yields
+\[
+ B\ge\frac{1}{600\,4^aA_a}\,d^{1+a/2}\eps^{-a}.
+\]
+Taking the infimum over algorithms proves the lower bound. It permits unrestricted predictions, so also applies to linear outputs. A nonadaptive randomized algorithm is a special adaptive algorithm, while the upper-bound algorithm is nonadaptive, proving the last assertion.
+\end{proof}
+
+Equivalently, any budget below the displayed threshold forces Bayesian success strictly below $2/3$ against the one fixed rule $\mathcal O_\pi$. Consequently there is at least one \emph{fixed} target $\theta\in C_0$ for which the algorithm fails with probability greater than $1/3$ over its private tape. This target is obtained after averaging over tapes, not chosen separately for each tape.
+
+\section{Confidence and the cost over general domains}\label{sec:consequences}
+The matching theorem has two immediate consequences. Increasing the required confidence adds no asymptotic cost, because the upper bound is deterministic. Moreover, a standard geometric design extends the upper order to every known compact spanning domain, making the ball a worst-case domain.
+
+\subsection{Higher confidence}
+\begin{corollary}[No additional cost for higher confidence]\label[corollary]{cor:confidence}
+For every required success probability $1-\eta$ with $0\le\eta\le1/3$, the upper and lower bounds in~\eqref{eq:main} hold with the same constants.
+\end{corollary}
+\begin{proof}
+Any such guarantee implies the $2/3$ guarantee used in the lower bound. The coordinate algorithm succeeds for every legal reply sequence, with probability one.
+\end{proof}
+
+In particular, this bounded-error model requires no logarithmic confidence factor. The conclusion follows from the deterministic robustness of the upper construction, without repeated randomized runs.
+
+\subsection{Known compact spanning domains}
+Let $X\subset\R^d$ be a known compact set whose linear span is $\R^d$. Normalize the target class by
+\[
+ \Theta_X=\left\{\theta\in\R^d:
+            \sup_{x\in X}\abs{\ip{\theta}{x}}\le1\right\}.
+\]
+Queries must belong to $X$, the loss is uniform prediction error on $X$, and all other conventions remain as in \Cref{sec:model}. Denote the corresponding costs by $\Cr^{\mathrm{all}}(X,\eps,a)$ and $\Cr^{\mathrm{lin}}(X,\eps,a)$.
+
+\begin{corollary}[Optimal cost in the worst domain]\label[corollary]{cor:worstdomain}
+For fixed $a>0$, every $d\ge1$, and $0<\eps<1/4$,
+\begin{equation}\label{eq:worst-domain}
+\begin{split}
+ c_a d^{1+a/2}\eps^{-a}
+ &\le \sup_X\Cr^{\mathrm{all}}(X,\eps,a)\\
+ &\le \sup_X\Cr^{\mathrm{lin}}(X,\eps,a)
+ \le (2d-1)^{1+a/2}\eps^{-a},
+\end{split}
+\end{equation}
+where the supremum is over all known compact spanning sets $X\subset\R^d$. Thus the worst-domain cost is $\Theta_a(d^{1+a/2}\eps^{-a})$, for either output class. The same order holds for nonadaptive randomized learners.
+\end{corollary}
+\begin{proof}
+The Euclidean ball is an admissible domain, and its normalized target class is $\B_2^d$. The lower bound follows from \Cref{thm:main}. For each $X$, \Cref{prop:design} constructs a deterministic nonadaptive learner with linear output and cost at most $(2d-1)^{1+a/2}\eps^{-a}$. This proves the upper bound for both adaptive and nonadaptive classes.
+\end{proof}
+
+\paragraph{Why the domain matters.}
+The supremum in~\eqref{eq:worst-domain} is essential. For the finite domain $X=\{e_1,\ldots,e_d\}$, querying each point once at tolerance $\eps$ gives uniform error at most $\eps$ at cost $d\eps^{-a}$. On the entire ball, errors in different coordinates combine in Euclidean norm, and \Cref{thm:main} shows that the additional factor $d^{a/2}$ cannot be avoided. The worst-domain result therefore does not assert equal difficulty for every fixed domain.
+
+\section{Discussion}\label{sec:discussion}
+The main theorem identifies the precision cost of linear reconstruction on the ball under causal bounded errors. Deterministic coordinate measurements already attain the optimal order. The lower bound shows why adaptive precision allocation, private randomization, and nonlinear predictions cannot improve that order: a single public-state quantizer limits the information obtained per unit cost, while every accurate output must localize the target to a small part of a fixed prior.
+
+The causal convention is substantive. The hard oracle recenters its bins after each public observation, so it is not a memoryless function of $(\theta,x,\delta)$. A corresponding randomized lower bound for memoryless errors would require a different argument. The theorem also concerns a fixed positive exponent $a$; it does not settle the broader costly-reconstruction problem for arbitrary cost functions, such as logarithmic costs.
+
+The present statements use budgets that hold on every execution and charge only oracle evaluations. Expected-budget formulations are outside their scope. Both the learner and the hard oracle may perform exact, uncharged computation, and the compact-domain design is an information-cost result rather than a running-time guarantee for arbitrary set representations. Finally, the hard prior and oracle rule may be disclosed to the learner: the proof already permits such knowledge, while keeping the target fixed and the learner's random tape private.
+
+\appendix
+\section{Integral interpolation and Gaussian conditioning}\label{app:PL}
+For completeness, this appendix proves the two log-concavity facts in \Cref{lem:gaussian-concavity}. We first establish a regular form of the classical Pr\'ekopa--Leindler inequality~\cite{Prekopa73}, then apply it to Gaussian approximations of convex indicators.
+
+\subsection{A regular integral inequality}
+Let $\mathcal G_n$ consist of strictly positive continuous $f:\R^n\to(0,\infty)$ such that $f(x)\le C e^{-c\norm{x}_2^2}$ for some $C,c>0$. Marginals belong to the same class in the remaining coordinates, by integration and dominated convergence.
+
+\begin{lemma}[Integral interpolation]\label[lemma]{lem:PL}
+Suppose $0<\lambda<1$ and $f,g,h\in\mathcal G_n$ satisfy
+\[
+ h((1-\lambda)x+\lambda y)\ge f(x)^{1-\lambda}g(y)^\lambda
+ \quad(x,y\in\R^n).
+\]
+Then
+\[
+ \int h\ge(\int f)^{1-\lambda}(\int g)^\lambda.
+\]
+\end{lemma}
+\begin{proof}
+First let $n=1$. Normalize $f$ and $g$ to integrate to one, and divide $h$ by the corresponding weighted geometric mean. Let $F,G$ be their cumulative distribution functions and define $T=G^{-1}\circ F$. Strict positivity and continuity imply
+\[
+ T'(x)=\frac{f(x)}{g(T(x))}>0,
+ \qquad T(x)\longrightarrow\pm\infty\quad(x\longrightarrow\pm\infty).
+\]
+Thus $S(x)=(1-\lambda)x+\lambda T(x)$ is a continuously differentiable increasing bijection of $\R$. Change of variables gives
+\begin{align*}
+ \int h(z)\,dz
+ &=\int h(S(x))((1-\lambda)+\lambda T'(x))\,dx\\
+ &\ge\int f(x)^{1-\lambda}g(T(x))^\lambda
+       \left((1-\lambda)+\lambda\frac{f(x)}{g(T(x))}\right)dx\\
+ &\ge\int f(x)\,dx=1.
+\end{align*}
+The final step is $(1-\lambda)+\lambda r\ge r^\lambda$ for $r>0$. Rescaling proves the result in dimension one.
+
+Induct on $n$. Split $x=(s,z)$ with $z\in\R^{n-1}$. For fixed $s,t$, apply the induction hypothesis to the slices at $s$, $t$, and $(1-\lambda)s+\lambda t$. Their integrals satisfy the one-dimensional pointwise interpolation inequality. Apply the proved one-dimensional result to these marginals, and then Fubini. The marginals are positive, continuous, and Gaussian-dominated, so every application is justified.
+\end{proof}
+
+\subsection{Log-concavity of the Gaussian convolution of a convex indicator}
+\begin{proof}[Proof of \Cref{lem:gaussian-concavity}, part 1]
+For a nonempty closed convex $C$, the function $z\mapsto\dist(z,C)^2$ is convex and continuous. Indeed, approximate nearest points for two arguments, take their convex combination in $C$, and use convexity of the squared Euclidean norm; the distance function is also $1$-Lipschitz.
+
+For integers $j\ge1$, put
+\[
+ F_{C,j}(v)=\int_{\R^d}
+ \exp\left(-\frac{\norm{z-v}_2^2}{2\sigma^2}-j\dist(z,C)^2\right)dz.
+\]
+The integrand is jointly log-concave in $(z,v)$, positive, and continuous. Each fixed-$v$ slice is Gaussian-dominated in $z$: for example,
+$\norm{z-v}_2^2\ge\norm{z}_2^2/2-\norm{v}_2^2$.
+For fixed $v_0,v_1$, apply \Cref{lem:PL} to the corresponding slices and their interpolated slice. It follows that $F_{C,j}$ is log-concave.
+
+As $j\to\infty$, the factor $\exp(-j\dist(z,C)^2)$ converges pointwise to $\mathbf1_C(z)$, and each fixed-$v$ slice has an integrable Gaussian bound. Dominated convergence gives $F_{C,j}(v)\to F_C(v)$. Passing to the limit preserves log-concavity. Positive volume gives positivity. Compactness of $C$ justifies differentiation under the original integral at every $v$, proving the stated differentiability.
+\end{proof}
+
+\subsection{Log-concavity for Gaussian masses of Minkowski averages}
+\begin{proof}[Proof of \Cref{lem:gaussian-concavity}, part 2]
+It suffices to consider nonempty compact convex $A,B$ of positive mass. Let $D=(A+B)/2$. Approximate nearest points show that for all $x,y$,
+\[
+ \dist((x+y)/2,D)^2
+ \le\tfrac12\dist(x,A)^2+\tfrac12\dist(y,B)^2.
+\]
+Also $\norm{(x+y)/2}_2^2\le(\norm{x}_2^2+\norm{y}_2^2)/2$. Therefore the three functions
+\[
+\begin{aligned}
+ f_j(x)&=e^{-\norm{x}_2^2/(2\sigma^2)-j\dist(x,A)^2},\quad
+ g_j(x)=e^{-\norm{x}_2^2/(2\sigma^2)-j\dist(x,B)^2},\\
+ h_j(x)&=e^{-\norm{x}_2^2/(2\sigma^2)-j\dist(x,D)^2}
+\end{aligned}
+\]
+obey $h_j((x+y)/2)\ge\sqrt{f_j(x)g_j(y)}$. They belong to $\mathcal G_d$. \Cref{lem:PL} with $\lambda=1/2$, followed by dominated convergence as $j\to\infty$, proves~\eqref{eq:gaussian-set-concavity} after dividing by the Gaussian normalizing constant.
+\end{proof}
+
+\section{A universal deterministic reconstruction design}\label{app:design}
+We give the geometric upper bound used in \Cref{cor:worstdomain}. The argument is the determinant-exchange proof underlying volumetric spanners~\cite{HKM14,BMV23}; the exchange identity and the associated leverage bound appear in \cite[Lemmas~3.3--3.4]{BMV23}. Repeated points are allowed, and the proof applies directly to compact spanning sets.
+
+\begin{proposition}[Reconstruction from a volumetric design]\label[proposition]{prop:design}
+Let $X\subset\R^d$ be compact and spanning. For every $a>0$ and $0<\eps<1$, there is a deterministic nonadaptive algorithm that uses $2d-1$ queries in $X$, returns a linear predictor, and has uniform error at most $\eps$ for every target and every legal reply sequence. Its total cost is $(2d-1)^{1+a/2}\eps^{-a}$.
+\end{proposition}
+\begin{proof}
+
+Let $X\subset\R^d$ be compact and spanning. For an integer $m\ge d$, maximize
+\[
+ \det S,\qquad S=\sum_{i=1}^m x_ix_i^\top,
+\]
+over tuples in $X^m$, with repetition allowed. A maximizer exists and has positive determinant. For any $x\in X$, write
+\[
+ q=x^\top S^{-1}x,\quad \ell_i=x_i^\top S^{-1}x_i,
+ \quad b_i=x_i^\top S^{-1}x.
+\]
+Replacing $x_i$ by $x$ cannot improve the determinant. The rank-two determinant identity gives
+\[
+ (1-\ell_i)(1+q)+b_i^2
+ =\frac{\det(S-x_ix_i^\top+xx^\top)}{\det S}\le1.
+\]
+This identity follows by applying $\det(I+UV^\top)=\det(I+V^\top U)$ to the two-column update of $S$; it does not require $S-x_ix_i^\top$ to be invertible. Since $\sum_i\ell_i=d$ and $\sum_i b_i^2=q$, summation yields
+\[
+ (m-d+1)q\le d.
+\]
+For $m=2d-1$, therefore $\sup_{x\in X}x^\top S^{-1}x\le1$.
+
+Query these $m$ points at tolerance $\delta=\eps/\sqrt m$ and return
+\[
+ \widehat\theta=S^{-1}\sum_{i=1}^m x_iY_i.
+\]
+For every admissible error vector $e_i=Y_i-\ip{\theta}{x_i}$ and every $x\in X$,
+\[
+ |\ip{x}{\widehat\theta-\theta}|
+ \le\left(\sum_i(x^\top S^{-1}x_i)^2\right)^{1/2}\norm{e}_2
+ =\sqrt{x^\top S^{-1}x}\,\norm{e}_2
+ \le\sqrt m\,\delta=\eps.
+\]
+The cost is $m\delta^{-a}=(2d-1)^{1+a/2}\eps^{-a}$, and every query belongs to $X$.
+\end{proof}
+
+Exact determinant maximization is free preprocessing in this information-cost model. The proposition does not assert a polynomial-time implementation for an arbitrary representation of a compact set. It uses the existing volumetric-spanner principle to control error amplification; the matching randomized lower bound is supplied separately by \Cref{thm:main}.
+
+\begin{thebibliography}{9}
+\bibitem{Cost20}
+Renato Paes Leme and Jon Schneider.
+\newblock Costly Zero Order Oracles.
+\newblock In \emph{Proceedings of the 33rd Conference on Learning Theory},
+  volume 125 of \emph{Proceedings of Machine Learning Research}, pages 3120--3132, 2020.
+\newblock \url{https://proceedings.mlr.press/v125/paes-leme20a.html}.
+
+\bibitem{PS23}
+Leszek Plaskota and Pawe{\l} Siedlecki.
+\newblock Worst case tractability of linear problems in the presence of noise: Linear information.
+\newblock \emph{Journal of Complexity}, 79:101782, 2023.
+\newblock \url{https://doi.org/10.1016/j.jco.2023.101782}.
+
+\bibitem{FMN26}
+Yuval Filmus, Shay Moran, and Elizaveta Nesterova.
+\newblock Optimal Reconstruction from Linear Queries.
+\newblock In \emph{Proceedings of the 39th Conference on Learning Theory},
+  volume 336 of \emph{Proceedings of Machine Learning Research}, pages 2428--2476, 2026.
+\newblock \url{https://proceedings.mlr.press/v336/filmus26a.html}.
+
+\bibitem{KNU25}
+David Krieg, Erich Novak, and Mario Ullrich.
+\newblock On the power of adaption and randomization.
+\newblock \emph{Forum of Mathematics, Sigma}, 13:e152, 2025.
+\newblock \url{https://doi.org/10.1017/fms.2025.10101}.
+
+\bibitem{KNPU26}
+David Krieg, Erich Novak, Leszek Plaskota, and Mario Ullrich.
+\newblock Noisy Nonlinear Information and Entropy Numbers.
+\newblock \emph{Journal of Fourier Analysis and Applications}, 32:36, 2026.
+\newblock \url{https://doi.org/10.1007/s00041-026-10249-z}.
+
+\bibitem{HKM14}
+Elad Hazan, Zohar Karnin, and Raghu Meka.
+\newblock Volumetric Spanners: an Efficient Exploration Basis for Learning.
+\newblock In \emph{Proceedings of the 27th Conference on Learning Theory},
+  volume 35 of \emph{Proceedings of Machine Learning Research}, pages 408--422, 2014.
+\newblock \url{https://proceedings.mlr.press/v35/hazan14b.html}.
+
+\bibitem{BMV23}
+Aditya Bhaskara, Sepideh Mahabadi, and Ali Vakilian.
+\newblock Tight Bounds for Volumetric Spanners and Applications.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume 36, 2023.
+\newblock \url{https://arxiv.org/abs/2310.00175}.
+
+\bibitem{DW13}
+John C. Duchi and Martin J. Wainwright.
+\newblock Distance-based and continuum Fano inequalities with applications to statistical estimation.
+\newblock arXiv:1311.2669, 2013.
+\newblock \url{https://arxiv.org/abs/1311.2669}.
+
+\bibitem{Prekopa73}
+Andr\'as Pr\'ekopa.
+\newblock On logarithmic concave measures and functions.
+\newblock \emph{Acta Scientiarum Mathematicarum (Szeged)}, 34:335--343, 1973.
+\newblock \url{https://acta.bibl.u-szeged.hu/14411/}.
+\end{thebibliography}
+\end{document}

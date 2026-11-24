@@ -182,6 +182,14 @@ $b_0$: Twice the primal–dual gap of the first regularized saddle problem at th
 
 $b_0=2[\max_y h_{x_0}(x_0,y)-\min_x h_{x_0}(x,y_0)]$
 
+$H_-$: Source lower-bound initialization budget **Domain:** $H_->0$.
+
+$H_-=\min\{1,c_{\rm init}\}H$
+
+$H_+$: Source upper-bound initialization budget **Domain:** $H_+>0$.
+
+$H_+=(1+c_{\rm init})H$
+
 ## 3. Complexity bracket
 
 ### Compared quantities
@@ -193,6 +201,18 @@ $b_0=2[\max_y h_{x_0}(x_0,y)-\min_x h_{x_0}(x,y_0)]$
 **Resource contract.** budget: fixed worst-case cap on every transcript; primary: N_grad; unit: one declared oracle call; auxiliary: projection/internal model solves separately retained, never counted as hidden oracle
 
 This is the native source metric/resource guarantee. Joint precision, block size, runtime and oracle components stay separate; do not infer a scalar optimal query complexity.
+
+#### Q2 - minimax metric resource quantity
+
+$$
+Q^\star_\infty(\varepsilon;\beta,\kappa,H,\sigma,c_{\rm init})
+$$
+
+**Scope.** The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+**Optimization direction.** minimize
+
+**Resource contract.** expression: $N_{\rm joint\ gradient}$; description: A deterministic pathwise cap on independent fresh joint-gradient responses.
 
 ### R1 - The bound’s native applicability window.
 
@@ -208,11 +228,31 @@ This is the native source metric/resource guarantee. Joint precision, block size
 
 **Upper bound.** B1
 
+### R2 - Weighted NC-PL stationarity with charged initialization
+
+**Region.** Fix $c_{\rm init}>0$; assume $\beta,H>0$, $\sigma\ge0$, $\kappa\ge\kappa_0$ and $0<\varepsilon^2\le c_\varepsilon\beta H_-$. Source constants are $\kappa_0=8/c_N$ and $c_\varepsilon=c_M/8$, with $c_N,c_M$ fixed in equation cN-cM. The upper bound holds for all finite block dimensions. For the lower construction set $N_0=\lfloor c_N\kappa\rfloor$ and $M_0=\lfloor c_M\beta H_-/\varepsilon^2\rfloor$ using equation cN-cM. At a proposed cap Q, Lemma adaptive-frame with delta=1/16 permits $d_b\ge2N_0+2^{20}N_0\log(1024M_0N_0(Q+1))$, $d_x\ge2M_0+2^{24}M_0\log(1024M_0(Q+1))$ and $d_y=M_0d_b$. The lower quantity takes a worst case over finite dimensions; no fixed-dimensional optimality is asserted.
+
+**Quantity.** Q2
+
+**Resource.** A deterministic pathwise cap on independent fresh joint-gradient responses.
+
+**Status.** Optimal
+
+**Lower bound.** B3
+
+$$
+\Omega_{c_{\rm init}}\!\left(\frac{\beta\kappa H}{\varepsilon^2}+\frac{\beta\kappa^2H\sigma^2}{\varepsilon^4}\right)
+$$
+
+**Upper bound.** B2
+
+$$
+O_{c_{\rm init}}\!\left(\frac{\beta\kappa H}{\varepsilon^2}+\frac{\beta\kappa^2H\sigma^2}{\varepsilon^4}\right)
+$$
+
+**Gap or comparison.** Constant-factor matching for each fixed positive c_init.
+
 ## 4. Bounds and supporting evidence
-
-The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
-
-**Conditions.** Equations (40)-(41) control the weighted squared residuals of both blocks, with initialization $\Delta+b_0\le(1+c_{\rm init})H$. Suitable step sizes and random iterate selection give the stated mean-square guarantee. Simulate the two independent block samples with two joint-sample calls, discard the unused blocks, and charge both calls.
 
 ### B1 - See the cited theorem
 
@@ -230,6 +270,8 @@ $$
 
 **Sources.** [1](https://proceedings.mlr.press/v151/yang22b/yang22b.pdf)
 
+**Conditions.** Equations (40)-(41) control the weighted squared residuals of both blocks, with initialization $\Delta+b_0\le(1+c_{\rm init})H$. Suitable step sizes and random iterate selection give the stated mean-square guarantee. Simulate the two independent block samples with two joint-sample calls, discard the unused blocks, and charge both calls.
+
 **Constants.** Use the source theorem’s universal constants except where derivative order or structural budgets are explicitly fixed. Unspecified sufficient thresholds remain symbolic.
 
 **Source location.** [1](https://proceedings.mlr.press/v151/yang22b/yang22b.pdf) Assumptions2.1–2.3; Algorithm2; Theorem4.1; Remark4.1; proof Eq40–41
@@ -238,8 +280,76 @@ Fresh-sample Smoothed-AGDA controls weighted squared joint gradient.
 
 Block Lipschitz source constant l; beta-Euclidean joint smoothness implies source assumptions with l=beta. Source per-block variance <=sigma^2 follows from joint variance <=sigma^2. Two independent sample calls each iteration at different points. Explicit auxiliary initialization b0 must be retained, or b0<=cH and primal gap<=H imposed. Weighted RMS target is not direct primal gradient.
 
+### B2 - Stochastic Smoothed-AGDA
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+O_{c_{\rm init}}\!\left(\frac{\beta\kappa H}{\varepsilon^2}+\frac{\beta\kappa^2H\sigma^2}{\varepsilon^4}\right)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N07/manuscript.pdf)
+
+**Conditions.** Fix $c_{\rm init}>0$; assume $\beta,H>0$, $\sigma\ge0$, $\kappa\ge\kappa_0$ and $0<\varepsilon^2\le c_\varepsilon\beta H_-$. Source constants are $\kappa_0=8/c_N$ and $c_\varepsilon=c_M/8$, with $c_N,c_M$ fixed in equation cN-cM.; The existing initialization bounds imply the source charged sum is at most H_+. The same primal point is used for the source x0 and z0.
+
+**Dimension conditions.** The upper bound holds for all finite block dimensions. For the lower construction set $N_0=\lfloor c_N\kappa\rfloor$ and $M_0=\lfloor c_M\beta H_-/\varepsilon^2\rfloor$ using equation cN-cM. At a proposed cap Q, Lemma adaptive-frame with delta=1/16 permits $d_b\ge2N_0+2^{20}N_0\log(1024M_0N_0(Q+1))$, $d_x\ge2M_0+2^{24}M_0\log(1024M_0(Q+1))$ and $d_y=M_0d_b$. The lower quantity takes a worst case over finite dimensions; no fixed-dimensional optimality is asserted.
+
+**Constants.** Constants may depend on fixed c_init; source constants before initialization conversion are universal.
+
+**Logarithmic factors.** None.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N07/manuscript.pdf) Proposition upper-bound; Corollary matching; equations charged-init and matching-rate; verified labels: eq:charged-init (line 312), prop:upper-bound (line 376), cor:matching (line 413), eq:matching-rate (line 419)
+
+Stochastic Smoothed-AGDA. Randomized output selection from a deterministic-horizon stochastic algorithm.
+
+The existing initialization bounds imply the source charged sum is at most H_+. The same primal point is used for the source x0 and z0.
+
+### B3 - Capped PL saddle chain with Bernoulli masking and independently rotated hidden frames
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+\Omega_{c_{\rm init}}\!\left(\frac{\beta\kappa H}{\varepsilon^2}+\frac{\beta\kappa^2H\sigma^2}{\varepsilon^4}\right)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N07/manuscript.pdf)
+
+**Conditions.** Fix $c_{\rm init}>0$; assume $\beta,H>0$, $\sigma\ge0$, $\kappa\ge\kappa_0$ and $0<\varepsilon^2\le c_\varepsilon\beta H_-$. Source constants are $\kappa_0=8/c_N$ and $c_\varepsilon=c_M/8$, with $c_N,c_M$ fixed in equation cN-cM.; Use source initialization budget H_-. Its hard instances have x0=z0=y0=0; each nonnegative initialization term is then bounded by H_- and therefore satisfies the existing separate bounds.
+
+**Dimension conditions.** The upper bound holds for all finite block dimensions. For the lower construction set $N_0=\lfloor c_N\kappa\rfloor$ and $M_0=\lfloor c_M\beta H_-/\varepsilon^2\rfloor$ using equation cN-cM. At a proposed cap Q, Lemma adaptive-frame with delta=1/16 permits $d_b\ge2N_0+2^{20}N_0\log(1024M_0N_0(Q+1))$, $d_x\ge2M_0+2^{24}M_0\log(1024M_0(Q+1))$ and $d_y=M_0d_b$. The lower quantity takes a worst case over finite dimensions; no fixed-dimensional optimality is asserted.
+
+**Constants.** Constants may depend on fixed c_init; source constants before initialization conversion are universal.
+
+**Logarithmic factors.** None.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N07/manuscript.pdf) Theorem main-lower; Section scaling; Corollary matching; verified labels: thm:main-lower (line 330), cor:matching (line 413), sec:scaling (line 1463)
+
+Capped PL saddle chain with Bernoulli masking and independently rotated hidden frames. All randomized adaptive algorithms with unrestricted queries and outputs.
+
+Use source initialization budget H_-. Its hard instances have x0=z0=y0=0; each nonnegative initialization term is then bounded by H_- and therefore satisfies the existing separate bounds.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
 ## References
 
 [1] Junchi Yang; Antonio Orvieto; Aurelien Lucchi; Niao He. Faster Single-loop Algorithms for Minimax Optimization without Strong Concavity. 2022. AISTATS2022 PMLR151.
 
 https://proceedings.mlr.press/v151/yang22b/yang22b.pdf
+
+[2] Colombo_N07. Optimal Fresh-Oracle Complexity for Nonconvex--PL Minimax Optimization. N07_fresh_oracle_minimax.tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N07/manuscript.pdf

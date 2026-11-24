@@ -1,0 +1,2012 @@
+% Standalone manuscript. Compile twice with pdfLaTeX.
+% All figures and bibliography entries are embedded in this file.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{aliascnt}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{needspace}
+\usepackage{xcolor}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\definecolor{frontierteal}{RGB}{0,108,117}
+\definecolor{baselineblue}{RGB}{67,91,127}
+\definecolor{aggregatepurple}{RGB}{135,75,119}
+\usepackage[colorlinks=true,linkcolor=baselineblue,citecolor=baselineblue,urlcolor=baselineblue]{hyperref}
+
+\setlength{\parindent}{1.2em}
+\setlength{\parskip}{2pt plus 1pt minus 1pt}
+\setlength{\emergencystretch}{2em}
+\raggedbottom
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\allowdisplaybreaks[1]
+\numberwithin{equation}{section}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.75}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\setlist{nosep,leftmargin=2em}
+
+\newtheorem{theorem}{Theorem}[section]
+\newaliascnt{lemma}{theorem}
+\newtheorem{lemma}[lemma]{Lemma}
+\aliascntresetthe{lemma}
+\newaliascnt{proposition}{theorem}
+\newtheorem{proposition}[proposition]{Proposition}
+\aliascntresetthe{proposition}
+\newaliascnt{corollary}{theorem}
+\newtheorem{corollary}[corollary]{Corollary}
+\aliascntresetthe{corollary}
+\theoremstyle{remark}
+\newaliascnt{remark}{theorem}
+\newtheorem{remark}[remark]{Remark}
+\aliascntresetthe{remark}
+\theoremstyle{definition}
+\newaliascnt{definition}{theorem}
+\newtheorem{definition}[definition]{Definition}
+\aliascntresetthe{definition}
+\usepackage[nameinlink,capitalise,noabbrev]{cleveref}
+\crefname{theorem}{Theorem}{Theorems}
+\crefname{lemma}{Lemma}{Lemmas}
+\crefname{proposition}{Proposition}{Propositions}
+\crefname{corollary}{Corollary}{Corollaries}
+\crefname{remark}{Remark}{Remarks}
+\crefname{definition}{Definition}{Definitions}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Pp}{\mathbb{P}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cH}{\mathcal{H}}
+\newcommand{\cK}{\mathcal{K}}
+\newcommand{\cT}{\mathcal{T}}
+\newcommand{\cG}{\mathcal{G}}
+\newcommand{\cS}{\mathcal{S}}
+\newcommand{\cE}{\mathcal{E}}
+\newcommand{\Ball}{B_2}
+\newcommand{\ip}[2]{\langle #1,#2\rangle}
+\newcommand{\norm}[1]{\lVert #1\rVert_2}
+\newcommand{\opnorm}[1]{\lVert #1\rVert_{\mathrm{op}}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\eps}{\epsilon}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\vol}{vol}
+
+\title{Near-Optimal Oracle Bounds for Distributed\\
+Zeroth-Order Convex Optimization}
+\author{Colombo Team\\[0.3em]
+\normalsize\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+\hypersetup{pdfauthor={Colombo Team},
+pdftitle={Near-Optimal Oracle Bounds for Distributed Zeroth-Order Convex Optimization},
+pdfsubject={Selected-client exact-value complexity for nonsmooth convex finite sums},
+pdfkeywords={zeroth-order convex optimization; finite sums; selected-client oracle; minimax complexity}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We determine, up to logarithmic factors, the number of exact component
+values needed to minimize a finite sum of convex Lipschitz functions on a
+Euclidean ball. Each oracle call selects a client and an on-domain point
+and returns one scalar value of that client's fixed function. Algorithms
+may choose both adaptively, use randomization, and perform unlimited
+computation, subject to a deterministic bound on the number of calls.
+For dimension $d$, population size $N$, Lipschitz constant $L$, ball
+radius $R$, and expected-error target $\eps$, write $\rho=LR/\eps$.
+For universal thresholds on $d$ and $\rho$, we prove that the minimax
+complexity is
+\[
+\widetilde\Theta\!\left(d\min\{\rho^2,d+N\}\right).
+\]
+The standard two-point method supplies the $O(d\rho^2)$ branch.
+Our complementary upper bound partitions the clients into at most $d$
+balanced groups and localizes their lifted epigraph using
+$\widetilde O(d(d+N))$ component values. An explicit randomized
+finite-difference separator, exact centroid cuts, and robust bisection
+give a feasible output and an unconditional expected-error guarantee.
+For the lower bound, independent affine client groups yield
+$\Omega(d\min\{N,\rho^2\})$ calls. A grouped extension of an existing
+exact-value support-function lower bound supplies the dimension
+obstruction. The resulting frontier identifies how finite population
+size changes the high-accuracy cost while accounting for every component
+evaluation. The bounds concern oracle information; exact real arithmetic
+and centroid computation are uncharged.
+\end{abstract}
+
+\noindent\textbf{Keywords:} zeroth-order convex optimization; finite sums;
+selected-client oracle; minimax complexity; epigraph lifting;
+cutting-plane methods.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}
+\label{sec:introduction}
+
+Consider the finite-sum problem
+\begin{equation}
+\min_{x\in R\Ball^d}F(x),\qquad
+F(x)=\frac1N\sum_{i=1}^N f_i(x),
+\label{eq:intro-model}
+\end{equation}
+where each client owns a fixed convex $L$-Lipschitz function.
+The available information is an exact value $f_i(x)$ at a selected
+client and a selected point. The objective is to return a feasible point
+with worst-case expected suboptimality at most $\eps$, using as few
+scalar component values as possible. This model isolates the information
+cost of optimizing an average when its components can be queried
+individually and revisited. It permits arbitrary heterogeneity and
+requires neither smoothness nor a bound on client-specific additive
+offsets.
+
+Two established approaches give different answers to this problem.
+Two-point methods estimate a descent direction from a pair of values of
+the same sampled component. The stochastic framework of
+Duchi et al.~\cite{duchi2015}, the nonsmooth analysis of
+Shamir~\cite{shamir2017}, and the finite-sum smoothing framework of
+Gasnikov et al.~\cite{gasnikov2022} provide the accuracy-dependent scale
+\begin{equation}
+Q_{\rm two}=O(d\rho^2),\qquad \rho=\frac{LR}{\eps}.
+\label{eq:intro-two}
+\end{equation}
+For the present ball-constrained problem, a small domain contraction
+keeps both function evaluations legal. The cost is independent of $N$,
+but grows quadratically with inverse accuracy even when the population
+contains only one persistent function.
+
+Value-only localization offers a different high-accuracy strategy.
+Protasov's method~\cite{protasov1996} optimizes a single convex objective
+on an explicit convex body with a number of values that is quadratic in
+dimension and logarithmic in inverse accuracy. Applying this method to
+$F$ is possible, but each aggregate value costs $N$ component values.
+Using $\max_XF-\min_XF\le2LR$, the resulting simulation requires
+\begin{equation}
+Q_{\rm aggregate}
+=O\!\left(Nd^2\log(d+1)\log(4\rho)\right).
+\label{eq:intro-aggregate}
+\end{equation}
+Thus sampling controls the population cost, whereas aggregate
+localization controls the accuracy cost. Their combination leaves open
+whether the component structure can also make localization cheaper.
+
+\paragraph{Balancing the epigraph lift.}
+Our construction partitions the clients into
+$p=\min\{N,d\}$ balanced groups and introduces one epigraph coordinate
+per group. This gives a lifted problem in dimension $d+p\le2d$.
+At a candidate point, all group constraints can be screened using $N$
+component values. If a group constraint is violated, a separating cut
+requires only that group's values: an explicit procedure uses at most
+$2d+1$ exact group evaluations to produce a global affine minorant on a
+contracted ball. Consequently, one localization step costs at most
+\begin{equation}
+N+(2d+1)\left\lceil\frac{N}{p}\right\rceil=O(d+N).
+\label{eq:intro-step-cost}
+\end{equation}
+Exact-centroid localization uses $O(d)$ such steps, up to logarithmic
+factors, and therefore yields $\widetilde O(d(d+N))$ component calls.
+The proof accounts for initialization, screening, every group value,
+and all execution paths on which a randomized cut fails.
+
+This changes the upper bound obtained from the two direct simulations
+from
+\begin{equation}
+\widetilde O\!\left(\min\{d\rho^2,Nd^2\}\right)
+\quad\text{to}\quad
+\widetilde O\!\left(d\min\{\rho^2,d+N\}\right).
+\label{eq:intro-improvement}
+\end{equation}
+The improvement concerns total component values. In particular, the
+high-accuracy polynomial cost is $d^2$ for $N\le d$ and $dN$ for $N>d$.
+
+\paragraph{Two lower-bound mechanisms.}
+The lower bound must respect exact real-valued feedback and arbitrary
+adaptive revisits to persistent clients. We use two hard families.
+Balanced groups of independent random affine slopes force
+$\Omega(d\min\{N,\rho^2\})$ calls: each reply reveals only one
+projection of one group's slope, and the posterior mean of the aggregate
+slope acquires energy slowly. This obstruction arises even for affine
+components. The dimension obstruction comes from random support
+functions. We use the posterior analysis of
+Zhang et al.~\cite{zzql2026}, with explicit grouped weighting and
+component-level accounting. Its one-step posterior estimate also gives
+a refinement of the logarithmic factor when several independent facet
+groups can be selected separately. Because our performance criterion is
+expected error, the final reduction uses the posterior mean directly.
+
+\paragraph{Contributions and scope.}
+The paper establishes the joint polynomial minimax scale
+$d\min\{\rho^2,d+N\}$ for selected-client exact-value access.
+Its principal algorithmic contribution is the balanced epigraph
+construction and its complete implementation in component values.
+The lower-bound contribution is the population obstruction and the
+grouped extension of the single-objective support-function analysis.
+The two-point estimator, random finite-difference approach, and centroid
+localization are established techniques; their role and precise
+specialization are identified where they are used.
+
+Here ``distributed'' describes component ownership and selectable
+access. The model imposes no communication graph or round structure.
+It does not charge arithmetic, memory, or exact centroid computation.
+The high-accuracy result is therefore an information-complexity theorem;
+an efficient numerical implementation would require additional analysis.
+
+\paragraph{Organization.}
+\Cref{sec:related} compares the closest results under explicit oracle
+and error conventions. \Cref{sec:model,sec:main} state the model and
+main bounds. \Cref{sec:moderate-upper} proves the two-point guarantee,
+and \cref{sec:separator,sec:localization-upper} develop the
+finite-population localization method.
+\Cref{sec:lower,sec:combine} prove the lower bounds and combine them.
+\Cref{sec:regimes,sec:discussion} interpret the parameter regimes and
+describe the remaining questions.
+
+\section{Related work and comparison}
+\label{sec:related}
+
+\paragraph{Two-point methods and nonsmooth finite sums.}
+Shamir~\cite[Corollary 2]{shamir2017} gives the Euclidean expected-error
+rate underlying \eqref{eq:intro-two}. Uniformly sampling a client
+realizes the stochastic objective, while pairing values at the same
+client cancels its additive offset. Gasnikov
+et al.~\cite[Theorem 2.4 and Section 3.2]{gasnikov2022} explicitly study
+nonsmooth convex finite sums with an incremental value oracle. Their
+smoothing scheme has $\widetilde O(d\rho^2)$ total-evaluation complexity
+and also controls sequential iterations and distributed batching.
+These works already cover nonsmoothness and component access. The
+additional issue addressed here is the saturation of total-call
+complexity as accuracy increases for a fixed finite population.
+
+\paragraph{Value-only localization and separation.}
+Protasov~\cite{protasov1996} supplies the deterministic aggregate
+baseline in \eqref{eq:intro-aggregate}. Lee, Sidford, and
+Vempala~\cite{lsv2018} give evaluation-to-separation reductions and a
+general $\widetilde O(d^2)$-oracle algorithm with additional arithmetic
+guarantees when the feasible set is accessed through membership queries.
+Their random coordinate finite differences already provide approximate
+subgradients. Our separator is a self-contained specialization for the
+known ball, with explicit global-minorant error, on-domain queries,
+and a fixed $2d+1$ value cap. The finite-population improvement comes from
+balancing the lift and the cost of the violated group, within the
+classical centroid-cut framework~\cite{bubeck2015}.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.225\linewidth}>{\raggedright\arraybackslash}p{0.285\linewidth}Y@{}}
+\toprule
+Result and realization & Selected-client call bound & Conditions and comparison \\
+\midrule
+Shamir~\cite{shamir2017}; uniform-client sampling
+& Upper: $O(d\rho^2)$
+& Convex Lipschitz losses; expected gap; two values of the same
+sampled client; on-domain contraction. \\
+\addlinespace
+Gasnikov et al.~\cite{gasnikov2022}; incremental finite sum
+& Upper: $\widetilde O(d\rho^2)$
+& Nonsmooth convex components; Euclidean geometry; expected gap;
+also studies iteration and batching costs. \\
+\addlinespace
+Protasov~\cite{protasov1996}; full aggregation
+& Upper: $O\bigl(Nd^2\log(d+1)$\newline
+$\hspace{3em}\cdot\log(4\rho)\bigr)$
+& Deterministic; explicit convex domain; relative error converted
+using objective oscillation at most $2LR$. \\
+\addlinespace
+Zhang et al.~\cite{zzql2026}; identical clients
+& Lower:
+$\displaystyle\Omega\!\left(\frac{d\min\{d,\rho^2\}}{\log(e\min\{d,\rho^2\})}\right)$
+& Arbitrary adaptive randomized exact-value policies; universal
+thresholds on $d,\rho$; constant rescaling converts success probability
+to expected error. \\
+\addlinespace
+This work; two-point sampling and balanced lift
+& Upper:
+$\widetilde O(d\min\{\rho^2,d+N\})$
+& Every $d,N\ge1$, $\rho>2$; deterministic pathwise cap and
+unconditional expected gap. \\
+\addlinespace
+This work; affine and grouped support families
+& Lower:
+$\widetilde\Omega(d\min\{\rho^2,d+N\})$
+& Universal thresholds on $d,\rho$; fixed hard tuples independent
+of the realized policy seed; no linear-span restriction. \\
+\bottomrule
+\end{tabularx}
+\caption{Comparison in scalar component evaluations, with
+$\rho=LR/\eps$. The domain is the known Euclidean ball, and every
+component is convex and $L$-Lipschitz. Tildes suppress logarithms in
+$e+d+N+\rho$. The earlier upper bounds are explicit realizations in
+the selected-client model, not claims about communication complexity.
+The lower-bound row for identical clients carries no additional
+population dependence.}
+\label{tab:comparison}
+\end{table}
+
+\paragraph{Exact-value lower bounds.}
+Zhang et al.~\cite[Theorem 6]{zzql2026} establish the randomized
+single-objective lower bound shown in \cref{tab:comparison}. If an
+algorithm guarantees expected gap at most $\eps$, Markov's inequality
+gives gap at most $2\eps$ with probability at least $1/2$. Applying their
+theorem at this rescaled accuracy and taking all clients equal yields
+the stated comparison. Kerger~\cite[Theorem 4]{kerger2026} proves the
+complementary deterministic bound $\Omega(d^2/\log(d+1))$ for
+$\eps\le cLR/\sqrt d$ with a sufficiently small universal $c$ and
+sufficiently large $d$. Its deterministic resisting-oracle argument is
+not used to infer a randomized lower bound here. Our grouped extension
+uses specifically identified posterior results from~\cite{zzql2026};
+the lower bound is not presented as an independent proof of those results.
+
+\paragraph{Distributed and federated optimization.}
+Alashqar et al.~\cite{alashqar2023} study nonsmooth convex stochastic
+optimization in a federated architecture and compare local work,
+communication, and smoothing randomizations. Their homogeneous
+stochastic-worker model differs from adaptive access to persistent
+heterogeneous clients. Distributed nonconvex methods such as
+Tang et al.~\cite{tang2019}, and smooth finite-sum variance reduction
+such as Liu et al.~\cite{liu2018}, address further complementary
+questions. Their network, smoothness, or stationarity assumptions are
+not imposed in the present minimax model. Accordingly, their guarantees
+provide context rather than interchangeable entries in
+\cref{tab:comparison}.
+
+\section{Model and minimax complexity}
+\label{sec:model}
+
+Fix
+\[
+d,N\in\mathbb N,\qquad L,R>0,\qquad 0<\eps\le LR,
+\]
+and let
+\[
+X=R\Ball^d=\{x\in\R^d:\norm{x}\le R\}.
+\]
+Client $i$ persistently owns a function
+\[
+f_i:X\to\R
+\]
+that is finite, convex, and $L$-Lipschitz in Euclidean norm.  Define
+\[
+F(x)=\frac1N\sum_{i=1}^N f_i(x),
+\qquad
+F^\star=\min_{x\in X}F(x).
+\]
+Continuity and compactness guarantee existence of a minimizer.
+
+One oracle call chooses a pair $(i,x)\in[N]\times X$ and returns the exact scalar $f_i(x)$.  Every returned scalar costs one call.  A value of $F$, a group average, or a paired difference costs the number of component values actually used to form it.
+
+\begin{definition}[Admissible randomized policy]
+For each public tuple $(d,N,L,R,\eps)$, a policy chooses an instance-independent random seed $U$ on a standard Borel probability space.  At every time, the selected client, query point, stopping decision, and terminal point are Borel functions of $U$ and the complete prior selected-client transcript.  Every query and the output belong to $X$.  There is a deterministic integer $Q$ such that every fixed seed and every possible scalar history stop by call $Q$.
+\end{definition}
+
+The policy and seed law are fixed first, then the complete client tuple is fixed, and only afterward is the seed realized.  Define the minimax pathwise-cap complexity
+\[
+q_\eps(d,N,L,R)
+=
+\inf\left\{Q\in\mathbb N_0:
+\begin{array}{l}
+\text{there is an admissible policy with cap }Q,\\[1mm]
+\displaystyle
+\sup_{f_1,\ldots,f_N}
+\E\bigl[F(\widehat x)-F^\star\bigr]\le\eps
+\end{array}
+\right\}.
+\]
+Only oracle answers are charged. Computation, storage, and public
+domain operations are unrestricted. In particular, no value of the
+aggregate or of a client group is supplied for free. The client tuple
+is fixed throughout an execution; revisiting a client evaluates the
+same function, rather than drawing a fresh stochastic loss.
+
+We use the dimensionless quantities
+\[
+\rho=\frac{LR}{\eps},
+\qquad
+\Lambda=e+d+N+\rho.
+\]
+
+
+All logarithms are natural unless their base is shown. The notation
+$\widetilde O$, $\widetilde\Omega$, and $\widetilde\Theta$ suppresses
+only logarithmic factors in $\Lambda$, and all unspecified constants
+are universal. Returning $0$ without querying gives error at most
+$LR$, so $q_\eps=0$ for $\eps\ge LR$. The matching theorem below
+concerns the stated nontrivial range of dimension and accuracy.
+
+\section{Main results}
+\label{sec:main}
+
+We first state the joint minimax rate and then give the finite-parameter
+bounds underlying it. Both upper-bound policies have a deterministic
+cap on every execution path, and both lower bounds apply to arbitrary
+adaptive randomized policies in \cref{sec:model}.
+
+\begin{theorem}[Near-optimal total-call rate]
+\label{thm:main-rate}
+There exist universal constants $d_\star,\rho_\star\in\mathbb N$ and $c,C>0$ such that, for every $d\ge d_\star$, $N\ge1$, $L,R>0$, and $\rho=LR/\eps\ge\rho_\star$,
+\begin{equation}
+ c\,
+ \frac{d\min\{\rho^2,d+N\}}{\log\Lambda}
+ \le
+ q_\eps(d,N,L,R)
+ \le
+ C\,d\min\{\rho^2,d+N\}\log^2\Lambda.
+\label{eq:main-rate}
+\end{equation}
+Consequently,
+\[
+q_\eps(d,N,L,R)
+=
+\widetilde\Theta\!\left(
+ d\min\left\{\left(\frac{LR}{\eps}\right)^2,d+N\right\}
+\right),
+\]
+where the suppressed logarithms have argument $e+d+N+LR/\eps$.
+\end{theorem}
+
+The polynomial transition occurs at $\rho^2\asymp d+N$.
+The thresholds in this theorem are universal; the result does not
+assert a matching bound for every small dimension or for coarse
+accuracy. The next statement retains the exact query accounting and
+the sharper population-dependent lower bound.
+
+\begin{theorem}[Explicit upper and lower frontiers]
+\label{thm:explicit-frontier}
+There are universal constants $d_0\in\mathbb N$ and $c_0,c_1,c_3>0$ with the following properties.
+
+\emph{Upper bounds.}  For every $d,N,L,R$ and $0<\eps<LR/2$,
+\begin{equation}
+q_\eps(d,N,L,R)
+\le 2\left\lceil32d\rho^2\right\rceil.
+\label{eq:stochastic-upper-main}
+\end{equation}
+Moreover, put
+\[
+p=\min\{N,d\},\qquad
+s_{\rm grp}=\left\lceil\frac Np\right\rceil,
+\qquad
+\beta_0=-\log(1-e^{-1}),
+\]
+\[
+D=d+p,
+\qquad
+H=\left\lceil
+\frac{D\log(64\rho\sqrt{1+p})}{\beta_0}
+\right\rceil+1,
+\qquad
+J=\left\lceil\log_2(8\rho)\right\rceil,
+\qquad M=JH.
+\]
+Then
+\begin{equation}
+q_\eps(d,N,L,R)
+\le
+N+M\bigl[N+(2d+1)s_{\rm grp}\bigr].
+\label{eq:exact-localization-upper-main}
+\end{equation}
+The policy in \eqref{eq:exact-localization-upper-main} actually has expected error at most $41\eps/64$.
+
+\emph{Lower bounds.}  If $d\ge2$ and $0<\eps\le LR/4$, then
+\begin{equation}
+q_\eps(d,N,L,R)
+\ge
+\left\lfloor
+\frac d{512}
+\min\left\{N,
+\left\lfloor\left(\frac{LR}{2\eps}\right)^2\right\rfloor
+\right\}
+\right\rfloor+1.
+\label{eq:affine-lower-main}
+\end{equation}
+If $d\ge d_0$ and
+\[
+m_\eps=
+\min\left\{c_0d,
+\left(\frac{c_1LR}{2\eps}\right)^2\right\}\ge2,
+\]
+then
+\begin{equation}
+q_\eps(d,N,L,R)
+\ge
+\left\lfloor
+c_3\,
+\frac{d m_\eps}
+{\log\!\left(e\max\{1,m_\eps/N\}\right)}
+\right\rfloor.
+\label{eq:support-lower-main}
+\end{equation}
+\end{theorem}
+
+
+The upper bound may be implemented by choosing the smaller of the two
+displayed caps from the public parameters. The lower statements have
+different hard families and hold separately; taking their maximum
+gives the joint obstruction. The proof of
+\cref{thm:explicit-frontier} is given in
+\cref{sec:moderate-upper,sec:separator,sec:localization-upper,sec:lower},
+and \cref{sec:combine} proves \cref{thm:main-rate}.
+
+\section{Moderate-accuracy upper bound}
+\label{sec:moderate-upper}
+
+We include the standard two-point argument to fix the on-domain
+construction, constants, and selected-client accounting. This is the
+Euclidean nonsmooth two-point method of~\cite{shamir2017}, specialized
+to uniform sampling from a persistent finite population. It proves
+\eqref{eq:stochastic-upper-main}.
+
+\begin{lemma}[Spherical two-point estimator]
+\label{lem:spherical-estimator}
+Let $V$ be a $k$-dimensional Euclidean space, $k\ge1$, let $\delta>0$, and suppose
+$w+\delta B_{2,V}\subseteq\operatorname{int}_V(\operatorname{dom}f)$
+for a convex $L$-Lipschitz function $f$, where the interior is taken in $V$.
+Thus the smoothing is defined on a neighborhood of $w$. Define
+\[
+\widetilde f(w)=\E_{Z\sim\operatorname{Unif}(B_{2,V})}f(w+\delta Z).
+\]
+If $U$ is uniform on the unit sphere of $V$, then
+\[
+g(w,U)=\frac{k}{2\delta}
+\bigl(f(w+\delta U)-f(w-\delta U)\bigr)U
+\]
+satisfies
+\begin{equation}
+\E g(w,U)=\nabla\widetilde f(w),
+\qquad
+\E\norm{g(w,U)}^2\le2kL^2.
+\label{eq:spherical-estimator}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The ball average is differentiable on that neighborhood, and the divergence theorem gives
+\[
+\nabla\widetilde f(w)=\frac{k}{\delta}\E[f(w+\delta U)U].
+\]
+For a merely Lipschitz $f$, first mollify in $V$ and then pass to the limit by dominated convergence.  Symmetry of $U$ gives the unbiasedness identity.
+
+For $k\ge2$, the spherical Poincar\'e inequality states
+\[
+\operatorname{Var}(h(U))
+\le\frac1{k-1}\E\norm{\nabla_S h(U)}^2.
+\]
+For completeness, for a smooth mean-zero $h$, expand in spherical harmonics.  Every positive-degree eigenvalue of $-\Delta_S$ is at least $k-1$, so orthogonality and integration by parts yield
+\[
+(k-1)\int h^2\le\int h(-\Delta_Sh)=\int\norm{\nabla_Sh}^2.
+\]
+Approximation gives the Lipschitz version.  Apply it to $h(u)=f(w+\delta u)$.  Its tangential gradient has norm at most $\delta L$ almost everywhere, whence
+\[
+\operatorname{Var}(h(U))\le\frac{\delta^2L^2}{k-1}.
+\]
+Writing $m=\E h(U)$ and using symmetry,
+\[
+\E(h(U)-h(-U))^2
+\le4\operatorname{Var}(h(U)).
+\]
+Therefore
+\[
+\E\norm{g(w,U)}^2
+\le\frac{k^2}{k-1}L^2\le2kL^2.
+\]
+For $k=1$, the sphere has two antipodal points and the secant-slope bound gives $\norm{g(w,U)}\le L$.
+\end{proof}
+
+\begin{theorem}[Two-point selected-client upper bound]
+\label{thm:two-point-upper}
+For every $d,N,L,R$ and $0<\eps<LR/2$,
+\[
+q_\eps(d,N,L,R)
+\le2\left\lceil32d\rho^2\right\rceil.
+\]
+\end{theorem}
+
+\begin{proof}
+Put
+\[
+\eta=\frac{\eps}{8LR},
+\qquad
+W=(1-\eta)R\Ball^d,
+\qquad
+\delta=\frac{\eta R}{2},
+\]
+so $W+\delta\Ball^d\subset R\Ball^d$.  Let
+\[
+T=\left\lceil32d\rho^2\right\rceil,
+\qquad
+a=\frac{2R}{L\sqrt{2dT}}.
+\]
+Starting from any $w_1\in W$, independently draw $I_t$ uniformly from $[N]$ and $U_t$ uniformly from $S^{d-1}$.  Query the same client at $w_t\pm\delta U_t$, form
+\[
+g_t=\frac d{2\delta}
+\bigl(f_{I_t}(w_t+\delta U_t)-f_{I_t}(w_t-\delta U_t)\bigr)U_t,
+\]
+and update
+\[
+w_{t+1}=P_W(w_t-ag_t).
+\]
+Return $\widehat x=T^{-1}\sum_{t=1}^T w_t$.
+
+Let $\widetilde f_i$ be the radius-$\delta$ ball smoothing and let $\widetilde F=N^{-1}\sum_i\widetilde f_i$.  Conditional on $w_t$, \cref{lem:spherical-estimator}~gives
+\[
+\E[g_t\mid w_t]=\nabla\widetilde F(w_t),
+\qquad
+\E[\norm{g_t}^2\mid w_t]\le2dL^2.
+\]
+For any $z\in W$, projection nonexpansiveness gives
+\[
+\norm{w_{t+1}-z}^2
+\le\norm{w_t-z}^2
+-2a\ip{g_t}{w_t-z}+a^2\norm{g_t}^2.
+\]
+Take conditional expectations, use convexity of $\widetilde F$, sum, and use $\diam(W)\le2R$:
+\begin{align*}
+\E\left[\frac1T\sum_{t=1}^T\widetilde F(w_t)-\widetilde F(z)\right]
+&\le \frac{(2R)^2}{2aT}+adL^2\\
+&=2LR\sqrt{\frac{2d}{T}}.
+\end{align*}
+
+Let $x^\star$ minimize $F$ on $X$ and put $z^*=(1-\eta)x^\star\in W$. Convexity and bounded oscillation yield
+\[
+F(z^*)-F(x^\star)\le2\eta LR=\frac\eps4.
+\]
+Also, for $w\in W$,
+\[
+F(w)\le\widetilde F(w)\le F(w)+L\delta.
+\]
+By convexity at the returned average,
+\begin{align*}
+\E[F(\widehat x)-F(x^\star)]
+&\le2LR\sqrt{\frac{2d}{T}}+2\eta LR+L\delta\\
+&\le\frac\eps2+\frac\eps4+\frac\eps{16}<\eps.
+\end{align*}
+The method uses exactly $2T$ calls pathwise.  Uniform client labels and sphere directions can be generated from a fixed standard-Borel seed, and all remaining maps are continuous or Borel.  Every query and the output are on-domain.
+\end{proof}
+
+\section{A value-to-global-separation primitive}
+\label{sec:separator}
+
+The high-accuracy method needs a globally valid epigraph cut from
+component values. Randomly shifted coordinate differences already
+appear in the evaluation-to-separation reductions of
+Lee et al.~\cite[Section 3.1, Algorithm 2 and Lemmas 9--10]{lsv2018}.
+We give a complete specialization to the known Euclidean ball, with
+explicit constants and a $2d+1$-value cap. The key interface is a
+minorant that holds simultaneously over the contracted domain, rather
+than only a local finite-difference estimate.
+
+\subsection{Three elementary lemmas}
+
+\begin{lemma}[Interior subgradient with norm control]
+\label{lem:interior-subgradient}
+Let $C\subseteq\R^d$ be closed and convex, let $z\in\operatorname{int}C$, and let $f:C\to\R$ be finite, convex, and $L$-Lipschitz.  Then there exists $p\in\R^d$ such that
+\[
+f(w)\ge f(z)+\ip{p}{w-z}\qquad(w\in C),
+\]
+and every such $p$ satisfies $\norm p\le L$.
+\end{lemma}
+
+\begin{proof}
+Consider the closed convex restricted epigraph
+\[
+K=\{(w,r):w\in C,\ r\ge f(w)\}\subset\R^{d+1}.
+\]
+For $n\ge1$, let $a_n=(z,f(z)-1/n)\notin K$, choose a Euclidean nearest point $b_n\in K$, and put
+\[
+v_n=\frac{a_n-b_n}{\norm{a_n-b_n}}.
+\]
+A nearest point exists by restricting a minimizing sequence to a closed bounded ball.  The elementary nearest-point inequality gives
+\[
+\ip{v_n}{y-b_n}\le0\qquad(y\in K).
+\]
+Since $(z,f(z))\in K$, one has $\norm{a_n-b_n}\le1/n$, hence $b_n\to(z,f(z))$.  Along a subsequence, $v_n\to(u,\beta)$ with $\norm{(u,\beta)}=1$, and therefore
+\[
+\ip{u}{w-z}+\beta(r-f(z))\le0\qquad((w,r)\in K).
+\]
+The vertical ray in $K$ implies $\beta\le0$.  If $\beta=0$, then $\norm u=1$; because $z$ is interior, $z+tu\in C$ for all sufficiently small $t>0$, giving $t\le0$, a contradiction.  Hence $\beta<0$.  Taking $r=f(w)$ and defining $p=-u/\beta$ proves the subgradient inequality.
+
+For the norm bound, if $p\ne0$, then $w=z+t p/\norm p\in C$ for sufficiently small $t>0$.  The subgradient inequality and Lipschitzness give
+\[
+t\norm p\le f(w)-f(z)\le Lt,
+\]
+so $\norm p\le L$.  The same argument applies to every subgradient at $z$.
+\end{proof}
+
+\begin{lemma}[Random coordinate finite differences]
+\label{lem:random-fd}
+Let $a,\sigma,L>0$, $c\in\R^d$, and let $C\subseteq\R^d$ be convex.  Suppose that for every $i$ the slab
+\[
+Q_i^+=\{c+u: |u_j|\le a\ (j\ne i),\ |u_i|\le a+\sigma\}
+\]
+is contained in $C$.  Let $f:C\to\R$ be convex and $L$-Lipschitz, let $Z$ be uniform on $Q=c+[-a,a]^d$, and define
+\[
+q_i(Z)=\frac{f(Z+\sigma e_i)-f(Z-\sigma e_i)}{2\sigma},
+\]
+\[
+D_i(Z)=\frac{f(Z+\sigma e_i)-2f(Z)+f(Z-\sigma e_i)}{\sigma^2}.
+\]
+Then $D_i\ge0$,
+\begin{equation}
+\E\sum_{i=1}^dD_i(Z)\le\frac{dL}{a},
+\label{eq:fd-curvature}
+\end{equation}
+and, for every $Z\in Q$ and every $p\in\partial f(Z)$,
+\begin{equation}
+\norm{q(Z)-p}
+\le\lVert q(Z)-p\rVert_1
+\le\frac\sigma2\sum_{i=1}^dD_i(Z).
+\label{eq:fd-pointwise}
+\end{equation}
+Consequently, for every $\eta>0$,
+\begin{equation}
+\Pp\{\text{some }p\in\partial f(Z)\text{ has }\norm{q(Z)-p}>\eta\}
+\le\frac{\sigma dL}{2a\eta}.
+\label{eq:fd-probability}
+\end{equation}
+Outside this event, every subgradient at $Z$ is within $\eta$ of $q(Z)$.
+\end{lemma}
+
+\begin{proof}
+Fix $z\in Q$ and $p\in\partial f(z)$.  Put
+\[
+A_i=\frac{f(z)-f(z-\sigma e_i)}\sigma,
+\qquad
+B_i=\frac{f(z+\sigma e_i)-f(z)}\sigma.
+\]
+One-dimensional convexity gives $A_i\le B_i$, while the subgradient inequality gives $A_i\le p_i\le B_i$.  Since $q_i=(A_i+B_i)/2$ and $B_i-A_i=\sigma D_i$,
+\[
+|p_i-q_i|\le\frac{\sigma D_i(z)}2.
+\]
+This proves \eqref{eq:fd-pointwise} and $D_i\ge0$.
+
+Fix $i$ and condition on all coordinates of $Z-c$ except coordinate $i$.  The resulting one-dimensional restriction $\phi$ is convex and $L$-Lipschitz on $[-a-\sigma,a+\sigma]$.  Translation of the three integrals gives
+\begin{align*}
+&\int_{-a}^{a}\bigl(\phi(u+\sigma)-2\phi(u)+\phi(u-\sigma)\bigr)\,du\\
+&\quad=\int_0^\sigma\bigl(\phi(a+r)-\phi(a-\sigma+r)\bigr)\,dr\\
+&\qquad+\int_0^\sigma\bigl(\phi(-a-\sigma+r)-\phi(-a+r)\bigr)\,dr.
+\end{align*}
+The left side is nonnegative and each difference on the right has absolute value at most $L\sigma$.  Hence the integral is at most $2L\sigma^2$.  Dividing by $2a\sigma^2$ and removing the conditioning gives $\E D_i(Z)\le L/a$.  Summing proves \eqref{eq:fd-curvature}.
+
+Finally, let $W=(\sigma/2)\sum_iD_i(Z)$.  By \eqref{eq:fd-pointwise}, the bad event is contained in $\{W>\eta\}$.  Since $\eta\ind_{\{W>\eta\}}\le W$, Markov's inequality in this elementary form and \eqref{eq:fd-curvature} give \eqref{eq:fd-probability}.
+\end{proof}
+
+\begin{lemma}[Projection and transfer]
+\label{lem:projection-transfer}
+Let $X\subseteq\R^d$ be convex and let $h:X\to\R$ be finite, convex,
+and $L$-Lipschitz. Let $x,z,w\in X$, $\eta\ge0$,
+$p\in\partial h(z)$ with $\norm p\le L$, and $q\in\R^d$.
+Define the Euclidean projection onto the radius-$L$ ball,
+\[
+g=P_{L\Ball^d}(q).
+\]
+If $\norm{q-p}\le\eta$, then $\norm g\le L$, $\norm{g-p}\le\eta$, and
+\begin{equation}
+h(w)\ge h(x)+\ip g{w-x}
+-2L\norm{z-x}-\eta\norm{w-x}.
+\label{eq:projection-transfer}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Metric projection onto a closed convex set does not increase distance to any point in that set, so $\norm{g-p}\le\norm{q-p}\le\eta$.  For completeness, if $\norm q>L$, write $u=q/\norm q$.  Then
+\begin{align*}
+\norm{q-p}^2-\norm{Lu-p}^2
+&=(\norm q-L)(\norm q+L-2\ip up)\\
+&\ge(\norm q-L)^2\ge0.
+\end{align*}
+The subgradient inequality at $z$, Lipschitzness, and $\norm p\le L$ imply
+\begin{align*}
+h(w)
+&\ge h(z)+\ip p{w-z}\\
+&=h(z)+\ip p{w-x}+\ip p{x-z}\\
+&\ge h(x)+\ip p{w-x}-2L\norm{z-x}.
+\end{align*}
+Replace $p$ by $g$ and use Cauchy--Schwarz.
+\end{proof}
+
+\subsection{The separator}
+
+The three preceding lemmas separate the issues of subgradient
+existence, finite-difference accuracy, and transfer to the requested
+point. The following construction combines them into a single
+value-oracle routine.
+
+Let
+\[
+X=R\Ball^d,
+\qquad
+\Delta=\frac{\tau}{8L},
+\qquad
+Y=(R-\Delta)\Ball^d,
+\]
+where $0<\tau\le LR$.  Given $h:X\to\R$, $x\in Y$, and $t\in\R$, the task is to return either
+\begin{enumerate}
+\item an \textsc{Accept} certificate $h(x)\le t+\tau$, or
+\item a pair $(g,\alpha)$ such that
+\[
+\norm g\le L,
+\qquad
+\alpha=h(x)-\frac\tau2>t,
+\qquad
+h(y)\ge\alpha+\ip g{y-x}\quad(y\in Y).
+\]
+\end{enumerate}
+The second outcome is a global affine minorant on all of $Y$, not merely a local or expected inequality.
+
+\begin{theorem}[$2d+1$-value global separation]
+\label{thm:separator}
+For every $0<\delta\le1/4$, there is a randomized Borel procedure that uses at most $2d+1$ exact values pathwise and is correct with probability at least $1-\delta$, uniformly over every finite convex $L$-Lipschitz $h:X\to\R$, $x\in Y$, and $t\in\R$.
+\end{theorem}
+
+\begin{proof}
+Set
+\[
+a=\frac{\Delta}{2\sqrt d},
+\qquad
+\eta=\frac{\tau}{8R},
+\qquad
+\sigma=\frac{2a\eta\delta}{dL}
+=\frac{a\tau\delta}{4dLR}.
+\]
+Take the seed space $[-1,1]^d$ with normalized Lebesgue law and let $V$ be the coordinate map.  First query $h(x)$.  If $h(x)\le t+\tau$, output \textsc{Accept}.  Otherwise set
+\[
+Z=x+aV
+\]
+and, in the fixed order $i=1,\ldots,d$, query $Z+\sigma e_i$ and $Z-\sigma e_i$.  Form
+\[
+q_i=\frac{h(Z+\sigma e_i)-h(Z-\sigma e_i)}{2\sigma},
+\qquad
+g=P_{L\Ball^d}(q),
+\qquad
+\alpha=h(x)-\frac\tau2.
+\]
+
+We first check legality.  Since $\tau\le LR$ and $\delta\le1/4$,
+\[
+\frac\sigma a=\frac{\tau\delta}{4dLR}\le\frac1{16d}\le1.
+\]
+Also $\norm{Z-x}\le a\sqrt d=\Delta/2$.  Every point in every coordinate slab required by \cref{lem:random-fd} is at distance at most
+\[
+a\sqrt d+\sigma\le\Delta/2+a\le\Delta
+\]
+from $x$, hence belongs to $X$.  The point $Z$ is at positive distance from the boundary of $X$, so \cref{lem:interior-subgradient} applies.
+
+By \cref{lem:random-fd}, with probability at least
+\[
+1-\frac{\sigma dL}{2a\eta}=1-\delta,
+\]
+every $p\in\partial h(Z)$ satisfies $\norm{q-p}\le\eta$.  Choose one such $p$; it exists and has norm at most $L$.  For every $w\in Y$, \cref{lem:projection-transfer}, $\norm{Z-x}\le\Delta/2$, and $\norm{w-x}\le2R$ give
+\begin{align*}
+h(w)
+&\ge h(x)+\ip g{w-x}-L\Delta-2R\eta\\
+&=h(x)+\ip g{w-x}-\frac\tau8-\frac\tau4\\
+&\ge h(x)-\frac\tau2+\ip g{w-x}\\
+&=\alpha+\ip g{w-x}.
+\end{align*}
+With probability at least $1-\delta$, this minorant holds simultaneously for every $w\in Y$.
+
+If the first branch is taken, its defining test proves correctness.  Otherwise $h(x)>t+\tau$, so
+\[
+\alpha=h(x)-\tau/2>t+\tau/2>t.
+\]
+The theoretical values $h(Z)$ used to define the second differences in \cref{lem:random-fd} are not queried and cancel from every computed coordinate difference.  Hence no uncharged call is used.
+
+All query and output maps are Borel: the active branch is a scalar comparison, the query maps are affine, and projection onto a closed ball is continuous.  The seed law is fixed before $(h,x,t)$, and the cap $2d+1$ holds for every seed and every scalar history.
+\end{proof}
+
+\begin{remark}[Confidence and exact precision]
+The number of values in \cref{thm:separator} is independent of
+$\delta$: higher confidence is obtained by decreasing $\sigma$.
+The procedure relies on exact scalar values and exact arithmetic;
+its fixed call cap is not a finite-precision or noisy-oracle guarantee.
+\end{remark}
+
+\section{Balanced-group lifted localization}
+\label{sec:localization-upper}
+
+We now convert \cref{thm:separator} into the high-accuracy upper
+bound. The construction has three parts: a balanced epigraph lift,
+localization of a trial objective sublevel, and robust bisection with
+an exact feasible incumbent. The group count keeps both the lifted
+dimension and the component cost of a cut under control.
+
+\subsection{Grouping and lifted geometry}
+
+Set
+\[
+\tau=\frac\eps8,
+\qquad
+\kappa=\frac{\tau}{LR}=\frac1{8\rho},
+\qquad
+\Delta=\frac{\tau}{8L},
+\qquad
+Y=(R-\Delta)\Ball^d.
+\]
+Let $p=\min\{N,d\}$ and fix a public balanced partition
+\[
+[N]=I_1\sqcup\cdots\sqcup I_p,
+\qquad
+|I_g|\le s_{\rm grp}=\left\lceil\frac Np\right\rceil.
+\]
+Define
+\[
+h_g(x)=\frac1{|I_g|}\sum_{i\in I_g}f_i(x),
+\qquad
+w_g=\frac{|I_g|}{N},
+\qquad
+F(x)=\sum_{g=1}^p w_gh_g(x).
+\]
+One exact $h_g(x)$ value costs exactly $|I_g|$ component calls at the common point $x$.
+
+Make the $N$ initialization calls at zero and set $b_g=h_g(0)$.  Consider
+\begin{equation}
+\cK=
+\left\{(x,t)\in Y\times\R^p:
+ h_g(x)\le t_g\le b_g+LR\quad(g\in[p])
+\right\}.
+\label{eq:lifted-body}
+\end{equation}
+
+\begin{lemma}[Lifted optimal value and contraction]
+\label{lem:group-lift}
+The body $\cK$ is nonempty, compact, and convex. Its optimal value satisfies
+\[
+\min_{(x,t)\in\cK}\sum_gw_gt_g
+=
+\min_{x\in Y}F(x).
+\]
+Moreover,
+\[
+\min_YF-F^\star\le L\Delta=\frac\tau8.
+\]
+\end{lemma}
+
+\begin{proof}
+Every $h_g$ is finite, convex, and $L$-Lipschitz.  The point $(0,b_1,\ldots,b_p)$ is feasible.  Convexity follows from the epigraph constraints.  Closedness is immediate, and boundedness follows from $x\in Y$, $t_g\le b_g+LR$, and
+\[
+t_g\ge h_g(x)\ge b_g-L\norm x\ge b_g-LR.
+\]
+For each $x\in Y$, choosing $t_g=h_g(x)$ is feasible because
+\[
+h_g(x)\le b_g+L(R-\Delta)<b_g+LR.
+\]
+Conversely, feasibility gives $\sum_gw_gt_g\ge F(x)$.  This proves the optimal-value identity.
+
+If $x^\star$ minimizes $F$ on $X$, let $x_Y=(1-\Delta/R)x^\star\in Y$.  Then $\norm{x_Y-x^\star}\le\Delta$, so \mbox{the Lipschitz bound yields}
+\[
+\min_YF\le F(x_Y)\le F^\star+L\Delta.
+\]
+\end{proof}
+
+Normalize by
+\[
+u=x/R,
+\qquad
+v_g=(t_g-b_g)/(LR),
+\qquad
+\phi_g(u)=\frac{h_g(Ru)-b_g}{LR}.
+\]
+The normalized body is
+\begin{equation}
+K=\left\{(u,v):\norm u\le r_Y,
+\ \phi_g(u)\le v_g\le1\quad(g\in[p])\right\},
+\qquad
+r_Y=1-\frac\kappa8.
+\label{eq:normalized-body}
+\end{equation}
+Let
+\[
+D=d+p,
+\qquad
+c=(0_d,w_1,\ldots,w_p)\in\R^D,
+\qquad
+\mu=\min_{z\in K}c^Tz
+=\frac{\min_YF-F(0)}{LR}.
+\]
+
+\begin{lemma}[Normalized radii and thick sublevels]
+\label{lem:normalized-geometry}
+The body $K$ is $D$-dimensional, with
+\[
+K\subseteq R_0\Ball^D,
+\qquad R_0=\sqrt{1+p},
+\]
+\[
+\Ball^D\!\left((0_d,\tfrac12\mathbf1_p),\tfrac14\right)\subseteq K.
+\]
+Moreover, $-1<\mu\le0$.  For every $\alpha\in\R$, if $\mu\le\alpha-\kappa$, then
+\[
+S_\alpha=K\cap\{z:c^Tz\le\alpha\}
+\]
+contains a Euclidean ball of radius $\kappa/8$.
+\end{lemma}
+
+\begin{proof}
+Each $\phi_g$ is convex, one-Lipschitz, and satisfies $\phi_g(0)=0$.  Hence on $K$,
+\[
+-1<-r_Y\le\phi_g(u)\le v_g\le1,
+\]
+so $\norm{(u,v)}^2\le1+p$.  If $\norm{(a,b)}\le1/4$, then
+\[
+\norm a\le1/4<r_Y,
+\qquad
+1/4\le1/2+b_g\le3/4,
+\qquad
+\phi_g(a)\le\norm a\le1/4,
+\]
+proving the inner ball and full dimension.  The point $(0,0)$ is feasible and has objective zero, so $\mu\le0$.  Lipschitzness gives $\min_YF-F(0)>-LR$, hence $\mu>-1$.
+
+Let $z^*$ attain $\mu$ and let $z_0=(0_d,\frac12\mathbf1_p)$.  Every $y\in\Ball(z_0,1/4)$ satisfies
+\[
+c^Ty\le c^Tz_0+\norm c/4\le3/4.
+\]
+Set $\lambda=\kappa/2\le1/16$.  Convexity gives
+\[
+(1-\lambda)z^*+\lambda\Ball(z_0,1/4)
+=
+\Ball((1-\lambda)z^*+\lambda z_0,\lambda/4)
+\subset K.
+\]
+Every point in this ball has objective at most
+\[
+(1-\lambda)\mu+\lambda\frac34
+=\mu+\lambda(3/4-\mu)
+<\mu+2\lambda
+=\mu+\kappa
+\le\alpha.
+\]
+Its radius is $\lambda/4=\kappa/8$.
+\end{proof}
+
+\subsection{Centroid localization}
+
+We use the following standard form of Gr\"unbaum's inequality: if $P$ is a full-dimensional compact convex body with centroid $g(P)$, then every closed halfspace whose boundary passes through $g(P)$ contains at least $e^{-1}\vol(P)$.  We use the formulation recorded in \cite[Lemma 2.2]{bubeck2015}.
+
+\begin{lemma}[Centroid localization]
+\label{lem:centroid-localization}
+Let $S\subseteq R_0\Ball^D$.  Suppose that, at the exact centroid of every current localization body, a query procedure either accepts or returns a nonzero normal $a$ whose central halfspace contains $S$. If $S$ contains a radius-$r$ ball, then the number of centroid queries before acceptance is at most
+\[
+H(D,R_0,r)=
+\left\lceil
+\frac{D\log(R_0/r)}{\beta_0}
+\right\rceil+1,
+\qquad
+\beta_0=-\log(1-e^{-1}).
+\]
+\end{lemma}
+
+\begin{proof}
+Start from $P_0=R_0\Ball^D$ and retain the returned halfspace after each nonaccepting query.  Every current body remains full-dimensional because the cut boundary passes through an interior point.  Gr\"unbaum's inequality implies that the retained volume is at most $(1-e^{-1})$ times the current volume.  After $H$ nonaccepting queries,
+\[
+\vol(P_H)
+\le e^{-\beta_0H}R_0^D\vol(\Ball^D)
+<r^D\vol(\Ball^D).
+\]
+All cuts contain $S$, so $S\subseteq P_H$.  This is impossible if $S$ contains a radius-$r$ ball.
+\end{proof}
+
+Fix a level $\alpha$ and run the preceding localization for $S_\alpha$, with
+\begin{equation}
+H=
+\left\lceil
+\frac{D\log(64\rho\sqrt{1+p})}{\beta_0}
+\right\rceil+1,
+\label{eq:H-def}
+\end{equation}
+because $R_0/(\kappa/8)=64\rho\sqrt{1+p}$.
+
+Every returned normal $a\ne0$ specifies the retained central halfspace
+\[
+  \{z':\ip a{z'-z}\le0\}.
+\]
+At a centroid $z=(u,v)$, use the following deterministic screening order.
+\begin{enumerate}
+\item If $\norm u>r_Y$, return the central cut with normal $(u,0_p)$.
+\item Otherwise, if some $v_g>1$, take the least such $g$ and return normal $(0_d,e_g)$.
+\item Otherwise, if $c^Tz>\alpha$, return normal $c$.
+\item Otherwise set $x=Ru$, evaluate all $p$ group functions at $x$ using exactly $N$ component calls, and put $t_g=b_g+LRv_g$.  If $h_g(x)\le t_g+\tau$ for every $g$, accept.  If not, take the least violated group and invoke \cref{thm:separator} on $(h_g,x,t_g)$ with tolerance $\tau$.
+\end{enumerate}
+If the separator returns $g^{\rm sep}$, use the normalized central-cut normal
+\[
+(g^{\rm sep}/L,-e_g).
+\]
+For total pathwise behavior, if a separator invocation were ever to return
+\textsc{Accept} despite the already known exact strict violation, replace that
+output by the fixed nonzero central normal $(0_d,-e_g)$.  This fallback is
+irrelevant on the joint success event but keeps the wrapper defined and the
+localization body full-dimensional for every seed and every scalar history.
+
+\begin{lemma}[Correct localization interface]
+\label{lem:sep-interface}
+On the event that every invoked separator succeeds, every returned cut contains $S_\alpha$.  An accepted point $z=(u,v)$ satisfies
+\begin{equation}
+\frac{F(Ru)-F(0)}{LR}\le\alpha+\kappa.
+\label{eq:accepted-objective}
+\end{equation}
+Moreover, with $\bar t_g=\max\{t_g,h_g(Ru)\}$, one has $(Ru,\bar t)\in\cK$ and
+\begin{equation}
+\sum_gw_g\bar t_g\le\sum_gw_gt_g+\tau.
+\label{eq:repaired-lift}
+\end{equation}
+If no point is accepted within $H$ queries, then $\mu>\alpha-\kappa$.
+\end{lemma}
+
+\begin{proof}
+For the domain cut, every $z'=(u',v')\in S_\alpha$ satisfies
+\[
+\ip u{u'-u}\le r_Y\norm u-\norm u^2<0.
+\]
+The upper-box and level cuts are valid because respectively $v'_g\le1<v_g$ and $c^Tz'\le\alpha<c^Tz$.
+
+At step 4, $x\in Y$, exactly the contracted domain required by \cref{thm:separator}.  If group $g$ is violated, a successful separator returns $g^{\rm sep}$ such that
+\[
+\norm{g^{\rm sep}}\le L,
+\qquad
+h_g(y)\ge h_g(x)+\ip{g^{\rm sep}}{y-x}-\frac\tau2
+\quad(y\in Y),
+\]
+and $h_g(x)-\tau/2>t_g$.  In normalized variables,
+\[
+\phi_g(u')\ge\phi_g(u)+\ip{g^{\rm sep}/L}{u'-u}-\frac\kappa2.
+\]
+For $z'\in K$, $v'_g\ge\phi_g(u')$, while $\phi_g(u)-\kappa/2>v_g$.  Therefore
+\[
+\ip{g^{\rm sep}/L}{u'-u}-(v'_g-v_g)<0.
+\]
+Thus the central separator cut is nonzero and contains all of $K$, hence $S_\alpha$.
+
+If $z$ is accepted, then
+\begin{align*}
+F(Ru)
+&\le\sum_gw_g(t_g+\tau)\\
+&=F(0)+LRc^Tz+\tau\\
+&\le F(0)+LR(\alpha+\kappa),
+\end{align*}
+which is \eqref{eq:accepted-objective}.  Also $h_g(Ru)<b_g+LR$, $t_g\le b_g+LR$, and $\bar t_g\le t_g+\tau$, proving exact feasibility and \eqref{eq:repaired-lift}.
+
+Finally, if $\mu\le\alpha-\kappa$, \cref{lem:normalized-geometry} puts a radius-$\kappa/8$ ball in $S_\alpha$, and \cref{lem:centroid-localization} forces acceptance within $H$ queries.  Take the contrapositive.
+\end{proof}
+
+\subsection{Robust bisection and risk}
+
+Let
+\[
+J=\left\lceil\log_2(1/\kappa)\right\rceil
+=\left\lceil\log_2(8\rho)\right\rceil,
+\qquad
+M=JH.
+\]
+Initialize $\ell_0=-1$, $U_0=0$, and the best primal point at $0$.  At bisection stage $j$, set $\alpha_j=(\ell_j+U_j)/2$ and run a fresh $H$-query localization from the outer ball.  On acceptance, compute the already screened exact normalized value
+\[
+f_j=\frac{F(Ru_j)-F(0)}{LR},
+\]
+set $U_{j+1}=\min\{U_j,f_j\}$ and $\ell_{j+1}=\ell_j$.
+Replace the incumbent by $Ru_j$ only if $f_j<U_j$; otherwise retain
+the previous incumbent. On nonacceptance, set
+$\ell_{j+1}=\max\{\ell_j,\alpha_j-\kappa\}$ and $U_{j+1}=U_j$,
+and retain the incumbent. Run stages $j=0,\ldots,J-1$.
+
+\begin{lemma}[Robust bisection]
+\label{lem:robust-bisection}
+If every invoked separator succeeds, the final incumbent $\widehat x\in Y$ satisfies
+\[
+F(\widehat x)-\min_YF\le3\tau.
+\]
+There are at most $M$ centroid queries and at most one separator invocation per centroid.
+\end{lemma}
+
+\begin{proof}
+Inductively, $\mu\in[\ell_j,U_j]$.  On acceptance, \cref{lem:sep-interface} gives $\mu\le f_j\le\alpha_j+\kappa$; on nonacceptance it gives $\mu>\alpha_j-\kappa$.  Therefore, with $W_j=U_j-\ell_j$,
+\[
+W_{j+1}\le\frac12W_j+\kappa.
+\]
+Since $W_0=1$,
+\[
+W_J\le2^{-J}+2\kappa(1-2^{-J})\le3\kappa.
+\]
+The incumbent realizes $U_J$, so
+\[
+\frac{F(\widehat x)-\min_YF}{LR}=U_J-\mu\le3\kappa.
+\]
+The query count follows from $J$ runs of at most $H$ centroids and the least-violated-group rule.
+\end{proof}
+
+Use fresh separator seeds and set
+\[
+\zeta=\frac\kappa M\le\frac14.
+\]
+The local separator has cap $2d+1$ independent of $\zeta$.  A requested group value is implemented by querying every member of that group in fixed public order, even if the same point appeared earlier; this conservative convention prevents any hidden free reuse.
+
+\begin{theorem}[High-accuracy finite-population upper bound]
+\label{thm:localization-upper}
+The balanced-group lifted-localization policy is admissible, has pathwise cap
+\begin{equation}
+Q_{\rm loc}
+\le
+N+M\bigl[N+(2d+1)s_{\rm grp}\bigr],
+\label{eq:Qloc}
+\end{equation}
+and satisfies
+\begin{equation}
+\sup_{f_1,\ldots,f_N}
+\E[F(\widehat x)-F^\star]
+\le\frac{41}{64}\eps.
+\label{eq:localization-risk}
+\end{equation}
+Furthermore, for a universal $C$,
+\begin{equation}
+Q_{\rm loc}
+\le
+\begin{cases}
+C d^2\log^2\Lambda,&N\le d,\\
+C dN\log^2\Lambda,&N>d.
+\end{cases}
+\label{eq:localization-asymptotic}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Take the global random source to be a countable product of the separator's standard-Borel seed space, and allocate the next unused coordinate to each invocation.  Conditional on the complete history before invocation $j$, its group, point, and threshold are fixed and independent of the fresh seed.  Hence its conditional failure probability is at most $\zeta$.  If $E$ is the event that all invoked separators succeed, the adaptive union bound gives
+\[
+\Pp(E^c)\le M\zeta=\kappa.
+\]
+
+Initialization costs exactly $N$ calls.  At each centroid, the all-group screen costs at most $N$ calls.  One separator invocation uses at most $2d+1$ group values, each costing at most $s_{\rm grp}$ component calls.  There are at most $M$ centroids and invocations, proving \eqref{eq:Qloc} pathwise, including on $E^c$.
+
+On $E$, \cref{lem:robust-bisection,lem:group-lift} give
+\[
+F(\widehat x)-F^\star
+\le3\tau+L\Delta
+=3\tau+\frac\tau8
+=\frac{25}{8}\tau.
+\]
+For every $x\in X$ and any minimizer $x^\star$,
+\[
+0\le F(x)-F^\star\le L\norm{x-x^\star}\le2LR.
+\]
+Therefore
+\begin{align*}
+\E[F(\widehat x)-F^\star]
+&\le\frac{25}{8}\tau+2LR\,\Pp(E^c)\\
+&\le\frac{25}{8}\tau+2LR\kappa\\
+&=\frac{41}{8}\tau
+=\frac{41}{64}\eps.
+\end{align*}
+
+We record measurability because the policy uses exact centroids.  Every current localization body is the fixed outer ball intersected with finitely many halfspaces whose coefficients are Borel functions of the seed and prior transcript.  Its indicator is jointly Borel in the coefficients and integration variable.  Parameterized integration over the fixed outer ball makes volume and first moments Borel; central cuts preserve positive volume, so their ratio is a Borel centroid map.  Finite comparisons, least-index choices, arithmetic, projections, incumbent updates, and the separator policies preserve Borel measurability.  Expanding each group request into a fixed finite client order gives Borel source-level query maps.  The fixed nonzero fallback after a contradictory separator certificate makes every branch total; every seed produces legal on-domain queries, a legal output, and the deterministic cap \eqref{eq:Qloc}.
+
+Finally, $p\le d$ and $D=d+p\le2d$.  Since $\log\Lambda>1$,
+\[
+J\le C\log\Lambda,
+\qquad
+H\le Cd\log\Lambda,
+\qquad
+M\le Cd\log^2\Lambda.
+\]
+If $N\le d$, then $p=N$ and $s_{\rm grp}=1$, so the bracket in \eqref{eq:Qloc} is $O(d)$.  If $N>d$, then $p=d$ and $s_{\rm grp}=\lceil N/d\rceil\le2N/d$, so the bracket is $O(N)$.  This proves \eqref{eq:localization-asymptotic}.
+\end{proof}
+
+Combining \cref{thm:two-point-upper,thm:localization-upper} proves the two upper statements in \cref{thm:explicit-frontier}.  In particular, use the two-point method when $\rho^2<d+N$ and localization when $\rho^2\ge d+N$ to obtain
+\begin{equation}
+q_\eps(d,N,L,R)
+\le C d\min\{\rho^2,d+N\}\log^2\Lambda.
+\label{eq:combined-upper}
+\end{equation}
+
+\section{Lower bounds}
+\label{sec:lower}
+
+The lower frontier is the combination of two hard families.  The first encodes independent hidden directions across clients and is already affine.  The second distributes hidden support facets among groups of
+persistent client functions.
+
+\subsection{Population branch: random affine client groups}
+
+\begin{theorem}[Grouped spherical affine lower bound]
+\label{thm:grouped-affine-lower}
+Let $d\ge2$, $1\le M\le N$, and
+\[
+0<\eta\le\frac{LR}{2\sqrt M}.
+\]
+Then
+\[
+q_\eta(d,N,L,R)
+\ge\left\lfloor\frac{dM}{512}\right\rfloor+1.
+\]
+The hard clients are affine and all slopes have norm exactly $L$.
+\end{theorem}
+
+\begin{proof}
+Partition the public labels into $M$ nonempty balanced groups, with weights $w_j$.  Then
+\[
+\sum_{j=1}^Mw_j=1,
+\qquad
+w_{\max}\le\frac2M,
+\qquad
+\sum_{j=1}^Mw_j^2\ge\frac1M.
+\]
+Draw independent $a_1,\ldots,a_M$ uniformly from $LS^{d-1}$.  Every client in group $j$ receives
+\[
+f_i(x)=\ip{a_j}{x}.
+\]
+The average objective is $F(x)=\ip A x$, where $A=\sum_jw_ja_j$, and its minimum is $-R\norm A$.
+
+Fix first the seed of an arbitrary policy, so the policy is deterministic.
+Pad an early stop with zero queries to the cap $Q$, preserving the output.
+Given a realized transcript $\cT$, let $S_j$ be the span of all points queried from group $j$, and put $p_j=P_{S_j}a_j$.  Exact replies determine $p_j$.  Almost surely, conditional on $\cT$, the posterior of $a_j$ is uniform on the sphere
+\[
+p_j+\{z\in S_j^\perp:\norm z^2=L^2-\norm{p_j}^2\},
+\]
+and the group posteriors remain independent.  This follows inductively by Gram--Schmidt and rotational invariance, including response-dependent queries and stopping.  Hence
+\[
+\E[a_j\mid\cT]=p_j,
+\qquad
+m(\cT):=\E[A\mid\cT]=\sum_jw_jp_j.
+\]
+For $i\ne j$, posterior independence and the tower property give $\E\ip{p_i}{p_j}=0$, so
+\[
+\E\norm{m(\cT)}^2
+=\sum_jw_j^2\E\norm{p_j}^2.
+\]
+
+Suppose the current queried-span dimension for group $j$ is $r<d/2$.  A new independent unit direction in $S_j^\perp$ reveals a coordinate with conditional second moment
+\[
+\frac{L^2-\norm{p_j}^2}{d-r}\le\frac{2L^2}{d}.
+\]
+For precision under adaptive stopping, let $p_{j,t}$ and $r_{j,t}$ denote
+the projection and span dimension after $t$ calls, and let $J_t$ be the
+group queried at time $t$. The indicator
+$\ind_{\{r_{J_t,t-1}<d/2\}}$ is measurable before that reply. Orthogonal
+projection increments and the preceding conditional estimate give
+\[
+\E\sum_{t=1}^Q
+ \ind_{\{r_{J_t,t-1}<d/2\}}w_{J_t}^2
+ \norm{p_{J_t,t}-p_{J_t,t-1}}^2
+ \le\frac{2Qw_{\max}^2L^2}{d}.
+\]
+Pathwise, the final energy of groups with $r_{j,Q}<d/2$ is bounded by
+this sum: every increment of such a group is included, and all summands
+are nonnegative. The remaining groups each require at least $d/2$
+independent queries, so there are at most $2Q/d$ of them. Since
+$\norm{p_{j,Q}}\le L$, their weighted energy is at most
+$2Qw_{\max}^2L^2/d$ pathwise. Repeated or dependent queries have zero
+increment. Thus
+\begin{equation}
+\E\norm{m(\cT)}^2
+\le\frac{4Qw_{\max}^2L^2}{d}
+\le\frac{16QL^2}{dM^2}.
+\label{eq:affine-posterior-energy}
+\end{equation}
+
+Next, with $S=L^2\sum_jw_j^2$, independence and rotational symmetry give
+\[
+\E\norm A^2=S\ge\frac{L^2}{M}
+\]
+and the exact fourth-moment expansion
+\[
+\E\norm A^4
+=S^2+\frac{4L^4}{d}\sum_{i<j}w_i^2w_j^2
+\le2S^2.
+\]
+H\"older interpolation yields
+\[
+\E\norm A
+\ge
+\frac{(\E\norm A^2)^{3/2}}{(\E\norm A^4)^{1/2}}
+\ge\frac{L}{\sqrt{2M}}.
+\]
+
+For any transcript-measurable output $\widehat x\in R\Ball^d$,
+\begin{align*}
+\E\bigl[F(\widehat x)-F^\star\mid\cT\bigr]
+&=\E\bigl[R\norm A+\ip A{\widehat x}\mid\cT\bigr]\\
+&\ge R\E[\norm A\mid\cT]-R\norm{m(\cT)}.
+\end{align*}
+If $Q\le dM/512$, \eqref{eq:affine-posterior-energy} and Cauchy--Schwarz give
+\[
+\E\norm{m(\cT)}\le\frac{L}{4\sqrt{2M}}.
+\]
+The Bayes expected gap is therefore at least
+\[
+\frac{3LR}{4\sqrt{2M}}>\frac{LR}{2\sqrt M}\ge\eta.
+\]
+
+Now average over the independent policy seed.  The hard-tuple distribution does not depend on that seed, so some fixed admissible tuple has seed-averaged risk greater than $\eta$.  Every integer budget $Q\le\lfloor dM/512\rfloor$ fails the minimax guarantee.
+\end{proof}
+
+Choosing
+\[
+M=\min\left\{N,
+\left\lfloor\left(\frac{LR}{2\eps}\right)^2\right\rfloor
+\right\}
+\]
+proves \eqref{eq:affine-lower-main}.
+
+\subsection{Dimension branch: grouped random support functions}
+
+The second hard family places several hidden facets inside each client
+group. We use the posterior analysis of Zhang et al.~\cite{zzql2026},
+with an explicit accounting of which group a selected-client query can
+access. Only the posterior mean and a spectral event are needed for our
+expected-error criterion.
+
+\begin{lemma}[Gaussian posterior estimates for adaptive maxima]
+\label{lem:posterior-toolkit}
+Let the latent vectors be independent standard Gaussian vectors
+conditioned on the Euclidean ball of radius $2\sqrt d$.
+\begin{enumerate}[label=(\roman*)]
+\item Under adaptive observations of maxima of selected finite blocks,
+augment each maximum by its least active index. Almost surely, the
+conditional law remains a product over the latent vectors. Each factor
+has a density of the form
+\[
+  Z^{-1}e^{-\norm b^2/2}\ind_K(b)
+\]
+with respect to Lebesgue--Hausdorff measure on a nonempty affine
+subspace $H$, where $K\subseteq H$ is closed and convex and
+$0<Z<\infty$. On a zero-dimensional support this means a point mass.
+In particular, every factor is one-strongly log-concave relative to
+its affine support.
+\item Suppose that $u_1,\ldots,u_k$ are independent and each has a
+density of the preceding form, possibly on different affine supports.
+For a fixed unit vector $v$, put
+\[
+ Y=\max_{1\le i\le k}\ip{u_i}v,
+ \qquad I=\min\argmax_{1\le i\le k}\ip{u_i}v,
+ \qquad S=\sum_{i=1}^k u_i.
+\]
+There is a universal constant $C\ge1$ such that
+\[
+ \E\norm{\E[S\mid I,Y]-\E S}^2\le C\log(ek).
+\]
+\item There is a universal integer $\bar d$ such that, whenever
+$d\ge\bar d$ and $1\le M\le d/16$, the matrix $\mathsf A$ with
+independent rows $a_j=b_j/\sqrt d$ satisfies
+\[
+ \Pp\{\mathsf A\mathsf A^T\succeq\tfrac14I_M\}\ge\frac78.
+\]
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}[Source and selected-block adaptation]
+Part (ii) is the special case of \cite[Theorem 14]{zzql2026} for
+Gaussian densities restricted to convex subsets of affine spaces;
+we do not require that theorem's more general strongly log-concave
+formulation. Part (iii) is \cite[Theorem 40]{zzql2026}.
+
+For part (i), apply the update argument of
+\cite[Lemma 13]{zzql2026} within the selected block. Conditional on the
+past, both that block and the next query direction are fixed.
+The winning factor is restricted by an affine equality, the other
+factors in the block by halfspace constraints, and factors outside the
+block are unchanged. The source's measurable disintegration handles
+least-index tie-breaking and affine supports, including point masses.
+Its almost-sure product-posterior conclusion therefore persists after
+each selected-block update. Choosing the block as a function of the
+past introduces no additional conditioning. These facts are imported
+analytic inputs; the grouping, weights, and risk reduction below are
+specific to selected-client access.
+\end{proof}
+
+\Needspace{23\baselineskip}
+\begin{theorem}[Grouped support-function lower bound]
+\label{thm:replicated-support-lower}
+Let $C$ be the universal constant in
+\cref{lem:posterior-toolkit}(ii), and set
+\[
+ c_0=\frac1{16},\qquad c_1=\frac3{64},\qquad
+ c_2=\frac1{4096C}.
+\]
+There is a universal integer $d_0$ such that the following holds.
+Let $d\ge d_0$, $1\le G\le N$, $k\ge1$, and $M=Gk\le c_0d$.
+If
+\[
+ 0<\eta\le c_1\frac{LR}{\sqrt M},
+\]
+then
+\begin{equation}
+ q_\eta(d,N,L,R)
+ \ge\left\lfloor c_2\frac{dM}{\log(ek)}\right\rfloor+1.
+ \label{eq:replicated-lower}
+\end{equation}
+Consequently, with $c_3=c_2/2$, if
+\[
+ m_\eta=\min\left\{c_0d,
+       \left(\frac{c_1LR}{2\eta}\right)^2\right\}\ge2,
+\]
+then
+\begin{equation}
+ q_\eta(d,N,L,R)
+ \ge\left\lfloor
+ c_3\frac{d m_\eta}
+ {\log\!\left(e\max\{1,m_\eta/N\}\right)}
+ \right\rfloor.
+ \label{eq:replicated-consequence}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+We first use the unit ball and local Lipschitz constant two.
+Partition the public client labels into $G$ nonempty balanced groups
+$C_g$ and write $w_g=|C_g|/N$. Then
+\[
+ \sum_{g=1}^G w_g=1,\qquad w_g\le\frac2G.
+\]
+Draw $M=Gk$ independent conditioned Gaussian vectors $b_{g\ell}$,
+set $a_{g\ell}=b_{g\ell}/\sqrt d$, and assign to every client in
+$C_g$ the function
+\[
+ h_g(x)=\max_{1\le\ell\le k}\ip{a_{g\ell}}x.
+\]
+Every $h_g$ is convex and two-Lipschitz because
+$\norm{a_{g\ell}}\le2$. Define
+\[
+ H(x)=\sum_{g=1}^G w_g h_g(x),\qquad
+ Z=\sum_{g=1}^G\frac{w_g}{k}\sum_{\ell=1}^k a_{g\ell}.
+\]
+The maximum is at least the average of its entries, so
+\begin{equation}
+ H(x)\ge\ip Zx\qquad(x\in\Ball^d).
+ \label{eq:support-linear-minorant}
+\end{equation}
+
+\paragraph{A negative optimum.}
+Let $\mathsf A$ contain all $M$ rows $a_{g\ell}$, and set
+$\gamma=1/4$. On the spectral event in
+\cref{lem:posterior-toolkit}(iii), the point
+\[
+ x_*=-\frac\gamma{\sqrt M}
+       \mathsf A^T(\mathsf A\mathsf A^T)^{-1}\mathbf1_M
+\]
+satisfies
+\[
+ \norm{x_*}^2
+ =\frac{\gamma^2}{M}
+   \mathbf1_M^T(\mathsf A\mathsf A^T)^{-1}\mathbf1_M
+ \le4\gamma^2\le1.
+\]
+All rows have the same inner product $-\gamma/\sqrt M$ with $x_*$.
+Thus
+\begin{equation}
+ H^\star\le-\frac\gamma{\sqrt M}
+ \quad\text{with probability at least }\frac78.
+ \label{eq:hard-optimum}
+\end{equation}
+Moreover, $H^\star\le H(0)=0$ on every instance. Hence
+\begin{equation}
+ \E[-H^\star]\ge\frac{7\gamma}{8\sqrt M}.
+ \label{eq:support-expected-optimum}
+\end{equation}
+
+\paragraph{Information revealed by a query.}
+Fix the seed of any admissible policy with integer cap $T$.
+For analysis, augment every oracle reply with the least active facet
+index of its queried group, and let $\cG_t$ be the resulting filtration.
+The policy's queries and final output are measurable with respect to
+this enlarged transcript. Set
+\[
+ m_t=\E[Z\mid\cG_t].
+\]
+This is a square-integrable martingale with $m_0=0$ by symmetry.
+Pad early stopping with queries at zero, which give no new information
+for this hard family. At a nonzero query $x$ in group $g$, the
+augmented reply determines
+\[
+ \max_{1\le\ell\le k}
+ \ip{b_{g\ell}}{x/\norm x}
+ =\frac{\sqrt d}{\norm x}h_g(x)
+\]
+and its least active index.
+
+By \cref{lem:posterior-toolkit}(i), conditional on the past, the latent
+factors are independent and have the required truncated Gaussian
+form. Only the $k$ factors in group $g$ are updated. Part (ii), scaled
+by $w_g/(k\sqrt d)$, therefore gives
+\[
+ \E[\norm{m_t-m_{t-1}}^2\mid\cG_{t-1}]
+ \le\frac{Cw_g^2\log(ek)}{dk^2}
+ \le\frac{4C\log(ek)}{dM^2}.
+\]
+A zero query has zero increment. Martingale orthogonality yields
+\begin{equation}
+ \E\norm{m_T}^2\le\frac{4CT\log(ek)}{dM^2}.
+ \label{eq:support-martingale-energy}
+\end{equation}
+
+\paragraph{Expected optimization error.}
+For every transcript-measurable output $\widehat x\in\Ball^d$,
+\eqref{eq:support-linear-minorant} and the tower property imply
+\[
+ \E H(\widehat x)
+ \ge\E\ip Z{\widehat x}
+ =\E\ip{m_T}{\widehat x}
+ \ge-\E\norm{m_T}.
+\]
+If $T\le c_2dM/\log(ek)$, the choice
+$c_2=\gamma^2/(256C)=1/(4096C)$ gives
+\[
+ \E\norm{m_T}\le\sqrt{\E\norm{m_T}^2}
+ \le\frac\gamma{8\sqrt M}.
+\]
+Combining this with \eqref{eq:support-expected-optimum}, we obtain
+\begin{equation}
+ \E[H(\widehat x)-H^\star]
+ \ge\frac{3\gamma}{4\sqrt M}.
+ \label{eq:support-bayes-gap}
+\end{equation}
+This argument directly controls expected error; it needs no tail bound
+for the posterior residual.
+
+For general $L,R$, assign to clients in group $g$
+\[
+ f_g(x)=\frac{LR}{2}h_g(x/R),\qquad x\in R\Ball^d.
+\]
+Each client is $L$-Lipschitz, and one value query in this model is
+equivalent to one query to $h_g$. The rescaling multiplies the gap
+in \eqref{eq:support-bayes-gap} by $LR/2$, giving
+\[
+ \E[F(\widehat x)-F^\star]
+ \ge\frac{3LR}{32\sqrt M}
+ =2c_1\frac{LR}{\sqrt M}>\eta.
+\]
+The hard-tuple distribution is independent of the policy seed.
+Averaging the bound over that seed and applying Tonelli's theorem
+shows that some fixed admissible tuple has seed-averaged error greater
+than $\eta$. Thus every integer cap at most
+$\lfloor c_2dM/\log(ek)\rfloor$ fails, proving
+\eqref{eq:replicated-lower}.
+
+For \eqref{eq:replicated-consequence}, take
+\[
+ G=\min\{N,\lfloor m_\eta\rfloor\},\qquad
+ k=\left\lfloor\frac{m_\eta}{G}\right\rfloor.
+\]
+Since $m_\eta\ge2$, these are positive integers, and
+\[
+ \frac{m_\eta}{2}\le M=Gk\le m_\eta\le c_0d.
+\]
+If $G=N$, then $k\le m_\eta/N$. If $G<N$, then
+$G=\lfloor m_\eta\rfloor$, $k=1$, and $N>m_\eta$.
+Consequently,
+\[
+ k\le\max\{1,m_\eta/N\}.
+\]
+Also, $M\le m_\eta\le(c_1LR/(2\eta))^2$ implies
+$\eta\le c_1LR/(2\sqrt M)$, so the first part applies.
+Its bound, together with the last two displays and $c_3=c_2/2$,
+proves \eqref{eq:replicated-consequence} without any additional
+small-integer exceptions.
+\end{proof}
+
+Taking $\eta=\eps$ proves \eqref{eq:support-lower-main}.
+
+\section{Combination and proof of the main rate}
+\label{sec:combine}
+
+\begin{proof}[Proof of \cref{thm:main-rate}]
+The upper bound is \eqref{eq:combined-upper}.
+
+For the lower bound, take $d$ and $\rho$ larger than fixed universal thresholds so that floors and the condition $m_\eps\ge2$ can be absorbed into constants.  From \eqref{eq:affine-lower-main},
+\begin{equation}
+q_\eps(d,N,L,R)
+\ge c_a d\min\{N,\rho^2\}.
+\label{eq:population-simplified}
+\end{equation}
+From \eqref{eq:support-lower-main}, since
+\[
+m_\eps\ge c_b\min\{d,\rho^2\}
+\]
+for a universal $c_b>0$, while $N\ge1$ and $c_0\le1$ give
+$m_\eps\le d$ and hence
+\[
+\log(e\max\{1,m_\eps/N\})
+\le 1+\log(1+m_\eps)
+\le 1+\log\Lambda
+\le 2\log\Lambda,
+\]
+we obtain, after absorbing the factor two and the integer floor into
+the universal constant,
+\begin{equation}
+q_\eps(d,N,L,R)
+\ge
+c_c\frac{d\min\{d,\rho^2\}}{\log\Lambda}.
+\label{eq:dimension-simplified}
+\end{equation}
+Because $\log\Lambda\ge1$, \eqref{eq:population-simplified} also implies
+\[
+q_\eps(d,N,L,R)
+\ge
+c_a\frac{d\min\{N,\rho^2\}}{\log\Lambda}.
+\]
+Taking the maximum of the last display and \eqref{eq:dimension-simplified}, and using $\max\{x,y\}\ge(x+y)/2$, gives
+\[
+q_\eps(d,N,L,R)
+\ge
+\frac{c d}{\log\Lambda}
+\left(\min\{N,\rho^2\}+\min\{d,\rho^2\}\right).
+\]
+Finally,
+\[
+\min\{N,r\}+\min\{d,r\}\ge\min\{N+d,r\}
+\qquad(r\ge0),
+\]
+which proves the lower half of \eqref{eq:main-rate}.
+\end{proof}
+
+\section{Parameter regimes and theoretical illustrations}
+\label{sec:regimes}
+
+The main theorem identifies the polynomial scale
+\begin{equation}
+\mathcal Q(d,N,\rho)=d\min\{\rho^2,d+N\}.
+\label{eq:polynomial-scale}
+\end{equation}
+It describes a transition at $\rho^2\asymp d+N$, or equivalently
+$\eps\asymp LR/\sqrt{d+N}$, up to logarithmic factors.
+\Cref{tab:regimes} makes the three resulting regions explicit.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}p{0.29\linewidth}p{0.19\linewidth}Y@{}}
+\toprule
+Parameter region & Minimax scale & Mechanism \\
+\midrule
+$\rho^2\le d+N$
+& $\widetilde\Theta(d\rho^2)$
+& Two-point sampling attains the rate; the two lower-bound families
+jointly provide the obstruction. \\
+\addlinespace
+$N\le d$, $\rho^2\ge d+N$
+& $\widetilde\Theta(d^2)$
+& The balanced lift has dimension $O(d)$; hidden support facets
+supply the dimension obstruction. \\
+\addlinespace
+$N>d$, $\rho^2\ge d+N$
+& $\widetilde\Theta(dN)$
+& Each localization step costs $O(N)$ values; independent affine
+client groups already require $\Omega(dN)$ calls. \\
+\bottomrule
+\end{tabularx}
+\caption{Regimes of \cref{thm:main-rate}, under its universal
+thresholds on $d$ and $\rho$. Equalities in the boundary conditions
+are harmless up to universal constants. The displayed scale suppresses
+logarithms, so ``saturation'' refers to polynomial accuracy dependence.}
+\label{tab:regimes}
+\end{table}
+
+\paragraph{Comparison with direct aggregation.}
+The high-accuracy polynomial factors in the aggregate baseline and the
+balanced construction are $Nd^2$ and $d(d+N)$, respectively. Their ratio
+is
+\begin{equation}
+\frac{Nd^2}{d(d+N)}=\frac{Nd}{d+N}
+\asymp\min\{N,d\}.
+\label{eq:improvement-factor}
+\end{equation}
+This quantifies the potential polynomial saving in the localization
+branch. It does not compare hidden constants or running time.
+For $N=1$, the two scales agree up to a constant, as expected from the
+known single-objective theory. For $N\asymp d$, balancing removes one
+factor of $d$ from the aggregate simulation. When $N\gg d$, it replaces
+$Nd^2$ by $Nd$.
+
+\begin{figure}[t]
+\centering
+\begin{minipage}{0.48\linewidth}
+\centering
+\begin{tikzpicture}
+\begin{loglogaxis}[
+width=\linewidth,height=6.1cm,
+xmin=2,xmax=1024,ymin=1,ymax=2000000,
+xtick={2,8,32,128,512},xticklabels={2,8,32,128,512},
+ytick={1,100,10000,1000000},
+xlabel={$\rho=LR/\eps$},ylabel={Polynomial factor divided by $d$},
+title={Few clients: $d=64$, $N=16$},
+title style={font=\small},label style={font=\small},
+tick label style={font=\scriptsize},
+grid=major,grid style={gray!15},
+legend style={draw=none,fill=none,font=\scriptsize,
+at={(0.02,0.98)},anchor=north west},
+legend cell align=left]
+\addplot[baselineblue,dashed,thick,domain=2:1024,samples=100] {x^2};
+\addlegendentry{Two-point: $\rho^2$}
+\addplot[aggregatepurple,dashdotted,thick,domain=2:1024,samples=2] {1024};
+\addlegendentry{Aggregate: $Nd$}
+\addplot[frontierteal,very thick] coordinates {(2,4) (4,16) (8,64) (8.94427191,80) (16,80) (32,80) (128,80) (1024,80)};
+\addlegendentry{Combined: $\min\{\rho^2,d+N\}$}
+\end{loglogaxis}
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}{0.48\linewidth}
+\centering
+\begin{tikzpicture}
+\begin{loglogaxis}[
+width=\linewidth,height=6.1cm,
+xmin=2,xmax=1024,ymin=1,ymax=2000000,
+xtick={2,8,32,128,512},xticklabels={2,8,32,128,512},
+ytick={1,100,10000,1000000},
+xlabel={$\rho=LR/\eps$},
+title={Many clients: $d=64$, $N=4096$},
+title style={font=\small},label style={font=\small},
+tick label style={font=\scriptsize},
+grid=major,grid style={gray!15}]
+\addplot[baselineblue,dashed,thick,domain=2:1024,samples=100] {x^2};
+\addplot[aggregatepurple,dashdotted,thick,domain=2:1024,samples=2] {262144};
+\addplot[frontierteal,very thick] coordinates {(2,4) (4,16) (8,64) (16,256) (32,1024) (64,4096) (64.49806199,4160) (128,4160) (1024,4160)};
+\end{loglogaxis}
+\end{tikzpicture}
+\end{minipage}
+\caption{Analytic illustrations of polynomial rate factors.
+The curves plot $d\rho^2$, $Nd^2$, and
+$d\min\{\rho^2,d+N\}$ after division by $d$, with logarithmic factors
+and unknown multiplicative constants omitted. The colors and line
+styles agree across panels. These are formulas, not measured query
+counts or experimental performance; the finite values of $d$ are
+illustrative and do not specify the universal lower-bound threshold.
+Both panels are generated directly from the formulas embedded in
+the source file.}
+\label{fig:theoretical-scaling}
+\end{figure}
+
+\paragraph{The role of grouping.}
+Ignoring logarithms and integer rounding, a lift with $p$ groups has
+dimension $d+p$ and per-step component cost of order
+$N(1+d/p)$. Their product is
+\begin{equation}
+N(d+p)(1+d/p)=N(2d+p+d^2/p).
+\label{eq:group-balance}
+\end{equation}
+The expression $p+d^2/p$ is minimized at $p=d$.
+The constraint $p\le N$ therefore suggests the balanced choice
+$p=\min\{N,d\}$. Using a single group pays for all clients whenever
+a value is needed to form a cut; using many more than $d$ groups
+unnecessarily enlarges the lifted space.
+
+\paragraph{The lower bound retains more information than the headline.}
+The denominator $\log\Lambda$ in \cref{thm:main-rate} presents a common
+envelope. The population bound in
+\eqref{eq:affine-lower-main} has no logarithmic loss. In addition,
+the grouped support bound has denominator
+$\log(e\max\{1,m_\eps/N\})$: separating the hidden facets across
+selectable groups reduces the number of facets involved in each
+maximum observation. When $N\ge d$, the affine construction alone
+matches the polynomial scale throughout the stated accuracy range.
+The detailed inequalities in \cref{thm:explicit-frontier} should be
+used when these distinctions matter.
+
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{Exact values and arithmetic cost.}
+The separator attains its requested confidence by decreasing the
+finite-difference spacing, while keeping its query count fixed.
+This relies on exact values and exact real arithmetic. With noisy or
+finite-precision replies, dividing by a small spacing amplifies error,
+and a different cost analysis is needed. Likewise, the centroid method
+uses a Borel exact-centroid map without a running-time bound.
+Sampling-based centroid approximations would require quantitative
+control of both geometric error and failure probability before they
+could inherit the present oracle guarantee.
+
+\paragraph{Logarithmic factors and endpoint regimes.}
+The main theorem leaves a gap between its lower factor
+$1/\log\Lambda$ and upper factor $\log^2\Lambda$.
+Sharper stopping rules or localization routines may reduce the upper
+logarithms; a sharper posterior information bound may improve the
+dimension lower bound. The matching statement also has universal
+thresholds on dimension and inverse accuracy. It does not resolve
+sharp low-dimensional constants or the complete transition to the
+zero-call regime $\eps\ge LR$.
+
+\paragraph{Beyond selected-client information.}
+A communication graph, restrictions on participating clients, batched
+rounds, or message-size constraints would introduce additional
+resources. The current model deliberately leaves those resources
+uncharged. Extending the balanced-lift argument to a joint query and
+communication frontier, or to general convex domains with accessible
+geometry, requires further work.
+
+\section{Conclusion}
+
+In the regime of \cref{thm:main-rate}, the polynomial selected-client
+exact-value complexity for convex Lipschitz finite sums on a Euclidean ball is
+$d\min\{(LR/\eps)^2,d+N\}$.
+Balanced epigraph localization provides the high-accuracy upper bound,
+and independent affine groups together with a grouped support-function
+construction provide compatible lower bounds for arbitrary adaptive
+randomized policies. The analysis distinguishes the contributions of
+accuracy, dimension, and population size, with all component values
+charged explicitly. Logarithmic optimality and efficient geometric
+implementation remain open.
+
+\begin{thebibliography}{99}
+\small
+
+\bibitem{zzql2026}
+Haihan Zhang, Chenheng Zhang, Zhiquan Qi, and Zhouchen Lin.
+\newblock Near-optimal lower bounds for randomized algorithms in exact value zeroth-order convex optimization.
+\newblock \href{https://arxiv.org/abs/2607.16558v2}{arXiv:2607.16558v2}, 2026.
+
+\bibitem{duchi2015}
+John C. Duchi, Michael I. Jordan, Martin J. Wainwright, and Andre Wibisono.
+\newblock Optimal rates for zero-order convex optimization: The power of two function evaluations.
+\newblock \emph{IEEE Transactions on Information Theory}, 61(5):2788--2806, 2015.
+\newblock \href{https://doi.org/10.1109/TIT.2015.2409256}{doi:10.1109/TIT.2015.2409256}.
+
+\bibitem{shamir2017}
+Ohad Shamir.
+\newblock An optimal algorithm for bandit and zero-order convex optimization with two-point feedback.
+\newblock \emph{Journal of Machine Learning Research}, 18(52):1--11, 2017.
+\newblock \href{https://jmlr.org/papers/v18/16-632.html}{JMLR article 16-632}.
+
+\bibitem{protasov1996}
+Vladimir Yu. Protasov.
+\newblock Algorithms for approximate calculation of the minimum of a convex function from its values.
+\newblock \emph{Mathematical Notes}, 59(1):69--74, 1996.
+\newblock \href{https://doi.org/10.1007/BF02312467}{doi:10.1007/BF02312467}.
+
+\bibitem{lsv2018}
+Yin Tat Lee, Aaron Sidford, and Santosh S. Vempala.
+\newblock Efficient convex optimization with membership oracles.
+\newblock In \emph{Proceedings of the 31st Conference On Learning Theory},
+volume 75 of \emph{Proceedings of Machine Learning Research}, pages 1292--1294, 2018.
+\newblock \url{https://proceedings.mlr.press/v75/lee18a.html}.
+\newblock Full~version:~\href{https://arxiv.org/abs/1706.07357}{arXiv:1706.07357}.
+
+\bibitem{liu2018}
+Sijia Liu, Bhavya Kailkhura, Pin-Yu Chen, Paishun Ting, Shiyu Chang, and Lisa Amini.
+\newblock Zeroth-order stochastic variance reduction for nonconvex optimization.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume 31, 2018.
+\newblock \href{https://arxiv.org/abs/1805.10367}{arXiv:1805.10367}.
+
+\bibitem{tang2019}
+Yujie Tang, Junshan Zhang, and Na Li.
+\newblock Distributed zero-order algorithms for nonconvex multi-agent optimization.
+\newblock \href{https://arxiv.org/abs/1908.11444}{arXiv:1908.11444}, 2019.
+
+\bibitem{bubeck2015}
+S\'ebastien Bubeck.
+\newblock Convex optimization: Algorithms and complexity.
+\newblock \emph{Foundations and Trends in Machine Learning}, 8(3--4):231--357, 2015.
+\newblock \href{https://arxiv.org/abs/1405.4980}{arXiv:1405.4980}.
+
+\bibitem{kerger2026}
+Phillip Kerger.
+\newblock Closing the oracle-complexity gap in derivative-free convex optimization:
+A near-quadratic lower bound from exact function values.
+\newblock \href{https://arxiv.org/abs/2607.13335v1}{arXiv:2607.13335v1}, 2026.
+
+\bibitem{gasnikov2022}
+Alexander Gasnikov, Anton Novitskii, Vasilii Novitskii, Farshed Abdukhakimov,
+Dmitry Kamzolov, Aleksandr Beznosikov, Martin Tak\'a\v{c},
+Pavel Dvurechensky, and Bin Gu.
+\newblock The power of first-order smooth optimization for black-box non-smooth problems.
+\newblock In \emph{Proceedings of the 39th International Conference on Machine Learning},
+volume 162 of \emph{Proceedings of Machine Learning Research}, pages 7241--7265, 2022.
+\newblock \url{https://proceedings.mlr.press/v162/gasnikov22a.html}.
+
+\bibitem{alashqar2023}
+Belal A. Alashqar, Alexander V. Gasnikov, Darina M. Dvinskikh, and Aleksandr V. Lobanov.
+\newblock Gradient-free federated learning methods with $l_1$ and $l_2$-randomization
+for non-smooth convex stochastic optimization problems.
+\newblock \emph{Computational Mathematics and Mathematical Physics},
+63(9):1600--1653, 2023.
+\newblock \href{https://doi.org/10.1134/S0965542523090026}{doi:10.1134/S0965542523090026}.
+\newblock Preprint: \href{https://arxiv.org/abs/2211.10783}{arXiv:2211.10783}.
+
+\end{thebibliography}
+\end{document}

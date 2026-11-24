@@ -1,0 +1,3495 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{booktabs,tabularx,array}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{xurl}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,
+ urlcolor=blue!45!black,pdftitle={Sample Complexity and Communication Limits of Decentralized Optimization under Relaxed Smoothness},
+ pdfauthor={Colombo Team}}
+\setlength{\parindent}{1.2em}
+\setlength{\parskip}{0.18em}
+\setlist[itemize]{leftmargin=*,itemsep=0.25em,topsep=0.35em}
+\setlist[enumerate]{leftmargin=*,itemsep=0.25em,topsep=0.35em}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\inner}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\cO}{\mathcal{O}}
+\newcommand{\cOmega}{\Omega}
+\newcommand{\tO}{\widetilde{\mathcal{O}}}
+\newcommand{\tOmega}{\widetilde{\Omega}}
+\newcommand{\tTheta}{\widetilde{\Theta}}
+\newcommand{\one}{\mathbf{1}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\emergencystretch=2em
+\allowdisplaybreaks[1]
+\title{Sample Complexity and Communication Limits\\
+of Decentralized Optimization\\under Relaxed Smoothness}
+\author{Colombo Team\\
+\small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study decentralized nonconvex optimization when local gradient variation
+is controlled by a constant plus the local gradient norm. Each of $m$ agents
+has access to an unbiased stochastic gradient oracle with fresh noise of
+variance at most $\sigma^2$, and local gradients differ from their average
+by at most $H$. Writing $L_H=L_0+L_1H$, we characterize the minimax total
+number of local oracle calls, up to logarithmic factors, throughout the
+range $\eps^2\le c\Delta L_H$:
+\[
+\widetilde\Theta\!\left(
+ \left[\frac{L_H\Delta}{\eps^2}+\frac{L_1\Delta}{\eps}\right]
+       \left[1+\frac{\sigma^2}{\eps^2}\right]
+ +\frac{L_H\Delta}{\eps^2}
+       \sqrt{1+\min\{m,H^2/\eps^2\}}
+ +1+\min\{m,H^2/\eps^2\}\right).
+\]
+The upper bound uses robust dyadic gradient differences to separate
+component uncertainty from fresh oracle noise. The lower bounds
+combine an orthogonal embedding, hidden-sign discovery, a retiring
+finite-sum chain with uniformly bounded disagreement, and a terminally flat
+stochastic chain. The last construction shows that fresh noise multiplies
+the coarse-accuracy scale $L_1\Delta/\eps$. The lower bounds allow arbitrary
+randomized adaptive queries in sufficiently large finite dimension.
+We also distinguish total sample complexity from communication complexity.
+For a known fixed gossip matrix $W$, exact arithmetic permits averaging in
+$r(W)-1$ communication calls, where $r(W)$ counts its distinct eigenvalues.
+Small heterogeneity additionally permits communication-free optimization.
+These facts delimit the scope of spectral-gap-based communication bounds.
+\end{abstract}
+
+\noindent\textbf{Keywords.} Decentralized optimization; nonconvex optimization;
+relaxed smoothness; oracle complexity; variance reduction; communication complexity.
+\par\medskip
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}
+
+Decentralized optimization separates access to data from the exchange of
+information. An agent can sample its own objective without communicating,
+but its local gradient may differ substantially from the gradient of the
+network average. Under relaxed smoothness, this disagreement has a second
+effect: it changes the curvature that an algorithm must accommodate.
+A useful complexity theory must therefore account for the interaction
+between accuracy, heterogeneity, stochastic noise, and the number of agents.
+
+We consider local functions satisfying the finite-step
+$(L_0,L_1)$-smoothness condition, under which gradient variation can grow
+with the gradient norm. Luo et al.~\cite{relaxed2025} established a
+convergence framework for decentralized normalized stochastic gradient
+descent in this setting and identified the inherited smoothness parameter
+$L_H=L_0+L_1H$. Their results motivate two distinct questions. Which
+combinations of $L_H$, the initial gap $\Delta$, the target accuracy $\eps$,
+and the noise level are unavoidable in the \emph{total} number of local
+queries? Separately, what does a spectral-gap dependence say when the
+communication matrix is fixed and exact linear arithmetic is allowed?
+
+Our answer to the first question is a minimax characterization over all
+finite dimensions. The rate has four contributions: ordinary smooth
+stochastic optimization, sequential component identification, one-time
+component discovery, and stochastic progress at coarse accuracy. These
+contributions have different constructions and become dominant in different
+parameter ranges. The distinction is particularly useful when local oracle
+noise is small, or when the target accuracy is larger than $L_H/L_1$.
+
+The analysis develops three complementary arguments.
+\begin{itemize}
+\item \textbf{Separating the two sources of uncertainty.}
+A dyadic estimator averages component differences and fresh endpoint noise
+at different scales. A robust aggregation rule gives simultaneous control
+along the adaptive path, including the random times at which the algorithm
+returns to a macro-iterate. This yields an additive fresh-noise cost rather
+than a product between noise and the effective population size.
+\item \textbf{Realizing the lower-bound scales in the stated class.}
+An orthogonal simplex makes ordinary $L_H$-smooth hard instances admissible
+under local $(L_0,L_1)$-smoothness. A retiring selector adapts dense weak
+hiding~\cite{dense2026} so that gradient disagreement does not accumulate
+with the number of stages. A terminally flat chain combines low-amplitude
+hidden gradients with a pointwise smoothness certificate and a fresh
+rare-reveal oracle.
+\item \textbf{Specifying the communication quantifiers.}
+Classical finite-time consensus~\cite{finiteconsensus2007} supplies a
+fixed-matrix implementation of the sample-efficient method. A two-agent
+example and a communication-free regime show why an uncapped
+$\gamma^{-1/2}$ expression cannot be a universal pointwise communication
+lower bound in this exact-real model. These observations are compatible
+with lower bounds for hard network families under different protocol
+restrictions~\cite{ludesa2021}.
+\end{itemize}
+
+Section~\ref{sec:model} specifies the oracle model and states the main
+result. Section~\ref{sec:related} compares the result with prior work using
+consistent sample counts and explicit assumptions.
+Sections~\ref{sec:upper-main} and~\ref{sec:lower-main} give the upper-bound
+framework, the main reductions, and the assembly of the minimax rate.
+Section~\ref{sec:communication} treats communication separately.
+The appendices contain the adaptive-estimation and sequential-hiding
+arguments, together with a one-dimensional deterministic lower bound.
+
+\section{Oracle model and main result}
+\label{sec:model}
+
+\subsection{Functions, queries, and outputs}
+
+Fix $m\ge2$, $L_0,L_1,\Delta>0$, and $H,\sigma\ge0$.
+For a finite dimension $d$, consider continuously differentiable functions
+$f_i:\R^d\to\R$ with average
+\[
+ f(x)=\frac1m\sum_{i=1}^m f_i(x),\qquad
+ f(x_0)-\inf_x f(x)\le\Delta.
+\]
+Only the average objective is required to be bounded below. For every agent
+$i$ and every pair with $\norm{x-y}\le1/L_1$, assume
+\begin{align}
+ \norm{\nabla f_i(x)-\nabla f_i(y)}
+ &\le\bigl(L_0+L_1\norm{\nabla f_i(x)}\bigr)\norm{x-y},
+ \label{eq:local-relaxed}\\
+ \norm{\nabla f_i(x)-\nabla f(x)}&\le H.
+ \label{eq:heterogeneity}
+\end{align}
+The heterogeneity bound is uniform over agents and over the whole space.
+
+A local query specifies an agent $i$ and a point $x$ and returns a gradient
+vector $G_i(x;\xi)$. If $\mathcal F$ denotes the complete history before the
+call, its conditional moments satisfy
+\begin{equation}
+ \E[G_i(x;\xi)\mid\mathcal F]=\nabla f_i(x),\qquad
+ \E[\norm{G_i(x;\xi)-\nabla f_i(x)}^2\mid\mathcal F]\le\sigma^2.
+ \label{eq:oracle-model}
+\end{equation}
+Every call uses fresh randomness. In particular, the interface does not
+allow a random sample to be reused at a second query point, and imposes no
+smoothness condition on the noisy response as a function of $x$.
+Calls may be serialized, so their noise vectors form martingale differences.
+The oracle returns no function values. Algorithms may select both the
+agent and the query point adaptively, with unrestricted local computation.
+
+Communication uses a known fixed matrix $W\in\R^{m\times m}$ that is
+symmetric, nonnegative, and doubly stochastic, with
+\[
+ 0\preceq W\preceq I,\qquad
+ \ker(I-W)=\operatorname{span}\{\one\}.
+\]
+One communication call applies $W$ to any finite stack of local vectors.
+Exact-real local arithmetic is allowed, including linear combinations with
+coefficients determined by the known matrix. Write
+\begin{equation}
+ \gamma=1-\lambda_2(W),\qquad
+ r(W)=\#\{\text{distinct eigenvalues of }W\}.
+ \label{eq:network-parameters}
+\end{equation}
+All agents know $x_0$, the parameter bounds, and the protocol, and may use
+public randomness. Each agent must return a locally available point
+$\widehat x_i$ such that
+\begin{equation}
+ \E\norm{\nabla f(\widehat x_i)}\le\eps.
+ \label{eq:output-criterion}
+\end{equation}
+The outputs need not be equal; the upper-bound algorithm below produces a
+common output. Let $S$ count total local oracle calls across all agents and
+let $C_{\rm comm}$ count communication calls.
+
+For each $d$, let $S_d^*$ be the infimum of the worst-case expected value of
+$S$ over randomized adaptive protocols satisfying
+\eqref{eq:output-criterion} on the entire $d$-dimensional class. Define
+\begin{equation}
+ S^*:=\sup_{d\ge1}S_d^*.
+ \label{eq:minimax-definition}
+\end{equation}
+Thus the upper bounds are dimension independent, whereas the lower bounds
+may choose a sufficiently large finite dimension. The matrix $W$ is held
+fixed throughout this definition. Communication is permitted and counted
+separately; it is not constrained when minimizing $S$.
+
+\subsection{Scales and notation}
+
+Define
+\begin{align}
+ L_H&=L_0+L_1H,&
+ A_\eps&=\frac{L_H\Delta}{\eps^2},&
+ B_\eps&=\frac{L_1\Delta}{\eps},
+ \label{eq:abbrev}\\
+ V_\eps&=\frac{\sigma^2}{\eps^2},&
+ P_\eps&=1+V_\eps,&
+ N_\eps&=1+\min\left\{m,\frac{H^2}{\eps^2}\right\}.
+ \label{eq:refined-parameters}
+\end{align}
+The ratio
+\begin{equation}
+ t_\eps:=\frac{B_\eps}{A_\eps}=\frac{L_1\eps}{L_H}
+ \label{eq:theta}
+\end{equation}
+separates high accuracy ($t_\eps\le1$) from coarse accuracy
+($t_\eps>1$). The parameter $N_\eps$ is an effective component count, while
+$P_\eps$ measures fresh-noise cost. Notice that $t_\eps>1$ implies
+$H<\eps$ and hence $N_\eps<2$.
+
+Throughout the minimax statements, the nontrivial-accuracy assumption means
+\begin{equation}
+ 0<\eps^2\le c_0\Delta L_H
+ \label{eq:nontrivial}
+\end{equation}
+for one sufficiently small universal constant $c_0>0$. We do not assert a
+minimax characterization outside this range. To specify the logarithmic
+losses, set
+\begin{align}
+ \Xi_\eps&=\left[1+\log\left(1+\frac{L_1\eps}{L_0}\right)\right]^4,
+ \label{eq:stochastic-coarse-log}\\
+ \mathcal L_\eps&=1+\log\left(2+m+A_\eps+B_\eps+P_\eps
+                  +\frac H\eps+\frac{L_1\eps}{L_0}\right).
+ \label{eq:global-log}
+\end{align}
+The symbols $\widetilde O$, $\widetilde\Omega$, and
+$\widetilde\Theta$ suppress universal powers of these logarithmic factors.
+Unadorned $O$, $\Omega$, and $\Theta$ suppress universal constants, unless a
+fixed regime constant is explicitly specified.
+
+\subsection{The sample-complexity characterization}
+
+\begin{theorem}[Minimax total sample complexity]
+\label{thm:main}
+There are universal constants $c_0,c,C>0$ such that, under
+\eqref{eq:nontrivial}, for every admissible fixed communication matrix $W$,
+\begin{equation}
+ \frac{c}{\Xi_\eps}\,\mathfrak F_\eps
+ \le S^*\le C\mathcal L_\eps^3\,\mathfrak F_\eps,
+ \qquad
+ \mathfrak F_\eps:=(A_\eps+B_\eps)P_\eps
+                  +A_\eps\sqrt{N_\eps}+N_\eps.
+ \label{eq:main-explicit}
+\end{equation}
+In particular,
+\begin{equation}
+ \boxed{S^*=\tTheta\!\left(
+       (A_\eps+B_\eps)P_\eps
+       +A_\eps\sqrt{N_\eps}+N_\eps\right).}
+ \label{eq:fully-closed-all-regime-rate}
+\end{equation}
+The sample upper bound can be attained together with
+\begin{equation}
+ \E C_{\rm comm}\le C(r(W)-1)(1+A_\eps+B_\eps).
+ \label{eq:main-communication}
+\end{equation}
+The lower bound applies to arbitrary randomized adaptive protocols with
+stopping-time query counts and arbitrary output points. In the high-accuracy
+region $B_\eps\le A_\eps$, its logarithmic loss can be removed:
+$S^*\ge c\mathfrak F_\eps$.
+\end{theorem}
+
+The proof is assembled in Section~\ref{sec:assembly}; all constructions and
+estimator details are given below. Equation~\eqref{eq:main-communication}
+is an achievable communication bound for a sample-efficient method. It is
+not a characterization of the joint sample--communication Pareto frontier.
+
+\begin{table}[t]
+\centering\small
+\caption{Consequences of Theorem~\ref{thm:main}. Every row assumes
+\eqref{eq:nontrivial}; logarithmic factors are suppressed.}
+\label{tab:regimes}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{@{}p{0.25\textwidth}p{0.39\textwidth}Y@{}}
+\toprule
+Regime & Minimax total samples & Interpretation\\
+\midrule
+$B_\eps\le A_\eps$
+& $\tTheta(A_\eps P_\eps+A_\eps\sqrt{N_\eps}+N_\eps)$
+& Smooth stochastic cost plus component identification.\\
+$B_\eps>A_\eps$
+& $\tTheta(B_\eps P_\eps)$
+& Here $N_\eps<2$; fresh noise multiplies coarse progress.\\
+$\sigma=0$, all accuracies
+& $\tTheta(A_\eps\sqrt{N_\eps}+N_\eps+B_\eps)$
+& Exact local gradients.\\
+$H=0$, all accuracies
+& $\tTheta((A_\eps+B_\eps)P_\eps)$
+& Identical local gradients; $L_H=L_0$ and $N_\eps=1$.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The four lower-bound scales can be proved on separate hard families:
+$A_\eps P_\eps$ by an orthogonal smooth embedding,
+$N_\eps$ by hidden-sign discovery,
+$A_\eps\sqrt{N_\eps}$ by a retiring finite-sum chain, and
+$B_\eps P_\eps/\Xi_\eps$ by a terminally flat stochastic chain.
+Taking the maximum of four lower bounds loses only a constant relative to
+their sum. No direct-sum assertion about simultaneously realizing all four
+mechanisms is needed.
+
+\section{Comparison with prior work}
+\label{sec:related}
+
+Comparisons require the same counting convention and information interface.
+We count \emph{total} local gradient calls. A fresh stochastic response at
+one point is different from an exact component gradient, or from a random
+sample that can be evaluated at two points. Table~\ref{tab:sample-comparison}
+records these distinctions.
+
+\begin{table}[!t]
+\centering\small
+\caption{Sample-complexity comparisons. Put $A_0=L\Delta/\eps^2$ for an
+ordinary smoothness constant $L$. All rates count total gradient calls.
+The notation $S_{\rm DNSGD}$ is defined in~\eqref{eq:dnsgd-rounded}.
+Each row retains its own assumptions and output guarantee.}
+\label{tab:sample-comparison}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{@{}p{0.20\textwidth}p{0.27\textwidth}Y@{}}
+\toprule
+Work & Rate & Oracle, regime, and guarantee\\
+\midrule
+Arjevani et al.\ \cite{arjevani2022}; Carmon et al.\ \cite{carmon2019}
+& $\Omega(A_0P_\eps)$
+& Ordinary $L$-smooth objective; fresh bounded-variance gradients;
+$\eps^2\le cL\Delta$; arbitrary randomized algorithms; expected gradient norm at most $\eps$.\\[0.5em]
+Zhou et al.\ \cite{snvrg2018}
+& $\tO(N_\eps+A_0\sqrt{N_\eps})$
+& Exact finite-sum gradients; ordinary averaged squared smoothness $L$;
+component variance at most $H^2$; expected squared gradient at most
+$\eps^2$.\\[0.5em]
+Reisizadeh et al.\ \cite{reisizadeh2023}
+& $O(m+A_\eps\sqrt m)$
+& Exact finite-sum gradients; averaged relaxed smoothness with constant
+$L_H$; $\eps\le cL_H/L_1$; constant-probability stationarity.\\[0.5em]
+Peng et al.\ \cite{dense2026}
+& $\Omega(m+A_0\sqrt m)$
+& Individually $L$-smooth finite sums; exact value--gradient IFO;
+$m\ge m_0$, $\eps^2\le cL\Delta$; randomized adaptive queries;
+expected-gradient criterion; sufficiently large dimension; no uniform $H$ bound.\\[0.5em]
+Luo et al.\ \cite{relaxed2025}
+& $O(S_{\rm DNSGD})$
+& Local finite-step relaxed smoothness, uniform heterogeneity, and fresh
+bounded-variance noise; expected gradient norm at most $\eps$ at every
+agent. Integer batches are retained below.\\[0.5em]
+This paper
+& $\tTheta(\mathfrak F_\eps)$
+& Model~\eqref{eq:local-relaxed}--\eqref{eq:output-criterion};
+$\eps^2\le c_0\Delta L_H$; expected total calls; dimension unrestricted.
+The upper bound works in every finite dimension.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{The direct decentralized comparison.}
+With the present notation, Corollary~1 of Luo et al.~\cite{relaxed2025}
+reports the noise-dependent total cost
+$O(V_\eps[A_\eps+1+(B_\eps+1)t_\eps^2])$ after multiplication of their
+per-agent formula by $m$. Retaining integer batches gives the useful
+uniform upper estimate
+\begin{equation}
+ S_{\rm DNSGD}:=
+ m(1+A_\eps+B_\eps)
+ +V_\eps\bigl[A_\eps+1+(B_\eps+1)t_\eps^2\bigr].
+ \label{eq:dnsgd-rounded}
+\end{equation}
+To obtain it directly from their Theorem~1, apply that theorem to
+\[
+ \bar f_i(y)=\frac{L_H}{\eps^2}
+             f_i\!\left(x_0+\frac{\eps}{L_H}y\right).
+\]
+This makes both the inherited smoothness constant and the target accuracy
+one. The quantities $A_\eps,B_\eps,V_\eps,t_\eps$ and the query count
+are unchanged. Their choices
+then give $T=O(1+A_\eps+B_\eps)$ and
+$b=O(1+V_\eps(1+t_\eps^2)/m)$, including rounding and initialization.
+The identity $B_\eps=A_\eps t_\eps$ yields
+\eqref{eq:dnsgd-rounded}. The corresponding communication guarantee is
+$\widetilde O((1+A_\eps+B_\eps)/\sqrt\gamma)$.
+
+For $t_\eps\le1$ and $V_\eps\gtrsim m$, this earlier bound already attains
+$O(A_\eps V_\eps)$ under~\eqref{eq:nontrivial}. Our result supplies the
+matching necessity of $L_H$ and characterizes the complementary low-noise
+and coarse-accuracy regions. In the exact-gradient, full-population regime
+$H^2/\eps^2\ge m$, our rate is
+$\widetilde\Theta(m+A_\eps\sqrt m)$ at high accuracy. At coarse accuracy,
+the fresh-noise term is $\widetilde\Theta(B_\eps P_\eps)$, removing the
+extra $t_\eps^2$ in the noise-dependent part of
+\eqref{eq:dnsgd-rounded} when that term dominates. These are comparisons
+of guarantees under their stated models, rather than claims about the
+observed performance of DNSGD.
+
+\paragraph{Variance reduction and component uncertainty.}
+The effective population cutoff in $N_\eps$ already appears in nested
+variance reduction for ordinarily smooth finite sums~\cite{snvrg2018}.
+Variance-reduced clipping gives finite-sum improvements under relaxed
+smoothness~\cite{reisizadeh2023}, while normalized methods and SPIDER also
+extend to broader generalized-smooth classes~\cite{chen2023}.
+Their stochastic $\eps^{-3}$ results use additional mean-squared regularity
+and paired evaluations with the same random sample. Our interface supplies
+fresh oracle noise, for which the ordinary stochastic obstruction
+remains of order $L_H\Delta\sigma^2/\eps^4$~\cite{arjevani2022}.
+The dyadic construction separates this cost from component uncertainty.
+
+\paragraph{Lower-bound mechanisms and attribution.}
+The inherited smoothness inequality with $L_H$ is Proposition~1 of
+Luo et al.~\cite{relaxed2025}. Our orthogonal embedding shows that this
+parameter is also necessary for the stated class. The dense sign tables,
+bounded radial map, and sequential information principle are adapted from
+Peng et al.~\cite{dense2026}; the retiring selector enforces a gradient
+heterogeneity bound independent of chain length. The rare-reveal principle
+is related to probabilistic zero chains~\cite{arjevani2022}. The coarse
+construction adds terminal flatness and a blockwise noncancellation
+argument to satisfy the stated finite-step relaxed-smoothness condition.
+
+\paragraph{Communication and quantifiers.}
+Finite-time polynomial consensus is classical~\cite{finiteconsensus2007}.
+The sample algorithm uses its symmetric known-matrix specialization.
+Lu and De Sa~\cite{ludesa2021} establish lower bounds for restricted
+synchronous protocols on suitable hard networks, with a specified local
+query budget per iteration. Their results do not assert an uncapped
+spectral-gap lower bound for every fixed $W$ in the model studied here.
+Section~\ref{sec:communication} makes this distinction explicit.
+
+\section{Upper bounds}\label{sec:upper-main}
+\subsection{Inherited smoothness and normalized descent}
+
+\begin{lemma}[Inherited smoothness; cf.~\cite{relaxed2025}]
+\label{lem:global-relaxed}
+Under \eqref{eq:local-relaxed}--\eqref{eq:heterogeneity}, for every
+$\norm{x-y}\le1/L_1$,
+\begin{equation}
+ \norm{\nabla f(x)-\nabla f(y)}
+ \le\bigl(L_H+L_1\norm{\nabla f(x)}\bigr)\norm{x-y}.
+ \label{eq:global-relaxed}
+\end{equation}
+Consequently, for every $s$ with $\norm{s}\le1/L_1$,
+\begin{equation}
+ f(x+s)
+ \le f(x)+\inner{\nabla f(x)}{s}
+ +\frac12\bigl(L_H+L_1\norm{\nabla f(x)}\bigr)\norm{s}^2.
+ \label{eq:descent}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Averaging \eqref{eq:local-relaxed} and using
+$\norm{\nabla f_i(x)}\le\norm{\nabla f(x)}+H$ gives
+\[
+\begin{aligned}
+ \norm{\nabla f(x)-\nabla f(y)}
+ &\le \frac1m\sum_{i=1}^m
+       \norm{\nabla f_i(x)-\nabla f_i(y)}\\
+ &\le \left(L_0+\frac{L_1}{m}\sum_{i=1}^m
+       \norm{\nabla f_i(x)}\right)\norm{x-y}\\
+ &\le \bigl(L_0+L_1H+L_1\norm{\nabla f(x)}\bigr)\norm{x-y}.
+\end{aligned}
+\]
+For \eqref{eq:descent}, integrate the directional derivative on the segment
+$x+ts$, $t\in[0,1]$, and apply \eqref{eq:global-relaxed} to the pair
+$(x,x+ts)$.
+\end{proof}
+
+The following perturbation bound relates an inexact normalized direction to
+the true gradient.
+
+\begin{lemma}[Direction perturbation]
+\label{lem:direction}
+Let $g,v\in\R^d$ and define $u=v/\norm v$ when $v\ne0$, and $u=0$ when
+$v=0$.  Then
+\begin{equation}
+ \inner{g}{u}\ge\norm g-2\norm{v-g}.
+ \label{eq:direction}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+If $v\ne0$, then
+\[
+ \inner g u=\norm v-\inner{v-g}{u}
+ \ge\norm v-\norm{v-g}
+ \ge\norm g-2\norm{v-g}.
+\]
+If $v=0$, the right-hand side is $\norm g-2\norm g=-\norm g\le0$.
+\end{proof}
+\subsection{Exact averaging at a fixed communication matrix}
+The next lemma is the symmetric known-spectrum form of finite-time polynomial consensus~\cite{finiteconsensus2007}.
+
+\begin{lemma}[Spectral polynomial consensus]
+\label{lem:polynomial-consensus}
+Let the distinct eigenvalues of $W$ be
+$1=\lambda_1,\lambda_2,\ldots,\lambda_r$.  Define
+\begin{equation}
+ p_W(t)=\prod_{j=2}^{r}\frac{t-\lambda_j}{1-\lambda_j}.
+ \label{eq:consensus-polynomial}
+\end{equation}
+Then
+\begin{equation}
+ p_W(W)=J:=\frac1m\one\one^\top.
+ \label{eq:exact-consensus}
+\end{equation}
+Consequently the exact average of any stack of local vectors can be made
+available at every agent using $r(W)-1\le m-1$ calls to $W$ and local linear
+arithmetic.
+\end{lemma}
+
+\begin{proof}
+Because $W$ is real symmetric, it has an orthogonal spectral decomposition.
+The polynomial satisfies $p_W(1)=1$ and $p_W(\lambda_j)=0$ for every distinct
+nonconsensus eigenvalue.  Connectedness makes the eigenspace of $1$ equal to
+$\operatorname{span}\{\one\}$, proving \eqref{eq:exact-consensus}.  Horner
+or factored evaluation uses one $W$-multiplication per polynomial degree.
+\end{proof}
+
+\subsection{A normalized minibatch method}
+At a common point $x$, there are two useful constructions.
+
+\paragraph{Random-agent batch.}
+Draw public independent indices $I_1,\ldots,I_q\sim\operatorname{Unif}[m]$ and
+one fresh local sample for each selected index.  Set
+\begin{equation}
+ \widehat g_R(x)=\frac1q\sum_{k=1}^q G_{I_k}(x;\xi_k).
+ \label{eq:random-agent-estimator}
+\end{equation}
+It can be formed by letting agent $i$ store
+$(m/q)\sum_{k:I_k=i}G_i(x;\xi_k)$ and applying exact averaging once.  With
+$\nu^2:=\sigma^2+H^2$,
+\begin{equation}
+ \E[\widehat g_R(x)]=\nabla f(x),
+ \qquad
+ \E\norm{\widehat g_R(x)-\nabla f(x)}^2\le\frac{\nu^2}{q}.
+ \label{eq:random-agent-variance}
+\end{equation}
+Indeed, conditional unbiasedness kills the cross term between oracle noise and
+$\nabla f_i(x)-\nabla f(x)$.
+
+\paragraph{Full-network batch.}
+Every agent takes $b$ fresh samples and exact averaging forms
+\begin{equation}
+ \widehat g_F(x)=\frac1m\sum_{i=1}^m
+ \left(\frac1b\sum_{k=1}^bG_i(x;\xi_{i,k})\right).
+ \label{eq:full-network-estimator}
+\end{equation}
+Then
+\begin{equation}
+ \E[\widehat g_F(x)]=\nabla f(x),
+ \qquad
+ \E\norm{\widehat g_F(x)-\nabla f(x)}^2\le\frac{\sigma^2}{mb}.
+ \label{eq:full-network-variance}
+\end{equation}
+Here heterogeneity cancels before the stochastic variance is evaluated.
+
+
+
+\begin{theorem}[Normalized minibatch upper bound]
+\label{thm:sample-upper}
+There is a decentralized algorithm for which all agents return the same
+random output $\widehat x$ and
+\[
+ \E\norm{\nabla f(\widehat x)}\le\eps.
+\]
+Its total sample and communication costs obey
+\begin{align}
+ S
+ &\le C_1(1+A_\eps+B_\eps)
+ \min\left\{
+ 1+\frac{\sigma^2+H^2}{\eps^2},
+ m+\frac{\sigma^2}{\eps^2}
+ \right\},
+ \label{eq:upper-min-form}\\
+ C
+ &\le C_2\bigl(r(W)-1\bigr)(1+A_\eps+B_\eps),
+ \label{eq:upper-communication-exact}
+\end{align}
+for universal constants $C_1,C_2$.  In particular,
+\begin{equation}
+ S=\cO\!\left(
+ (1+A_\eps+B_\eps)
+ \left[1+\frac{\sigma^2}{\eps^2}
+ +\min\left\{m,\frac{H^2}{\eps^2}\right\}
+ \right]
+ \right).
+ \label{eq:upper-simple-form}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Choose the cheaper of the following two batch rules:
+\begin{align*}
+ q_R&=\max\left\{1,
+ \left\lceil\frac{256(\sigma^2+H^2)}{\eps^2}\right\rceil\right\},\\
+ b_F&=\max\left\{1,
+ \left\lceil\frac{256\sigma^2}{m\eps^2}\right\rceil\right\},
+ \qquad q_F=mb_F.
+\end{align*}
+By \eqref{eq:random-agent-variance} or \eqref{eq:full-network-variance}, the
+selected estimator $v_t$ satisfies, conditionally on the common iterate $x_t$,
+\begin{equation}
+ \E[v_t\mid x_t]=g_t:=\nabla f(x_t),
+ \qquad
+ \E[\norm{v_t-g_t}\mid x_t]\le\frac{\eps}{16}.
+ \label{eq:estimator-error}
+\end{equation}
+Exact consensus from Lemma~\ref{lem:polynomial-consensus} makes $v_t$ available
+at every agent.  Define $u_t=v_t/\norm{v_t}$ when $v_t\ne0$ and $u_t=0$
+otherwise, and update
+\begin{equation}
+ x_{t+1}=x_t-\eta u_t,
+ \qquad
+ \eta=\min\left\{\frac1{2L_1},\frac{\eps}{16L_H}\right\},
+ \label{eq:normalized-update}
+\end{equation}
+where $1/(2L_1)=+\infty$ if $L_1=0$.
+
+Since $\eta\le1/L_1$, Lemmas~\ref{lem:global-relaxed} and
+\ref{lem:direction} give
+\[
+\begin{aligned}
+ \E[f(x_{t+1})\mid x_t]
+ &\le f(x_t)
+ -\eta\E[\inner{g_t}{u_t}\mid x_t]
+ +\frac{\eta^2}{2}(L_H+L_1\norm{g_t})\\
+ &\le f(x_t)
+ -\eta\left(1-\frac{\eta L_1}{2}\right)\norm{g_t}
+ +2\eta\E[\norm{v_t-g_t}\mid x_t]
+ +\frac{\eta^2L_H}{2}.
+\end{aligned}
+\]
+Let
+\[
+ T=\max\left\{1,
+ \left\lceil\frac{16\Delta}{\eta\eps}\right\rceil\right\}.
+\]
+Summation, the global gap bound, \eqref{eq:estimator-error},
+$1-\eta L_1/2\ge3/4$, and $\eta L_H/2\le\eps/32$ imply
+\[
+ \frac34\cdot\frac1T\sum_{t=0}^{T-1}
+ \E\norm{\nabla f(x_t)}
+ \le \frac{\Delta}{\eta T}+\frac{\eps}{8}+\frac{\eps}{32}
+ \le\frac{7\eps}{32}.
+\]
+Thus a public uniform choice from $x_0,\ldots,x_{T-1}$ has expected gradient
+norm below $\eps$.
+
+Moreover,
+\[
+ T=\cO(1+A_\eps+B_\eps),
+\]
+while
+\[
+ q_R\le1+\frac{256(\sigma^2+H^2)}{\eps^2},
+ \qquad
+ q_F\le m+\frac{256\sigma^2}{\eps^2}.
+\]
+This proves \eqref{eq:upper-min-form}.  Each iteration uses one exact average,
+which costs $r(W)-1$ calls, proving \eqref{eq:upper-communication-exact}.
+Finally,
+\[
+ \min\{1+V_\eps+H^2/\eps^2,\,m+V_\eps\}
+ =\cO\!\left(1+V_\eps+\min\{m,H^2/\eps^2\}\right),
+\]
+which gives \eqref{eq:upper-simple-form}.
+\end{proof}
+\subsection{The refined upper bound}
+
+The minibatch method pays the component uncertainty at every iteration.
+The dyadic method reuses reference points while resampling every stochastic
+response. It has the following sharper guarantee.
+
+\begin{theorem}[Dyadic fresh-noise upper bound]
+\label{thm:dyadic-upper}
+There is a decentralized algorithm for which all agents return the same
+$\widehat x$ satisfying $\E\norm{\nabla f(\widehat x)}\le\eps$ and
+\begin{equation}
+ \E S\le\tO\left(
+ N_\eps+(1+A_\eps+B_\eps)
+                    (\sqrt{N_\eps}+P_\eps)\right).
+ \label{eq:dyadic-master-upper}
+\end{equation}
+Its expected communication cost at the fixed matrix $W$ satisfies
+\begin{equation}
+ \E C_{\rm comm}\le C(r(W)-1)(1+A_\eps+B_\eps).
+ \label{eq:dyadic-communication}
+\end{equation}
+All local oracle evaluations use fresh samples.
+\end{theorem}
+
+\begin{proof}[Proof outline]
+Appendix~\ref{sec:dyadic} gives the complete algorithm and proof. It
+partitions a virtual path into epochs of length $Q\asymp\sqrt{N_\eps}$
+and represents each gradient by an anchor and a binary partition of gradient
+differences. A length-$h$ difference costs, up to logarithms,
+$\min\{m,h^2,H^2/\eps^2\}+P_\eps$ calls and is formed once per $h$ virtual
+steps. Summing over dyadic lengths separates the amortized costs
+$\sqrt{N_\eps}$ and $P_\eps$. A finite robust aggregation rule controls
+all estimates simultaneously. Normalized descent bounds the expected
+virtual path length by $O(1+A_\eps+B_\eps)$.
+\end{proof}
+
+\section{Lower bounds and assembly}\label{sec:lower-main}
+\subsection{An orthogonal embedding of smooth optimization}
+
+The following reduction realizes the inherited scale $L_H$ using admissible
+local functions. It also preserves the noise distribution of any centralized
+gradient oracle.
+
+\begin{theorem}[Orthogonal-simplex reduction]
+\label{thm:sample-lower}
+There are universal constants $c,c_0>0$ such that the following holds.  Let
+\[
+ 0<\eps\le c_0\min\{\sigma,\sqrt{\Delta L_H}\}.
+\]
+For every randomized adaptive decentralized algorithm in the stated model,
+there is a finite-dimensional admissible instance for which success at every
+agent requires
+\begin{equation}
+ \E S\ge c\left(
+      \frac{L_H\Delta}{\eps^2}
+      +\frac{L_H\sigma^2\Delta}{\eps^4}
+      \right).
+ \label{eq:sample-lower}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Let $g:\R^{d_0}\to\R$ be any ordinary $L_H$-smooth instance with
+$g(0)-\inf g\le\Delta$.  In an auxiliary copy of $\R^m$, define
+\begin{equation}
+ u_i=H\sqrt{\frac{m}{m-1}}
+ \left(e_i-\frac1m\one\right),
+ \qquad i=1,\ldots,m.
+ \label{eq:simplex}
+\end{equation}
+Then
+\[
+ \frac1m\sum_{i=1}^m u_i=0,
+ \qquad
+ \norm{u_i}=H.
+\]
+For $x=(z,t)\in\R^{d_0}\times\R^m$, set
+\begin{equation}
+ f_i(z,t)=g(z)+\inner{u_i}{t}.
+ \label{eq:embedded-local}
+\end{equation}
+Their average and gradients are
+\begin{equation}
+ f(z,t)=g(z),
+ \qquad
+ \nabla f_i(z,t)=(\nabla g(z),u_i),
+ \qquad
+ \nabla f(z,t)=(\nabla g(z),0).
+ \label{eq:embedded-gradients}
+\end{equation}
+Thus the global gap is unchanged and the heterogeneity is exactly $H$.
+Moreover, for arbitrary $x=(z,t)$ and $y=(z',t')$,
+\[
+\begin{aligned}
+ \norm{\nabla f_i(x)-\nabla f_i(y)}
+ &=\norm{\nabla g(z)-\nabla g(z')}\\
+ &\le L_H\norm{z-z'}
+ \le L_H\norm{x-y}.
+\end{aligned}
+\]
+Since $\norm{\nabla f_i(x)}\ge\norm{u_i}=H$,
+\[
+ L_H=L_0+L_1H
+ \le L_0+L_1\norm{\nabla f_i(x)}.
+\]
+Therefore every $f_i$ satisfies \eqref{eq:local-relaxed}, in fact globally.
+
+Given any unbiased oracle $G_g(z;\xi)$ for $g$, define the local oracle
+\begin{equation}
+ G_i((z,t);\xi)=(G_g(z;\xi),u_i).
+ \label{eq:embedded-oracle}
+\end{equation}
+It has exactly the same noise norm and variance as the oracle for $g$.
+
+For a fixed-budget algorithm using $S$ local calls, a centralized
+simulator with access to the oracle of $g$ can maintain the complete virtual
+state of all agents.  Whenever virtual agent $i$ queries $(z,t)$, the simulator
+uses one fresh query at $z$ and returns \eqref{eq:embedded-oracle}.  It can
+perform all $W$-multiplications and all local arithmetic internally, without
+additional oracle calls.  Hence it reproduces the decentralized transcript
+using exactly $S$ queries to $g$.
+
+At termination, the $z$-component of the output of any one agent satisfies
+\[
+ \E\norm{\nabla g(\widehat z_i)}
+ =\E\norm{\nabla f(\widehat z_i,\widehat t_i)}
+ \le\eps.
+\]
+The sharp centralized lower bound for arbitrary randomized adaptive
+fresh-sample algorithms therefore yields the fixed-budget form of
+\eqref{eq:sample-lower}; see \cite[Theorem~3 and its fixed-budget construction]{arjevani2022}.  For completeness, apply that construction at a fixed universal multiple of
+$\eps$, so that the capped output has gradient norm at least $8\eps$ with
+probability at least $1/2$. If the worst-case expected number of calls were
+a sufficiently small fraction of its fixed-budget threshold, Markov's
+inequality would bound the probability of exceeding the cap by $1/8$ on
+the same hard instance. The original output would then have expected
+gradient norm larger than $\eps$. This proves the expected-call bound.
+\end{proof}
+
+\begin{corollary}[The ordinary stochastic scale]
+\label{cor:AP-lower}
+There are universal constants $c,c_0>0$ such that, whenever
+$\eps^2\le c_0\Delta L_H$, the minimax total sample complexity satisfies
+\begin{equation}
+ S^*\ge cA_\eps P_\eps.
+ \label{eq:AP-lower}
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+If $\sigma$ is at least a sufficiently large universal multiple of $\eps$,
+Theorem~\ref{thm:sample-lower} applies and gives
+$\Omega(A_\eps+A_\eps\sigma^2/\eps^2)=\Omega(A_\eps P_\eps)$.
+If $\sigma=O(\eps)$, then $P_\eps=\Theta(1)$, and the classical deterministic
+smooth nonconvex lower bound~\cite{carmon2019} gives $\Omega(L_H\Delta/\eps^2)=\Omega(A_\eps)$.
+The orthogonal-simplex embedding in the proof of
+Theorem~\ref{thm:sample-lower} transfers that deterministic hard instance to
+the present decentralized class.  The overlap between the two cases is
+absorbed into the universal constants.
+\end{proof}
+
+\begin{remark}[Why this proves necessity of $L_1H$]
+The local Hessian scale of the hard component is $L_H$, although the primitive
+constant in \eqref{eq:local-relaxed} is only $L_0$.  The additional curvature is
+certified by the orthogonal gradient component of norm $H$.  Hence the lower
+bound contains $L_0+L_1H$ for structural, rather than merely analytic,
+reasons.
+\end{remark}
+
+\begin{remark}[Scope of the construction]
+Our model assumes that the average objective is bounded below; it
+does not require every $f_i$ to be bounded below.  The linear orthogonal
+components in \eqref{eq:embedded-local} use this scope.  Adding a
+separate lower-boundedness requirement on every local objective defines a
+strictly different problem and would require another embedding.
+\end{remark}
+\subsection{Discovering heterogeneous components}
+\label{sec:discovery-lower}
+
+The centralized hard instance proves the multiplicative term
+$A_\eps P_\eps$, but it does not charge the algorithm for discovering which
+local components are present.  The following construction supplies this
+additional obstruction and uses the uniform heterogeneity bound exactly.
+
+\begin{theorem}[Hidden-sign discovery lower bound]
+\label{thm:discovery-lower}
+There are universal constants $c,c_0>0$ such that, whenever
+$\eps^2\le c_0\Delta L_H$, every randomized adaptive decentralized algorithm
+has an admissible deterministic-oracle instance on which
+\begin{equation}
+ \E S\ge c\min\left\{m,\frac{H^2}{\eps^2}\right\}.
+ \label{eq:discovery-lower}
+\end{equation}
+Consequently, after combining with the centralized smooth and stochastic
+lower bounds,
+\begin{equation}
+ \boxed{
+ S^*\ge c\bigl(A_\eps P_\eps+N_\eps\bigr).}
+ \label{eq:combined-sample-lower}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Write $K_H=\min\{m,H^2/\eps^2\}$.  If $K_H$ is below a
+universal constant, the deterministic smooth lower bound and the nontrivial-
+accuracy assumption give $\E S=\Omega(1)=\Omega(K_H)$.  Otherwise it
+suffices to prove the claim for every integer
+\begin{equation}
+ 2\le n\le c_1\min\left\{m,\frac{H^2}{\eps^2}\right\}.
+ \label{eq:n-discovery-choice}
+\end{equation}
+Partition the $m$ agents into $n$ nonempty groups $G_1,\ldots,G_n$ with group
+sizes $g_j$ differing by at most one, and set
+\[
+ w_j:=\frac{m}{ng_j}.
+\]
+Then $1/2\le w_j\le2$.  Draw independent hidden signs
+$s_1,\ldots,s_n\in\{-1,+1\}$, let
+\[
+ L_\star:=L_0+\frac12L_1H,
+ \qquad
+ a:=4\eps\sqrt n,
+\]
+and, for an agent $i\in G_j$, define on $z\in\R^n$
+\begin{equation}
+ h_i(z)=\frac{L_\star}{2}\norm z^2-a w_j s_jz_j.
+ \label{eq:sign-local}
+\end{equation}
+The average is
+\begin{equation}
+ h(z)=\frac{L_\star}{2}\norm z^2
+ -\frac an\sum_{j=1}^ns_jz_j.
+ \label{eq:sign-average}
+\end{equation}
+
+Append an auxiliary orthogonal coordinate and choose simplex vectors $u_i$
+of norm $H/2$ and mean zero.  Set
+\begin{equation}
+ f_i(z,t)=h_i(z)+\inner{u_i}{t}.
+ \label{eq:sign-embedded}
+\end{equation}
+The base-gradient disagreement is bounded by
+\begin{equation}
+ \norm{a w_js_je_j-\frac an(s_1,\ldots,s_n)}
+ \le\sqrt5\,a.
+ \label{eq:sign-base-heterogeneity}
+\end{equation}
+Taking $c_1$ sufficiently small makes the squared sum of this quantity and
+$(H/2)^2$ at most $H^2$.  Thus \eqref{eq:heterogeneity} holds.  Every local
+objective is ordinarily $L_\star$-smooth and
+$\norm{\nabla f_i}\ge H/2$, so
+\[
+ L_\star=L_0+\frac12L_1H
+ \le L_0+L_1\norm{\nabla f_i}.
+\]
+Hence the relaxed-smoothness requirement also holds globally.
+
+At the common start $z_0=0$,
+\begin{equation}
+ h(0)-\inf h
+ =\frac{a^2}{2nL_\star}
+ =\frac{8\eps^2}{L_\star}
+ \le\Delta
+ \label{eq:sign-gap}
+\end{equation}
+under the stated nontrivial-accuracy condition, after adjusting the universal
+constant.
+
+One query to a member of $G_j$ can reveal $s_j$, but no query outside $G_j$
+contains that sign.  Let $D$ be the number of distinct groups queried before
+termination.  Conditional on the complete transcript, every sign in an
+unqueried group remains independent and symmetric.  If $U$ denotes the
+unqueried groups, then for the transcript-measurable output $z$ of any fixed
+agent,
+\[
+ \nabla_U h(z)=L_\star z_U-\frac an s_U.
+\]
+The function
+\[
+ z_U\longmapsto
+ \E_{s_U}\norm{L_\star z_U-\frac an s_U}
+\]
+is convex and even, hence minimized at $z_U=0$.  On $D<n/2$,
+\begin{equation}
+ \E\bigl[\norm{\nabla h(z)}\mid\text{transcript}\bigr]
+ \ge\frac an\sqrt{|U|}
+ \ge\frac{a}{\sqrt{2n}}
+ =2\sqrt2\,\eps.
+ \label{eq:sign-conditional-lower}
+\end{equation}
+Suppose an algorithm had worst-case expected total call count at most $n/4$.
+Under the uniform sign prior, $D\le S$, so Markov's inequality gives
+\[
+ \Pr(D\ge n/2)\le\frac{2\E S}{n}\le\frac12.
+\]
+Averaging \eqref{eq:sign-conditional-lower} over the transcript yields
+$\E\norm{\nabla h(\widehat z)}>\eps$.  Hence some fixed sign realization
+violates the required expected stationarity guarantee.  Thus the worst-case
+expected number of calls is $\Omega(n)$.  Maximizing $n$ subject to
+\eqref{eq:n-discovery-choice} proves \eqref{eq:discovery-lower}.
+
+For \eqref{eq:combined-sample-lower},
+Corollary~\ref{cor:AP-lower} gives $\Omega(A_\eps P_\eps)$.  Under the
+nontrivial-accuracy assumption this term is also $\Omega(1)$, so it absorbs
+the additive one in $N_\eps=1+K_H$.  The maximum of the two lower bounds is
+within a universal factor of their sum.
+\end{proof}
+\subsection{Sequential component and coarse-noise lower bounds}
+
+The component-discovery construction is a single estimation task. The next
+result shows that component uncertainty can recur throughout an optimization
+trajectory, even under a uniform heterogeneity bound.
+
+\begin{theorem}[Bounded-disagreement dense-weak-hiding lower bound]
+\label{thm:retiring-dwh-lower}
+There are universal constants $c,c_0>0$ such that, whenever
+\begin{equation}
+ \eps^2\le c_0\Delta L_H,
+ \label{eq:retiring-nontrivial}
+\end{equation}
+every randomized adaptive decentralized algorithm has an admissible
+exact-gradient instance for which
+\begin{equation}
+ \boxed{
+ \E S\ge c A_\eps\sqrt{N_\eps}.}
+ \label{eq:retiring-square-root-lower}
+\end{equation}
+The algorithm may adaptively choose both the queried agent and an arbitrary
+query point from its complete preceding history.
+\end{theorem}
+
+\begin{proof}[Construction and proof location]
+Appendix~\ref{subsec:retiring-dwh} constructs a chain whose component-specific
+signal disappears as a gate opens. A dimension-independent selector bound
+keeps the disagreement at $O(\eps/\rho)$ after scaling. Choosing
+$\rho\asymp\max\{m^{-1/2},\eps/H\}$ yields
+$\Theta(A_\eps\rho)$ sequential stages, each requiring
+$\Omega(\min\{m,\rho^{-2}\})$ component queries. Their product is
+$\Omega(A_\eps\sqrt{N_\eps})$; the boundary cases follow from the
+ordinary and discovery lower bounds.
+\end{proof}
+
+At coarse accuracy, the question is whether the path-length scale
+$B_\eps$ also incurs the fresh-noise factor $P_\eps$. A hidden stage must
+have small gradient amplitude for the variance budget to conceal it for
+$\Theta(P_\eps)$ calls. The following construction achieves this while
+retaining the prescribed relaxed smoothness.
+
+\begin{theorem}[Stochastic coarse product lower bound]
+\label{thm:stochastic-coarse-product}
+There are universal constants $c,C>0$ such that the following holds.  Assume
+\begin{equation}
+ L_1\eps\ge2L_0,
+ \qquad
+ \eps^2\le c\Delta L_H.
+ \label{eq:stochastic-coarse-premise}
+\end{equation}
+With $\Xi_\eps$ as in~\eqref{eq:stochastic-coarse-log},
+assume in addition that $B_\eps\ge C\Xi_\eps$.  Then every randomized
+adaptive decentralized algorithm has an admissible
+instance with identical local objectives and independent fresh local oracle
+samples for which
+\begin{equation}
+ \boxed{
+ \E S\ge
+ c\frac{B_\eps P_\eps}{\Xi_\eps}.}
+ \label{eq:BP-product-lower}
+\end{equation}
+The construction has zero heterogeneity and therefore belongs to the class
+for every prescribed upper bound $H\ge0$.
+\end{theorem}
+
+\begin{proof}[Construction and proof location]
+Appendix~\ref{sec:stochastic-coarse-closure} constructs
+$T=\Theta(B_\eps/\Xi_\eps)$ hidden blocks with an $8\eps$ stationarity
+obstruction. The hidden part of every reply has norm $O(\eps)$, so it can
+be revealed with probability $\Theta(P_\eps^{-1})$ under the variance
+budget. A prefix-truncated coupling prevents arbitrary adaptive queries or
+the final output from bypassing the hidden blocks. The required number of
+calls is therefore $\Omega(TP_\eps)$. The appendix proves every analytic
+and oracle property, and includes the stopping-time argument.
+\end{proof}
+
+\subsection{Proof of the main theorem}
+\label{sec:assembly}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Corollary~\ref{cor:AP-lower} and Theorems~\ref{thm:discovery-lower}
+and~\ref{thm:retiring-dwh-lower} give the three lower bounds
+\[
+ \Omega(A_\eps P_\eps),\qquad \Omega(N_\eps),\qquad
+ \Omega(A_\eps\sqrt{N_\eps}).
+\]
+Here the additive one in $N_\eps$ is absorbed by $A_\eps P_\eps$, since
+\eqref{eq:nontrivial} implies $A_\eps\ge1/c_0$.
+If $B_\eps\le A_\eps$, these bounds already give
+$S^*\ge c\mathfrak F_\eps$.
+
+For the coarse term, if $L_1\eps<2L_0$, then $B_\eps<2A_\eps$ and the
+ordinary stochastic bound suffices. If $L_1\eps\ge2L_0$ and
+$B_\eps\ge C\Xi_\eps$, Theorem~\ref{thm:stochastic-coarse-product} gives
+$S^*\ge cB_\eps P_\eps/\Xi_\eps$. In the remaining case,
+$B_\eps<C\Xi_\eps$, and $A_\eps\ge1/c_0$ implies
+$B_\eps P_\eps/\Xi_\eps\le Cc_0A_\eps P_\eps$.
+Thus all cases give $S^*\ge c\mathfrak F_\eps/\Xi_\eps$ after combining
+the four lower bounds. Every construction uses a finite dimension, and the
+centralized simulations apply to any fixed admissible $W$.
+
+For the upper bound, Appendix~\ref{sec:dyadic} gives the quantitative estimate
+\[
+ \E S\le C\mathcal L_\eps^3
+ \left[N_\eps+P_\eps+
+       (1+A_\eps+B_\eps)(\sqrt{N_\eps}+P_\eps)\right].
+\]
+If $B_\eps\le A_\eps$, every term containing $B_\eps$ is absorbed by the
+corresponding $A_\eps$ term. If $B_\eps>A_\eps$, then $N_\eps<2$, so
+$B_\eps\sqrt{N_\eps}\le\sqrt2B_\eps P_\eps$.
+The remaining startup terms are absorbed using $A_\eps\ge1/c_0$ and
+$\sqrt{N_\eps}\le N_\eps$. This proves the upper inequality in
+\eqref{eq:main-explicit}. The same implementation uses
+$O(1+A_\eps+B_\eps)$ expected exact averaging operations, each costing
+$r(W)-1$ calls, which proves~\eqref{eq:main-communication}.
+\end{proof}
+
+\section{Communication at a fixed matrix}
+\label{sec:communication}
+
+The sample characterization does not determine the minimum number of
+communication rounds. The latter depends on the protocol, the matrix, and
+whether sample cost is constrained. We give two explicit implications of
+the model used in this paper.
+
+\subsection{Finite spectral degree and the spectral gap}
+
+\begin{proposition}[Two-agent spectral-gap counterexample]
+\label{prop:two-agent}
+For every $0<\delta\le1/2$, let
+\begin{equation}
+ W_\delta=
+ \begin{pmatrix}
+ 1-\delta&\delta\\
+ \delta&1-\delta
+ \end{pmatrix}.
+ \label{eq:two-agent-W}
+\end{equation}
+Then $W_\delta$ is symmetric, doubly stochastic and positive semidefinite, and
+its spectral gap is $\gamma=2\delta$.  Nevertheless, one call to $W_\delta$
+lets each agent recover the other agent's entire transmitted vector exactly.
+Consequently no lower bound containing an uncapped factor
+$\gamma^{-1/2}$ can hold pointwise for all fixed $W$ under the stated
+communication oracle.
+\end{proposition}
+
+\begin{proof}
+If the transmitted vectors are $v_1,v_2$, agent $1$ receives
+\[
+ y_1=(1-\delta)v_1+\delta v_2.
+\]
+It knows $v_1$ and $\delta$, hence computes
+\[
+ v_2=\frac{y_1-(1-\delta)v_1}{\delta}.
+\]
+Agent $2$ argues symmetrically.  This remains true as $\delta\downarrow0$,
+while $\gamma^{-1/2}\to\infty$.
+\end{proof}
+
+
+Lemma~\ref{lem:polynomial-consensus} gives the corresponding general
+statement: exact averaging costs at most $r(W)-1\le m-1$ calls. The
+coefficients may have either sign and may be large; this is permitted by
+the exact-real model. A finite-precision implementation would require a
+separate numerical-stability analysis.
+
+Accelerated approximate consensus instead gives a useful dependence on
+$\gamma^{-1/2}$ and on a logarithmic accuracy parameter~\cite{relaxed2025}.
+These two guarantees concern different implementations. The two-agent
+example shows that the spectral gap alone does not characterize pointwise
+communication complexity when exact polynomial arithmetic is available.
+
+\begin{remark}[Iteration bounds and communication bounds]
+A proof that allows a bounded number of local queries per iteration must
+retain that restriction when its iteration lower bound is interpreted as
+a communication lower bound. Unrestricted local work does not eliminate
+all communication obstructions, but it changes which arguments apply.
+The network-family and protocol quantifiers in~\cite{ludesa2021} are
+therefore essential; Proposition~\ref{prop:two-agent} does not contradict
+those results.
+\end{remark}
+
+\subsection{A communication-free regime}
+
+\begin{theorem}[Small heterogeneity permits zero communication]
+\label{thm:zero-communication}
+For any $\sigma\ge0$, if $H\le\eps/32$, each agent can independently
+return an output satisfying~\eqref{eq:output-criterion}, with
+\begin{equation}
+ C_{\rm comm}=0,\qquad
+ S=O\bigl(m(1+A_\eps+B_\eps)P_\eps\bigr).
+ \label{eq:zero-communication-rate}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+At its own point $x_{i,t}$, agent $i$ averages
+$b=\max\{1,\lceil256\sigma^2/\eps^2\rceil\}$ fresh responses to obtain
+$v_{i,t}$. Conditional on that point,
+\[
+ \E\norm{v_{i,t}-\nabla f(x_{i,t})}
+ \le H+\frac{\eps}{16}\le\frac{3\eps}{32}.
+\]
+It takes a normalized step of length
+$\eta=\min\{1/(2L_1),\eps/(16L_H)\}$, with the zero convention.
+The direction and descent inequalities give
+\[
+ \E f(x_{i,t+1})\le\E f(x_{i,t})
+ -\frac34\eta\E\norm{\nabla f(x_{i,t})}
+ +\frac{3\eta\eps}{16}+\frac{\eta^2L_H}{2}.
+\]
+Taking $T=\max\{1,\lceil16\Delta/(\eta\eps)\rceil\}$ and summing yields
+\[
+ \frac34\,\frac1T\sum_{t<T}\E\norm{\nabla f(x_{i,t})}
+ \le\frac{\eps}{16}+\frac{3\eps}{16}+\frac{\eps}{32}
+ =\frac{9\eps}{32}.
+\]
+A uniform local iterate therefore meets the target. Since
+$T=O(1+A_\eps+B_\eps)$ and $b=O(P_\eps)$, summing over the $m$ agents
+proves~\eqref{eq:zero-communication-rate}.
+\end{proof}
+
+For $H\le\eps/32$, the main theorem has sample scale
+$(A_\eps+B_\eps)P_\eps$ up to logarithmic factors.
+Theorem~\ref{thm:zero-communication} provides a communication-free
+alternative with an $m$-fold total sample budget. It does not determine the
+full sample--communication frontier. In particular, a positive
+communication lower bound uniform in $H/\eps$ cannot hold for this class.
+
+\section{Discussion}
+
+The sample rate separates four costs that are conflated by a single
+minibatch analysis. Heterogeneity affects both the inherited curvature
+$L_H$ and the effective population $N_\eps$, but fresh within-component
+noise enters through its own factor $P_\eps$. At coarse accuracy, a
+terminally flat chain forces that factor to multiply $B_\eps$ as well.
+The explicit logarithmic losses in~\eqref{eq:main-explicit} locate the
+remaining difference between the proved upper and lower estimates.
+
+Several questions remain outside the theorem. The lower constructions do
+not determine the minimax rate in every fixed ambient dimension. The
+one-dimensional construction in Appendix~\ref{sec:coarse-reset} proves a
+separate deterministic coarse obstruction, but does not settle that broader
+question. Requiring every local objective to be bounded below would also
+change the class used by the simplex reductions. Finally, a complete joint
+sample--communication frontier would need to track the matrix and allowed
+local work explicitly. The bounds and counterexamples in
+Section~\ref{sec:communication} identify constraints on such a theory.
+
+\clearpage
+\begin{thebibliography}{99}
+
+\bibitem{relaxed2025}
+Luo Luo, Xue Cui, Tingkai Jia, and Cheng Chen.
+\newblock Decentralized stochastic nonconvex optimization under the
+$(L_0,L_1)$-smoothness.
+\newblock In \emph{Proceedings of the 32nd ACM SIGKDD Conference on Knowledge
+Discovery and Data Mining V.2}, 2026.
+\newblock \href{https://doi.org/10.1145/3770855.3817843}{doi:10.1145/3770855.3817843}.
+\newblock Also arXiv:2509.08726v3.
+
+\bibitem{ludesa2021}
+Yucheng Lu and Christopher De Sa.
+\newblock Optimal complexity in decentralized training.
+\newblock In \emph{Proceedings of the 38th International Conference on
+Machine Learning}, volume 139 of \emph{Proceedings of Machine Learning
+Research}, pages 7111--7123, 2021.
+\newblock \url{https://proceedings.mlr.press/v139/lu21a.html}.
+
+\bibitem{chen2023}
+Ziyi Chen, Yi Zhou, Yingbin Liang, and Zhaosong Lu.
+\newblock Generalized-smooth nonconvex optimization is as efficient as smooth
+nonconvex optimization.
+\newblock In \emph{Proceedings of the 40th International Conference on
+Machine Learning}, volume 202 of \emph{Proceedings of Machine Learning
+Research}, pages 5396--5427, 2023.
+\newblock \url{https://proceedings.mlr.press/v202/chen23ar.html}.
+
+\bibitem{snvrg2018}
+Dongruo Zhou, Pan Xu, and Quanquan Gu.
+\newblock Stochastic nested variance reduction for nonconvex optimization.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+volume 31, 2018.
+\newblock \url{https://arxiv.org/abs/1806.07811}.
+
+\bibitem{reisizadeh2023}
+Amirhossein Reisizadeh, Haochuan Li, Subhro Das, and Ali Jadbabaie.
+\newblock Variance-reduced clipping for non-convex optimization.
+\newblock In \emph{IEEE International Conference on Acoustics, Speech and
+Signal Processing (ICASSP)}, pages 1--5, 2025.
+\newblock Full version: arXiv:2303.00883v2, 2023.
+\newblock \url{https://arxiv.org/abs/2303.00883}.
+
+\bibitem{dense2026}
+Yuxing Peng, Zhiqing Tang, and Weijia Jia.
+\newblock Dense weak hiding: Closing complexity gaps in nonconvex and PL
+finite-sum optimization under individual smoothness.
+\newblock arXiv:2609.00045v3, 2026.
+\newblock \url{https://arxiv.org/abs/2609.00045v3}.
+
+\bibitem{arjevani2022}
+Yossi Arjevani, Yair Carmon, John C. Duchi, Dylan J. Foster, Nathan Srebro,
+and Blake Woodworth.
+\newblock Lower bounds for non-convex stochastic optimization.
+\newblock \emph{Mathematical Programming}, 199(1--2):165--214, 2023.
+\newblock Full version: arXiv:1912.02365v2.
+\newblock \url{https://arxiv.org/abs/1912.02365}.
+
+\bibitem{carmon2019}
+Yair Carmon, John C. Duchi, Oliver Hinder, and Aaron Sidford.
+\newblock Lower bounds for finding stationary points I.
+\newblock \emph{Mathematical Programming}, 184(1--2):71--120, 2020.
+\newblock \url{https://arxiv.org/abs/1710.11606}.
+
+\bibitem{finiteconsensus2007}
+Shreyas Sundaram and Christoforos N. Hadjicostis.
+\newblock Finite-time distributed consensus in graphs with time-invariant
+ topologies.
+\newblock In \emph{American Control Conference}, pages 711--716, 2007.
+\newblock \href{https://doi.org/10.1109/ACC.2007.4282726}{doi:10.1109/ACC.2007.4282726}.
+
+\end{thebibliography}
+
+\clearpage
+\appendix
+\section{A robust dyadic estimator with fresh oracle noise}
+\label{sec:dyadic}
+
+The distinction between component sampling and fresh oracle noise is useful
+only if it is preserved under adaptive choices of the iterates.  We use a
+binary family of reference intervals and a robust estimate for each interval.
+The resulting guarantee holds simultaneously for all constructed objects.
+This avoids applying an unconditional second-moment estimate at a random
+virtual time.
+
+\subsection{Averaged component variation}
+\label{sec:averaged-smoothness}
+
+The multilevel estimator below needs a deterministic bound on the average
+variation of the local gradients.  No samplewise coupling of the stochastic
+oracle is assumed.
+
+\begin{lemma}[Averaged relaxed smoothness]
+\label{lem:averaged-relaxed}
+For every $x,y$ with $\norm{x-y}\le1/L_1$,
+\begin{equation}
+ \left(
+ \frac1m\sum_{i=1}^m
+ \norm{\nabla f_i(x)-\nabla f_i(y)}^2
+ \right)^{1/2}
+ \le
+ \bigl(L_H+L_1\norm{\nabla f(x)}\bigr)\norm{x-y}.
+ \label{eq:averaged-relaxed}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+For every $i$,
+\[
+ L_0+L_1\norm{\nabla f_i(x)}
+ \le L_0+L_1H+L_1\norm{\nabla f(x)}
+ =L_H+L_1\norm{\nabla f(x)}.
+\]
+Apply the local relaxed-smoothness assumption componentwise and take the root
+mean square.
+\end{proof}
+
+\subsection{Fresh finite-population estimates}
+
+\begin{lemma}[Fresh anchor and difference estimates]
+\label{lem:fresh-finite-pop}
+Let $a,b$ be measurable with respect to the history before the next oracle
+calls.  Draw a uniform subset ${\cal S}\subseteq[m]$ of size $c$ without
+replacement.  For each selected component, average $r$ fresh responses at
+each required endpoint.  Then
+\[
+ \widehat D_{a,b}=\frac1c\sum_{i\in{\cal S}}
+       \bigl(\bar G_i(b)-\bar G_i(a)\bigr)
+\]
+is conditionally unbiased for $D_{a,b}=\nabla f(b)-\nabla f(a)$ and satisfies
+\begin{equation}
+ \E\bigl[\norm{\widehat D_{a,b}-D_{a,b}}^2\mid\mathcal F\bigr]
+ \le \frac{\mathbf1_{\{c<m\}}}{c}\,
+       \frac1m\sum_{i=1}^m\norm{D^i_{a,b}-D_{a,b}}^2
+       +\frac{2\sigma^2}{cr},
+ \label{eq:difference-primitive}
+\end{equation}
+where $D^i_{a,b}=\nabla f_i(b)-\nabla f_i(a)$.
+The corresponding anchor $\widehat g(a)=c^{-1}\sum_{i\in{\cal S}}\bar G_i(a)$
+is conditionally unbiased and satisfies
+\begin{equation}
+ \E\bigl[\norm{\widehat g(a)-\nabla f(a)}^2\mid\mathcal F\bigr]
+ \le \frac{\mathbf1_{\{c<m\}}H^2}{c}+\frac{\sigma^2}{cr}.
+ \label{eq:anchor-primitive}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The finite-population variance formula bounds the component-sampling term.
+For $c=m$ that term vanishes.  The fresh oracle errors are conditionally
+centered martingale differences, so their cross terms have zero expectation.
+Their variances sum to the displayed noise terms.  No common random sample is
+used at two points.
+\end{proof}
+
+\begin{lemma}[A finite robust aggregation rule]
+\label{lem:robust-center}
+Let $Y_1,\ldots,Y_k$ estimate the same vector $\mu$, where $k$ is odd.
+For each $j$, let $r_j$ be the $(k+1)/2$-th smallest member of
+$\{\norm{Y_j-Y_i}:1\le i\le k\}$, and return
+$\mathsf M(Y_1,\ldots,Y_k)=Y_{j_*}$ for the smallest index minimizing $r_j$.
+If, conditionally on the history preceding each replicate,
+\[
+ \E\norm{Y_j-\mu}^2\le V,
+\]
+then
+\begin{equation}
+ \E\norm{\mathsf M(Y_1,\ldots,Y_k)-\mu}^2\le18V.
+ \label{eq:robust-global-mse}
+\end{equation}
+If additionally $V\le a^2/16$, then
+\begin{equation}
+ \Pr\{\norm{\mathsf M(Y_1,\ldots,Y_k)-\mu}>3a\}
+ \le2^{-k}.
+ \label{eq:robust-tail}
+\end{equation}
+The conclusions also hold conditionally on the history preceding all
+replicates.  Independence beyond the stated conditional moment bounds is
+unnecessary.
+\end{lemma}
+
+\begin{proof}
+Write $q=(k+1)/2$.  If at least $q$ replicates lie within distance $a$ of
+$\mu$, each of these replicates has $q$ neighbors within distance $2a$.
+Consequently $r_{j_*}\le2a$.  The selected ball and the set of $q$ accurate
+replicates intersect, so the selected center lies within $3a$ of $\mu$.
+More generally, if $R$ is the $q$-th smallest error
+$\norm{Y_j-\mu}$, the same argument gives
+$\norm{\mathsf M-\mu}\le3R$.  Since at least $q$ errors are at least $R$,
+\[
+ \norm{\mathsf M-\mu}^2
+ \le \frac{18}{k}\sum_{j=1}^k\norm{Y_j-\mu}^2.
+\]
+Taking expectations proves \eqref{eq:robust-global-mse}.
+For \eqref{eq:robust-tail}, conditional Markov inequalities bound the
+probability of each replicate error exceeding $a$ by $1/16$.  Iterated
+conditioning bounds the probability that any specified $q$ replicates are
+inaccurate by $16^{-q}$.  A union bound over subsets gives
+$2^k16^{-q}\le2^{-k}$.
+\end{proof}
+
+\subsection{Normalized steps and a bounded virtual path}
+
+Put $L=L_H$, set $\delta=\eps/32$, and choose
+\begin{equation}
+ \eta=\min\left\{\frac1{4L_1},\frac{\delta}{4L}\right\},
+ \qquad
+ T=\max\left\{1,\left\lceil\frac{16\Delta}{\eta\delta}\right\rceil\right\}.
+ \label{eq:dyadic-macro-parameters}
+\end{equation}
+At macro-iterate $x_t$, the algorithm uses an estimate $v_t$ and takes the
+normalized step $x_{t+1}=x_t-\eta u_t$, with
+$u_t=v_t/\norm{v_t}$ and the usual zero convention.  To construct estimates
+at future points, subdivide this segment into
+\begin{equation}
+ J_t=\left\lceil8\left(1+
+                 \frac{\eta L_1\norm{v_t}}{\delta}\right)\right\rceil,
+ \qquad
+ z_{t,j}=x_t-\frac{j\eta}{J_t}u_t,
+ \quad 0\le j\le J_t.
+ \label{eq:intrinsic-micro-path}
+\end{equation}
+These intermediate points affect only the estimator; they do not introduce
+additional descent decisions.
+
+We impose a deterministic safeguard to control the contribution of rare
+estimation failures.  Define
+\begin{equation}
+ \mathcal G(D)=2\sqrt{LD}+4L_1D,\qquad
+ \overline\Delta=\Delta+3T\eta\delta,\qquad
+ M=2\bigl(\mathcal G(\overline\Delta)+\delta\bigr).
+ \label{eq:dyadic-safeguard}
+\end{equation}
+If $\norm{v_t}>M$, terminate and return $x_0$.  Otherwise accept the
+macro-iterate and continue.  Consequently
+\begin{equation}
+ J_t\le J_{\max}:=
+ \left\lceil8\left(1+\frac{\eta L_1M}{\delta}\right)\right\rceil,
+ \qquad U\le U_{\max}:=TJ_{\max}.
+ \label{eq:dyadic-deterministic-cap}
+\end{equation}
+If no safeguard is triggered, return a fresh public uniform choice from
+$x_0,\ldots,x_{T-1}$.
+
+\begin{lemma}[Gap and pathwise variation bounds]
+\label{lem:micro-variation}
+At every point $x$ with $f(x)-\inf f\le D$,
+\begin{equation}
+ \norm{\nabla f(x)}\le\mathcal G(D).
+ \label{eq:gap-gradient-envelope}
+\end{equation}
+If $\norm{v_t-\nabla f(x_t)}\le\delta$, each micro-edge of
+\eqref{eq:intrinsic-micro-path} satisfies
+\begin{equation}
+ \max_i\norm{\nabla f_i(z_{t,j+1})-
+                      \nabla f_i(z_{t,j})}\le\delta.
+ \label{eq:micro-edge-variation}
+\end{equation}
+Thus, on any path whose preceding macro-estimates satisfy this error bound,
+a block $I$ of $h$ consecutive micro-edges obeys
+\begin{equation}
+ \frac1m\sum_i\norm{D^i_I-D_I}^2
+ \le\min\{h^2\delta^2,4H^2\}.
+ \label{eq:block-variation}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let $g=\norm{\nabla f(x)}$.  For $g>0$, apply the descent inequality to a
+step of length $s=\min\{g/(2L),1/(2L_1)\}$ in the negative gradient
+direction.  Since $(L+L_1g)s\le g$, the objective decreases by at least
+$sg/2$.  It follows that
+$D\ge\min\{g^2/(4L),g/(4L_1)\}$, which proves
+\eqref{eq:gap-gradient-envelope}.
+
+Every point $z$ on an accepted macro-segment satisfies
+\[
+ \norm{\nabla f(z)}
+ \le(1+\eta L_1)\norm{\nabla f(x_t)}+\eta L
+ \le\frac54\norm{v_t}+\frac32\delta.
+\]
+Apply the local smoothness inequality to a micro-edge and use
+$\norm{\nabla f_i(z)}\le\norm{\nabla f(z)}+H$.  The edge variation is at most
+\[
+ \frac{\eta}{J_t}
+ \left(L+\frac54L_1\norm{v_t}+\frac32L_1\delta\right)
+ \le\delta,
+\]
+by \eqref{eq:dyadic-macro-parameters}--\eqref{eq:intrinsic-micro-path}.
+Telescoping gives $\norm{D^i_I}\le h\delta$, and centering cannot increase
+the average square.  The alternative bound follows from
+$\norm{D^i_I-D_I}\le2H$.
+\end{proof}
+
+\subsection{Binary reference intervals and simultaneous accuracy}
+
+Choose a power of two $Q$ and an integer $\ell$ such that
+\begin{equation}
+ Q\le\sqrt{N_\eps}<2Q,\qquad \ell=2+\log_2Q.
+ \label{eq:dyadic-Q}
+\end{equation}
+Partition the virtual path into epochs of $Q$ edges.  At each epoch start,
+form a fresh anchor.  Within an epoch, maintain the binary partition of the
+prefix: append a unit interval, and whenever two adjacent active intervals
+have the same length, replace them by a fresh estimate across their union.
+At every virtual time there are at most $\ell$ active objects, including the
+anchor.  All endpoints are fixed before the corresponding fresh calls.
+
+Fix $C_b=2^{16}$.  For an anchor, use
+\begin{equation}
+ c_0=\min\left\{m,\max\left\{1,
+       \left\lceil C_b\ell^2H^2/\delta^2\right\rceil\right\}\right\},
+ \qquad
+ r_0=\max\left\{1,
+       \left\lceil C_b\ell^2\sigma^2/(c_0\delta^2)\right\rceil\right\}.
+ \label{eq:dyadic-anchor-batches}
+\end{equation}
+For an interval of length $h$, use
+\begin{equation}
+ \begin{split}
+ c_h&=\min\left\{m,\max\left\{1,
+       \left\lceil C_b\ell^2\min\{h^2,H^2/\delta^2\}\right\rceil
+                              \right\}\right\},\\
+ r_h&=\max\left\{1,
+       \left\lceil C_b\ell^2\sigma^2/(c_h\delta^2)\right\rceil\right\}.
+ \end{split}
+ \label{eq:dyadic-block-batches}
+\end{equation}
+For each object, construct $k$ fresh replicate estimates from
+Lemma~\ref{lem:fresh-finite-pop} and aggregate them by
+Lemma~\ref{lem:robust-center}.  In particular, the aggregate need not be
+unbiased.  The subsets and all endpoint responses are drawn afresh in every
+replicate.
+
+Here are explicit choices of the confidence parameters.  Set
+\begin{equation}
+ M_{\rm obj}=(\ell+2)(U_{\max}+1),\qquad
+ V_*=128(H^2+\delta^2),
+ \label{eq:dyadic-object-envelope}
+\end{equation}
+and
+\begin{equation}
+ p=\min\left\{\frac14,\frac1{U_{\max}+1},
+       \frac{\delta}{4(M+\delta)},
+       \frac{\delta^2}{16\ell M_{\rm obj}V_*}\right\}.
+ \label{eq:dyadic-failure-budget}
+\end{equation}
+Take $k$ to be the smallest odd integer at least
+$\log_2(M_{\rm obj}/p)$.  These choices introduce only logarithmic factors
+in the dimensionless problem parameters.
+
+At virtual time $u$, let ${\cal P}(u)$ denote the active intervals and define
+\begin{equation}
+ w_u=\widehat g(z_{u_0})+
+           \sum_{I\in{\cal P}(u)}\widehat D_I,
+ \label{eq:dyadic-estimator}
+\end{equation}
+where $u_0$ is the epoch start.  The macro-estimator $v_t$ is $w_u$ at the
+virtual time corresponding to $x_t$.
+
+\begin{lemma}[Simultaneous accuracy and cost]
+\label{lem:dyadic-invariant}
+With probability at least $1-p$, every constructed anchor or difference has
+error at most $\delta/(2\ell)$.  On this event, every virtual estimate has
+error at most $\delta/2$, including those at random macro endpoints, and the
+safeguard never triggers.  Moreover,
+\begin{equation}
+ \E S\le\tO\left(N_\eps+P_\eps+
+            \E U\bigl(\sqrt{N_\eps}+P_\eps\bigr)\right).
+ \label{eq:dyadic-path-cost}
+\end{equation}
+Even without restricting to the simultaneous-accuracy event, each
+constructed object's error has conditional second moment at most $V_*$.
+\end{lemma}
+
+\begin{proof}
+Suppose all previously constructed objects are accurate.  The true gradient
+telescopes over the active partition, so each preceding macro-estimate has
+error at most $\delta/2$.  Lemma~\ref{lem:micro-variation} then supplies the
+pathwise variation bound for the next object's endpoints.  Equations
+\eqref{eq:difference-primitive}--\eqref{eq:dyadic-block-batches} bound the
+conditional variance of every fresh replicate by
+\[
+ \frac{6\delta^2}{C_b\ell^2}
+ \le\frac1{16}\left(\frac{\delta}{6\ell}\right)^2.
+\]
+Lemma~\ref{lem:robust-center}, with $a=\delta/(6\ell)$, bounds the
+conditional probability that the next aggregate error exceeds
+$\delta/(2\ell)$ by $2^{-k}$.  This is a first-failure argument: no
+conditioning on future accuracy events is used.
+
+At most $M_{\rm obj}$ objects can be created before termination, by
+\eqref{eq:dyadic-deterministic-cap}.  A union bound therefore gives a total
+failure probability at most $M_{\rm obj}2^{-k}\le p$.
+On the resulting event, summing the at most $\ell$ active errors gives the
+claimed pathwise estimate, irrespective of the random macro endpoint.
+The normalized descent inequality also gives
+\[
+ f(x_{t+1})\le f(x_t)+3\eta\delta.
+\]
+Hence all accepted iterates have gap at most $\overline\Delta$.
+Equation~\eqref{eq:gap-gradient-envelope} and the estimator error bound imply
+$\norm{v_t}\le\mathcal G(\overline\Delta)+\delta<M$.
+Thus the safeguard cannot trigger on this event.
+
+For the unconditional moment claim, uniform heterogeneity always gives
+\[
+ m^{-1}\sum_i\norm{D^i_I-D_I}^2\le4H^2,
+\]
+even on a failed path.
+The fresh-noise contribution is at most
+$2\delta^2/(C_b\ell^2)$.  Thus every replicate has conditional second
+moment at most $4H^2+\delta^2$, and
+\eqref{eq:robust-global-mse} gives the bound $V_*$.
+
+ An anchor costs $O(k\ell^2(N_\eps+P_\eps))$ calls and occurs at most
+ $1+U/Q$ times.  A length-$h$ interval costs
+ $O(k\ell^2(1+\min\{m,h^2,H^2/\delta^2\}+P_\eps))$ calls and is created
+ at most $\lfloor U/h\rfloor$ times.  Indeed, $h$ divides the epoch length
+ $Q$, and every creation of a length-$h$ object completes a new block of
+ $h$ micro-edges.  Since the lengths are dyadic and
+ $Q\asymp\sqrt{N_\eps}$,
+\[
+ \sum_{h\le Q,\ h\ {\rm dyadic}}\frac{h^2+1}{h}=O(Q),
+ \qquad
+ \sum_{h\le Q,\ h\ {\rm dyadic}}\frac1h=O(1).
+\]
+ The initial anchor is the only startup cost.  Altogether,
+ \[
+  S\le Ck\ell^2\left(N_\eps+P_\eps+
+           U(\sqrt{N_\eps}+P_\eps)\right).
+ \]
+ Taking expectations proves \eqref{eq:dyadic-path-cost}.
+\end{proof}
+
+\subsection{Proof of Theorem~\ref{thm:dyadic-upper}}
+
+\begin{proof}
+Let ${\cal E}$ be the simultaneous-accuracy event from
+Lemma~\ref{lem:dyadic-invariant}.  On ${\cal E}$, the direction perturbation
+and descent inequalities give, pathwise,
+\[
+ f(x_{t+1})\le f(x_t)
+ -\eta(1-\eta L_1/2)\norm{\nabla f(x_t)}
+ +2\eta\delta+\eta^2L/2.
+\]
+Since $1-\eta L_1/2\ge7/8$, $\eta L/2\le\delta/8$, and
+$\Delta/(\eta T)\le\delta/16$, summation yields
+\begin{equation}
+ \frac1T\sum_{t=0}^{T-1}\norm{\nabla f(x_t)}\le\frac52\delta,
+ \qquad
+ \sum_{t=0}^{T-1}\norm{\nabla f(x_t)}
+       \le C(\Delta/\eta+T\delta).
+ \label{eq:dyadic-average-gradient}
+\end{equation}
+The fresh uniform output therefore contributes at most $5\delta/2$ to
+$\E[\norm{\nabla f(\widehat x)}\mathbf1_{\cal E}]$.
+
+To control the complementary event, enumerate the constructed object errors
+as $e_1,\ldots,e_{M_{\rm obj}}$, setting absent objects to zero.  The last
+claim of Lemma~\ref{lem:dyadic-invariant} gives
+\[
+ \E\sum_{j=1}^{M_{\rm obj}}\norm{e_j}^2\le M_{\rm obj}V_*.
+\]
+Every accepted output point has $\norm{v_t}\le M$, and its estimator error
+is the sum of at most $\ell$ object errors.  The abort output $x_0$ has
+gradient norm at most $\mathcal G(\Delta)<M$.  Consequently, on every run,
+\[
+ \norm{\nabla f(\widehat x)}
+ \le M+\left(\ell\sum_{j=1}^{M_{\rm obj}}\norm{e_j}^2\right)^{1/2}.
+\]
+Cauchy--Schwarz and \eqref{eq:dyadic-failure-budget} show that
+\[
+ \E[\norm{\nabla f(\widehat x)}\mathbf1_{{\cal E}^c}]
+ \le Mp+\sqrt{p\ell M_{\rm obj}V_*}\le\delta/2.
+\]
+Thus the expected gradient norm is at most $3\delta<\eps$.
+
+On ${\cal E}$, \eqref{eq:intrinsic-micro-path} and
+\eqref{eq:dyadic-average-gradient} imply
+\[
+ U\le C\left(T+\frac{\eta L_1}{\delta}
+                 \sum_t\norm{v_t}\right)
+ \le C\left(T+\frac{L_1\Delta}{\delta}\right)
+ \le C(1+A_\eps+B_\eps).
+\]
+On ${\cal E}^c$, use $U\le U_{\max}$.  Since $pU_{\max}\le1$,
+\begin{equation}
+ \E U\le C(1+A_\eps+B_\eps).
+ \label{eq:virtual-path-length}
+\end{equation}
+Substitution into \eqref{eq:dyadic-path-cost} proves the sample bound.
+The logarithmic exponent can be read directly from the parameters. Since
+$\overline\Delta\le49\Delta+3\eta\delta$, one has
+\begin{align*}
+ M/\delta&\le C(1+\sqrt{A_\eps}+B_\eps),\\
+ U_{\max}&\le C(1+A_\eps+B_\eps)^2,\\
+ p^{-1}&\le C\ell^2(1+A_\eps+B_\eps)^2
+                   (1+H^2/\eps^2).
+\end{align*}
+Thus $k,\ell\le C\mathcal L_\eps$ and
+$k\ell^2\le C\mathcal L_\eps^3$. The cost estimate in
+Lemma~\ref{lem:dyadic-invariant} therefore has precisely the logarithmic
+upper factor used in Theorem~\ref{thm:main}.
+
+All replicate means for the objects created at one virtual time can be
+stacked and exactly averaged in a single polynomial-consensus operation.
+Every agent can then apply the same finite robust aggregation rule locally.
+Thus $O(U+1)$ exact averaging operations suffice.  Lemma
+\ref{lem:polynomial-consensus} and \eqref{eq:virtual-path-length} give
+\eqref{eq:dyadic-communication}.
+\end{proof}
+
+The reference-point organization is related to nested variance reduction
+\cite{snvrg2018}.  The present construction separately averages fresh oracle
+noise at each endpoint, and its analysis uses simultaneous robust accuracy
+instead of same-sample smoothness or unbiasedness at adaptively selected
+virtual times.
+
+\section{A retiring chain with uniformly bounded disagreement}
+\label{subsec:retiring-dwh}
+
+Dense weak hiding spreads a hidden direction across component rows, so that
+one row is weakly informative while the average preserves the signal.
+We use the sign-table and radial-coordinate construction of
+Peng et al.~\cite{dense2026}. The additional requirement here is a uniform
+bound on local gradient disagreement, independent of the number of stages.
+A retiring selector removes the component-specific signal of a completed
+stage and passes it to the next one. The following calculus lemma controls
+both its gradient and its Hessian without dependence on the chain length.
+
+\subsection{A gate with a square-root plateau bound}
+
+Keep the fixed thresholds
+\[
+ a=\frac5{32},\qquad b=\frac9{32}.
+\]
+For $u=(s-a)/(b-a)$ define
+\begin{equation}
+ G(s)=
+ \begin{cases}
+ 0,&s\le a,\\
+ 10u^3-15u^4+6u^5,&a<s<b,\\
+ 1,&s\ge b.
+ \end{cases}
+ \label{eq:retiring-gate}
+\end{equation}
+This is the standard quintic smoothstep.
+
+\begin{lemma}[Stable plateau gate]
+\label{lem:stable-gate}
+The function in \eqref{eq:retiring-gate} is nondecreasing and $C^2$.  There
+are universal constants $M_1,M_2,\kappa_G$ such that
+\begin{equation}
+ 0\le G\le1,\qquad
+ \norm{G'}_\infty\le M_1,\qquad
+ \norm{G''}_\infty\le M_2,\qquad
+ |G'(s)|^2\le\kappa_G(1-G(s)).
+ \label{eq:gate-square-root}
+\end{equation}
+Moreover, $G'=G''=0$ on both plateaus.
+\end{lemma}
+
+\begin{proof}
+Only the last inequality needs comment.  On $u\in(0,1)$,
+\[
+ G'(s)=\frac{30}{b-a}u^2(1-u)^2,
+ \qquad
+ 1-G(s)=(1-u)^3(1+3u+6u^2).
+\]
+Hence
+\[
+ \frac{|G'(s)|^2}{1-G(s)}
+ =\frac{900}{(b-a)^2}
+   \frac{u^4(1-u)}{1+3u+6u^2}
+ \le \frac{900}{(b-a)^2}.
+\]
+The endpoint derivatives of orders one and two vanish, so the polynomial
+piece joins the constant plateaus in $C^2$.
+\end{proof}
+
+\subsection{A dimension-free stick-breaking calculus lemma}
+
+The next lemma is the mechanism that prevents accumulation over the chain
+length.  The variables $x_j$ below live in mutually orthogonal Euclidean
+blocks.
+
+\begin{lemma}[Uniform $C^2$ stability of a retiring selector]
+\label{lem:stick-breaking}
+For $j=1,\ldots,T$, let $d_j=d_j(x_j)$ and
+$g_j=g_j(x_j)\in[0,1]$, and recursively define
+\begin{equation}
+ Z_{T+1}=0,
+ \qquad
+ Z_j=(1-g_j)d_j+g_jZ_{j+1}.
+ \label{eq:stick-recursion}
+\end{equation}
+Assume, uniformly in $j$,
+\begin{align}
+ |d_j|&\le D_0,&
+ \norm{\nabla d_j}&\le D_1,&
+ \norm{\nabla^2d_j}_{\rm op}&\le D_2,
+ \label{eq:stick-d-bounds}\\
+ \norm{\nabla g_j}^2&\le\kappa(1-g_j),&
+ \norm{\nabla^2g_j}_{\rm op}&\le M_2,
+ \label{eq:stick-g-bounds}
+\end{align}
+and suppose $g_j=1$ implies
+$\nabla g_j=\nabla^2g_j=0$.  Then there are constants
+$C_1,C_2$, depending only on
+$(D_0,D_1,D_2,\kappa,M_2)$ and not on $T$, such that
+\begin{equation}
+ |Z_j|\le D_0,
+ \qquad
+ \norm{\nabla Z_j}\le C_1,
+ \qquad
+ \norm{\nabla^2Z_j}_{\rm op}\le C_2
+ \quad(1\le j\le T+1).
+ \label{eq:stick-uniform}
+\end{equation}
+More precisely, if $D_k=O(K)$ for $k=0,1,2$ and
+$\kappa,M_2=O(1)$, then $C_1,C_2=O(K)$.
+\end{lemma}
+
+\begin{proof}
+The value bound follows by backward induction because
+\eqref{eq:stick-recursion} is a convex combination of $d_j$ and $Z_{j+1}$.
+Write $g=g_j$, $d=d_j$, and $V=Z_{j+1}$.  The current-block and tail parts of
+the gradient are orthogonal and equal to
+\[
+ a=(1-g)\nabla d+(V-d)\nabla g,
+ \qquad
+ g\nabla V.
+\]
+Consequently,
+\[
+ \norm a^2
+ \le \bigl(2D_1^2+8\kappa D_0^2\bigr)(1-g)
+ =:K_1^2(1-g).
+\]
+If $\norm{\nabla V}\le K_1$, then
+\[
+ \norm{\nabla Z_j}^2
+ \le K_1^2(1-g)+g^2K_1^2
+ \le K_1^2,
+\]
+which closes the gradient induction.
+
+For the Hessian, with respect to the decomposition
+$x_j\oplus(x_{j+1},\ldots,x_T)$,
+\begin{equation}
+ \nabla^2Z_j=
+ \begin{pmatrix}
+ A&B\\ B^\top&g\nabla^2V
+ \end{pmatrix},
+ \label{eq:stick-hessian-block}
+\end{equation}
+where
+\begin{align*}
+ A&=(1-g)\nabla^2d
+ -\nabla g\otimes\nabla d-\nabla d\otimes\nabla g
+ +(V-d)\nabla^2g,\\
+ B&=\nabla g\otimes\nabla V.
+\end{align*}
+Thus
+\[
+ \norm{A}_{\rm op}\le
+ D_2+2\sqrt\kappa D_1+2D_0M_2=:A_*,
+ \qquad
+ \norm{B}_{\rm op}^2\le\kappa(1-g)K_1^2.
+\]
+Choose
+\[
+ K_2\ge 2A_*+2\sqrt\kappa K_1.
+\]
+Assume inductively that $\norm{\nabla^2V}_{\rm op}\le K_2$.  For $g<1$,
+the lower-right block of either matrix
+$K_2I\mp\nabla^2Z_j$ is bounded below by
+$K_2(1-g)I$.  Its Schur complement is therefore bounded below by
+\[
+ \left(K_2-A_*-\frac{\kappa K_1^2}{K_2}\right)I\succeq0.
+\]
+If $g=1$, then $A=B=0$ by the plateau assumption and the conclusion follows
+directly from the induction hypothesis.  Hence
+$-K_2I\preceq\nabla^2Z_j\preceq K_2I$, which proves the Hessian bound.  The
+last assertion follows from the displayed choices of $K_1,K_2$.
+\end{proof}
+
+\subsection{The retiring radial chain}
+
+We use the same dense weak-hiding table as in \cite{dense2026}.  For $m$
+agents its admissible bias grid is
+\begin{equation}
+ \mathcal R_m:=\left\{
+ \frac{k}{m}: k\in\mathbb Z_{>0},\ k\equiv m\pmod 2,\
+ k\le\frac m8
+ \right\}.
+ \label{eq:retiring-bias-grid}
+\end{equation}
+For a bias $\rho\in\mathcal R_m$, stage $j$ has an independent hidden
+direction $\Theta^{(j)}\in\{\pm1\}^D$.  Conditional on
+$\Theta^{(j)}$, the columns of the table
+$S^{(j)}\in\{\pm1\}^{m\times D}$ are independent.  In column $h$, a
+uniformly random subset of $m(1+\rho)/2$ rows receives the sign
+$\Theta_h^{(j)}$ and all remaining rows receive the opposite sign.  Thus the
+row average is exactly $\rho\Theta^{(j)}$.  Consecutive admissible biases
+differ by $2/m$.  Let
+\begin{equation}
+ \Psi(z)=\frac{z}{\sqrt{1+\norm z^2}},
+ \quad
+ q_j(z)=\frac1{\sqrt D}\inner{\Theta^{(j)}}{\Psi(z)},
+ \quad
+ \widetilde q_{ij}(z)=
+ \frac1\rho\inner{S^{(j)}_{i:}/\sqrt D}{\Psi(z)}.
+ \label{eq:retiring-radial-coordinates}
+\end{equation}
+Then $m^{-1}\sum_i\widetilde q_{ij}=q_j$ and, uniformly in $i,j,z$,
+\begin{equation}
+ |q_j|\le1,
+ \quad \norm{\nabla q_j}\le1,
+ \quad \norm{\nabla^2q_j}_{\rm op}\le2,
+ \qquad
+ |\widetilde q_{ij}|\le\rho^{-1},
+ \quad \norm{\nabla\widetilde q_{ij}}\le\rho^{-1},
+ \quad \norm{\nabla^2\widetilde q_{ij}}_{\rm op}\le2\rho^{-1}.
+ \label{eq:retiring-radial-bounds}
+\end{equation}
+Put $g_j=G(q_j(x_j))$ and define the component selectors
+\begin{equation}
+ Z_{i,T+1}=0,
+ \qquad
+ Z_{i,j}=(1-g_j)\widetilde q_{ij}(x_j)+g_jZ_{i,j+1}.
+ \label{eq:component-retiring-selector}
+\end{equation}
+Their average $Z_j=m^{-1}\sum_iZ_{i,j}$ obeys the same recursion with
+$\widetilde q_{ij}$ replaced by $q_j$.  Fix
+\[
+ C=2,
+ \qquad
+ \lambda=\frac{33}{16},
+\]
+and define
+\begin{equation}
+ R_i(x)=
+ -Z_{i,1}(x)
+ -\sum_{j=1}^Tg_j(x_j)\bigl(q_j(x_j)+C\bigr)
+ +\frac\lambda2\sum_{j=1}^T\norm{x_j}^2,
+ \qquad
+ R=\frac1m\sum_{i=1}^mR_i.
+ \label{eq:retiring-chain}
+\end{equation}
+
+\begin{lemma}[Tunable-bias sequential revelation]
+\label{lem:tunable-sequential-revelation}
+For the independent exact-bias stage distribution above, let
+\begin{equation}
+ r_\rho=
+ \left\lfloor\frac1{4096}\min\{m,\rho^{-2}\}\right\rfloor.
+ \label{eq:retiring-row-threshold}
+\end{equation}
+Consider an augmented interaction with the following properties.
+\begin{enumerate}
+\item The data available immediately before a stage's initialization are
+independent of its stage pair.  Initialization may reveal one table row,
+whose index is selected before that row is seen.
+\item Before completion, each full value--gradient reply is a measurable
+function of the past, the query, completed stage pairs, and the selected
+rows of the current stage.  This formula does not itself test the hidden
+alignment and contains no future-stage data.
+\item Completion is checked before the reply, at the first query whose
+current-stage alignment exceeds $a$.  A completion response may reveal the
+completed stage pair and one initialization row of the successor.  Each
+call is assigned only to the stage current before that call.
+\item There is a prefix-truncated interaction satisfying the preceding
+properties.  It has the same replies as the full interaction whenever all
+stages beyond the current one have alignment at most $a$.  This equality
+includes the final output.
+\end{enumerate}
+Let $1\le J<T$, $M\ge1$, and $r_\rho\ge2$.  If
+\begin{equation}
+ M\le\frac{r_\rho J}{2},\qquad
+ D\ge\max\left\{
+ 512\log(M+3)+2048,
+ \frac{2048}{25}\log\bigl(128(M+1)T\bigr)
+ \right\},
+ \label{eq:imported-sequential-budget}
+\end{equation}
+then
+\begin{equation}
+ \Pr(\nu_M<J,\mathcal E_{\rm future}^{c})\ge\frac{95}{128}.
+ \label{eq:imported-sequential-probability}
+\end{equation}
+Here $\nu_M$ counts completed stages in the truncated interaction, and
+$\mathcal E_{\rm future}$ is the event that some query or the final output
+has alignment greater than $a$ at a stage beyond its current stage.
+On the displayed event, the full-oracle output satisfies
+$q_k(\widehat x_k)\le a$ for every $k>J$.
+\end{lemma}
+
+\begin{proof}
+We give the information argument explicitly.  It is the dense-weak-hiding
+principle of~\cite{dense2026}, with the bias retained as a free parameter.
+
+\emph{One stage.}
+Suppress the stage index.  Condition on any side information $W$ independent
+of $(\Theta,S)$, including the private random seed and the data available
+before initialization.  Grant the algorithm the entire selected row on
+every call.  This can only strengthen it.  Consider a row-only continuation
+with at most $B=M+1$ predictable query vectors $V_t$, $\|V_t\|\le1$.
+After the $r_\rho$th distinct row has been returned, replace subsequent
+query vectors by zero and stop returning new rows.  Let $\mathcal Y$ be
+this stopped transcript, including the optional initialization row and all
+query vectors.  It reads at most $r_\rho$ distinct rows.
+
+Suppose $d<r_\rho$ distinct rows have been seen, and write
+$A_h$ for their sum in column $h$.  Conditional exchangeability of the
+unseen row labels gives
+\[
+ \Pr(S_{ih}=1\mid\Theta,\text{past})
+ =\frac{m+m\rho\Theta_h-d-A_h}{2(m-d)}=:p_h(\Theta_h)
+\]
+for each newly selected row.  The same formula holds after earlier
+coordinates of that new row are disclosed, because table columns are
+independent conditional on $\Theta$.  Since $\rho\le1/8$ and
+$d\le m/4096$, both possible values of $p_h$ lie in $[1/4,3/4]$ and differ
+by $m\rho/(m-d)$.  The binary entropy function has second derivative of
+absolute value at most $16/3$ on this interval.  Its Jensen gap therefore
+bounds the information in one coordinate by
+\[
+ I(\Theta;S_{ih}\mid\text{past},S_{i,<h})
+ \le \frac23\left(\frac{m\rho}{m-d}\right)^2
+ \le\rho^2.
+\]
+Repeated rows contain no additional information, and query choices are
+predictable from the preceding transcript.  The chain rule yields
+\[
+ I(\Theta;\mathcal Y\mid W)
+ \le D r_\rho\rho^2\le\frac{D}{4096}.
+\]
+
+Let $E$ be the event that a predictable query made before the row cutoff
+has $\langle\Theta,V_t\rangle/\sqrt D>a$.
+Under the product law that keeps the transcript distribution but makes
+$\Theta$ independent of it, a Rademacher tail bound gives
+$\Pr(E)\le B\exp(-a^2D/2)$.  Binary data processing for relative entropy
+therefore gives, under the true joint law,
+\[
+ \Pr(E\mid W)
+ \le\frac{D/4096+\log2}{a^2D/2-\log B}
+ \le\frac18.
+\]
+For the last inequality use $a=5/32$,
+$B\le M+1$, and the first dimension condition
+in~\eqref{eq:imported-sequential-budget}.
+All these estimates are uniform in the independent side information.
+
+To apply this estimate to a stage of the actual truncated interaction,
+continue its precompletion reply formula without ever announcing
+completion.  The resulting row-only interaction has the same histories
+and queries through its first completion query.  Completion is determined
+before that query's response, so completion in fewer than $r_\rho$
+assigned calls uses fewer than $r_\rho$ previously seen rows, even with
+one initialization row.  It is consequently contained in $E$ and has
+conditional probability at most $1/8$.
+
+\emph{Future stages.}
+The prefix-truncated interaction reads only completed pairs and the current
+stage pair.  It is defined on every realization, without conditioning on
+the absence of a bypass.  Every direction beyond its current stage is thus
+independent of its query block.  The same holds at the final output.
+A Rademacher tail bound and the second dimension condition give
+\[
+ \Pr(\mathcal E_{\rm future})
+ \le T(M+1)\exp(-a^2D/2)\le\frac1{128}.
+\]
+The transcript-matching assumption couples the full and truncated
+interactions on the complementary event.
+
+\emph{Counting calls.}
+Let $Z$ count the stages among the first $J$ that are reached and complete
+in fewer than $r_\rho$ assigned calls.  Conditioning immediately before
+each reached stage is initialized and using the one-stage bound gives
+$\E Z\le J/8$.  If all first $J$ stages complete within
+$M\le r_\rho J/2$ calls, then $Z\ge J/2$, because assigned calls for
+different stages are disjoint.  Markov's inequality yields
+$\Pr(\nu_M\ge J)\le1/4$.  Combining this with the future-stage bound
+gives $1-1/4-1/128=95/128$.  Finally, on $\{\nu_M<J\}$ every $k>J$
+is beyond the current stage; the output part of
+$\mathcal E_{\rm future}^{c}$ gives the claimed final alignments.
+\end{proof}
+
+
+\begin{proposition}[Analytic and oracle properties of the retiring chain]
+\label{prop:retiring-chain-properties}
+There are universal constants $C_{\rm sm},C_{\rm dis},C_{\rm gap},\chi>0$
+such that, for every $T$, $m$, admissible $\rho$, and every realization of
+the hidden tables, the chain \eqref{eq:retiring-chain} has the following
+properties.
+\begin{enumerate}
+\item Each component is ordinarily smooth with
+\begin{equation}
+ \sup_x\norm{\nabla^2R_i(x)}_{\rm op}\le\frac{C_{\rm sm}}\rho.
+ \label{eq:retiring-smoothness}
+\end{equation}
+\item The component--average disagreement is uniform in both $x$ and $T$:
+\begin{equation}
+ \sup_x\norm{\nabla R_i(x)-\nabla R(x)}
+ \le\frac{C_{\rm dis}}\rho.
+ \label{eq:retiring-disagreement}
+\end{equation}
+\item The initial gap satisfies
+\begin{equation}
+ R(0)-\inf R\le C_{\rm gap}T.
+ \label{eq:retiring-gap}
+\end{equation}
+\item If at least one stage is not fully open, then
+\begin{equation}
+ \min_{1\le j\le T}q_j(x_j)<b
+ \quad\Longrightarrow\quad
+ \norm{\nabla R(x)}\ge\chi.
+ \label{eq:retiring-gradient-lower}
+\end{equation}
+\item The exact component value--gradient oracle satisfies the
+interface conditions of Lemma~\ref{lem:tunable-sequential-revelation}.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+For item 1, Lemma~\ref{lem:stable-gate} and
+\eqref{eq:retiring-radial-bounds} give
+\[
+ \norm{\nabla g_j}^2\le\kappa_G(1-g_j),
+ \qquad
+ \norm{\nabla^2g_j}_{\rm op}\le C_G
+\]
+with universal $C_G$.  Apply Lemma~\ref{lem:stick-breaking} to
+\eqref{eq:component-retiring-selector} with
+$(D_0,D_1,D_2)=\rho^{-1}(1,1,2)$.  It yields
+\[
+ \sup_x\norm{\nabla^2Z_{i,1}(x)}_{\rm op}=O(\rho^{-1}).
+\]
+Each common term $g_j(q_j+C)$ depends on only one block and has a uniformly
+bounded Hessian.  Their Hessians form a block-diagonal matrix, so their sum
+has operator norm $O(1)$ rather than $O(T)$.  Adding the quadratic proves
+\eqref{eq:retiring-smoothness}.
+
+For item 2, let $D_{i,j}=Z_{i,j}-Z_j$.  Then
+\begin{equation}
+ D_{i,T+1}=0,
+ \qquad
+ D_{i,j}=(1-g_j)(\widetilde q_{ij}-q_j)+g_jD_{i,j+1}.
+ \label{eq:retiring-difference-recursion}
+\end{equation}
+The three $C^2$ bounds on $\widetilde q_{ij}-q_j$ are all $O(\rho^{-1})$.
+Lemma~\ref{lem:stick-breaking} therefore gives
+$\sup_x\norm{\nabla D_{i,1}(x)}=O(\rho^{-1})$.  Since all other terms in
+\eqref{eq:retiring-chain} are common to the components,
+$R_i-R=-D_{i,1}$, proving \eqref{eq:retiring-disagreement}.
+
+At the origin, all $q_j$ and all gates vanish, so $R(0)=0$.  Moreover,
+$|Z_1|\le1$, $0\le g_j\le1$, $|q_j|\le1$, and the quadratic is nonnegative.
+Thus
+\[
+ R(x)\ge-1-(C+1)T,
+\]
+which proves item 3.
+
+For item 4, let $j$ be the first index with $q_j(x_j)<b$.  All preceding
+gates equal one, hence $Z_1=Z_j$.  The recursion gives the exact identity
+\begin{equation}
+ Z_j+g_j(q_j+C)=q_j+g_j(C+Z_{j+1}).
+ \label{eq:retiring-gradient-identity}
+\end{equation}
+Because $|Z_{j+1}|\le1$, $C=2$, and $G'\ge0$, differentiation in block $j$
+gives
+\[
+ \nabla_{x_j}R(x)=\lambda x_j-c_j\nabla q_j(x_j),
+ \qquad
+ c_j=1+G'(q_j)(C+Z_{j+1})\ge1.
+\]
+The radial estimate used in Lemma~A.6 of \cite{dense2026}, with the same
+$\lambda$ and threshold $b$, gives
+$\norm{\lambda x_j-c_j\nabla q_j(x_j)}\ge\chi$ uniformly for
+$c_j\ge1$ and $q_j<b$.  This proves \eqref{eq:retiring-gradient-lower}.
+
+For item 5, define the prefix-truncated interaction explicitly.
+Reveal each completed stage pair in full, which can only strengthen the
+algorithm. If $h$ stages have been completed, stage $k=h+1$ is current.
+On a query to component $i$, the truncated oracle retains the completed
+stage data and the public quadratic term. It evaluates the current-stage
+completion test before returning the reply.
+
+If $q_k\le a$, set every gate with index at least $k$ to zero in the
+simulated value and gradient, and terminate the selector with
+$Z_{i,k}=\widetilde q_{ik}$. The resulting reply depends only on the
+completed stage pairs, the query, and the selected current row
+$S^{(k)}_{i:}$. Its algebraic precompletion formula contains no test of
+$q_k$ and no unread future-stage data; the completion test is used only to
+choose when to leave this formula.
+
+If $q_k>a$, disclose the completed stage pair, retain its actual gate, and
+initialize the successor by the selected row $S^{(k+1)}_{i:}$ when $k<T$.
+In this reply, force every gate with index at least $k+1$ to zero and set
+$Z_{i,k+1}=\widetilde q_{i,k+1}$. Thus the completion reply uses the newly
+completed pair and at most one successor row. The physical call remains
+assigned to stage $k$; the successor row is the optional initialization
+row allowed by Lemma~\ref{lem:tunable-sequential-revelation}.
+
+This construction defines the simulated interaction on every realization.
+It reads only completed stage pairs and the current pair, with the
+successor row first read on its initialization. Future pairs are independent
+of the history immediately before that initialization. On the event that
+all stages beyond the current one satisfy $q_j\le a$, their gates and first
+derivatives vanish. Consequently all omitted terms in the common reward
+sum are zero, and the full selector cuts off at the same current or
+successor block as the simulated selector. The simulated and full component
+values and every gradient block are then identical. Induction gives
+pathwise agreement of the histories, queries, and final outputs on the
+no-future-alignment event. These are precisely the four properties in
+Lemma~\ref{lem:tunable-sequential-revelation}.
+\end{proof}
+
+\subsection{Proof of Theorem~\ref{thm:retiring-dwh-lower}}
+
+\begin{proof}
+Set
+\[
+ L_\star=L_0+\frac12L_1H,
+ \qquad
+ A_\star=\frac{L_\star\Delta}{\eps^2},
+ \qquad
+ K:=\min\left\{m,\frac{H^2}{\eps^2}\right\}.
+\]
+Then $L_H/2\le L_\star\le L_H$, so $A_\star=\Theta(A_\eps)$ and
+$\sqrt{N_\eps}=\Theta(1+\sqrt K)$.  We first treat the nonboundary case
+\begin{equation}
+ m\ge m_0,\qquad K\ge K_0,\qquad
+ A_\eps\ge C_0\sqrt K,
+ \label{eq:retiring-interior-case}
+\end{equation}
+for sufficiently large universal constants.  The complementary cases will be
+absorbed by the earlier centralized and discovery lower bounds.
+
+For an admissible bias $\rho$ scale the retiring chain by
+\begin{equation}
+ \beta_\rho=\frac{L_\star\rho\chi}
+ {8C_{\rm sm}\eps},
+ \qquad
+ \alpha_\rho=\frac{64C_{\rm sm}\eps^2}
+ {L_\star\rho\chi^2},
+ \qquad
+ f_i(y)=\alpha_\rho R_i(\beta_\rho y).
+ \label{eq:retiring-scaling}
+\end{equation}
+Then
+\[
+ \alpha_\rho\beta_\rho^2\frac{C_{\rm sm}}\rho=L_\star,
+ \qquad
+ \alpha_\rho\beta_\rho\chi=8\eps.
+\]
+Taking
+\begin{equation}
+ T=\left\lfloor c_TA_\star\rho\right\rfloor
+ \label{eq:retiring-stage-count}
+\end{equation}
+with a sufficiently small universal $c_T$ makes the initial gap at most
+$\Delta$, while Proposition~\ref{prop:retiring-chain-properties} gives
+ordinary $L_\star$-smoothness and an $8\eps$ gradient lower bound until all
+stages are fully open.
+
+The scaled uniform disagreement is
+\begin{equation}
+ \sup_y\norm{\nabla f_i(y)-\nabla f(y)}
+ \le\alpha_\rho\beta_\rho\frac{C_{\rm dis}}\rho
+ =\frac{8C_{\rm dis}}\chi\frac{\eps}{\rho}.
+ \label{eq:retiring-scaled-disagreement}
+\end{equation}
+Let
+\begin{equation}
+ \bar\rho=C_\rho\max\left\{m^{-1/2},\frac\eps H\right\},
+ \label{eq:retiring-bias-choice}
+\end{equation}
+where $C_\rho$ is a sufficiently large universal constant.  In the interior
+case we may assume $\bar\rho\le1/16$: otherwise either $m$ or $H/\eps$ is
+bounded by a universal constant, hence $K=O(1)$, one of the boundary cases
+below.  Choose the least $\rho\in\mathcal R_m$ with $\rho\ge\bar\rho$.
+Since consecutive values of $\mathcal R_m$ differ by $2/m$ and
+$\bar\rho\ge C_\rho/\sqrt m$, increasing $m_0$ if necessary gives
+\begin{equation}
+ \bar\rho\le\rho\le\bar\rho+\frac2m\le2\bar\rho\le\frac18.
+ \label{eq:retiring-grid-rounding}
+\end{equation}
+Thus \eqref{eq:retiring-scaled-disagreement} is at most $H/2$, after fixing
+$C_\rho$ large enough.
+
+Append orthogonal simplex vectors $u_i$ of norm $H/2$ and mean zero, and set
+\begin{equation}
+ F_i(y,t)=f_i(y)+\inner{u_i}{t}.
+ \label{eq:retiring-relaxed-embedding}
+\end{equation}
+The total local--global disagreement is at most $H/\sqrt2<H$.  Every $F_i$
+is ordinarily $L_\star$-smooth and
+$\norm{\nabla F_i}\ge H/2$, so
+\[
+ L_\star=L_0+\frac12L_1H
+ \le L_0+L_1\norm{\nabla F_i}.
+\]
+Hence the required local relaxed smoothness holds globally.  The auxiliary
+linear terms average to zero, so the average objective, its initial gap, and
+its stationarity obstruction are unchanged.  The exact-gradient oracle used
+here has variance zero and is therefore an admissible subclass for every
+stated value of $\sigma$.
+
+For the bias in \eqref{eq:retiring-grid-rounding}, a two-case calculation gives
+\begin{equation}
+ \min\{m\rho,\rho^{-1}\}
+ =\Theta(\sqrt K).
+ \label{eq:retiring-effective-size}
+\end{equation}
+Indeed, when $H/\eps\le\sqrt m$ one has
+$\rho=\Theta(\eps/H)$ and the minimum is $\Theta(H/\eps)$; otherwise
+$\rho=\Theta(m^{-1/2})$ and both branches are $\Theta(\sqrt m)$.
+The tunable-bias one-stage row threshold is
+$r_\rho=\Theta(\min\{m,\rho^{-2}\})$, while
+$T=\Theta(A_\star\rho)$.  Conditions
+\eqref{eq:retiring-interior-case} ensure $r_\rho,T\ge2$, and hence their
+product is
+\begin{equation}
+ r_\rho T
+ =\Theta\left(
+ A_\star\min\{m\rho,\rho^{-1}\}
+ \right)
+ =\Theta(A_\eps\sqrt K).
+ \label{eq:retiring-row-stage-product}
+\end{equation}
+For any fixed call budget $M$ below a sufficiently small universal multiple
+of this quantity, choose a finite block dimension
+\begin{equation}
+ D\ge C_D\left[1+\log\bigl((M+3)(T+1)\bigr)\right].
+ \label{eq:retiring-dimension}
+\end{equation}
+Take $J=T-1$ and restrict $M$ so that
+$M\le r_\rho(T-1)/2$.  Proposition~\ref{prop:retiring-chain-properties}
+verifies the sequential interface, so Lemma~\ref{lem:tunable-sequential-revelation} gives
+an event of probability at least $95/128$ on which
+$q_T(\widehat x_T)\le a<b$.  By the deterministic $8\eps$ stationarity
+obstruction, conditioning on a randomized algorithm's private seed and then
+averaging over the stage pairs fixes one realization for which
+\begin{equation}
+ \Pr\!\left(\norm{\nabla F(\widehat x)}\ge8\eps\right)
+ \ge\frac{95}{128}.
+ \label{eq:retiring-fixed-budget-failure}
+\end{equation}
+
+We now transfer the statement both to decentralized protocols and to expected
+call budgets.  A centralized IFO simulator maintains the complete state of all
+agents, executes every local arithmetic and communication operation for free,
+and replaces each local exact-gradient query by one query to the corresponding
+component.  Simultaneous batches can be serialized without changing their
+responses.  Thus a decentralized protocol making $S$ total local calls induces
+an IFO algorithm making exactly $S$ calls; we apply the lower bound to the
+output of any fixed agent.  The information argument above allows an oracle returning both
+value and gradient. Its lower bound therefore applies to the weaker
+gradient-only protocol considered here.
+
+To make the dimension quantifier explicit, choose first
+\[
+ M_0=\left\lfloor c_Mr_\rho(T-1)\right\rfloor
+\]
+with a sufficiently small universal $c_M>0$, and choose $D$ using
+\eqref{eq:retiring-dimension} with $M=M_0$. These choices depend only on the
+problem parameters. Increasing the universal interior thresholds if needed
+ensures $M_0\ge1$ and $M_0=\Theta(A_\eps\sqrt K)$.
+Consider any protocol in this fixed dimension whose worst-case expected
+call count is $q\le M_0/4$. Cap its simulator after $M_0$ calls, using a
+fixed fallback output if necessary. The fixed-budget argument supplies one
+hard instance for which the capped output has gradient at least $8\eps$
+with probability at least $95/128$. On that same instance, Markov's
+inequality gives $\Pr(S>M_0)\le1/4$. Therefore the original output satisfies
+\[
+ \Pr\!\left(\norm{\nabla F(\widehat x)}\ge8\eps\right)
+ \ge\frac{95}{128}-\frac14=\frac{63}{128},
+\]
+and its expected gradient norm exceeds $\eps$. This contradiction proves
+$q=\Omega(A_\eps\sqrt K)$ with the dimension fixed before the algorithm
+is selected.
+
+Finally consider the omitted cases.  If $A_\eps\lesssim\sqrt{N_\eps}$, the
+hidden-sign lower bound $\Omega(N_\eps)$ dominates
+$A_\eps\sqrt{N_\eps}$.  If $K$, $m$, or $H/\eps$ is bounded by a universal
+constant, the ordinary centralized lower bound $\Omega(A_\eps)$ dominates the
+same target.  These observations also cover $H=0$, an empty admissible grid,
+$r_\rho<2$, $T<2$, and $\bar\rho>1/16$.  Since
+$\sqrt{N_\eps}=\Theta(1+\sqrt K)$, combining the interior and boundary cases
+proves \eqref{eq:retiring-square-root-lower}.
+\end{proof}
+
+\section{A terminally flat chain for the coarse stochastic lower bound}
+\label{sec:stochastic-coarse-closure}
+
+The construction uses a bounded hidden gradient in each block and a public
+radial wall. Terminal flatness prevents residual curvature from violating
+the relaxed-smoothness condition near a stationary point. A Bernoulli oracle
+then reveals at most one new hidden direction per success. The rare-reveal
+principle is related to~\cite{arjevani2022}; the analytic certificate and
+coupling below verify its use in the present function class.
+
+\subsection{A flat switch with approximate logarithmic derivatives}
+
+Define
+\begin{equation}
+ \vartheta(t)=
+ \begin{cases}
+  0,&t\le0,\\
+  e^{-1/t},&t>0,
+ \end{cases}
+ \qquad
+ \mathsf S(t)=
+ \frac{\vartheta(t)}{\vartheta(t)+\vartheta(1-t)}.
+ \label{eq:flat-switch}
+\end{equation}
+Then $\mathsf S$ is nondecreasing and $C^\infty$, equals zero on
+$(-\infty,0]$, equals one on $[1,\infty)$, and satisfies
+$\mathsf S(1-t)=1-\mathsf S(t)$.
+
+\begin{lemma}[Flat-switch calculus]
+\label{lem:flat-switch-calculus}
+There is a universal constant $C_{\rm sw}$ such that, for every
+$0<\zeta\le e^{-4}$, with
+\begin{equation}
+ \Gamma_\zeta
+ :=C_{\rm sw}\bigl(1+\log(1/\zeta)\bigr)^4,
+ \label{eq:flat-switch-Gamma}
+\end{equation}
+one has, for every $t\in\R$,
+\begin{align}
+ 0\le \mathsf S'(t)
+ &\le \Gamma_\zeta\bigl(\zeta+\mathsf S(t)\bigr),
+ \label{eq:switch-first-left}\\
+ \mathsf S'(t)
+ &\le \Gamma_\zeta\bigl(\zeta+1-\mathsf S(t)\bigr),
+ \label{eq:switch-first-right}\\
+ |\mathsf S''(t)|
+ &\le \Gamma_\zeta\bigl(\zeta+\mathsf S'(t)\bigr).
+ \label{eq:switch-second}
+\end{align}
+The same statements hold after any fixed affine rescaling of the argument,
+with only a universal change in $C_{\rm sw}$.
+\end{lemma}
+
+\begin{proof}
+Outside $(0,1)$ all derivatives vanish.  On $(0,1/2]$, put
+\[
+ A(t)=\frac1t-\frac1{1-t},
+ \qquad
+ B(t)=\frac1{t^2}+\frac1{(1-t)^2}.
+\]
+Then
+\[
+ \mathsf S(t)=\frac1{1+e^{A(t)}},
+ \qquad
+ \mathsf S'(t)=\mathsf S(t)(1-\mathsf S(t))B(t),
+\]
+and direct differentiation gives
+\begin{equation}
+ |\mathsf S''(t)|
+ \le C\mathsf S(t)(t^{-4}+1).
+ \label{eq:flat-switch-second-raw}
+\end{equation}
+Moreover, on this half-interval
+\begin{equation}
+ A(t)\ge t^{-1}-2,
+ \qquad
+ \frac12e^{-A(t)}\le\mathsf S(t)\le e^{-A(t)},
+ \qquad
+ \mathsf S'(t)\ge4\mathsf S(t).
+ \label{eq:flat-switch-elementary}
+\end{equation}
+
+Write $L=1+\log(1/\zeta)$.  If $\mathsf S(t)\ge\zeta$, then
+$A(t)\le\log(1/\zeta)$, so \eqref{eq:flat-switch-elementary} yields
+$t^{-1}\le C L$.  Hence
+\[
+ \mathsf S'(t)\le C L^2\mathsf S(t),
+ \qquad
+ |\mathsf S''(t)|\le C L^4\mathsf S(t)
+ \le C L^4\mathsf S'(t).
+\]
+If $\mathsf S(t)<\zeta$, then by
+\eqref{eq:flat-switch-elementary}, with $A=A(t)$,
+\[
+ \mathsf S(t)t^{-k}
+ \le e^{-A}(A+2)^k
+ \le C\zeta L^k,
+ \qquad k=2,4.
+\]
+The last inequality is the elementary monotonicity bound for
+$e^{-A}(A+2)^k$ on
+$A\ge\log(1/(2\zeta))$, using $\zeta\le e^{-4}$ and enlarging a universal
+constant.  Together with \eqref{eq:flat-switch-second-raw}, these two cases
+prove \eqref{eq:switch-first-left} and \eqref{eq:switch-second} on
+$(0,1/2]$.
+
+On $[1/2,1)$, the first-left inequality is immediate from boundedness of
+$\mathsf S'$ and $\mathsf S\ge1/2$.  The identity
+$\mathsf S(1-t)=1-\mathsf S(t)$ transfers the first-left estimate on
+$(0,1/2]$ to \eqref{eq:switch-first-right} on $[1/2,1)$ and transfers the
+second-derivative estimate to the other half.  The remaining halves of the
+two first-derivative estimates are again trivial by boundedness.  Fixed
+affine rescalings multiply the first and second derivatives by fixed
+constants, which are absorbed into $C_{\rm sw}$.
+\end{proof}
+
+Fix once and for all
+\begin{equation}
+ a=\frac1{16},
+ \qquad b=\frac18,
+ \qquad d=\frac14.
+ \label{eq:coarse-chain-thresholds}
+\end{equation}
+Define the activation gate
+\begin{equation}
+ s(u)=\mathsf S\!\left(\frac{u-a}{b-a}\right)
+ \label{eq:coarse-chain-gate}
+\end{equation}
+and the bounded reward
+\begin{equation}
+ r(u)=\int_{-\infty}^{u}
+ \mathsf S(v+2)
+ \left[1-\mathsf S\!\left(\frac{v-b}{d-b}\right)\right]dv.
+ \label{eq:coarse-chain-reward}
+\end{equation}
+Write $R=\sup_u r(u)<\infty$.  On the interval $(-1,1)$,
+\begin{equation}
+ r'(u)=1\quad(u\le b),
+ \qquad
+ r'(u)=0\quad(u\ge d),
+ \qquad
+ 0\le r'(u)\le1.
+ \label{eq:reward-plateaux}
+\end{equation}
+Moreover, Lemma~\ref{lem:flat-switch-calculus} gives
+\begin{equation}
+ |r''(u)|\le C\Gamma_\zeta(\zeta+r'(u)),
+ \qquad u\in(-1,1).
+ \label{eq:reward-log-derivative}
+\end{equation}
+
+\subsection{A terminally flat scalar zero-chain}
+
+For $q=(q_1,\ldots,q_T)\in(-1,1)^T$, define
+\begin{equation}
+ \Phi_T(q)
+ =-r(q_1)-\sum_{j=2}^{T}s(q_{j-1})r(q_j).
+ \label{eq:terminal-flat-scalar-chain}
+\end{equation}
+Use the conventions $s(q_0)=1$ and $r(q_{T+1})=0$.  Its coordinate
+gradients have one sign:
+\begin{equation}
+ -\partial_j\Phi_T(q)
+ =s(q_{j-1})r'(q_j)+s'(q_j)r(q_{j+1})
+ =:g_j(q)\ge0.
+ \label{eq:scalar-chain-gradient}
+\end{equation}
+Thus the two mechanisms in one coordinate never cancel.
+
+\begin{lemma}[Scalar-chain properties]
+\label{lem:scalar-chain-properties}
+There are universal constants $G_0,C_0>0$, independent of $T$, such that:
+\begin{enumerate}
+\item $0\le g_j(q)\le G_0$ for every $j,q$;
+\item if $q_j\le b$ for at least one $j$, then
+      $\norm{\nabla\Phi_T(q)}\ge1$;
+\item
+\begin{equation}
+ \norm{\nabla^2\Phi_T(q)}_{\rm op}
+ \le C_0\Gamma_\zeta
+       \bigl(\zeta+\norm{\nabla\Phi_T(q)}\bigr);
+ \label{eq:scalar-chain-certificate}
+\end{equation}
+\item
+\begin{equation}
+ \Phi_T(0)-\inf_q\Phi_T(q)\le RT.
+ \label{eq:scalar-chain-gap}
+\end{equation}
+In addition, if every $q_j\ge d$, then
+$\nabla\Phi_T(q)=0$ and $\nabla^2\Phi_T(q)=0$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+The first claim follows from boundedness of $s'$, $r$, and $r'$.  For the
+second, let $j$ be the first index with $q_j\le b$.  Then
+$s(q_{j-1})=1$ when $j>1$, and the same is true by convention for $j=1$.
+Since $r'(q_j)=1$, \eqref{eq:scalar-chain-gradient} gives $g_j\ge1$.
+
+We spell out the Hessian estimate.  Since $r$ is continuous and strictly
+positive on $[-1,1]$, there is a universal $r_*>0$ such that
+\begin{equation}
+ r(u)\ge r_*,\qquad -1\le u\le1.
+ \label{eq:reward-positive-lower}
+\end{equation}
+The only nonzero Hessian entries are
+\begin{align*}
+ \partial_{jj}^2\Phi_T
+ &=-s(q_{j-1})r''(q_j)-s''(q_j)r(q_{j+1}),\\
+ \partial_{j,j+1}^2\Phi_T
+ &=-s'(q_j)r'(q_{j+1}).
+\end{align*}
+The reward estimate gives
+\[
+ s(q_{j-1})|r''(q_j)|
+ \le C\Gamma_\zeta\bigl(\zeta+s(q_{j-1})r'(q_j)\bigr)
+ \le C\Gamma_\zeta(\zeta+g_j).
+\]
+The flat-switch second-derivative estimate and
+\eqref{eq:reward-positive-lower} give
+\[
+ |s''(q_j)|r(q_{j+1})
+ \le C\Gamma_\zeta\bigl(\zeta+s'(q_j)\bigr)
+ \le C\Gamma_\zeta(\zeta+g_j).
+\]
+For the off-diagonal entry, the left logarithmic-derivative bound for $s$
+gives
+\[
+ s'(q_j)r'(q_{j+1})
+ \le C\Gamma_\zeta\bigl(\zeta+s(q_j)r'(q_{j+1})\bigr)
+ \le C\Gamma_\zeta(\zeta+g_{j+1}).
+\]
+Thus every absolute row sum of the tridiagonal Hessian is at most
+$C\Gamma_\zeta(\zeta+\max_jg_j)$.  Since
+$\max_jg_j\le\norm{\nabla\Phi_T(q)}$, the operator-norm bound
+\eqref{eq:scalar-chain-certificate} follows.
+
+Every summand in \eqref{eq:terminal-flat-scalar-chain} lies in $[-R,0]$,
+which proves \eqref{eq:scalar-chain-gap}.  Finally, if every $q_j\ge d$, then
+$r'(q_j)=r''(q_j)=s'(q_j)=s''(q_j)=0$, proving both gradient and Hessian
+terminal flatness.
+\end{proof}
+
+\subsection{Block hiding and a public radial wall}
+
+Let $D\ge2$, let $\theta_1,\ldots,\theta_T$ be unit vectors in mutually
+separate copies of $\R^D$, and define
+\begin{equation}
+ \pi(z)=\frac{z}{\sqrt{1+\norm z^2}},
+ \qquad
+ q_j(z_j)=\inner{\theta_j}{\pi(z_j)}.
+ \label{eq:block-compression}
+\end{equation}
+Then $q_j\in(-1,1)$.  Let
+\begin{equation}
+ \omega(r)=M\int_0^r\mathsf S(t-1)\,dt,
+ \label{eq:radial-wall}
+\end{equation}
+where $M$ is a sufficiently large universal constant, and set
+\begin{equation}
+ \mathcal H_{\Theta,T}(z_1,\ldots,z_T)
+ =\Phi_T(q_1(z_1),\ldots,q_T(z_T))
+  +\sum_{j=1}^T\omega(\norm{z_j}).
+ \label{eq:block-terminal-chain}
+\end{equation}
+The wall vanishes on the unit ball, has constant radial slope $M$ outside
+the ball of radius two, and contains no hidden direction.
+
+\begin{lemma}[Block-chain geometry and smoothness]
+\label{lem:block-chain-geometry}
+For a sufficiently large universal choice of $M$, there are universal
+constants $c_g,C_g,C_H,C_\Delta>0$, independent of $T,D,\Theta$, such that:
+\begin{enumerate}
+\item if $q_j(z_j)\le b$ for at least one $j$, then
+\begin{equation}
+ \norm{\nabla\mathcal H_{\Theta,T}(z)}\ge c_g;
+ \label{eq:block-gradient-obstruction}
+\end{equation}
+\item every hidden-chain block of $\nabla\mathcal H_{\Theta,T}$ has norm at
+most $C_g$;
+\item
+\begin{equation}
+ \norm{\nabla^2\mathcal H_{\Theta,T}(z)}_{\rm op}
+ \le C_H\Gamma_\zeta
+ \bigl(\zeta+\norm{\nabla\mathcal H_{\Theta,T}(z)}\bigr);
+ \label{eq:block-generalized-certificate}
+\end{equation}
+\item
+\begin{equation}
+ \mathcal H_{\Theta,T}(0)-\inf_z\mathcal H_{\Theta,T}(z)
+ \le C_\Delta T.
+ \label{eq:block-chain-gap}
+\end{equation}
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Fix one block and write $r=\norm z$, $e=z/r$ for $r>0$,
+$c=\inner\theta e$, $u=\inner\theta z=rc$, and
+$\rho=(1+r^2)^{-1/2}$.  Direct differentiation gives
+\begin{align}
+ \nabla q(z)
+ &=\rho\theta-\rho^3uz,
+ \label{eq:compression-gradient}\\
+ \nabla^2q(z)
+ &=-\rho^3(\theta z^\top+z\theta^\top+uI)
+   +3\rho^5u zz^\top.
+ \label{eq:compression-hessian}
+\end{align}
+Equivalently,
+\begin{equation}
+ \nabla q
+ =\rho(\theta-ce)+\rho^3ce,
+ \qquad
+ \norm{\nabla q}^2
+ =\rho^2(1-c^2)+\rho^6c^2.
+ \label{eq:compression-radial-tangent}
+\end{equation}
+The singular values of $D\pi(z)$ are $\rho$ in tangential directions and
+$\rho^3$ in the radial direction.  In particular,
+\begin{equation}
+ \norm{\nabla q}\ge5^{-3/2}\quad(r\le2),
+ \qquad
+ \norm{\nabla^2q}_{\rm op}\le6\rho^2.
+ \label{eq:compression-quantitative-bounds}
+\end{equation}
+The Hessian estimate follows directly from
+\eqref{eq:compression-hessian}, using $|u|\le r$,
+$\rho r\le1$, and $\rho^3r^3\le1$.
+
+Let $w(r)=\omega'(r)=M\mathsf S(r-1)$.  A block gradient has the form
+\begin{equation}
+ v=-g\nabla q+w(r)e,
+ \qquad 0\le g\le G_0,
+ \label{eq:block-gradient-two-parts}
+\end{equation}
+with the zero convention at $r=0$.  We claim that, for $M$ sufficiently
+large,
+\begin{equation}
+ \norm v\ge c\bigl(g\norm{\nabla q}+w(r)\bigr)
+ \label{eq:block-noncancellation}
+\end{equation}
+with a universal $c>0$.
+
+If $r\le1$, then $w=0$ and the claim is immediate.  Suppose
+$1\le r\le2$.  If $q\le0$, the radial component of $-\nabla q$ is outward,
+so adding the outward wall cannot decrease either the chain norm or the wall
+norm; hence \eqref{eq:block-noncancellation} follows.  If $q\ge d$, then
+$r'(q)=s'(q)=0$ and consequently $g=0$.  In the remaining case
+$0<q<d$, one has
+\[
+ |c|=\frac{|q|\sqrt{1+r^2}}r\le d\sqrt2<\frac12.
+\]
+Thus the tangential component of $-g\nabla q$ has norm at least
+$c_0g\rho$, while $\norm{\nabla q}\le\rho$.  If $w\le2g\rho$, the
+tangential component proves \eqref{eq:block-noncancellation}; if
+$w>2g\rho$, the triangle inequality gives
+$\norm v\ge w-g\norm{\nabla q}\ge w/2$.  Finally, when $r\ge2$ the wall
+slope equals $M$.  If $q\ge d$, again $g=0$; otherwise choosing
+$M\ge4G_0$ makes
+$\norm v\ge M-G_0\norm{\nabla q}\ge3M/4$.  This proves the claim in all
+cases.
+
+The same cases, together with
+\eqref{eq:compression-quantitative-bounds}, yield
+\begin{equation}
+ g\norm{\nabla^2q}_{\rm op}
+ \le C\bigl(g\norm{\nabla q}+w(r)\bigr).
+ \label{eq:compression-second-controlled}
+\end{equation}
+Indeed, for $r\le2$ the gradient is uniformly bounded below.  For $r\ge2$
+and $0\le q<d$, the bound $|c|<1/2$ gives
+$\norm{\nabla q}\ge c_0\rho$, while
+$\norm{\nabla^2q}\le6\rho^2$.  For $r\ge2$ and $q<0$, the constant wall
+slope dominates the bounded left side, and for $q\ge d$ one has $g=0$.
+
+Apply \eqref{eq:block-noncancellation} to every block and put
+$d_j=\norm{\nabla q_j}$ and $w_j=w(\norm{z_j})$.  Since the blocks are
+orthogonal,
+\begin{equation}
+ \left(\sum_j(g_jd_j+w_j)^2\right)^{1/2}
+ \le C\norm{\nabla\mathcal H_{\Theta,T}(z)}.
+ \label{eq:coefficient-control-by-gradient}
+\end{equation}
+If some $q_j\le b$, Lemma~\ref{lem:scalar-chain-properties} gives a block
+with $g_j\ge1$.  For that block either $r_j\le2$, in which case
+$d_j\ge5^{-3/2}$, or $r_j>2$, in which case $w_j=M$.  The first assertion
+therefore follows from \eqref{eq:block-noncancellation}.  The second follows
+from $g_j\le G_0$ and $d_j\le1$.
+
+For the Hessian, the lifted scalar-chain part is
+\[
+ J^\top\nabla^2\Phi_TJ
+ +\operatorname{diag}(\partial_j\Phi_T\nabla^2q_j),
+\]
+where $J$ is block diagonal with blocks $\nabla q_j^\top$.  The proof of
+Lemma~\ref{lem:scalar-chain-properties} gives
+\begin{align*}
+ |\partial_{jj}^2\Phi_T|
+ &\le C\Gamma_\zeta(\zeta+g_j),\\
+ |\partial_{j,j+1}^2\Phi_T|
+ &\le C\Gamma_\zeta(\zeta+g_{j+1}).
+\end{align*}
+After multiplication by $d_jd_k$, every block-row sum is at most
+\[
+ C\Gamma_\zeta
+ \left(\zeta+\max_\ell(g_\ell d_\ell+w_\ell)\right)
+ \le C\Gamma_\zeta
+ \left(\zeta+\norm{\nabla\mathcal H_{\Theta,T}(z)}\right),
+\]
+where we used \eqref{eq:coefficient-control-by-gradient}.  The second
+composition term is controlled by
+\eqref{eq:compression-second-controlled} in the same way.
+
+For a radial wall, the Hessian eigenvalues are $w'(r)$ and $w(r)/r$.
+They vanish for $r\le1$, while for $r\ge1$ the flat-switch estimate gives
+\[
+ |w'(r)|+\frac{w(r)}r
+ \le C\Gamma_\zeta\bigl(\zeta+w(r)\bigr).
+\]
+The wall Hessian is block diagonal, so
+\eqref{eq:coefficient-control-by-gradient} again gives
+\eqref{eq:block-generalized-certificate}.
+
+Finally, the walls are nonnegative and vanish at the origin, while the scalar
+part lies in $[-RT,0]$.  Hence
+\eqref{eq:block-chain-gap} holds with a universal $C_\Delta$.
+\end{proof}
+
+\subsection{Scaling into the target function class}
+
+The next elementary lemma converts the pointwise Hessian certificate into
+the exact finite-step condition of the problem.
+
+\begin{lemma}[Vector differential certificate]
+\label{lem:vector-differential-certificate}
+Suppose a $C^2$ function $f$ satisfies
+\begin{equation}
+ \norm{\nabla^2f(x)}_{\rm op}
+ \le\frac18\bigl(L_0+L_1\norm{\nabla f(x)}\bigr)
+ \qquad\text{for every }x.
+ \label{eq:vector-hessian-certificate}
+\end{equation}
+Then, whenever $\norm{x-y}\le1/L_1$,
+\begin{equation}
+ \norm{\nabla f(y)-\nabla f(x)}
+ \le\bigl(L_0+L_1\norm{\nabla f(x)}\bigr)\norm{y-x}.
+ \label{eq:vector-finite-step-certificate}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Parametrize the segment by arclength and put
+$Q(t)=\norm{\nabla f(x+tv)}+L_0/L_1$.  Its upper Dini derivative obeys
+$Q'(t)\le(L_1/8)Q(t)$.  Hence
+$Q(t)\le Q(0)e^{L_1t/8}$.  Integrating
+\eqref{eq:vector-hessian-certificate} along a segment of length $d$ gives
+\[
+ \norm{\nabla f(y)-\nabla f(x)}
+ \le\frac{L_0+L_1\norm{\nabla f(x)}}{L_1}
+       (e^{L_1d/8}-1).
+\]
+For $0\le L_1d\le1$, $e^{L_1d/8}-1\le L_1d$, proving the claim.
+\end{proof}
+
+Assume for the moment that $L_1\eps\ge2L_0$ and define
+\begin{equation}
+ \zeta_\eps
+ =\min\left\{e^{-4},\frac{c_gL_0}{16L_1\eps}\right\},
+ \qquad
+ \Gamma_\eps:=\Gamma_{\zeta_\eps}.
+ \label{eq:coarse-chain-zeta}
+\end{equation}
+Choose
+\begin{equation}
+ \beta=\frac{L_1}{8C_H\Gamma_\eps},
+ \qquad
+ \alpha=\frac{8\eps}{c_g\beta},
+ \label{eq:coarse-chain-scaling}
+\end{equation}
+and define
+\begin{equation}
+ f_{\Theta,T}(x)=\alpha\mathcal H_{\Theta,T}(\beta x).
+ \label{eq:scaled-coarse-chain}
+\end{equation}
+By Lemma~\ref{lem:block-chain-geometry},
+\begin{align*}
+ \norm{\nabla^2 f_{\Theta,T}(x)}_{\rm op}
+ &\le C_H\Gamma_\eps\alpha\beta^2\zeta_\eps
+      +C_H\Gamma_\eps\beta\norm{\nabla f_{\Theta,T}(x)}\\
+ &\le\frac18L_0+\frac18L_1\norm{\nabla f_{\Theta,T}(x)}.
+\end{align*}
+Thus Lemma~\ref{lem:vector-differential-certificate} proves the required
+relaxed smoothness.  Moreover,
+\begin{equation}
+ \text{if some }q_j\le b,
+ \qquad
+ \norm{\nabla f_{\Theta,T}(x)}\ge8\eps.
+ \label{eq:scaled-gradient-obstruction}
+\end{equation}
+The scaled gap is at most $\alpha C_\Delta T$.  Consequently, for a
+sufficiently small universal $c_T>0$, the choice
+\begin{equation}
+ T=\left\lfloor
+ c_T\frac{B_\eps}{\Gamma_\eps}
+ \right\rfloor
+ \label{eq:coarse-chain-length}
+\end{equation}
+ensures
+$f_{\Theta,T}(0)-\inf f_{\Theta,T}\le\Delta$.
+
+\subsection{A fixed fresh rare-reveal oracle}
+
+The oracle must be defined pointwise for every query, including queries that
+deactivate a previously active block.  For this reason we use the maximum
+active index rather than the length of a currently active contiguous prefix.
+For a base point $z=(z_1,\ldots,z_T)$ define
+\begin{equation}
+ k_\Theta(z)
+ =\max\bigl(\{0\}\cup\{j:q_j(z_j)>a\}\bigr).
+ \label{eq:max-active-index}
+\end{equation}
+
+\begin{lemma}[One-new-direction decomposition]
+\label{lem:one-new-direction-decomposition}
+For every $z$, if $k=k_\Theta(z)<T$, then
+\begin{equation}
+ \nabla\mathcal H_{\Theta,T}(z)
+ =D_{\Theta_{\le k}}(z)+h_{\Theta,k+1}(z),
+ \label{eq:one-new-direction-base}
+\end{equation}
+where $D_{\Theta_{\le k}}$ depends only on
+$\theta_1,\ldots,\theta_k$, no direction with index at least $k+2$ appears,
+and
+\begin{equation}
+ \sup_{T,D,\Theta,z,k}\norm{h_{\Theta,k+1}(z)}\le C_h
+ \label{eq:rare-vector-bounded}
+\end{equation}
+for a universal constant $C_h$.  If $k=T$, take
+$h_{\Theta,T+1}=0$ and $D_{\Theta_{\le T}}=\nabla\mathcal H_{\Theta,T}$.
+\end{lemma}
+
+\begin{proof}
+The hidden-chain contribution in block $j$ is
+$-g_j(q)\nabla q_j$, where
+\[
+ g_j(q)=s(q_{j-1})r'(q_j)+s'(q_j)r(q_{j+1}).
+\]
+If $j\ge k+2$, then $q_{j-1}\le a$ and $q_j\le a$.  Hence
+$s(q_{j-1})=s'(q_j)=0$, so $g_j=0$.  Thus no direction beyond $k+1$ appears.
+
+For $1\le k<T$, split the only two blocks that may depend on
+$\theta_{k+1}$ as
+\begin{align}
+ [h_{\Theta,k+1}(z)]_k
+ &=-s'(q_k)\bigl(r(q_{k+1})-r(0)\bigr)\nabla q_k,
+ \label{eq:rare-vector-prev-block}\\
+ [h_{\Theta,k+1}(z)]_{k+1}
+ &=-s(q_k)r'(q_{k+1})\nabla q_{k+1}.
+ \label{eq:rare-vector-new-block}
+\end{align}
+All remaining blocks of $h_{\Theta,k+1}$ are zero.  The baseline term
+$-s'(q_k)r(0)\nabla q_k$, every block of index at most $k-1$, and the public
+radial wall are placed in $D_{\Theta_{\le k}}$.  Because
+$q_{k+1}\le a<b$, one has $s'(q_{k+1})=0$ and $r'(q_{k+1})=1$, so this split
+is exact.  For $k=0$, all coordinates lie on the lower gate plateau and the
+only hidden-chain block is $-\nabla q_1$; take this as $h_{\Theta,1}$.
+Uniform boundedness of $s'$, $r$, $r'$, and $\nabla q_j$ proves
+\eqref{eq:rare-vector-bounded}.
+\end{proof}
+
+In scaled coordinates, with $z=\beta x$, put
+\begin{equation}
+ H_{\Theta,k+1}(x)=\alpha\beta h_{\Theta,k+1}(\beta x),
+ \qquad
+ \norm{H_{\Theta,k+1}(x)}\le C_*\eps,
+ \label{eq:scaled-rare-vector}
+\end{equation}
+where $C_*=8C_h/c_g$.  Define
+\begin{equation}
+ p=
+ \begin{cases}
+  1,&\sigma=0,\\
+  \min\left\{1,\dfrac{C_*^2\eps^2}{\sigma^2}\right\},&\sigma>0.
+ \end{cases}
+ \label{eq:rare-probability}
+\end{equation}
+For a fresh $\xi\sim\operatorname{Bernoulli}(p)$ and
+$k=k_\Theta(\beta x)$, define the fixed oracle
+\begin{equation}
+ G_\Theta(x;\xi)
+ =\alpha\beta D_{\Theta_{\le k}}(\beta x)
+  +\frac{\xi}{p}H_{\Theta,k+1}(x).
+ \label{eq:rare-reveal-oracle}
+\end{equation}
+When $k=T$, the second term is zero and the oracle returns the exact gradient.
+Lemma~\ref{lem:one-new-direction-decomposition} gives, pointwise for every
+query $x$,
+\begin{equation}
+ \E_\xi[G_\Theta(x;\xi)]=\nabla f_{\Theta,T}(x),
+ \qquad
+ \E_\xi\norm{G_\Theta(x;\xi)-\nabla f_{\Theta,T}(x)}^2
+ =\frac{1-p}{p}\norm{H_{\Theta,k+1}(x)}^2
+ \le\sigma^2.
+ \label{eq:rare-oracle-validity}
+\end{equation}
+Moreover,
+\begin{equation}
+ p^{-1}=\Theta(P_\eps)
+ \label{eq:p-is-P}
+\end{equation}
+up to universal constants.  Notice that this is a single fixed oracle kernel:
+$k_\Theta(\beta x)$ is a deterministic function of the instance and query,
+and every call uses a fresh independent Bernoulli variable.
+
+\subsection{No parallel bypass and the product lower bound}
+
+Draw $\theta_1,\ldots,\theta_T$ independently and uniformly from the unit
+sphere in $\R^D$.  For the analysis, strengthen a successful oracle reply by
+also revealing the corresponding new direction in full.  Let $\ell_0=0$ and
+let $\ell_t$ be the largest initial segment of directions revealed after the
+first $t$ calls.  If at call $t$ one has
+$k_\Theta(\beta x_t)=\ell_{t-1}<T$ and $\xi_t=1$, set
+$\ell_t=\ell_{t-1}+1$; otherwise set $\ell_t=\ell_{t-1}$.  This extra reveal
+can only help the algorithm.
+
+\begin{lemma}[Blockwise no-bypass and monotone exposure]
+\label{lem:block-no-bypass}
+Fix a possibly randomized algorithm making at most $Q$ oracle calls and then
+returning one output.  If
+\begin{equation}
+ D\ge C a^{-2}\log\bigl(16T(Q+1)\bigr),
+ \label{eq:block-dimension-choice}
+\end{equation}
+then, with probability at least $7/8$, the following event holds
+simultaneously at every query and at the output:
+\begin{equation}
+ q_j(\beta x_{t,j})\le a
+ \quad\text{for every }j>\ell_{t-1},
+ \qquad
+ q_j(\beta\widehat x_j)\le a
+ \quad\text{for every }j>\ell_Q.
+ \label{eq:no-bypass-event}
+\end{equation}
+On this event, one Bernoulli success increases $\ell_t$ by at most one, and a
+non-success reveals no new direction.
+\end{lemma}
+
+\begin{proof}
+We use a truncated interaction so that no independence assertion is made
+after conditioning on the absence of an earlier bypass.  Fix the algorithm's
+private seed, and couple all interactions using the same independent
+Bernoulli variables and hidden directions.  We may additionally disclose
+each Bernoulli variable after its call and disclose a new direction whenever
+the augmented revelation rule calls for it.  These disclosures only
+strengthen the algorithm.
+
+In the truncated interaction, maintain a revealed prefix of length
+$\widetilde\ell$, initially zero.  At a query $z=\beta x$, form
+\[
+ \widetilde k
+ =\max\bigl(\{0\}\cup
+       \{j\le\widetilde\ell:q_j(z_j)>a\}\bigr).
+\]
+This index uses revealed directions only.  The expressions for
+$D_{\Theta_{\le k}}$ and $h_{\Theta,k+1}$ in the proof of
+Lemma~\ref{lem:one-new-direction-decomposition} also define algebraic
+extensions outside the region $k=k_\Theta(z)$: retain the public wall,
+the displayed prefix terms and the displayed successor correction, and
+omit every further hidden-chain contribution.  Use these extensions with
+$k=\widetilde k$ to form the reply.  If
+$\widetilde k<\widetilde\ell$, all required directions are already known.
+If $\widetilde k=\widetilde\ell<T$, a Bernoulli failure returns only
+$\alpha\beta D_{\Theta_{\le\widetilde\ell}}(z)$; a success reads and
+discloses $\theta_{\widetilde\ell+1}$, returns the corresponding successor
+correction, and increases the prefix length by one.  When the prefix has
+length $T$, all directions are known and no further disclosure is needed.
+
+By induction, this simulated history reads only its revealed prefix.
+In particular, the decision to read a successor direction is made before
+that direction is read.  Conditional on the simulated history before a
+call, all directions outside its prefix remain independent uniform sphere
+vectors.  This statement concerns the unconditioned truncated interaction;
+it does not condition on any alignment event.  For each as-yet unread
+direction, the standard spherical-cap bound therefore gives
+\[
+ \Pr\!\left(
+   \inner{\theta_j}{\pi(\beta\widetilde x_{t,j})}>a
+   \,\middle|\,\widetilde{\mathcal F}_{t-1}
+ \right)
+ \le e^{-cDa^2}
+ \qquad(j>\widetilde\ell_{t-1}),
+\]
+after adjusting the universal constant for $D\ge2$.
+The same bound holds for the simulated final output and each direction
+outside its final prefix.  A union bound over at most $T(Q+1)$ pairs shows
+that the probability of any such simulated alignment exceeding $a$ is at
+most $1/8$ under~\eqref{eq:block-dimension-choice}.
+
+On the complementary event the truncated and true augmented interactions
+coincide, pathwise.  Indeed, assume their histories agree before a query.
+All directions outside the common revealed prefix then have alignment at
+most $a$, so the true maximum active index equals $\widetilde k$.
+Lemma~\ref{lem:one-new-direction-decomposition} makes their oracle replies
+identical, including the successor correction when it is sampled.  Their
+disclosures, next queries, and prefix lengths consequently agree as well.
+Induction gives equality through all calls and at the final output.  This
+proves~\eqref{eq:no-bypass-event}, together with the asserted one-direction
+exposure rule.  Averaging over the private seed completes the proof.
+\end{proof}
+
+\subsection{Proof of Theorem~\ref{thm:stochastic-coarse-product}}
+
+\begin{proof}
+Choose the universal constant in $B_\eps\ge C\Xi_\eps$ large enough
+that $T\ge32$. Consider first an algorithm with a deterministic budget
+\begin{equation}
+ Q=\left\lfloor\frac{T}{16p}\right\rfloor.
+ \label{eq:coarse-fixed-budget-Q}
+\end{equation}
+Choose $D$ according to Lemma~\ref{lem:block-no-bypass}.  The number of
+Bernoulli successes among the $Q$ calls has expectation at most $T/16$, so
+Markov's inequality gives probability at most $1/16$ that there are $T$ or
+more successes.  Lemma~\ref{lem:block-no-bypass} fails with probability at
+most $1/8$.  Hence, with probability at least $13/16$, the output has at
+least one unrevealed block with $q_j\le a<b$.  By
+\eqref{eq:scaled-gradient-obstruction},
+\begin{equation}
+ \norm{\nabla f_{\Theta,T}(\widehat x)}\ge8\eps
+ \label{eq:coarse-product-failure-gradient}
+\end{equation}
+on that event.  Averaging over the independent random directions and then
+fixing one realization shows that every randomized fixed-budget algorithm
+has a fixed admissible instance on which its expected output gradient is
+larger than $\eps$.
+
+Now let an algorithm have worst-case expected budget $q$.  Cap it after the
+$Q$ calls in \eqref{eq:coarse-fixed-budget-Q}.  The fixed-budget argument
+selects one realization $\Theta_\star$ for which the capped algorithm obeys
+\eqref{eq:coarse-product-failure-gradient} with probability at least
+$13/16$.  If $q\le Q/32$, then on that same instance
+$\Pr(S>Q)\le1/32$.  The original and capped outputs agree on
+$\{S\le Q\}$, and therefore the original output has gradient at least
+$8\eps$ with probability at least $25/32$, contradicting the target
+criterion.  Thus
+\[
+ q\ge c\frac{T}{p}
+ =\Omega\left(\frac{B_\eps P_\eps}{\Gamma_\eps}\right).
+\]
+Finally, \eqref{eq:coarse-chain-zeta} implies
+$\Gamma_\eps=O(\Xi_\eps)$ under
+$L_1\eps\ge2L_0$.  Giving every node the same objective and independent
+copies of \eqref{eq:rare-reveal-oracle} converts the centralized query lower
+bound into the total decentralized local-call lower bound without changing
+any parameter.
+\end{proof}
+
+\section{A one-dimensional deterministic coarse lower bound}
+\label{sec:coarse-reset}
+
+The main lower bounds are allowed to increase the ambient dimension. This
+appendix records a complementary one-dimensional obstruction to coarse
+optimization. It uses identical local objectives and exact gradients, and
+establishes the $B_\eps$ scale up to a logarithm without a high-dimensional
+hiding argument. The oracle is gradient-only, as in the main model.
+
+The basic device is a periodic derivative which is equal to a fixed positive
+slope in every cell except one hidden cell.  Inside that cell it descends
+exponentially, spends enough time on a negative plateau to reset the total
+integral, and then returns exponentially to the common positive slope.  The
+exponential ramps are chosen so that their derivative is proportional to
+$L_0+L_1|f'|$; consequently the construction obeys the stated finite-step
+relaxed-smoothness inequality exactly.
+
+\begin{lemma}[Differential certificate for relaxed smoothness]
+\label{lem:coarse-differential-certificate}
+Let $p:\R\to\R$ be locally absolutely continuous and suppose that, almost
+everywhere,
+\begin{equation}
+ |p'(x)|\le \frac14\bigl(L_0+L_1|p(x)|\bigr).
+ \label{eq:coarse-differential-bound}
+\end{equation}
+If $f'(x)=p(x)$, then for all $x,y$ with $|x-y|\le1/L_1$,
+\begin{equation}
+ |f'(y)-f'(x)|
+ \le \bigl(L_0+L_1|f'(x)|\bigr)|y-x|.
+ \label{eq:coarse-exact-relaxed}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Put $c=L_0/L_1$ and $q=|p|+c$.  Along either orientation of the segment from
+$x$ to $y$, \eqref{eq:coarse-differential-bound} and Gronwall's inequality
+give
+\[
+ q(x+s)\le q(x)e^{L_1s/4},
+ \qquad 0\le s\le |y-x|.
+\]
+Therefore, writing $d=|y-x|$,
+\[
+ |p(y)-p(x)|
+ \le \frac{L_1}{4}\int_0^d q(x+s)\,ds
+ \le q(x)\bigl(e^{L_1d/4}-1\bigr).
+\]
+For $0\le u\le1$, one has $e^{u/4}-1\le u$.  Since $L_1d\le1$, the last
+display is at most
+$L_1q(x)d=(L_0+L_1|p(x)|)d$.
+\end{proof}
+
+Define the logarithmic loss
+\begin{equation}
+ \Lambda_\eps
+ :=1+\log\left(1+4\frac{L_1\eps}{L_0}\right)
+      +\log\left(1+8(1+B_\eps)\frac{L_1\eps}{L_0}\right).
+ \label{eq:coarse-log-loss}
+\end{equation}
+
+\begin{theorem}[Hidden reset-cycle lower bound]
+\label{thm:coarse-reset-lower}
+There are universal constants $c,C>0$ with the following property.  Suppose
+\begin{equation}
+ L_1\eps\ge L_0,
+ \qquad
+ B_\eps\ge C\Lambda_\eps.
+ \label{eq:coarse-reset-regime}
+\end{equation}
+Then every randomized adaptive decentralized algorithm has an admissible
+one-dimensional exact-gradient instance for which
+\begin{equation}
+ \boxed{
+ \E S\ge c\frac{B_\eps}{\Lambda_\eps}.}
+ \label{eq:coarse-B-lower}
+\end{equation}
+All local objectives in the instance are identical.  Hence the construction
+has zero heterogeneity and its deterministic oracle is an admissible subclass
+for every stated value of $H$ and $\sigma$.
+\end{theorem}
+
+\begin{proof}
+Fix an integer $K\ge16$, to be chosen below, and set
+\begin{equation}
+ \alpha=4\eps,
+ \qquad
+ \kappa=\frac14,
+ \qquad
+ c_0=\frac{L_0}{L_1},
+ \qquad
+ M=2K\alpha.
+ \label{eq:coarse-pulse-scales}
+\end{equation}
+The assumption $L_1\eps\ge L_0$ implies
+$r:=\alpha/c_0\ge4$.  Define
+\begin{align}
+ \ell_+
+ &=\frac1{\kappa L_1}\log\left(1+\frac{\alpha}{c_0}\right),
+ &
+ \ell_-
+ &=\frac1{\kappa L_1}\log\left(1+\frac{M}{c_0}\right),
+ &
+ \ell&=\ell_++\ell_- .
+ \label{eq:coarse-ramp-lengths}
+\end{align}
+On $[0,\ell]$ introduce the descending profile
+\begin{equation}
+ d(t)=
+ \begin{cases}
+  (\alpha+c_0)e^{-\kappa L_1t}-c_0,
+       &0\le t\le\ell_+,\\[1mm]
+  c_0-c_0e^{\kappa L_1(t-\ell_+)},
+       &\ell_+\le t\le\ell.
+ \end{cases}
+ \label{eq:coarse-descending-profile}
+\end{equation}
+It satisfies $d(0)=\alpha$, $d(\ell_+)=0$, $d(\ell)=-M$, and
+\begin{equation}
+ |d'(t)|=\kappa\bigl(L_0+L_1|d(t)|\bigr)
+ \quad\text{almost everywhere.}
+ \label{eq:coarse-ramp-ode}
+\end{equation}
+Its signed integral is
+\begin{equation}
+ D:=\int_0^\ell d(t)\,dt
+ =\frac1{\kappa L_1}
+ \left[
+  \alpha-M+c_0\log\frac{c_0+M}{c_0+\alpha}
+ \right].
+ \label{eq:coarse-ramp-integral}
+\end{equation}
+Choose the negative-plateau length
+\begin{equation}
+ h=
+ \frac{2\alpha(K-1)\ell+2D}
+      {M-\alpha(K-1)}.
+ \label{eq:coarse-plateau-length}
+\end{equation}
+The denominator is $\alpha(K+1)$.  Moreover,
+\begin{equation}
+ -\frac{M}{\kappa L_1}\le D\le\frac{\alpha}{\kappa L_1}.
+ \label{eq:coarse-D-bounds}
+\end{equation}
+Indeed, the logarithm in \eqref{eq:coarse-ramp-integral} is nonnegative,
+while
+$c_0\log((c_0+M)/(c_0+\alpha))\le
+c_0\log(1+M/c_0)\le M$.
+Since $M/c_0=2Kr\ge128$, \eqref{eq:coarse-D-bounds} gives
+\[
+ 2\alpha(K-1)\ell+2D
+ \ge
+ \frac{2\alpha}{\kappa L_1}
+ \left[(K-1)\log(1+2Kr)-2K\right]
+ \ge0.
+\]
+Thus $h\ge0$.  The upper bound in \eqref{eq:coarse-D-bounds} also gives
+\begin{equation}
+ h\le2\ell+\frac2{\kappa L_1},
+ \qquad
+ w:=2\ell+h
+ \le4\ell+\frac2{\kappa L_1}.
+ \label{eq:coarse-cell-width}
+\end{equation}
+
+Define a continuous pulse $\pi:[0,w]\to[-M,\alpha]$ by
+\begin{equation}
+ \pi(t)=
+ \begin{cases}
+  d(t),&0\le t\le\ell,\\
+  -M,&\ell\le t\le\ell+h,\\
+  d(w-t),&\ell+h\le t\le w.
+ \end{cases}
+ \label{eq:coarse-pulse}
+\end{equation}
+The pulse begins and ends at $\alpha$, and its integral is $2D-Mh$.
+Let ${\mathsf P}=Kw$ and divide one period into cells
+$I_j=[jw,(j+1)w)$, $j=0,\ldots,K-1$.  For a hidden index
+$J\in\{0,\ldots,K-1\}$, define the ${\mathsf P}$-periodic derivative
+$p_J$ to equal the translated pulse $\pi$ on $I_J$ and the constant
+$\alpha$ on every other cell.  By \eqref{eq:coarse-plateau-length},
+\begin{equation}
+ \int_0^{\mathsf P}p_J(t)\,dt
+ =\alpha(K-1)w+2D-Mh=0.
+ \label{eq:coarse-zero-mean}
+\end{equation}
+Consequently
+\begin{equation}
+ f_J(x):=\int_0^x p_J(t)\,dt
+ \label{eq:coarse-objective}
+\end{equation}
+is continuously differentiable, periodic, and bounded below.  The positive
+part of $p_J$ is everywhere at most $\alpha$.  Since the signed integral over
+a period is zero, the oscillation of $f_J$ is at most the total positive
+variation, hence
+\begin{equation}
+ f_J(0)-\inf f_J
+ \le \operatorname{osc}(f_J)
+ \le \alpha {\mathsf P}=\alpha Kw.
+ \label{eq:coarse-gap-bound}
+\end{equation}
+The derivative $p_J$ is locally absolutely continuous and satisfies
+\eqref{eq:coarse-differential-bound}: equality up to the factor $\kappa$
+holds on the two exponential ramps, and the derivative vanishes on all
+plateaux.  Lemma~\ref{lem:coarse-differential-certificate} therefore proves
+the required relaxed smoothness globally.
+
+We now choose $K$ while respecting the gap budget.  Let
+\begin{equation}
+ K=\left\lfloor c_K\frac{B_\eps}{\Lambda_\eps}\right\rfloor
+ \label{eq:coarse-K-choice}
+\end{equation}
+for a sufficiently small universal $c_K>0$.  Assumption
+\eqref{eq:coarse-reset-regime}, after increasing $C$, ensures $K\ge16$.
+Also $K\le B_\eps$, and therefore
+$M/c_0=8K L_1\eps/L_0\le8B_\eps L_1\eps/L_0$.
+Equations \eqref{eq:coarse-ramp-lengths} and
+\eqref{eq:coarse-cell-width} yield
+\begin{equation}
+ w\le \frac{C_w\Lambda_\eps}{L_1}
+ \label{eq:coarse-width-log}
+\end{equation}
+for a universal $C_w$.  Hence
+\[
+ \alpha Kw
+ \le 4C_wc_K\frac{\eps B_\eps}{L_1}
+ =4C_wc_K\Delta.
+\]
+Taking $c_K\le(4C_w)^{-1}$ makes
+\eqref{eq:coarse-gap-bound} at most $\Delta$.
+
+It remains to prove the query lower bound.  Give every agent the same local
+objective $f_J$ and the exact-gradient oracle $p_J$.  Consider first a
+deterministic protocol using at most $n$ total local queries, and expose the
+hypothetical transcript in which every oracle response equals $\alpha$.
+The periodic extension identifies every point with one residue cell modulo
+$\mathsf P$.  A query therefore tests at most one of the $K$ residue classes;
+boundary points return $\alpha$ and may be assigned arbitrarily.  Thus the
+query sequence touches at most $n$ candidate residue classes.  Fix one agent
+and include the residue class containing its output, for a total of at most
+$n+1$ classes.  For every hidden index $J$ outside this set, the actual
+transcript under $f_J$ is exactly the hypothetical all-$\alpha$ transcript,
+by induction over the adaptive queries, and the output lies outside every
+translate of the hidden cell $I_J$.
+Therefore
+\begin{equation}
+ |f'_J(\widehat x)|=\alpha=4\eps.
+ \label{eq:coarse-unqueried-output}
+\end{equation}
+Under a uniform hidden index, every deterministic $n$-query protocol thus
+satisfies
+\begin{equation}
+ \Pr_J\bigl(|f'_J(\widehat x)|=4\eps\bigr)
+ \ge1-\frac{n+1}{K}.
+ \label{eq:coarse-fixed-budget-failure}
+\end{equation}
+The same statement holds for randomized fixed-budget protocols after
+conditioning on their private seed and averaging.
+
+Finally let a randomized protocol have worst-case expected total call count
+$q$.  Cap it after $n=\lfloor K/4\rfloor$ calls, using any
+transcript-measurable fallback output.  By
+\eqref{eq:coarse-fixed-budget-failure}, averaging over the hidden index and
+then fixing one index $J_\star$ gives failure probability at least $11/16$
+for the capped protocol.  If $q\le K/128$, Markov's inequality on that same
+instance gives
+\[
+ \Pr_{J_\star}(S>n)
+ \le\frac{q}{n+1}\le\frac1{32}.
+\]
+The capped and original outputs agree on $\{S\le n\}$, so the original
+protocol has
+\[
+ \Pr_{J_\star}\bigl(|f'_{J_\star}(\widehat x)|=4\eps\bigr)
+ \ge\frac{11}{16}-\frac1{32}
+ =\frac{21}{32}.
+\]
+Its expected gradient norm is therefore larger than $\eps$, a contradiction.
+Thus $q>K/128=\Omega(B_\eps/\Lambda_\eps)$.
+\end{proof}
+
+\end{document}

@@ -1,0 +1,1585 @@
+% Unified manuscript. Compile with: pdflatex Suffix_OLS_UCB_Colombo_Team.tex
+% Run pdflatex twice to resolve all internal references. No external files required.
+\documentclass[11pt]{article}
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{aliascnt}
+\usepackage{float}
+\floatstyle{ruled}
+\newfloat{algorithm}{tbp}{loa}
+\floatname{algorithm}{Algorithm}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[round,authoryear]{natbib}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\usepackage[nameinlink,capitalize,noabbrev]{cleveref}
+\usepackage{fancyhdr}
+\usepackage{placeins}
+\hypersetup{pdftitle={Minimax Regret for Restless Rising Concave Bandits via Suffix Least-Squares Optimism},pdfauthor={Colombo Team},pdfsubject={Sequential decision-making and shape-constrained nonstationary bandits},pdfkeywords={restless bandits, rising concave rewards, dynamic regret, least squares, minimax optimality}}
+\newtheorem{theorem}{Theorem}[section]
+\newaliascnt{lemma}{theorem}
+\newtheorem{lemma}[lemma]{Lemma}
+\aliascntresetthe{lemma}
+\newaliascnt{proposition}{theorem}
+\newtheorem{proposition}[proposition]{Proposition}
+\aliascntresetthe{proposition}
+\newaliascnt{corollary}{theorem}
+\newtheorem{corollary}[corollary]{Corollary}
+\aliascntresetthe{corollary}
+\newaliascnt{assumption}{theorem}
+\newtheorem{assumption}[assumption]{Assumption}
+\aliascntresetthe{assumption}
+\newaliascnt{definition}{theorem}
+\newtheorem{definition}[definition]{Definition}
+\aliascntresetthe{definition}
+\theoremstyle{remark}
+\newaliascnt{remark}{theorem}
+\newtheorem{remark}[remark]{Remark}
+\aliascntresetthe{remark}
+\crefname{lemma}{Lemma}{Lemmas}
+\Crefname{lemma}{Lemma}{Lemmas}
+\crefname{proposition}{Proposition}{Propositions}
+\Crefname{proposition}{Proposition}{Propositions}
+\crefname{corollary}{Corollary}{Corollarys}
+\Crefname{corollary}{Corollary}{Corollarys}
+\crefname{assumption}{Assumption}{Assumptions}
+\Crefname{assumption}{Assumption}{Assumptions}
+\crefname{definition}{Definition}{Definitions}
+\Crefname{definition}{Definition}{Definitions}
+\crefname{remark}{Remark}{Remarks}
+\Crefname{remark}{Remark}{Remarks}
+\crefname{algorithm}{Algorithm}{Algorithms}
+\Crefname{algorithm}{Algorithm}{Algorithms}
+\crefname{appendix}{Appendix}{Appendices}
+\Crefname{appendix}{Appendix}{Appendices}
+
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\newcommand{\N}{\mathbb N}
+\newcommand{\Reg}{\mathrm{Reg}}
+\newcommand{\cE}{\mathcal E}
+\newcommand{\cF}{\mathcal F}
+\newcommand{\cI}{\mathcal I}
+\newcommand{\cP}{\mathcal P}
+\newcommand{\cS}{\mathcal S}
+\newcommand{\tO}{\widetilde O}
+\newcommand{\tOm}{\widetilde\Omega}
+\newcommand{\tTheta}{\widetilde\Theta}
+\newcommand{\ind}{\mathbf 1}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\ip}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\bracket}[1]{\left[#1\right]}
+\newcommand{\paren}[1]{\left(#1\right)}
+\newcommand{\polylog}{\operatorname{polylog}}
+\newcommand{\argmax}{\operatorname*{arg\,max}}
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\wt}{\widetilde}
+\newcommand{\calR}{\mathfrak R}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\setlength{\emergencystretch}{1.5em}
+\setlength{\headheight}{14pt}
+\setlength{\footskip}{28pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small Colombo Team}
+\rhead{\small Restless Rising Concave Bandits}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.2em,topsep=0.4em}
+\setlist[enumerate]{leftmargin=1.8em,itemsep=0.3em,topsep=0.4em}
+\title{\vspace{-1.4em}Minimax Regret for Restless Rising Concave Bandits\\[0.2em]
+\large via Suffix Least-Squares Optimism}
+\author{Colombo Team\\[0.2em]\normalsize\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study stochastic bandits whose arm means are nondecreasing concave functions of absolute time. The means continue to evolve when an arm is not selected, and regret is measured against the best arm at each round. For this class, the known horizon dependence lies between an $\Omega(T^{3/5})$ lower bound and a $\widetilde O(T^{7/11})$ upper bound. We close this gap with Suffix-OLS-UCB, which fits an affine least-squares predictor to every suffix of each arm's observations and uses the smallest suffix upper confidence bound for each arm. The learner selects an arm with the largest resulting index. The analysis rests on a deterministic identity: an affine least-squares extrapolator is a convex combination of pairwise secant extrapolators and is therefore optimistic for a concave curve. A simultaneous martingale confidence bound preserves this property under adaptive sampling. We prove an oracle inequality of order $\widetilde O(\sigma\sqrt{MT}+M+\varepsilon T)$ for unknown piecewise-affine approximations with $M$ total pieces and error $\varepsilon$. Combining it with a discrete concave approximation theorem gives
+\[
+\E R_T=\widetilde O\!\left(\min\left\{T,\,
+\sigma\sqrt{KT}+\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}\right\}\right),
+\qquad v=\min\{1,V_T\},
+\]
+for $\sigma\ge1$. Here $V_T$ bounds cumulative temporal variation. Together with existing nonstationary lower bounds and a stationary lower bound, this characterizes minimax regret up to logarithmic factors in all parameter regimes. The algorithm does not require the variation budget or the locations of slope changes and uses $O(T^2)$ arithmetic operations.
+\end{abstract}
+\medskip
+\noindent\textbf{Keywords:} nonstationary bandits; rising concave rewards; dynamic regret; least-squares extrapolation; minimax optimality.\par
+\medskip
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol. 
+\par
+\end{samepage}
+\medskip
+
+\section{Introduction}\label{sec:intro}
+
+When the quality of every available action improves over time, the learner faces a prediction problem as well as an exploration problem. A recent observation may underestimate an arm's current value; an older trend may overestimate how much improvement remains. Concavity provides useful structure: rewards rise, but successive gains diminish. This paper asks how far that structure reduces the cost of learning when every arm evolves with absolute time, including while it is unobserved.
+
+We consider \emph{restless rising concave bandits}. At round $t$, arm $i$ has mean reward $\mu_i(t)\in[0,1]$, with nonnegative, nonincreasing increments. A learner selects one arm and observes its reward. Performance is measured by dynamic pseudo-regret, which compares the selected mean with the largest mean available at each round. The absolute-time clock distinguishes this problem from rested rising bandits, where an arm improves only when selected. The model was developed in the stochastic setting by \citet{metelli2022stochastic}; the recent analysis of \citet{migali2025tightening} established an $\Omega(T^{3/5})$ lower bound and a $\widetilde O(T^{7/11})$ upper bound for the rising concave class.
+
+The gap is small in exponent but substantive in mechanism. General variation-budget methods give a $T^{2/3}$ dependence without exploiting the shape of the trajectories \citep{besbes2014nonstationary}. Smooth nonstationary models can yield a $T^{3/5}$ dependence, but their guarantees require control of temporal smoothness that does not follow from discrete concavity \citep{jia2023smooth,suk2025adaptive}. In particular, a downward jump in slope is compatible with concavity and can occur at any scale. A method for the present class must accommodate such changes while predicting at irregular times chosen by the learner itself.
+
+\paragraph{Result.}
+We introduce \emph{Suffix-OLS-UCB} and prove, for conditionally $\sigma$-sub-Gaussian noise with $\sigma\ge1$,
+\begin{equation}\label{eq:intro-rate}
+\E R_T\le\widetilde O\!\left(\min\left\{T,\,
+\sigma\sqrt{KT}+\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}\right\}\right),
+\end{equation}
+where $v=\min\{1,V_T\}$ and $V_T$ bounds the sum, over time, of the largest arm increment. The stationary term is necessary even when all curves are constant. The second term matches the nonstationary lower bound of \citet{migali2025tightening} in every displayed polynomial dependence. We make the lower-bound quantifiers and the transition between parameter regimes explicit, so the resulting minimax statement also covers small horizons, large noise scales, and more arms than rounds.
+
+\paragraph{Why suffix least squares?}
+Fit an affine function by ordinary least squares (OLS), with an intercept, to any past sample points of a concave curve. Its prediction at every future time lies above the curve. An exact identity explains this fact: the predictor is a convex combination of all pairwise secant-line extrapolations, each of which is optimistic by concavity. The observation times need not be evenly spaced, and the extrapolation distance can be arbitrarily large.
+
+Our algorithm applies this construction to every suffix of each arm's observation history. Long suffixes offer more data; short suffixes can avoid earlier changes in slope. After simultaneous confidence calibration, every candidate is an upper bound, so their minimum remains an upper bound. The algorithm thus selects a useful history length without knowing a variation budget, an approximation scale, or a partition into nearly affine regions. The logarithmic cost of searching over suffixes is included in the confidence radius.
+
+\paragraph{Contributions and proof strategy.}
+The analysis separates sequential estimation from deterministic approximation.
+\begin{enumerate}
+\item \textbf{Optimistic extrapolation under adaptive sampling.} We combine the secant-mixture identity with a uniform martingale confidence event that covers every arm, suffix, and prediction round. This avoids the invalid step of treating the adaptively chosen observation times as a fixed design.
+\item \textbf{An oracle inequality for unknown affine pieces.} On a common high-probability event, if the true curves admit uniform $\varepsilon$-approximations with $M$ total affine pieces, then
+\begin{equation}\label{eq:intro-oracle}
+R_T=\widetilde O\!\left(\sigma\sqrt{\min\{M,T\}T}+\min\{M,T\}+\varepsilon T\right).
+\end{equation}
+The proof controls both observation noise and extrapolation of approximation error through the same leverage potential. The algorithm is not given the approximating functions or their partitions.
+\item \textbf{A matching regret bound for discrete concave trajectories.} A curve with total rise at most $v$ admits an $\varepsilon$-uniform piecewise-affine approximation with $\widetilde O(1+\sqrt{v/\varepsilon})$ pieces. Inserting this approximation law into \eqref{eq:intro-oracle} and balancing estimation and approximation yields \eqref{eq:intro-rate}.
+\end{enumerate}
+The new contribution is the algorithm and upper-bound analysis. The nonstationary lower bound is due to \citet{migali2025tightening}; we use it with explicit attribution and supply the stationary argument needed to complete the parameter regimes. The elementary OLS and concentration tools are not claimed as new in isolation.
+
+\paragraph{Organization.}
+\Cref{sec:model} gives the model and complete rate statement. \Cref{sec:related} compares the result with the closest prior bounds. \Cref{sec:algorithm} presents the algorithm, and \cref{sec:overview} explains the main proof steps. Full proofs, the lower-bound reduction, and an anytime extension appear in the appendices.
+
+\section{Model and main results}\label{sec:model}
+
+\subsection{Observation model and variation budget}
+
+Write $[m]=\{1,\ldots,m\}$. Fix integers $K,T\ge2$. Each arm $i\in[K]$ has a deterministic mean sequence $\mu_i:[T]\to[0,1]$. Its increments
+\[
+d_i(t):=\mu_i(t+1)-\mu_i(t),\qquad t\in[T-1],
+\]
+satisfy
+\begin{equation}\label{eq:shape-main}
+d_i(t)\ge0\quad(t\in[T-1]),\qquad
+d_i(t+1)\le d_i(t)\quad(t\in[T-2]).
+\end{equation}
+These are discrete monotonicity and concavity, respectively. All arms evolve on this absolute-time clock, regardless of the learner's choices.
+
+Let $\cF_{t-1}$ contain the observations before round $t$ and the learner's internal randomization. Equivalently, the learner may draw an independent random seed at time zero and include it in the filtration. The selected arm $I_t$ is then $\cF_{t-1}$-measurable, and the observed reward is
+\begin{equation}\label{eq:observation-main}
+Y_t=\mu_{I_t}(t)+\eta_t.
+\end{equation}
+We assume a known sub-Gaussian upper bound $\sigma\ge0$:
+\begin{equation}\label{eq:subg-main}
+\E\!\left[e^{\lambda\eta_t}\mid\cF_{t-1}\right]
+\le e^{\lambda^2\sigma^2/2}
+\qquad\text{for every }\lambda\in\R.
+\end{equation}
+Thus the noise is conditionally centered; independence across rounds is not needed for the upper bound. The means, rather than the observed rewards, are restricted to $[0,1]$. Independent Gaussian rewards with variance $\sigma^2$ are admissible and will suffice for lower bounds.
+
+The dynamic pseudo-regret is
+\begin{equation}\label{eq:regret-main}
+R_T:=\sum_{t=1}^T\bigl(\max_{i\in[K]}\mu_i(t)-\mu_{I_t}(t)\bigr),
+\qquad 0\le R_T\le T.
+\end{equation}
+Following \citet{migali2025tightening}, define
+\begin{equation}\label{eq:variation-main}
+\Upsilon(1,T):=\sum_{t=1}^{T-1}\max_{i\in[K]}d_i(t),
+\qquad \Upsilon(1,T)\le V_T,
+\qquad v:=\min\{1,V_T\},
+\end{equation}
+where $V_T\ge0$. This is also the usual temporal variation on the present nondecreasing class. Every arm therefore has total rise at most $v$:
+\begin{equation}\label{eq:perarm-rise-main}
+\mu_i(T)-\mu_i(1)\le\min\{1,\Upsilon(1,T)\}\le v.
+\end{equation}
+The clipping of $V_T$ at one uses bounded means; it does not assert that $\Upsilon(1,T)$ itself is always at most one.
+
+Let $\cE_c^\sigma(T,V_T)$ denote this class of $K$-armed environments, including the admissible noise laws. The minimax expected regret is
+\begin{equation}\label{eq:minimax-def}
+\calR_T^*(K,V_T,\sigma)
+:=\inf_{\pi}\sup_{\nu\in\cE_c^\sigma(T,V_T)}\E_\nu R_T(\pi),
+\end{equation}
+where the infimum includes randomized nonanticipating policies. Policies in this definition may know the class parameters; our upper-bound policy does not use $V_T$.
+
+\subsection{Upper bound and minimax characterization}
+
+For $\delta\in(0,1)$, set
+\begin{equation}\label{eq:L-def}
+L_{T,K,\delta}:=\log\!\left(\frac{8KT^8}{\delta}\right),
+\qquad
+S:=\sigma\sqrt{KT},
+\qquad
+N:=\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}.
+\end{equation}
+All unqualified logarithms are natural. Universal constants are independent of $K,T,V_T,\sigma,\delta$. The notation $\widetilde O$ suppresses logarithmic factors in $K,T$ and, for probability bounds, $1/\delta$.
+
+\begin{samepage}
+\begin{theorem}[High-probability regret]\label{thm:high-prob-main}
+Suppose $\sigma\ge1$. For every $\nu\in\cE_c^\sigma(T,V_T)$ and every $\delta\in(0,1)$, Suffix-OLS-UCB in \cref{sec:algorithm} satisfies, with probability at least $1-\delta$,
+\begin{equation}\label{eq:high-prob-rate}
+R_T\le\min\left\{T,\,C L_{T,K,\delta}^{3/2}(S+N)\right\}.
+\end{equation}
+The algorithm requires $K,T,\sigma,\delta$, but no variation budget, approximation accuracy, or information about slope changes.
+\end{theorem}
+\end{samepage}
+
+\begin{samepage}
+\begin{corollary}[Expected regret]\label{cor:expected-main}
+Under the same assumptions, using $\delta=T^{-2}$ gives
+\begin{equation}\label{eq:expected-rate}
+\E R_T\le\min\left\{T,\,C[\log(2KT)]^{3/2}(S+N)\right\}.
+\end{equation}
+\end{corollary}
+\end{samepage}
+\begin{proof}
+The failure event contributes at most $T\delta=T^{-1}$. This is absorbed by the right-hand side after increasing $C$, and $R_T\le T$ holds deterministically.
+\end{proof}
+
+\begin{samepage}
+\begin{theorem}[Minimax regret in every parameter regime]\label{cor:minimax-main}
+For every $K,T\ge2$, $V_T\ge0$, and $\sigma\ge1$, there are universal constants $c,C>0$ such that
+\begin{equation}\label{eq:minimax-main}
+c\min\{T,S+N\}
+\le\calR_T^*(K,V_T,\sigma)
+\le C[\log(2KT)]^{3/2}\min\{T,S+N\}.
+\end{equation}
+Consequently, the rate is
+$\widetilde\Theta(\min\{T,\sigma\sqrt{KT}+\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}\})$.
+\end{theorem}
+\end{samepage}
+
+\paragraph{How the lower bounds cover the full parameter range.}
+For $v>0$, \citet[Theorem~3.3]{migali2025tightening} prove
+\begin{equation}\label{eq:published-lower}
+\sup_{\nu\in\cE_c^\sigma(T,V_T)}\E_\nu R_T(\pi)
+\ge 2^{-14}N,
+\qquad
+T\ge 2^{10}\sigma^2K v^{-2}.
+\end{equation}
+Their theorem is phrased for deterministic policies, but Appendix~B.1 proves an average-regret bound for a policy-independent product distribution over hard instances. Averaging over an independent policy seed therefore gives the same lower bound for randomized policies. We record this step in \cref{app:lower}.
+
+The stationary subclass also yields, for all $K,T\ge2$,
+\begin{equation}\label{eq:stationary-lower}
+\calR_T^*(K,V_T,\sigma)\ge\frac18\min\{T,S\}.
+\end{equation}
+A direct Gaussian proof is included in \cref{app:main-proof}. Outside the range of \eqref{eq:published-lower}, the identity
+\begin{equation}\label{eq:ratio-main}
+\frac NS=\left(\frac{v^2T}{\sigma^2K}\right)^{1/10}
+\end{equation}
+gives $N<2S$. Thus the stationary lower bound covers precisely the range in which the quoted nonstationary lower bound is unavailable. This establishes \cref{cor:minimax-main} without adding a large-horizon assumption to its statement.
+
+\begin{table}[t]
+\centering
+\caption{Parameter regimes of \cref{cor:minimax-main}, up to universal constants and logarithmic factors. The threshold is $v_c=\sigma\sqrt{K/T}$.}
+\label{tab:regimes}
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{@{}P{0.24\textwidth}YP{0.28\textwidth}@{}}
+\toprule
+Regime & Conditions & Minimax order\\
+\midrule
+Saturated & $T\le\sigma^2K$ & $T$\\
+Stationary term dominates & $T>\sigma^2K$, $0\le v\le v_c$ & $\sigma\sqrt{KT}$\\
+Nonstationary term dominates & $T>\sigma^2K$, $v_c<v\le1$ & $\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{remark}[Noise dependence and scope]\label{rem:noise}
+The concentration and approximation oracle inequality below hold for every $\sigma\ge0$. The minimax statement is restricted to $\sigma\ge1$, as in the published nonstationary lower bound. For smaller noise scales, the literal oracle inequality retains a segment-count term, and we do not claim a sharp minimax characterization. The guarantee is a worst-case theoretical result; it does not assert an empirical advantage over every existing algorithm on every instance.
+\end{remark}
+
+
+\section{Related work and comparison}\label{sec:related}
+
+\paragraph{The same shape-constrained model.}
+\citet{metelli2022stochastic} developed optimistic methods for both rested and
+restless rising bandits. Their restless analysis contains a
+$\widetilde O(T^{2/3})$ noise term and a separate term describing the increment
+profile. \citet{migali2025tightening} subsequently established the
+$T^{3/5}$ lower bound for the restless rising-concave class and introduced
+Rising Concave Budgeted Exploration (RC-BE), with upper exponent $7/11$.
+\Cref{tab:direct-comparison} records the parameter dependence and applicability
+of the directly comparable bounds. Our contribution is the upper bound:
+the nonstationary lower-bound construction is due to
+\citet{migali2025tightening}, and the stationary term follows from classical
+bandit lower bounds \citep{lattimore2020bandit}.
+
+The distinction between the algorithms is structural. RC-BE allocates
+exploration budgets within growing windows. Suffix-OLS-UCB instead compares
+affine predictors fitted to all observation suffixes. Concavity makes every
+suffix optimistic, while its leverage determines how much uncertainty to
+retain. This permits adaptation to an unknown approximation partition.
+
+\begin{table}[t]
+\centering
+\caption{Bounds for the same restless rising-concave mean class. Here
+$v=\min\{1,V_T\}$, $K\ge2$, and $\sigma\ge1$.
+Upper bounds suppress logarithmic factors and may always be capped at $T$.
+All bounds concern expected dynamic pseudo-regret.}
+\label{tab:direct-comparison}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{tabularx}{\textwidth}{@{}P{0.21\textwidth}P{0.44\textwidth}Y@{}}
+\toprule
+Result & Bound & Conditions and information \\
+\midrule
+Stationary lower bound
+\citep{lattimore2020bandit}
+& $\Omega\!\left(\min\{T,\sigma\sqrt{KT}\}\right)$
+& Stationary subclass; valid for every $V_T\ge0$. \\
+\addlinespace
+Nonstationary lower bound
+\citep[Theorem~3.3]{migali2025tightening}
+& $\Omega\!\left(\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}\right)$
+& $v>0$, $T\ge2^{10}\sigma^2K/v^2$. \\
+\addlinespace
+RC-BE$(8/3)$
+\citep[Theorem~4.4]{migali2025tightening}
+& $\begin{aligned}[t]
+\widetilde O\bigl(&\sigma K^3T^{6/11}\\
+&+K^3V_TT^{7/11}+\sigma KT^{7/11}\bigr)
+\end{aligned}$
+& $T\ge24$; neither $T$ nor $V_T$ is required by the policy. \\
+\addlinespace
+Suffix-OLS-UCB
+(this work)
+& $\begin{aligned}[t]
+\widetilde O\bigl(&\sigma\sqrt{KT}\\
+&+\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}\bigr)
+\end{aligned}$
+& Every $T\ge2$, $V_T\ge0$; uses $T$ and a noise bound, but no variation or partition parameters. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The predecessor's fixed-parameter upper bound depends on $V_T$, whereas
+its lower bound and our upper bound use $v=\min\{1,V_T\}$.
+These quantities should not be interchanged when $V_T>1$.
+The fixed choice $\alpha=8/3$ also makes its logarithmic suppression uniform
+in the displayed parameters.
+
+\paragraph{General nonstationarity.}
+Variation-budget bandits allow arbitrary directions of change and have a
+$T^{2/3}$ minimax dependence in the nonstationary regime
+\citep{besbes2014nonstationary}. Adaptive guarantees are also available for
+contextual bandits \citep{chen2019nonstationary} and for changes in the identity
+of the best arm \citep{abbasi2023newlook}. These results establish useful
+benchmarks, but their general classes contain trajectories that violate
+concavity. Their lower bounds consequently do not imply lower bounds for the
+subclass studied here.
+
+\paragraph{Smooth temporal evolution.}
+The exponent $3/5$ also occurs in smooth bandits.
+The ICML version of \citet{jia2023smooth} treats two arms; its expanded version
+\citep{jia2024smooth} gives a $\widetilde O(K^{4/5}T^{3/5})$ upper bound for
+general $K$ under second-order H\"older regularity.
+\citet{suk2025adaptive} obtains sharp dependence on the number of arms and the
+H\"older parameters, adaptively; see \cref{tab:adjacent-comparison}.
+These results impose quantitative smoothness conditions on trajectories or
+gap functions in normalized time. Discrete concavity alone gives no
+horizon-independent bound on the corresponding H\"older coefficient.
+In particular, downward slope jumps are allowed here. The coincidence of
+exponents therefore does not make the smooth-class results directly
+applicable to our setting.
+
+\begin{table}[t]
+\centering
+\caption{Adjacent models. Rates suppress logarithms and the cap at $T$.
+Here $W$ is a general variation budget and $H$ is a H\"older coefficient in
+normalized time. These parameters describe different classes and are not
+identified with $v$. The smooth-class comparisons use a fixed noise scale.}
+\label{tab:adjacent-comparison}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{@{}P{0.24\textwidth}P{0.34\textwidth}Y@{}}
+\toprule
+Work and model & Representative rate & Relation to the present model \\
+\midrule
+\citet{besbes2014nonstationary}; general temporal variation
+& $\widetilde\Theta\!\left((KW)^{1/3}T^{2/3}\right)$ in the nonstationary regime
+& No monotonicity or concavity; bounded rewards. \\
+\addlinespace
+\citet{jia2023smooth,jia2024smooth}; second-order H\"older means
+& $\widetilde O\!\left(K^{4/5}T^{3/5}\right)$ for a fixed H\"older coefficient
+& Expanded $K$-arm analysis; requires quantitative smoothness of normalized-time mean curves. \\
+\addlinespace
+\citet{suk2025adaptive}; H\"older gap environments
+& $\begin{aligned}[t]
+\widetilde\Theta\bigl(&\sqrt{KT}\\
+&+H^{1/5}K^{2/5}T^{3/5}\bigr)
+\end{aligned}$ for $\beta=2$
+& Bounded rewards; adapts to unknown H\"older exponent and coefficient. Smoothness is imposed on gap functions. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Other evolution clocks and proof tools.}
+In rested rising bandits, an arm evolves only when it is pulled
+\citep{metelli2022stochastic}; graph-triggered bandits interpolate between
+rested and restless clocks \citep{genalti2024graph}. The fully restless
+endpoint recovers our evolution clock. For other trigger graphs, actions
+influence future arm states, and the benchmark depends on that trigger
+structure; a rate for the general framework is therefore not a direct
+minimax comparison for our fixed subclass.
+Our confidence analysis uses vector self-normalization
+\citep{abbasi2011improved}. The approximation exponent has a related
+counterpart in one-dimensional convex-function entropy under $L_p$ losses,
+$1\le p<\infty$ \citep{guntuboyina2013covering}. That entropy result does not
+supply the finite-grid uniform approximation needed here; we prove the latter
+directly.
+
+\section{Suffix-OLS-UCB}\label{sec:algorithm}
+
+The algorithm uses ordinary least squares with an intercept. For an absolute time $s$, let $z_s=(1,s)^\top$. Before round $t$, suppose arm $i$ has been selected at times
+\[
+s_{i,1}<\cdots<s_{i,n_i(t)}<t.
+\]
+For a suffix $r:n$ with $q=n-r+1\ge2$ observations, define
+\begin{align}
+V_{i,r:n}&:=\sum_{j=r}^n z_{s_{i,j}}z_{s_{i,j}}^\top,
+&b_{i,r:n}&:=\sum_{j=r}^n z_{s_{i,j}}Y_{s_{i,j}},\label{eq:suffix-stats}\\
+\widehat L_{i,r:n}(t)&:=z_t^\top V_{i,r:n}^{-1}b_{i,r:n},
+&h_{i,r:n}(t)&:=z_t^\top V_{i,r:n}^{-1}z_t.\label{eq:suffix-pred}
+\end{align}
+The Gram matrix is invertible because the sample times are distinct. The quantity $h_{i,r:n}(t)$ is the prediction leverage: it increases when the query time lies far beyond a tightly clustered set of observations.
+
+Set
+\begin{equation}\label{eq:beta-main}
+\beta_{T,\delta}:=2\sigma\sqrt{L_{T,K,\delta}}.
+\end{equation}
+After pulling every arm twice, compute
+\begin{equation}\label{eq:index-main}
+U_i(t):=\min\left\{1,\,
+\min_{1\le r\le n_i(t)-1}
+\left[\widehat L_{i,r:n_i(t)}(t)
++\beta_{T,\delta}\sqrt{h_{i,r:n_i(t)}(t)}\right]\right\},
+\end{equation}
+and select an arm with the largest index. Ties may be resolved by any fixed rule. The cap at one uses the known range of the mean rewards.
+
+\begin{algorithm}[t]
+\caption{Suffix-OLS-UCB}\label{alg:suffix-ols}
+\small
+\begin{tabularx}{\linewidth}{@{}r@{\quad}X@{}}
+\multicolumn{2}{@{}l@{}}{\textbf{Input:} $K$, $T$, noise bound $\sigma$, and confidence $\delta$.}\\[0.3em]
+1 & \textbf{If} $T<2K$, select any arm in each round and terminate after $T$ rounds.\\
+2 & Select each arm twice and record its observations.\\
+3 & \textbf{For} $t=2K+1,\ldots,T$:\\
+4 & \quad For each arm $i$, consider every observation suffix of length at least two.\\
+5 & \quad Compute its OLS prediction and leverage using \eqref{eq:suffix-stats}--\eqref{eq:suffix-pred}.\\
+6 & \quad Set $U_i(t)$ to the minimum suffix upper bound, capped at one, as in \eqref{eq:index-main}.\\
+7 & \quad Select $I_t\in\argmax_{i\in[K]}U_i(t)$ and observe $Y_t$.\\
+8 & \quad Append $(t,Y_t)$ to arm $I_t$'s history.\\
+9 & \textbf{End for.}
+\end{tabularx}
+\end{algorithm}
+
+\paragraph{Choosing a history length.}
+A suffix starting after a change in slope can have little extrapolation bias but substantial statistical uncertainty. A longer suffix has a smaller leverage at a fixed prediction time, but earlier, larger slopes can increase its upward bias. Concavity ensures that both candidates are valid upper bounds after noise calibration. Taking their minimum balances these effects directly, without estimating change points or using an explicit restart test.
+
+\paragraph{Initialization and computation.}
+Two observations per arm ensure that subsequent candidate regressions are well defined. Initialization costs at most $2K$ regret, which is absorbed by the stationary term when $T\ge2K$ and $\sigma\ge1$. For implementation, maintain prefix sums of $1,s,s^2,Y_s,sY_s$ along each arm's history. Each suffix statistic can then be recovered in constant arithmetic time. There are at most $t-1$ candidate suffixes across all arms in round $t$, giving $O(T^2)$ total arithmetic operations and $O(T)$ storage. \Cref{app:computation} provides explicit formulas and a horizon-free version.
+
+\section{Analysis: from optimistic prediction to minimax regret}\label{sec:overview}
+
+The proof has four steps: deterministic optimism, simultaneous confidence, regret control for an unknown affine partition, and approximation of the true curves. This section states the ingredients and explains their roles; the appendices supply all details.
+
+\subsection{An OLS extrapolator is a mixture of secants}
+
+Let $x_1<\cdots<x_n<t$, with $n\ge2$, and fit an affine OLS function to responses $y_1,\ldots,y_n$. Write $\widehat L(t)$ for its prediction and
+\[
+D:=\sum_{1\le p<q\le n}(x_q-x_p)^2>0.
+\]
+
+\begin{samepage}
+\begin{lemma}[Secant-mixture identity]\label{lem:secant-main}
+For arbitrary responses,
+\begin{equation}\label{eq:secant-main}
+\widehat L(t)=\frac1D\sum_{p<q}(x_q-x_p)^2
+\left[y_p+\frac{y_q-y_p}{x_q-x_p}(t-x_p)\right].
+\end{equation}
+\end{lemma}
+\end{samepage}
+
+The weights in \eqref{eq:secant-main} are nonnegative and sum to one. If $y_j=f(x_j)$ and $f$ is concave, every bracketed secant extrapolation lies above $f(t)$. Therefore the same is true of their average.
+
+\begin{samepage}
+\begin{corollary}[Future optimism]\label{cor:optimism-main}
+If $f$ is concave on an interval containing $x_1<\cdots<x_n<t$, then the noiseless OLS predictor satisfies
+\[
+\widehat L_f(t)\ge f(t).
+\]
+The claim also holds for a discrete concave sequence through its piecewise-linear extension.
+\end{corollary}
+\end{samepage}
+
+Neither regular spacing nor differentiability is required. Monotonicity is not needed for this step; it enters later through the total-rise bound. A direct coefficient calculation proving the identity appears in \cref{app:ols}.
+
+\subsection{Simultaneous confidence for adaptive suffixes}
+
+The observation times depend on past rewards. One cannot condition on the final design and then apply an ordinary fixed-design regression interval. Instead, for each arm $i$ and each \emph{deterministic absolute start time} $u$, consider the predictable process
+\[
+X_\ell^{i,u}:=\ind\{\ell\ge u,\ I_\ell=i\}z_\ell.
+\]
+Vector self-normalization \citep{abbasi2011improved} controls its accumulated noise at all endpoints. A union bound over the $KT$ pairs $(i,u)$ then covers every realized suffix, because its random starting time equals one of the already-covered absolute starts. Distinct integer times provide a deterministic lower bound on the smallest eigenvalue of each suffix Gram matrix, allowing the auxiliary regularization to be removed.
+
+\begin{samepage}
+\begin{lemma}[Uniform suffix confidence]\label{lem:confidence-main}
+With probability at least $1-\delta$, simultaneously for every arm, round, and suffix containing at least two observations,
+\begin{equation}\label{eq:confidence-main}
+\left|z_t^\top V_{i,r:n_i(t)}^{-1}
+\sum_{j=r}^{n_i(t)}z_{s_{i,j}}\eta_{s_{i,j}}\right|
+\le\beta_{T,\delta}\sqrt{h_{i,r:n_i(t)}(t)}.
+\end{equation}
+On this event, $\mu_i(t)\le U_i(t)\le1$ for every post-initialization index.
+\end{lemma}
+\end{samepage}
+
+\Cref{app:confidence} proves this statement with the displayed value of $\beta_{T,\delta}$. The confidence event is defined without reference to an approximation scale or partition. This uniformity will allow us to choose both only in the analysis.
+
+\subsection{An oracle inequality for unknown affine pieces}
+
+\begin{samepage}
+\begin{assumption}[Affine approximation oracle]\label{ass:oracle-main}
+For each arm $i$, there is a partition of $[T]$ into $m_i$ nonempty consecutive integer intervals and a function $g_i$ that is affine on each interval, with
+\[
+\max_{t\in[T]}|\mu_i(t)-g_i(t)|\le\varepsilon.
+\]
+Set $M:=\sum_{i=1}^K m_i$ and $M_0:=\min\{M,T\}$. The true means remain concave; the approximants need not be concave or continuous across the integer cells.
+\end{assumption}
+\end{samepage}
+
+\begin{samepage}
+\begin{theorem}[Unknown-partition oracle inequality]\label{thm:oracle-main}
+For every $\sigma\ge0$, on the event of \cref{lem:confidence-main}, simultaneously for every approximation satisfying \cref{ass:oracle-main},
+\begin{equation}\label{eq:oracle-main}
+\begin{split}
+R_T\le C\bigl[&2K+\beta_{T,\delta}\sqrt{M_0T\log(2T)}\\
+&+\varepsilon T\sqrt{\log(2T)}+M_0\log(2T)\bigr].
+\end{split}
+\end{equation}
+In particular, up to logarithmic factors,
+\[
+R_T=\widetilde O\!\left(K+\sigma\sqrt{M_0T}+M_0+\varepsilon T\right).
+\]
+\end{theorem}
+\end{samepage}
+
+When $T\ge2K$, every arm has at least one oracle cell, so $K\le M_0$ and the separate $K$ term is absorbed by $M_0$. When $T<2K$, the cap $R_T\le T$ suffices. The theorem is an oracle inequality because the approximation is used only to evaluate regret; none of its components is supplied to the learner.
+
+\paragraph{Why extrapolation error can be summed.}
+Fix an arm and one oracle interval, and list its post-initialization pull times as $x_1<\cdots<x_N$. At the $(q+1)$st such pull, the earlier observations $x_1,\ldots,x_q$ form a suffix available to the algorithm. For $q\ge2$, let
+\[
+V_q=\sum_{j=1}^qz_{x_j}z_{x_j}^\top,
+\qquad \ell_{q+1}=z_{x_{q+1}}^\top V_q^{-1}z_{x_{q+1}}.
+\]
+The determinant lemma gives
+\begin{equation}\label{eq:leverage-overview}
+\sum_{q=2}^{N-1}\min\{1,\ell_{q+1}\}\le8\log(2T).
+\end{equation}
+Thus large leverage can occur only logarithmically often within a cell.
+
+For the corresponding OLS weights $w_q$, affine reproduction and the normal equations give
+\[
+\sum_{j=1}^q w_{q,j}=1,
+\qquad \sum_{j=1}^q w_{q,j}x_j=x_{q+1},
+\qquad \norm{w_q}_2^2=\ell_{q+1}.
+\]
+The weights need not be nonnegative, even though the mixture of secant \emph{predictors} has nonnegative weights. Consequently, uniform approximation error must be controlled through $\norm{w_q}_1$, not through $\sum_jw_{q,j}$. Affine reproduction yields the bound
+\begin{equation}\label{eq:misspec-overview}
+0\le\widehat L_{\mu}(x_{q+1})-\mu(x_{q+1})
+\le\varepsilon\left(1+\sqrt q\sqrt{\ell_{q+1}}\right).
+\end{equation}
+Adding the noise radius twice bounds the selected-arm index width. We pay at most one regret on each high-leverage round and use Cauchy--Schwarz on the remaining rounds. This gives, for a cell with $N$ pulls,
+\[
+C\left[\beta_{T,\delta}\sqrt{N\log(2T)}
++\varepsilon N\sqrt{\log(2T)}+\log(2T)\right].
+\]
+At most $M_0$ cells are occupied. Summing their square-root terms by Cauchy--Schwarz proves \eqref{eq:oracle-main}; \cref{app:oracle} makes the initialization and suffix bookkeeping explicit.
+
+\subsection{Approximating a discrete concave curve}
+
+The remaining step is deterministic. Concavity controls the deviation above a chord: if $L_{p,q}$ joins $(p,f(p))$ and $(q,f(q))$, then
+\begin{equation}\label{eq:chord-overview}
+0\le f(t)-L_{p,q}(t)
+\le\frac{q-p}{4}\bigl(d_p-d_{q-1}\bigr),
+\qquad p\le t\le q,
+\end{equation}
+where $d_r=f(r+1)-f(r)$. The right-hand side combines interval length with the decrease in slope across that interval.
+
+\begin{samepage}
+\begin{lemma}[Discrete concave approximation]\label{lem:approx-main}
+Suppose $f:[T]\to[0,1]$ is nondecreasing and concave and $f(T)-f(1)\le v$. For every $\varepsilon>0$, there is a continuous piecewise-affine function $g:[1,T]\to\R$ such that
+\[
+\max_{t\in[T]}|f(t)-g(t)|\le\varepsilon,
+\]
+with at most
+\begin{equation}\label{eq:approx-count-main}
+C\bigl(1+\log(2T)\bigr)\left(1+\sqrt{v/\varepsilon}\right)
+\end{equation}
+affine pieces. Its restriction to integer times gives a partition of the form required by \cref{ass:oracle-main}, with no increase in the number of pieces. If $\varepsilon\ge v$, one constant piece suffices.
+\end{lemma}
+\end{samepage}
+
+To prove the lemma, divide time into dyadic blocks $[a,\min\{2a,T\}]$. Monotonicity and the total-rise bound imply $d_a\le v/a$. On each block, extend a chord greedily while the right-hand side of \eqref{eq:chord-overview} remains at most $\varepsilon$. Every nonterminal chord must exhaust a product of length and slope decrease of order $\varepsilon$. The lengths sum to order $a$, and the slope decreases sum to at most $v/a$. Cauchy--Schwarz therefore bounds the number of chords by $O(1+\sqrt{v/\varepsilon})$ per block. \Cref{app:approx} supplies the finite-grid construction and endpoint details.
+
+\paragraph{Balancing estimation and approximation.}
+Applying the lemma to all arms gives
+$M\le CK(1+\log(2T))(1+\sqrt{v/\varepsilon})$.
+For $\sigma\ge1$, the segment-count term in \eqref{eq:oracle-main} is absorbed by the estimation term, up to logarithms, because $M_0\le T$. Hence
+\begin{equation}\label{eq:balance-overview}
+R_T\le\widetilde O\!\left(
+\sigma\sqrt{KT}
++\sigma\sqrt{KT}(v/\varepsilon)^{1/4}
++\varepsilon T\right).
+\end{equation}
+For $v>0$, balancing the last two terms yields
+\begin{equation}\label{eq:eps-star-main}
+\varepsilon_*:=\sigma^{4/5}K^{2/5}v^{1/5}T^{-2/5}.
+\end{equation}
+The balanced cost is $\varepsilon_*T=N$. If $\varepsilon_*\ge v$, a constant approximation already gives the stationary order because $vT\le S$. If $v=0$, the true curves themselves are constant. These observations, together with the deterministic regret cap, complete the upper bound. The full argument and lower-bound stitching are in \cref{app:main-proof}.
+
+\section{Discussion}\label{sec:discussion}
+
+The rate is determined by two quantities: the $\sqrt{MT}$ cost of estimating $M$ affine regions and the $\varepsilon^{-1/2}$ growth of the number of pieces needed to approximate a concave curve. Their balance explains the exponent $3/5$. The proof accommodates arbitrarily many changes in slope because it never needs to identify the exact pieces of the true trajectory; an approximation at the appropriate scale is enough.
+
+The algorithm illustrates a general benefit of one-sided structural information. Once every candidate predictor is a valid upper bound on a common confidence event, taking their minimum preserves optimism. Concavity supplies that property here, and the leverage calculation controls the cost of selecting among histories with very different geometries. This reasoning concerns prediction beyond observed data, which is essential under bandit feedback.
+
+There are three natural directions for further work. First, the direct $O(T^2)$ implementation may be expensive for long horizons. Restricting the suffix set could reduce the cost, but a proof would need to control the leverage and approximation error after changing the suffix start. Second, the small-noise regime requires a finer treatment of the segment-count term; the present minimax statement covers $\sigma\ge1$. Third, the algorithm assumes a known noise upper bound. Horizon knowledge can be removed by epoch doubling, as shown in \cref{app:computation}, whereas adaptation to the noise scale calls for a separate confidence construction. Instance-dependent guarantees and empirical evaluation would complement the worst-case characterization established here.
+
+\FloatBarrier
+
+{\small\raggedright
+\setlength{\bibsep}{3pt}
+\begin{thebibliography}{12}
+
+\bibitem[Abbasi-Yadkori et~al.(2011)Abbasi-Yadkori, P\'al, and Szepesv\'ari]{abbasi2011improved}
+Yasin Abbasi-Yadkori, D\'avid P\'al, and Csaba Szepesv\'ari.
+\newblock Improved algorithms for linear stochastic bandits.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+volume~24, pages 2312--2320, 2011.
+\newblock \href{https://proceedings.neurips.cc/paper/2011/hash/e1d5be1c7f2f456670de3d53c7b54f4a-Abstract.html}{Online version}.
+
+\bibitem[Abbasi-Yadkori et~al.(2023)Abbasi-Yadkori, Gy\"orgy, and Lazi\'c]{abbasi2023newlook}
+Yasin Abbasi-Yadkori, Andr\'as Gy\"orgy, and Nevena Lazi\'c.
+\newblock A new look at dynamic regret for non-stationary stochastic bandits.
+\newblock \emph{Journal of Machine Learning Research}, 24(288):1--37, 2023.
+\newblock \href{https://www.jmlr.org/papers/v24/22-0387.html}{Online version}.
+
+\bibitem[Besbes et~al.(2014)Besbes, Gur, and Zeevi]{besbes2014nonstationary}
+Omar Besbes, Yonatan Gur, and Assaf Zeevi.
+\newblock Stochastic multi-armed-bandit problem with non-stationary rewards.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+volume~27, pages 199--207, 2014.
+\newblock \href{https://proceedings.neurips.cc/paper_files/paper/2014/hash/91ba7292e5388b90b58d0b839a7f19ec-Abstract.html}{Online version}.
+
+\bibitem[Chen et~al.(2019)Chen, Lee, Luo, and Wei]{chen2019nonstationary}
+Yifang Chen, Chung-Wei Lee, Haipeng Luo, and Chen-Yu Wei.
+\newblock A new algorithm for non-stationary contextual bandits: Efficient,
+optimal and parameter-free.
+\newblock In \emph{Proceedings of the Thirty-Second Conference on Learning
+Theory}, volume~99 of \emph{Proceedings of Machine Learning Research}, pages
+696--726, 2019.
+\newblock \href{https://proceedings.mlr.press/v99/chen19b.html}{Online version}.
+
+\bibitem[Genalti et~al.(2024)Genalti, Mussi, Gatti, Restelli, Castiglioni, and Metelli]{genalti2024graph}
+Gianmarco Genalti, Marco Mussi, Nicola Gatti, Marcello Restelli,
+Matteo Castiglioni, and Alberto~Maria Metelli.
+\newblock Graph-triggered rising bandits.
+\newblock In \emph{Proceedings of the 41st International Conference on Machine
+Learning}, volume~235 of \emph{Proceedings of Machine Learning Research},
+pages 15351--15380, 2024.
+\newblock \href{https://proceedings.mlr.press/v235/genalti24a.html}{Online version}.
+
+\bibitem[Guntuboyina and Sen(2013)]{guntuboyina2013covering}
+Adityanand Guntuboyina and Bodhisattva Sen.
+\newblock Covering numbers for convex functions.
+\newblock \emph{IEEE Transactions on Information Theory}, 59(4):1957--1965, 2013.
+\newblock \href{https://doi.org/10.1109/TIT.2012.2232702}{doi:10.1109/TIT.2012.2232702}.
+
+\bibitem[Jia et~al.(2023)Jia, Xie, Kallus, and Frazier]{jia2023smooth}
+Su Jia, Qian Xie, Nathan Kallus, and Peter~I. Frazier.
+\newblock Smooth non-stationary bandits.
+\newblock In \emph{Proceedings of the 40th International Conference on Machine
+Learning}, volume~202 of \emph{Proceedings of Machine Learning Research},
+pages 14930--14944, 2023.
+\newblock \href{https://proceedings.mlr.press/v202/jia23c.html}{Online version}.
+
+\bibitem[Jia et~al.(2024)Jia, Xie, Kallus, and Frazier]{jia2024smooth}
+Su Jia, Qian Xie, Nathan Kallus, and Peter~I. Frazier.
+\newblock Smooth non-stationary bandits.
+\newblock Expanded version, arXiv:2301.12366v3, November 2024.
+\newblock \href{https://arxiv.org/abs/2301.12366v3}{Online version}.
+
+\bibitem[Lattimore and Szepesv\'ari(2020)]{lattimore2020bandit}
+Tor Lattimore and Csaba Szepesv\'ari.
+\newblock \emph{Bandit Algorithms}.
+\newblock Cambridge University Press, 2020.
+\newblock \href{https://tor-lattimore.com/downloads/book/book.pdf}{Online version}.
+
+\bibitem[Metelli et~al.(2022)Metelli, Trov\`o, Pirola, and Restelli]{metelli2022stochastic}
+Alberto~Maria Metelli, Francesco Trov\`o, Matteo Pirola, and Marcello Restelli.
+\newblock Stochastic rising bandits.
+\newblock In \emph{Proceedings of the 39th International Conference on Machine
+Learning}, volume~162 of \emph{Proceedings of Machine Learning Research},
+pages 15421--15457, 2022.
+\newblock \href{https://proceedings.mlr.press/v162/metelli22a.html}{Online version}.
+
+\bibitem[Migali et~al.(2025)Migali, Mussi, Genalti, and Metelli]{migali2025tightening}
+Cristiano Migali, Marco Mussi, Gianmarco Genalti, and Alberto~Maria Metelli.
+\newblock Tightening regret lower and upper bounds in restless rising bandits.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+volume~38, pages 20972--21013, 2025.
+\newblock \href{https://doi.org/10.52202/085713-0622}{doi:10.52202/085713-0622}.
+
+\bibitem[Suk(2025)]{suk2025adaptive}
+Joe Suk.
+\newblock Adaptive smooth nonstationary bandits.
+\newblock \emph{SIAM Journal on Mathematics of Data Science}, 7(3):1265--1291, 2025.
+\newblock \href{https://doi.org/10.1137/24M167651X}{doi:10.1137/24M167651X}.
+
+\end{thebibliography}
+
+}
+
+\clearpage
+\appendix
+\crefalias{section}{appendix}
+\crefalias{subsection}{appendix}
+\section{OLS secant mixtures and deterministic optimism}\label{app:ols}
+
+We first prove the secant representation and then record the prediction-weight
+identities used in the oracle analysis.
+
+\begin{proof}[Proof of \cref{lem:secant-main}]
+Write
+\[
+\bar x:=\frac1n\sum_{j=1}^n x_j,
+\qquad
+S_{xx}:=\sum_{j=1}^n(x_j-\bar x)^2>0.
+\]
+The affine OLS predictor with an intercept is
+\begin{equation}\label{eq:ols-standard-app}
+\widehat L(t)
+=\sum_{j=1}^n
+\left[\frac1n+
+\frac{(x_j-\bar x)(t-\bar x)}{S_{xx}}\right]y_j.
+\end{equation}
+The denominator in the proposed secant mixture satisfies
+\begin{equation}\label{eq:pair-x-app}
+D=\sum_{p<q}(x_q-x_p)^2=nS_{xx}.
+\end{equation}
+To compare the two expressions, collect the coefficient of a fixed response
+$y_j$ in the right-hand side of \eqref{eq:secant-main}. It equals
+\begin{align*}
+\frac1D\left[
+\sum_{q>j}(x_q-x_j)(x_q-t)
++\sum_{p<j}(x_j-x_p)(t-x_p)
+\right]
+&=\frac1D\sum_{k=1}^n(x_j-x_k)(t-x_k)\\
+&=\frac{S_{xx}+n(x_j-\bar x)(t-\bar x)}{nS_{xx}}\\
+&=\frac1n+\frac{(x_j-\bar x)(t-\bar x)}{S_{xx}}.
+\end{align*}
+This is exactly the coefficient in \eqref{eq:ols-standard-app}, proving the
+identity. Each secant weight $(x_q-x_p)^2/D$ is nonnegative, and these weights
+sum to one. The identity holds for arbitrary responses and arbitrary real
+prediction times; the future-time restriction is needed only for optimism.
+\end{proof}
+
+\begin{proof}[Proof of \cref{cor:optimism-main}]
+For $p<q$ and $t>x_q$, concavity implies
+\[
+\frac{f(x_q)-f(x_p)}{x_q-x_p}
+\ge
+\frac{f(t)-f(x_q)}{t-x_q}.
+\]
+Consequently, the secant through $(x_p,f(x_p))$ and $(x_q,f(x_q))$ satisfies
+\[
+f(x_p)+\frac{f(x_q)-f(x_p)}{x_q-x_p}(t-x_p)
+\ge f(t).
+\]
+The OLS predictor is a convex combination of these secant predictions, so it
+also upper-bounds $f(t)$. For a discrete concave sequence, the piecewise-linear
+interpolation is concave, and the same argument applies.
+\end{proof}
+
+\begin{samepage}
+\begin{lemma}[Prediction-weight identities]\label{lem:weights-app}
+Let $Z\in\R^{q\times2}$ have rows $z_{x_j}^\top=(1,x_j)$ at distinct sample
+times, with $q\ge2$. Set $V:=Z^\top Z$ and
+\[
+w:=ZV^{-1}z_x.
+\]
+Then the OLS prediction weights satisfy
+\begin{equation}\label{eq:weight-identities-app}
+\sum_{j=1}^q w_j=1,
+\qquad
+\sum_{j=1}^q w_jx_j=x,
+\qquad
+\norm{w}_2^2=z_x^\top V^{-1}z_x.
+\end{equation}
+In particular, OLS reproduces every affine function exactly.
+\end{lemma}
+\end{samepage}
+
+\begin{proof}
+The first two identities follow from $Z^\top w=VV^{-1}z_x=z_x$. For the third,
+\[
+\norm{w}_2^2
+=z_x^\top V^{-1}Z^\top ZV^{-1}z_x
+=z_x^\top V^{-1}z_x.
+\]
+\end{proof}
+
+\section{Uniform confidence under adaptive sampling}\label{app:confidence}
+
+The sample times depend on previous rewards. We therefore apply a martingale
+inequality to predictable sampling processes, rather than conditioning on the
+realized design. For a positive definite matrix $A$, write
+$\norm{u}_A:=\sqrt{u^\top Au}$.
+
+\begin{samepage}
+\begin{lemma}[Integer-time Gram bounds]\label{lem:gram-app}
+Let $1\le x_1<\cdots<x_q\le T$ be distinct integers with $q\ge2$, and set
+$V:=\sum_{j=1}^q z_{x_j}z_{x_j}^\top$. Then
+\begin{align}
+\det V
+&=q\sum_{j=1}^q(x_j-\bar x)^2
+=\sum_{p<r}(x_r-x_p)^2
+\ge1,\label{eq:det-gram-app}\\
+\tr V&\le2T^3,
+\qquad
+\lambda_{\min}(V)\ge\frac1{2T^3}.
+\label{eq:trace-gram-app}
+\end{align}
+\end{lemma}
+\end{samepage}
+
+\begin{proof}
+Expanding the determinant gives
+\[
+\det V
+=q\sum_jx_j^2-\left(\sum_jx_j\right)^2
+=\sum_{p<r}(x_r-x_p)^2.
+\]
+At least one pair consists of distinct integers, which proves the determinant
+lower bound. Also,
+\[
+\tr V=\sum_{j=1}^q(1+x_j^2)
+\le q(1+T^2)\le2T^3.
+\]
+The eigenvalues are positive, and
+$\lambda_{\min}(V)=\det(V)/\lambda_{\max}(V)\ge\det(V)/\tr(V)$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{lem:confidence-main}]
+Fix an arm $i\in[K]$ and a deterministic start time $u\in[T]$. Define
+\[
+X_\ell^{i,u}:=\ind\{\ell\ge u,\ I_\ell=i\}z_\ell,
+\qquad
+S_s^{i,u}:=\sum_{\ell=1}^s X_\ell^{i,u}\eta_\ell,
+\qquad
+G_s^{i,u}:=\sum_{\ell=1}^s
+X_\ell^{i,u}(X_\ell^{i,u})^\top.
+\]
+By the predictability of the action, $X_\ell^{i,u}$ is
+$\cF_{\ell-1}$-measurable. Apply the vector self-normalized martingale
+inequality of \citet{abbasi2011improved} with the deterministic ridge
+\[
+\lambda_0:=\frac1{4T^4}
+\]
+and failure probability $\delta/(KT)$. With probability at least
+$1-\delta/(KT)$, simultaneously for all endpoints $s\in[T]$,
+\begin{equation}\label{eq:selfnorm-app}
+\norm{S_s^{i,u}}_{(G_s^{i,u}+\lambda_0I)^{-1}}
+\le
+\sigma\sqrt{2\log\!\left(
+\frac{\det(G_s^{i,u}+\lambda_0I)^{1/2}}
+{\det(\lambda_0I)^{1/2}}\frac{KT}{\delta}
+\right)}.
+\end{equation}
+Take the intersection of these events over all $KT$ pairs $(i,u)$; call it
+$\mathcal H$. A union bound gives $\Pp(\mathcal H)\ge1-\delta$.
+
+On $\mathcal H$, fix any realized suffix of arm $i$ beginning at its $r$th
+pull and ending at its last pull before round $t$. Its start time
+$u=s_{i,r}$ is random, but it is one of the deterministic starts already
+covered by $\mathcal H$. Taking $s=t-1$ therefore gives
+\[
+G_s^{i,u}=V_{i,r:n_i(t)},
+\qquad
+S_s^{i,u}=\sum_{j=r}^{n_i(t)}z_{s_{i,j}}\eta_{s_{i,j}}.
+\]
+Suppose the suffix has at least two observations, and abbreviate its Gram
+matrix by $V$. By \cref{lem:gram-app},
+$\lambda_{\min}(V)\ge(2T^3)^{-1}\ge\lambda_0$. Hence
+\[
+V+\lambda_0I\preceq2V,
+\qquad
+V^{-1}\preceq2(V+\lambda_0I)^{-1}.
+\]
+The arithmetic--geometric mean inequality for the two eigenvalues of
+$I+V/\lambda_0$ yields
+\begin{equation}\label{eq:det-ratio-app}
+\frac{\det(V+\lambda_0I)^{1/2}}
+{\det(\lambda_0I)^{1/2}}
+=\det(I+V/\lambda_0)^{1/2}
+\le1+\frac{\tr V}{2\lambda_0}
+\le8T^7.
+\end{equation}
+Substituting into \eqref{eq:selfnorm-app} and removing the ridge gives
+\begin{equation}\label{eq:unreg-norm-app}
+\norm{\sum_{j=r}^{n_i(t)}z_{s_{i,j}}\eta_{s_{i,j}}}_{V^{-1}}
+\le
+2\sigma\sqrt{\log\!\left(\frac{8KT^8}{\delta}\right)}
+=\beta_{T,\delta}.
+\end{equation}
+Cauchy--Schwarz in the $V^{-1}$ inner product now implies
+\[
+\left|z_t^\top V^{-1}
+\sum_{j=r}^{n_i(t)}z_{s_{i,j}}\eta_{s_{i,j}}\right|
+\le
+\sqrt{z_t^\top V^{-1}z_t}\,
+\norm{\sum_{j=r}^{n_i(t)}z_{s_{i,j}}\eta_{s_{i,j}}}_{V^{-1}}
+\le\beta_{T,\delta}\sqrt{h_{i,r:n_i(t)}(t)}.
+\]
+This proves the simultaneous suffix-confidence statement. If $\sigma=0$,
+the conditional sub-Gaussian assumption implies $\eta_t=0$ almost surely,
+and the same conclusion holds directly.
+
+For optimism, decompose an empirical OLS prediction into its noiseless
+prediction and its noise term. By \cref{cor:optimism-main}, the former is at
+least $\mu_i(t)$; by the displayed confidence bound, adding the confidence
+radius compensates for the latter. Every suffix candidate is thus an upper
+bound on $\mu_i(t)$. Taking their minimum and clipping at one preserves that
+upper bound, since $\mu_i(t)\le1$.
+\end{proof}
+
+The event $\mathcal H$ refers only to the observed process and all possible
+suffixes. It does not involve an approximation accuracy, a piecewise-affine
+partition, or an approximating function. The oracle inequality below
+therefore holds on the same event for every such choice simultaneously.
+
+\section{Oracle inequality for unknown affine pieces}\label{app:oracle}
+
+We prove \cref{thm:oracle-main} on the confidence event $\mathcal H$ from
+\cref{app:confidence}. The proof first controls sequential leverage within one
+interval and then sums over the intervals used only for analysis.
+
+\subsection{Sequential leverage accounting}
+
+For distinct integer times $1\le x_1<\cdots<x_N\le T$ with $N\ge2$, define
+\[
+V_q:=\sum_{j=1}^qz_{x_j}z_{x_j}^\top,
+\qquad
+\ell_{q+1}:=z_{x_{q+1}}^\top V_q^{-1}z_{x_{q+1}},
+\qquad 2\le q<N.
+\]
+
+\begin{samepage}
+\begin{lemma}[Leverage potential]\label{lem:leverage-app}
+With empty sums interpreted as zero,
+\begin{equation}\label{eq:leverage-potential-app}
+A_N:=\sum_{q=2}^{N-1}\min\{1,\ell_{q+1}\}
+\le8\log(2T).
+\end{equation}
+Moreover, for $a,\varepsilon\ge0$,
+\begin{align}
+\sum_{q=2}^{N-1}\min\{1,a\sqrt{\ell_{q+1}}\}
+&\le a\sqrt{NA_N}+A_N,
+\label{eq:leverage-sqrt-app}\\
+\sum_{q=2}^{N-1}
+\min\{1,\varepsilon\sqrt q\sqrt{\ell_{q+1}}\}
+&\le\varepsilon N\sqrt{A_N}+A_N.
+\label{eq:leverage-weighted-app}
+\end{align}
+\end{lemma}
+\end{samepage}
+
+\begin{proof}
+The matrix determinant lemma gives
+$\det(V_{q+1})=\det(V_q)(1+\ell_{q+1})$. The initial determinant is
+$\det(V_2)=(x_2-x_1)^2\ge1$, while
+\[
+\det(V_N)
+=N\sum_{j=1}^N(x_j-\bar x)^2
+\le N\sum_{j=1}^Nx_j^2
+\le N^2T^2\le T^4.
+\]
+Therefore
+\[
+\sum_{q=2}^{N-1}\log(1+\ell_{q+1})
+=\log\frac{\det(V_N)}{\det(V_2)}
+\le4\log T.
+\]
+The inequality $\min\{1,u\}\le2\log(1+u)$ for $u\ge0$ proves
+\eqref{eq:leverage-potential-app}.
+
+Partition the indices into
+$\mathcal Q_{\mathrm{hi}}:=\{q:\ell_{q+1}>1\}$ and
+$\mathcal Q_{\mathrm{lo}}:=\{q:\ell_{q+1}\le1\}$. There are at most $A_N$
+high-leverage indices, and each contributes at most one to either truncated
+sum. On the low-leverage indices, Cauchy--Schwarz gives
+\[
+\sum_{q\in\mathcal Q_{\mathrm{lo}}}a\sqrt{\ell_{q+1}}
+\le a\sqrt{N\sum_{q\in\mathcal Q_{\mathrm{lo}}}\ell_{q+1}}
+\le a\sqrt{NA_N},
+\]
+and
+\[
+\sum_{q\in\mathcal Q_{\mathrm{lo}}}
+\varepsilon\sqrt q\sqrt{\ell_{q+1}}
+\le\varepsilon\sqrt{\sum_{q=2}^{N-1}q}
+\sqrt{\sum_{q\in\mathcal Q_{\mathrm{lo}}}\ell_{q+1}}
+\le\varepsilon N\sqrt{A_N}.
+\]
+Adding the high-leverage contributions proves the two claims.
+\end{proof}
+
+\subsection{Prediction error within one oracle interval}
+
+Fix an arm $i$ and one interval of its oracle partition. Let
+$x_1<\cdots<x_N$ be the \emph{post-initialization} rounds in this interval on
+which the arm is pulled. Thus any pulls during the first $2K$ rounds are
+excluded from this list. For $q\ge2$, all previous observations of arm $i$
+from $x_1$ through $x_q$ form a suffix of its complete history at round
+$x_{q+1}$: every time between $x_1$ and $x_{q+1}$ remains in the same
+consecutive oracle interval and occurs after initialization. The algorithm
+therefore considers precisely this suffix, regardless of whether other
+observations from the same interval preceded $x_1$.
+
+Let $g_i$ be the affine approximant on the interval, and define
+\[
+w_q^\top
+:=z_{x_{q+1}}^\top V_q^{-1}
+\begin{bmatrix}z_{x_1}&\cdots&z_{x_q}\end{bmatrix}.
+\]
+By \cref{lem:weights-app},
+\begin{equation}\label{eq:weights-oracle-app}
+\sum_{j=1}^qw_{q,j}=1,
+\qquad
+\sum_{j=1}^qw_{q,j}x_j=x_{q+1},
+\qquad
+\norm{w_q}_2^2=\ell_{q+1}.
+\end{equation}
+The first two identities imply
+$\sum_{j=1}^q w_{q,j}g_i(x_j)=g_i(x_{q+1})$. With
+$e_i(s):=\mu_i(s)-g_i(s)$ and $|e_i(s)|\le\varepsilon$, we obtain
+\begin{align}
+0
+&\le\sum_{j=1}^qw_{q,j}\mu_i(x_j)-\mu_i(x_{q+1})
+\label{eq:misspec-positive-app}\\
+&=\sum_{j=1}^qw_{q,j}e_i(x_j)-e_i(x_{q+1})\notag\\
+&\le\varepsilon(1+\norm{w_q}_1)
+\le\varepsilon\left(1+\sqrt q\sqrt{\ell_{q+1}}\right).
+\label{eq:misspec-app}
+\end{align}
+The first inequality uses the concavity of the true curve, through
+\cref{cor:optimism-main}. The approximation need not itself be concave. The
+absolute-value bound is essential because individual OLS prediction weights
+can be negative.
+
+The uniform confidence event bounds the empirical prediction error of this
+suffix by $\beta_{T,\delta}\sqrt{\ell_{q+1}}$. Adding its confidence radius
+and using the minimum in the definition of $U_i$ gives
+\begin{equation}\label{eq:single-pull-width-app}
+0\le U_i(x_{q+1})-\mu_i(x_{q+1})
+\le2\beta_{T,\delta}\sqrt{\ell_{q+1}}
++\varepsilon\left(1+\sqrt q\sqrt{\ell_{q+1}}\right).
+\end{equation}
+On $\mathcal H$, the same width is at most one, because
+$\mu_i(x_{q+1})\le U_i(x_{q+1})\le1$ and the means are nonnegative.
+
+\begin{samepage}
+\begin{lemma}[Width sum within one interval]\label{lem:one-segment-app}
+An occupied oracle interval with $N\ge1$ post-initialization pulls satisfies
+\begin{equation}\label{eq:one-segment-app}
+\sum_{j=1}^N\bigl(U_i(x_j)-\mu_i(x_j)\bigr)
+\le C\left[
+\beta_{T,\delta}\sqrt{N\log(2T)}
++\varepsilon N\sqrt{\log(2T)}
++\log(2T)
+\right]
+\end{equation}
+for a universal constant $C$.
+\end{lemma}
+\end{samepage}
+
+\begin{proof}
+Charge at most one for each of the first two pulls; this also handles
+$N\le2$. For the remaining pulls, use \eqref{eq:single-pull-width-app} and
+\[
+\min\{1,a+b+c\}
+\le\min\{1,a\}+\min\{1,b\}+\min\{1,c\}
+\qquad(a,b,c\ge0).
+\]
+The total of these widths is at most
+\[
+2+2\beta_{T,\delta}\sqrt{NA_N}
++\varepsilon N\sqrt{A_N}
++\varepsilon N+2A_N.
+\]
+Apply \cref{lem:leverage-app} and use $\log(2T)\ge1$ for $T\ge2$ to obtain
+\eqref{eq:one-segment-app}.
+\end{proof}
+
+\subsection{Proof of the oracle inequality}
+
+\begin{proof}[Proof of \cref{thm:oracle-main}]
+If $T<2K$, the bound follows from $R_T\le T<2K$. Assume henceforth that
+$T\ge2K$, so initialization is completed and costs at most $2K$ regret. On
+$\mathcal H$, optimism and the action-selection rule imply, at every later
+round,
+\begin{equation}\label{eq:ucb-regret-app}
+\max_j\mu_j(t)-\mu_{I_t}(t)
+\le\max_jU_j(t)-\mu_{I_t}(t)
+=U_{I_t}(t)-\mu_{I_t}(t).
+\end{equation}
+
+Fix any oracle approximation satisfying \cref{ass:oracle-main}. Partition all
+post-initialization pulls according to the arm and the interval containing
+the pull time. Let $\mathcal C$ be the set of occupied cells, and let $N_c$
+be the number of pulls in cell $c$. There are at most
+$M_0:=\min\{M,T\}$ occupied cells, and $\sum_{c\in\mathcal C}N_c\le T$.
+Applying \cref{lem:one-segment-app} cell by cell, then using
+\[
+\sum_{c\in\mathcal C}\sqrt{N_c}
+\le\sqrt{|\mathcal C|\sum_{c\in\mathcal C}N_c}
+\le\sqrt{M_0T},
+\]
+gives
+\[
+R_T\le C\left[
+2K+\beta_{T,\delta}\sqrt{M_0T\log(2T)}
++\varepsilon T\sqrt{\log(2T)}
++M_0\log(2T)
+\right].
+\]
+This is \eqref{eq:oracle-main}. Substituting
+$\beta_{T,\delta}=2\sigma\sqrt{L_{T,K,\delta}}$ gives the stated
+$\widetilde O$ form. The partition and approximation were arbitrary, and
+the event $\mathcal H$ is independent of their choice, so the inequality
+holds simultaneously for every admissible oracle approximation.
+\end{proof}
+
+\section{Piecewise-affine approximation of discrete concave curves}
+\label{app:approx}
+
+We give a finite-grid proof of \cref{lem:approx-main}.  Let
+$f:[T]\to\mathbb R$ have nonnegative, nonincreasing increments
+$d_t=f(t+1)-f(t)$, and assume $f(T)-f(1)\le v$.
+
+\subsection{The error of a chord}
+
+For integers $1\le p<q\le T$, write $L_{p,q}$ for the affine function
+through $(p,f(p))$ and $(q,f(q))$.
+
+\begin{samepage}
+\begin{lemma}[Chord error]\label{lem:chord-app}
+For every integer $t\in[p,q]$,
+\begin{equation}\label{eq:chord-app}
+0\le f(t)-L_{p,q}(t)
+\le \frac{q-p}{4}\bigl(d_p-d_{q-1}\bigr).
+\end{equation}
+\end{lemma}
+\end{samepage}
+
+\begin{proof}
+Put $m=q-p$ and $j=t-p$.  The assertion is immediate for $j=0,m$.
+Otherwise, let $A$ and $B$ be the average increments on
+$[p,p+j-1]$ and $[p+j,q-1]$, respectively.  The chord slope is
+$[jA+(m-j)B]/m$, so
+\[
+f(p+j)-L_{p,q}(p+j)
+=\frac{j(m-j)}m(A-B).
+\]
+Monotonicity gives $0\le A-B\le d_p-d_{q-1}$, and
+$j(m-j)/m\le m/4$.
+\end{proof}
+
+\subsection{Greedy chords on a dyadic interval}
+
+Consider the integer interval $[a,b]$, where $a$ is a power of two,
+$a<T$, and $b=\min\{2a,T\}$.  Since the increments are nonincreasing,
+\begin{equation}\label{eq:slope-envelope-app}
+d_a\le \frac1a\sum_{r=1}^a d_r\le\frac va.
+\end{equation}
+Starting at $p_0=a$, take $p_{j+1}$ to be the largest integer
+$q\in[p_j+1,b]$ satisfying
+\begin{equation}\label{eq:greedy-condition-app}
+(q-p_j)\bigl(d_{p_j}-d_{q-1}\bigr)\le4\varepsilon.
+\end{equation}
+An adjacent point always satisfies this condition, so the construction
+reaches $b$ after finitely many steps.  By \cref{lem:chord-app},
+each selected chord approximates $f$ within $\varepsilon$.
+
+\begin{samepage}
+\begin{lemma}[Piece count on one block]\label{lem:block-count-app}
+The construction uses at most $1+\sqrt{v/(2\varepsilon)}$ pieces.
+In particular, it uses at most $2+C\sqrt{v/\varepsilon}$ pieces for a
+universal constant $C$.
+\end{lemma}
+\end{samepage}
+
+\begin{proof}
+Let $m$ be the number of pieces other than the terminal piece.
+For each such piece, maximality of $p_{j+1}$ gives
+\[
+A_jB_j>4\varepsilon,\qquad
+A_j=p_{j+1}+1-p_j,\qquad B_j=d_{p_j}-d_{p_{j+1}}.
+\]
+The total length of the nonterminal pieces is at most $b-a\le a$.
+Each has length at least one, so $m\le a$ and
+\[
+\sum_j A_j=\sum_j(p_{j+1}-p_j)+m\le2a.
+\]
+The slope differences telescope, yielding
+$\sum_jB_j\le d_a\le v/a$.  Thus
+\[
+2m\sqrt{\varepsilon}
+<\sum_j\sqrt{A_jB_j}
+\le\sqrt{\sum_jA_j}\sqrt{\sum_jB_j}
+\le\sqrt{2v}.
+\]
+Adding the terminal piece proves the claim.  When $m=0$, the bound is
+immediate.
+\end{proof}
+
+\subsection{Assembling the approximation}
+
+\begin{proof}[Proof of \cref{lem:approx-main}]
+Apply the construction on blocks with left endpoints
+$1,2,4,\ldots,2^{\lfloor\log_2(T-1)\rfloor}$.  Adjacent blocks share
+one endpoint, and their chords agree there because both take the value
+$f$ at that point.  They therefore define a continuous piecewise-affine
+function on $[1,T]$.  Every grid point has approximation error at most
+$\varepsilon$, and the number of pieces is at most
+\[
+C\bigl(1+\log(2T)\bigr)\left(1+\sqrt{v/\varepsilon}\right).
+\]
+If $\varepsilon\ge v$, the constant function $g(t)=f(1)$ provides a
+one-piece approximation.  This also covers $v=0$.
+
+For the integer-interval partition required in \cref{ass:oracle-main},
+let $1=p_0<p_1<\cdots<p_J=T$ be the chord knots.  Assign grid points to
+$[p_{j-1},p_j)\cap\mathbb Z$ for $j<J$ and to
+$[p_{J-1},p_J]\cap\mathbb Z$ for the last piece.  These are nonempty,
+disjoint consecutive integer intervals.  The restriction of $g$ to each
+one is affine, and this endpoint convention does not increase the number
+of pieces.
+\end{proof}
+
+\section{The main rate and the minimax lower bound}\label{app:main-proof}
+
+\subsection{Optimizing the approximation accuracy}
+
+\begin{proof}[Proof of \cref{thm:high-prob-main}]
+Write $L=L_{T,K,\delta}$ and define
+\[
+A=\sigma\sqrt{KT},
+\qquad
+B=\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}.
+\]
+The deterministic bound $R_T\le T$ holds for every policy.  If $T<2K$,
+then $A\ge T/\sqrt2$, so a sufficiently large universal constant makes
+the claimed bound immediate.  Hence assume $T\ge2K$.
+The initialization costs at most $2K\le\sqrt{2KT}\le\sqrt2 A$.
+
+If $v=0$, all means are constant.  Use $M=K$ and $\varepsilon=0$ in
+\cref{thm:oracle-main}.  Since $K\le T$ and
+$\log(2T)\le L$, its terms are bounded by $CL^{3/2}A$.
+
+For $v>0$, set
+\begin{equation}\label{eq:eps-star-app}
+\varepsilon_*=\sigma^{4/5}K^{2/5}v^{1/5}T^{-2/5}.
+\end{equation}
+If $\varepsilon_*\ge v$, approximate arm $i$ by the constant
+$\mu_i(1)$.  This uses $M=K$ and error at most $v$.  The inequality
+$\varepsilon_*\ge v$ is equivalent to
+$vT\le\sigma\sqrt{KT}=A$, so the same oracle bound gives
+$R_T\le CL^{3/2}A$.
+
+It remains to consider $0<\varepsilon_*<v$.
+Apply \cref{lem:approx-main} separately to the arms and use the
+integer-cell convention above.  The total number of pieces satisfies
+\begin{equation}\label{eq:M-main-app}
+M\le CK\bigl(1+\log(2T)\bigr)
+       \left(1+\sqrt{v/\varepsilon_*}\right).
+\end{equation}
+Only occupied cells enter the regret calculation.  With
+$M_0=\min\{M,T\}$, we have
+$M_0\le\sigma\sqrt{M_0T}$ because $\sigma\ge1$.
+Substituting \eqref{eq:M-main-app} into \cref{thm:oracle-main}, and
+using $\log(2T)\le L$, gives
+\begin{equation}\label{eq:prebalance-app}
+R_T\le CL^{3/2}
+\left[
+A+A(v/\varepsilon_*)^{1/4}+\varepsilon_*T
+\right].
+\end{equation}
+Here the factor $(1+\log(2T))^{1/2}$ comes from the approximation
+piece count, and the remaining logarithms come from the confidence and
+leverage bounds.  The choice \eqref{eq:eps-star-app} solves
+$A(v/\varepsilon)^{1/4}=\varepsilon T$, so both balanced terms
+equal $B$.  Consequently, on the confidence event,
+\[
+R_T\le CL^{3/2}(A+B).
+\]
+Combining this inequality with the deterministic cap yields the sharper
+placement of the minimum,
+\[
+R_T\le \min\{T,\,CL^{3/2}(A+B)\}.
+\]
+\end{proof}
+
+\subsection{A stationary lower bound in all parameter regimes}
+
+\begin{samepage}
+\begin{lemma}[Stationary subclass]\label{lem:stationary-lower-app}
+For $K,T\ge2$, $\sigma>0$, and $V_T\ge0$,
+\begin{equation}\label{eq:stationary-lower-app}
+\inf_\pi\sup_{\nu\in\cE_c^\sigma(T,V_T)}
+\E_\nu R_T(\pi)
+\ge\frac18\min\{T,\sigma\sqrt{KT}\}.
+\end{equation}
+The infimum includes randomized policies.
+\end{lemma}
+\end{samepage}
+
+\begin{proof}
+Fix a policy and let $N_i$ be the number of times it selects arm $i$.
+In the null instance every arm has constant mean $1/2$.
+For each $i\in[K]$, construct an alternative instance in which only
+arm $i$ has its mean increased by
+\[
+\Delta=\frac12\min\{1,\sigma\sqrt{K/T}\}.
+\]
+All observations have independent Gaussian noise with variance
+$\sigma^2$.  These stationary instances have means in $[0,1]$ and
+cumulative increment zero, so they belong to every class in the lemma.
+
+Write $P_0$ and $P_i$ for the laws of the complete interaction transcript
+under the null and alternative $i$.  Include the policy's internal
+randomness in the transcript if needed.  Its conditional action rule is
+the same under both instances, so the chain rule for relative entropy
+gives
+\[
+\operatorname{KL}(P_0,P_i)
+=\frac{\Delta^2}{2\sigma^2}\E_0N_i.
+\]
+Since $0\le N_i\le T$, the expectation bound in total variation and
+Pinsker's inequality imply
+\[
+\E_iN_i
+\le \E_0N_i+T\sqrt{\frac{\operatorname{KL}(P_0,P_i)}2}
+=\E_0N_i+\frac{T\Delta}{2\sigma}\sqrt{\E_0N_i}.
+\]
+Average over $i$, use $\sum_i\E_0N_i=T$, and apply Cauchy--Schwarz:
+\[
+\frac1{KT}\sum_{i=1}^K\E_iN_i
+\le\frac1K+\frac{\Delta}{2\sigma}\sqrt{\frac TK}
+\le\frac12+\frac14=\frac34.
+\]
+The expected regret in instance $i$ is
+$\Delta(T-\E_iN_i)$.  Its average over the $K$ alternatives is therefore
+at least $\Delta T/4$, which equals the right-hand side of
+\eqref{eq:stationary-lower-app}.  At least one alternative attains this
+average.
+\end{proof}
+
+\subsection{The published nonstationary lower bound and randomization}
+\label{app:lower}
+
+The remaining lower-bound ingredient is
+\citet[Theorem~3.3]{migali2025tightening}.  For $v>0$, $\sigma\ge1$,
+and
+\begin{equation}\label{eq:lower-range-app}
+T\ge2^{10}\sigma^2Kv^{-2},
+\end{equation}
+their result gives
+\begin{equation}\label{eq:lower-random-app}
+\inf_\pi\sup_{\nu\in\cE_c^\sigma(T,V_T)}
+\E_\nu R_T(\pi)
+\ge2^{-14}\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}.
+\end{equation}
+We apply their construction with budget $v\le V_T$.
+Their theorem is stated for deterministic policies.  The following
+argument explains why the same bound holds for randomized policies.
+
+\begin{samepage}
+\begin{lemma}[Averaging over a fixed hard family]\label{lem:yao-app}
+Suppose a distribution $Q$ on bandit instances satisfies
+$\E_{\nu\sim Q}\E_\nu R_T(\pi)\ge b$ for every deterministic policy
+$\pi$.  Then every randomized policy $\Pi$ satisfies
+$\sup_{\nu\in\operatorname{supp}(Q)}\E_\nu R_T(\Pi)\ge b$.
+\end{lemma}
+\end{samepage}
+
+\begin{proof}
+Condition on the policy's internal random seed.  For every seed, the
+resulting deterministic policy obeys the assumed inequality for the
+same distribution $Q$.  Averaging over the seed gives
+\[
+\E_{\nu\sim Q}\E_\nu R_T(\Pi)
+=\E_{\pi\sim\Pi}\E_{\nu\sim Q}\E_\nu R_T(\pi)\ge b.
+\]
+The supremum is at least this average.
+\end{proof}
+
+In Appendix~B.1 of \citet{migali2025tightening}, the improved arm is
+chosen independently and uniformly from $[K]$ in each prescribed time
+window.  This product prior is independent of the policy.  Their proof
+of Lemma~3.1 bounds its average regret, and Appendix~B.3 specializes the
+construction to rising concave curves.  Only finitely many window
+choices affect the first $T$ rounds.  Thus \cref{lem:yao-app} applies
+and proves \eqref{eq:lower-random-app} with the original constant.
+
+\subsection{Combining the regimes}
+
+\begin{proof}[Proof of \cref{cor:minimax-main}]
+The upper bound follows from \cref{cor:expected-main}.
+For the lower bound, write again
+$A=\sigma\sqrt{KT}$ and
+$B=\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}$.
+If $v=0$, then $B=0$ and \cref{lem:stationary-lower-app} suffices.
+Suppose $v>0$.  The exact ratio
+\begin{equation}\label{eq:regime-ratio-app}
+\frac BA=\left(\frac{v^2T}{\sigma^2K}\right)^{1/10}
+\end{equation}
+identifies the transition between the two terms.
+
+If \eqref{eq:lower-range-app} fails, then $B<2A$.
+Consequently
+\[
+\min\{T,A+B\}\le3\min\{T,A\},
+\]
+and the stationary lower bound already has the required order.
+
+If \eqref{eq:lower-range-app} holds, then
+\[
+\frac AT\le\frac v{32},
+\qquad
+\frac BT
+=\left(\frac{\sigma^2K}T\right)^{2/5}v^{1/5}
+\le\frac v{16}.
+\]
+In particular, both $A$ and $B$ are at most $T$.  Combining
+\cref{lem:stationary-lower-app} with
+\eqref{eq:lower-random-app} yields
+\[
+\mathfrak R_T^*(K,V_T,\sigma)
+\ge c\max\{A,B\}
+\ge\frac c2(A+B)
+\ge\frac c2\min\{T,A+B\}.
+\]
+This proves the lower bound throughout the parameter range.
+\end{proof}
+
+\section{Implementation and an anytime version}\label{app:computation}
+
+\subsection{Arithmetic and storage costs}
+
+For each arm, maintain prefix sums along its observation history of
+\[
+1,\qquad s,\qquad s^2,\qquad Y_s,\qquad sY_s.
+\]
+The difference of two prefix vectors recovers the Gram matrix and
+response vector for any suffix:
+\[
+V=
+\begin{bmatrix}
+q&\sum s\\
+\sum s&\sum s^2
+\end{bmatrix},
+\qquad
+b=
+\begin{bmatrix}
+\sum Y_s\\
+\sum sY_s
+\end{bmatrix}.
+\]
+Thus each suffix prediction and leverage require a constant number of
+arithmetic operations.  After initialization, the total number of
+suffixes considered in round $t$ is at most $t-1$, and $K\le t$.
+The direct implementation uses $O(T^2)$ arithmetic operations and
+$O(T)$ stored statistics.  If $T<2K$, the algorithm follows its
+arbitrary-policy branch, which satisfies these bounds as well.
+
+These are arithmetic operation counts.  For numerical computation,
+the equivalent centered formulas
+\[
+\widehat L(t)=\overline Y+
+(t-\overline s)\,
+\frac{\sum_j(s_j-\overline s)(Y_j-\overline Y)}
+     {\sum_j(s_j-\overline s)^2},
+\qquad
+h(t)=\frac1q+
+\frac{(t-\overline s)^2}{\sum_j(s_j-\overline s)^2}
+\]
+make the regression geometry explicit.  Centered sums should be
+accumulated with an appropriate stable method when the absolute time
+coordinates are large.
+
+\subsection{A horizon-free policy}
+
+Run fresh copies of Suffix-OLS-UCB on successive epochs of planned
+lengths $H_m=2^m$, $m=0,1,\ldots$, resetting the statistics at each
+boundary.  In epoch $m$, use the local time coordinate
+$1,\ldots,H_m$, confidence level
+\[
+\delta_m=\frac{\delta}{2(m+1)^2},
+\]
+and the same confidence formula as in the fixed-horizon algorithm,
+with $T=H_m$.  An epoch of length one can simply select an arbitrary
+arm.  Restriction to an interval and translation of the time
+coordinate preserve nondecreasing concavity.
+
+Fix any evaluation horizon $T\ge2$ and let $r$ be the last epoch that
+has begun by round $T$.  If its observed prefix has length $h\le H_r$,
+extend each arm's mean constantly after that prefix up to $H_r$.
+This preserves concavity, adds no variation, and leaves the policy's
+observations and decisions before $T$ unchanged.  Additional noise may
+be generated independently with the same sub-Gaussian bound.  The
+regret on the observed prefix is at most the nonnegative regret on
+this extended epoch.  Thus the fixed-horizon theorem controls the
+last incomplete epoch using its \emph{planned} length $H_r$.
+The same argument can be applied conditional on the history preceding
+each epoch because the noise assumption is conditional.
+
+Every completed epoch has cumulative increment at most $V_T$; the
+constant extension of the last prefix does as well.  Hence the same
+$v=\min\{1,V_T\}$ is valid for every epoch used in this comparison.
+Moreover, $H_r\le T$ and geometric summation gives
+\[
+\sum_{m=0}^r H_m^{1/2}\le C T^{1/2},
+\qquad
+\sum_{m=0}^r H_m^{3/5}\le C T^{3/5}.
+\]
+Since $r+1\le1+\log_2T$, all epoch confidence logarithms are bounded by
+$C\log(8KT^8/\delta)$.  Finally,
+$\sum_{m\ge0}\delta_m<\delta$.  A union bound and the two geometric
+sums therefore give the same regret rate, up to universal constants
+in its logarithmic factor, at every fixed evaluation horizon.
+The policy itself requires no horizon as input.
+
+\subsection{The noise parameter}
+
+The algorithm uses a known upper bound on the conditional sub-Gaussian
+scale.  The oracle inequality remains meaningful for any such scale,
+including small noise.  The minimax characterization in this paper is
+restricted to $\sigma\ge1$; adaptation to an unknown scale and sharp
+low-noise rates are separate questions.
+
+\end{document}

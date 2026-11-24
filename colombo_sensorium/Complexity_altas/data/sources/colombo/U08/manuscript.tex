@@ -1,0 +1,1176 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage{aliascnt}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+\definecolor{linkblue}{RGB}{28,65,113}
+\hypersetup{colorlinks=true,linkcolor=linkblue,citecolor=linkblue,urlcolor=linkblue,
+ pdftitle={Minimax Regret under Per-Round Separation-Oracle Budgets},
+ pdfauthor={Colombo Team},pdfkeywords={online convex optimization, separation oracle, minimax regret, asphericity}}
+\setlist[itemize]{leftmargin=1.5em,itemsep=3pt,topsep=4pt}
+\setlist[enumerate]{leftmargin=1.8em,itemsep=3pt,topsep=4pt}
+\setlength{\emergencystretch}{2em}
+\setlength{\belowcaptionskip}{5pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prob}{\mathbb P}
+\newcommand{\K}{\mathcal K}
+\newcommand{\Reg}{\operatorname{Reg}}
+\newcommand{\vol}{\operatorname{vol}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\Sep}{\mathsf{Sep}}
+\newcommand{\Back}{\mathsf{Back}}
+\newcommand{\ip}[2]{\langle #1,#2\rangle}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\newcommand{\wtO}{\widetilde O}
+\newcommand{\wtTheta}{\widetilde\Theta}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\ind}{\mathbf 1}
+\DeclareMathOperator{\proj}{proj}
+
+\newtheorem{theorem}{Theorem}[section]
+\newaliascnt{lemma}{theorem}
+\newtheorem{lemma}[lemma]{Lemma}
+\aliascntresetthe{lemma}
+\newaliascnt{corollary}{theorem}
+\newtheorem{corollary}[corollary]{Corollary}
+\aliascntresetthe{corollary}
+\theoremstyle{definition}
+\newaliascnt{definition}{theorem}
+\newtheorem{definition}[definition]{Definition}
+\aliascntresetthe{definition}
+\newcounter{algorithm}
+\crefname{algorithm}{Algorithm}{Algorithms}
+\Crefname{algorithm}{Algorithm}{Algorithms}
+
+\title{Minimax Regret under Per-Round\\Separation-Oracle Budgets}
+\author{Colombo Team\\\normalsize\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study adversarial online convex optimization over an unknown convex body
+$rB_2^d\subseteq\K\subseteq RB_2^d$ accessed through an exact separation oracle.
+The learner must play feasible points and obey an oracle budget on every round.
+Writing $\kappa=R/r$ and $M=\min\{T,d\}$, we show that the minimax expected regret
+under a sufficiently large, strictly enforced polylogarithmic budget is
+\[
+ \wtTheta\!\left(GR\min\{T,\sqrt T+\min\{M,\kappa\sqrt M\}\}\right),
+\]
+where $G$ bounds the subgradient norm and logarithms in $d,T,\kappa$ are
+suppressed. The upper bound combines Gaussian localization with a deterministic
+separation-based learner on rounds when localization fails. Strong
+log-concavity controls online stability without a dimension factor, while each
+rejected approximate centroid supplies a constant decrease in a partition
+potential. Both components share a single per-round query budget. The lower
+bound hides independent signs in the facets of a ball. Every adaptive oracle
+transcript leaves a uniform posterior on a coordinate subcube, and one oracle
+answer identifies at most two new signs in conditional expectation. Exact
+feasibility then forces regret until the hidden facets have been learned.
+We also give explicit bounds for a general query cap $Q$. These bounds match up
+to logarithms for polylogarithmic $Q$, but leave an intermediate-asphericity gap
+for larger budgets. The results concern unknown-body oracle complexity; the
+centroid implementation does not provide a competitive arithmetic-time bound.
+\end{abstract}
+
+\noindent\textbf{Keywords.} Online convex optimization; separation oracles;
+minimax regret; asphericity; oracle complexity; log-concave localization.
+
+\medskip
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol. 
+\par
+\end{samepage}
+
+\section{Introduction}
+
+Online convex optimization asks a learner to select feasible decisions before
+observing their losses. With access to Euclidean projections, online gradient
+descent achieves regret $O(GR\sqrt T)$ over a convex set contained in a ball of
+radius $R$~\cite{zinkevich2003}. For a set specified implicitly, however, a
+projection may be substantially more expensive than a feasibility query. A
+separation oracle provides an alternative: it either certifies that a proposed
+point is feasible or returns a hyperplane separating that point from the set.
+The resulting question is how much regret must be paid when only a small
+number of such queries is available before each decision.
+
+Two features distinguish this question from the usual analysis of online
+gradient descent. First, the learner must discover useful parts of the
+feasible set while learning from the losses. Second, a budget imposed on each
+round prevents the learner from spending an arbitrarily large number of
+queries before its first decision. A linear total query budget does not impose
+this restriction. The geometry of the set also matters: if a known inner ball
+has radius $r$, then the ratio $\kappa=R/r$ measures the geometric uncertainty
+allowed by the prescribed ball sandwich.
+
+We characterize the interaction between horizon, dimension, and this
+asphericity bound under a strict polylogarithmic query budget. With
+$M=\min\{T,d\}$, the answer is
+\begin{equation}\label{eq:headline}
+ \wtTheta\!\left(GR\min\{T,\sqrt T+\min\{M,\kappa\sqrt M\}\}\right).
+\end{equation}
+The term $\sqrt T$ is the unavoidable cost of online learning even when the
+body is known. The remaining term describes the cost of learning an unknown
+body. It grows with $\kappa$ until it saturates at $M$. This geometric cost
+need not be lower order: when the horizon is short relative to the dimension,
+it can make regret linear in $T$. Conversely, if $M\le\sqrt T$, the standard
+$\sqrt T$ rate is attainable for every asphericity, up to logarithms.
+
+\paragraph{Contributions.}
+The analysis has three components.
+\begin{enumerate}
+ \item \textbf{An upper bound that separates stability from geometry.}
+ A truncated Gaussian over an explicit outer approximation of $\K$ gives
+ dimension-independent online stability. A rejected approximate centroid
+ reduces the log partition function by a constant amount. Charging these
+ decreases against the regret of a deterministic fallback learner yields
+ an upper bound of order
+ $GR[\sqrt T+\kappa\sqrt{d/q}]$, up to logarithms, where $q$ is the number
+ of localization queries reserved on each round. An origin fallback gives
+ $\wtO(GR[\sqrt T+d/Q])$ with any cap $Q\ge1$.
+ \item \textbf{A lower bound that tracks both queries and asphericity.}
+ A family of hidden-facet bodies gives an explicit comparator advantage for
+ every $\kappa>1$. An exact posterior invariant bounds the information
+ revealed by adaptive separation queries. The argument applies to randomized
+ learners required to remain feasible almost surely on every admissible body.
+ \item \textbf{A minimax characterization with an explicit resource model.}
+ Combining the bounds proves \eqref{eq:headline} for, in particular, the
+ logarithmic cap $Q_\star=2[1+\lceil\log_2(\kappa T)\rceil]$.
+ The same order holds for larger caps bounded by a fixed power of a logarithm.
+ For general growing $Q$, we state the remaining gap explicitly.
+\end{enumerate}
+
+The deterministic fallback uses the established gauge-reduction idea of
+Mhammedi~\cite{mhammedi2022membership,mhammedi2025sep}; we include a complete
+proof with its precise query cost. Our contribution is the localization
+analysis, its combination with that reduction, and the matching geometric
+lower bound. The distinction matters because a membership-only implementation
+of the same regret guarantee has a different query cost. A comparison of
+the relevant models and bounds appears in \cref{sec:related}.
+
+\section{Model and main results}\label{sec:results}
+
+\subsection{Protocol and charged resources}
+
+Let $d,T\ge1$ be integers and let $G,R,r>0$, with $r\le R$.
+The learner knows these parameters and the common center, taken to be the
+origin. The unknown compact convex body satisfies
+\begin{equation}\label{eq:sandwich}
+ rB_2^d\subseteq\K\subseteq RB_2^d,
+ \qquad \kappa:=R/r.
+\end{equation}
+Here $B_2^d$ is the closed Euclidean unit ball. The supplied radii need not be
+optimal for $\K$; thus $\kappa$ is a bound associated with the model class.
+In particular, the known ball $RB_2^d$ belongs to this class for every
+$\kappa\ge1$.
+
+At round $t$, the learner first makes at most $Q$ oracle calls and then plays
+$w_t\in\K$. It receives a convex loss $f_t$ and a subgradient
+$g_t\in\partial f_t(w_t)$ satisfying $\norm{g_t}_2\le G$.
+The loss may depend on the history and the current action. The algorithms
+below use only $g_t$. Their regret is
+\begin{equation}\label{eq:regret}
+ \Reg_T:=\sup_{u\in\K}\sum_{t=1}^T[f_t(w_t)-f_t(u)]
+ \le \sup_{u\in\K}\sum_{t=1}^T\ip{g_t}{w_t-u}.
+\end{equation}
+The upper bounds hold uniformly over comparators and realized subgradient
+sequences on the event of accurate centroid computation.
+
+\begin{definition}[Exact strong separation]\label{def:sep}
+For a query $z\in\R^d$, the oracle $\Sep_\K$ returns either
+\texttt{inside}, certifying $z\in\K$, or a unit vector $a$ such that
+\[
+ \sup_{x\in\K}\ip{a}{x}<\ip{a}{z}.
+\]
+In the latter case, $\{x:\ip{a}{x}\le\ip{a}{z}\}$ is a valid outer halfspace.
+The oracle may select any valid response.
+\end{definition}
+
+The cap includes every call made before the current action, starting on
+round~1. No uncharged preprocessing access to $\K$ is allowed. Calls cannot
+be saved and spent on later rounds. Internal arithmetic and queries to
+explicitly stored inequalities are not charged as unknown-body oracle calls.
+We impose no arithmetic-time or bit-complexity bound. \Cref{app:sampling}
+gives an explicit sampling implementation with finite expected internal work;
+this work can be large.
+
+Write $\mathfrak R_Q^{\rm sep}(d,T,\kappa)$ for the infimum, over learners
+obeying this cap and feasible almost surely for every body and valid oracle,
+of the worst-case expected regret. The supremum ranges over bodies satisfying
+\eqref{eq:sandwich}, valid separation responses, and admissible loss
+adversaries. Dependence on $G,R$ is suppressed. All constants below are
+universal. Tilde notation suppresses factors polynomial in
+$\log(edT\kappa)$.
+
+\subsection{Upper bounds for a fixed cap}
+
+Define the explicit quantities
+\begin{equation}\label{eq:LD}
+ L_T:=1+\lceil\log_2(\kappa T)\rceil,
+ \qquad D_T:=d\log(e\kappa T).
+\end{equation}
+The integer $L_T$ reserves enough separation queries for one action of the
+deterministic fallback learner in \cref{sec:backup}.
+
+\begin{theorem}[Upper bounds]\label{thm:upper}
+For every integer $Q\ge1$, an almost surely feasible randomized learner using
+at most $Q$ exact separation calls on every round satisfies
+\begin{equation}\label{eq:upper-origin}
+ \mathfrak R_Q^{\rm sep}
+ \le C GR\min\left\{T,\sqrt T+\frac{D_T}{Q}\right\}.
+\end{equation}
+If $Q\ge L_T+1$ and $q:=Q-L_T$, then also
+\begin{equation}\label{eq:upper-hybrid}
+ \mathfrak R_Q^{\rm sep}
+ \le C GR\min\left\{
+ T,\ \kappa\sqrt T,\ \sqrt T+\frac{D_T}{Q},\
+ \sqrt T+\kappa\sqrt{\frac{D_T}{q}}
+ \right\}.
+\end{equation}
+The bounds hold against adaptive loss adversaries.
+\end{theorem}
+
+The minimum is implemented by selecting a strategy using the known
+parameters, rather than by querying all strategies in parallel. The
+origin-fallback strategy uses the entire budget $Q$ for localization.
+The hybrid reserves $L_T$ calls for its fallback and uses the remaining
+$q=Q-L_T$ for localization. These are separate upper-bound constructions.
+
+\subsection{Lower bounds for a fixed cap}
+
+For $m\ge1$ and $\kappa\ge1$, set
+\begin{equation}\label{eq:delta}
+ \delta_{m,\kappa}:=
+ \frac{\kappa^2-1}
+ {2\kappa^2\left(
+ \sqrt{(\kappa^2+1)/(2\kappa^2)}+\sqrt{1+m/\kappa^2}
+ \right)}.
+\end{equation}
+This quantity is zero at $\kappa=1$ and is the normalized comparator
+advantage of the hidden-facet construction.
+
+\begin{theorem}[Lower bounds]\label{thm:lower}
+For $d\ge2$, $T\ge1$, $\kappa\ge1$, and every integer $Q\ge1$,
+\begin{equation}\label{eq:lower-exact}
+ \mathfrak R_Q^{\rm sep}
+ \ge cGR\max\left\{\sqrt T,
+ \max_{1\le m\le d-1}
+ \delta_{m,\kappa}
+ \left\lfloor\min\left\{T,\frac{m}{4Q}\right\}\right\rfloor
+ \right\}.
+\end{equation}
+For $\kappa\ge2$, with $N_Q:=\min\{T,(d-1)/Q\}$, this implies
+\begin{equation}\label{eq:lower-simple}
+ \mathfrak R_Q^{\rm sep}
+ \ge cGR\min\left\{T,
+ \sqrt T+\min\left\{N_Q,\kappa\sqrt{\frac{N_Q}{Q}}\right\}
+ \right\}.
+\end{equation}
+The hidden-facet bound uses one fixed legal oracle for each body and the
+same linear loss on every round. The $\sqrt T$ bound already holds on a
+known ball.
+\end{theorem}
+
+The floor in \eqref{eq:lower-exact} retains the small-budget and
+small-dimension endpoints literally. Its effect is absorbed by the
+$\sqrt T$ term only when passing to \eqref{eq:lower-simple}.
+
+\subsection{Minimax rate with a strict polylogarithmic budget}
+
+To make the budget convention unambiguous, define
+\begin{equation}\label{eq:pldef}
+ Q_\star:=2L_T,
+ \qquad
+ \mathfrak R_{\rm pl}^{\rm sep}:=\mathfrak R_{Q_\star}^{\rm sep}.
+\end{equation}
+The notation does not refer to every cap bounded above by a polylogarithm;
+in particular, it does not assert the hybrid result for $Q=1$.
+
+\begin{corollary}[All-asphericity minimax rate]\label{cor:main}
+For $d,T\ge1$, $\kappa\ge1$, and $M:=\min\{T,d\}$,
+\begin{equation}\label{eq:main}
+ \mathfrak R_{\rm pl}^{\rm sep}(d,T,\kappa)
+ =\wtTheta\!\left(
+ GR\min\{T,\sqrt T+\min\{M,\kappa\sqrt M\}\}
+ \right).
+\end{equation}
+More generally, for every fixed $a>0$, the same rate holds for any cap
+$Q$ satisfying
+$L_T+1\le Q\le[\log(edT\kappa)]^a$, whenever this interval is nonempty.
+Constants implicit in the suppressed logarithmic factors may depend on $a$.
+\end{corollary}
+
+\Cref{tab:phases} states the resulting regimes in terms of the total regret.
+It separates the transition in the geometric term from the point at which
+that term actually exceeds the online-learning cost.
+
+\begin{table}[t]
+\centering
+\caption{Minimax expected regret with a strict polylogarithmic separation
+budget. Here $M=\min\{T,d\}$; rates suppress logarithmic factors and universal
+constants. Boundary cases agree up to constants.}
+\label{tab:phases}
+\small
+\begin{tabularx}{\textwidth}{@{}P{0.22\textwidth}Y P{0.24\textwidth}@{}}
+\toprule
+Size of $M$ & Asphericity range & Regret \\
+\midrule
+$M\le\sqrt T$ & Every $\kappa\ge1$ & $\wtTheta(GR\sqrt T)$ \\
+\addlinespace
+\(M>\sqrt T\) & $1\le\kappa\le\sqrt{T/M}$ & $\wtTheta(GR\sqrt T)$ \\
+\addlinespace
+\(M>\sqrt T\) & $\sqrt{T/M}<\kappa<\sqrt M$ & $\wtTheta(GR\kappa\sqrt M)$ \\
+\addlinespace
+\(M>\sqrt T\) & $\kappa\ge\sqrt M$ & $\wtTheta(GRM)$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Comparison with prior work}\label{sec:related}
+
+Projection-based online gradient descent supplies the $GR\sqrt T$ benchmark,
+but computing a projection is not a unit-cost operation in our model
+\cite{zinkevich2003}. Oracle-based alternatives must therefore be compared
+using both their regret and the information required to produce an action.
+\Cref{tab:related} uses a common normalization and distinguishes a per-round
+cap from a total budget.
+
+\begin{table}[t]
+\centering
+\caption{Results for fixed-domain full-information OCO under a known ball
+sandwich. Regret is divided by $GR$; logarithms are suppressed. The
+membership rows are distinct algorithms. ``Per round'' refers to a bound
+on every round; ``total'' permits uneven allocation.
+Here $H_M:=\min\{M,\kappa\sqrt M\}$ and $M=\min\{T,d\}$.}
+\label{tab:related}
+\small
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\textwidth}{@{}P{0.28\textwidth}P{0.15\textwidth}P{0.24\textwidth}Y@{}}
+\toprule
+Work & Oracle & Calls & Regret divided by $GR$ \\
+\midrule
+Mhammedi (2022), Thm.~8 & Membership & $\wtO(d)$ per round & $\wtO(\kappa\sqrt T)$ \\
+Mhammedi (2022), Thm.~15 & Membership & $\wtO(1)$ per round & $\wtO(\kappa\sqrt{dT})$ \\
+Gauge reduction\newline Mhammedi (2022, 2025) & Separation & $\wtO(1)$ per round & $O(\kappa\sqrt T)$ \\
+Garber--Kretzu (2022), Thm.~14 & Separation & $O(T)$ total & $O(\kappa\sqrt T)$ \\
+Mhammedi (COLT 2025), Thm.~4.1 & Separation & $\wtO(1)$ per round & $\wtO(\sqrt{dT}+\kappa d)$ \\
+Mhammedi (NeurIPS 2025), Thm.~4.1 & Separation & $\wtO(1)$ per round & $\wtO(\sqrt{dT}+d^2)$ \\
+\midrule
+This work, \Cref{thm:upper} & Separation & $1$ per round & $\wtO(\min\{T,\sqrt T+d\})$ \\
+This work, \Cref{cor:main} & Separation & $Q_\star=O(\log(e\kappa T))$ per round &
+$\begin{gathered}\wtTheta(\min\{T,\\[-2pt]\sqrt T+H_M\})\end{gathered}$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Membership and separation reductions.}
+Mhammedi~\cite{mhammedi2022membership} reduces OCO on a general body to OCO
+on a ball using approximate gauge computations. The dimension-independent
+$\kappa\sqrt T$ regret bound in Theorem~8 uses $\wtO(d)$ membership calls
+per round; Theorem~15 reduces the calls to $\wtO(1)$ and pays a $\sqrt d$
+factor in expected regret. With separation access, the gauge reduction
+attains $O(\kappa\sqrt T)$ using only logarithmically many calls. A direct
+deterministic analysis is given in Mhammedi~\cite[Lemma~4.1 and
+Remark~4.1]{mhammedi2025sep}. Our fallback is a self-contained version of
+this established reduction, adjusted to an unknown number of selected rounds.
+
+\paragraph{Total-budget methods.}
+Garber and Kretzu~\cite[Theorem~14]{garberkretzu2022} obtain a separation-based
+algorithm with adaptive-regret guarantees and $O(T)$ total oracle calls.
+Restoring the dependence on the ball sandwich gives
+$O(\kappa GR\sqrt T)$ regret. For the displayed total-call bound, their
+parameter choice applies when $T>16\kappa^2$; playing the origin handles
+the remaining horizons at the same regret order. This total budget is a
+different restriction from the hard cap considered here. Their guarantees
+over all time intervals also address a stronger comparator criterion than
+our static regret.
+
+\paragraph{Strict-budget separation methods.}
+Mhammedi~\cite[Theorem~4.1]{mhammedi2025sep} proves
+$\wtO(GR[\sqrt{dT}+\kappa d])$ regret with a polylogarithmic per-round
+separation budget. The subsequent ellipsoid
+method~\cite[Theorem~4.1]{mhammedi2025ellipsoid} obtains
+$\wtO(GR[\sqrt{dT}+d^2])$, with only logarithmic dependence on $\kappa$.
+Our bound replaces the dimension-dependent leading term by $\sqrt T$ and
+identifies the additional geometric cost up to logarithms. This comparison
+concerns oracle complexity. The ellipsoid method also provides efficient
+per-round matrix computations, which the centroid implementation here does
+not match.
+
+The first membership row is a high-probability bound, while the second is an
+expected bound for each comparator; these distinctions do not turn either
+row into a dimension-independent, polylogarithmic membership guarantee.
+The separation reductions and the two cited separation algorithms are
+deterministic. Our localization upper bound is in expectation, and its
+high-probability event gives a guarantee simultaneously for all comparators.
+
+\paragraph{Other oracle-budget tradeoffs.}
+Aggarwal~\cite{aggarwal2026} studies total and per-round query budgets for
+exact linear optimization access. That oracle returns a feasible optimizer
+of a supplied linear objective. Its information interface differs from a
+separating hyperplane at a supplied point, so those bounds address a
+different oracle model from the one in \cref{def:sep}.
+
+\section{A deterministic feasible fallback}\label{sec:backup}
+
+The hybrid algorithm needs a learner that can be paused between selected
+rounds. Its guarantee must hold for every realized number of selected rounds,
+because that number is determined by localization. We now construct such a
+learner using only exact separation.
+
+\subsection{Radial feasibility and a surrogate gradient}
+
+Let $y\in RB_2^d$ be an auxiliary action. If a separation query certifies
+$y\in\K$, play $x=y$ and set $h=0$. Otherwise initialize $a=1$, $b=\kappa$,
+and retain the separator at $y/a$. The point $y/b$ is feasible because it
+lies in $rB_2^d$. Repeatedly bisect $[a,b]$: query $y/c$ at
+$c=(a+b)/2$, replace $b$ by $c$ after a feasible response, and replace $a$
+by $c$ and retain the new separator after an infeasible response. Stop when
+$b-a\le1/T$. At most $L_T$ calls, including the first query, are needed.
+The case $\kappa=1$ has a known feasible ball and needs no bisection.
+
+Let $n$ be the unit normal at the final infeasible point $y/a$, and define
+\begin{equation}\label{eq:polar}
+ x:=y/b,
+ \qquad h:=\frac{n}{\ip{n}{y/a}}.
+\end{equation}
+The separator and the inner ball imply
+\begin{equation}\label{eq:polar-properties}
+ x\in\K,\qquad
+ \norm{h}_2\le1/r,\qquad
+ \ip{h}{u}\le1\quad(u\in\K),\qquad
+ \ip{h}{y}=a.
+\end{equation}
+Indeed, $\ip{n}{y/a}>\sup_{u\in\K}\ip{n}{u}\ge r$.
+When the loss subgradient $g$ is revealed, set
+\begin{equation}\label{eq:surrogate}
+ \widetilde g:=g+(-\ip{g}{x})_+h,
+ \qquad (z)_+:=\max\{z,0\}.
+\end{equation}
+
+\begin{lemma}[One-step reduction]\label{lem:radial}
+For every $u\in\K$ and every $g$ with $\norm{g}_2\le G$,
+\begin{equation}\label{eq:radial}
+ \ip{g}{x-u}\le\ip{\widetilde g}{y-u}+GR/T,
+ \qquad
+ \norm{\widetilde g}_2\le(1+\kappa)G.
+\end{equation}
+The action $x$ is feasible regardless of the subsequent loss.
+\end{lemma}
+
+\begin{proof}
+The feasible case has $x=y$ and $h=0$, so the claim is immediate.
+In the remaining case, $y=bx$ with $b\ge1$. If $\ip{g}{x}\ge0$, then
+$\ip{g}{x-y}=(1-b)\ip{g}{x}\le0$. Otherwise put
+$c=-\ip{g}{x}>0$. By \eqref{eq:polar-properties},
+\begin{align*}
+ \ip{g}{x-u}-\ip{g+ch}{y-u}
+ &=c(b-1)-c(a-\ip{h}{u})\\
+ &\le c(b-a)\le GR/T.
+\end{align*}
+Finally $c\le GR$, so
+$\norm{\widetilde g}_2\le G+GR/r=(1+\kappa)G$.
+\end{proof}
+
+\subsection{Anytime guarantee on selected rounds}
+
+Set $H=(1+\kappa)G$. On virtual round $j$, the fallback maintains
+$y_j\in RB_2^d$, computes its feasible action by the preceding procedure,
+and, after receiving $g_j$, performs
+\begin{equation}\label{eq:ogd}
+ y_{j+1}=\proj_{RB_2^d}(y_j-\eta_j\widetilde g_j),
+ \qquad \eta_j=\frac{2R}{H\sqrt j},\qquad y_1=0.
+\end{equation}
+This projection is onto an explicit ball and needs no oracle access.
+
+\begin{lemma}[Fallback guarantee]\label{lem:backup}
+The deterministic learner $\Back$ uses at most $L_T$ separation queries
+per virtual action. For every $0\le F\le T$, every realized sequence of
+subgradients, and every $u\in\K$,
+\begin{equation}\label{eq:backup}
+ \sum_{j=1}^F\ip{g_j}{x_j-u}\le7\kappa GR\sqrt F.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Nonexpansiveness of projection gives
+\[
+ \ip{\widetilde g_j}{y_j-u}
+ \le\frac{\norm{y_j-u}_2^2-\norm{y_{j+1}-u}_2^2}{2\eta_j}
+       +\frac{\eta_jH^2}{2}.
+\]
+The step sizes are nonincreasing and $\norm{y_j-u}_2\le2R$.
+Summation therefore bounds the distance terms by $2R^2/\eta_F$.
+Since $\sum_{j=1}^Fj^{-1/2}\le2\sqrt F$,
+\[
+ \sum_{j=1}^F\ip{\widetilde g_j}{y_j-u}
+ \le RH\sqrt F+2RH\sqrt F=3RH\sqrt F.
+\]
+By \cref{lem:radial}, the original regret adds at most $GRF/T$.
+For $F\ge1$, use $F/T\le\sqrt F$ and $1+\kappa\le2\kappa$.
+The claim for $F=0$ is immediate.
+\end{proof}
+
+The horizon $T$ is used only to fix the bisection accuracy and its query cap;
+the step sizes do not require advance knowledge of $F$. Because
+\eqref{eq:backup} is pathwise and holds for every prefix, it applies without
+an optional-stopping argument when localization determines which rounds
+are sent to the fallback.
+
+\section{Gaussian localization and the upper bound}\label{sec:upper}
+
+\subsection{Algorithm and query allocation}
+
+The primary learner stores an explicit convex outer approximation $D$ and
+the sum $s$ of gradients on previously accepted rounds. Initially
+$D=RB_2^d$ and $s=0$. For parameters $\lambda,\mu>0$, define
+\begin{equation}\label{eq:gibbs}
+ p_{D,s}(x):=\frac{1}{Z(D,s)}
+ \exp\!\left(-\frac{\lambda\norm{x}_2^2/2+\ip{s}{x}}{\mu}\right)
+ \ind_D(x),
+ \qquad m(D,s):=\E_{p_{D,s}}X.
+\end{equation}
+Each localization query uses an approximate centroid $\widehat m$ of this
+density. A feasible answer supplies the action. An infeasible answer adds
+the valid halfspace through $\widehat m$ to $D$ and the learner tries again.
+If all $q$ queries fail, the fallback supplies the action.
+
+\begin{figure}[t]
+\hrule\smallskip
+\refstepcounter{algorithm}\label{alg:hybrid}
+\noindent\textbf{Algorithm \thealgorithm. Gaussian localization with a feasible fallback}
+\smallskip\hrule\medskip
+\small
+\noindent\textbf{Input:} $Q\ge L_T+1$, $q=Q-L_T$, $\lambda,\mu>0$.
+\par\smallskip
+\noindent\textbf{Initialize:} $D=RB_2^d$, $s=0$, and the learner $\Back$.
+\par\smallskip
+\noindent\textbf{On each round $t=1,\ldots,T$:}
+\begin{enumerate}[label=\arabic*.,leftmargin=1.7em,itemsep=3pt,topsep=4pt]
+ \item Set $\mathsf{accepted}=\mathsf{false}$.
+ \item For at most $q$ attempts, compute an approximate centroid $\widehat m$
+ of $p_{D,s}$ and query $\Sep_\K(\widehat m)$:
+ \begin{itemize}[leftmargin=1.4em,itemsep=2pt,topsep=2pt]
+  \item If the answer is \texttt{inside}, set $w_t=\widehat m$ and
+  $\mathsf{accepted}=\mathsf{true}$, and stop the attempts.
+  \item Otherwise, for the returned normal $a$, replace $D$ by
+  $D\cap\{x:\ip{a}{x}\le\ip{a}{\widehat m}\}$.
+ \end{itemize}
+ \item If all attempts fail, obtain the next feasible action $w_t$ of
+ $\Back$, using at most $L_T$ additional separation calls.
+ \item Play $w_t$ and observe $g_t$.
+ \item On an accepted round, set $s\gets s+g_t$. Otherwise, update $\Back$
+ with $g_t$ on its next virtual round.
+\end{enumerate}
+\smallskip\hrule
+\end{figure}
+
+Every real round uses at most $q+L_T=Q$ queries. The fallback is invoked
+only after the primary queries fail and before the current loss is known.
+Its internal state depends only on the gradients from earlier failure
+rounds. This gives precisely the virtual sequence covered by
+\cref{lem:backup}. For the origin-fallback variant, omit $\Back$, allow
+$Q$ primary queries, and play $0$ whenever all of them fail.
+
+At every step, $D$ contains $\K$ and has the explicit form
+\[
+ D=RB_2^d\cap\bigcap_{j\le C}\{x:\ip{a_j}{x}\le b_j\}.
+\]
+Testing membership in $D$ requires only the stored inequalities.
+In particular, centroid sampling does not query membership in the unknown
+body $\K$. Exact feasibility of the played actions follows from either an
+\texttt{inside} response or the deterministic fallback construction, even
+when a centroid estimate is inaccurate.
+
+\subsection{Dimension-independent stability}
+
+Define $\Phi(D,s):=\mu\log Z(D,s)$.
+
+\begin{lemma}[Gaussian stability]\label{lem:stability}
+For every convex $D$ with nonempty interior and every $s,g\in\R^d$,
+\begin{equation}\label{eq:stability}
+ \Phi(D,s+g)-\Phi(D,s)
+ \le-\ip{g}{m(D,s)}+\frac{\norm{g}_2^2}{2\lambda}.
+\end{equation}
+Equivalently, the covariance of $p_{D,s}$ satisfies
+$\Cov(X)\preceq(\mu/\lambda)I$.
+\end{lemma}
+
+\begin{proof}
+Completing the square gives
+\[
+ Z(D,s)=e^{\norm{s}_2^2/(2\lambda\mu)}
+ \int_D\exp\!\left(-\frac{\lambda}{2\mu}
+                  \norm{x+s/\lambda}_2^2\right)\,dx.
+\]
+The integral is log-concave as a function of $s$, by preservation of
+log-concavity under marginalization~\cite[Theorem~5.1]{lovaszvempala2007}.
+Consequently $\nabla_s^2\log Z\preceq(\lambda\mu)^{-1}I$.
+Differentiation under the integral gives
+$\nabla_s\log Z=-m(D,s)/\mu$ and
+$\nabla_s^2\log Z=\Cov(X)/\mu^2$.
+The smoothness inequality proves \eqref{eq:stability}.
+\end{proof}
+
+The covariance bound is in operator norm. Replacing it by a trace bound
+would introduce an unnecessary factor of $d$ into the stability cost.
+
+\subsection{Constant-depth cuts from approximate centroids}
+
+Let $m=m(D,s)$ and $\Sigma=\Cov_{p_{D,s}}(X)$. The centroid procedure is
+chosen so that, simultaneously for every primary query,
+\begin{equation}\label{eq:centroid-accuracy}
+ \norm{\widehat m-m}_2\le R/T,
+ \qquad
+ \norm{\Sigma^{-1/2}(\widehat m-m)}_2\le\frac1{2e}.
+\end{equation}
+\Cref{app:sampling} constructs such a procedure with overall failure
+probability at most $1/(4T^2)$. The two inequalities have distinct roles:
+Euclidean error controls regret, and Mahalanobis error controls cut depth.
+
+\begin{lemma}[Partition decrease]\label{lem:cut}
+If \eqref{eq:centroid-accuracy} holds and the oracle rejects $\widehat m$,
+then the updated outer body $D'$ satisfies
+\begin{equation}\label{eq:cut}
+ \Phi(D',s)-\Phi(D,s)\le-\gamma\mu,
+ \qquad \gamma:=-\log(1-1/(2e))>0.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let $a$ be the returned unit normal and put
+$\sigma_a=(a^\top\Sigma a)^{1/2}>0$.
+The random variable $Y=\ip{a}{X-m}/\sigma_a$ is log-concave, has mean zero,
+and has variance one. A halfline through its mean has probability at least
+$1/e$, and its density is bounded above by one
+\cite[Lemmas~5.4 and~5.5]{lovaszvempala2007}.
+By Cauchy--Schwarz,
+\[
+ \frac{|\ip{a}{\widehat m-m}|}{\sigma_a}
+ \le\norm{\Sigma^{-1/2}(\widehat m-m)}_2\le1/(2e).
+\]
+Moving the threshold from $m$ to $\widehat m$ therefore leaves probability
+at least $1/(2e)$ in each open halfspace. The valid cut retains at most
+$1-1/(2e)$ of the probability mass, proving \eqref{eq:cut}.
+\end{proof}
+
+\subsection{A potential bound for the accepted rounds}
+
+Let $\mathcal A$ and $\mathcal F$ be the accepted and failure rounds,
+respectively. Write $F=|\mathcal F|$ and let $C$ be the number of rejected
+primary queries. In the hybrid, $C\ge qF$.
+
+\begin{lemma}[Accepted-round regret]\label{lem:accepted}
+Set $\lambda=G\sqrt T/R$. On the event that all centroid estimates satisfy
+\eqref{eq:centroid-accuracy}, simultaneously for every $u\in\K$,
+\begin{equation}\label{eq:accepted}
+ \sum_{t\in\mathcal A}\ip{g_t}{w_t-u}
+ \le GR(\sqrt T+3)+\mu D_T-\gamma\mu C.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Apply \cref{lem:stability} to each accepted gradient update and
+\cref{lem:cut} to each rejected query. Summing in the actual chronological
+order, including the cuts between successive gradient updates, gives
+\begin{align}\label{eq:telescoping}
+ \sum_{t\in\mathcal A}\ip{g_t}{m_t-u}
+ \le{}&\Phi(D_0,0)-\Phi(D_{\rm fin},s_{\rm fin})
+       -\ip{s_{\rm fin}}{u}\\
+ &+\frac{TG^2}{2\lambda}-\gamma\mu C.\nonumber
+\end{align}
+Here $m_t$ is the centroid at the accepted query, and
+$s_{\rm fin}=\sum_{t\in\mathcal A}g_t$.
+Replacing $m_t$ by $w_t$ adds at most $GR$.
+
+To bound the remaining partition terms, put $\delta=1/T$. Convexity and
+\eqref{eq:sandwich} imply
+\[
+ U_u:=(1-\delta)u+\delta rB_2^d\subseteq\K\subseteq D_{\rm fin}.
+\]
+For $x\in U_u$, $\norm{x}_2\le R$ and $\norm{x-u}_2\le2R/T$.
+Since $\norm{s_{\rm fin}}_2\le TG$, integration over $U_u$ yields
+\[
+ Z(D_{\rm fin},s_{\rm fin})
+ \ge T^{-d}\vol(rB_2^d)
+ \exp\!\left(-\frac{\lambda R^2/2+\ip{s_{\rm fin}}{u}+2GR}{\mu}\right).
+\]
+Also $Z(D_0,0)\le\vol(RB_2^d)$. Therefore
+\[
+ \Phi(D_0,0)-\Phi(D_{\rm fin},s_{\rm fin})-\ip{s_{\rm fin}}{u}
+ \le\frac{\lambda R^2}{2}+2GR+\mu d\log(\kappa T).
+\]
+Substitute in \eqref{eq:telescoping}. The choice of $\lambda$ makes
+$\lambda R^2/2+TG^2/(2\lambda)=GR\sqrt T$.
+Finally, $d\log(\kappa T)\le D_T$.
+\end{proof}
+
+\subsection{Paying for failed localization}
+
+\begin{proof}[Proof of \cref{thm:upper}]
+For the origin-fallback strategy, use all $Q$ primary queries per round.
+The failure rounds contribute at most $GRF$, and $C\ge QF$.
+Choosing $\mu=GR/(\gamma Q)$ in \eqref{eq:accepted} gives, on the good
+centroid event,
+\begin{equation}\label{eq:origin-explicit}
+ \Reg_T\le GR(\sqrt T+3)+\frac{GRD_T}{\gamma Q}.
+\end{equation}
+
+For the hybrid, put $q=Q-L_T$ and use \cref{lem:backup}. Uniformly over
+$u\in\K$, the combined regret is at most
+\[
+ GR(\sqrt T+3)+\mu D_T-\gamma\mu qF+7\kappa GR\sqrt F.
+\]
+For $A,B>0$, $A\sqrt F-BF\le A^2/(4B)$. Hence
+\[
+ \Reg_T\le GR(\sqrt T+3)+\mu D_T
+       +\frac{49\kappa^2G^2R^2}{4\gamma\mu q}.
+\]
+The choice
+$\mu=7\kappa GR/(2\sqrt{\gamma qD_T})$ gives
+\begin{equation}\label{eq:hybrid-explicit}
+ \Reg_T\le GR(\sqrt T+3)
+       +7\kappa GR\sqrt{\frac{D_T}{\gamma q}}.
+\end{equation}
+This use of the fallback does not require a deterministic value of $F$:
+its bound holds on every realized virtual sequence.
+
+All played actions remain feasible if centroid estimation fails. By
+\eqref{eq:regret}, regret is then at most $2GRT$. The failure probability
+$1/(4T^2)$ adds at most $GR/(2T)$ in expectation.
+Running $\Back$ alone gives $7\kappa GR\sqrt T$ using at most $L_T$ calls
+per round. Playing $0$ throughout gives $GRT$ with no queries.
+Selecting the best guaranteed strategy proves both claims.
+\end{proof}
+
+\section{Hidden facets and the lower bound}\label{sec:lower}
+
+The lower bound isolates the cost of discovering feasible actions. The loss
+does not change with time; all uncertainty is in the body and its oracle.
+
+\subsection{A family with tunable comparator advantage}
+
+Fix $\kappa>1$ and $1\le m\le d-1$. Write points as
+$z=(a,x,y)\in\R\times\R^m\times\R^{d-m-1}$ and let
+$V=(V_1,\ldots,V_m)$ be uniform on $\{-1,+1\}^m$. Define
+\begin{equation}\label{eq:facet-parameters}
+ \alpha=\sqrt{\frac{2}{\kappa^2-1}},\qquad
+ \beta=r\sqrt{1+\alpha^2},\qquad
+ \tau=\frac{\beta}{\alpha}
+ =R\sqrt{\frac{\kappa^2+1}{2\kappa^2}}.
+\end{equation}
+The hidden-facet body is
+\begin{equation}\label{eq:body}
+ \K_V^{(m)}:=RB_2^d\cap
+ \bigcap_{i=1}^m\{(a,x,y):\alpha a-V_ix_i\le\beta\}.
+\end{equation}
+
+\begin{lemma}[Geometry of the hidden-facet family]\label{lem:geometry}
+Each body in \eqref{eq:body} satisfies \eqref{eq:sandwich}. An optimizer
+of $\max_{z\in\K_V^{(m)}}a$ is
+\begin{equation}\label{eq:comparator}
+ u_V=(\tau+\Delta_{m,\kappa},\alpha\Delta_{m,\kappa}V,0),
+ \qquad \Delta_{m,\kappa}=R\delta_{m,\kappa}.
+\end{equation}
+Moreover,
+\begin{equation}\label{eq:delta-lower}
+ \delta_{m,\kappa}\ge\frac18
+ \min\left\{1-\kappa^{-2},\frac{\kappa^2-1}{\kappa\sqrt m}\right\}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Each facet normal has norm $\sqrt{1+\alpha^2}$ and offset
+$r\sqrt{1+\alpha^2}$, so its halfspace contains $rB_2^d$.
+The outer inclusion follows from intersection with $RB_2^d$.
+
+For fixed $a>\tau$, the feasible vector of smallest norm has
+$x_i=V_i\alpha(a-\tau)$ and $y=0$. Thus the largest feasible $a$ is the
+root above $\tau$ of
+\[
+ a^2+m\alpha^2(a-\tau)^2=R^2.
+\]
+Let $\rho=\tau/R$. The positive root for $\delta=(a-\tau)/R$ is
+\[
+ \delta=\frac{1-\rho^2}
+ {\rho+\sqrt{\rho^2+(1+m\alpha^2)(1-\rho^2)}}.
+\]
+Using $1-\rho^2=(1-\kappa^{-2})/2$ and
+$\alpha^2(1-\rho^2)=\kappa^{-2}$ gives \eqref{eq:delta}.
+Finally,
+\[
+ \delta_{m,\kappa}
+ \ge\frac{(1-\kappa^{-2})/2}{2+\sqrt m/\kappa}.
+\]
+If $\sqrt m/\kappa\le2$, the denominator is at most $4$;
+otherwise it is at most $2\sqrt m/\kappa$. These two cases imply
+\eqref{eq:delta-lower}.
+\end{proof}
+
+Choose the same loss on every round:
+\begin{equation}\label{eq:fixed-loss}
+ f_t(a,x,y)=-Ga.
+\end{equation}
+Every feasible action with $a\le\tau$ then loses at least
+$G\Delta_{m,\kappa}$ relative to $u_V$. Since $u_V$ maximizes $a$, regret
+on other rounds is nonnegative as well.
+
+\subsection{A fixed oracle and its conditional information}
+
+For each $V$, fix the following oracle once and for all. Given
+$z=(a,x,y)$, it first checks the outer ball. If $\norm{z}_2>R$, it returns
+$z/\norm{z}_2$. Otherwise it returns the normalized normal
+$(\alpha e_0-V_ie_i)/\sqrt{1+\alpha^2}$ for the least index $i$ with
+$\alpha a-V_ix_i>\beta$. If no such index exists, it returns
+\texttt{inside}. Each response is a valid exact strong separator or a
+correct feasibility certificate. In particular, the construction does not
+choose an oracle retrospectively from the learner's future actions.
+
+\begin{lemma}[Posterior subcube]\label{lem:subcube}
+Fix a deterministic learner. Conditional on any positive-probability
+adaptive transcript, $V$ is uniform on
+$S_1\times\cdots\times S_m$, where each
+$S_i$ is one of $\{-1\}$, $\{+1\}$, or $\{-1,+1\}$.
+\end{lemma}
+
+\begin{proof}
+The initial prior has this form. Given a transcript, the next query is
+fixed. A ball response imposes no restriction on $V$. A response from facet
+$j$ requires every earlier facet to be satisfied, fixes $V_j$ through the
+returned normal, and imposes no condition on later coordinates. An
+\texttt{inside} response requires each facet to be satisfied. Each
+condition concerns a single sign. Its intersection with a coordinate
+subcube is another such subcube, and all surviving sign vectors retain
+equal probability. The losses in \eqref{eq:fixed-loss} reveal no additional
+information. Induction proves the claim.
+\end{proof}
+
+\begin{lemma}[Information per query]\label{lem:information}
+Let $J$ count previously unfixed signs that become fixed after a single
+oracle response. Conditional on any previous transcript,
+\begin{equation}\label{eq:information}
+ \Prob(J\ge k\mid\text{transcript})\le2^{-(k-1)}
+ \quad(k\ge1),\qquad
+ \E[J\mid\text{transcript}]\le2.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+If the query is outside the outer ball, $J=0$. Otherwise inspect the
+still-unknown coordinates in oracle order.
+At each coordinate either both signs satisfy its facet, exactly one sign
+does, or neither sign does. A coordinate of the first type reveals
+nothing. At a coordinate of the second type, continuing past that facet
+requires its independent uniform sign to equal the satisfying value, with
+conditional probability $1/2$. A coordinate of the third type stops the
+query and can reveal only the final sign. Already fixed coordinates can
+only stop the query earlier.
+Thus revealing at least $k$ new signs requires passing at least $k-1$
+independent tests of probability $1/2$. This proves the tail bound.
+Summing $\E J=\sum_{k\ge1}\Prob(J\ge k)$ gives the second claim.
+\end{proof}
+
+\subsection{Why feasibility limits an uninformed action}
+
+If sign $V_i$ is not fixed by a transcript, both of its values remain
+possible. Any action feasible for every consistent body must satisfy
+\[
+ \alpha a-x_i\le\beta,
+ \qquad \alpha a+x_i\le\beta.
+\]
+Adding these inequalities gives $a\le\tau$.
+
+This statement also applies to randomized learners with almost-sure
+feasibility. For each of the finitely many bodies, the set of internal
+random seeds on which the learner remains feasible has probability one.
+Intersect these sets over all $2^m$ bodies and fix a seed in the
+intersection. The learner is then deterministic and feasible for every
+consistent body. The same argument can be averaged over the seed after
+applying \cref{lem:information}.
+
+\begin{proof}[Proof of \eqref{eq:lower-exact}]
+By the time the action on round $t$ is selected, at most $Qt$ oracle
+responses have been received. Pad a shorter query sequence with queries
+at the known feasible origin if necessary. By
+\cref{lem:information}, the expected number of fixed signs is at most
+$2Qt$. Therefore
+\[
+ \Prob(\text{all $m$ signs are fixed before action $t$})\le\frac{2Qt}{m}.
+\]
+For $t\le m/(4Q)$, with probability at least $1/2$ an unknown sign remains
+and feasibility forces $a_t\le\tau$. Summing the resulting regret under
+\eqref{eq:fixed-loss} gives
+\[
+ \E\Reg_T\ge\frac{GR\delta_{m,\kappa}}2
+ \left\lfloor\min\left\{T,\frac{m}{4Q}\right\}\right\rfloor.
+\]
+This holds under the uniform prior for every randomized admissible learner,
+so some fixed body has at least this expected regret.
+
+For completeness, take the known body $RB_2^d$ and independent Rademacher
+signs $\epsilon_1,\ldots,\epsilon_T$. Use losses
+$f_t(w)=G\epsilon_t w_1$, with the current sign unrevealed before $w_t$.
+The learner's expected loss is zero, while the best fixed comparator has
+loss $-GR|S_T|$, where $S_T=\sum_t\epsilon_t$.
+Since $\E S_T^2=T$ and $\E S_T^4=3T^2-2T\le3T^2$, the
+Paley--Zygmund inequality gives
+$\Prob(S_T^2\ge T/2)\ge1/12$. Hence
+$\E|S_T|\ge\sqrt T/(12\sqrt2)$.
+The maximum of this ball lower bound and the hidden-facet bounds proves
+\eqref{eq:lower-exact}. For $\kappa=1$, only the ball argument is needed.
+\end{proof}
+
+\subsection{The simplified query frontier}
+
+\begin{proof}[Proof of \eqref{eq:lower-simple}]
+Suppose $\kappa\ge2$ and choose the integer
+$m=\min\{d-1,QT\}$. Then $m/Q=N_Q$.
+If $N_Q<8$, the proposed geometric term is at most $8$ and is absorbed,
+up to a universal constant, by the ball lower bound.
+If $N_Q\ge8$, then
+\[
+ \left\lfloor\min\left\{T,\frac{m}{4Q}\right\}\right\rfloor
+ =\lfloor N_Q/4\rfloor\ge N_Q/8.
+\]
+Moreover, \cref{lem:geometry} implies
+$\delta_{m,\kappa}\ge c\min\{1,\kappa/\sqrt m\}$.
+Thus the hidden-facet contribution is at least
+\[
+ cGR\min\left\{N_Q,\kappa\frac{N_Q}{\sqrt m}\right\}
+ =cGR\min\left\{N_Q,\kappa\sqrt{\frac{N_Q}{Q}}\right\}.
+\]
+Combine this with the ball lower bound using
+$\max\{a,b\}\ge(a+b)/2$, and take the outer minimum with $T$.
+\end{proof}
+
+\section{Consequences and the unresolved budget dependence}\label{sec:consequences}
+
+\begin{proof}[Proof of \cref{cor:main}]
+First consider the upper bound. The reserve condition gives $q\ge1$.
+If $d\le T$, the two localization branches in
+\eqref{eq:upper-hybrid} give
+$\wtO(GR[\sqrt T+\min\{d,\kappa\sqrt d\}])$, and the origin strategy
+caps this at $GRT$. If $d>T$, the minimum of the fallback-only and origin
+strategies is $O(GR\min\{\kappa\sqrt T,T\})$, which is within a constant
+factor of the asserted expression with $M=T$.
+
+For the lower bound, $d=1$ or $1\le\kappa<2$ is settled by the known-ball
+bound because $\min\{M,\kappa\sqrt M\}\le2\sqrt T$ in these cases.
+For $d\ge2$ and $\kappa\ge2$, observe that
+\[
+ N_Q=\min\{T,(d-1)/Q\}\ge\frac{M}{2Q}.
+\]
+Consequently
+\[
+ \min\left\{N_Q,\kappa\sqrt{N_Q/Q}\right\}
+ \ge\frac1{2Q}\min\{M,\kappa\sqrt M\}.
+\]
+Apply \eqref{eq:lower-simple}. A factor $Q$ bounded by a fixed power of
+$\log(edT\kappa)$ is absorbed by the tilde notation. This proves the
+claim for the stated budget range and, in particular, for $Q_\star$.
+\end{proof}
+
+\paragraph{Larger query budgets.}
+The dependence on $Q$ should not be suppressed when $Q$ grows faster than
+a polylogarithm. For example, when $d\le QT$ and the intermediate
+asphericity terms are relevant, the upper and lower geometric terms are,
+respectively,
+\begin{equation}\label{eq:Qgap}
+ \wtO\!\left(GR\kappa\sqrt{\frac d{Q-L_T}}\right),
+ \qquad
+ \Omega\!\left(GR\kappa\frac{\sqrt{d-1}}{Q}\right).
+\end{equation}
+Their ratio, apart from logarithms and constants, is
+$Q/\sqrt{Q-L_T}$. If $Q\ge2L_T$, this is $O(\sqrt Q)$.
+When $d>QT$, the fallback-only term $\kappa\sqrt T$ and the corresponding
+lower term $\kappa\sqrt{T/Q}$ lead to the same $\sqrt Q$ comparison.
+Near the threshold $Q=L_T+1$, however, one must retain the reserve
+explicitly; a uniform $\sqrt Q$ statement would be inaccurate.
+Closing this budget-dependent gap remains open.
+
+\paragraph{One call per round.}
+The origin-fallback algorithm is valid with $Q=1$ and achieves
+$\wtO(GR[\sqrt T+d])$, capped by $GRT$.
+Its guarantee does not establish the hybrid asphericity improvement at
+that literal cap. The fallback queries cannot be omitted from the
+accounting, and \cref{cor:main} makes no such claim.
+
+\paragraph{Other access models.}
+An exact separation call simulates an exact membership call by discarding
+the normal. Thus our separation lower bound also applies to learners with
+only membership access under the same cap. The upper bound does not
+transfer: both the primary cuts and the low-query fallback use separating
+normals. A weak oracle that may certify points at distance at most
+$\eps$ from $\K$ changes the feasibility requirement. Simply accepting
+its certificates can produce infeasible actions. A theorem for that model
+must specify the allowed constraint violation and the separation margin.
+
+\section{Discussion}
+
+The analysis identifies two distinct sources of regret under limited
+separation access. Online stability costs $GR\sqrt T$ even on a known
+ball. Geometric uncertainty contributes an additional term that depends on
+both the number of coordinates that can remain hidden and the comparator
+advantage permitted by the ball sandwich. Gaussian localization and the
+hidden-facet family meet at this scale when the per-round budget is
+polylogarithmic.
+
+Two questions remain particularly direct. The first is the exact dependence
+on larger budgets, where \eqref{eq:Qgap} records a gap rather than a minimax
+characterization. The second is computational: can one attain the same
+regret with the per-round arithmetic efficiency of ellipsoid-based
+methods? The elementary sampler below establishes oracle implementability,
+but not an efficient numerical algorithm. A finite-precision result would
+also require quantitative assumptions on separator encoding and numerical
+certification. These issues do not affect the strict unknown-body query
+count proved here, but they matter for turning the minimax construction
+into a practical method.
+
+\appendix
+\section{Centroid estimation without unknown-body queries}\label{app:sampling}
+
+This appendix makes the implementation used by \cref{thm:upper} explicit.
+Only the ball and the stored halfspaces defining $D$ are consulted.
+The construction proves finite expected internal work, not a polynomial
+arithmetic bound. More sophisticated log-concave sampling algorithms
+\cite{lovaszvempala2007} may be substituted, provided their approximation
+errors are controlled as described below.
+
+\subsection{Exact samples by rejection}
+
+For a current state $(D,s)$, let
+$V(x)=\lambda\norm{x}_2^2/2+\ip{s}{x}$.
+Draw $X$ uniformly from $RB_2^d$ and $U$ uniformly from $[0,1]$,
+independently. Accept $X$ if $X\in D$ and
+\begin{equation}\label{eq:rejection}
+ U\le\exp\!\left(-\frac{V(X)+R\norm{s}_2}{\mu}\right).
+\end{equation}
+The right-hand side lies in $[0,1]$ on $RB_2^d$ because
+$V(X)\ge-R\norm{s}_2$. The density of an accepted point is exactly
+$p_{D,s}$. Since $D$ contains $rB_2^d$, the acceptance probability is at least
+\begin{equation}\label{eq:accept-prob}
+ p_{\min}(s):=
+ \kappa^{-d}\exp\!\left(-\frac{\lambda R^2/2+2R\norm{s}_2}{\mu}\right)>0.
+\end{equation}
+Restarting with independent randomness therefore produces independent
+exact samples with finite expected work. Also $\norm{s}_2\le TG$, so a
+known uniform positive lower bound is obtained by replacing
+$\norm{s}_2$ with $TG$ in \eqref{eq:accept-prob}.
+
+If a deterministically bounded number of arithmetic trials is desired,
+stop each sample after $K$ proposals and output $0$ on timeout. Its law
+then differs from the target by at most $(1-p_{\min})^K$ in total
+variation. Choosing $K$ using the known uniform lower bound makes this
+error as small as required. This bound can be exponential, which is why
+no polynomial-time assertion is made.
+
+\subsection{Two norms and a uniform success event}
+
+Let $X_1,\ldots,X_N$ be independent exact samples from $p_{D,s}$ and
+$\overline X=N^{-1}\sum_iX_i$. With centroid $m$ and covariance $\Sigma$,
+\begin{equation}\label{eq:sample-moments}
+ \E\norm{\overline X-m}_2^2
+ =\frac{\operatorname{tr}\Sigma}{N}\le\frac{R^2}{N},
+ \qquad
+ \E\norm{\Sigma^{-1/2}(\overline X-m)}_2^2=\frac dN.
+\end{equation}
+Positive definiteness follows because the density is positive on a body
+containing a nonempty ball. Markov's inequality gives
+\[
+ \Prob\!\left(\norm{\overline X-m}_2>R/T
+ \text{ or }
+ \norm{\Sigma^{-1/2}(\overline X-m)}_2>1/(2e)\right)
+ \le\frac{T^2+4e^2d}{N}.
+\]
+Let $J_{\max}=QT$ bound the total number of centroid estimates. Taking
+\begin{equation}\label{eq:N}
+ N=\left\lceil8J_{\max}T^2(T^2+4e^2d)\right\rceil
+\end{equation}
+and applying a conditional union bound gives failure probability at most
+$1/(8T^2)$. This reasoning remains valid when each density is selected
+adaptively from previous oracle responses and gradients: the moment
+bound holds conditional on every prior state, using fresh samples.
+
+For approximate sampling, require each draw, conditional on its current
+state and previous draws, to be within total variation
+\[
+ \xi\le\frac{1}{8T^2J_{\max}N}
+\]
+of the intended exact law. Sequential maximal coupling makes all samples
+coincide with corresponding independent exact draws except on an event
+of probability at most $J_{\max}N\xi$. Together with the preceding
+centroid bound, this is at most $1/(4T^2)$.
+This coupling argument is needed because the Mahalanobis statistic is
+not uniformly bounded across states; total variation alone cannot be
+applied directly to its second moment.
+
+\begin{thebibliography}{9}
+
+\bibitem{aggarwal2026}
+Vaneet Aggarwal.
+\newblock Sharp oracle-regret tradeoffs for projection-free online convex optimization.
+\newblock arXiv preprint arXiv:2610.00254, 2026.
+\newblock \url{https://arxiv.org/abs/2610.00254}.
+
+\bibitem{garberkretzu2022}
+Dan Garber and Ben Kretzu.
+\newblock New projection-free algorithms for online convex optimization with
+adaptive regret guarantees.
+\newblock In \emph{Proceedings of the 35th Conference on Learning Theory},
+volume 178 of \emph{Proceedings of Machine Learning Research},
+pages 2326--2359, 2022.
+\newblock \url{https://proceedings.mlr.press/v178/garber22a.html}.
+
+\bibitem{lovaszvempala2007}
+L\'aszl\'o Lov\'asz and Santosh Vempala.
+\newblock The geometry of logconcave functions and sampling algorithms.
+\newblock \emph{Random Structures \& Algorithms}, 30(3):307--358, 2007.
+\newblock \href{https://doi.org/10.1002/rsa.20135}{doi:10.1002/rsa.20135}.
+
+\bibitem{mhammedi2022membership}
+Zakaria Mhammedi.
+\newblock Efficient projection-free online convex optimization with membership oracle.
+\newblock In \emph{Proceedings of the 35th Conference on Learning Theory},
+volume 178 of \emph{Proceedings of Machine Learning Research},
+pages 5314--5390, 2022.
+\newblock \url{https://proceedings.mlr.press/v178/mhammedi22a.html}.
+
+\bibitem{mhammedi2025sep}
+Zakaria Mhammedi.
+\newblock Online convex optimization with a separation oracle.
+\newblock In \emph{Proceedings of the 38th Conference on Learning Theory},
+volume 291 of \emph{Proceedings of Machine Learning Research},
+pages 4033--4077, 2025.
+\newblock \url{https://proceedings.mlr.press/v291/mhammedi25a.html}.
+
+\bibitem{mhammedi2025ellipsoid}
+Zakaria Mhammedi.
+\newblock An ellipsoid algorithm for online convex optimization.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+volume 38, 2025.
+\newblock \href{https://doi.org/10.52202/085713-0030}{doi:10.52202/085713-0030}.
+
+\bibitem{zinkevich2003}
+Martin Zinkevich.
+\newblock Online convex programming and generalized infinitesimal gradient ascent.
+\newblock In \emph{Proceedings of the 20th International Conference on Machine
+Learning}, pages 928--936, 2003.
+\newblock \url{https://martin.zinkevich.org/publications/ICML03.pdf}.
+
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,1339 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in,headheight=14pt]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,array,tabularx,enumitem}
+\usepackage{caption,placeins}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+\setlength{\emergencystretch}{3em}
+\setlist[enumerate]{leftmargin=1.8em,itemsep=3pt,topsep=5pt}
+\newcommand{\R}{\mathbb R}
+\newcommand{\N}{\mathbb N}
+\newcommand{\E}{\mathbb E}
+\newcommand{\PP}{\mathbb P}
+\newcommand{\B}{\mathbb B}
+\newcommand{\Fop}{\mathcal F_{\mathrm{op}}}
+\newcommand{\Eop}{\mathcal E_T^{\mathrm{op}}}
+\newcommand{\FS}{\mathcal F_{S_p}}
+\newcommand{\ES}{\mathcal E_T^{(p)}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\ip}[2]{\left\langle#1,#2\right\rangle}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\TV}{\operatorname{TV}}
+\newcommand{\Lip}{\operatorname{Lip}}
+\newcommand{\hamming}{d_{\mathrm H}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\clip}{\mathcal C_\mu}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\usepackage[nameinlink,noabbrev]{cleveref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+
+\crefname{theorem}{Theorem}{Theorems}
+\crefname{lemma}{Lemma}{Lemmas}
+\crefname{proposition}{Proposition}{Propositions}
+\crefname{corollary}{Corollary}{Corollaries}
+\crefname{section}{Section}{Sections}
+\crefname{subsection}{Section}{Sections}
+\crefname{subsubsection}{Section}{Sections}
+\captionsetup{font=small,labelfont=bf,skip=6pt}
+\setlength{\belowcaptionskip}{6pt}
+\allowdisplaybreaks[1]
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+% Standalone manuscript: bibliography and all proofs are included below.
+% Compile with: pdflatex H17_Hessian_Norms_Colombo_Team.tex (twice).
+\hypersetup{
+  pdftitle={Hessian Norms and Minimax Rates in Noisy Zeroth-Order Optimization},
+  pdfauthor={Colombo Team},
+  pdfsubject={Strongly convex optimization from noisy function values},
+  pdfkeywords={zeroth-order optimization, minimax risk, Lipschitz Hessians, Schatten norms}
+}
+\title{\textbf{Hessian Norms and Minimax Rates\\in Noisy Zeroth-Order Optimization}}
+\author{Colombo Team\\[0.35em]
+\normalsize\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The matrix norm in a Lipschitz-Hessian assumption changes the statistical difficulty of noisy zeroth-order optimization. We give a unified, self-contained analysis for strongly convex functions on $\R^d$ whose Hessians are $\rho$-Lipschitz in Schatten-$p$ norm, whose strong-convexity modulus is $\mu$, and whose minimizers lie in a known ball. Each query returns one function value with fresh independent standard Gaussian noise. For every fixed integer $d\ge1$, positive $\mu,\rho,R$, and $p\in[2,\infty]$, the minimax expected objective error satisfies
+\[
+ \mathcal E_T^{(p)}
+ =\Theta\!\left(
+ \frac{\rho^{2/3}d^{\,4/3-2/(3p)}}{\mu T^{2/3}}
+ \right)
+ \qquad (T\to\infty),
+\]
+with universal multiplicative constants and a parameter-dependent threshold. The formula makes explicit the Schatten dependence implied by known Frobenius and operator endpoint bounds. We provide complete proofs, an explicit lower bound for every query budget, and a direct upper construction requiring no global Hessian upper bound. The lower proof uses a shared radial cutoff to control the total information about neighboring alternatives under arbitrary adaptive queries. The upper proof combines localization in an estimated metric, orthogonal finite differences, and a Newton error bound that remains valid on every estimation event. A structural calculation realizes the sharp norm conversions within the hard family and explains why additive objectives do not exhibit the same separation.
+\end{abstract}
+
+\noindent\textbf{Keywords:} zeroth-order optimization; minimax risk; strongly convex optimization; Lipschitz Hessians; Schatten norms.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol. 
+\par
+\end{samepage}
+
+\section{Introduction}
+\label{sec:introduction}
+A Lipschitz-Hessian assumption is incomplete until the matrix norm is specified. An operator-norm bound controls the largest change in curvature along any direction; a Frobenius-norm bound also limits how much curvature can change across directions at once. These restrictions need not lead to the same statistical complexity when an algorithm observes only noisy function values. The purpose of this paper is to make that dependence explicit and to explain the analytic and information-theoretic mechanisms behind it.
+
+We consider globally $\mu$-strongly convex functions $f:\R^d\to\R$ with a minimizer in a known ball of radius $R$. Their Hessians satisfy
+\[
+ \|\nabla^2f(x)-\nabla^2f(y)\|_{S_p}
+ \le\rho\|x-y\|,
+ \qquad 2\le p\le\infty.
+\]
+Here $S_p$ is the $\ell_p$ norm of the matrix singular values: $S_2$ is the Frobenius norm and $S_\infty$ is the operator norm. Every query returns $f(x)$ plus an independent standard Gaussian error, and the budget counts scalar evaluations. Queries may be adaptive and may lie anywhere in $\R^d$.
+
+The minimax expected objective error has order
+\begin{equation}\label{eq:intro-rate}
+ \frac{\rho^{2/3}}{\mu T^{2/3}}
+ d^{\,4/3-2/(3p)}.
+\end{equation}
+Thus the dimension factor is $d$ under Frobenius smoothness and $d^{4/3}$ under operator smoothness, with a continuous dependence on $1/p$ between them. These statements compare classes with the \emph{same numerical smoothness modulus} $\rho$. The leading constants are universal; the budget at which the comparison applies may depend on the fixed dimension and structural parameters. We do not assert a matching finite-budget formula in all parameters.
+
+\paragraph{Relation to existing results.}
+The endpoint rates already have a substantial literature. Yu et al.~\cite{Yu2024} establish the Frobenius rate without a global curvature bound. Akhavan et al.~\cite{Akhavan2024} obtain the operator upper exponent under global gradient smoothness. More recent work proves matching operator bounds and treats broader smoothness orders~\cite{Zhang2026,Loginov2026}. The intermediate-$p$ formula follows from these endpoint results by matrix-norm comparisons, as we show explicitly in \cref{sec:related}. We therefore present it as a unified characterization with complete proofs, rather than as a previously unresolved endpoint rate.
+
+\paragraph{What the complete proof provides.}
+The lower argument uses a quadratic perturbed by a linear form under one shared radial cutoff. This mechanism also appears in the higher-order constructions of Zhang et al.~\cite{Zhang2026} and Loginov et al.~\cite{Loginov2026}. Here we specify an elementary polynomial cutoff, verify all derivatives with numerical constants, and derive a lower bound valid for every budget. The construction remains globally well conditioned, with Hessian between $\mu I$ and $3\mu I$. Its pointwise information bound applies to every query location, which makes the statistical reduction valid for arbitrary randomized adaptive algorithms.
+
+The direct upper argument gives a complementary explanation of the same dimension factor. A trace-smoothing estimate turns Schatten control into a gradient-bias bound. Full random orthonormal bases, as studied by Feng and Wang~\cite{Feng2023}, remove the gradient-magnitude contribution to directional variance. Localization and a final Newton correction then convert estimation error into objective error uniformly over functions with unbounded Hessian magnitude. The resulting rate is inherited from endpoint theory; the proof records an explicit scalar-query allocation and handles localization failures without assuming a uniform objective-gap bound.
+
+Finally, we identify the norm separation inside the scalar hard family itself. Its Hessian variations attain the dimension factors in both norm conversions used in the rate comparison. Additive objectives behave differently: operator-Lipschitz Hessians are automatically Frobenius-Lipschitz with the same constant. This observation explains why a shared, nonadditive perturbation is needed to exhibit the operator--Frobenius distinction.
+
+\paragraph{Organization.}
+\Cref{sec:model} states the model, matching asymptotic rate, and finite-budget lower bounds. \Cref{sec:related} aligns the relevant literature by assumptions, rates, and regimes. \Cref{sec:lower-overview,sec:upper-overview} explain the proof mechanisms, and \cref{sec:norm-separation} studies their structural consequences. Complete lower and upper proofs appear in \cref{app:lower,app:upper}.
+
+\section{Model and Main Results}
+\label{sec:model}
+All vector norms are Euclidean. For $p\in[2,\infty]$, the Schatten norm $\|A\|_{S_p}$ is the $\ell_p$ norm of the singular values of $A$, with $1/\infty=0$. Fix an integer $d\ge1$ and positive parameters $\mu,\rho,R$.
+
+\paragraph{Function class.}
+Let $\FS(d,\mu,\rho,R)$ be the set of all $C^2$ functions $f:\R^d\to\R$ satisfying, for every $x,y\in\R^d$,
+\begin{equation}\label{eq:class}
+ \nabla^2 f(x)\succeq\mu I,\qquad
+ \norm{\nabla^2 f(x)-\nabla^2 f(y)}_{S_p}\le\rho\norm{x-y},\qquad
+ \norm{x_*}\le R.
+\end{equation}
+Strong convexity ensures that the minimizer $x_*$ exists and is unique. The radius condition supplies a known region containing $x_*$; it does not restrict the queries or the output. No global upper bound on $\nabla^2 f$ or $\nabla f$ is imposed. We use $\Fop=\mathcal F_{S_\infty}$ for the operator-norm class.
+
+\paragraph{Oracle and admissible algorithms.}
+The $t$th scalar evaluation at $X_t\in\R^d$ returns
+\begin{equation}\label{eq:oracle}
+ Y_t=f(X_t)+\xi_t,\qquad \xi_t\overset{\mathrm{iid}}\sim N(0,1).
+\end{equation}
+The noises are independent of all algorithmic randomization. An algorithm may select $X_t$ from its random seed and the preceding observations. Its output $\widehat x$ may be any measurable function of the resulting transcript and need not have been queried. The public inputs are $d,\mu,\rho,R,p$, and the budget $T$. Internal computation and exact specification of query coordinates are free.
+
+Every scalar evaluation counts toward $T$, including repeated evaluations and both sides of a central difference. Opposite-point observations have independent noise, so differencing does not cancel the observation error. We measure terminal objective error, also called simple regret, rather than cumulative bandit regret.
+
+\paragraph{Minimax risk.}
+For each integer $T\ge1$, define
+\begin{equation}\label{eq:risk}
+ \ES(d,\mu,\rho,R)
+ :=\inf_{\mathcal A}\sup_{f\in\FS(d,\mu,\rho,R)}
+ \E_f[f(\widehat x)-f(x_*)],
+\end{equation}
+where the infimum is over all measurable randomized adaptive algorithms using at most $T$ scalar evaluations. The expectation includes both observation noise and algorithmic randomization. We write $\Eop=\mathcal E_T^{(\infty)}$ and suppress parameters when they are clear.
+
+\subsection{Matching asymptotic rates}
+\begin{theorem}[Minimax risk across Schatten norms]\label[theorem]{thm:schatten}
+There are universal constants $0<c<C<\infty$ such that, for every fixed $p\in[2,\infty]$, integer $d\ge1$, and $\mu,\rho,R>0$,
+\begin{equation}\label{eq:schatten-main}
+ c\frac{\rho^{2/3}d^{\,4/3-2/(3p)}}{\mu}
+ \le\liminf_{T\to\infty}T^{2/3}\ES
+ \le\limsup_{T\to\infty}T^{2/3}\ES
+ \le C\frac{\rho^{2/3}d^{\,4/3-2/(3p)}}{\mu}.
+\end{equation}
+One may take
+\[
+ c=\frac{3}{64\,16^{2/3}5120^{2/3}},\qquad C=4.
+\]
+These constants are independent of all parameters, including $d$ and $p$. The sufficiently large budget may depend on the fixed parameters.
+\end{theorem}
+
+\begin{corollary}[Frobenius and operator endpoints]\label[corollary]{cor:operator}
+Under the same fixed-parameter convention,
+\begin{equation}\label{eq:main}
+ \mathcal E_T^{(2)}
+ =\Theta\!\left(\frac{\rho^{2/3}d}{\mu T^{2/3}}\right),
+ \qquad
+ \Eop
+ =\Theta\!\left(\frac{\rho^{2/3}d^{4/3}}{\mu T^{2/3}}\right).
+\end{equation}
+\end{corollary}
+\begin{proof}
+Set $p=2$ and $p=\infty$ in \cref{thm:schatten}.
+\end{proof}
+
+The upper proof is uniform over the function class \emph{before} taking the limit. This order matters because the class allows arbitrarily large Hessians. Neither the theorem nor the $\Theta$ notation asserts an exact limiting constant or a threshold uniform in dimension. The two endpoint rates in \eqref{eq:main} recover existing results; \cref{sec:related} explains the precise implications of the prior bounds.
+
+\subsection{An explicit lower bound for every budget}
+\begin{theorem}[A globally well-conditioned hard family]\label[theorem]{thm:finite}
+Let $B=5120$. For integers $d,T\ge1$, set
+\begin{equation}\label{eq:bandwidth}
+ h_T=\min\left\{
+ \frac{\mu}{\rho},\ \sqrt{\frac{\mu R}{\rho}},\
+ \left(\frac{B^2d^2}{16\rho^2T}\right)^{1/6}\right\},
+ \qquad a_T=\frac{\rho h_T^2}{B}.
+\end{equation}
+Then
+\begin{equation}\label{eq:finite-explicit}
+ \Eop\ge\frac{3a_T^2}{64\mu}
+ =\frac{3\rho^2h_T^4}{64B^2\mu}.
+\end{equation}
+In particular, with $c_0=3/(64B^2)$,
+\begin{equation}\label{eq:finite-min}
+ \Eop\ge c_0\min\left\{
+ \frac{\mu^3}{\rho^2},\ \mu R^2,\
+ \frac{\rho^{2/3}d^{4/3}}{\mu T^{2/3}}\right\}.
+\end{equation}
+The same lower bound holds on the subclass satisfying $\mu I\preceq\nabla^2 f(x)\preceq3\mu I$ globally.
+\end{theorem}
+
+\begin{corollary}[A finite-time Schatten lower bound]\label[corollary]{cor:schatten-finite}
+For all integers $d,T\ge1$ and $p\in[2,\infty]$,
+\begin{equation}\label{eq:schatten-finite}
+ \ES\ge c_0\min\left\{
+ \frac{\mu^3d^{2/p}}{\rho^2},\ \mu R^2,\
+ \frac{\rho^{2/3}d^{\,4/3-2/(3p)}}{\mu T^{2/3}}\right\}.
+\end{equation}
+\end{corollary}
+\begin{proof}
+Substitute $\lambda=\rho d^{-1/p}$ in \eqref{eq:finite-min} and use $\|A\|_{S_p}\le d^{1/p}\|A\|_{\op}$ to embed the operator-norm hard family into the Schatten class.
+\end{proof}
+
+The three terms in \cref{thm:finite,cor:schatten-finite} are lower-bound scales from the hard construction. They are not asserted to bound the whole class from above. In particular, the finite-budget lower bound should not be read as a complete characterization of the startup regime.
+
+\subsection{Sample complexity and noise scaling}
+\begin{corollary}[High-precision sample complexity]\label[corollary]{cor:sample}
+For fixed $p,d,\mu,\rho,R$, define
+$T_*^{(p)}(\varepsilon)=\inf\{T\in\N:\ES\le\varepsilon\}$.
+As $\varepsilon\downarrow0$,
+\begin{equation}\label{eq:sample}
+ T_*^{(p)}(\varepsilon)
+ =\Theta\left(\frac{\rho d^{\,2-1/p}}{\mu^{3/2}\varepsilon^{3/2}}\right).
+\end{equation}
+The multiplicative constants can be universal. The sufficiently small precision threshold may depend on the fixed parameters. In particular, the operator-norm sample complexity is $\Theta(\rho d^2/(\mu^{3/2}\varepsilon^{3/2}))$.
+\end{corollary}
+\begin{proof}
+Risk is nonincreasing in the budget because unused evaluations may be discarded. The matching theorem implies eventual two-sided bounds by universal multiples of
+$\rho^{2/3}d^{4/3-2/(3p)}\mu^{-1}T^{-2/3}$.
+Their $3/2$ power gives \eqref{eq:sample}. To exclude a smaller fixed budget when inverting the bounds, note that \eqref{eq:schatten-finite} is strictly positive for each finite $T$ and positive parameters. Thus $T_*^{(p)}(\varepsilon)\to\infty$ as $\varepsilon\downarrow0$. Integer rounding can be absorbed into these constants and the precision threshold.
+\end{proof}
+
+
+
+\begin{remark}[A known Gaussian noise level]\label[remark]{rem:noise-scaling}
+Let $\mathcal E_{T,\sigma}^{(p)}$ denote the risk when each observation has noise $N(0,\sigma^2)$, for fixed known $\sigma>0$. Dividing observations and the objective by $\sigma$ gives the exact identity
+\[
+ \mathcal E_{T,\sigma}^{(p)}(d,\mu,\rho,R)
+ =\sigma\,\mathcal E_{T,1}^{(p)}
+ \left(d,\frac\mu\sigma,\frac\rho\sigma,R\right).
+\]
+The correspondence preserves every query, adaptation step, and scalar-evaluation cost. Consequently, the regret and high-precision query complexity have orders
+\[
+ \frac{\sigma^{4/3}\rho^{2/3}d^{\,4/3-2/(3p)}}{\mu T^{2/3}},
+ \qquad
+ \frac{\sigma^2\rho d^{\,2-1/p}}{\mu^{3/2}\varepsilon^{3/2}},
+\]
+respectively. The multiplicative constants remain universal, while the asymptotic thresholds may also depend on $\sigma$.
+\end{remark}
+
+\section{Prior Work and Comparison}
+\label{sec:related}
+\subsection{Endpoint results and the Schatten consequence}
+Table~\ref{tab:comparison} compares expected objective error under unit-variance Gaussian observations. It distinguishes a global curvature bound, a known minimizer radius, and the budget range in which each guarantee applies. When a source counts pairs or iterations, converting to scalar evaluations changes only a numerical factor.
+
+\begin{table}[!htbp]
+\centering
+\caption{Aligned comparison at smoothness order three. Let $q_T=\rho^{2/3}/(\mu T^{2/3})$ and $H=\nabla^2f$. All matrix smoothness moduli use the same Euclidean distance between query points. The normalized row explicitly fixes the structural parameters.}
+\label{tab:comparison}
+\small
+\renewcommand{\arraystretch}{1.24}
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.19\textwidth}>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Reference & Smoothness and curvature & Expected objective error & Regime and interpretation \\
+\midrule
+Akhavan et al.~\cite{Akhavan2024}, Cor.~19
+& Operator Hessian smoothness; $\mu I\preceq H\preceq LI$
+& Upper: $O_L(q_Td^{4/3})$
+& Fixed parameters, large $T$; leading constant may depend on $L$. \\
+\addlinespace[5pt]
+Yu et al.~\cite{Yu2024}, Thms.~3.1--3.2
+& Frobenius Hessian smoothness; $H\succeq\mu I$
+& Matching: $\Theta(q_Td)$
+& Fixed $d,\mu,\rho,R$, $T\to\infty$; no curvature upper bound. \\
+\addlinespace[5pt]
+Zhang et al.~\cite{Zhang2026}, Thm.~3.2, $\beta=3$
+& Operator Hessian smoothness; $I\preceq H\preceq3I$; $\mu=\rho=R=1$
+& Matching:\newline $\Theta\!\bigl(\min\{1,(d^2/T)^{2/3}\}\bigr)$
+& All integers $d,T\ge1$ under the stated normalization. \\
+\addlinespace[5pt]
+Loginov et al.~\cite{Loginov2026}, Thm.~3, $\beta=3$
+& Operator or Frobenius Hessian smoothness; $H\succeq\mu I$
+& Operator: $\Theta(q_Td^{4/3})$\newline Frobenius: $\Theta(q_Td)$
+& $d\ge2$, $T\ge C_0d^2$; $C_0$ depends on structural parameters. \\
+\addlinespace[5pt]
+This paper,\newline \cref{thm:schatten}
+& Schatten $S_p$, $2\le p\le\infty$; $H\succeq\mu I$
+& Matching:\newline $\Theta(q_Td^{4/3-2/(3p)})$
+& Fixed parameters, $T\to\infty$; explicit all-budget lower bound. \\
+\bottomrule
+\end{tabularx}
+\par\vspace{6pt}
+\begin{minipage}{\textwidth}
+\footnotesize
+The last row makes explicit a consequence of the endpoint bounds through \eqref{eq:class-inclusions}; complete direct proofs are supplied here. Theorem~3 of Loginov et al. gives a more explicit dimension-dependent startup guarantee at the endpoints. Akhavan et al. use operator-Lipschitz Hessians at order three and additionally assume global gradient smoothness; their upper constant may depend on that additional modulus.
+\end{minipage}
+\end{table}
+
+The Schatten formula can be deduced without an interpolation theorem. For every symmetric matrix $A$,
+\[
+ \|A\|_{S_p}\le d^{1/p}\|A\|_{\op},
+ \qquad
+ \|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}.
+\]
+Keeping $d,\mu,R$ fixed and displaying only the smoothness modulus, these inequalities give
+\begin{equation}\label{eq:class-inclusions}
+ \mathcal F_{\op}(\rho d^{-1/p})
+ \subseteq\mathcal F_{S_p}(\rho)
+ \subseteq\mathcal F_{S_2}(\rho d^{1/2-1/p}).
+\end{equation}
+Minimax risk is monotone under class inclusion. Applying the parameter-explicit operator lower bound of Loginov et al.~\cite[Theorem~1(b)]{Loginov2026}, with curvature cap $3\mu$, on the left, and the Frobenius upper bound of Yu et al.~\cite[Theorem~3.1]{Yu2024} on the right, gives
+\begin{align*}
+ (\rho d^{-1/p})^{2/3}d^{4/3}
+ &=\rho^{2/3}d^{\,4/3-2/(3p)},\\
+ (\rho d^{1/2-1/p})^{2/3}d
+ &=\rho^{2/3}d^{\,4/3-2/(3p)}.
+\end{align*}
+This deduction is a consequence of the cited endpoint theorems; it is not a claim that those papers explicitly state the entire Schatten family. The direct proofs below establish the same formula with numerical constants and without invoking an external optimization theorem.
+
+\subsection{Estimation, curvature, and oracle models}
+Higher-order zeroth-order methods exploit smoothness to reduce finite-difference bias. Bach and Perchet~\cite{Bach2016} develop this approach for stochastic optimization, while Akhavan et al.~\cite{Akhavan2024} sharpen the dimension dependence using sphere-based estimators and Poincar\'e inequalities. At order three, their smoothness definition is precisely the $C^2$ operator-Lipschitz-Hessian condition, together with an additional global gradient-Lipschitz assumption.
+
+Yu et al.~\cite{Yu2024} handle unbounded curvature by combining a preliminary localization stage with a final curvature-adapted procedure. Hong et al.~\cite{Hong2025} refine the Frobenius setting by prescribing the Hessian at the minimizer and studying spectral dependence. Their spectrally grouped estimator concerns an instance-dependent question; the present comparison concerns the worst-case effect of the norm used to control Hessian variation.
+
+Full orthogonal frames reduce the directional variance of central-difference estimators~\cite{Feng2023}. We use this established construction with fresh Gaussian value noise and prove the needed conditional moment bounds. Additive objectives admit smaller dimension dependence under their own smoothness and domain assumptions~\cite{Akhavan2025}. \Cref{prop:additive} explains why additive Hessians do not separate the operator and Frobenius conditions at a fixed modulus.
+
+Finally, lower bounds for noisy derivative-free convex optimization reduce objective error to statistical identification~\cite{Shamir2013}. Paired observations of the same random loss, as in Duchi et al.~\cite{Duchi2015} and Shamir~\cite{Shamir2017}, provide a different information interface. Here the two values in a central difference carry independent additive noise. All comparisons in Table~\ref{tab:comparison} use the scalar-evaluation accounting in \eqref{eq:oracle}.
+
+\FloatBarrier
+\section{Lower Bound: Controlling Total Information}
+\label{sec:lower-overview}
+The proof of \cref{thm:finite} combines two requirements: the alternatives must satisfy all global analytic constraints, and no query may reveal too many of their hidden signs. Both are enforced by one scalar construction. For $s\in\{-1,+1\}^d$, set $v_s=s/\sqrt d$ and consider
+\[
+ f_s(x)=\mu\|x\|^2-a\langle v_s,x\rangle\psi(\|x\|^2/h^2),
+\]
+where $\psi$ equals one on $[0,1/4]$, vanishes on $[1,\infty)$, and has dimension-independent derivative bounds. The explicit polynomial in \cref{sec:cutoff} provides such a cutoff. Choosing $a=\rho h^2/B$ with $B=5120$ makes the Hessian $\rho$-Lipschitz in operator norm. The two deterministic caps on $h$ in \eqref{eq:bandwidth} ensure $\mu I\preceq\nabla^2f_s\preceq3\mu I$ and put the minimizer $x_s^*=av_s/(2\mu)$ inside the radius-$R$ ball.
+
+Let $s^{(i)}$ flip the $i$th sign. The shared support gives, simultaneously for every $x\in\R^d$,
+\[
+ \sum_{i=1}^d\big(f_s(x)-f_{s^{(i)}}(x)\big)^2
+ \le \frac{4a^2h^2}{d}.
+\]
+A query far outside the support gives no information about the signs. For an adaptive query inside it, the same bound controls the total information across neighbors, regardless of how the query was selected. The Gaussian chain rule therefore bounds the average neighboring transcript divergence by $2Ta^2h^2/d^2$. With the statistical bandwidth $h\asymp(d^2/(\rho^2T))^{1/6}$, this divergence is bounded by a numerical constant. Binary testing then forces a constant fraction of sign errors. Each such error costs squared distance of order $a^2/(\mu^2d)$, and strong convexity converts their sum into regret of order $a^2/\mu$.
+
+Substitution yields the operator-norm lower rate. For the Schatten class, use the same family with modulus $\rho d^{-1/p}$; the inequality $\|A\|_{S_p}\le d^{1/p}\|A\|_{\op}$ proves admissibility and gives the exponent $4/3-2/(3p)$. \Cref{app:lower} supplies the derivative bounds, adaptive likelihood calculation, testing step, and all constants. This construction is independent of the algorithm's realized random seed.
+
+\section{Upper Bound: Localization and Newton Correction}
+\label{sec:upper-overview}
+The upper bound in \cref{thm:schatten} is attained by a single value-based procedure. Its preliminary stages need only use $o(T)$ observations; almost all evaluations are reserved for the final gradient estimate. \Cref{sec:robust-newton} gives the complete deterministic allocation and output rule, and \cref{app:upper} proves the required error estimates.
+
+\subsection{Localization with an observed metric}
+Coordinatewise central differences estimate a gradient with $L_q$ error $O(m^{-1/3})$ and a Hessian with $L_q$ error $O(m^{-1/6})$, using repeated batches of size $m$. Here the constants can depend on fixed $d,\mu,\rho,R$, but not on the unknown Hessian magnitude. Estimate the Hessian at zero, floor its eigenvalues at $\mu$, and add $(\rho R+\mu)I$ to obtain a reference matrix $Q$. Projected gradient steps in this metric stay in the known ball.
+
+On the event that the initial Hessian estimate is accurate, $Q$ and every true Hessian in the ball are comparable, so the iteration contracts in the $Q$ norm. The initial $Q$-distance itself need not be bounded uniformly. An explicit first-step calculation removes that dependence before applying the contraction. On the complementary event, Euclidean distance is at most $2R$. With $K=O(\log T)$ steps, \cref{lem:localization} gives a localized point $z$ with moments $\E\|z-x_*\|^q=O(m^{-q/3})$ for $2\le q\le12$.
+
+\subsection{The norm dependence enters through smoothing bias}
+Let $V$ be uniform on the unit ball and define $F_r(x)=\E f(x+rV)$. Differentiating spherical averages relates the smoothing error to the gradient of the Hessian trace. Schatten duality yields
+\[
+ \|\nabla F_r(x)-\nabla f(x)\|
+ \le \frac{\rho d^{1-1/p}}{2(d+2)}r^2
+ \le \frac{\rho d^{-1/p}r^2}{2}.
+\]
+\Cref{lem:smoothing} proves this estimate for the stated $C^2$ class by mollification. Unlike a directionwise Taylor bound alone, it retains the gain from the Hessian norm.
+
+At $z$, sample $N$ independent random orthonormal bases and take one noisy value at each of the $2d$ opposite displacements per basis. Summing the central differences within a basis reproduces the linear part of $f$ exactly. Consequently, the variance has no factor involving $\|\nabla f(z)\|$. With $\beta_p=\rho d^{-1/p}$, the resulting estimate $G$ obeys
+\[
+ \E\|G-\nabla f(z)\|^2
+ \le \frac{\beta_p^2r^4}{4}
+       +\frac{d\rho^2r^4}{36N}
+       +\frac{d}{2Nr^2}.
+\]
+Minimizing the leading bias--variance bound gives $r=(d/(\beta_p^2N))^{1/6}$. Since $N\sim T/(2d)$, their order is $\rho^{2/3}d^{4/3-2/(3p)}T^{-2/3}$.
+
+\subsection{A loss bound valid on every estimation event}
+Using fresh observations, estimate and floor the Hessian at $z$, obtaining $\widehat H\succeq\mu I$, and return $\widehat x=z-\widehat H^{-1}G$. The pathwise inequality in \cref{lem:robust-newton} controls its objective gap through localization, Hessian-estimation, and gradient-estimation errors, with coefficients independent of $\|\nabla^2 f(x_*)\|$. This is necessary because even a point in a bounded ball can have arbitrarily large objective gap over our function class.
+
+Allocate at most $T^{3/4}$ observations to localization and Hessian estimation. Then $m\asymp T^{3/4}/\log T$ for fixed parameters, while the remaining observations give $N\sim T/(2d)$. \Cref{prop:upper-remainder} bounds the extra loss by a constant multiple of
+\[
+ m^{-1}+m^{-1/6}N^{-2/3}+N^{-1}=o(T^{-2/3}).
+\]
+The leading term is therefore the norm-sensitive gradient error divided by $\mu$. All batches, repeated center evaluations, and both sides of every central difference count toward $T$.
+
+\section{Norm Separation and Structural Consequences}
+\label{sec:norm-separation}
+The class inclusions in \eqref{eq:class-inclusions} are elementary matrix inequalities. The following calculation shows that their dimension factors are realized by Hessians of globally defined scalar functions in the lower construction.
+
+\subsection{Sharp norm conversions within the hard family}
+Write $\Phi_v(z)=\langle v,z\rangle\psi(\|z\|^2)$ for the unscaled potential, with $\|v\|=1$ and the polynomial cutoff from \cref{sec:cutoff}. For a function with Lipschitz Hessian, define
+\[
+ L_p(f):=\sup_{x\ne y}
+ \frac{\|\nabla^2 f(x)-\nabla^2 f(y)\|_{S_p}}{\|x-y\|}.
+\]
+
+\begin{proposition}[Norm conversion is attained by scalar potentials]\label[proposition]{prop:norm-witness}
+Let $d\ge2$ and let $f_s$ be the hard function in \eqref{eq:family}, with $a=\rho h^2/B$ and $B=5120$. Set $\gamma=35/(6B)$. Then, simultaneously for $2\le p\le\infty$,
+\begin{equation}\label{eq:frobenius-separation}
+ \gamma\rho(d-1)^{1/p}\le L_p(f_s)\le\rho d^{1/p}.
+\end{equation}
+In particular,
+\begin{equation}\label{eq:norm-ratio}
+ \frac{\gamma}{\sqrt2}\,d^{1/2-1/p}
+ \le\frac{L_2(f_s)}{L_p(f_s)}
+ \le d^{1/2-1/p}.
+\end{equation}
+All constants are independent of dimension and $p$.
+\end{proposition}
+\begin{proof}
+Take $t=\sqrt{5/8}$. The cutoff satisfies $\psi'(5/8)=-35/12$ and $\psi''(5/8)=0$. Substituting $z=tv$ and $v,w,w'$ with $w,w'\in v^\perp$ into \eqref{eq:third-full} yields
+\begin{equation}\label{eq:trace-witness}
+ D^3\Phi_v(tv)[v,w,w']=-\frac{35}{6}\ip w{w'}.
+\end{equation}
+Let $U\in\R^{d\times(d-1)}$ have orthonormal columns spanning $v^\perp$. After scaling by $-a/h^2$, \eqref{eq:trace-witness} implies
+\[
+ U^\top\bigl(D_v\nabla^2 f_s(htv)\bigr)U
+ =\gamma\rho I_{d-1},\qquad v=v_s.
+\]
+Compression cannot increase a Schatten norm. Indeed, if $1/p+1/q=1$, Schatten duality gives
+\[
+ \|U^\top A U\|_{S_p}
+ =\sup_{\|K\|_{S_q}\le1}
+ \tr\bigl((UKU^\top)^\top A\bigr)
+ \le\|A\|_{S_p},
+\]
+because $UKU^\top$ has the singular values of $K$ together with one additional zero. This includes $p=\infty$, $q=1$. The Lipschitz modulus dominates the norm of every unit-direction derivative, so the compression proves the lower bound in \eqref{eq:frobenius-separation}. The upper bound follows from $\|A\|_{S_p}\le d^{1/p}\|A\|_{\op}$ and \cref{lem:cutoff}.
+
+For \eqref{eq:norm-ratio}, divide the $p=2$ lower bound by the general upper bound and use $d-1\ge d/2$. The reverse inequality follows by applying $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ to every Hessian difference.
+\end{proof}
+
+The proposition shows that the Frobenius conversion used for the upper rate can lose exactly the displayed dimension factor even for uniformly well-conditioned scalar potentials. In dimension one all Schatten norms coincide, so no norm separation is intended.
+
+\subsection{Additive objectives}
+\begin{proposition}[Additivity removes the Hessian norm distinction]\label[proposition]{prop:additive}
+Suppose $f(x)=\sum_{i=1}^d f_i(x_i)$ is $C^2$ and its Hessian is $\rho$-Lipschitz in operator norm. Then its Hessian is also $\rho$-Lipschitz in Frobenius norm.
+\end{proposition}
+\begin{proof}
+Vary only the $i$th coordinate in the operator-norm assumption. The Hessian is diagonal, so
+$|f_i''(u)-f_i''(v)|\le\rho|u-v|$.
+For arbitrary $x,y$,
+\[
+ \norm{\nabla^2f(x)-\nabla^2f(y)}_F^2
+ =\sum_i|f_i''(x_i)-f_i''(y_i)|^2
+ \le\rho^2\sum_i|x_i-y_i|^2.
+\]
+Taking square roots proves the assertion.
+\end{proof}
+For an additive objective, the operator and Frobenius conditions with the same modulus define the same Hessian restriction. Since $\|A\|_{\op}\le\|A\|_{S_p}\le\|A\|_F$ for $p\ge2$, the same is true of every intervening Schatten norm. The shared radial cutoff in \eqref{eq:family} is generally nonadditive; it is this coupling across coordinates that permits the separation in \cref{prop:norm-witness}.
+
+\section{Discussion}
+\label{sec:scope}
+The Hessian smoothness norm changes the minimax cost of noisy value information. For the same modulus, the Schatten family has dimension factor $d^{4/3-2/(3p)}$, and the resulting high-precision query complexity has dimension factor $d^{2-1/p}$. The norm comparisons that yield this formula are attained within the explicit scalar hard family. Additive functions cannot exhibit the same separation.
+
+The proof also isolates what is needed to work without a global curvature bound. Finite differences estimate derivatives in absolute error, a reference metric gives localization moments, and a pathwise Newton inequality converts those moments into expected objective error. The first localization step and the final pathwise estimate prevent the unknown Hessian magnitude from entering the uniform risk bound.
+
+The scope remains fixed-parameter asymptotics. The finite-budget lower caps do not characterize the optimal initialization cost, and the upper allocation is designed to make its remainder negligible. It does not optimize the dependence of the startup budget on $d,\mu,\rho,R$, nor improve the explicit endpoint thresholds available in the literature. Further analysis of this construction could sharpen its finite-budget guarantees, adapt the localization-and-Newton implementation to heavy-tailed observations, and quantify the computational cost of its matrix and projection operations. The degenerate cases $\rho=0$ and $R=0$ lie outside the positive-parameter theorem; when $R=0$, the minimizer is known and the risk is zero.
+
+\begin{thebibliography}{99}
+
+\bibitem{Yu2024}
+Qian Yu, Yining Wang, Baihe Huang, Qi Lei, and Jason D. Lee.
+\newblock Stochastic Zeroth-Order Optimization under Strongly Convexity and Lipschitz Hessian: Minimax Sample Complexity.
+\newblock \emph{Advances in Neural Information Processing Systems}, 37, 2024.
+\newblock arXiv:2406.19617.
+\newblock \url{https://arxiv.org/abs/2406.19617}.
+
+\bibitem{Akhavan2024}
+Arya Akhavan, Evgenii Chzhen, Massimiliano Pontil, and Alexandre B. Tsybakov.
+\newblock Gradient-free optimization of highly smooth functions: improved analysis and a new algorithm.
+\newblock \emph{Journal of Machine Learning Research}, 25(370):1--50, 2024.
+\newblock \url{https://jmlr.org/papers/v25/23-0733.html}.
+
+\bibitem{Zhang2026}
+Haihan Zhang, Wendao Wu, Chenheng Zhang, Yanyi Li, Chunyuan Zheng, Cong Fang, Haoxuan Li, and Zhouchen Lin.
+\newblock Sharp Minimax Rates for Highly Smooth Strongly Convex Zeroth-Order Optimization.
+\newblock arXiv:2610.00276, version~2, 2026.
+\newblock \url{https://arxiv.org/abs/2610.00276}.
+
+\bibitem{Loginov2026}
+Timofei Loginov, Darina Dvinskikh, Nazarii Tupitsa, Osman Osmanov, Yuriy Dorn, and Alexander Gasnikov.
+\newblock Minimax Oracle Call Complexity, Rounds and Admissible Noise in Zeroth-Order Optimization of Highly Smooth Functions.
+\newblock arXiv:2610.05517, version~2, 2026.
+\newblock \url{https://arxiv.org/abs/2610.05517}.
+
+\bibitem{Feng2023}
+Yasong Feng and Tianyu Wang.
+\newblock Stochastic zeroth-order gradient and Hessian estimators: variance reduction and refined bias bounds.
+\newblock \emph{Information and Inference: A Journal of the IMA}, 12(3):1514--1545, 2023.
+\newblock \url{https://doi.org/10.1093/imaiai/iaad014}.
+
+\bibitem{Bach2016}
+Francis Bach and Vianney Perchet.
+\newblock Highly-Smooth Zero-th Order Online Optimization.
+\newblock \emph{Proceedings of the 29th Annual Conference on Learning Theory}, PMLR 49:257--283, 2016.
+\newblock \url{https://proceedings.mlr.press/v49/bach16.html}.
+
+\bibitem{Hong2025}
+Mengtian Hong, Jason D. Lee, and Qian Yu.
+\newblock Hessian-Dependent Sample Complexity in Zeroth-Order Stochastic Optimization: Nonconvex Support Sampling Is Necessary for Optimality.
+\newblock \emph{17th Annual Workshop on Optimization for Machine Learning (OPT)}, 2025.
+\newblock \url{https://opt-ml.org/papers/2025/paper61.pdf}.
+
+\bibitem{Akhavan2025}
+Arya Akhavan and Alexandre B. Tsybakov.
+\newblock Gradient-free stochastic optimization for additive models.
+\newblock arXiv:2503.02131, 2025.
+\newblock \url{https://arxiv.org/abs/2503.02131}.
+
+\bibitem{Shamir2013}
+Ohad Shamir.
+\newblock On the Complexity of Bandit and Derivative-Free Stochastic Convex Optimization.
+\newblock \emph{Proceedings of the 26th Annual Conference on Learning Theory},
+Proceedings of Machine Learning Research 30:3--24, 2013.
+\newblock \url{https://proceedings.mlr.press/v30/Shamir13.html}.
+
+\bibitem{Duchi2015}
+John C. Duchi, Michael I. Jordan, Martin J. Wainwright, and Andre Wibisono.
+\newblock Optimal Rates for Zero-Order Convex Optimization: The Power of Two Function Evaluations.
+\newblock \emph{IEEE Transactions on Information Theory}, 61(5):2788--2806, 2015.
+\newblock \url{https://doi.org/10.1109/TIT.2015.2409256}.
+
+\bibitem{Shamir2017}
+Ohad Shamir.
+\newblock An Optimal Algorithm for Bandit and Zero-Order Convex Optimization with Two-Point Feedback.
+\newblock \emph{Journal of Machine Learning Research}, 18(52):1--11, 2017.
+\newblock \url{https://jmlr.org/papers/v18/16-632.html}.
+
+\end{thebibliography}
+\clearpage
+\appendix
+\section{Complete Lower-Bound Proof}
+\label{app:lower}
+We prove \cref{thm:finite} using an explicit order-three version of the shared radial construction in \cite{Zhang2026,Loginov2026}. We first verify global admissibility and then bound the total information that any adaptive policy receives about the hidden signs. The derivative estimates ensure that the statistical alternatives belong to one scalar function class; the transcript calculation then converts their separation into expected regret.
+
+\subsection{A scalar cutoff with dimension-free derivative bounds}
+\label{sec:cutoff}
+For $0\le t\le1$, let
+\begin{equation}\label{eq:P}
+ P(t)=1-35t^4+84t^5-70t^6+20t^7.
+\end{equation}
+Extend $P$ to equal $1$ for $t\le0$ and $0$ for $t\ge1$, and set
+\begin{equation}\label{eq:psi}
+ \psi(s)=P\left(\frac{4s-1}{3}\right).
+\end{equation}
+This is $C^3$ on $\R$, equals one for $s\le1/4$, and equals zero for $s\ge1$. It takes values in $[0,1]$: indeed,
+\begin{align}
+ P'(t)&=-140t^3(1-t)^3,\\
+ P''(t)&=-420t^2(1-t)^2(1-2t),\\
+ P'''(t)&=-840t(1-t)(1-5t+5t^2)
+\end{align}
+inside $(0,1)$, and all three derivatives vanish at the endpoints. The following elementary bounds will suffice:
+\begin{equation}\label{eq:cutoff-bounds}
+ \norm{\psi'}_\infty\le b_1:=\frac{35}{12},\qquad
+ \norm{\psi''}_\infty\le b_2:=\frac{140}{3},\qquad
+ \norm{\psi'''}_\infty\le b_3:=\frac{4480}{9}.
+\end{equation}
+For example, $t(1-t)\le1/4$, $|1-2t|\le1$, and $|1-5t+5t^2|\le1$ give these bounds after accounting for the change of variable in \eqref{eq:psi}.
+
+\begin{lemma}[Dimension-free radial linear cutoff]\label[lemma]{lem:cutoff}
+For any unit vector $v\in\R^d$, define
+\[
+ \Phi_v(z)=\ip{v}{z}\psi(\norm{z}^2).
+\]
+Uniformly over $d$, $v$, and $z$,
+\begin{equation}\label{eq:phi-bounds}
+ \norm{\nabla^2\Phi_v(z)}_{\op}\le B,
+ \qquad
+ \sup_{\norm{u},\norm{w},\norm{\ell}\le1}
+ |D^3\Phi_v(z)[u,w,\ell]|\le B,
+ \qquad B=5120.
+\end{equation}
+Thus, for $h>0$ and
+\[
+ g_{v,h}(x)=\ip{v}{x}\psi(\norm{x}^2/h^2)=h\Phi_v(x/h),
+\]
+we have
+\begin{equation}\label{eq:scaled-bounds}
+ \norm{\nabla^2g_{v,h}(x)}_{\op}\le\frac{B}{h},\qquad
+ \norm{\nabla^2g_{v,h}(x)-\nabla^2g_{v,h}(y)}_{\op}
+ \le\frac{B}{h^2}\norm{x-y}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Write $s=\norm z^2$. Direct differentiation gives
+\begin{equation}\label{eq:hessian}
+ \nabla^2\Phi_v(z)
+ =2\psi'(s)\big(vz^\top+zv^\top+\ip{v}{z}I\big)
+  +4\ip{v}{z}\psi''(s)zz^\top.
+\end{equation}
+Inside the transition region, $\norm z\le1$. Outside that region the Hessian is zero. Since the operator norms of $vz^\top$, $zv^\top$, and $\ip{v}{z}I$ are each at most one there,
+\[
+ \norm{\nabla^2\Phi_v(z)}_{\op}
+ \le 6b_1+4b_2=\frac{1225}{6}<B.
+\]
+For the third derivative, use the notation $v_u=\ip vu$, $z_u=\ip zu$, and similarly for other directions. Differentiating \eqref{eq:hessian} gives
+\begin{align}\label{eq:third-full}
+ D^3\Phi_v(z)[u,w,\ell]
+ ={}&2\psi'(s)\big(v_u\ip w\ell+v_w\ip u\ell+v_\ell\ip uw\big)\notag\\
+ &+4\psi''(s)\big(v_u z_w z_\ell+v_w z_u z_\ell+v_\ell z_u z_w\big)\notag\\
+ &+4\ip vz\psi''(s)
+ \big(\ip uw z_\ell+\ip u\ell z_w+\ip w\ell z_u\big)\notag\\
+ &+8\ip vz\psi'''(s)z_u z_w z_\ell.
+\end{align}
+For unit directions, each displayed product of inner products is at most one in absolute value when a cutoff derivative is nonzero. Hence
+\[
+ |D^3\Phi_v(z)[u,w,\ell]|
+ \le6b_1+24b_2+8b_3
+ =\frac{92155}{18}<5120.
+\]
+The same bounds extend over the interfaces because $\psi$ is $C^3$. Scaling gives the Hessian bound in \eqref{eq:scaled-bounds}. Finally, for unit $u,w$, the fundamental theorem of calculus gives
+\begin{align*}
+ &\big|u^\top(\nabla^2g_{v,h}(x)-\nabla^2g_{v,h}(y))w\big|\\
+ &\hspace{12mm}\le\int_0^1
+ \big|D^3g_{v,h}(y+t(x-y))[u,w,x-y]\big|\,dt
+ \le\frac{B}{h^2}\norm{x-y}.
+\end{align*}
+Taking the supremum over $u,w$ proves the Lipschitz assertion.
+\end{proof}
+
+\subsection{The hard family and global admissibility}
+Let $\mathcal S=\{-1,+1\}^d$ and, for $s\in\mathcal S$, define $v_s=s/\sqrt d$. For positive $a,h$, consider the explicit scalar potential
+\begin{equation}\label{eq:family}
+ \boxed{\quad f_s(x)=\mu\norm x^2-a\ip{v_s}{x}\psi(\norm x^2/h^2).\quad}
+\end{equation}
+All alternatives coincide with $\mu\norm x^2$ outside the ball of radius $h$. They are linear perturbations of that quadratic inside the ball of radius $h/2$.
+
+\begin{lemma}[Admissibility and exact minimizers]\label[lemma]{lem:admissible}
+Suppose
+\begin{equation}\label{eq:admissible-conditions}
+ a=\frac{\rho h^2}{B},\qquad
+ h\le\frac{\mu}{\rho},\qquad
+ h\le\sqrt{\frac{\mu R}{\rho}}.
+\end{equation}
+Every $f_s$ belongs to $\Fop(d,\mu,\rho,R)$. In fact,
+\begin{equation}\label{eq:convex}
+ \mu I\preceq\nabla^2f_s(x)\preceq3\mu I\qquad(x\in\R^d),
+\end{equation}
+and its exact minimizer is
+\begin{equation}\label{eq:minimizer}
+ x_s^*=\frac{a}{2\mu}v_s,
+ \qquad (x_s^*)_i=\frac{a}{2\mu\sqrt d}s_i.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The family is $C^3$ by construction, and \cref{lem:cutoff} gives
+\[
+ \norm{\nabla^2 f_s(x)-2\mu I}_{\op}
+ \le\frac{aB}{h}=\rho h\le\mu.
+\]
+This proves \eqref{eq:convex}. The same lemma shows that the operator-norm Hessian-Lipschitz constant is at most $aB/h^2=\rho$.
+
+The proposed minimizer lies in the linear core, because
+\[
+ \frac{a}{2\mu}=\frac{\rho h^2}{2B\mu}\le\frac{h}{2B}\le\frac h2.
+\]
+There $\psi=1$, so $\nabla f_s(x)=2\mu x-av_s$. The proposed point is stationary and hence, by global strong convexity, is the unique global minimizer. Its radius satisfies
+\[
+ \norm{x_s^*}=\frac{\rho h^2}{2B\mu}\le\frac{R}{2B}\le R.
+\]
+Thus every condition in \eqref{eq:class}, with $p=\infty$, holds globally.
+\end{proof}
+
+\begin{remark}[Why the scalar construction matters]
+No Hessian matrices are prescribed independently: \eqref{eq:family} is one globally defined scalar function for each $s$. Consequently all derivative symmetry and integrability requirements are automatic. The factor $1/\sqrt d$ in $v_s$ is explicitly included both in the smoothness calculation and in the statistical calculation below.
+\end{remark}
+
+\subsection{Information accounting for arbitrary adaptive queries}
+\label{sec:information}
+For $i\in\{1,\ldots,d\}$ let $s^{(i)}$ be $s$ with its $i$th sign flipped. From \eqref{eq:family}, for every $x\in\R^d$,
+\begin{equation}\label{eq:neighbor}
+ f_s(x)-f_{s^{(i)}}(x)
+ =-\frac{2a}{\sqrt d}s_i x_i\psi(\norm x^2/h^2).
+\end{equation}
+The key inequality is a \emph{pointwise sum over all neighbors}:
+\begin{equation}\label{eq:pointwise}
+ \boxed{\quad
+ \sum_{i=1}^d\big(f_s(x)-f_{s^{(i)}}(x)\big)^2
+ =\frac{4a^2}{d}\norm x^2\psi(\norm x^2/h^2)^2
+ \le\frac{4a^2h^2}{d}.
+ \quad}
+\end{equation}
+The last inequality uses both $0\le\psi\le1$ and its support. It remains true for arbitrarily distant query locations, where the left-hand side vanishes.
+
+Fix any randomized adaptive algorithm. Include an independent random seed generating all its randomness in its transcript, and let $P_s$ be the distribution of this enlarged transcript under $f_s$. Any extra output randomness can also be included in that seed. If the algorithm makes fewer than $T$ evaluations, pad its transcript with queries at the origin, where all $f_s$ equal zero.
+
+\begin{lemma}[Adaptive average-neighbor KL bound]\label[lemma]{lem:kl}
+For every such algorithm,
+\begin{equation}\label{eq:kl-bound}
+ \overline K:=\frac{1}{d2^d}\sum_{s\in\mathcal S}\sum_{i=1}^d
+ \KL(P_s\Vert P_{s^{(i)}})
+ \le\frac{2Ta^2h^2}{d^2}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Condition on the seed and all observations preceding a query. The query is determined by the same algorithm under either hypothesis. Conditional observation laws are Gaussians with variance one and respective means $f_s(X_t)$ and $f_{s^{(i)}}(X_t)$. The relative entropy between $N(m,1)$ and $N(m',1)$ is $(m-m')^2/2$. The chain rule therefore gives
+\begin{equation}\label{eq:chain}
+ \KL(P_s\Vert P_{s^{(i)}})
+ =\frac12\E_s\sum_{t=1}^T
+ \big(f_s(X_t)-f_{s^{(i)}}(X_t)\big)^2.
+\end{equation}
+The chain rule follows by factoring the joint likelihood ratio into conditional likelihood ratios. The seed has the same distribution under both hypotheses and contributes zero. Query-selection kernels are the same given a history and also contribute zero. The final output is a function of the enlarged history and creates no additional term.
+
+Now fix $s$ and sum \eqref{eq:chain} over $i$ \emph{inside the same expectation $\E_s$}. The pointwise bound \eqref{eq:pointwise} yields
+\[
+ \sum_{i=1}^d\KL(P_s\Vert P_{s^{(i)}})
+ \le\frac12\E_s\sum_{t=1}^T\frac{4a^2h^2}{d}
+ =\frac{2Ta^2h^2}{d}.
+\]
+Average this inequality over $s$ and divide by $d$ to obtain \eqref{eq:kl-bound}. In particular, the proof does not assume that the query distribution is the same under different functions, nor that queries are nonadaptive.
+\end{proof}
+
+\subsubsection{A self-contained testing inequality}
+Use $\TV(P,Q)=\sup_A|P(A)-Q(A)|$. For any decision between two hypotheses, the sum of its two error probabilities is at least $1-\TV(P,Q)$: apply the definition to the event that the first hypothesis is selected. We also use
+\begin{equation}\label{eq:pinsker}
+ \TV(P,Q)\le\sqrt{\KL(P\Vert Q)/2}.
+\end{equation}
+For completeness, choose a dominating measure and let $A$ be the set where the density of $P$ is at least that of $Q$. Then $P(A)-Q(A)=\TV(P,Q)$. Applying Jensen's inequality separately on $A$ and $A^c$ to the relative-entropy integral gives
+\[
+ \KL(P\Vert Q)\ge
+ p\log\frac pq+(1-p)\log\frac{1-p}{1-q},
+ \quad p=P(A),\quad q=Q(A).
+\]
+For fixed $q\in(0,1)$, the right-hand side, viewed as a function of $p$, has value and derivative zero at $p=q$ and second derivative $1/[p(1-p)]\ge4$. It is therefore at least $2(p-q)^2$. Endpoint cases follow by continuity or infinite relative entropy. This proves \eqref{eq:pinsker}.
+
+\begin{lemma}[From transcript indistinguishability to regret]\label[lemma]{lem:testing}
+If the family satisfies \cref{lem:admissible} and $\overline K\le1/8$, then every algorithm satisfies
+\begin{equation}\label{eq:bayes-regret}
+ \frac{1}{2^d}\sum_{s\in\mathcal S}
+ \E_s\big[f_s(\widehat x)-f_s(x_s^*)\big]
+ \ge\frac{3a^2}{64\mu}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Decode each sign from the output by $\widehat s_i=+1$ when $\widehat x_i\ge0$, and $\widehat s_i=-1$ otherwise. For each neighboring pair,
+\[
+ P_s(\widehat s_i\ne s_i)
+ +P_{s^{(i)}}(\widehat s_i\ne s_i^{(i)})
+ \ge 1-\TV(P_s,P_{s^{(i)}}).
+\]
+Sum over all $s,i$. Each error probability appears twice because $s\mapsto s^{(i)}$ is an involution. Hence, with
+\[
+ \overline V=\frac{1}{d2^d}\sum_{s,i}\TV(P_s,P_{s^{(i)}}),
+\]
+we obtain
+\begin{equation}\label{eq:hamming}
+ \frac{1}{2^d}\sum_s\E_s\hamming(\widehat s,s)
+ \ge\frac d2(1-\overline V)
+ \ge\frac d2\left(1-\sqrt{\frac{\overline K}{2}}\right)
+ \ge\frac{3d}{8}.
+\end{equation}
+The middle inequality follows from \eqref{eq:pinsker} and the concavity of the square root.
+
+If a sign is decoded incorrectly, the corresponding coordinate of $\widehat x$ is at least $a/(2\mu\sqrt d)$ away from the coordinate of $x_s^*$. The tie convention at zero preserves this inequality. Thus
+\[
+ \norm{\widehat x-x_s^*}^2
+ \ge\frac{a^2}{4\mu^2d}\hamming(\widehat s,s).
+\]
+Strong convexity and stationarity at $x_s^*$ give
+\begin{equation}\label{eq:error-to-regret}
+ f_s(\widehat x)-f_s(x_s^*)
+ \ge\frac\mu2\norm{\widehat x-x_s^*}^2
+ \ge\frac{a^2}{8\mu d}\hamming(\widehat s,s).
+\end{equation}
+Taking uniform averages and using \eqref{eq:hamming} proves \eqref{eq:bayes-regret}.
+\end{proof}
+
+\subsection{Completion of the lower bounds}\label{sec:lower-end}
+\begin{proof}[Proof of \cref{thm:finite}]
+Choose $h=h_T$ and $a=a_T$ as in \eqref{eq:bandwidth}. The first two bandwidth caps ensure global admissibility by \cref{lem:admissible}. The third cap and \cref{lem:kl} give
+\[
+ \overline K\le\frac{2T\rho^2h_T^6}{B^2d^2}\le\frac18.
+\]
+\cref{lem:testing} now proves that every algorithm has average regret at least $3a_T^2/(64\mu)$ under the uniform prior on the $2^d$ functions. The supremum over the class is at least this average, so taking the infimum over all algorithms proves \eqref{eq:finite-explicit}. No restriction on randomization has been introduced. This uniform prior is fixed before interaction and depends only on $(d,T,\mu,\rho,R)$, not on the algorithm or the realized queries.
+
+Expanding the three bandwidth caps gives the exact expression
+\begin{equation}\label{eq:expanded}
+ \frac{3a_T^2}{64\mu}
+ =\min\left\{
+ \frac{3\mu^3}{64B^2\rho^2},\;
+ \frac{3\mu R^2}{64B^2},\;
+ \frac{3\rho^{2/3}d^{4/3}}{64\,16^{2/3}B^{2/3}\mu T^{2/3}}
+ \right\}.
+\end{equation}
+Since $B\ge4$, all three coefficients in \eqref{eq:expanded} are at least $c_0=3/(64B^2)$ after the parameter factors are separated. This proves \eqref{eq:finite-min}. The condition-number assertion follows from \eqref{eq:convex}.
+\end{proof}
+
+For fixed $d,\mu,\rho,R$, the statistical bandwidth is eventually the smallest cap. More explicitly, this occurs whenever
+\begin{equation}\label{eq:lower-threshold}
+ T\ge T_{\mathrm{low}}:=\max\left\{1,\;
+ \frac{B^2d^2}{16}\max\left\{
+ \frac{\rho^4}{\mu^6},\frac{\rho}{\mu^3R^3}
+ \right\}\right\}.
+\end{equation}
+In that range,
+\begin{equation}\label{eq:asym-lower}
+ \Eop\ge c_*\frac{\rho^{2/3}d^{4/3}}{\mu T^{2/3}},
+ \qquad c_*:=\frac{3}{64\,16^{2/3}B^{2/3}}.
+\end{equation}
+This proves the operator-norm lower bound in \cref{cor:operator}. The threshold \eqref{eq:lower-threshold} is only a sufficient threshold for this \emph{lower-bound construction}; it is not a claim about the startup time of a matching upper algorithm.
+
+
+
+\begin{proof}[Lower bound in \cref{thm:schatten}]
+\cref{thm:finite} and \eqref{eq:asym-lower} already prove the operator-norm lower bound with $c=c_*$. For the Schatten case, use the same lower construction with operator-Hessian Lipschitz constant
+$\lambda=\rho d^{-1/p}$. The singular-value inequality
+$\norm A_{S_p}\le d^{1/p}\norm A_{\op}$ implies that every such hard function belongs to $\FS(d,\mu,\rho,R)$. Hence
+\begin{align*}
+ \liminf_{T\to\infty}T^{2/3}\ES
+ &\ge c_*\frac{\lambda^{2/3}d^{4/3}}\mu
+ =c_*\frac{\rho^{2/3}d^{\,4/3-2/(3p)}}\mu.
+\end{align*}
+All other conditions, including the minimizer radius and global Hessian bounds of the hard subclass, remain those already verified with $\lambda$ in place of $\rho$. The constants are independent of $p$. This proves the lower bound in \cref{thm:schatten}.
+\end{proof}
+
+\section{Complete Upper-Bound Proof}
+\label{app:upper}
+We prove the upper bound in \cref{thm:schatten} directly from scalar observations. The proof proceeds from finite-difference moments to localization, norm-sensitive gradient estimation, and a final loss bound valid on the entire probability space. The final subsection combines the upper result with the lower construction to complete \cref{thm:schatten}.
+
+\subsection{Scalar-query primitives for the upper bound}
+\label{sec:primitives}
+Throughout the upper proof $f\in\FS(d,\mu,\rho,R)$ for some $p\in[2,\infty]$. Since $\norm{A}_{\op}\le\norm{A}_{S_p}$, all operator-norm estimates apply. Write $H(x)=\nabla^2 f(x)$.
+
+\subsubsection{Taylor estimates and a matrix flooring operation}
+\begin{lemma}[Taylor remainders]\label[lemma]{lem:taylor}
+For every $x,s\in\R^d$,
+\begin{align}
+ \norm{\nabla f(x+s)-\nabla f(x)-H(x)s}
+ &\le\frac\rho2\norm{s}^2,\label{eq:grad-taylor}\\
+ \left|f(x+s)-f(x)-\ip{\nabla f(x)}s-\tfrac12s^\top H(x)s\right|
+ &\le\frac\rho6\norm{s}^3.\label{eq:value-taylor}
+\end{align}
+Consequently, for a unit vector $u$ and $r>0$,
+\begin{equation}\label{eq:central-bias}
+ \left|\frac{f(x+ru)-f(x-ru)}{2r}-\ip{\nabla f(x)}u\right|
+ \le\frac{\rho r^2}{6}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The gradient remainder is
+$\int_0^1[H(x+ts)-H(x)]s\,dt$, whose norm is at most
+$\rho\norm{s}^2\int_0^1t\,dt$.
+For the value remainder, integrate the second derivative of $t\mapsto f(x+ts)$ twice; it equals
+$\int_0^1(1-t)s^\top[H(x+ts)-H(x)]s\,dt$.
+Use $\int_0^1t(1-t)\,dt=1/6$. Subtracting the two value expansions at $s=ru$ and $s=-ru$ cancels their quadratic terms and gives \eqref{eq:central-bias}.
+\end{proof}
+
+For a real symmetric matrix $A=U\diag(\lambda_i)U^\top$, define
+\begin{equation}\label{eq:floor-definition}
+ \clip(A)=U\diag(\max\{\lambda_i,\mu\})U^\top.
+\end{equation}
+This definition does not depend on the choice of eigenvectors in a repeated eigenspace.
+\begin{lemma}[Absolute-error control after flooring]\label[lemma]{lem:floor}
+If $H\succeq\mu I$ and $A$ is symmetric, then
+\begin{equation}\label{eq:floor-bound}
+ \clip(A)\succeq\mu I,\qquad
+ \norm{\clip(A)-H}_{\op}\le2\norm{A-H}_{\op}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Set $e=\norm{A-H}_{\op}$. For every unit $v$, $v^\top Av\ge\mu-e$, so the smallest eigenvalue of $A$ is at least $\mu-e$. Flooring changes each eigenvalue by at most $e$, whence $\norm{\clip(A)-A}_{\op}\le e$. Apply the triangle inequality. This argument only compares the floored estimate with a matrix already bounded below by $\mu I$.
+\end{proof}
+
+\subsubsection{Coordinatewise gradient and Hessian estimators}
+For an integer $m\ge1$, put $r_m=m^{-1/6}$. At a specified center $x$, the estimator $\mathcal G_m(x)$ uses $m$ independent evaluations at each $x+r_me_i$ and $x-r_me_i$. If their means are $\overline Y_{i,+}$ and $\overline Y_{i,-}$, its $i$th coordinate is
+\begin{equation}\label{eq:pilot-gradient}
+ [\mathcal G_m(x)]_i=\frac{\overline Y_{i,+}-\overline Y_{i,-}}{2r_m}.
+\end{equation}
+Its cost is exactly $2dm$ scalar evaluations.
+
+To estimate the Hessian, use a separate collection of fresh observations. For each diagonal entry use $m$ evaluations at each of $x+r_me_i$, $x-r_me_i$, and $x$. In particular, the center-point observations are \emph{repeated separately for every diagonal entry} and are all charged. For each $i<j$, use $m$ evaluations at each of the four locations $x+r_m(\epsilon_i e_i+\epsilon_j e_j)$ with $\epsilon_i,\epsilon_j\in\{-1,1\}$. Form the raw symmetric matrix $A_m(x)$ with entries
+\begin{align}
+ [A_m(x)]_{ii}
+ &=\frac{\overline Y_{i,+}+\overline Y_{i,-}-2\overline Y_{i,0}}{r_m^2},\label{eq:hess-diag}\\
+ [A_m(x)]_{ij}=[A_m(x)]_{ji}
+ &=\frac{\overline Y_{ij,++}+\overline Y_{ij,--}
+ -\overline Y_{ij,+-}-\overline Y_{ij,-+}}{4r_m^2}.
+ \label{eq:hess-offdiag}
+\end{align}
+Observations in \eqref{eq:hess-diag} are not reused from the gradient estimator. Define
+\begin{equation}\label{eq:pilot-hessian}
+ \mathcal H_m(x)=\clip(A_m(x)),\qquad D_d:=2d^2+d.
+\end{equation}
+Its exact cost is
+\begin{equation}\label{eq:hessian-cost}
+ \left[3d+4\binom d2\right]m=D_dm.
+\end{equation}
+Separate observation batches make the noise covariance and query cost explicit.
+
+For $q\ge2$, let $s_q=(\E|Z|^q)^{1/q}$ for $Z\sim N(0,1)$. These constants are finite, as follows directly by integrating $|z|^q e^{-z^2/2}/\sqrt{2\pi}$.
+\begin{lemma}[Uniform conditional moment bounds]\label[lemma]{lem:pilot-moments}
+For every $q\ge2$ and every center $x$,
+\begin{align}
+ \left(\E\norm{\mathcal G_m(x)-\nabla f(x)}^q\right)^{1/q}
+ &\le \sqrt d\left(\frac\rho6+\frac{s_q}{\sqrt2}\right)m^{-1/3},
+ \label{eq:gradient-moments}\\
+ \left(\E\norm{\mathcal H_m(x)-H(x)}_{\op}^q\right)^{1/q}
+ &\le 2d(\rho+\sqrt6\,s_q)m^{-1/6}.
+ \label{eq:hessian-moments}
+\end{align}
+These bounds hold conditionally on any past history when the center is chosen from that history and all evaluations in the estimator are fresh. They contain no bound on $\norm{H(x)}$ or $\norm{\nabla f(x)}$.
+\end{lemma}
+\begin{proof}
+The gradient error is a deterministic bias vector with coordinate magnitudes at most $\rho r_m^2/6$, plus a Gaussian vector whose coordinates have variance $1/(2mr_m^2)$. For scalar random variables $V_j$ and $q\ge2$, Minkowski's inequality in $L_{q/2}$ implies
+\begin{equation}\label{eq:moment-minkowski}
+ \left(\E\left(\sum_j|V_j|^2\right)^{q/2}\right)^{1/q}
+ \le\left(\sum_j(\E|V_j|^q)^{2/q}\right)^{1/2}.
+\end{equation}
+Together with $r_m=m^{-1/6}$ this proves \eqref{eq:gradient-moments}.
+
+For a diagonal Hessian entry, \eqref{eq:value-taylor} gives bias at most $\rho r_m/3$ and Gaussian noise variance $6/(mr_m^4)$. For an off-diagonal entry, constants and linear terms cancel, while the quadratic terms return $H_{ij}(x)$ exactly. Each displacement has norm $\sqrt2r_m$, so the absolute bias is at most $\sqrt2\rho r_m/3\le\rho r_m$. The noise variance is $1/(4mr_m^4)$. Thus every entry has $L_q$ error at most
+$\rho r_m+\sqrt6\,s_q/(\sqrt m\,r_m^2)$.
+Apply \eqref{eq:moment-minkowski} to all $d^2$ entries, use the Frobenius norm as an upper bound on the operator norm, and then apply \cref{lem:floor}. This gives \eqref{eq:hessian-moments}. All calculations are valid conditional on the center and past history because the new noises remain independent standard Gaussians.
+\end{proof}
+
+\subsubsection{Projection in a known positive definite metric}
+For a positive definite matrix $Q$ and $K_R=\{x:\norm{x}\le R\}$, define
+\begin{equation}\label{eq:metric-projection}
+ \Pi_{K_R}^{Q}(y)=\argmin_{x\in K_R}\tfrac12(x-y)^\top Q(x-y),
+ \qquad \norm{x}_{Q}=\sqrt{x^\top Qx}.
+\end{equation}
+The minimizer exists and is unique by compactness and strict convexity.
+\begin{lemma}[Nonexpansiveness]\label[lemma]{lem:projection}
+For all $a,b\in\R^d$,
+\begin{equation}\label{eq:nonexpansive}
+ \norm{\Pi_{K_R}^{Q}(a)-\Pi_{K_R}^{Q}(b)}_Q\le\norm{a-b}_Q.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Let $u$ and $v$ be the respective projections of $a$ and $b$. First-order optimality on the convex set gives
+$\ip{Q(u-a)}{v-u}\ge0$ and $\ip{Q(v-b)}{u-v}\ge0$.
+Adding and rearranging yields
+$\norm{u-v}_Q^2\le\ip{Q(a-b)}{u-v}$.
+Cauchy--Schwarz in the $Q$ inner product proves the result, including $u=v$.
+\end{proof}
+
+\begin{remark}[Projection is internal computation]
+The set $K_R$ is a known Euclidean ball and $Q$ is an observed matrix, not an unknown function. No additional oracle is used by \eqref{eq:metric-projection}. If $\norm y>R$, its solution is
+$(Q+\lambda I)^{-1}Qy$, where the unique $\lambda>0$ makes its Euclidean norm equal to $R$; if $\norm y\le R$, the solution is $y$. Diagonalizing $Q$ reduces the former computation to a monotone scalar equation. The oracle model charges neither this calculation nor the spectral flooring operation. No bit-complexity guarantee is asserted.
+\end{remark}
+
+\subsection{Localization without a global Hessian upper bound}
+\label{sec:localization}
+Set
+\begin{equation}\label{eq:kappa}
+ \kappa=3+\frac{2\rho R}{\mu}.
+\end{equation}
+With natural logarithms, given $T\ge2$ and a batch size $1\le m\le T$, take
+$K=2+\lceil\kappa\log T\rceil$.
+Estimate $\widehat H_0=\mathcal H_m(0)$ once and define the fixed reference metric
+\begin{equation}\label{eq:reference-metric}
+ Q=\widehat H_0+(\rho R+\mu)I.
+\end{equation}
+Starting from $z_0=0$, perform $K$ updates, using fresh gradient observations at every update:
+\begin{equation}\label{eq:localization-update}
+ z_{k+1}=\Pi_{K_R}^{Q}\left(z_k-Q^{-1}\mathcal G_m(z_k)\right),
+ \qquad k=0,\ldots,K-1.
+\end{equation}
+All iterates belong to $K_R$ on every realization.
+
+\begin{lemma}[Uniform localization moments]\label[lemma]{lem:localization}
+For each $q\in[2,12]$ there is a finite constant $C_q=C_q(d,\mu,\rho,R)$, independent of $f,m,T$ and $p$, such that
+\begin{equation}\label{eq:localization-moments}
+ \sup_{f\in\FS}\E_f\norm{z_K-x_*}^{q}\le C_q m^{-q/3}.
+\end{equation}
+In particular, no dependence on the unknown Hessian magnitude is hidden in $C_q$.
+\end{lemma}
+\begin{proof}
+Let $H_0=H(0)$, $E_0=\norm{\widehat H_0-H_0}_{\op}$, and
+$\Omega=\{E_0\le\mu\}$. The $q=24$ case of \eqref{eq:hessian-moments} and Markov's inequality give
+\begin{equation}\label{eq:reference-failure}
+ \PP_f(\Omega^c)\le \mu^{-24}\E E_0^{24}
+ \le C(d,\mu,\rho)m^{-4}.
+\end{equation}
+This bound is uniform over $f$.
+
+On $\Omega$, for every $x\in K_R$, $\norm{H(x)-H_0}_{\op}\le\rho R$. Therefore
+\begin{equation}\label{eq:relative-Hessian}
+ H(x)\preceq Q\preceq H(x)+(2\rho R+2\mu)I\preceq\kappa H(x),
+ \qquad\text{or equivalently}\qquad
+ \kappa^{-1}Q\preceq H(x)\preceq Q.
+\end{equation}
+The last inequality uses $H(x)\succeq\mu I$, not an upper Hessian bound.
+
+If $x,y\in K_R$, then
+$\nabla f(x)-\nabla f(y)=J(x,y)(x-y)$, where
+$J(x,y)=\int_0^1H(y+t(x-y))\,dt$ also lies between $\kappa^{-1}Q$ and $Q$.
+Consequently the symmetric matrix $Q^{-1/2}J(x,y)Q^{-1/2}$ has eigenvalues in $[\kappa^{-1},1]$. Hence
+\begin{equation}\label{eq:gradient-contraction}
+ \norm{x-y-Q^{-1}(\nabla f(x)-\nabla f(y))}_Q
+ \le (1-\kappa^{-1})\norm{x-y}_Q.
+\end{equation}
+Let $\theta=1-\kappa^{-1}$, $D_k=\norm{z_k-x_*}_Q$, and
+$\varepsilon_k=\mathcal G_m(z_k)-\nabla f(z_k)$.
+Since $\nabla f(x_*)=0$ and $x_*\in K_R$, \cref{lem:projection} and \eqref{eq:gradient-contraction} give, on $\Omega$,
+\begin{equation}\label{eq:local-recursion}
+ D_{k+1}\le\theta D_k+\norm{\varepsilon_k}_{Q^{-1}}
+ \le\theta D_k+\mu^{-1/2}\norm{\varepsilon_k}.
+\end{equation}
+It is \emph{not} legitimate to bound $D_0$ by a uniform constant: $H_0$ can be arbitrarily large. Instead, analyze the first update separately. Put
+$J_* =\int_0^1H(tx_*)\,dt$.
+Then $\nabla f(0)=-J_*x_*$ and, on $\Omega$,
+$\norm{Q-J_*}_{\op}\le2\rho R+2\mu$.
+Before projection the first update has error
+$Q^{-1}(J_*-Q)x_*-Q^{-1}\varepsilon_0$.
+Nonexpansiveness therefore gives the Hessian-independent bound
+\begin{equation}\label{eq:first-step}
+ D_1\le\mu^{-1/2}\big[(2\rho R+2\mu)R+\norm{\varepsilon_0}\big].
+\end{equation}
+This first-step estimate removes the otherwise unbounded initial metric distance.
+
+Iterate \eqref{eq:local-recursion} from $k=1$. For any $q\in[2,12]$, apply Minkowski's inequality to the resulting sum after multiplication by $\mathbf1_\Omega$. The conditional version of \eqref{eq:gradient-moments} implies
+$\norm{\mathbf1_\Omega\norm{\varepsilon_k}}_{L_q}\le C_q(d,\rho)m^{-1/3}$ even though $z_k$ is adaptive.
+Since $\sum_{j\ge0}\theta^j=\kappa$, \eqref{eq:first-step} yields
+\begin{equation}\label{eq:good-local}
+ \left(\E[\mathbf1_\Omega D_K^q]\right)^{1/q}
+ \le C_q(d,\mu,\rho,R)\big(\theta^{K-1}+m^{-1/3}\big).
+\end{equation}
+By $1-u\le e^{-u}$,
+$\theta^{K-1}\le e^{-(K-1)/\kappa}\le T^{-1}\le m^{-1/3}$.
+Also $\norm{z_K-x_*}\le\mu^{-1/2}D_K$ because $Q\succeq\mu I$.
+Thus the contribution on $\Omega$ to \eqref{eq:localization-moments} is at most $C_qm^{-q/3}$.
+On $\Omega^c$, both $z_K$ and $x_*$ lie in $K_R$, so
+\[
+ \E[\mathbf1_{\Omega^c}\norm{z_K-x_*}^q]
+ \le(2R)^q C(d,\mu,\rho)m^{-4}
+ \le C_qm^{-q/3},
+\]
+where $q\le12$ was used. This proves the assertion on the entire probability space.
+\end{proof}
+
+\begin{remark}[Why a high-probability objective bound is not used]
+An arbitrarily small failure probability cannot be multiplied by a purported uniform upper bound on $f(z_K)-f(x_*)$: no such bound follows from the radius constraint when the Hessian is unbounded. We control only the Euclidean localization error on that event. \cref{sec:robust-newton} converts this error into final loss through a pathwise estimate whose coefficients do not involve the Hessian magnitude.
+\end{remark}
+
+\subsection{A dimension-sharp gradient estimator from random bases}
+\label{sec:bases}
+For $p\in[2,\infty]$, introduce
+\begin{equation}\label{eq:beta}
+ \beta_p=\rho d^{-1/p}.
+\end{equation}
+The $p=\infty$ case is $\beta_\infty=\rho$.
+The following trace argument captures the dependence of the smoothing bias on the Hessian norm.
+
+\subsubsection{Trace smoothing in Schatten norms}
+\begin{lemma}[Ball smoothing identity and sharp bias]\label[lemma]{lem:smoothing}
+Let $U$ be uniform on the unit sphere and $V$ uniform on the unit Euclidean ball. For $r>0$, set
+$F_r(x)=\E[f(x+rV)]$.
+If the Hessian is $\rho$-Lipschitz in Schatten $p$ norm, then
+\begin{align}
+ \nabla F_r(x)
+ &=\frac d r\E[f(x+rU)U],\label{eq:ball-divergence}\\
+ \norm{\nabla F_r(x)-\nabla f(x)}
+ &\le\frac{\rho d^{1-1/p}}{2(d+2)}r^2
+ \le\frac{\beta_p r^2}{2}.
+ \label{eq:sharp-smoothing-bias}
+\end{align}
+Both statements hold for $d=1$ and for $C^2$ functions with Lipschitz Hessians; a classical third derivative is not required.
+\end{lemma}
+\begin{proof}
+Let $\omega_d$ be the volume of the unit ball. Differentiation under its compact integral and the divergence theorem give
+\[
+ \nabla F_r(x)
+ =\frac{1}{\omega_dr^d}\int_{\norm y\le r}\nabla f(x+y)\,dy
+ =\frac{1}{\omega_dr^d}\int_{\norm y=r}f(x+y)\frac yr\,dS(y).
+\]
+The sphere has area $d\omega_dr^{d-1}$, which proves \eqref{eq:ball-divergence}.
+
+First suppose that $f$ is smooth. For any symmetric matrix $A$, the scalar H\"older inequality applied to its eigenvalues gives
+\begin{equation}\label{eq:trace-holder}
+ |\tr A|\le d^{1-1/p}\norm{A}_{S_p}.
+\end{equation}
+Taking difference quotients in a unit direction $v$ shows
+$\norm{D_vH(x)}_{S_p}\le\rho$. Therefore
+\begin{equation}\label{eq:trace-gradient}
+ \norm{\nabla\tr H(x)}
+ =\sup_{\norm v=1}|\tr(D_vH(x))|
+ \le L_p:=\rho d^{1-1/p}.
+\end{equation}
+Write $g=\nabla f$ and $M(t)=\E[g(x+tU)]$ for $t>0$.
+Apply the divergence theorem to the gradient of each scalar component $g_i$:
+\begin{align*}
+ M'(t)
+ &=\frac{1}{d\omega_dt^{d-1}}\int_{\norm y=t}\partial_n g(x+y)\,dS(y)\\
+ &=\frac{1}{d\omega_dt^{d-1}}\int_{\norm y\le t}\Delta g(x+y)\,dy
+ =\frac t d\E[\nabla\tr H(x+tV)].
+\end{align*}
+Here $\Delta g=\nabla\Delta f=\nabla\tr H$ componentwise. By \eqref{eq:trace-gradient}, $\norm{M'(t)}\le tL_p/d$, and continuity at zero gives
+$\norm{M(t)-g(x)}\le L_pt^2/(2d)$.
+A uniform point in the radius-$r$ ball has radial density $d\,t^{d-1}/r^d$ on $0\le t\le r$. Consequently
+\[
+ \norm{\nabla F_r(x)-g(x)}
+ \le\frac d{r^d}\int_0^r t^{d-1}\frac{L_pt^2}{2d}\,dt
+ =\frac{L_pr^2}{2(d+2)}.
+\]
+This is \eqref{eq:sharp-smoothing-bias}. In dimension one the same divergence calculations are the fundamental theorem of calculus at the two endpoints of an interval.
+
+To remove the auxiliary smoothness assumption, choose a nonnegative smooth compactly supported density $\eta_\epsilon$ on the radius-$\epsilon$ ball and let $f_\epsilon=f*\eta_\epsilon$. Such a density can be obtained by normalizing and rescaling $\exp(-1/(1-\norm x^2))\mathbf1_{\{\norm x<1\}}$.
+The convolution is well-defined locally and smooth. Its Hessian is the average of $H$, and the triangle inequality shows that it has the same Schatten Lipschitz constant $\rho$. Moreover, $f_\epsilon$ and its first two derivatives converge uniformly on every compact set to those of $f$. Apply the already proved inequalities to $f_\epsilon$ and pass to the limit in the compact ball and sphere integrals. This proves the result for the stated $C^2$ class.
+\end{proof}
+
+\subsubsection{Random orthonormal frames cancel the linear term exactly}
+The noiseless single-frame estimator below is the full-basis case of the orthogonal-direction estimator studied by Feng and Wang~\cite{Feng2023}. We include its proof to account explicitly for independent observation noise and for conditioning on an adaptively selected center.
+Independently draw $N$ random orthogonal matrices, with columns $u_{j,1},\ldots,u_{j,d}$ for $j=1,\ldots,N$. Each column is uniform on the sphere. Such matrices can be generated by Gram--Schmidt orthogonalization of independent standard Gaussian vectors: the procedure is defined almost surely, and rotational invariance implies the required column marginals. On the probability-zero event that Gram--Schmidt is undefined, use the identity matrix. Different matrices use independent randomization.
+At a fixed center $x$, make one fresh evaluation at each of $x+ru_{j,i}$ and $x-ru_{j,i}$, and set
+\begin{equation}\label{eq:frame-estimator}
+ G_{N,r}(x)=\frac1N\sum_{j=1}^N\sum_{i=1}^d
+ \frac{Y_{j,i,+}-Y_{j,i,-}}{2r}\,u_{j,i}.
+\end{equation}
+The exact cost is $2dN$ evaluations.
+
+\begin{lemma}[Bias, variance, and moments of the frame estimator]\label[lemma]{lem:frame-estimator}
+For every center $x$, let $\nu=G_{N,r}(x)-\nabla f(x)$. Then
+\begin{equation}\label{eq:frame-MSE}
+ \E\norm\nu^2\le
+ \frac{\beta_p^2r^4}{4}
+ +\frac{d\rho^2r^4}{36N}
+ +\frac{d}{2Nr^2}.
+\end{equation}
+For every $q\ge2$, the following coarser bound also holds:
+\begin{equation}\label{eq:frame-high-moments}
+ \big(\E\norm\nu^q\big)^{1/q}
+ \le\frac{\sqrt d\,\rho r^2}{6}
+ +s_q\sqrt{\frac{d}{2Nr^2}}.
+\end{equation}
+All bounds hold conditionally on the history selecting $x$, uniformly over $f$, and contain no gradient-magnitude term.
+\end{lemma}
+\begin{proof}
+For a fixed frame, \eqref{eq:central-bias} and $\sum_i u_{j,i}u_{j,i}^\top=I$ show that its noiseless estimate is
+\[
+ \nabla f(x)+B_j,\qquad
+ B_j=\sum_i b_{j,i}u_{j,i},\qquad
+ |b_{j,i}|\le\rho r^2/6,\qquad
+ \norm{B_j}^2\le d\rho^2r^4/36.
+\]
+The exact cancellation of the linear term is why there is no factor involving $\norm{\nabla f(x)}$ in the variance.
+The marginal law of each direction is uniform on the sphere. By the symmetry $U\overset d=-U$ and \eqref{eq:ball-divergence},
+\[
+ \E[\nabla f(x)+B_j]
+ =\frac d{2r}\E[(f(x+rU)-f(x-rU))U]
+ =\nabla F_r(x).
+\]
+Thus $b:=\E B_j$ satisfies $\norm b\le\beta_pr^2/2$.
+Independent frames imply
+\[
+ \E\left\|\frac1N\sum_j(B_j-b)\right\|^2
+ =\frac1N\E\norm{B_1-b}^2
+ \le\frac{d\rho^2r^4}{36N}.
+\]
+Conditional on a frame, the observation-noise vector is Gaussian with covariance $I/(2r^2)$: its coordinates in that orthonormal basis are independent $N(0,1/(2r^2))$. This conditional law does not depend on the frame. Hence the averaged noise is independent of the frames and has law $N(0,I/(2Nr^2))$.
+Adding squared bias, frame variance, and noise variance proves \eqref{eq:frame-MSE}.
+For \eqref{eq:frame-high-moments}, use the pointwise inequality $\norm{N^{-1}\sum_j B_j}\le\sqrt d\,\rho r^2/6$, the Gaussian moment bound \eqref{eq:moment-minkowski}, and Minkowski's inequality once more. The same arguments work conditionally on the past because all directions and scalar noises are fresh.
+\end{proof}
+
+\subsection{A robust final correction and the complete upper algorithm}
+\label{sec:robust-newton}
+The final output need not be projected. Flooring the estimated Hessian at $\mu$ makes its inverse uniformly bounded, while the following estimate controls the resulting objective value even when the true Hessian is arbitrarily large.
+
+\begin{lemma}[Pathwise Newton-error inequality]\label[lemma]{lem:robust-newton}
+Let $z\in\R^d$, $e=z-x_*$, and let $\widehat H\succeq\mu I$ be any symmetric matrix. Suppose a gradient estimate has the form $G=\nabla f(z)+\nu$. Define
+\begin{equation}\label{eq:newton-definitions}
+ \Delta=\norm{\widehat H-H(z)}_{\op},\qquad
+ r_g=\nabla f(z)-H(z)e,\qquad
+ w=(\widehat H-H(z))e-r_g,
+ \qquad \widehat x=z-\widehat H^{-1}G.
+\end{equation}
+Then $\norm{r_g}\le\rho\norm e^2/2$, $\widehat x-x_*=\widehat H^{-1}(w-\nu)$, and
+\begin{align}
+ f(\widehat x)-f(x_*)
+ &\le\frac{\norm{w-\nu}^2}{2\mu}
+ +\frac{\Delta+\rho\norm e}{2\mu^2}\norm{w-\nu}^2
+ +\frac{\rho}{6\mu^3}\norm{w-\nu}^3.
+ \label{eq:pathwise-newton}
+\end{align}
+This is a deterministic inequality, with no small-error or high-probability condition.
+\end{lemma}
+\begin{proof}
+Using $\nabla f(x_*)=0$, integrate the Hessian along the segment from $x_*$ to $z$ and subtract $H(z)e$. The operator Lipschitz condition gives $\norm{r_g}\le\rho\norm e^2/2$.
+The identity for $\widehat x-x_*$ follows by substituting $G=H(z)e+r_g+\nu$.
+Write $u=\widehat x-x_*$. The Taylor bound at $x_*$ gives
+\[
+ f(\widehat x)-f(x_*)\le\tfrac12u^\top H(x_*)u+\frac\rho6\norm u^3.
+\]
+Also,
+$H(x_*)\preceq\widehat H+(\Delta+\rho\norm e)I$.
+Since $u=\widehat H^{-1}(w-\nu)$ and $\widehat H\succeq\mu I$,
+\[
+ u^\top\widehat Hu\le\mu^{-1}\norm{w-\nu}^2,
+ \qquad \norm u\le\mu^{-1}\norm{w-\nu}.
+\]
+Substitution proves \eqref{eq:pathwise-newton}. In particular, the quadratic form is handled through $\widehat H^{-1}$, not through $\norm{H(x_*)}_{\op}$.
+\end{proof}
+
+\subsubsection{Exact budget allocation and all algorithmic operations}
+For a given integer $T\ge2$, choose
+\begin{align}
+ \kappa&=3+2\rho R/\mu,
+ & K&=2+\lceil\kappa\log T\rceil,
+ &D_d&=2d^2+d,\notag\\
+ A_T&=2D_d+2dK,
+ &m&=\left\lfloor\frac{T^{3/4}}{A_T}\right\rfloor,
+ &N&=\left\lfloor\frac{T-A_Tm}{2d}\right\rfloor.
+ \label{eq:budget-allocation}
+\end{align}
+For $T=1$, or if the allocation for $T\ge2$ gives $m=0$ or $N=0$, output zero. Its worst-case risk can be infinite, so this fallback carries no finite-risk guarantee. For every fixed parameter tuple, $m,N\ge1$ for all sufficiently large $T$.
+Otherwise perform the following fully specified operations:
+\begin{enumerate}
+\item Compute $\widehat H_0=\mathcal H_m(0)$, set $Q=\widehat H_0+(\rho R+\mu)I$, and run the $K$ updates \eqref{eq:localization-update}, starting at zero. Let $z=z_K$.
+\item Compute a fresh $\widehat H=\mathcal H_m(z)$, independently of all previous observations conditional on $z$.
+\item Set $\beta_p=\rho d^{-1/p}$ and
+\begin{equation}\label{eq:final-radius}
+ r=\left(\frac{d}{\beta_p^2N}\right)^{1/6}.
+\end{equation}
+Using fresh random bases and fresh scalar noises, compute $G=G_{N,r}(z)$ by \eqref{eq:frame-estimator}.
+\item Return $\widehat x=z-\widehat H^{-1}G$.
+\end{enumerate}
+Every matrix, projection, and center in this description is determined by known parameters and already observed noisy values. No derivative oracle is used.
+
+The costs of the reference Hessian, the $K$ pilot gradients, and the final Hessian are respectively $D_dm$, $2dKm$, and $D_dm$. They sum to $A_Tm$. The final gradient costs $2dN$. Thus
+\begin{equation}\label{eq:budget-verified}
+ A_Tm+2dN\le T,\qquad A_Tm\le T^{3/4}.
+\end{equation}
+Repeated center observations, opposite-direction observations, and all pilot evaluations have been included. Unused evaluations may be discarded. The definition of the oracle permits an unqueried output; reserving one extra evaluation would not change any asymptotic statement if that convention were changed.
+
+\subsubsection{Uniform finite-horizon estimate for this algorithm}
+\begin{proposition}[Upper bound with an explicit remainder structure]\label[proposition]{prop:upper-remainder}
+There is a finite constant $C_{\rm rem}=C_{\rm rem}(d,\mu,\rho,R)$, independent of $f,T,p$, such that whenever the allocation \eqref{eq:budget-allocation} gives $m,N\ge1$, the preceding algorithm satisfies
+\begin{equation}\label{eq:upper-remainder}
+ \sup_{f\in\FS}\E_f[f(\widehat x)-f(x_*)]
+ \le\frac{V_N^{(p)}}{\mu}
+ +C_{\rm rem}\left(m^{-1}+m^{-1/6}N^{-2/3}+N^{-1}\right),
+\end{equation}
+where
+\begin{equation}\label{eq:VN}
+ V_N^{(p)}=
+ \left(\frac34+\frac{d^{1+2/p}}{36N}\right)
+ \beta_p^{2/3}d^{2/3}N^{-2/3}.
+\end{equation}
+The constant is not optimized in the joint parameters. In particular, \eqref{eq:upper-remainder} is not asserted to be a matching all-regime finite-time bound.
+\end{proposition}
+\begin{proof}
+Let $\mathcal B$ denote all information at the end of localization, so $z$ and $e=z-x_*$ are $\mathcal B$-measurable. All expectations in this proof are taken under a fixed $f$; every bound is uniform over that $f$.
+\cref{lem:localization} yields, for $2\le q\le12$,
+\begin{equation}\label{eq:e-moments}
+ \E\norm e^q\le C_qm^{-q/3}.
+\end{equation}
+By \cref{lem:pilot-moments}, the fresh final Hessian has conditional errors
+\begin{equation}\label{eq:Delta-moments}
+ \E[\Delta^q\mid\mathcal B]\le C_q(d,\rho)m^{-q/6},\qquad q\ge2.
+\end{equation}
+In \eqref{eq:newton-definitions}, $\norm w\le\Delta\norm e+(\rho/2)\norm e^2$. For $q\in[2,4]$, condition on $\mathcal B$ in the first product and apply \eqref{eq:e-moments} and \eqref{eq:Delta-moments}. The inequality $(a+b)^q\le2^{q-1}(a^q+b^q)$ gives
+\begin{align}
+ \E\norm w^q
+ &\le C_q\left(m^{-q/6}\E\norm e^q+\E\norm e^{2q}\right)\notag\\
+ &\le C_q\left(m^{-q/2}+m^{-2q/3}\right)
+ \le C_qm^{-q/2}.
+ \label{eq:w-moments}
+\end{align}
+The range $2q\le8$ is within the localization lemma.
+
+For $\nu=G_{N,r}(z)-\nabla f(z)$, substitution of \eqref{eq:final-radius} into \eqref{eq:frame-MSE} gives
+\begin{equation}\label{eq:nu-MSE}
+ \E[\norm\nu^2\mid\mathcal B]\le V_N^{(p)}.
+\end{equation}
+Indeed, $\beta_p^2r^4=\beta_p^{2/3}d^{2/3}N^{-2/3}$, the noise term is half this quantity, and $\rho^2/\beta_p^2=d^{2/p}$.
+The coarser moment bound \eqref{eq:frame-high-moments} also gives
+\begin{equation}\label{eq:nu-high}
+ \E\norm\nu^q\le C_q(d,\rho)N^{-q/3},\qquad 2\le q\le4.
+\end{equation}
+The constants can be chosen uniformly over $p\in[2,\infty]$ because $\rho/\sqrt d\le\beta_p\le\rho$.
+
+Apply the pathwise inequality \eqref{eq:pathwise-newton} on the \emph{entire} probability space.
+For its first term, use $\norm{w-\nu}^2\le2\norm w^2+2\norm\nu^2$:
+\begin{equation}\label{eq:main-quadratic}
+ \frac1{2\mu}\E\norm{w-\nu}^2
+ \le \frac{V_N^{(p)}}\mu+C m^{-1}.
+\end{equation}
+For the remaining quadratic factor, Cauchy--Schwarz and the preceding moment bounds give
+\begin{align}
+ \E[\Delta\norm w^2]
+ &\le(\E\Delta^2)^{1/2}(\E\norm w^4)^{1/2}
+ \le C m^{-7/6},\notag\\
+ \E[\norm e\,\norm w^2]
+ &\le(\E\norm e^2)^{1/2}(\E\norm w^4)^{1/2}
+ \le C m^{-4/3},\notag\\
+ \E[\Delta\norm\nu^2]
+ &\le(\E\Delta^2)^{1/2}(\E\norm\nu^4)^{1/2}
+ \le C m^{-1/6}N^{-2/3},\notag\\
+ \E[\norm e\,\norm\nu^2]
+ &\le(\E\norm e^2)^{1/2}(\E\norm\nu^4)^{1/2}
+ \le C m^{-1/3}N^{-2/3}.
+ \label{eq:weighted-terms}
+\end{align}
+These estimates do not rely on treating dependent quantities as independent.
+Finally, $\norm{w-\nu}^3\le4(\norm w^3+\norm\nu^3)$ implies
+\begin{equation}\label{eq:cubic-term}
+ \E\norm{w-\nu}^3\le C(m^{-3/2}+N^{-1}).
+\end{equation}
+Combine \eqref{eq:main-quadratic}--\eqref{eq:cubic-term} with \eqref{eq:pathwise-newton}. Since $m\ge1$, the terms $m^{-7/6}$, $m^{-4/3}$, and $m^{-3/2}$ are bounded by $m^{-1}$, and $m^{-1/3}\le m^{-1/6}$. Absorbing parameter-only factors into $C_{\rm rem}$ proves \eqref{eq:upper-remainder}.
+The loss on a localization failure is included through \eqref{eq:e-moments}; no unbounded objective-gap cap has been introduced.
+\end{proof}
+
+\subsection{Completion of the minimax theorem}
+\label{sec:upper-completion}
+\begin{proof}[Upper bound in \cref{thm:schatten}]
+For fixed $(d,\mu,\rho,R)$, \eqref{eq:budget-allocation} satisfies
+\begin{equation}\label{eq:allocation-asymptotics}
+ K=\Theta_{\mu,\rho,R}(\log T),\qquad
+ m=\Theta_{d,\mu,\rho,R}\left(\frac{T^{3/4}}{\log T}\right),\qquad
+ N\sim\frac{T}{2d}.
+\end{equation}
+The floors do not change these assertions because their arguments tend to infinity, while $A_Tm\le T^{3/4}=o(T)$.
+In particular, $m,N\ge1$ eventually, and all three remainders in \eqref{eq:upper-remainder} are $o(T^{-2/3})$:
+\begin{align*}
+ T^{2/3}m^{-1}&=O_{d,\mu,\rho,R}(T^{-1/12}\log T)\longrightarrow0,\\
+ T^{2/3}m^{-1/6}N^{-2/3}&=O_d(m^{-1/6})\longrightarrow0,\\
+ T^{2/3}N^{-1}&=O_d(T^{-1/3})\longrightarrow0.
+\end{align*}
+The explicit leading term gives
+\begin{equation}\label{eq:upper-limit}
+ \limsup_{T\to\infty}T^{2/3}\sup_{f\in\FS}
+ \E_f[f(\widehat x)-f(x_*)]
+ \le\frac{3\,2^{2/3}}{4}\,
+ \frac{\rho^{2/3}d^{\,4/3-2/(3p)}}{\mu}.
+\end{equation}
+The minimax infimum is no larger than the risk of this particular algorithm, so the desired upper bound follows, for example with the universal constant $C=4$. Setting $p=\infty$ gives the operator-norm case. This proof is uniform over $f$ before taking the limit and therefore does not exchange a pointwise asymptotic limit with a supremum. Together with the lower bound proved in \cref{sec:lower-end}, it completes \cref{thm:schatten}.
+\end{proof}
+
+
+
+
+\end{document}

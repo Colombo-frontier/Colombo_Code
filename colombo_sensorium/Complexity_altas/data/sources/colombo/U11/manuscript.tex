@@ -1,0 +1,1999 @@
+% Unified manuscript. The bibliography is embedded at the end of this file.
+% Compile with pdfLaTeX twice; no external bibliography or figure files are needed.
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{microtype,booktabs,tabularx,array,enumitem}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xurl}
+\numberwithin{equation}{section}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\Tdet}{\mathsf T_{p,\mathrm{str}}^{\mathrm{det}}}
+\newcommand{\Trand}{\mathsf T_{p,\mathrm{str}}^{\mathrm{rand}}}
+\newcommand{\Tcert}{\mathsf T_{p,\mathrm{str}}^{\mathrm{det,cert}}}
+\newcommand{\ap}{\alpha_p}
+\newcommand{\logplus}{\log_{+}}
+\DeclareMathOperator{\sym}{sym}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\setlength{\emergencystretch}{2em}
+\setlength{\parskip}{0.12em}
+\setlist{itemsep=0.25em,topsep=0.4em}
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\title{Higher-Order Oracle Complexity of\\Strongly Monotone Variational Inequalities}
+\author{Colombo Team\\[0.35em]
+\small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+\hypersetup{pdfauthor={Colombo Team},
+pdftitle={Higher-Order Oracle Complexity of Strongly Monotone Variational Inequalities},
+pdfsubject={Condition complexity, full-jet oracles, and tangent-residual certificates},
+pdfkeywords={variational inequalities, strong monotonicity, higher-order methods, oracle complexity}}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study the condition dependence of higher-order methods for strongly
+monotone variational inequalities. For a fixed integer $p\ge2$, the operator
+$F$ is $\mu$-strongly monotone on a known compact convex set of diameter at
+most $D$, and $D^{p-1}F$ is $L_p$-Lipschitz. Each feasible query returns
+$(F,DF,\ldots,D^{p-1}F)$; the target is a tangent residual of at most
+$\varepsilon$. Write $\kappa_D=L_pD^{p-1}/\mu$ and
+$\theta=\varepsilon/(\mu D)$. We give a complete proof that the optimal
+polynomial condition exponent is $\alpha_p=2/(3p-1)$. A deterministic
+algorithm returns an evaluated residual certificate within
+$C_p(1+\kappa_D^{\alpha_p})\mathcal H^{6p-4}$ queries, where
+$\mathcal H=1+\ln(2+\kappa_D+(\kappa_D+1)/\theta)$.
+For sufficiently large $\kappa_D$ and $0<\theta\le1/16$, a matching
+$c_p\kappa_D^{\alpha_p}$ lower bound holds in sufficiently high dimension
+for arbitrary adaptive randomized algorithms with per-instance success
+probability at least $2/3$. The proof specializes the extrapolated Halpern
+hierarchy and flat-gated construction of the general monotone VI framework,
+with explicit calibration to the prescribed strong-monotonicity modulus.
+We also show that restarting a recent log-free monotone VI solver
+sharpens the upper bound to
+$O_p(1+\kappa_D^{\alpha_p}+\log_{+}(1/\theta))$.
+Thus the condition dependence is sharp at fixed relative accuracy. One
+scalar $p$-jet simulates one operator query, transferring the upper bounds
+to strongly convex--strongly concave saddle problems.
+\end{abstract}
+\noindent\textbf{Keywords:} strongly monotone variational inequalities;
+higher-order oracle complexity; tangent residual; randomized lower bounds;
+Halpern iteration; saddle-point problems.
+\par
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol. 
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:intro}
+A variational inequality associated with an operator $F$ on a convex set
+$\mathcal X$ asks for a point $x^\star\in\mathcal X$ satisfying
+\[
+\langle F(x^\star),x-x^\star\rangle\ge0
+\qquad\text{for every }x\in\mathcal X.
+\]
+This formulation includes constrained optimization, convex--concave saddle
+problems, and equilibrium systems that need not admit a scalar
+potential~\cite{facchinei2003}. Strong monotonicity makes the solution
+unique and turns a residual bound into a distance bound. The question
+studied here is how the amount of higher-order information needed to find
+that solution depends on the strong-monotonicity modulus.
+
+Fix an order $p\ge2$. We assume that $F$ is $\mu$-strongly monotone,
+$D^{p-1}F$ is $L_p$-Lipschitz, and $\mathcal X$ is known, compact, and
+convex, with diameter at most $D$. A query at a feasible point returns the
+complete jet $(F,DF,\ldots,D^{p-1}F)$. The requested output satisfies
+\begin{equation}\label{eq:intro-residual}
+r_{\mathrm{tan}}(x)
+:=\operatorname{dist}\bigl(0,F(x)+N_{\mathcal X}(x)\bigr)
+\le\varepsilon,
+\end{equation}
+where $N_{\mathcal X}$ is the outward normal cone. This criterion measures
+stationarity at the returned point and remains meaningful when the
+solution lies on the boundary. No common upper bound on $F$, $DF$, or the
+other lower derivatives is imposed. The natural dimensionless parameters
+are therefore
+\[
+\kappa_D=\frac{L_pD^{p-1}}{\mu},\qquad
+\theta=\frac{\varepsilon}{\mu D}.
+\]
+Unlike a first-order condition number, $\kappa_D$ need not be at least one.
+
+\paragraph{From tensor methods to accelerated resolvent solves.}
+The extragradient and proximal-point frameworks provide classical methods
+for monotone VIs~\cite{korpelevich1976,rockafellar1976,nemirovski2004}.
+Newton and higher-order extensions replace the operator by a regularized
+Taylor model before applying an extragradient
+correction~\cite{monteiro2012,bullins2020,adil2022,lin2024}.
+Restarting such methods gives the strong-VI condition exponent
+$2/(p+1)$~\cite{ostroukhov2020}. More recent methods exploit the structure
+of successive resolvent problems. Higher-order Halpern iteration yields
+the general monotone exponent $1/p$~\cite{chen2026halpern}, while
+extrapolated Halpern methods~\cite{zhang2026,zhangchen2026} and anchored
+extra-proximal methods~\cite{jiangyoon2026} reach $2/(3p-1)$.
+These developments make it necessary to distinguish a general monotone
+accuracy bound from a condition bound with a prescribed $\mu$.
+
+\paragraph{The condition-complexity statement.}
+Put
+\[
+\ap=\frac{2}{3p-1},\qquad
+\mathcal H=1+\ln\!\left(2+\kappa_D+
+\frac{\kappa_D+1}{\theta}\right).
+\]
+Our complete, self-contained construction proves
+\begin{equation}\label{eq:intro-frontier}
+c_p\kappa_D^{\ap}
+\le\Trand\le\Tdet\le\Tcert
+\le C_p(1+\kappa_D^{\ap})\mathcal H^{6p-4}
+\end{equation}
+whenever $\kappa_D\ge\kappa_{0,p}$ and $0<\theta\le1/16$.
+Here the randomized complexity allows arbitrary adaptive queries and
+arbitrary feasible outputs, with success probability at least $2/3$ on
+each instance. The deterministic certificate complexity requires the
+stronger output $(x,n,F(x))$, with $n\in N_{\mathcal X}(x)$ and
+$\|F(x)+n\|\le\varepsilon$, evaluated at a charged query. The upper
+bound holds in every finite dimension and for all positive public
+parameters. The lower bound is realized on a Euclidean ball in an
+explicitly specified dimension that grows with the condition parameter.
+
+The sharpest upper comparison uses the recent log-free monotone
+solver of Zhang, Chen, Pan, Liu, Yang, and
+Zhang~\cite[Theorem~5.1]{zhangchen2026}. A short restart argument gives
+\begin{equation}\label{eq:intro-sharper}
+\Tcert\le C_p\left(1+\kappa_D^{\ap}
++\logplus\frac1\theta\right),
+\qquad \logplus t=\max\{0,\ln t\}.
+\end{equation}
+We prove this consequence separately in Proposition~\ref{prop:literature-restart}
+and identify its external algorithmic input explicitly. Combining it with
+our randomized lower bound removes the logarithmic condition loss at any
+fixed $\theta\in(0,1/16]$. Neither bound determines the optimal dependence
+on arbitrarily small $\theta$.
+
+\paragraph{Contribution and attribution.}
+The exponent $2/(3p-1)$, the extrapolated Halpern hierarchy, and the
+flat-gated hard family already appear in the general monotone VI analysis
+of Zhang et al.~\cite{zhang2026}. This paper gives their prescribed-modulus
+specialization with a complete proof: the lower family satisfies the
+public $\mu$ and $L_p$ simultaneously; the upper algorithm accepts only
+evaluated certificates and charges all nested calls; and the randomized
+lower bound fixes the instance before the algorithm's seed is realized.
+The scalar saddle reduction preserves both the residual and the number
+of calls. The sharper estimate~\eqref{eq:intro-sharper} is a consequence
+of~\cite{zhangchen2026}, rather than a new monotone VI algorithm.
+
+\paragraph{Why the exponent has this value.}
+The upper and lower arguments expose complementary mechanisms. On the
+upper side, firm nonexpansiveness controls the squared second differences
+of a Halpern orbit over a block of $k$ iterations by
+$O(R^2\log^2(k+2)/k^2)$. A projected linear predictor therefore makes the
+aggregate cost of successive regularized solves small. If the inner
+strong solver has exponent $\gamma$, the outer cost is, up to logarithms,
+\[
+K+\left(\frac{L_pR^p}{\varepsilon K}\right)^\gamma.
+\]
+Balancing the two terms gives $\gamma/(1+\gamma)$, and certified restart
+returns a strong solver with that exponent. Starting from $2/(p+1)$,
+exactly $p-1$ admissible layers give $2/(3p-1)$.
+On the lower side, a contractive chain with $m$ hidden directions has
+strong-monotonicity modulus proportional to
+$L_pD^{p-1}m^{-(3p-1)/2}$. Taking
+$m\asymp_p\kappa_D^{2/(3p-1)}$ preserves the prescribed modulus while
+keeping the residual above $\mu D/8$ until the last direction is revealed.
+
+\paragraph{Organization.}
+Section~\ref{sec:related} aligns the relevant literature by oracle and
+error criterion. Sections~\ref{sec:setup} and~\ref{sec:results} specify
+the model and theorems. Section~\ref{sec:upper} proves the self-contained
+upper bound; Section~\ref{sec:lower} proves the randomized lower bound.
+Section~\ref{sec:saddle} gives the scalar saddle reduction, and
+Section~\ref{sec:discussion} states the remaining limitations.
+
+\section{Related Work and Rate Comparisons}\label{sec:related}
+All orders in this section follow the same convention: an order-$p$
+operator oracle returns derivatives through $D^{p-1}F$, and the
+corresponding scalar oracle returns derivatives through order $p$.
+Constants denoted by $O_p$ depend only on the fixed order.
+
+\paragraph{Error criteria.}
+For a monotone operator, define the Minty and Stampacchia gaps by
+\[
+g_{\mathrm M}(x)=\sup_{u\in\mathcal X}\langle F(u),x-u\rangle,
+\qquad
+g_{\mathrm S}(x)=\sup_{u\in\mathcal X}\langle F(x),x-u\rangle.
+\]
+Monotonicity and the normal-cone inequality imply
+\begin{equation}\label{eq:gap-comparison}
+g_{\mathrm M}(x)\le g_{\mathrm S}(x)\le D r_{\mathrm{tan}}(x).
+\end{equation}
+Indeed, for $n\in N_{\mathcal X}(x)$,
+$\langle F(x),x-u\rangle\le\langle F(x)+n,x-u\rangle$.
+A tangent certificate therefore controls both gaps, but a small gap does
+not generally control the tangent residual at the same point. For example,
+on $[0,1]$, $F(x)=1+x$ is strongly monotone and has solution zero;
+$g_{\mathrm S}(x)=x(1+x)\to0$ as $x\downarrow0$, whereas
+$r_{\mathrm{tan}}(x)=1+x$ for every interior $x$. This distinction is
+essential when comparing published rates.
+
+\paragraph{Classical and higher-order methods.}
+Extragradient, Mirror-Prox, and dual extrapolation provide the classical
+first-order foundations~\cite{korpelevich1976,nemirovski2004,nesterov2007}.
+The Newton proximal extragradient method~\cite{monteiro2012}, higher-order
+Mirror-Prox~\cite{bullins2020}, and subsequent tensor
+methods~\cite{adil2022,lin2024} achieve the characteristic gap exponent
+$2/(p+1)$. The lower bounds in the latter two works use restrictions on
+the generated iterates; they do not cover every adaptive full-jet policy.
+Ostroukhov et al.~\cite{ostroukhov2020} develop restarted tensor methods
+for strongly monotone VIs and strongly convex--strongly concave saddle
+problems. Their condition exponent provides the historical baseline.
+
+\paragraph{Anchoring and recent general monotone results.}
+Halpern-based methods connect fixed-point residuals to strong VI
+solutions~\cite{diakonikolas2020}; tangent residuals also underpin
+last-iterate guarantees~\cite{cai2022}. Chen et
+al.~\cite{chen2026halpern} combine Halpern iteration with tensor solves,
+obtaining exponent $1/p$ for a normalized proximal residual. Their
+residual comparison controls the tangent residual at the associated
+exact resolvent point, which need not be the reported point. Zhang et
+al.~\cite{zhang2026} use extrapolated warm starts and a finite hierarchy
+to obtain exponent $\ap$ and an unrestricted randomized lower bound.
+The recent method of Zhang, Chen, Pan, Liu, Yang, and
+Zhang~\cite{zhangchen2026} attains the same upper exponent without
+logarithmic losses. Jiang and Yoon~\cite{jiangyoon2026} obtain it, up to
+a logarithm, for composite monotone inclusions, and prove an unrestricted
+deterministic lower bound. Their single-valued operator is globally
+smooth, and Taylor centers need not belong to the constrained domain;
+their oracle model therefore differs from our feasible-query model.
+Table~\ref{tab:general-comparison} records the main distinctions.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\textwidth}{@{}L{0.25\textwidth}L{0.17\textwidth}L{0.20\textwidth}Y@{}}
+\toprule
+Work / setting & Criterion & Upper queries & Lower-bound scope\\
+\midrule
+Tensor VI methods\newline\cite{adil2022,lin2024}
+& Minty gap & $O_p(1+Q_{\rm gap}^{2/(p+1)})$
+& The cited matching lower bounds impose tensor or span restrictions.\\
+Chen et al.\ \cite{chen2026halpern}
+& Proximal residual
+& $\widetilde O_p(1+Q_{\rm res}^{1/p})$
+& Upper-bound result for general monotone VIs.\\
+Zhang et al.\ \cite{zhang2026}
+& Evaluated tangent certificate
+& $\widetilde O_p(1+Q_{\rm res}^{\ap})$
+& $\Omega_p(Q_{\rm res}^{\ap})$ for arbitrary adaptive randomized policies.\\
+Zhang--Chen--Pan et al.\ \cite{zhangchen2026}
+& Evaluated tangent certificate
+& $O_p(1+Q_{\rm res}^{\ap})$
+& Upper bound; comparisons with lower bounds inherit their stated scope.\\
+Jiang--Yoon\ \cite{jiangyoon2026}
+& Tangent residual; global smoothness
+& $O_p((1+Q_{\rm res}^{\ap})\ell_Q)$
+& Composite inclusions; unrestricted deterministic lower bound;
+queries need not be feasible.\\
+\bottomrule
+\end{tabularx}
+\caption{General monotone benchmarks, in a common order convention.
+Here $Q_{\rm res}=L_pD^p/\varepsilon$, with the residual criterion
+specified separately in each row, and
+$Q_{\rm gap}=L_pD^{p+1}/\varepsilon_G$, and
+$\ell_Q=\ln(2+Q_{\rm res})$. These are different accuracy
+parameters. The table uses the domain diameter $D$ as a valid distance
+bound for bounded VIs; the composite-inclusion row uses a supplied
+distance bound in its place. Some sources allow the sharper
+initial-distance bound $R$. All unrestricted lower bounds require
+sufficiently high dimension.}
+\label{tab:general-comparison}
+\end{table}
+
+\paragraph{Strong monotonicity and the present comparison.}
+The general monotone rate $Q_{\rm res}^{\ap}$ becomes
+$(\kappa_D/\theta)^{\ap}$ if applied directly. Restart uses
+$\mu\|x-x^\star\|\le r_{\mathrm{tan}}(x)$ to improve the accuracy
+dependence. Our self-contained proof yields the explicit factor
+$\mathcal H^{6p-4}$ and an initial-distance refinement.
+Proposition~\ref{prop:literature-restart} gives the stronger consequence
+of the log-free solver. Thus the contribution is a calibrated
+strong-monotonicity statement with full randomized lower-bound
+quantifiers, not a claim to improve the best known general monotone
+upper exponent or its logarithmic factors.
+
+\paragraph{Saddle problems and hidden derivatives.}
+Chen et al.~\cite{chen2025} obtain second-order gap complexity
+$\widetilde O(\varepsilon_G^{-4/7})$ for convex--concave minimax
+problems; their higher-order development~\cite{chen2026saddle} gives
+tangent-residual exponent $4/(3p+1)$ and a lower exponent $\ap$ under
+its tensor-algorithm restriction. These are fixed-geometry accuracy
+comparisons; the higher-order upper analysis also uses a first-derivative
+smoothness bound in logarithmic factors. General VI upper bounds transfer to
+scalar saddle problems through the signed gradient. A general VI lower
+bound does not transfer in the reverse direction: the operator must also
+have the required scalar integrability structure.
+The exact flat gates used here follow the information-hiding approach
+in~\cite{zhang2026}, related to the smooth contractive fixed-point
+construction of Jang and Ryu~\cite{jang2026}. We verify explicitly that
+the gates hide every tensor in a reply and that boundary normals cannot
+cancel the lower-bound residual.
+
+
+\section{Problem Formulation}\label{sec:setup}
+We count information acquired from the unknown operator. All other
+computations use the public domain or information already returned by the
+oracle. This distinction allows arbitrary convex domains while keeping
+the complexity statement independent of how tensors and constraints are
+represented.
+
+\subsection{Public data and the operator class}
+Fix an integer $p\ge2$. The public data are a finite dimension $d\ge1$,
+positive numbers $L_p,\mu,D,\varepsilon$, a known nonempty compact convex
+set $\mathcal X\subseteq\R^d$ with $\operatorname{diam}(\mathcal X)\le D$,
+and a start $x_0\in\mathcal X$. All vector norms are Euclidean. For a
+vector-valued $j$-linear map $A$, use the norm
+\[
+\|A\|_{\mathrm{op}}
+=\sup_{\|u_1\|,\ldots,\|u_j\|\le1}
+\|A[u_1,\ldots,u_j]\|.
+\]
+The unknown operator $F$ is defined and $C^{p-1}$ on an open neighborhood
+of $\mathcal X$. For all $x,y\in\mathcal X$, it satisfies
+\begin{align}
+\langle F(x)-F(y),x-y\rangle
+&\ge\mu\|x-y\|^2,\label{eq:strong-monotonicity}\\
+\|D^{p-1}F(x)-D^{p-1}F(y)\|_{\mathrm{op}}
+&\le L_p\|x-y\|.\label{eq:operator-smoothness}
+\end{align}
+We denote this class by
+$\mathfrak F^{\mathrm{str}}_{p,L_p,\mu}(\mathcal X)$.
+The constants are one-sided promises: $\mu$ is a lower bound on the
+strong-monotonicity modulus, and $L_p$ is an upper bound on the highest
+derivative's Lipschitz modulus. We do not require a continuous $D^pF$, a
+scalar potential, or uniform bounds on the lower derivatives. The class
+is nonempty for every positive parameter tuple, since
+$F(x)=\mu x+b$ satisfies both promises for any $b\in\R^d$.
+
+The solution $x^\star$ is characterized by
+\begin{equation}\label{eq:vi-solution}
+\langle F(x^\star),x-x^\star\rangle\ge0
+\qquad(x\in\mathcal X).
+\end{equation}
+Existence follows from the fixed-point theorem applied to the continuous
+map $x\mapsto\Pi_{\mathcal X}(x-F(x))$. Adding the inequalities for two
+solutions and using~\eqref{eq:strong-monotonicity} proves uniqueness. Define the outward
+normal cone and tangent residual by
+\begin{align}
+N_{\mathcal X}(x)
+&=\{n:\langle n,u-x\rangle\le0\text{ for every }u\in\mathcal X\},
+\label{eq:normal-cone}\\
+r_{\mathrm{tan}}(x)
+&=\min_{n\in N_{\mathcal X}(x)}\|F(x)+n\|.
+\label{eq:tangent-residual}
+\end{align}
+The minimum exists because the normal cone is nonempty and closed.
+At a solution, $-F(x^\star)\in N_{\mathcal X}(x^\star)$, including when
+$F(x^\star)$ is nonzero.
+
+\begin{lemma}[Residual controls distance]\label{lem:error-bound}
+For every $x\in\mathcal X$ and $n\in N_{\mathcal X}(x)$,
+\begin{equation}\label{eq:error-distance}
+\mu\|x-x^\star\|\le r_{\mathrm{tan}}(x)\le\|F(x)+n\|.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The normal-cone inequalities at $x$ and $x^\star$ imply
+\[
+\langle F(x)+n,x-x^\star\rangle
+\ge\langle F(x)-F(x^\star),x-x^\star\rangle
+\ge\mu\|x-x^\star\|^2.
+\]
+Apply Cauchy--Schwarz and minimize over $n$.
+\end{proof}
+
+\subsection{Oracle, policies, and evaluated certificates}
+One charged query at a feasible point $x$ returns
+\begin{equation}\label{eq:full-jet}
+\mathcal O_p^F(x)=(F(x),DF(x),\ldots,D^{p-1}F(x)).
+\end{equation}
+All returned tensors are exact. Every call to this oracle counts,
+including calls inside regularized problems, unsuccessful radius trials,
+restarts, and the final certificate check. Projections onto the known
+domain and exact solution of a model formed solely from returned jets
+are internal computations. An evaluation of the unknown operator's
+resolvent is implemented through charged queries; it is not supplied as
+an additional oracle.
+
+Policies may use the complete transcript, arbitrary Borel measurable
+internal computations, and any feasible output, whether queried or not.
+A randomized policy uses an instance-independent seed on a standard
+Borel space. Query feasibility and the query cap hold on every sample
+path, and each fixed seed defines a legal deterministic policy.
+Its success probability must be at least $2/3$ on every fixed instance.
+Thus an adversarial instance may depend on the policy but must be fixed
+before the realized seed. Policy rules are taken to be total Borel maps
+on transcripts; outside realizable transcripts they can be extended by
+feasible default queries and outputs. Equivalently, projecting such
+default points onto $\mathcal X$ enforces feasibility without changing
+any legal run.
+
+For the public tuple $(p,L_p,\mu,D,\varepsilon)$, let $\Tdet$ and
+$\Trand$ be the least nonnegative integer query caps for deterministic
+and randomized point output. The worst case ranges over every finite
+dimension, every legal public domain and start, and every compatible
+operator. Let $\Tcert$ be the deterministic complexity for returning
+an evaluated triple
+\begin{equation}\label{eq:evaluated-certificate}
+(\widehat x,n,F(\widehat x)),\qquad
+n\in N_{\mathcal X}(\widehat x),\qquad
+\|F(\widehat x)+n\|\le\varepsilon,
+\end{equation}
+where $F(\widehat x)$ was obtained at a charged query at that same point.
+If no finite uniform cap exists, the corresponding complexity is
+$+\infty$. These definitions immediately imply
+\begin{equation}\label{eq:complexity-order}
+\Trand\le\Tdet\le\Tcert.
+\end{equation}
+For lower bounds, an early stop can be padded by ignored feasible
+queries while preserving its saved output.
+
+\subsection{Normalization}
+Throughout the paper,
+\begin{equation}\label{eq:normalized-parameters}
+\kappa_D=\frac{L_pD^{p-1}}{\mu},\qquad
+\theta=\frac{\varepsilon}{\mu D},\qquad
+\ap=\frac{2}{3p-1},
+\end{equation}
+and
+\begin{equation}\label{eq:public-log}
+\mathcal H(\kappa_D,\theta)
+=1+\ln\!\left(2+\kappa_D+\frac{\kappa_D+1}{\theta}\right).
+\end{equation}
+The notation $c_p,C_p$ denotes positive finite constants depending only
+on $p$; their values may change between displays. Specified constants,
+such as $c_p^{\mathrm{sc}}$ in the lower-bound construction, retain their
+defined values. The diameter bound $D$ is unrelated to the derivative
+notation $D^jF$.
+
+\section{Main Results}\label{sec:results}
+We first state the bounds proved entirely within this paper. We then
+record the stronger upper estimate obtained by importing the recent
+log-free monotone solver. This separates the two proof dependencies.
+
+\begin{theorem}[Self-contained certified upper bound]\label{thm:upper}
+For each fixed $p\ge2$, there is a total deterministic measurable
+algorithm that, for every positive $L_p,\mu,D,\varepsilon$, every finite
+dimension, and every legal instance, returns~\eqref{eq:evaluated-certificate} within
+\begin{equation}\label{eq:hierarchy-upper}
+\Tcert(\varepsilon;L_p,\mu,D)
+\le C_p(1+\kappa_D^{\ap})\mathcal H(\kappa_D,\theta)^{6p-4}
+\end{equation}
+queries. More precisely, on an instance with
+$r_0=\|x_0-x^\star\|$, its cost is at most
+\begin{equation}\label{eq:distance-sensitive-upper}
+C_p\left[1+\left(\frac{L_pr_0^{p-1}}{\mu}\right)^{\ap}\right]
+\mathcal H(\kappa_D,\theta)^{6p-4}.
+\end{equation}
+Neither $r_0$ nor $x^\star$ is supplied to the algorithm.
+\end{theorem}
+
+Section~\ref{sec:upper} constructs the algorithm by a finite hierarchy
+starting from tensor extragradient. Public query caps make unsuccessful
+radius guesses safe, and an evaluated certificate is the only acceptance
+test. In particular, the initial-distance refinement holds even when
+$r_0=0$.
+
+\begin{theorem}[Randomized lower bound with prescribed modulus]
+\label{thm:lower}
+For each fixed $p\ge2$, there are $c_p,\kappa_{0,p}>0$ such that, whenever
+\begin{equation}\label{eq:lower-regime}
+\kappa_D\ge\kappa_{0,p},\qquad
+0<\varepsilon\le\frac{\mu D}{16},
+\end{equation}
+every randomized adaptive policy that succeeds with probability at least
+$2/3$ on every legal instance has uniform query cap at least
+\begin{equation}\label{eq:randomized-lower}
+\Trand(\varepsilon;L_p,\mu,D)
+\ge c_p\kappa_D^{\ap}.
+\end{equation}
+The lower bound permits arbitrary feasible full-jet queries and arbitrary
+feasible outputs. The hard instance is fixed before the policy's seed.
+\end{theorem}
+
+The proof uses the public ball $B_2^d(D/2)$ and the public start zero.
+With the constant $c_p^{\mathrm{sc}}$ specified
+in~\eqref{eq:lower-constants}, set
+\[
+m=\left\lfloor(c_p^{\mathrm{sc}}\kappa_D)^{\ap}\right\rfloor.
+\]
+Any integer dimension satisfying
+\[
+d\ge m+\left\lceil2048m^3\ln\bigl(8(m^2+1)\bigr)\right\rceil
+\]
+suffices. Every policy using at most $m-1$ calls fails on one fixed legal
+operator with probability at least $3/4$; its residual is then at least
+$2\varepsilon$. The dimension requirement is sufficient, not asserted
+to be optimal.
+
+\subsection{A sharper upper bound from a recent monotone solver}
+The next proposition uses an external theorem as an explicit input.
+It improves the logarithmic factors of Theorem~\ref{thm:upper}, while
+the proof in Section~\ref{sec:upper} remains independent of that input.
+
+\begin{proposition}[Restart of the log-free monotone solver]
+\label{prop:literature-restart}
+The monotone VI algorithm of Zhang, Chen, Pan, Liu, Yang, and
+Zhang~\cite[Theorem~5.1]{zhangchen2026}, followed by certified restart,
+gives, for all positive public parameters,
+\begin{equation}\label{eq:sharper-upper}
+\Tcert(\varepsilon;L_p,\mu,D)
+\le C_p\left(1+\kappa_D^{\ap}+
+\logplus\frac{\mu D}{\varepsilon}\right).
+\end{equation}
+\end{proposition}
+\begin{proof}
+We use the cited theorem in the following radius form. Given a monotone
+operator with the smoothness promise~\eqref{eq:operator-smoothness}, a feasible start
+$w$, and a known $R>0$ with $\|w-z^\star\|\le R$ for a solution
+$z^\star$, its algorithm returns an evaluated tangent certificate of
+norm at most $\delta$ in
+\begin{equation}\label{eq:imported-radius-solver}
+C_p\left[1+\left(\frac{L_pR^p}{\delta}\right)^{\ap}\right]
+\end{equation}
+feasible full-jet queries. In the source, the symbol $D$ denotes the
+initial distance. The proof uses this distance only through upper
+bounds: replacing it by $R$ in the initial step size
+$1/(L_pR^{p-1})$ and inner tolerance $R/T^{3/2}$ preserves those
+bounds. The source's projected warm starts are feasible, and its inner
+acceptance test evaluates the operator at the certified point. Thus its
+output and query convention agree with ours. The affine-hull reduction
+in Section~\ref{sec:upper} handles lower-dimensional domains.
+
+Set $R_j=D2^{-j}$ and
+\[
+\delta_j=\max\{\varepsilon,\mu R_j/2\}.
+\]
+Start stage zero at $x_0$. At stage $j$, call~\eqref{eq:imported-radius-solver}
+on the original domain with radius $R_j$ and tolerance $\delta_j$.
+If $\delta_j=\varepsilon$, return its certificate. Otherwise,
+Lemma~\ref{lem:error-bound} places the returned point within $R_j/2$
+of $x^\star$, so it is a valid start for stage $j+1$.
+The last stage is
+\[
+J=\max\!\left\{0,\left\lceil
+\log_2\frac{\mu D}{2\varepsilon}\right\rceil\right\}.
+\]
+Since $\delta_j\ge\mu R_j/2$, the total cost is at most
+\begin{align*}
+C_p\sum_{j=0}^{J}
+\left[1+\left(\frac{2L_pR_j^{p-1}}{\mu}\right)^{\ap}\right]
+&\le C_p\left[J+1+
+\frac{(2\kappa_D)^{\ap}}{1-2^{-(p-1)\ap}}\right]\\
+&\le C_p\left(1+\kappa_D^{\ap}+
+\logplus\frac{\mu D}{\varepsilon}\right).
+\end{align*}
+All radii and tolerances are public. No new constraint is introduced
+during a restart, so every normal in the output is a normal to the
+original domain. The cited finite call bounds may be installed as public
+caps, and every final evaluation is included in the count.
+\end{proof}
+
+\begin{corollary}[Sharp condition dependence at fixed relative accuracy]
+\label{cor:frontier}
+In the regime~\eqref{eq:lower-regime},
+\begin{equation}\label{eq:combined-frontier}
+c_p\kappa_D^{\ap}
+\le\Trand\le\Tdet\le\Tcert
+\le C_p\left(1+\kappa_D^{\ap}+\logplus\frac1\theta\right).
+\end{equation}
+Consequently, for any fixed $\theta\in(0,1/16]$ and
+$\kappa_D\to\infty$,
+\[
+\Trand\asymp_p\Tdet\asymp_p\Tcert\asymp_p\kappa_D^{\ap},
+\]
+where the asymptotic threshold may depend on the fixed $\theta$.
+Using only the self-contained upper proof gives
+$\widetilde\Theta_p(\kappa_D^{\ap})$ instead.
+\end{corollary}
+\begin{proof}
+Combine Theorem~\ref{thm:lower}, Proposition~\ref{prop:literature-restart},
+and~\eqref{eq:complexity-order}. At fixed $\theta$, the additive accuracy term is
+constant. The self-contained alternative follows from
+Theorem~\ref{thm:upper} and
+$\mathcal H(\kappa_D,\theta)=O(\ln\kappa_D)$.
+\end{proof}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\textwidth}{@{}L{0.25\textwidth}L{0.34\textwidth}Y@{}}
+\toprule
+Result & Query bound & Criterion and scope\\
+\midrule
+Ostroukhov et al.\ \cite{ostroukhov2020}
+& $O_p\!\left(\kappa_R^{2/(p+1)}
+\ln\frac{\mu R^2}{\varepsilon_G}\right)$
+& Source's gap guarantee in its small-error regime; unconstrained setting,
+$\kappa_R=L_pR^{p-1}/\mu$.\\
+Certified tensor baseline\newline
+Lemma~\ref{lem:strong-base}
+& $O_p((1+\kappa_D^{2/(p+1)})\mathcal H^2)$
+& Evaluated tangent certificate; current model.\\
+Self-contained hierarchy\newline
+Theorem~\ref{thm:upper}
+& $O_p((1+\kappa_D^{\ap})\mathcal H^{6p-4})$
+& All positive parameters; all finite dimensions.\\
+Restart of\ \cite{zhangchen2026}\newline
+Proposition~\ref{prop:literature-restart}
+& $O_p(1+\kappa_D^{\ap}+\logplus(1/\theta))$
+& Same evaluated certificate and feasible-query model.\\
+Calibrated randomized lower bound\newline
+Theorem~\ref{thm:lower}
+& $\Omega_p(\kappa_D^{\ap})$
+& $\kappa_D\ge\kappa_{0,p}$, $\theta\le1/16$;
+arbitrary adaptive policies; high dimension.\\
+\bottomrule
+\end{tabularx}
+\caption{Strong-monotonicity comparison. Only the first row uses a
+different error criterion and domain. All other rows use
+the exact feasible full-jet model of Section~\ref{sec:setup}.
+The sharper upper row explicitly depends on the algorithm in the cited
+paper. The exponent $\ap$ equals $2/5$, $1/4$, and $2/11$ for
+$p=2,3,4$, respectively.}
+\label{tab:comparison}
+\end{table}
+
+
+\section{A Self-Contained Certified Upper Bound}\label{sec:upper}
+We prove Theorem~\ref{thm:upper} through a finite hierarchy of solvers.
+A regularized Taylor step first gives a distance-sensitive strongly
+monotone solver. A restart procedure and an extrapolated Halpern procedure
+then improve its exponent. Throughout the construction, a successful call
+returns a normal vector and the operator value evaluated at the same
+point. Every nested call is charged to the original oracle.
+
+\subsection{Affine-hull reduction and Taylor certificates}
+
+We first work in the known affine hull of the feasible set. Write
+\(\operatorname{aff}\mathcal X=x_c+U\mathbb R^m\), with
+\(U^\top U=I_m\), and set
+\[
+\widetilde{\mathcal X}=\{u:x_c+Uu\in\mathcal X\},
+\qquad
+\widetilde F(u)=U^\top F(x_c+Uu).
+\]
+One ambient jet supplies the entire reduced jet, with unchanged
+smoothness and strong-monotonicity promises. A reduced certificate lifts
+without increasing its norm: for \(x=x_c+Uu\), define
+\[
+n=U\widetilde n-(I-UU^\top)F(x).
+\]
+Then \(n\in N_{\mathcal X}(x)\) and
+\(F(x)+n=U(\widetilde F(u)+\widetilde n)\).
+If \(m=0\), one query at the unique feasible point and the normal
+\(-F(x)\) provide an exact certificate. We may therefore assume below
+that \(\mathcal X\) has nonempty interior in its working space.
+
+\begin{lemma}[Regularized Taylor certificate]\label{lem:taylor-certificate}
+Let \(G\) be monotone on \(\mathcal X\), with
+\(\operatorname{Lip}(D^{p-1}G)\le L_p\). For \(x\in\mathcal X\), define
+\[
+\overline G_x(y)=\sum_{j=0}^{p-1}\frac{1}{j!}D^jG(x)[y-x]^j,
+\qquad \beta=\frac{2L_p}{(p-1)!}.
+\]
+The model variational inequality
+\begin{equation}\label{eq:taylor-model}
+0\in\overline G_x(y)+\beta\|y-x\|^{p-1}(y-x)
+       +N_{\mathcal X}(y)
+\end{equation}
+has a unique solution. If \(z^\star\) solves the VI for \(G\) and
+\(\|x-z^\star\|\le r\), the model solution and its associated normal
+provide an evaluated certificate of norm at most \(A_pL_pr^p\) using
+at most two oracle calls, where
+\(A_p=(2p+1)3^p/p!\).
+\end{lemma}
+
+\begin{proof}
+The integral Taylor remainder gives
+\begin{equation}\label{eq:taylor-remainder}
+\|G(y)-\overline G_x(y)\|
+\le\frac{L_p}{p!}\|y-x\|^p.
+\end{equation}
+Applying the same estimate to \(DG\), one order lower, gives
+\[
+\|DG(y)-D\overline G_x(y)\|_{\mathrm{op}}
+\le\frac{L_p}{(p-1)!}\|y-x\|^{p-1}.
+\]
+These estimates require Lipschitz continuity of \(D^{p-1}G\), rather
+than the existence of a continuous \(D^pG\).
+Monotonicity implies that the symmetric part of \(DG\) is positive
+semidefinite in the interior; continuity extends this conclusion to the
+boundary. The derivative of \(s\mapsto\beta\|s\|^{p-1}s\) is bounded
+below by \(\beta\|s\|^{p-1}I\). Consequently, the symmetric Jacobian of
+the model operator is bounded below by
+\(L_p\|y-x\|^{p-1}I/(p-1)!\).
+Its integral along any nonconstant feasible segment is strictly positive.
+The model is therefore strictly monotone. Continuity and compactness give
+existence, and strict monotonicity gives uniqueness.
+
+The model solution supplies the exact normal
+\begin{equation}\label{eq:taylor-normal}
+n=-\overline G_x(y)-\beta\|y-x\|^{p-1}(y-x)
+\in N_{\mathcal X}(y).
+\end{equation}
+Put \(s=y-x\), \(E=G(y)-\overline G_x(y)\), and
+\(v=G(y)+n=E-\beta\|s\|^{p-1}s\).
+Monotonicity of \(G+N_{\mathcal X}\) gives
+\(\langle v,y-z^\star\rangle\ge0\). If \(s\ne0\),
+\eqref{eq:taylor-remainder} and \(\|x-z^\star\|\le r\) imply
+\[
+\beta(\|s\|-r)\le\frac{L_p}{p!}(\|s\|+r).
+\]
+Since \(\beta=2pL_p/p!\), it follows that
+\(\|s\|\le(2p+1)r/(2p-1)\le3r\). Thus
+\begin{equation}\label{eq:taylor-certificate}
+\|y-x\|\le3r,
+\qquad
+\|G(y)+n\|\le A_pL_pr^p,
+\qquad A_p=\frac{(2p+1)3^p}{p!}.
+\end{equation}
+A jet at \(x\) forms the model, and a query at \(y\) evaluates the
+certificate. If \(y=x\), the first query already evaluates an exact
+certificate.
+\end{proof}
+
+\subsection{A distance-sensitive base solver}
+
+For positive \(\nu,\delta\), define the public logarithmic factor
+\[
+\mathcal L_S(\nu,\delta)
+=1+\ln\!\left(2+\frac{L_pD^{p-1}}{\nu}
+                +\frac{L_pD^p}{\delta}
+                +\frac{\nu D}{\delta}\right).
+\]
+A \emph{strong solver with exponents \((\gamma,b)\)} is a deterministic
+routine for a \(\nu\)-strongly monotone operator \(G\), a supplied start
+\(w\), and a tolerance \(\delta\). It returns an evaluated certificate
+of norm at most \(\delta\), with cost
+\[
+C_S\left[1+\left(\frac{L_pr^{p-1}}{\nu}\right)^\gamma\right]
+\mathcal L_S(\nu,\delta)^b,
+\qquad r=\|w-z^\star\|,
+\]
+without receiving \(r\) or \(z^\star\). The constant \(C_S\) is fixed
+when the routine is constructed. All exponents and constants used below
+are functions of the fixed order \(p\).
+
+\begin{lemma}[Base strongly monotone solver]\label{lem:strong-base}
+There is a strong solver with
+\(\gamma_0=2/(p+1)\) and \(b_0=2\).
+\end{lemma}
+
+\begin{proof}
+First suppose a positive radius \(r\) is a valid bound on the current
+distance to \(z^\star\). Form the model solution from
+Lemma~\ref{lem:taylor-certificate}. If \(s=y-x\ne0\), set
+\[
+\lambda=(\beta\|s\|^{p-1})^{-1},
+\qquad x^+=\Pi_{\mathcal X}(x-\lambda G(y)).
+\]
+This iteration uses at most two original-operator queries. To verify its
+energy inequality, write \(d=x^+-x\). The projection inequality and
+\(\langle n,y-x^+\rangle\ge0\) give, for \(u\in\mathcal X\),
+\begin{align*}
+2\lambda\langle G(y),y-u\rangle
+&\le\|x-u\|^2-\|x^+-u\|^2-\|d\|^2
+       +2\lambda\langle G(y)+n,y-x^+\rangle\\
+&=\|x-u\|^2-\|x^+-u\|^2-\|d-s\|^2-\|s\|^2
+       -2\langle\lambda E,d-s\rangle.
+\end{align*}
+Here \(\lambda(G(y)+n)=\lambda E-s\), and
+\(\|\lambda E\|\le\|s\|/(2p)\). Completing the square proves
+\begin{equation}\label{eq:extragradient-descent}
+2\lambda\langle G(y),y-u\rangle
+\le\|x-u\|^2-\|x^+-u\|^2-\frac34\|s\|^2.
+\end{equation}
+For \(u=z^\star\), strong monotonicity and the solution VI imply
+\(\langle G(y),y-z^\star\rangle\ge\nu\|y-z^\star\|^2\).
+Summing \(T\) iterations therefore gives
+\begin{equation}\label{eq:extragradient-sum}
+2\nu\sum_{i<T}\lambda_i\|y_i-z^\star\|^2
++\frac34\sum_{i<T}\|s_i\|^2\le r^2.
+\end{equation}
+If some \(s_i=0\), that iteration already returns an exact certificate.
+Otherwise, convexity of \(t\mapsto t^{-(p-1)/2}\) yields
+\begin{equation}\label{eq:stepsize-sum}
+\Lambda_T:=\sum_{i<T}\lambda_i
+\ge a_p\frac{T^{(p+1)/2}}{L_pr^{p-1}},
+\qquad
+ a_p=\frac{(p-1)!}{2}\left(\frac34\right)^{(p-1)/2}.
+\end{equation}
+The feasible weighted mean
+\(\overline y=\Lambda_T^{-1}\sum_{i<T}\lambda_i y_i\) satisfies
+\(\|\overline y-z^\star\|^2\le r^2/(2\nu\Lambda_T)\).
+Hence the radius is halved after
+\begin{equation}\label{eq:base-halving-cost}
+T_p(r,\nu)=\max\left\{1,
+\left\lceil
+\left(\frac{2L_pr^{p-1}}{a_p\nu}\right)^{2/(p+1)}
+\right\rceil\right\}
+=O_p\!\left(1+\left(\frac{L_pr^{p-1}}{\nu}\right)^{2/(p+1)}\right)
+\end{equation}
+iterations, each costing at most two queries.
+
+For a supplied radius guess \(\rho>0\), apply these fixed-length
+halving stages with radii \(\rho,\rho/2,\ldots\). Stop at the first
+radius \(r_J\le(\delta/(A_pL_p))^{1/p}\), then apply
+Lemma~\ref{lem:taylor-certificate} and test the evaluated residual.
+The predetermined trial cap is
+\[
+B_0(\rho,\delta)
+=2\sum_{j=0}^{J-1}T_p(\rho2^{-j},\nu)+2.
+\]
+A valid initial radius guarantees success. An invalid radius changes
+neither feasibility nor the finite loop lengths; its trial is accepted
+only if the evaluated residual is at most \(\delta\).
+
+To avoid requiring the true distance, begin with
+\[
+\rho_{\min}=\min\{D,(\nu/L_p)^{1/(p-1)}\}
+\]
+and try \(\rho_{\min},2\rho_{\min},\ldots\), replacing the final
+radius by \(D\) and trying \(D\) only once. Each failed trial restarts
+from the original supplied point \(w\). If
+\(r=\|w-z^\star\|\), the first valid guess \(\rho_*\) satisfies
+\[
+\rho_*\le\max\{\rho_{\min},2r\},
+\qquad
+1+\left(\frac{L_p\rho_*^{p-1}}{\nu}\right)^{\gamma_0}
+\le C_p\left[1+\left(\frac{L_pr^{p-1}}{\nu}\right)^{\gamma_0}\right].
+\]
+There are \(O_p(\mathcal L_S)\) guesses and
+\(O_p(\mathcal L_S)\) halving stages per guess. The polynomial terms
+in the stage costs form a geometric series. Summing all trials up to
+\(\rho_*\) proves the claimed bound with logarithmic power two.
+The final guess is always valid because \(r\le D\), so the routine is
+total. Early exact solutions and successful certificates can only reduce
+its cost.
+\end{proof}
+
+\subsection{Certified restart as an interface transformation}
+
+A \emph{promised-radius monotone solver} receives a monotone operator
+\(G\), a feasible start \(w\), a positive radius \(R\le D\), and a
+tolerance \(\delta>0\). Its promise is
+\(\operatorname{dist}(w,\operatorname{SOL}(G))\le R\).
+It has a finite public query cap and must succeed when the promise is
+valid. When the promise is false, it may return failure, but it may report
+success only with an evaluated certificate of norm at most \(\delta\).
+Suppose its public cap is
+\begin{equation}\label{eq:monotone-interface}
+C_M\left[1+\left(\frac{L_pR^p}{\delta}\right)^\alpha\right]
+\left[1+\ln\!\left(2+\frac DR+\frac{L_pR^p}{\delta}\right)\right]^b.
+\end{equation}
+Ceilings are understood when an integer cap is installed.
+
+\begin{lemma}[Certified restart]\label{lem:certified-restart}
+A promised-radius solver with the bound \eqref{eq:monotone-interface} gives a strong
+solver with exponents \((\alpha,b+2)\).
+\end{lemma}
+
+\begin{proof}
+For a \(\nu\)-strongly monotone operator, the solution \(z^\star\) is
+unique. Monotonicity of the normal cone and
+\(-G(z^\star)\in N_{\mathcal X}(z^\star)\) imply
+\[
+\nu\|x-z^\star\|^2
+\le\langle G(x)+n,x-z^\star\rangle
+\qquad(n\in N_{\mathcal X}(x)).
+\]
+Consequently,
+\begin{equation}\label{eq:restart-error-bound}
+\nu\|x-z^\star\|\le\|G(x)+n\|.
+\end{equation}
+
+For an initial radius guess \(\rho\), set
+\(R_j=\rho2^{-j}\) and
+\(\delta_j=\max\{\delta,\nu R_j/2\}\).
+Starting at \(w\), invoke the promised-radius solver at stage \(j\)
+with radius \(R_j\), tolerance \(\delta_j\), and the public cap in
+\eqref{eq:monotone-interface}. If it reports failure, end this radius trial. If it
+succeeds and \(\delta_j=\delta\), return its certificate. Otherwise,
+use its output as the next stage's start. Equation~\eqref{eq:restart-error-bound}
+validates the next radius \(R_{j+1}\). The trial has at most
+\[
+1+\max\left\{0,
+\left\lceil\log_2\frac{\nu\rho}{2\delta}\right\rceil\right\}
+\]
+stages. A valid initial guess makes every stage valid and guarantees
+success. Even after an invalid initial guess, an accepted intermediate
+certificate still validates the next radius.
+
+Use the same initial-radius list as in Lemma~\ref{lem:strong-base},
+restarting each failed trial from \(w\). Before any original query,
+a counter checks the active stage and ancestor budgets; reaching a cap
+propagates failure to the radius trial. Thus all failed trials have
+predetermined finite costs.
+For each stage,
+\[
+\frac{L_pR_j^p}{\delta_j}
+\le\frac{2L_pR_j^{p-1}}{\nu}.
+\]
+These polynomial terms are geometrically summable. Until termination,
+\[
+\frac D{R_j}
+\le\max\left\{\frac D\rho,\frac{\nu D}{\delta}\right\}
+\le\max\left\{1,
+\left(\frac{L_pD^{p-1}}{\nu}\right)^{1/(p-1)},
+\frac{\nu D}{\delta}\right\}.
+\]
+It follows that every stage logarithm is at most
+\(C_p\mathcal L_S(\nu,\delta)\). One additional logarithm bounds the
+number of stages and another bounds the number of radius guesses.
+The first valid radius again satisfies
+\(\rho_*\le\max\{\rho_{\min},2\|w-z^\star\|\}\).
+Summing the stage and trial caps therefore gives the strong-interface
+bound with exponents \((\alpha,b+2)\).
+\end{proof}
+
+\subsection{A second-difference estimate for Halpern iteration}
+
+The reverse transformation uses the resolvent
+\[
+P_\eta=(I+\eta(F+N_{\mathcal X}))^{-1}.
+\]
+For any input \(x\), this is the unique solution of the regularized VI
+with operator \(z\mapsto F(z)+(z-x)/\eta\). Existence follows from
+compactness and continuity; strong monotonicity gives uniqueness.
+If \(u=P_\eta(x)\) and \(v=P_\eta(x')\), monotonicity implies
+\[
+\langle(x-u)-(x'-v),u-v\rangle\ge0.
+\]
+Thus \(P_\eta\) is firmly nonexpansive. Its evaluations will be
+implemented by the already constructed strong solver.
+
+\begin{lemma}[Halpern second-difference energy]\label{lem:halpern-energy}
+Let \(P\) be firmly nonexpansive, with a fixed point \(z^\star\)
+satisfying \(\|x_0-z^\star\|\le R\). Define the exact orbit
+\[
+\overline x_0=x_0,\qquad \overline y_t=P(\overline x_t),\qquad
+\overline x_{t+1}=\frac{x_0+(t+1)\overline y_t}{t+2}.
+\]
+For every integer \(k\ge2\),
+\begin{equation}\label{eq:second-difference-energy}
+\sum_{t=k}^{2k-1}
+\|\overline y_t-2\overline y_{t-1}+\overline y_{t-2}\|^2
+\le32\frac{R^2(1+H_{2k})^2}{k^2},
+\end{equation}
+where \(H_j=\sum_{i=1}^j i^{-1}\). Moreover,
+\[
+\|\overline x_t-\overline y_t\|
+\le\frac{2R(1+H_{t+1})}{t+1}.
+\]
+\end{lemma}
+
+\begin{proof}
+Every \(\overline x_t\) and \(\overline y_t\) lies within \(R\) of
+\(z^\star\). Set
+\(b_t=\overline x_t-\overline x_{t-1}\) and
+\(a_t=\overline y_t-\overline y_{t-1}\).
+Subtracting successive updates gives, for \(t\ge2\),
+\[
+b_t=\frac{t}{t+1}a_{t-1}
+       +\frac{\overline y_{t-2}-x_0}{t(t+1)}.
+\]
+Since \(\|a_t\|\le\|b_t\|\) and \(\|b_1\|\le R\), induction yields
+\[
+\|b_t\|\le\frac{2RH_t}{t+1}.
+\]
+Writing \(c_t=b_t-a_{t-1}\), the same recurrence gives
+\[
+\|c_t\|\le\frac{2R(1+H_{t-1})}{t(t+1)}.
+\]
+Firm nonexpansiveness gives
+\[
+\|a_t\|^2+\|b_t-a_t\|^2
+\le\|b_t\|^2=\|a_{t-1}+c_t\|^2.
+\]
+Summing over \(k\le t\le2k-1\) and dropping the final nonnegative
+term therefore gives
+\[
+\sum_{t=k}^{2k-1}\|b_t-a_t\|^2
+\le\|a_{k-1}\|^2+
+\sum_{t=k}^{2k-1}
+       (2\|a_{t-1}\|\|c_t\|+\|c_t\|^2)
+\le14\frac{R^2(1+H_{2k})^2}{k^2}.
+\]
+Also \(\sum_{t=k}^{2k-1}\|c_t\|^2
+\le2R^2(1+H_{2k})^2/k^2\).
+Since
+\(a_t-a_{t-1}=c_t-(b_t-a_t)\), these two estimates prove
+\eqref{eq:second-difference-energy}. Finally, for \(t\ge1\),
+\[
+\overline x_t-\overline y_t
+=\frac{x_0-\overline y_{t-1}}{t+1}-a_t.
+\]
+The displayed residual bound follows from
+\(\|x_0-\overline y_{t-1}\|\le2R\) and the bound on \(a_t\).
+The case \(t=0\) follows directly from nonexpansiveness.
+\end{proof}
+
+\subsection{Extrapolated inexact Halpern iteration and its cost}
+
+\begin{lemma}[Boosting a strong solver]\label{lem:strong-boost}
+Suppose a strong solver has exponents \((\gamma,b)\), where
+\begin{equation}\label{eq:boost-exponent-range}
+\frac{2}{3(p-1)}\le\gamma\le\frac{2}{p+1}.
+\end{equation}
+Then there is a promised-radius monotone solver of the form
+\eqref{eq:monotone-interface} with exponents
+\(\alpha=\gamma/(1+\gamma)\) and \(b+4\).
+\end{lemma}
+
+\begin{proof}
+Consider a monotone problem with start \(x_0\), positive radius promise
+\(R\le D\), and target residual \(\varepsilon\). Define
+\[
+Q_R=\frac{L_pR^p}{\varepsilon},\qquad
+\mathcal L_A=1+\ln\!\left(2+\frac DR+Q_R\right),\qquad
+K=\max\{2,\lceil Q_R^\alpha\rceil\}.
+\]
+Use the parameters
+\begin{equation}\label{eq:halpern-parameters}
+e=\frac{R}{(K+2)^4},\qquad
+\eta=\frac{8R(1+H_{K+1})}{\varepsilon(K+1)},\qquad
+\delta=\frac e\eta.
+\end{equation}
+At iteration \(t\), define
+\(G_t(z)=F(z)+(z-x_t)/\eta\), which is \(1/\eta\)-strongly monotone
+and retains the original \(L_p\)-smoothness promise. Its exact solution
+is \(y_t^*=P_\eta(x_t)\).
+
+The implemented algorithm has \(K+1\) inner calls:
+\begin{enumerate}[label=\arabic*.,leftmargin=*]
+\item Set \(x_0\) equal to the supplied start. At \(t=0\), use
+\(w_0=x_0\); at \(t=1\), use \(w_1=\widehat y_0\); and, for
+\(t\ge2\), use the feasible extrapolation
+\[
+w_t=\Pi_{\mathcal X}(2\widehat y_{t-1}-\widehat y_{t-2}).
+\]
+\item Invoke the input strong solver on \(G_t\), starting from \(w_t\),
+with modulus \(1/\eta\) and tolerance \(\delta\). Save its evaluated
+certificate \((\widehat y_t,n_t,G_t(\widehat y_t))\).
+\item If \(t<K\), set
+\[
+x_{t+1}=\frac{x_0+(t+1)\widehat y_t}{t+2}
+\]
+and continue. After \(t=K\), recover
+\(F(\widehat y_K)=G_K(\widehat y_K)-(\widehat y_K-x_K)/\eta\).
+Return the saved certificate only if its evaluated norm
+\(\|F(\widehat y_K)+n_K\|\) is at most \(\varepsilon\); otherwise
+report failure.
+\end{enumerate}
+A shared raw-query cap, specified below, aborts a run before its next
+query would exceed the budget. An affine-regularized jet costs exactly
+one original jet. Projections and convex combinations keep every query
+feasible.
+
+Assume first that the radius promise is valid, and choose a solution
+\(z^\star\) with \(\|x_0-z^\star\|\le R\). Let
+\((\overline x_t,\overline y_t)\) be the exact shadow orbit of
+Lemma~\ref{lem:halpern-energy} for \(P_\eta\), with the same anchor.
+Strong monotonicity and the inner certificate imply
+\[
+\|\widehat y_t-y_t^*\|\le\eta\delta=e.
+\]
+Induction through the two Halpern recursions gives
+\[
+\|x_t-\overline x_t\|\le\frac{te}{2},\qquad
+\|\widehat y_t-\overline y_t\|\le\frac{(t+2)e}{2}.
+\]
+For the actual warm-start distances \(r_t=\|w_t-y_t^*\|\),
+nonexpansiveness of projection and of \(P_\eta\) gives
+\(r_0,r_1\le3R\), and, for \(t\ge2\),
+\[
+r_t\le
+\|\overline y_t-2\overline y_{t-1}+\overline y_{t-2}\|
++(2t+1)e.
+\]
+
+Put \(a=(p-1)\gamma\); condition~\eqref{eq:boost-exponent-range} implies
+\(2/3\le a<2\). Power mean and
+Lemma~\ref{lem:halpern-energy} give, on a dyadic block of length \(k\),
+\[
+\sum_{t=k}^{2k-1}
+\|\overline y_t-2\overline y_{t-1}+\overline y_{t-2}\|^a
+\le32^{a/2}R^a(1+H_{2k})^a k^{1-3a/2}.
+\]
+The exponent of \(k\) is nonpositive. Summing the dyadic blocks and
+using \((u+v)^a\le2(u^a+v^a)\) yields
+\begin{equation}\label{eq:warm-start-sum}
+\sum_{t=0}^{K}r_t^{(p-1)\gamma}
+\le C_pR^{(p-1)\gamma}
+            [1+\ln(K+2)]^{(p-1)\gamma+1}.
+\end{equation}
+Indeed, the accumulated perturbation contributes at most
+\[
+2e^a\sum_{t=2}^{K}(2t+1)^a
+\le2\cdot3^aR^a K^{1-3a}\le2\cdot3^aR^a.
+\]
+The exact shadow orbit may be extended beyond \(K\) when bounding an
+incomplete final block; no additional queries are performed.
+
+For correctness of the returned point, the saved regularized residual
+and the preceding orbit estimates imply
+\begin{equation}\label{eq:boost-certificate}
+\|F(\widehat y_K)+n_K\|
+\le\eta^{-1}\left[
+\frac{2R(1+H_{K+1})}{K+1}+(K+2)e\right]
+<\varepsilon.
+\end{equation}
+The first term after division by \(\eta\) is \(\varepsilon/4\),
+and the second is smaller than \(\varepsilon/8\). Thus every
+valid-promise run passes the final evaluated test.
+
+We next count all inner calls. Let \(h=1+H_{K+1}\).
+The logarithmic factor for every inner strong solve is
+\(\mathcal L_S(1/\eta,e/\eta)\). Its three dimensionless terms are
+\[
+\eta L_pD^{p-1}
+=\frac{8hQ_R}{K+1}\left(\frac DR\right)^{p-1},
+\]
+\[
+\frac{L_pD^p}{e/\eta}
+=\frac{8hQ_R(K+2)^4}{K+1}\left(\frac DR\right)^p,
+\qquad
+\frac{(1/\eta)D}{e/\eta}=\frac DR(K+2)^4.
+\]
+Since \(K\) is polynomially bounded by \(1+Q_R\), these identities
+show that
+\(\mathcal L_S(1/\eta,e/\eta)\le C_p\mathcal L_A\), while
+\(h\) and \(1+\ln(K+2)\) are also at most \(C_p\mathcal L_A\).
+Summing the input strong-interface costs using
+\eqref{eq:warm-start-sum} gives a bound with logarithmic power
+\(b+1+p\gamma\). By \eqref{eq:boost-exponent-range},
+\(1+p\gamma\le1+2p/(p+1)<3\); the following slightly larger power
+is convenient for the whole hierarchy:
+\begin{equation}\label{eq:boost-query-cost}
+C_p\mathcal L_A^{\,b+4}
+\left[K+1+\left(\frac{Q_R}{K+1}\right)^\gamma\right].
+\end{equation}
+The identity \(\gamma(1-\alpha)=\alpha\) and the definition of
+\(K\) show that its bracket is \(O_p(1+Q_R^\alpha)\).
+
+For completeness, the following entirely public finite sum implements
+the cap used in this argument:
+\[
+U_a(K)=4\cdot3^a+
+2\cdot32^{a/2}\sum_{j=1}^{\lfloor\log_2K\rfloor}
+ (1+H_{2^{j+1}})^a\,2^{j(1-3a/2)}.
+\]
+The preceding block calculation gives
+\(\sum_{t=0}^{K}r_t^a\le R^aU_a(K)\).
+If \(C_S\) is the fixed constant of the input strong solver, install
+the shared original-oracle cap
+\[
+B=\left\lceil
+C_S\mathcal L_S(1/\eta,e/\eta)^b
+\left[K+1+(\eta L_p)^\gamma R^aU_a(K)\right]
+\right\rceil+1.
+\]
+On a valid promise, the sum of all completed inner-solver costs is at
+most \(B\), so the cap cannot interrupt the run. On an invalid
+promise, every descendant checks this same counter before making a
+query. An exhausted budget propagates failure; a completed run must
+still pass the final evaluated residual test. This proves the claimed
+promised-radius interface, including finite caps and sound acceptance.
+\end{proof}
+
+\subsection{Finite acceleration and completion of the proof}
+
+Start with Lemma~\ref{lem:strong-base}, then apply
+Lemma~\ref{lem:strong-boost} followed by
+Lemma~\ref{lem:certified-restart}. At hierarchy level \(j\), the strong
+solver has exponents
+\begin{equation}\label{eq:finite-hierarchy}
+\gamma_j=\frac{2}{p+1+2j},
+\qquad b_j=6j+2.
+\end{equation}
+This follows by induction from
+\(\gamma\mapsto\gamma/(1+\gamma)\), with four logarithmic powers
+assigned to the boost and two to restart. For each
+\(j=1,\ldots,p-1\), the input exponent satisfies
+\[
+\frac{2}{3(p-1)}\le\gamma_{j-1}\le\frac{2}{p+1},
+\qquad
+(p-1)\gamma_{j-1}
+=\frac{2(p-1)}{p+2j-1}\ge\frac23.
+\]
+Every invocation of the boost is therefore valid, including the endpoint
+in the last layer. At \(j=p-1\), equation~\eqref{eq:finite-hierarchy} gives
+\(\gamma_{p-1}=2/(3p-1)\) and \(b_{p-1}=6p-4\).
+The hierarchy has exactly \(p-1\) layers; each layer uses only routines
+already constructed at lower levels.
+
+Apply the final strong solver to \(F\), with start \(x_0\), modulus
+\(\mu\), and tolerance \(\varepsilon\). Its distance-sensitive bound
+is \eqref{eq:distance-sensitive-upper}. Since \(r_0=\|x_0-x^\star\|\le D\) and
+\begin{equation}\label{eq:log-identities}
+\frac{L_pD^p}{\varepsilon}=\frac{\kappa_D}{\theta},
+\qquad
+\frac{\mu D}{\varepsilon}=\frac1\theta,
+\end{equation}
+we have
+\(\mathcal L_S(\mu,\varepsilon)=\mathcal H(\kappa_D,\theta)\).
+This proves \eqref{eq:hierarchy-upper}.
+
+Finally, the construction respects the policy requirements of
+Section~\ref{sec:setup}. For each fixed public domain, known-coefficient
+model VIs have unique solutions on every legal transcript. Compactness
+and passage to the VI limit show that these solutions depend continuously
+on the coefficients within the unique-solution class. The closed,
+compact-valued solution relation admits a Borel selection on the remaining
+coefficient tuples, which makes the rules total there as well.
+Tensor arithmetic, projections, finite loops, and evaluated norm tests
+are measurable. Radius lists, halving stages, and ancestor counters are
+finite and public. Every accepted certificate uses an operator value at
+the returned point, and affine corrections require no additional query.
+These observations complete the proof of Theorem~\ref{thm:upper}.
+
+\section{Randomized Lower Bound}\label{sec:lower}
+
+The hard instance is a smooth contractive chain placed in an unknown
+orthonormal frame. Its flat gates hide complete derivative tensors, while
+the contraction defect determines the strong-monotonicity modulus. We
+first establish the geometric and analytic properties of the chain, then
+prove that arbitrary adaptive queries cannot uncover it quickly enough.
+
+\subsection{A smooth chain with flat gates}
+
+Let
+\[
+\eta_0(t)=
+\begin{cases}
+e^{-1/t},&t>0,\\
+0,&t\le0,
+\end{cases}
+\qquad
+\chi(t)=\frac{\eta_0(t)}{\eta_0(t)+\eta_0(1-t)},
+\qquad
+\varrho(u)=\chi\!\left(\frac{4u^2-1}{3}\right).
+\]
+Thus $\varrho$ is an even $C^\infty$ function with values in $[0,1]$,
+equal to zero on $[-1/2,1/2]$ and to one outside $(-1,1)$. Define
+\begin{equation}\label{eq:flat-gate}
+B_p=\max\{1,\|\varrho^{(p-1)}\|_\infty\},
+\qquad
+h_\tau(s)=\tau\int_0^{s/\tau}\varrho(u)\,du.
+\end{equation}
+
+\begin{lemma}[Flat-gate properties]\label{lem:flat-gate}
+For every $\tau>0$, the function $h_\tau$ is odd and $C^\infty$.
+It and all its derivatives vanish on $[-\tau/2,\tau/2]$. Moreover,
+\[
+0\le h_\tau'(s)\le1,
+\qquad |h_\tau(s)|\le |s|,
+\qquad |s-h_\tau(s)|\le\tau,
+\]
+and
+\begin{equation}\label{eq:gate-smoothness}
+\operatorname{Lip}(h_\tau^{(p-1)})
+\le B_p\tau^{1-p}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Oddness follows from the evenness of $\varrho$, and
+$h_\tau'(s)=\varrho(s/\tau)$. Exact flatness follows from the
+definition on the open slab and smoothness at its endpoints.
+Since $0\le\varrho\le1$, the function $h_\tau$ is 1-Lipschitz and
+vanishes at zero. For $s\ge0$,
+\[
+0\le s-h_\tau(s)
+=\int_0^s(1-\varrho(t/\tau))\,dt\le\tau;
+\]
+oddness gives the same absolute bound for $s<0$. Finally,
+$h_\tau^{(p)}(s)=\tau^{1-p}\varrho^{(p-1)}(s/\tau)$, which proves
+\eqref{eq:gate-smoothness}.
+\end{proof}
+
+For an integer $m\ge2$, set
+\begin{equation}\label{eq:chain-parameters}
+R=\frac D2,\qquad
+q=1-\frac1{2m},\qquad
+c=\frac{R}{2\sqrt m},\qquad
+\tau=\frac{R}{16m^{3/2}},\qquad
+\lambda=\frac{L_p\tau^{p-1}}{B_p}.
+\end{equation}
+Let $\mathcal X=\{x\in\R^d:\|x\|\le R\}$ and $x_0=0$.
+For an orthonormal $m$-frame $V=(v_1,\ldots,v_m)$, define
+\begin{equation}\label{eq:hard-family}
+T_V(x)=cv_1+q\sum_{i=1}^{m-1}
+h_\tau(\langle v_i,x\rangle)v_{i+1},
+\qquad
+F_V(x)=\lambda(x-T_V(x)).
+\end{equation}
+
+\begin{lemma}[Geometry and regularity of the chain]\label{lem:chain-regularity}
+The map $T_V$ is a contraction and preserves $\mathcal X$:
+\begin{equation}\label{eq:chain-contraction}
+\|T_V(x)-T_V(y)\|\le q\|x-y\|,
+\qquad T_V(\mathcal X)\subseteq\mathcal X.
+\end{equation}
+The operator $F_V$ is globally smooth and strongly monotone with
+certified modulus
+\begin{equation}\label{eq:chain-modulus}
+\mu_m=\lambda(1-q)=\frac{\lambda}{2m}.
+\end{equation}
+Its highest-derivative Lipschitz modulus is at most $L_p$.
+Its unique zero $x^\star$ is interior to $\mathcal X$ and satisfies
+\begin{equation}\label{eq:interior-zero}
+\frac{3R}{16}\le\|x^\star\|\le\frac R2<R.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+By orthogonality, the 1-Lipschitz property of $h_\tau$, and Bessel's
+inequality,
+\[
+\|T_V(x)-T_V(y)\|^2
+\le q^2\sum_{i=1}^{m-1}|\langle v_i,x-y\rangle|^2
+\le q^2\|x-y\|^2.
+\]
+For $\|x\|\le R$, the same calculation gives
+\[
+\|T_V(x)\|^2\le c^2+q^2R^2
+=R^2\left(1-\frac{3m-1}{4m^2}\right)\le R^2.
+\]
+The contraction bound implies
+\[
+\langle F_V(x)-F_V(y),x-y\rangle
+\ge\lambda(1-q)\|x-y\|^2,
+\]
+which proves \eqref{eq:chain-modulus}.
+
+To verify smoothness without a dimension factor, take arbitrary unit
+vectors $u_1,\ldots,u_p$. Since $p\ge2$, the affine part of $F_V$
+has zero $p$th derivative. The nonlinear part satisfies
+\begin{align*}
+\|D^pF_V(x)[u_1,\ldots,u_p]\|^2
+&=\lambda^2q^2\sum_{i=1}^{m-1}
+ |h_\tau^{(p)}(\langle v_i,x\rangle)|^2
+ \prod_{j=1}^p|\langle v_i,u_j\rangle|^2\\
+&\le\lambda^2q^2B_p^2\tau^{2-2p}
+ \sum_{i=1}^{m-1}|\langle v_i,u_1\rangle|^2
+\le\lambda^2q^2B_p^2\tau^{2-2p}.
+\end{align*}
+Consequently,
+\begin{equation}\label{eq:chain-smoothness}
+\|D^pF_V(x)\|_{\mathrm{op}}
+\le\lambda qB_p\tau^{1-p}\le L_p.
+\end{equation}
+Integration along line segments gives the required Lipschitz bound on
+$D^{p-1}F_V$.
+
+The contraction has a unique fixed point
+$x^\star=\sum_{i=1}^m s_i v_i$, with
+$s_1=c$ and $s_{i+1}=qh_\tau(s_i)$. Since
+$0\le h_\tau(s)\le s$ for $s\ge0$,
+$0\le s_i\le cq^{i-1}\le c$. The estimate
+$h_\tau(s)\ge s-\tau$ also gives
+\[
+s_i\ge cq^{i-1}-\tau\sum_{j=1}^{i-1}q^j
+\ge\frac c2-m\tau=\frac{3c}{8}.
+\]
+Here $q^{m-1}\ge1/2$ by Bernoulli's inequality and $m\tau=c/8$.
+Thus $3c\sqrt m/8\le\|x^\star\|\le c\sqrt m$, proving
+\eqref{eq:interior-zero}.
+\end{proof}
+
+\subsection{A boundary-safe residual obstruction}
+
+\begin{lemma}[A hidden final coordinate forces a large residual]
+\label{lem:hidden-residual}
+For the operator \eqref{eq:hard-family},
+\begin{equation}\label{eq:boundary-residual}
+r_{\mathrm{tan}}(x)=\|F_V(x)\|
+\qquad(x\in\mathcal X).
+\end{equation}
+If $|\langle v_m,x\rangle|\le\tau/2$, then
+\begin{equation}\label{eq:hidden-slab-residual}
+r_{\mathrm{tan}}(x)
+\ge\frac{\lambda R}{8m}
+=\frac{\mu_mD}{8}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The normal cone is zero in the interior. On the boundary,
+$N_{\mathcal X}(x)=\{ax:a\ge0\}$ and, by \eqref{eq:chain-contraction},
+\[
+\langle F_V(x),x\rangle
+=\lambda(R^2-\langle T_V(x),x\rangle)\ge0.
+\]
+It follows that $\|F_V(x)+ax\|^2\ge\|F_V(x)\|^2$ for all $a\ge0$,
+so \eqref{eq:boundary-residual} also holds at the boundary.
+
+Write $s_i=\langle v_i,x\rangle$, $e=x-T_V(x)$, and
+$w=\sum_{i=1}^m q^{m-i}v_i$. The chain telescopes exactly:
+\begin{align*}
+\langle w,e\rangle
+&=s_m-cq^{m-1}
+ +\sum_{i=1}^{m-1}q^{m-i}\bigl(s_i-h_\tau(s_i)\bigr)\\
+&\le\frac\tau2-\frac c2+m\tau
+\le-\frac c4.
+\end{align*}
+We used $|s_m|\le\tau/2$, Lemma~\ref{lem:flat-gate},
+$m\tau=c/8$, and $\tau/2\le c/16$.
+Since $\|w\|\le\sqrt m$, Cauchy--Schwarz gives
+$\|e\|\ge c/(4\sqrt m)=R/(8m)$. Multiplying by $\lambda$ and using
+\eqref{eq:chain-modulus} and \eqref{eq:boundary-residual} proves \eqref{eq:hidden-slab-residual}.
+\end{proof}
+
+\subsection{Exact hiding under adaptive randomized queries}
+
+The next lemma is the information-theoretic step. It concerns one
+distribution of fixed instances, drawn independently of the algorithm's
+seed, and includes the algorithm's final output in the hiding event.
+
+\begin{lemma}[Adaptive full-jet hiding]\label{lem:adaptive-hiding}
+Let $N=m-1$ and suppose
+\begin{equation}\label{eq:lower-dimension}
+d\ge m+
+\left\lceil2048m^3\ln\bigl(8(m^2+1)\bigr)\right\rceil.
+\end{equation}
+For any randomized adaptive policy making at most $N$ feasible full-jet
+queries and returning a feasible point, there is a fixed frame $V_0$
+such that
+\[
+\Pr_{\mathrm{seed}}\!\left\{
+r_{\mathrm{tan}}^{F_{V_0}}(\widehat x)
+\ge\frac{\mu_mD}{8}\right\}\ge\frac34.
+\]
+The frame may depend on the policy, but is independent of its realized
+seed.
+\end{lemma}
+
+\begin{proof}
+Pad early stopping with ignored queries while retaining the saved output.
+We use total Borel query and output rules on finite transcripts. Applying
+the known projection onto $\mathcal X$ and enforcing the cap $N$ extends
+feasibility and stopping to all transcripts without changing any legal
+run. This makes the following auxiliary simulation well defined even
+when its replies do not form a legal transcript.
+
+Draw the complete frame $V$ from Haar measure, independently of the seed
+$U$. At simulated query $t\in\{1,\ldots,N\}$, return the full jet of
+\[
+F_t^V(x)=\lambda\left(
+x-cv_1-q\sum_{i=1}^{t-1}
+h_\tau(\langle v_i,x\rangle)v_{i+1}\right).
+\]
+Let $\widetilde x_t$ and $\widetilde x_{\mathrm{out}}$ be the queries
+and saved output in this simulation. Inductively,
+$\widetilde x_t$ is measurable with respect to
+$(U,v_1,\ldots,v_{t-1})$, and the response at step $t$ depends only on
+$(U,v_1,\ldots,v_t)$. The final output is therefore measurable with
+respect to $(U,v_1,\ldots,v_N)$. This argument does not require the
+policy to recover the frame vectors from its observations.
+
+We use the following elementary spherical tail bound. If $v$ is uniform
+on the unit sphere of a $k$-dimensional subspace and $\|x\|\le R$, then
+\begin{equation}\label{eq:spherical-tail}
+\Pr\{|\langle v,x\rangle|>a\}
+\le2\exp\!\left(-\frac{ka^2}{2R^2}\right).
+\end{equation}
+Indeed, with $x$ first projected onto that subspace, the even moments
+satisfy
+\[
+\mathbb E\langle v,x\rangle^{2j}
+=\frac{(2j-1)!!\,\|x\|^{2j}}
+ {k(k+2)\cdots(k+2j-2)}
+\le\frac{(2j-1)!!\,R^{2j}}{k^j}.
+\]
+Symmetry and the exponential series imply
+$\mathbb E e^{t\langle v,x\rangle}\le e^{t^2R^2/(2k)}$.
+Applying the exponential Markov inequality to both signs proves
+\eqref{eq:spherical-tail}.
+
+Define the good event
+\[
+\mathcal E=
+\bigcap_{t=1}^{N}\ \bigcap_{i=t}^{m-1}
+\left\{|\langle v_i,\widetilde x_t\rangle|\le\frac\tau2\right\}
+\ \cap\
+\left\{|\langle v_m,\widetilde x_{\mathrm{out}}\rangle|
+\le\frac\tau2\right\}.
+\]
+Conditioning on $(U,v_1,\ldots,v_{t-1})$ fixes
+$\widetilde x_t$. Each remaining $v_i$ has a uniform spherical marginal
+in the orthogonal complement of this prefix, whose dimension is
+$d-t+1$. For the final-output event, condition instead on
+$(U,v_1,\ldots,v_N)$; the remaining dimension is $d-m+1$.
+In each case the dimension is at least $d-m$. We apply
+\eqref{eq:spherical-tail} under this conditioning and then integrate, without
+conditioning on any earlier slab event. There are
+$m(m-1)/2+1<m^2+1$ events. Since $\tau/2=R/(32m^{3/2})$, the union
+bound and \eqref{eq:lower-dimension} yield
+\[
+\Pr(\mathcal E^c)
+\le2(m^2+1)\exp\!\left(-\frac{d-m}{2048m^3}\right)
+\le\frac14.
+\]
+
+On $\mathcal E$, every gate omitted from $F_t^V$ and every derivative
+of that gate vanishes at $\widetilde x_t$. Thus
+$\mathcal O_p^{F_V}(\widetilde x_t)
+=\mathcal O_p^{F_t^V}(\widetilde x_t)$. Induction on $t$ shows that
+the genuine and simulated transcripts, queries, and saved outputs agree
+exactly. Lemma~\ref{lem:hidden-residual} then implies, jointly over the
+frame and seed,
+\begin{equation}\label{eq:joint-failure}
+\Pr_{V,U}\!\left\{
+r_{\mathrm{tan}}^{F_V}(\widehat x)
+\ge\frac{\lambda R}{8m}\right\}\ge\frac34.
+\end{equation}
+All events are measurable: the hard-family jets are continuous in the
+frame and query point, and the finite policy recursion is Borel.
+Averaging \eqref{eq:joint-failure} over frames gives a fixed $V_0$ for which
+the same failure probability over $U$ is at least $3/4$.
+\end{proof}
+
+\subsection{Calibration to the public monotonicity modulus}
+
+We now prove Theorem~\ref{thm:lower}. Define constants depending only on
+$p$ by
+\begin{equation}\label{eq:lower-constants}
+c_p^{\mathrm{sc}}=\frac1{2^pB_p16^{p-1}},\qquad
+\kappa_{0,p}=\frac{2^{(3p-1)/2}}{c_p^{\mathrm{sc}}},\qquad
+c_p=\frac12(c_p^{\mathrm{sc}})^{2/(3p-1)}.
+\end{equation}
+For any public tuple satisfying \eqref{eq:lower-regime}, choose
+\begin{equation}\label{eq:chain-length}
+s=(c_p^{\mathrm{sc}}\kappa_D)^{2/(3p-1)},
+\qquad m=\lfloor s\rfloor.
+\end{equation}
+Then $s\ge2$, so $m\ge2$ and $m\ge s/2$. Substituting
+\eqref{eq:chain-parameters} into \eqref{eq:chain-modulus} gives
+\begin{equation}\label{eq:modulus-calibration}
+\mu_m
+=c_p^{\mathrm{sc}}\frac{L_pD^{p-1}}{m^{(3p-1)/2}}
+=\mu\left(\frac{s}{m}\right)^{(3p-1)/2}
+\ge\mu.
+\end{equation}
+Together with Lemma~\ref{lem:chain-regularity}, this verifies every
+public promise for every frame: the domain has diameter $D$, the
+highest-derivative Lipschitz modulus is at most $L_p$, and the
+strong-monotonicity modulus is at least $\mu$.
+
+Choose a dimension satisfying \eqref{eq:lower-dimension}. If a randomized policy
+has cap $m-1$, Lemma~\ref{lem:adaptive-hiding} provides one fixed legal
+instance on which, with probability at least $3/4$,
+\begin{equation}\label{eq:fixed-instance-failure}
+r_{\mathrm{tan}}(\widehat x)
+\ge\frac{\mu_mD}{8}
+\ge\frac{\mu D}{8}
+\ge2\varepsilon.
+\end{equation}
+Its success probability is therefore at most $1/4$, contradicting the
+required $2/3$. Hence
+\[
+\Trand(\varepsilon;L_p,\mu,D)
+\ge m\ge\frac s2
+=c_p\kappa_D^{2/(3p-1)},
+\]
+as claimed. The polynomial exponent comes directly from the chain's
+calibration
+$\mu_m\asymp_p L_pD^{p-1}m^{-(3p-1)/2}$; the random frame removes
+restrictions on the adaptive policy without changing this exponent.
+
+
+\section{Transfer to Scalar Saddle Problems}\label{sec:saddle}
+
+The upper bound also applies to strongly convex--strongly concave
+objectives. The transfer preserves the smoothness constant, the
+residual, and the number of oracle calls.
+
+Let $\mathcal X\subseteq\R^{d_x}$ and
+$\mathcal Y\subseteq\R^{d_y}$ be known nonempty compact convex sets,
+and suppose $\mathcal Z=\mathcal X\times\mathcal Y$ has diameter at
+most $D$ in the Euclidean product norm
+$\|(x,y)\|^2=\|x\|^2+\|y\|^2$. A feasible start $z_0$ is public.
+Let $\phi$ be $C^p$ on a neighborhood of $\mathcal Z$, with
+$\mu_x$-strongly convex $x$-sections and $\mu_y$-strongly concave
+$y$-sections, where $\mu_x,\mu_y>0$. Assume
+\begin{equation}\label{eq:scalar-smoothness}
+\|D^p\phi(z)-D^p\phi(z')\|_{\mathrm{sc},p}
+\le L_p\|z-z'\|
+\qquad(z,z'\in\mathcal Z),
+\end{equation}
+where $\|\cdot\|_{\mathrm{sc},p}$ is the norm of a scalar $p$-linear
+form, taking the supremum of its absolute value over unit inputs.
+One scalar oracle call returns
+\begin{equation}\label{eq:scalar-jet}
+(\phi(z),D\phi(z),\ldots,D^p\phi(z)).
+\end{equation}
+All parameter promises and policy conventions are as in
+Section~\ref{sec:setup}.
+
+Write $\mathsf T_{p,\mathrm{sad}}^{\mathrm{det,cert}}$ for the
+corresponding deterministic certificate complexity. The required
+output is an evaluated triple $(\widehat z,n,\nabla\phi(\widehat z))$,
+where $n=(n_x,n_y)\in
+N_{\mathcal X}(\widehat x)\times N_{\mathcal Y}(\widehat y)$ and
+\begin{equation}\label{eq:saddle-certificate}
+\left\|
+\binom{\nabla_x\phi(\widehat z)}{-\nabla_y\phi(\widehat z)}+n
+\right\|\le\varepsilon.
+\end{equation}
+The gradient in this certificate must come from a charged call at
+$\widehat z$.
+
+\begin{theorem}[Exact scalar-jet simulation]\label{thm:transfer}
+With $\mu=\min\{\mu_x,\mu_y\}$,
+\begin{equation}\label{eq:scalar-simulation}
+\mathsf T_{p,\mathrm{sad}}^{\mathrm{det,cert}}
+(\varepsilon;L_p,\mu_x,\mu_y,D)
+\le
+\Tcert(\varepsilon;L_p,\mu,D).
+\end{equation}
+Each operator call is simulated by exactly one scalar call. The
+simulation preserves all nested and final evaluations, and the
+operator tangent residual equals the product KKT residual.
+\end{theorem}
+
+\begin{proof}
+On $E=\R^{d_x}\times\R^{d_y}$, set
+\begin{equation}\label{eq:signed-gradient}
+J=\operatorname{diag}(I_{d_x},-I_{d_y}),
+\qquad
+F_\phi=J\nabla\phi
+=\binom{\nabla_x\phi}{-\nabla_y\phi}.
+\end{equation}
+Add the strong-convexity inequalities in $x$ at
+$(x_1,y_1)$ and $(x_2,y_2)$, evaluated respectively at $x_2$ and
+$x_1$, and the strong-concavity inequalities at the same two points,
+evaluated respectively at $y_2$ and $y_1$. Their four function values
+cancel, giving
+\begin{equation}\label{eq:saddle-monotonicity}
+\langle F_\phi(z_1)-F_\phi(z_2),z_1-z_2\rangle
+\ge\mu_x\|x_1-x_2\|^2+\mu_y\|y_1-y_2\|^2
+\ge\mu\|z_1-z_2\|^2.
+\end{equation}
+This proof uses only feasible chords, so it includes boundary points
+and lower-dimensional factors.
+
+For a scalar $(k+1)$-linear form $A$, define the vector-valued
+$k$-linear form $\mathcal R_k(A)$ by Euclidean duality:
+\[
+\langle\mathcal R_k(A)[u_1,\ldots,u_k],u_0\rangle
+=A[u_0,u_1,\ldots,u_k].
+\]
+For $k=0$, this is the usual identification of a linear functional
+with its gradient vector. Since $J$ is orthogonal,
+\begin{equation}\label{eq:tensor-isometry}
+\|J\mathcal R_k(A)\|_{\mathrm{vec},k}
+=\|A\|_{\mathrm{sc},k+1}.
+\end{equation}
+Furthermore, for $0\le k\le p-1$,
+\begin{equation}\label{eq:jet-conversion}
+D^kF_\phi(z)=J\mathcal R_k(D^{k+1}\phi(z)).
+\end{equation}
+Equations \eqref{eq:scalar-smoothness}, \eqref{eq:tensor-isometry}, and \eqref{eq:jet-conversion}
+give $\operatorname{Lip}(D^{p-1}F_\phi)\le L_p$ with no dimension
+factor. Thus $F_\phi$ belongs to the operator class with public
+parameters $(p,L_p,\mu,D)$.
+
+The outward normal cone factors as
+\begin{equation}\label{eq:product-normal}
+N_{\mathcal Z}(x,y)
+=N_{\mathcal X}(x)\times N_{\mathcal Y}(y).
+\end{equation}
+Consequently, the constrained first-order saddle conditions are
+equivalent to $0\in F_\phi(z)+N_{\mathcal Z}(z)$, and
+\begin{equation}\label{eq:residual-identity}
+r_{\mathrm{KKT}}(x,y)
+:=\operatorname{dist}\!\left(0,
+\binom{\nabla_x\phi(x,y)}{-\nabla_y\phi(x,y)}
++N_{\mathcal X}(x)\times N_{\mathcal Y}(y)\right)
+=r_{\mathrm{tan}}^{F_\phi}(x,y).
+\end{equation}
+
+To implement any deterministic operator policy, make one scalar call
+at each point it requests and transform the returned tensors using
+\eqref{eq:jet-conversion}. These are fixed linear transformations. The converted
+responses are exactly the operator's full jets, so the two transcripts
+and all subsequent queries agree. This includes every nested call,
+the stopping rule, and the final certificate evaluation. Equations
+\eqref{eq:product-normal}--\eqref{eq:residual-identity} convert the saved certificate without
+an additional query. The policy therefore has the same pathwise cap,
+which proves \eqref{eq:scalar-simulation}.
+\end{proof}
+
+Combining Theorems~\ref{thm:upper} and~\ref{thm:transfer} yields
+\begin{equation}\label{eq:saddle-hierarchy-upper}
+\mathsf T_{p,\mathrm{sad}}^{\mathrm{det,cert}}
+(\varepsilon;L_p,\mu_x,\mu_y,D)
+\le C_p(1+\kappa_D^{2/(3p-1)})
+\mathcal H(\kappa_D,\theta)^{6p-4},
+\qquad \mu=\min\{\mu_x,\mu_y\}.
+\end{equation}
+The sharper consequence of Proposition~\ref{prop:literature-restart}
+also transfers without loss:
+\begin{equation}\label{eq:saddle-sharper}
+\mathsf T_{p,\mathrm{sad}}^{\mathrm{det,cert}}
+(\varepsilon;L_p,\mu_x,\mu_y,D)
+\le C_p\left(1+\kappa_D^{\ap}+\logplus\frac1\theta\right).
+\end{equation}
+As in that proposition, this estimate explicitly uses the monotone
+solver of~\cite{zhangchen2026}.
+
+\begin{corollary}[From a KKT certificate to a saddle gap]
+\label{cor:saddle-gap}
+For every $z=(x,y)\in\mathcal Z$, define
+\[
+\operatorname{Gap}_\phi(x,y)
+=\max_{y'\in\mathcal Y}\phi(x,y')
+-\min_{x'\in\mathcal X}\phi(x',y).
+\]
+Then, with $\mu=\min\{\mu_x,\mu_y\}$,
+\begin{equation}\label{eq:saddle-gap}
+\operatorname{Gap}_\phi(z)
+\le\min\!\left\{D\,r_{\mathrm{KKT}}(z),
+\frac{r_{\mathrm{KKT}}(z)^2}{2\mu}\right\}.
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+Fix $z'=(x',y')\in\mathcal Z$ and $n\in N_{\mathcal Z}(z)$.
+Strong convexity and concavity, followed by the normal-cone inequality,
+give
+\begin{align*}
+\phi(x,y')-\phi(x',y)
+&\le\langle F_\phi(z),z-z'\rangle
+ -\frac\mu2\|z-z'\|^2\\
+&\le\langle F_\phi(z)+n,z-z'\rangle
+ -\frac\mu2\|z-z'\|^2.
+\end{align*}
+The last expression is at most $D\|F_\phi(z)+n\|$ by the diameter
+bound, and at most $\|F_\phi(z)+n\|^2/(2\mu)$ by completing the
+square. Take the supremum over $z'$ and then the infimum over $n$.
+\end{proof}
+
+The transfer in this section is an upper-bound result. A matching
+lower bound for scalar saddle problems would require a hard family
+with the signed-gradient structure in \eqref{eq:signed-gradient}; the general
+operator construction in Section~\ref{sec:lower} does not supply that
+property. Likewise, \eqref{eq:saddle-gap} is a one-way implication
+and does not by itself yield a gap lower bound.
+
+
+\section{Discussion}\label{sec:discussion}
+The results identify the condition dependence of exact higher-order
+information for strongly monotone VIs. The lower bound applies to
+arbitrary adaptive randomized policies, whereas both upper bounds return
+the stronger evaluated certificate. At fixed relative accuracy, the
+self-contained hierarchy matches the polynomial condition exponent;
+the restart consequence of~\cite{zhangchen2026} removes the remaining
+logarithmic condition loss. This distinction records both the complete
+proof given here and the strongest comparison supported by the current
+literature.
+
+\paragraph{Accuracy and small condition parameters.}
+The upper bounds hold for every $\kappa_D>0$ and $\theta>0$.
+The lower bound requires $\kappa_D\ge\kappa_{0,p}$ and
+$\theta\le1/16$. It does not establish a matching logarithmic accuracy
+term, and thus does not characterize the joint dependence on
+$(\kappa_D,\theta)$ in every regime. In particular, neither the factor
+$\mathcal H^{6p-4}$ in the self-contained proof nor the term
+$\logplus(1/\theta)$ in the imported restart bound is claimed to be
+necessary. Sharper local convergence and an accuracy-sensitive lower
+bound are separate questions.
+
+\paragraph{Dimension and computation.}
+The upper query guarantees are uniform over finite dimensions. The
+randomized lower bound uses a dimension of order $m^3\log m$, with
+$m\asymp_p\kappa_D^{\ap}$; it makes no fixed-dimensional optimality
+claim. Its concentration argument also uses the bounded feasible-query
+domain. Off-domain, noisy, or partial-tensor oracles require a separate
+analysis. Finally, an exact full tensor is charged as one reply, and
+Taylor-model VIs formed from known coefficients are solved by internal
+computation. Converting these information bounds into arithmetic or bit
+complexity requires additional assumptions on the domain representation
+and the model solver.
+
+\paragraph{Scalar structure.}
+The saddle reduction gives the same upper guarantees with
+$\mu=\min\{\mu_x,\mu_y\}$, and a KKT certificate controls both distance
+and saddle gap. The randomized lower construction is a general
+strongly monotone operator; it does not have the signed-gradient
+structure needed for a scalar saddle lower bound. Identifying the
+optimal accuracy dependence, the smallest sufficient dimension, and a
+matching unrestricted scalar lower family are natural extensions of
+the condition-complexity statement proved here.
+
+\begingroup
+\small
+\setlength{\bibsep}{2pt plus 1pt minus 1pt}
+\urlstyle{same}
+\begin{thebibliography}{19}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Facchinei and Pang(2003)]{facchinei2003}
+Francisco Facchinei and Jong-Shi Pang.
+\newblock \emph{Finite-Dimensional Variational Inequalities and Complementarity
+  Problems}.
+\newblock Springer, 2003.
+\newblock \doi{10.1007/b97543}.
+
+\bibitem[Korpelevich(1976)]{korpelevich1976}
+Galina~M. Korpelevich.
+\newblock The extragradient method for finding saddle points and other
+  problems.
+\newblock \emph{Ekonomika i Matematicheskie Metody}, 12\penalty0 (4):\penalty0
+  747--756, 1976.
+
+\bibitem[Rockafellar(1976)]{rockafellar1976}
+R.~Tyrrell Rockafellar.
+\newblock Monotone operators and the proximal point algorithm.
+\newblock \emph{SIAM Journal on Control and Optimization}, 14\penalty0
+  (5):\penalty0 877--898, 1976.
+\newblock \doi{10.1137/0314056}.
+
+\bibitem[Nemirovski(2004)]{nemirovski2004}
+Arkadi Nemirovski.
+\newblock Prox-method with rate of convergence {$O(1/t)$} for variational
+  inequalities with {Lipschitz} continuous monotone operators and smooth
+  convex-concave saddle point problems.
+\newblock \emph{SIAM Journal on Optimization}, 15\penalty0 (1):\penalty0
+  229--251, 2004.
+\newblock \doi{10.1137/S1052623403425629}.
+
+\bibitem[Monteiro and Svaiter(2012)]{monteiro2012}
+Renato D.~C. Monteiro and Benar~F. Svaiter.
+\newblock Iteration-complexity of a {Newton} proximal extragradient method for
+  monotone variational inequalities and inclusion problems.
+\newblock \emph{SIAM Journal on Optimization}, 22\penalty0 (3):\penalty0
+  914--935, 2012.
+\newblock \doi{10.1137/11083085X}.
+\newblock URL \url{https://doi.org/10.1137/11083085X}.
+
+\bibitem[Bullins and Lai(2022)]{bullins2020}
+Brian Bullins and Kevin~A. Lai.
+\newblock Higher-order methods for convex-concave min-max optimization and
+  monotone variational inequalities.
+\newblock \emph{SIAM Journal on Optimization}, 32\penalty0 (3):\penalty0
+  2208--2229, 2022.
+\newblock \doi{10.1137/21M1395764}.
+
+\bibitem[Adil et~al.(2022)Adil, Bullins, Jambulapati, and Sachdeva]{adil2022}
+Deeksha Adil, Brian Bullins, Arun Jambulapati, and Sushant Sachdeva.
+\newblock Optimal methods for higher-order smooth monotone variational
+  inequalities.
+\newblock arXiv:2205.06167, 2022.
+\newblock URL \url{https://arxiv.org/abs/2205.06167}.
+
+\bibitem[Lin and Jordan(2025)]{lin2024}
+Tianyi Lin and Michael~I. Jordan.
+\newblock {Perseus}: A simple and optimal high-order method for variational
+  inequalities.
+\newblock \emph{Mathematical Programming}, 209:\penalty0 609--650, 2025.
+\newblock \doi{10.1007/s10107-024-02075-2}.
+
+\bibitem[Ostroukhov et~al.(2020)Ostroukhov, Kamalov, Dvurechensky, and
+  Gasnikov]{ostroukhov2020}
+Petr Ostroukhov, Rinat Kamalov, Pavel Dvurechensky, and Alexander Gasnikov.
+\newblock Tensor methods for strongly convex strongly concave saddle point
+  problems and strongly monotone variational inequalities.
+\newblock arXiv:2012.15595v3, 2020.
+\newblock URL \url{https://arxiv.org/abs/2012.15595}.
+
+\bibitem[Chen et~al.(2026{\natexlab{a}})Chen, Zhang, Wang, Liu, Chen, and
+  Zhang]{chen2026halpern}
+Lesi Chen, Xinliang Zhang, Hengyu Wang, Chengchang Liu, Yongchao Chen, and
+  Jingzhao Zhang.
+\newblock Halpern iteration accelerates solving high-order monotone variational
+  inequalities.
+\newblock arXiv:2608.08463v2, 2026{\natexlab{a}}.
+\newblock URL \url{https://arxiv.org/abs/2608.08463}.
+
+\bibitem[Zhang et~al.(2026{\natexlab{a}})Zhang, Wu, Zhang, Fang, Li, and
+  Lin]{zhang2026}
+Haihan Zhang, Wendao Wu, Chenheng Zhang, Cong Fang, Haoxuan Li, and Zhouchen
+  Lin.
+\newblock Matching higher-order oracle complexity for smooth monotone
+  variational inequalities.
+\newblock arXiv:2609.13462v2, 2026{\natexlab{a}}.
+\newblock URL \url{https://arxiv.org/abs/2609.13462}.
+
+\bibitem[Zhang et~al.(2026{\natexlab{b}})Zhang, Chen, Pan, Liu, Yang, and
+  Zhang]{zhangchen2026}
+Xinliang Zhang, Lesi Chen, Linxuan Pan, Chengchang Liu, Junchi Yang, and
+  Jingzhao Zhang.
+\newblock Optimal high-order methods for solving monotone variational
+  inequalities.
+\newblock arXiv:2609.23557v1, 2026{\natexlab{b}}.
+\newblock URL \url{https://arxiv.org/abs/2609.23557}.
+
+\bibitem[Jiang and Yoon(2026)]{jiangyoon2026}
+Ruichen Jiang and TaeHo Yoon.
+\newblock Anchored extra-proximal methods: Optimal higher-order methods for
+  monotone inclusion problems.
+\newblock arXiv:2609.30212v2, 2026.
+\newblock URL \url{https://arxiv.org/abs/2609.30212}.
+
+\bibitem[Nesterov(2007)]{nesterov2007}
+Yurii Nesterov.
+\newblock Dual extrapolation and its applications to solving variational
+  inequalities and related problems.
+\newblock \emph{Mathematical Programming}, 109\penalty0 (2--3):\penalty0
+  319--344, 2007.
+\newblock \doi{10.1007/s10107-006-0034-z}.
+
+\bibitem[Diakonikolas(2020)]{diakonikolas2020}
+Jelena Diakonikolas.
+\newblock Halpern iteration for near-optimal and parameter-free monotone
+  inclusion and strong solutions to variational inequalities.
+\newblock In \emph{Proceedings of the Thirty-Third Conference on Learning
+  Theory}, volume 125 of \emph{Proceedings of Machine Learning Research}, pages
+  1428--1451, 2020.
+\newblock URL \url{https://proceedings.mlr.press/v125/diakonikolas20a.html}.
+
+\bibitem[Cai et~al.(2022)Cai, Oikonomou, and Zheng]{cai2022}
+Yang Cai, Argyris Oikonomou, and Weiqiang Zheng.
+\newblock Finite-time last-iterate convergence for learning in multi-player
+  games.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~35, 2022.
+\newblock URL
+  \url{https://proceedings.neurips.cc/paper_files/paper/2022/hash/db2d2001f63e83214b08948b459f69f0-Abstract-Conference.html}.
+
+\bibitem[Chen et~al.(2025)Chen, Liu, Luo, and Zhang]{chen2025}
+Lesi Chen, Chengchang Liu, Luo Luo, and Jingzhao Zhang.
+\newblock Solving convex-concave problems with {$\mathcal{O}(\epsilon^{-4/7})$}
+  second-order oracle complexity.
+\newblock In \emph{Proceedings of the Thirty Eighth Conference on Learning
+  Theory}, volume 291 of \emph{Proceedings of Machine Learning Research}, pages
+  952--982, 2025.
+\newblock URL \url{https://proceedings.mlr.press/v291/chen25a.html}.
+
+\bibitem[Chen et~al.(2026{\natexlab{b}})Chen, Zhang, Liu, Li, Luo, and
+  Zhang]{chen2026saddle}
+Lesi Chen, Xinliang Zhang, Chengchang Liu, Junru Li, Luo Luo, and Jingzhao
+  Zhang.
+\newblock Solving convex-concave problems with $\widetilde{\mathcal
+  o}(\epsilon^{-4/(3p+1)})$ $p$th-order oracle complexity.
+\newblock arXiv:2604.19462v1, 2026{\natexlab{b}}.
+\newblock URL \url{https://arxiv.org/abs/2604.19462v1}.
+
+\bibitem[Jang and Ryu(2026)]{jang2026}
+Uijeong Jang and Ernest~K. Ryu.
+\newblock Higher-order derivatives do not accelerate the computation of fixed
+  points.
+\newblock arXiv:2607.05947v1, 2026.
+\newblock URL \url{https://arxiv.org/abs/2607.05947v1}.
+
+\end{thebibliography}
+
+\endgroup
+\end{document}

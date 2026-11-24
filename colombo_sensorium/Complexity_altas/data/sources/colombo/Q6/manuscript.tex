@@ -1,0 +1,1047 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools}
+\usepackage{microtype}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{xcolor}
+\definecolor{linkblue}{RGB}{28,66,110}
+\usepackage[colorlinks=true,linkcolor=linkblue,citecolor=linkblue,urlcolor=linkblue]{hyperref}
+\hypersetup{pdftitle={A Near-Optimal Regret Lower Bound for Unknown Nonstochastic Linear Control},
+pdfauthor={Colombo Team},
+pdfsubject={Unrestricted-controller regret lower bounds under bounded oblivious disturbances},
+pdfkeywords={online control, nonstochastic control, minimax regret, unknown dynamics, Hellinger distance}}
+\setlength{\parindent}{1.25em}
+\setlength{\parskip}{3pt}
+\setlength{\emergencystretch}{2em}
+\allowdisplaybreaks[2]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\R}{\mathbb R}
+\newcommand{\one}{\mathbf 1}
+\newcommand{\Reg}{\operatorname{Reg}}
+\newcommand{\TV}{\operatorname{TV}}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\nat}{\mathrm{nat}}
+\newcommand{\clip}{\operatorname{clip}}
+\newcommand{\cost}{\mathsf C}
+\newcommand{\HH}{\mathsf H}
+\newcommand{\cclass}{\mathcal C}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\title{A Near-Optimal Regret Lower Bound for\\
+Unknown Nonstochastic Linear Control}
+\author{Colombo Team\\[3pt]
+\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study online control of unknown linear systems with full state observation,
+full cost-function feedback, oblivious disturbances, bounded natural
+trajectories, and general convex costs. Performance is measured against bounded disturbance-response
+controllers evaluated on their own counterfactual trajectories. We prove that
+every randomized causal controller incurs expected regret
+$\Omega(T^{2/3}/\log T)$ on some time-invariant system with two state
+coordinates, one input, a single unknown coefficient, and deterministically
+bounded disturbances. The learner may use
+arbitrary real-valued inputs, and the lower bound continues to hold when the
+costs, the two candidate systems, and the disturbance law are known in advance.
+Combined with the published $\widetilde O(T^{2/3})$ upper bound of Minasyan,
+Gradu, Simchowitz, and Hazan, this determines the minimax horizon exponent for
+the stated fixed-dimensional class and fixed or logarithmic comparator memory. The construction
+encodes input movement in a convex state-action cost and conceals the unknown
+coefficient through a bounded multiscale disturbance process. A sequential
+Hellinger argument controls adaptive information acquisition, while a quadratic
+penalty accounts for arbitrarily large probing inputs. Combining the new
+stationary lower bound with the existing variation lower bound also gives
+$\widetilde\Theta(T^{2/3}+T\sqrt v)$ regret for small normalized
+Markov-variation budgets $v$, with linear saturation for larger budgets.
+\end{abstract}
+
+\noindent\textbf{Keywords.} Online control; nonstochastic control; minimax regret;
+unknown dynamics; disturbance-response controllers; Hellinger distance.
+\par\medskip
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:intro}
+
+An online controller must learn how its actions affect future states while
+simultaneously keeping its cumulative cost small. Full observation of the
+state and the cost function does not remove this difficulty: the cost of a
+counterfactual action also depends on the unknown dynamics. In nonstochastic
+control, disturbances and costs may be chosen adversarially before the
+interaction begins. This formulation makes it possible to study learning
+guarantees without assuming that repeated observations provide independent
+information about the system.
+
+For unknown linear dynamics and general convex costs, algorithmic results
+achieve regret of order $\widetilde O(T^{2/3})$
+\citep{hazan,improper,minasyan}. For the disturbance-response-controller
+(DRC) benchmark considered here, the upper bound of \citet{minasyan}
+has two contributions: a $T^{2/3}$ term and a term proportional to the
+square root of the system's Markov variation. Their variation lower bound
+explains the second contribution, but vanishes when that variation is zero.
+The question addressed in this paper is whether the $T^{2/3}$ term is
+unavoidable even for time-invariant dynamics.
+
+We establish this obstruction in a two-state, one-input system. For every
+randomized causal controller, there is a fixed oblivious instance with
+$A=0$, a single unknown entry of $B$, and deterministically bounded
+disturbances on which the expected regret is
+$\Omega(T^{2/3}/\log T)$. The comparator has memory one and norm one.
+The lower bound applies to nonlinear controllers and to arbitrarily large
+inputs. Together with the established upper bound, it gives a matching
+horizon exponent for the stated general-convex DRC model.
+
+\subsection{Contributions and proof mechanism}
+
+The two state coordinates serve different purposes. The first contains an
+unknown input gain $\theta\varepsilon$, where $\theta\in\{-1,+1\}$,
+and makes the action $-\theta$ favorable. The second stores the preceding
+input, shifted by one. As a result, the convex state-action term
+$|u-z+1|$ becomes the movement cost $|u_t-u_{t-1}|$ along a trajectory.
+The same shift makes the natural second coordinate equal to one, so a linear
+memory-one DRC implements the favorable constant input without requiring
+an affine term in the comparator class.
+
+Three ingredients make this construction effective in the unrestricted
+control model.
+\begin{enumerate}[leftmargin=*,itemsep=4pt]
+\item \textbf{Bounded disturbances with multiscale dependence.}
+We use the binary-parent multiscale construction of \citet{dekel}.
+Compactly supported innovations keep every disturbance realization bounded.
+After conditioning on a common history, the information about $\theta$
+depends on differences $u_t-u_{p(t)}$ along the multiscale graph.
+\item \textbf{An information bound for arbitrary inputs.}
+A deterministic energy inequality controls these graph differences by
+ordinary input movement and squared excursions beyond $[-1,1]$.
+The state-action cost charges movement, and a convex action penalty charges
+excursions. Sequential Hellinger distance
+then bounds the information in the full adaptive transcript, including when
+shifted observation laws have different supports.
+\item \textbf{A matched horizon exponent and a variation consequence.}
+The resulting lower bound matches the published $T^{2/3}$ upper-bound
+exponent up to logarithms. Combining it with the variation construction of
+\citet{minasyan} gives the whole-horizon dependence on a deterministic
+variation budget. Appendix~\ref{app:variation} provides an explicit
+instantiation of that existing construction to verify the required budget
+and fixed constants.
+\end{enumerate}
+
+The exponent follows from a simple balance. Write $H\asymp\log T$ for the
+depth of the multiscale graph and $R$ for average excess cost, including a
+constant boundary correction. The proof establishes
+\[
+ \HH^2(P_+,P_-)\lesssim\varepsilon^2H^3R,
+ \qquad
+ R\ge\varepsilon(T-1)\bigl(1-\TV(P_+,P_-)\bigr).
+\]
+Thus low regret limits the information available to distinguish the two
+signs. Taking $\varepsilon\asymp(H T^{1/3})^{-1}$ makes a hypothetical
+$R\ll\varepsilon T$ incompatible with these inequalities, yielding
+$R\gtrsim T^{2/3}/\log T$. The argument below gives explicit constants.
+
+\subsection{Relation to prior work}\label{sec:related}
+
+\paragraph{Unknown dynamics and general convex costs.}
+\citet{hazan} established a $\widetilde O(T^{2/3})$ guarantee for unknown
+linear systems against a stable linear-feedback benchmark, under a known
+stabilizing controller and a controllability assumption.
+\citet{improper} developed the disturbance-response parametrization and
+obtained $\widetilde O(T^{2/3})$ regret for unknown systems, including
+partial observation. Later, \citet{liuchen} obtained the same exponent
+through a data-driven behavioral-system approach. These results provide
+algorithmic context; their benchmark and system assumptions should be kept
+distinct. The upper bound used in our matching theorem is specifically
+Theorem~3.4 of \citet{minasyan}, which uses the same norm-bounded DRC
+benchmark and regularity conditions as this paper.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{1.16}
+\caption{Results in the bounded-DRC model with full state and cost-function
+feedback and general convex costs. Here $v$ bounds the normalized squared
+Markov variation, dimensions and regularity parameters are fixed, and
+$m=O(\log T)$ for the upper bounds. The lower-bound constructions use
+memory one. Additive constants in the lower bounds are omitted in this
+table; the exact statements appear in Theorem~\ref{thm:main} and
+Lemma~\ref{lem:variation}.}
+\label{tab:comparison}
+\begin{tabularx}{\textwidth}{@{}P{0.24\textwidth}P{0.15\textwidth}P{0.25\textwidth}Y@{}}
+\toprule
+Result & Budget regime & Regret guarantee & Relevant scope\\
+\midrule
+\citet{minasyan}, Thm.~3.4
+& $v\ge0$
+& $\widetilde O(T^{2/3}+T\sqrt v)$
+& Published upper bound, specialized to logarithmic memory.\\[3pt]
+\citet{minasyan}, Thm.~3.1 and App.~F.2
+& $0<v\le1/64$
+& $\Omega(T\sqrt v)$
+& $d_x=d_u=3$; $T\sqrt v$ above an absolute constant.\\[3pt]
+This paper, Thm.~\ref{thm:main}
+& $v=0$
+& $\Omega(T^{2/3}/\log T)$
+& New lower bound; $d_x=2$, $d_u=1$; unrestricted inputs.\\[3pt]
+Combined, Cor.~\ref{cor:variation}
+& $0\le v\le1/64$
+& $\widetilde\Theta(T^{2/3}+T\sqrt v)$
+& Whole-horizon minimax rate; $d_x=d_u=3$.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Faster rates under additional structure.}
+\citet{simchowitzfast} obtains $\widetilde O(\sqrt T)$ regret for
+unknown systems with adversarial disturbances when costs are uniformly
+strongly convex and smooth. \citet{cassel} obtain the same horizon
+exponent for general convex Lipschitz costs under i.i.d.\ zero-mean noise,
+against a strongly stable linear-feedback benchmark; its principal
+presentation uses Gaussian noise, with an extension to known bounded
+i.i.d.\ noise. Our construction uses temporally correlated disturbances
+and costs without those curvature assumptions. These distinctions explain
+why the faster guarantees do not apply to the hard family studied here.
+
+\paragraph{Multiscale lower bounds.}
+\citet{dekel} prove a $\widetilde\Theta(T^{2/3})$ horizon rate for
+finite-action bandits with switching costs. We use its binary-parent graph
+and the connection between graph width and movement. A direct transfer of
+the finite-action theorem would leave two issues unresolved: the learner
+here chooses arbitrary real inputs, and it observes the entire cost
+function. The control embedding, the bounded-support Hellinger analysis,
+and the penalty for large inputs address these issues explicitly.
+
+\paragraph{Organization.}
+Section~\ref{sec:model} states the model and main results.
+Sections~\ref{sec:construction}--\ref{sec:finish} prove the new lower bound.
+Section~\ref{sec:variation} derives the variation-budget consequence,
+and Section~\ref{sec:discussion} discusses its scope and remaining questions.
+
+\section{Problem formulation and main results}\label{sec:model}
+
+\subsection{Dynamics, information, and regularity}
+
+For a horizon $T\ge2$, the state evolves according to
+\begin{equation}\label{eq:dynamics}
+ x_{t+1}=A_tx_t+B_tu_t+w_t,
+ \qquad x_t\in\R^{d_x},\quad u_t\in\R^{d_u},\quad x_1=0.
+\end{equation}
+The instance $\mathcal I=(A_t,B_t,w_t,c_t)_{t=1}^T$ is fixed before
+the controller's private randomness is drawn. At time $t$, the controller
+observes $x_t$, selects $u_t$, incurs $c_t(x_t,u_t)$, and then observes
+$x_{t+1}$ and the entire function $c_t$. Its decisions are measurable
+functions of its private seed and available history. It knows the horizon
+and the class parameters, but the dynamics and disturbance realization
+are unknown. Inputs are unrestricted elements of $\R^{d_u}$.
+
+The natural trajectory is the trajectory obtained with zero inputs:
+$x_1^{\nat}=0$ and $x_{t+1}^{\nat}=A_tx_t^{\nat}+w_t$.
+Set $u_s=x_s^{\nat}=0$ for $s\le0$. The Markov operators satisfy
+\begin{equation}\label{eq:markov}
+ x_{t+1}=x_{t+1}^{\nat}+\sum_{i\ge0}G_t^{[i]}u_{t-i},
+ \qquad
+ G_t^{[i]}=A_t\cdots A_{t-i+1}B_{t-i}\quad(0\le i<t),
+\end{equation}
+where the empty product gives $G_t^{[0]}=B_t$.
+We zero-pad coefficients with $i\ge t$.\footnote{The padding only
+concerns inputs before the initial time. All lower-bound instances in this
+paper have $A_t=0$, so their positive-lag coefficients vanish under either
+zero padding or a stationary prehistory convention. In particular, their
+stated variation budgets are unaffected by this convention.}
+For an operator sequence $G=(G^{[i]})_{i\ge0}$, write
+$\|G\|_{\ell_2,F}^2=\sum_{i\ge0}\|G^{[i]}\|_F^2$.
+Unsubscripted vector norms are Euclidean, and $\|\cdot\|_{\op}$
+denotes the induced operator norm.
+
+The class is specified by fixed parameters
+\[
+ \mathfrak p=(d_x,d_u,R_{\nat},R_G,\rho,R_M,L),\qquad 0<\rho<1.
+\]
+We impose the natural-state and Markov-tail bounds
+\begin{equation}\label{eq:regularity}
+ \|x_t^{\nat}\|\le R_{\nat},\qquad
+ \sum_{i\ge\ell}\|G_t^{[i]}\|_{\op}\le R_G\rho^\ell
+ \quad(\ell\ge0).
+\end{equation}
+Every cost is convex and nonnegative on the full state-input space and,
+for every $g\in\partial c_t(x,u)$, satisfies
+\begin{align}
+ c_t(x,u)&\le L\max\{1,\|x\|^2+\|u\|^2\},\label{eq:growth}\\
+ \|g\|&\le L\max\{1,\|x\|+\|u\|\}.\label{eq:gradgrowth}
+\end{align}
+These are the regularity conditions of \citet[Assumptions~1--3]{minasyan}.
+They allow nonsmooth costs and quadratic growth. In particular, bounded
+inputs are a property of the comparator below, not a restriction on the learner.
+
+\subsection{Comparator, regret, and variation}
+
+For a memory length $m\ge1$, the comparator parameters are
+\begin{equation}\label{eq:drcclass}
+ \mathcal M_m(R_M)=\left\{(M^{[0]},\ldots,M^{[m-1]}):
+ \sum_{i=0}^{m-1}\|M^{[i]}\|_{\op}\le R_M\right\}.
+\end{equation}
+A DRC with parameter $M$ uses
+\begin{equation}\label{eq:drc}
+ u_t^M=\sum_{i=0}^{m-1}M^{[i]}x_{t-i}^{\nat}.
+\end{equation}
+Its state $x_t^M$ follows \eqref{eq:dynamics} with these inputs and with
+the same matrices and disturbances as the learner. Define
+\[
+ J_T(\mathcal A)=\sum_{t=1}^T c_t(x_t,u_t),\qquad
+ J_T(M)=\sum_{t=1}^T c_t(x_t^M,u_t^M),
+\]
+and, for a deterministic instance,
+\begin{equation}\label{eq:regdef}
+ \Reg_T(\mathcal A;\mathcal I)
+ =\E_{\mathcal A}J_T(\mathcal A)
+    -\inf_{M\in\mathcal M_m(R_M)}J_T(M).
+\end{equation}
+The comparator is thus evaluated on its own counterfactual trajectory.
+The final transition to $x_{T+1}$ has no associated state cost in $J_T$.
+
+The normalized squared Markov variation is
+\begin{equation}\label{eq:variation}
+ V_{[T]}=\frac1T\inf_G\sum_{t=1}^T\|G-G_t\|_{\ell_2,F}^2.
+\end{equation}
+It is the empirical squared deviation from a constant Markov operator,
+not a successive-difference path length. Let $\mathfrak I_T(v;\mathfrak p)$
+be the deterministic instances with parameters $\mathfrak p$ satisfying
+\eqref{eq:regularity}--\eqref{eq:gradgrowth} and $V_{[T]}\le v$.
+Define the minimax expected regret by
+\begin{equation}\label{eq:minimax}
+ \cclass_{T,m}(v;\mathfrak p)
+ =\inf_{\mathcal A}
+   \sup_{\mathcal I\in\mathfrak I_T(v;\mathfrak p)}
+   \Reg_T(\mathcal A;\mathcal I).
+\end{equation}
+The infimum ranges over all randomized causal controllers. The budget
+holds for each instance.
+The notation $\widetilde O$ and $\widetilde\Theta$ suppresses factors
+polynomial in $\log(2T)$; dimensions and regularity parameters are held
+fixed in every matching-rate statement.
+
+\subsection{The stationary lower bound}
+
+\begin{theorem}[An unrestricted-controller lower bound]\label{thm:main}
+Fix
+\begin{equation}\label{eq:parameters0}
+ \mathfrak p_0=(2,1,2,2,1/2,1,8).
+\end{equation}
+For $T\ge2$, let $n=T-1$ and $H=1+\lfloor\log_2n\rfloor$.
+For every randomized causal controller and every comparator memory
+$m\ge1$, there is a deterministic oblivious instance in this class with
+time-invariant $A=0$ and $B$, and hence $V_{[T]}=0$, such that
+\begin{equation}\label{eq:explicitlb}
+ \Reg_T(\mathcal A;\mathcal I)
+ \ge \frac{n^{2/3}}{32H}-1-\frac{1}{16Hn^{1/3}}
+ \ge \frac{n^{2/3}}{32H}-2.
+\end{equation}
+The reference DRC has memory one and norm one. The construction has one
+unknown entry of $B$ and disturbances satisfying $\|w_t\|<2$ on every
+realization. The lower bound remains valid when the cost functions, the
+two candidate matrices, and the disturbance law are given to the learner
+in advance. Padding with unused coordinates extends the lower bound to
+every $d_x\ge2$ and $d_u\ge1$ with the same regularity constants.
+\end{theorem}
+
+The full proof is given in Sections~\ref{sec:construction}--\ref{sec:finish}.
+The statement quantifies over all randomized causal controllers; no bound
+on input magnitude or computation is imposed.
+
+\begin{corollary}[Matching horizon exponent]\label{cor:matching}
+For $\mathfrak p_0$ in \eqref{eq:parameters0} and fixed
+$m$, or $1\le m=O(\log T)$,
+\begin{equation}\label{eq:matching}
+ \cclass_{T,m}(0;\mathfrak p_0)=\widetilde\Theta(T^{2/3}).
+\end{equation}
+More explicitly, for sufficiently large $T$,
+\[
+ c\frac{T^{2/3}}{\log(2T)}
+ \le\cclass_{T,m}(0;\mathfrak p_0)
+ \le C T^{2/3}\bigl(\log(2T)\bigr)^k
+\]
+for constants $c,C>0$ and a finite $k$. The same horizon exponent holds
+after increasing the fixed dimensions to $d_x\ge2$, $d_u\ge1$.
+\end{corollary}
+
+\begin{proof}
+The lower bound follows from Theorem~\ref{thm:main}.
+Theorem~3.4 of \citet{minasyan}, specialized to a deterministic oblivious
+instance, provides a controller satisfying, for $m\le\sqrt T$,
+\begin{equation}\label{eq:importedupper}
+ \Reg_I(\mathcal A;\mathcal I)\le\widetilde O^{\star}\!\left(
+ Lm\left[|I|\sqrt{V_I}+d_uT^{2/3}\right]\right),
+ \qquad I\subseteq[T]\text{ contiguous}.
+\end{equation}
+Here $\Reg_I$ is defined as in \eqref{eq:regdef} with costs summed
+over $I$, and $V_I$ is defined as in \eqref{eq:variation} with $T$ replaced by
+$|I|$ and the sum restricted to $I$. The star suppresses the fixed
+regularity factors in that theorem. Setting $I=[T]$ and $V_{[T]}=0$
+gives the upper bound. Fixed or logarithmic $m$ satisfies
+$m\le\sqrt T$ for sufficiently large $T$ and contributes at most a
+logarithmic factor. The padding argument preserves the lower bound, while
+the same upper theorem applies in any fixed dimensions.
+\end{proof}
+
+The matching statement concerns the horizon exponent. Its upper bound is
+an existing result, and the logarithmic gap is retained explicitly.
+Sharp dependence on dimension, memory, and the other regularity parameters
+is outside this fixed-parameter conclusion.
+
+\begin{remark}[Time-invariant systems and initialization]\label{rem:lti}
+Under the zero-padding convention, a general time-invariant system can have
+a small nonzero initialization contribution to $V_{[T]}$. This does not
+affect the horizon exponent. Indeed, for $A_t=A$, $B_t=B$, set
+$r=\min\{d_x,d_u\}$ and choose $G=G_T$ in \eqref{eq:variation}.
+The two operators differ only in lags $i\ge t$, so
+\[
+ V_{[T]}\le\frac1T\sum_{t=1}^T\sum_{i=t}^{T-1}\|A^iB\|_F^2
+ \le\frac{rR_G^2}{T}\sum_{t=1}^T\rho^{2t}
+ \le\frac{rR_G^2\rho^2}{(1-\rho^2)T}.
+\]
+The middle inequality uses the tail bound for $G_T$ and
+$\|C\|_F^2\le r\|C\|_{\op}^2$ for a $d_x\times d_u$ matrix.
+Consequently, the variation term in \eqref{eq:importedupper} is
+$O(\sqrt T)$ for fixed parameters. The same
+$\widetilde\Theta(T^{2/3})$ minimax rate therefore holds over the full
+admissible time-invariant class with the fixed parameters and memory growth
+of Corollary~\ref{cor:matching}: the upper bound follows as above, and
+the lower-bound instances in Theorem~\ref{thm:main} belong to this class.
+\end{remark}
+
+\section{A two-state control construction}\label{sec:construction}
+
+The first coordinate will carry the unknown gain, while the second will
+record the preceding input. This realizes a movement cost using an ordinary
+convex function of the current state and action. Throughout this section,
+$n=T-1$ and $H=1+\lfloor\log_2 n\rfloor$ are as in Theorem~\ref{thm:main}.
+
+Let $\theta\in\{-1,+1\}$ be a uniform hidden sign, and put
+\begin{equation}\label{eq:epsilon}
+ \varepsilon=\frac{1}{16H n^{1/3}},\qquad
+ A=0,\qquad B_\theta=\begin{pmatrix}\theta\varepsilon\\1\end{pmatrix}.
+\end{equation}
+The disturbances will have the form
+\begin{equation}\label{eq:system}
+ w_t=\begin{pmatrix}W_t\\1\end{pmatrix},\qquad
+ x_{t+1}=\begin{pmatrix}\theta\varepsilon u_t+W_t\\u_t+1\end{pmatrix},
+ \qquad |W_t|\le\tfrac14.
+\end{equation}
+The joint law of $W_1,\ldots,W_n$ is specified in Section~\ref{sec:noise}; set $W_T=0$ for the final transition, which occurs after all charged decisions. Everything is drawn before play. In particular, $W$ is independent of the controller's random seed and, in fact, of $\theta$.
+
+Define
+\begin{equation}\label{eq:costparts}
+ \psi(v)=2+v+\tfrac12(|v|-1)_+^2,
+ \qquad P(u)=(u^2-1)_+,
+ \qquad a_+=\max\{a,0\}.
+\end{equation}
+For $x=(y,z)$, choose the deterministic costs
+\begin{equation}\label{eq:cost}
+ c_1(x,u)=\psi(y)+|u|+P(u),\qquad
+ c_t(x,u)=\psi(y)+|u-z+1|+P(u)\quad(t\ge2).
+\end{equation}
+The first cost is only a boundary convention for the prescribed zero initial state. The remaining costs are identical at every time. The controller may be given all these costs, the two candidate matrices, and the noise law in advance; the proof below still applies.
+
+\begin{lemma}[Admissibility of the construction]\label{lem:admissible}
+Every realization of this construction is admissible with the constants in Theorem~\ref{thm:main}; in particular, the bounds on natural states and costs are deterministic, not merely high probability. Moreover $V_{[T]}=0$.
+\end{lemma}
+\begin{proof}
+Since $A=0$, the natural state is $x_1^{\nat}=0$ and
+\[
+ x_{t+1}^{\nat}=(W_t,1)^\top,
+ \qquad \|x_{t+1}^{\nat}\|\le\sqrt{17/16}<2.
+\]
+The Markov operator is constant: $G_t^{[0]}=B_\theta$ and $G_t^{[i]}=0$ for every $i\ge1$. Thus its operator-norm sum is $\sqrt{1+\varepsilon^2}<2$, its positive-lag tails vanish, and its variation is exactly zero.
+
+The function $\psi$ is convex: its derivative is nondecreasing, and
+\[
+ \psi'(v)=1+\operatorname{sign}(v)(|v|-1)_+.
+\]
+Its global minimum is $\psi(-2)=1/2$. Both the absolute value of an affine function and $P$, the maximum of the convex functions $u^2-1$ and zero, are convex and nonnegative. Consequently all costs in \eqref{eq:cost} are convex and nonnegative on the entire ambient space.
+
+For $S=y^2+z^2+u^2$, the elementary bounds
+\[
+ \psi(y)\le\tfrac52+y^2,\qquad
+ |u-z+1|\le 2+\tfrac12(u^2+z^2),\qquad P(u)\le u^2
+\]
+give $c_t(x,u)\le\tfrac92+\tfrac32S\le6\max\{1,S\}$ for $t\ge2$; $c_1$ satisfies the same bound. Every subgradient of $c_t$ has coordinate magnitudes bounded by $1+|y|$, $1$, and $1+2|u|$. Therefore its Euclidean norm is at most
+\[
+ 3+|y|+2|u|\le5\max\{1,\|x\|+|u|\}.
+\]
+The first-round cost only removes a state subgradient. Thus $L=8$ is valid in both \eqref{eq:growth} and \eqref{eq:gradgrowth}.
+\end{proof}
+
+\begin{samepage}
+\begin{lemma}[Comparator and regret decomposition]\label{lem:regret}
+Let $M_\theta^{[0]}=(0,-\theta)$, with all later memory coefficients zero. Its inputs are
+\[
+ v_1=0,\qquad v_t=-\theta\quad(t\ge2),
+\]
+and it belongs to $\mathcal M_m(1)$ for every $m\ge1$. For any real input sequence $u_1,\ldots,u_T$, put $u_0=0$, $a_t=\clip(u_t,[-1,1])$, $e_t=u_t-a_t$, and
+\[
+ \cost_T(u)=\sum_{t=1}^T|u_t-u_{t-1}|+\sum_{t=1}^T e_t^2.
+\]
+Let $\Delta_\theta=J_T(\mathcal A)-J_T(M_\theta)$ denote the realized cost difference. Then, pathwise,
+\begin{equation}\label{eq:regretcoercive}
+ \Delta_\theta+1+\varepsilon
+ \ge \varepsilon\sum_{t=1}^n(1+\theta a_t)+\cost_T(u).
+\end{equation}
+In particular the right side is nonnegative and controls both movement and all excursions beyond $[-1,1]$.
+\end{lemma}
+\end{samepage}
+\begin{proof}
+The natural second coordinate is one from time two onward, so $M_\theta$ generates exactly the displayed inputs, with no affine term added to the DRC class. Its state at time $t+1$ is
+\[
+ x_{t+1}^{M_\theta}=(W_t+\theta\varepsilon v_t,v_t+1)^\top.
+\]
+The first coordinate is $W_1$ when $t=1$, and $W_t-\varepsilon$ when $t\ge2$. All these coordinates lie in $[-1,1]$, on which $\psi(v)=2+v$. The reference pays exactly one unit of movement, at time two, and has zero $P$-penalty.
+
+For the learner, the term $|u_t-z_t+1|$ at time $t\ge2$ is exactly $|u_t-u_{t-1}|$; the first-round definition charges $|u_1-u_0|$. Set $Y_t=\theta\varepsilon u_t+W_t$. Direct subtraction gives
+\begin{align}
+ \Delta_\theta+1+\varepsilon
+ &=\varepsilon\sum_{t=1}^n(1+\theta u_t)
+   +\tfrac12\sum_{t=1}^n(|Y_t|-1)_+^2\notag\\
+ &\quad+\sum_{t=1}^T|u_t-u_{t-1}|+\sum_{t=1}^T P(u_t).
+ \label{eq:exactregret}
+\end{align}
+The added $\varepsilon$ accounts for the reference's forced input $v_1=0$ rather than $-\theta$.
+
+For $a=\clip(u,[-1,1])$ and $e=u-a$, we have $P(u)=e^2+2|e|$. Since $\varepsilon\le1$, for each $t\le n$,
+\[
+ \varepsilon(1+\theta u_t)+P(u_t)
+ \ge\varepsilon(1+\theta a_t)+e_t^2.
+\]
+Also $P(u_T)\ge e_T^2$. Dropping the nonnegative state penalty in \eqref{eq:exactregret} proves \eqref{eq:regretcoercive}.
+\end{proof}
+
+\begin{remark}[No bounded-input reduction is assumed]
+Clipping above is only an analytic device. The physical input remains $u_t$, including when it is arbitrarily large. Both its observational effect and its cost remain in the proof. This is essential because silently restricting the learner to $[-1,1]$ would not establish the stated minimax lower bound.
+\end{remark}
+
+\section{Bounded multiscale disturbances and input energy}\label{sec:noise}
+
+For an integer $t\ge1$, let $\nu_2(t)$ be the largest $k$ for which $2^k$ divides $t$, and define the parent
+\begin{equation}\label{eq:parent}
+ p(t)=t-2^{\nu_2(t)}<t.
+\end{equation}
+Set $W_0=0$ and generate independent innovations $\xi_1,\ldots,\xi_n$ with density
+\begin{equation}\label{eq:density}
+ q_b(z)=\frac1b\cos^2\!\left(\frac{\pi z}{2b}\right)\one\{|z|\le b\},
+ \qquad b=\frac{1}{4H}.
+\end{equation}
+The density integrates to one because $\int_{-b}^b\cos^2(\pi z/(2b))\,dz=b$. The disturbances are
+\begin{equation}\label{eq:walk}
+ W_t=W_{p(t)}+\xi_t.
+\end{equation}
+The parent map is the binary-parent construction of \citet{dekel}. Here the innovations have compact support, so the disturbances are bounded on every sample path. The location and energy estimates required for arbitrary real inputs are proved below.
+
+\begin{lemma}[Depth, width, and out-degree]\label{lem:tree}
+For the parent graph on $\{0,1,\ldots,n\}$:
+\begin{enumerate}[label=(\roman*),nosep]
+\item every root-to-vertex path contains at most $H$ edges;
+\item every cut between $s-1$ and $s$ belongs to at most $H$ edge intervals $(p(t),t]$;
+\item every vertex has at most $H$ children.
+\end{enumerate}
+Consequently $|W_t|\le Hb=1/4$ for every realization.
+\end{lemma}
+\begin{proof}
+Passing from $t$ to $p(t)$ removes its least significant nonzero binary digit. Thus its depth is the number of ones in its binary expansion, at most $H$.
+
+At scale $k$, the edges of length $2^k$ have right endpoint $(2j+1)2^k$ and left endpoint $2j2^k$. Their intervals are pairwise disjoint. There are at most $H$ available scales, proving the width bound. A vertex has at most one child at each scale, proving the out-degree bound. Finally, each $W_t$ is a sum of at most $H$ innovations, each in $[-b,b]$.
+\end{proof}
+
+\subsection{Charging tree energy to movement and large inputs}
+
+\begin{lemma}[A deterministic tree-energy bound]\label{lem:energy}
+For every real sequence $u_0=0,u_1,\ldots,u_n$, define $a_t=\clip(u_t,[-1,1])$ and $e_t=u_t-a_t$. Then
+\begin{align}
+ \sum_{t=1}^n(u_t-u_{p(t)})^2
+ &\le4H\sum_{t=1}^n|u_t-u_{t-1}|
+      +4(H+1)\sum_{t=1}^n e_t^2\label{eq:energyfine}\\
+ &\le8H\left(\sum_{t=1}^n|u_t-u_{t-1}|+\sum_{t=1}^n e_t^2\right).
+ \label{eq:energy}
+\end{align}
+\end{lemma}
+\begin{proof}
+Set $a_0=e_0=0$. Since $a_t,a_{p(t)}\in[-1,1]$,
+\begin{align*}
+ (u_t-u_{p(t)})^2
+ &\le2(a_t-a_{p(t)})^2+2(e_t-e_{p(t)})^2\\
+ &\le4|a_t-a_{p(t)}|+4e_t^2+4e_{p(t)}^2.
+\end{align*}
+The triangle inequality, the graph width bound, and the fact that clipping is 1-Lipschitz give
+\[
+ \sum_{t=1}^n|a_t-a_{p(t)}|
+ \le H\sum_{s=1}^n|a_s-a_{s-1}|
+ \le H\sum_{s=1}^n|u_s-u_{s-1}|.
+\]
+The out-degree bound gives $\sum_{t=1}^n e_{p(t)}^2\le H\sum_{t=1}^n e_t^2$, because $e_0=0$. Summing proves \eqref{eq:energyfine}; then $H+1\le2H$ proves \eqref{eq:energy}.
+\end{proof}
+
+\section{Information in the adaptive decision transcript}\label{sec:information}
+
+Compact support ensures deterministic disturbance bounds, but translated
+densities need not be mutually absolutely continuous. We therefore work
+with Hellinger distance, whose translation estimate remains valid even
+when supports differ.
+
+For probability laws $P,Q$ with densities relative to a common dominating measure, use
+\[
+ \HH^2(P,Q)=\int(\sqrt{dP}-\sqrt{dQ})^2,\qquad
+ \TV(P,Q)=\tfrac12\int|dP-dQ|.
+\]
+These definitions apply regardless of whether either law is absolutely continuous with respect to the other. Cauchy--Schwarz gives
+\begin{equation}\label{eq:tvhell}
+ \TV(P,Q)\le\sqrt{\HH^2(P,Q)}.
+\end{equation}
+Indeed, writing $|p-q|=|\sqrt p-\sqrt q|(\sqrt p+\sqrt q)$ and noting $\int(\sqrt p+\sqrt q)^2\le4$ proves this inequality.
+
+\begin{lemma}[Bounded-support location experiment]\label{lem:location}
+For any real locations $a,a'$,
+\begin{equation}\label{eq:location}
+ \HH^2(q_b(\cdot-a),q_b(\cdot-a'))
+ \le\frac{\pi^2(a-a')^2}{4b^2}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The square-root density is
+\[
+ r_b(z)=b^{-1/2}\cos\!\left(\frac{\pi z}{2b}\right)\one\{|z|\le b\}.
+\]
+It vanishes at the two endpoints. Its extension by zero belongs to the Sobolev space $H^1(\R)$, and direct integration gives
+\[
+ \|r_b'\|_{L^2}^2=\frac{\pi^2}{4b^2}.
+\]
+The fundamental theorem of calculus followed by the $L^2$ triangle inequality yields
+\[
+ \|r_b(\cdot-a)-r_b(\cdot-a')\|_2
+ \le |a-a'|\,\|r_b'\|_2.
+\]
+Squaring proves the claim. This argument does not use a finite KL divergence, which in general would be unavailable for shifted compact supports.
+\end{proof}
+
+\begin{lemma}[Sequential Hellinger inequality]\label{lem:chain}
+Let $P,Q$ be two sequential experiments with a common initial random seed. At round $t$, let $P_t(\cdot\mid H_{t-1})$ and $Q_t(\cdot\mid H_{t-1})$ be their observation kernels at a common history. Then
+\begin{equation}\label{eq:chain}
+ \HH^2(P,Q)
+ \le\frac12\sum_{t=1}^n
+ \left(\E_P+\E_Q\right)
+ \HH^2\bigl(P_t(\cdot\mid H_{t-1}),Q_t(\cdot\mid H_{t-1})\bigr).
+\end{equation}
+\end{lemma}
+\begin{proof}
+Write $p_{t-1},q_{t-1}$ for the prefix densities. The Hellinger affinity of the length-$t$ prefixes is the integral of $\sqrt{p_{t-1}q_{t-1}}$ times the conditional affinity of the next observation. Therefore
+\[
+ \HH^2(P^{(t)},Q^{(t)})-\HH^2(P^{(t-1)},Q^{(t-1)})
+ =\int\sqrt{p_{t-1}q_{t-1}}\,
+   \HH^2(P_t(\cdot\mid H),Q_t(\cdot\mid H))\,dH.
+\]
+The seed contributes zero because its law is the same. Sum this identity over $t$ and use $\sqrt{p_{t-1}q_{t-1}}\le(p_{t-1}+q_{t-1})/2$. In the present application Lebesgue measure dominates each scalar observation and the common seed law supplies the seed measure. No mutual absolute continuity between $P$ and $Q$ is needed.
+\end{proof}
+
+Let $P_+$ and $P_-$ be the laws of the controller's complete seed and observations $Y_1,\ldots,Y_n$ under the two signs. This is the entire decision-relevant transcript: it includes every observation available when the final charged input $u_T$ is selected. Its states, actions, and previously revealed costs are measurable functions of this transcript, because the second state coordinate is just $u_{t-1}+1$ and the costs are the fixed functions \eqref{eq:cost}. Only the final transition, after $u_T$ is irrevocably selected, is omitted; it cannot affect any charged action.
+
+At a fixed common history, the input $u_t$ is the same measurable function of that history in both experiments. From \eqref{eq:walk}, with $Y_0=u_0=0$, its conditional observation law is
+\begin{equation}\label{eq:conditional}
+ Y_t=Y_{p(t)}+\theta\varepsilon\bigl(u_t-u_{p(t)}\bigr)+\xi_t.
+\end{equation}
+The two conditional locations differ by $2\varepsilon(u_t-u_{p(t)})$. This remains true for an arbitrary nonlinear randomized controller because its entire private seed was included at the start of the transcript. The displayed formula also defines versions of both kernels on histories having probability zero under one of the signs, which is sufficient for the sequential Hellinger calculation.
+
+Define
+\begin{equation}\label{eq:rdef}
+ r_\theta=\E_\theta[\Delta_\theta]+1+\varepsilon,
+ \qquad \bar r=\tfrac12(r_++r_-).
+\end{equation}
+Expectations here include the tree innovations and all controller randomness. If the cost expectation is infinite, the lower bound is immediate; otherwise Lemma~\ref{lem:regret} gives
+\begin{equation}\label{eq:rcontrols}
+ r_\theta\ge\E_\theta\cost_T(u)\ge0.
+\end{equation}
+
+\begin{proposition}[Decision-transcript information bound]\label{prop:info}
+For the unrestricted controller,
+\begin{equation}\label{eq:information}
+ \HH^2(P_+,P_-)
+ \le128\pi^2\varepsilon^2H^3\bar r.
+\end{equation}
+\end{proposition}
+\begin{proof}
+Apply Lemmas~\ref{lem:location} and~\ref{lem:chain} to \eqref{eq:conditional}, and then Lemma~\ref{lem:energy}:
+\begin{align*}
+ \HH^2(P_+,P_-)
+ &\le\frac{\pi^2\varepsilon^2}{2b^2}
+ \left(\E_++\E_-\right)\sum_{t=1}^n(u_t-u_{p(t)})^2\\
+ &\le\frac{4\pi^2\varepsilon^2H}{b^2}
+ \left(\E_++\E_-\right)\cost_T(u)\\
+ &\le\frac{8\pi^2\varepsilon^2H}{b^2}\bar r
+ =128\pi^2\varepsilon^2H^3\bar r.
+\end{align*}
+This calculation charges large inputs via their $e_t^2$ penalties, rather than assuming them away.
+\end{proof}
+
+\section{Proof of Theorem~\ref{thm:main}}\label{sec:finish}
+
+Let $D=\TV(P_+,P_-)$. Since each $a_t$ is a common measurable function of the seed and the past observations, with values in $[-1,1]$,
+\[
+ \E_+a_t-\E_-a_t\ge-2D.
+\]
+Average \eqref{eq:regretcoercive} over the two signs and discard its movement term. This yields
+\begin{equation}\label{eq:testing}
+ \bar r
+ \ge\varepsilon n+\frac\varepsilon2\sum_{t=1}^n
+       (\E_+a_t-\E_-a_t)
+ \ge\varepsilon n(1-D).
+\end{equation}
+Suppose for contradiction that $\bar r<\varepsilon n/2$. Proposition~\ref{prop:info} and \eqref{eq:epsilon} imply
+\[
+ \HH^2(P_+,P_-)
+ <64\pi^2\varepsilon^3H^3n
+ =\frac{\pi^2}{64}<\frac14.
+\]
+By \eqref{eq:tvhell}, $D<1/2$, so \eqref{eq:testing} gives $\bar r>\varepsilon n/2$, a contradiction. Hence
+\[
+ \bar r\ge\frac{\varepsilon n}{2}=
+ \frac{n^{2/3}}{32H}.
+\]
+Equivalently,
+\begin{equation}\label{eq:averagedlb}
+ \E_{\theta,W,\mathcal A}\bigl[J_T(\mathcal A)-J_T(M_\theta)\bigr]
+ \ge\frac{n^{2/3}}{32H}-1-\varepsilon.
+\end{equation}
+For every realization of $(\theta,W)$, the DRC infimum is at most $J_T(M_\theta)$. Averaging \eqref{eq:averagedlb} over the distribution of instances therefore shows that some \emph{fixed deterministic} admissible $(\theta,W)$ satisfies \eqref{eq:explicitlb}, with expectation only over the learner's random seed. Thus the lower bound has the quantifier order
+\[
+ \text{for every randomized causal }\mathcal A,
+ \quad\text{there exists a fixed oblivious }\mathcal I.
+\]
+Every instance in the distribution is admissible by Lemma~\ref{lem:admissible}. Adding coordinates on which both the dynamics and the cost are inactive gives the padding assertion. This completes the proof of Theorem~\ref{thm:main}.
+
+\section{Consequences for a deterministic variation budget}\label{sec:variation}
+
+The zero-variation construction supplies a baseline cost even when the
+variation budget is arbitrarily small. A separate construction of
+\citet[Theorem~3.1 and Appendix~F.2]{minasyan} supplies the
+$T\sqrt v$ obstruction. To combine them in one class, fix
+\begin{equation}\label{eq:parameters1}
+ \mathfrak p_1=(3,3,4,2,1/2,1,8).
+\end{equation}
+This class contains the padded construction of Theorem~\ref{thm:main}
+and the variation construction recorded in Appendix~\ref{app:variation}.
+
+\begin{corollary}[Whole-horizon minimax profile]\label{cor:variation}
+Fix $m$, or let $1\le m=O(\log T)$. For all sufficiently large $T$
+and all $0\le v\le1/64$,
+\begin{equation}\label{eq:varmatch}
+ \cclass_{T,m}(v;\mathfrak p_1)
+ =\widetilde\Theta\bigl(T^{2/3}+T\sqrt v\bigr).
+\end{equation}
+For $v\ge1/64$,
+\begin{equation}\label{eq:saturation}
+ \cclass_{T,m}(v;\mathfrak p_1)=\Theta(T).
+\end{equation}
+The implicit constants and logarithmic powers can be chosen independently
+of $v$ in the indicated ranges. Equivalently, over all $v\ge0$ the
+rate is $\widetilde\Theta(\min\{T,T^{2/3}+T\sqrt v\})$.
+\end{corollary}
+
+\begin{proof}
+The upper bound in \eqref{eq:varmatch} follows from
+\eqref{eq:importedupper} with $I=[T]$ and $V_{[T]}\le v$.
+By monotonicity of the instance class and Theorem~\ref{thm:main},
+\begin{equation}\label{eq:varbaseline}
+ \cclass_{T,m}(v;\mathfrak p_1)
+ \ge c_0\frac{T^{2/3}}{\log(2T)}
+\end{equation}
+for every $v\ge0$ and sufficiently large $T$.
+
+For $0<v\le1/64$, apply Lemma~\ref{lem:variation} with
+$\sigma=\sqrt v$. It gives
+\begin{equation}\label{eq:varsecond}
+ \cclass_{T,m}(v;\mathfrak p_1)
+ \ge \frac{(T-2)\sqrt v}{48}-2.
+\end{equation}
+The construction satisfies the budget on every realization because
+\[
+ V_{[T]}\le\frac1T\sum_{t=1}^T\|B_t-I_3\|_F^2
+          \le\sigma^2.
+\]
+Thus this is a lower bound for the deterministic-budget class in
+\eqref{eq:minimax}, rather than only an expected-budget class.
+If $T\sqrt v$ exceeds a sufficiently large absolute constant,
+\eqref{eq:varsecond} gives a constant multiple of $T\sqrt v$;
+otherwise this term is absorbed by \eqref{eq:varbaseline}.
+Taking the maximum yields, uniformly in the stated range,
+\[
+ \cclass_{T,m}(v;\mathfrak p_1)
+ \ge c_1\left(\frac{T^{2/3}}{\log(2T)}+T\sqrt v\right).
+\]
+This proves \eqref{eq:varmatch}, including $v=0$.
+
+For $v\ge1/64$, set $\sigma=1/8$ in the same construction to obtain
+an $\Omega(T)$ lower bound. For the upper bound, the zero-input
+controller follows the natural trajectory and incurs at most
+$LT\max\{1,R_{\nat}^2\}=128T$ cost. Comparator costs are nonnegative,
+so its regret is at most the same quantity. This proves
+\eqref{eq:saturation}.
+\end{proof}
+
+Up to logarithmic factors, the transition between the two sublinear
+contributions occurs at $v=T^{-2/3}$. Below this scale, the stationary
+identification obstruction determines the rate. Above it, the variation
+term dominates until the rate reaches order $T$. These are whole-horizon
+statements; the corollary does not identify the optimal regret on every
+subinterval simultaneously.
+
+\section{Discussion}\label{sec:discussion}
+
+The lower bound isolates an information cost of unknown dynamics. Apart
+from the first-round boundary convention, every cost function in the hard
+instance is identical and can be disclosed before play. Nevertheless,
+the favorable action depends on an unknown input gain. Full cost-function
+feedback therefore leaves the central statistical difficulty intact.
+
+Temporal dependence is equally important. The multiscale disturbance law
+is sampled before play and is independent of the controller's randomness.
+Holding an input fixed does not generate independent repeated measurements
+of its gain. Instead, the information in the conditional observations is
+controlled by input differences along the multiscale graph. Its width and
+degree convert those differences into costs already charged to the learner.
+The quadratic penalty outside $[-1,1]$ ensures that large probing inputs
+are covered by the same argument.
+
+The result leaves several natural questions. First, the lower and upper
+bounds retain a logarithmic gap. The proof pays for the depth and width
+of the multiscale graph, and determining the optimal logarithmic dependence
+requires further work. Second, the two-state embedding uses one coordinate
+to store the previous input; the scalar-state minimax problem is not
+settled by this construction. Third, determining sharp joint dependence on
+dimension, memory, stability, and comparator radius remains distinct from
+the fixed-parameter horizon analysis here. Finally, the present cost is
+nonsmooth and lacks uniform curvature. Smooth subclasses and subclasses
+with independent disturbances require separate lower-bound analyses.
+
+\appendix
+\section{An explicit variation lower bound}\label{app:variation}
+
+This appendix instantiates the variation construction of
+\citet[Appendix~F.2]{minasyan}. We include the details to establish its
+deterministic budget and its compatibility with \eqref{eq:parameters1}.
+We use $\alpha=1/24$, the value used in that proof's final estimate,
+the absolute-value cost, and comparator signs consistent with the negative
+disturbance convention. The variation obstruction is an existing result;
+the calculation below makes the version used in Corollary~\ref{cor:variation}
+explicit.
+
+\begin{lemma}[Variation lower bound, after \citet{minasyan}]\label{lem:variation}
+Let $T\ge2$ and $0<\sigma\le1/8$.  There is a distribution of oblivious
+instances with $d_x=d_u=3$, $A_t=0$, $R_{\nat}=4$, $R_G=2$,
+$\rho=1/2$, $R_M=1$, and $L=8$, supported on $V_{[T]}\le\sigma^2$,
+such that every randomized causal controller has expected regret at least
+\[
+ \frac{(T-2)\sigma}{48}-2.
+\]
+The comparator in this statement has memory one and norm one.
+\end{lemma}
+
+\begin{proof}
+Put $\alpha=1/24$.  Draw $\omega_0,\ldots,\omega_T$ independently
+and uniformly from $\{1-\alpha\sigma,1+\alpha\sigma\}$, and independently
+draw $\beta_1,\ldots,\beta_T$ uniformly from $[1-\sigma,1+\sigma]$.
+For $1\le t\le T$, take
+\[
+ B_t=\operatorname{diag}(1,\beta_t,1),\qquad
+ w_t=-(\omega_{t-1},\omega_t,1)^\top,\qquad
+ c(x,u)=x_2^2+u_2^2+|x_1|.
+\]
+All of these variables are drawn before the controller acts.  In particular,
+\[
+ x_{t+1,1}=u_{t,1}-\omega_{t-1},\qquad
+ x_{t+1,2}=\beta_tu_{t,2}-\omega_t,\qquad
+ x_{t+1,3}=u_{t,3}-1.
+\]
+The natural state is zero at time one and is $w_{t-1}$ at time $t\ge2$;
+its norm is less than $2$.  Moreover, $\|B_t\|_{\op}\le1+\sigma<2$,
+and all positive-lag Markov operators vanish.  The cost is convex and
+nonnegative.  With $S=\|x\|^2+\|u\|^2$, its value is at most
+$\tfrac12+S\le\tfrac32\max\{1,S\}$; every subgradient has norm at most
+$1+2(\|x\|+\|u\|)\le3\max\{1,\|x\|+\|u\|\}$.
+Thus all stated constants are valid.  On every realization,
+\[
+ V_{[T]}
+ \le\frac1T\sum_{t=1}^T\|B_t-I_3\|_F^2
+ =\frac1T\sum_{t=1}^T(\beta_t-1)^2\le\sigma^2.
+\]
+
+Define
+\[
+ a_\sigma=2+\frac{\sigma^2}{3},\qquad
+ \bar u=\frac1{a_\sigma},\qquad
+ q_\star=1+\alpha^2\sigma^2-\frac1{a_\sigma}.
+\]
+Let $R$ be the controller's complete private seed, and introduce the
+augmented past
+\[
+ \mathcal H_t=\sigma(R,\beta_1,\ldots,\beta_{t-1},
+                         \omega_0,\ldots,\omega_{t-1}).
+\]
+Every input $u_t$ is $\mathcal H_t$-measurable.  Conditional on this past,
+$\beta_t$ and $\omega_t$ remain independent and have their original laws.
+Expanding the square therefore gives
+\[
+ \E\left[x_{t+1,2}^2+u_{t,2}^2\mid\mathcal H_t\right]
+ =q_\star+a_\sigma(u_{t,2}-\bar u)^2.
+\tag{A.1}\label{eq:varquad}
+\]
+
+We next bound the error in predicting $\omega_t$ at time $t+1$.
+Conditional on $\mathcal H_t$, the only new coordinate of $x_{t+1}$
+containing information about $\omega_t$ is
+$Z_t=\beta_tu_{t,2}-\omega_t$.  The first and third coordinates,
+$u_{t,1}-\omega_{t-1}$ and $u_{t,3}-1$, are already determined by
+$\mathcal H_t$.  Consequently $u_{t+1,1}$ is a measurable function of
+$(\mathcal H_t,Z_t)$, even though the original controller need not observe
+the entire augmented past.
+
+On $E_t=\{u_{t,2}\ge1/6\}$, the two conditional laws of $Z_t$, corresponding
+to $\omega_t=1\pm\alpha\sigma$, are uniform on intervals of the same length
+$2\sigma u_{t,2}$ with location difference $2\alpha\sigma$.  Their total
+variation distance is
+\[
+ D_t=\frac{\alpha}{u_{t,2}}\le6\alpha=\frac14.
+\]
+For any estimator $g(Z_t)$ and two equiprobable values
+$\omega_-=1-\alpha\sigma$ and $\omega_+=1+\alpha\sigma$, integration
+against the minimum of the two densities gives
+\begin{align*}
+ \frac12\sum_{s\in\{-,+\}}
+       \E_s|g(Z_t)-\omega_s|
+ &\ge\frac{\omega_+-\omega_-}{2}(1-D_t)\\
+ &\ge\frac{\alpha\sigma}{2}.
+\end{align*}
+As $x_{t+2,1}=u_{t+1,1}-\omega_t$, it follows that
+\[
+ \E|x_{t+2,1}|\ge\frac{\alpha\sigma}{2}\Pr(E_t).
+\tag{A.2}\label{eq:varrisk}
+\]
+On the complementary event $E_t^c$, the inequalities
+$\bar u\ge1/3$ and $a_\sigma\ge2$ imply
+\[
+ a_\sigma(u_{t,2}-\bar u)^2\ge\frac1{18}.
+\tag{A.3}\label{eq:varexcess}
+\]
+
+The exact cost decomposition, valid because $x_1=0$, is
+\[
+ J_T(\mathcal A)
+ =\sum_{t=1}^{T-1}(x_{t+1,2}^2+u_{t,2}^2)
+     +u_{T,2}^2+\sum_{t=1}^T|x_{t,1}|.
+\]
+Using \eqref{eq:varquad}, retaining the terms indexed by $1\le t\le T-2$, and then
+applying \eqref{eq:varrisk}--\eqref{eq:varexcess}, we obtain
+\begin{align*}
+ \E J_T(\mathcal A)-(T-1)q_\star
+ &\ge\sum_{t=1}^{T-2}
+     \left[a_\sigma\E(u_{t,2}-\bar u)^2+\E|x_{t+2,1}|\right]\\
+ &\ge\sum_{t=1}^{T-2}
+     \left[\frac1{18}\Pr(E_t^c)
+           +\frac{\alpha\sigma}{2}\Pr(E_t)\right]\\
+ &\ge\frac{(T-2)\alpha\sigma}{2}
+   =\frac{(T-2)\sigma}{48}.
+\end{align*}
+The last step uses $\alpha\sigma/2\le1/18$.
+
+For comparison, take the memory-one DRC matrix
+\[
+ M=\begin{pmatrix}
+     0&-1&0\\
+     0&0&-\bar u\\
+     0&0&0
+   \end{pmatrix}.
+\]
+Its operator norm is one.  Since
+$x_t^{\nat}=(-\omega_{t-2},-\omega_{t-1},-1)^\top$ for $t\ge2$,
+its inputs are $u_1^M=0$ and
+$u_t^M=(\omega_{t-1},\bar u,0)^\top$ for $t\ge2$.
+It has $x_{t,1}^M=0$ for $t\ge3$ and $x_{2,1}^M=-\omega_0$.
+For the quadratic terms, the first pair has expectation
+$q_\star+\bar u$, each pair indexed by $2\le t\le T-1$ has expectation
+$q_\star$, and the terminal input contributes $\bar u^2$.
+Thus, exactly for $T\ge2$,
+\[
+ \E J_T(M)=(T-1)q_\star+1+\bar u+\bar u^2
+          \le(T-1)q_\star+\frac74.
+\]
+Subtracting proves the claimed bound (indeed with $-7/4$ in place of $-2$).
+The DRC infimum is no larger than the cost of this reference.  Finally, for each fixed randomized controller, averaging over the
+displayed oblivious distribution selects a deterministic instance with the
+same expected-regret lower bound.
+\end{proof}
+
+\begin{thebibliography}{8}
+
+\bibitem[Cassel et~al.(2022)]{cassel}
+Asaf Cassel, Alon Cohen, and Tomer Koren.
+\newblock Rate-optimal online convex optimization in adaptive linear control.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume~35, 2022.
+\newblock \url{https://arxiv.org/abs/2206.01426}.
+
+\bibitem[Dekel et~al.(2014)]{dekel}
+Ofer Dekel, Jian Ding, Tomer Koren, and Yuval Peres.
+\newblock Bandits with switching costs: $T^{2/3}$ regret.
+\newblock In \emph{Proceedings of the 46th Annual ACM Symposium on Theory
+of Computing}, pages 459--467, 2014.
+\newblock \href{https://doi.org/10.1145/2591796.2591868}{doi:10.1145/2591796.2591868}.
+\newblock Full version: \url{https://arxiv.org/abs/1310.2997}.
+
+\bibitem[Hazan et~al.(2020)]{hazan}
+Elad Hazan, Sham Kakade, and Karan Singh.
+\newblock The nonstochastic control problem.
+\newblock In \emph{Proceedings of the 31st International Conference on
+Algorithmic Learning Theory}, volume~117 of \emph{Proceedings of Machine
+Learning Research}, pages 408--421, 2020.
+\newblock \url{https://proceedings.mlr.press/v117/hazan20a.html}.
+
+\bibitem[Liu and Chen(2025)]{liuchen}
+Zishun Liu and Yongxin Chen.
+\newblock Data-driven adversarial online control for unknown linear systems.
+\newblock \emph{Systems \& Control Letters}, 205:106224, 2025.
+\newblock \href{https://doi.org/10.1016/j.sysconle.2025.106224}{doi:10.1016/j.sysconle.2025.106224}.
+\newblock Author preprint: \url{https://arxiv.org/abs/2308.08138}.
+
+\bibitem[Minasyan et~al.(2021)]{minasyan}
+Edgar Minasyan, Paula Gradu, Max Simchowitz, and Elad Hazan.
+\newblock Online control of unknown time-varying dynamical systems.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+volume~34, pages 15934--15945, 2021.
+\newblock Complete version: \url{https://arxiv.org/abs/2202.07890}.
+
+\bibitem[Simchowitz(2020)]{simchowitzfast}
+Max Simchowitz.
+\newblock Making non-stochastic control (almost) as easy as stochastic.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume~33, 2020.
+\newblock \url{https://arxiv.org/abs/2006.05910}.
+
+\bibitem[Simchowitz et~al.(2020)]{improper}
+Max Simchowitz, Karan Singh, and Elad Hazan.
+\newblock Improper learning for non-stochastic control.
+\newblock In \emph{Proceedings of the 33rd Conference on Learning Theory},
+volume~125 of \emph{Proceedings of Machine Learning Research},
+pages 3320--3436, 2020.
+\newblock \url{https://proceedings.mlr.press/v125/simchowitz20a.html}.
+
+\end{thebibliography}
+\end{document}

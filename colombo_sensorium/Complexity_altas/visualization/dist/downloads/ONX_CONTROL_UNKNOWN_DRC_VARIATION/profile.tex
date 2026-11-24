@@ -1,0 +1,646 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=20mm,headheight=15pt,headsep=7mm,footskip=10mm]{geometry}
+\usepackage{fontspec,amsmath,amssymb,mathtools,microtype}
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf,BoldItalicFont=lmsans10-boldoblique.otf]
+\setmonofont[Scale=.86]{lmmono10-regular.otf}[ItalicFont=lmmono10-italic.otf]
+\usepackage{ragged2e}\usepackage{xcolor,booktabs,longtable,array,graphicx,enumitem,fancyhdr,needspace,titlesec,hyperref,xurl}
+\definecolor{AtlasNavy}{HTML}{18334C}\definecolor{AtlasTeal}{HTML}{116D73}\definecolor{AtlasGray}{HTML}{52616D}
+\hypersetup{colorlinks=true,linkcolor=AtlasTeal,urlcolor=AtlasTeal,pdfcreator={Complexity Atlas},unicode=true}
+\urlstyle{same}\setlength{\parindent}{0pt}\setlength{\parskip}{4.8pt}\setlength{\emergencystretch}{3em}
+\renewcommand{\baselinestretch}{1.08}\setcounter{secnumdepth}{0}\setlist{nosep,leftmargin=1.5em}
+\titleformat{\section}{\Large\bfseries\sffamily\color{AtlasNavy}\raggedright}{}{0em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily\color{AtlasTeal}\raggedright}{}{0em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{AtlasNavy}\raggedright}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}\titlespacing*{\subsection}{0pt}{10pt}{5pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[L]{\small\sffamily\color{AtlasGray}COMPLEXITY ATLAS}
+\fancyhead[R]{\small\sffamily\color{AtlasGray}ENGLISH EDITION}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{.3pt}
+\newcommand{\AtlasMath}[1]{\par\begingroup\centering\setbox0=\hbox{$\displaystyle #1$}\ifdim\wd0>1.4\linewidth\typeout{ATLAS WIDE FORMULA: \the\wd0}\fi\ifdim\wd0>\linewidth\resizebox{\linewidth}{!}{\box0}\else\box0\fi\par\endgroup}
+\newcommand{\AtlasInlineMath}[1]{\begingroup\setbox0=\hbox{$#1$}\ifdim\wd0>.4\linewidth\endgroup\AtlasMath{#1}\else\endgroup$#1$\fi}
+\pdfstringdefDisableCommands{\def\AtlasInlineMath#1{#1}}
+\DeclareMathOperator{\polylog}{polylog}\DeclareMathOperator{\dist}{dist}\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\rank}{rank}\DeclareMathOperator{\tr}{tr}\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\prox}{prox}\DeclareMathOperator{\KL}{KL}\DeclareMathOperator{\Var}{Var}
+\providecommand{\eps}{\varepsilon}\providecommand{\R}{\mathbb R}\providecommand{\E}{\mathbb E}
+\providecommand{\mathbbm}[1]{\mathbf{#1}}\providecommand{\mathds}[1]{\mathbf{#1}}
+\providecommand{\llbracket}{[\![}\providecommand{\rrbracket}{]\!]}
+\begin{document}
+\raggedright
+
+{\LARGE\bfseries\sffamily\color{AtlasNavy} Unknown linear control with disturbance-response comparators and Markov variation\par}\vspace{5pt}
+
+
+\textbf{Setting ID.} \texttt{ONX\_\allowbreak{}CONTROL\_\allowbreak{}UNKNOWN\_\allowbreak{}DRC\_\allowbreak{}VARIATION}
+
+
+
+Online learning and bandits
+
+
+
+Counterfactual expected regret with full state and cost feedback, bounded natural trajectories, and instancewise squared Markov-variation budgets.
+
+
+
+\textbf{Status.} Logarithmic gap
+
+
+
+\textbf{TASK tags.} solution concept: Online control regret; task family: Online bandit
+
+
+
+\textbf{ORACLE tags.} feedback quality: Exact; operation: Current cost function; operation: Full state observation; public information: Hidden objects explicitly declared; public information: Public inputs explicitly declared
+
+
+
+\textbf{ALGORITHMS tags.} randomization: Private randomness allowed
+
+
+
+\textbf{GUARANTEE tags.} quantifier: Algorithm before instance
+
+
+
+\textbf{RESOURCE tags.} measure: T
+
+
+
+\needspace{7\baselineskip}\section{1. Setting specification}
+
+
+\needspace{4\baselineskip}\subsection{Task}
+
+
+Minimize expected counterfactual regret for an unknown linear system against bounded finite-memory disturbance-response controllers.
+
+
+
+\needspace{4\baselineskip}\subsection{Admissible model}
+
+
+The deterministic instance \AtlasInlineMath{(A_t,B_t,w_t,c_t)_{t=1}^T} is fixed before the controller seed. The state obeys \AtlasInlineMath{x_{t+1}=A_tx_t+B_tu_t+w_t}, \AtlasInlineMath{x_1=0}, with \AtlasInlineMath{x_t\in\mathbb R^{d_x}} and unrestricted \AtlasInlineMath{u_t\in\mathbb R^{d_u}}. The natural trajectory has zero input: \AtlasInlineMath{x_1^{\mathrm{nat}}=0}, \AtlasInlineMath{x_{t+1}^{\mathrm{nat}}=A_tx_t^{\mathrm{nat}}+w_t}.
+
+
+
+Let \AtlasInlineMath{G_t^{[i]}=A_t\cdots A_{t-i+1}B_{t-i}} for \AtlasInlineMath{0\le i<t}, with \AtlasInlineMath{G_t^{[0]}=B_t} and zero padding for \AtlasInlineMath{i\ge t}. The public regularity budgets satisfy \AtlasInlineMath{\|x_t^{\mathrm{nat}}\|\le R_{\mathrm{nat}}} and \AtlasInlineMath{\sum_{i\ge\ell}\|G_t^{[i]}\|_{\mathrm{op}}\le R_G\rho^\ell} for every \AtlasInlineMath{\ell\ge0}, where \AtlasInlineMath{0<\rho<1}.
+
+
+
+Each cost is convex and nonnegative on the full state-input space, obeys \AtlasInlineMath{c_t(x,u)\le L\max\{1,\|x\|^2+\|u\|^2\}}, and every subgradient obeys \AtlasInlineMath{\|g\|\le L\max\{1,\|x\|+\|u\|\}}. Nonsmooth costs and quadratic growth are allowed.
+
+
+
+The instancewise variation budget is \AtlasInlineMath{V_{[T]}=T^{-1}\inf_G\sum_{t=1}^T\|G-G_t\|_{\ell_2,F}^2\le v}, with \AtlasInlineMath{\|G\|_{\ell_2,F}^2=\sum_{i\ge0}\|G^{[i]}\|_F^2}. This is squared deviation from a constant Markov operator, not successive-difference variation.
+
+
+
+\needspace{4\baselineskip}\subsection{Oracle interface}
+
+
+Observe the full state x\_t, choose u\_t, incur c\_t(x\_t,u\_t), and then observe the next state and the entire current cost function. The actual dynamics and disturbances are hidden. Public information consists of the horizon, dimensions, regularity and comparator budgets. Internal computation and input magnitudes are unrestricted. The model does not supply a strong-controllability promise or a known stabilizing state-feedback matrix.
+
+
+
+\needspace{4\baselineskip}\subsection{Output}
+
+
+The output is the actual causal control trajectory. Each comparator must be evaluated on its own counterfactual trajectory under the same matrices and disturbances.
+
+
+
+\needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
+
+
+The comparator parameters satisfy \AtlasInlineMath{\mathcal M_m(R_M)=\{(M^{[0]},\ldots,M^{[m-1]}):\sum_{i=0}^{m-1}\|M^{[i]}\|_{\mathrm{op}}\le R_M\}} and use \AtlasInlineMath{u_t^M=\sum_{i=0}^{m-1}M^{[i]}x_{t-i}^{\mathrm{nat}}}, with prehistory zero. Regret is
+\AtlasMath{\operatorname{Reg}_T(A;I)=\mathbb E_A\sum_t c_t(x_t,u_t)-\inf_{M\in\mathcal M_m(R_M)}\sum_t c_t(x_t^M,u_t^M)}
+.
+
+
+
+\needspace{4\baselineskip}\subsection{Resource accounting}
+
+
+The fixed horizon T counts control transitions and full state/cost feedback. Every probing and identification input incurs its actual cost. There is no uncharged system-identification phase and no input-norm restriction.
+
+
+
+\needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
+
+
+All measurable randomized causal controllers with arbitrary real-valued inputs are allowed. They may use the public parameter budgets, but do not receive the realized disturbances or the unknown dynamics.
+
+
+
+
+\AtlasMath{\sup_{I:V_{[T]}\le v}\operatorname{Reg}_T(A;I)\le r}
+
+
+
+
+The fixed instance precedes controller randomization. The variation budget is satisfied by every instance, not merely on average under a hard prior.
+
+
+
+\textbf{Budget convention.} fixed\_horizon
+
+
+
+\needspace{7\baselineskip}\section{2. Notation and parameters}
+
+
+\AtlasInlineMath{d_x}: State dimension \textbf{Domain:} \AtlasInlineMath{d_x\ge1} integer.
+
+
+
+\AtlasInlineMath{d_u}: Input dimension \textbf{Domain:} \AtlasInlineMath{d_u\ge1} integer.
+
+
+
+\AtlasInlineMath{T}: Horizon \textbf{Domain:} \AtlasInlineMath{T\ge2} integer.
+
+
+
+\AtlasInlineMath{m}: Comparator memory \textbf{Domain:} \AtlasInlineMath{m\ge1} integer.
+
+
+
+\AtlasInlineMath{R_{\mathrm{nat}}}: Natural-trajectory norm budget \textbf{Domain:} \AtlasInlineMath{R_{\mathrm{nat}}>0}.
+
+
+
+\AtlasInlineMath{R_G}: Markov-tail budget \textbf{Domain:} \AtlasInlineMath{R_G>0}.
+
+
+
+\AtlasInlineMath{\rho}: Markov-tail geometric decay factor \textbf{Domain:} \AtlasInlineMath{0<\rho<1}.
+
+
+
+\AtlasInlineMath{R_M}: Sum of comparator matrix norms \textbf{Domain:} \AtlasInlineMath{R_M>0}.
+
+
+
+\AtlasInlineMath{L}: Cost and subgradient growth budget \textbf{Domain:} \AtlasInlineMath{L>0}.
+
+
+
+\AtlasInlineMath{v}: Instancewise normalized squared Markov-variation budget \textbf{Domain:} \AtlasInlineMath{v\ge0}.
+
+
+
+\AtlasInlineMath{\mathfrak p}: Ordered structural parameter tuple \textbf{Domain:} Public tuple.
+
+
+
+\AtlasInlineMath{\mathfrak p=(d_x,d_u,R_{\mathrm{nat}},R_G,\rho,R_M,L)}
+
+
+
+\AtlasInlineMath{c_m}: Fixed coefficient allowed in logarithmic comparator memory \textbf{Domain:} \AtlasInlineMath{c_m>0}.
+
+
+
+\AtlasInlineMath{m\le c_m\log(2T)} in logarithmic-memory regimes
+
+
+
+\needspace{12\baselineskip}\section{3. Complexity bracket}
+
+
+\needspace{4\baselineskip}\subsection{Compared quantities}
+
+
+\needspace{4\baselineskip}\subsubsection{Q1 - minimax metric resource quantity}
+
+
+\AtlasMath{\mathcal C_{T,m}(v;\mathfrak p)=\inf_A\sup_{I\in\mathfrak I_T(v;\mathfrak p)}\operatorname{Reg}_T(A;I)}
+
+
+\textbf{Scope.} The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+
+
+\textbf{Optimization direction.} minimize
+
+
+
+\textbf{Resource contract.} expression: \AtlasInlineMath{T}; description: Each played round and its prescribed feedback are charged.
+
+
+
+\needspace{4\baselineskip}\subsection{R1 - Zero Markov variation in two states and one input}
+
+
+\textbf{Region.} \AtlasInlineMath{\mathfrak p=(2,1,2,2,1/2,1,8)}, \AtlasInlineMath{v=0}; m is fixed or \AtlasInlineMath{1\le m\le c_m\log(2T)} for fixed c\_m; T is sufficiently large and \AtlasInlineMath{m\le\sqrt T}. Exactly d\_x=2 and d\_u=1; no dimension-growing lower-bound requirement. The hard instance already has constant A,B and a comparator of memory one. The theorem does not require strong controllability.
+
+
+
+\textbf{Quantity.} Q1
+
+
+
+\textbf{Resource.} Each played round and its prescribed feedback are charged.
+
+
+
+\textbf{Status.} Logarithmic gap
+
+
+
+\textbf{Lower bound.} B2
+
+
+
+\AtlasMath{\Omega(T^{2/3}/\log(2T))}
+
+
+\textbf{Upper bound.} B1
+
+
+
+\AtlasMath{\widetilde O(T^{2/3})}
+
+
+\textbf{Gap or comparison.} Only polynomial factors in log(2T) remain.
+
+
+
+\needspace{4\baselineskip}\subsection{R2 - Whole-horizon variation profile below saturation}
+
+
+\textbf{Region.} \AtlasInlineMath{\mathfrak p=(3,3,4,2,1/2,1,8)}, \AtlasInlineMath{0\le v\le1/64}; m is fixed or \AtlasInlineMath{1\le m\le c_m\log(2T)} for fixed c\_m; T is sufficiently large and \AtlasInlineMath{m\le\sqrt T}. Exactly d\_x=d\_u=3. The two sublinear contributions cross at \AtlasInlineMath{v=T^{-2/3}} up to logarithmic factors. The statement concerns whole-horizon regret, not optimal regret on every subinterval simultaneously.
+
+
+
+\textbf{Quantity.} Q1
+
+
+
+\textbf{Resource.} Each played round and its prescribed feedback are charged.
+
+
+
+\textbf{Status.} Logarithmic gap
+
+
+
+\textbf{Lower bound.} B4
+
+
+
+\AtlasMath{\Omega(T^{2/3}/\log(2T)+T\sqrt v)}
+
+
+\textbf{Upper bound.} B3
+
+
+
+\AtlasMath{\widetilde O(T^{2/3}+T\sqrt v)}
+
+
+\textbf{Gap or comparison.} Only horizon logarithms remain, uniformly over the displayed v interval.
+
+
+
+\needspace{4\baselineskip}\subsection{R3 - Linear saturation for larger variation}
+
+
+\textbf{Region.} \AtlasInlineMath{\mathfrak p=(3,3,4,2,1/2,1,8)}, \AtlasInlineMath{v\ge1/64}; m is fixed or at most logarithmic in T as above; T is sufficiently large. Exactly d\_x=d\_u=3.
+
+
+
+\textbf{Quantity.} Q1
+
+
+
+\textbf{Resource.} Each played round and its prescribed feedback are charged.
+
+
+
+\textbf{Status.} Optimal
+
+
+
+\textbf{Lower bound.} B6
+
+
+
+\AtlasMath{\Omega(T)}
+
+
+\textbf{Upper bound.} B5
+
+
+
+\AtlasMath{128T}
+
+
+\textbf{Gap or comparison.} Constant-factor matching.
+
+
+
+\needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
+
+
+\needspace{4\baselineskip}\subsection{B1 - The full-information unknown-system controller imported in the manuscript from Minasyan-Gradu-Simchowitz-Hazan Theorem 3.4, specialized to zero variation.}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} upper
+
+
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+
+
+\AtlasMath{\widetilde O(T^{2/3})}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{\mathfrak p=(2,1,2,2,1/2,1,8)}, \AtlasInlineMath{v=0}; m is fixed or \AtlasInlineMath{1\le m\le c_m\log(2T)} for fixed c\_m; T is sufficiently large and \AtlasInlineMath{m\le\sqrt T}.; The hard instance already has constant A,B and a comparator of memory one. The theorem does not require strong controllability.
+
+
+
+\textbf{Dimension conditions.} Exactly d\_x=2 and d\_u=1; no dimension-growing lower-bound requirement.
+
+
+
+\textbf{Constants.} The displayed structural tuple is fixed; logarithmic-memory constants may depend on c\_m.
+
+
+
+\textbf{Logarithmic factors.} Source tilde-O hides finite powers of log(2T); fixed or logarithmic comparator memory is included in these factors.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]} Corollary cor:matching; equations eq:matching and eq:importedupper
+
+
+
+The full-information unknown-system controller imported in the manuscript from Minasyan-Gradu-Simchowitz-Hazan Theorem 3.4, specialized to zero variation.. Randomized causal controllers with full state and cost-function feedback.
+
+
+
+\needspace{4\baselineskip}\subsection{B2 - A=0 with one hidden entry of B, bounded multiscale disturbances, and a convex movement cost.}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} lower
+
+
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+
+
+\AtlasMath{\Omega(T^{2/3}/\log(2T))}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{\mathfrak p=(2,1,2,2,1/2,1,8)}, \AtlasInlineMath{v=0}; m is fixed or \AtlasInlineMath{1\le m\le c_m\log(2T)} for fixed c\_m; T is sufficiently large and \AtlasInlineMath{m\le\sqrt T}.; The hard instance already has constant A,B and a comparator of memory one. The theorem does not require strong controllability.
+
+
+
+\textbf{Dimension conditions.} Exactly d\_x=2 and d\_u=1; no dimension-growing lower-bound requirement.
+
+
+
+\textbf{Constants.} The displayed structural tuple is fixed; logarithmic-memory constants may depend on c\_m.
+
+
+
+\textbf{Logarithmic factors.} Source tilde-O hides finite powers of log(2T); fixed or logarithmic comparator memory is included in these factors.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]} Theorem thm:main; Corollary cor:matching
+
+
+
+A=0 with one hidden entry of B, bounded multiscale disturbances, and a convex movement cost.. Every randomized causal controller, including unbounded probing inputs.
+
+
+
+\needspace{4\baselineskip}\subsection{B3 - Unknown-system control with the source full-information variation guarantee.}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} upper
+
+
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+
+
+\AtlasMath{\widetilde O(T^{2/3}+T\sqrt v)}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{\mathfrak p=(3,3,4,2,1/2,1,8)}, \AtlasInlineMath{0\le v\le1/64}; m is fixed or \AtlasInlineMath{1\le m\le c_m\log(2T)} for fixed c\_m; T is sufficiently large and \AtlasInlineMath{m\le\sqrt T}.; The two sublinear contributions cross at \AtlasInlineMath{v=T^{-2/3}} up to logarithmic factors. The statement concerns whole-horizon regret, not optimal regret on every subinterval simultaneously.
+
+
+
+\textbf{Dimension conditions.} Exactly d\_x=d\_u=3.
+
+
+
+\textbf{Constants.} Uniform in v; the structural tuple and comparator-memory coefficient are fixed.
+
+
+
+\textbf{Logarithmic factors.} Only finite powers of log(2T).
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]} Corollary cor:variation; equation eq:varmatch and proof using eq:importedupper
+
+
+
+Unknown-system control with the source full-information variation guarantee.. Causal randomized controllers with the declared regularity budgets.
+
+
+
+\needspace{4\baselineskip}\subsection{B4 - Combination of the stationary hidden-coefficient obstruction and an instancewise-budget variation construction.}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} lower
+
+
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+
+
+\AtlasMath{\Omega(T^{2/3}/\log(2T)+T\sqrt v)}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{\mathfrak p=(3,3,4,2,1/2,1,8)}, \AtlasInlineMath{0\le v\le1/64}; m is fixed or \AtlasInlineMath{1\le m\le c_m\log(2T)} for fixed c\_m; T is sufficiently large and \AtlasInlineMath{m\le\sqrt T}.; The two sublinear contributions cross at \AtlasInlineMath{v=T^{-2/3}} up to logarithmic factors. The statement concerns whole-horizon regret, not optimal regret on every subinterval simultaneously.
+
+
+
+\textbf{Dimension conditions.} Exactly d\_x=d\_u=3.
+
+
+
+\textbf{Constants.} Uniform in v; the structural tuple and comparator-memory coefficient are fixed.
+
+
+
+\textbf{Logarithmic factors.} Only finite powers of log(2T).
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]} Corollary cor:variation; equations eq:varbaseline, eq:varsecond and its combined lower bound
+
+
+
+Combination of the stationary hidden-coefficient obstruction and an instancewise-budget variation construction.. Every randomized causal controller.
+
+
+
+\needspace{4\baselineskip}\subsection{B5 - The zero-input controller follows the bounded natural trajectory.}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} upper
+
+
+
+\textbf{Witness or lower-bound scope.} Deterministic witness
+
+
+
+\AtlasMath{128T}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{\mathfrak p=(3,3,4,2,1/2,1,8)}, \AtlasInlineMath{v\ge1/64}; m is fixed or at most logarithmic in T as above; T is sufficiently large.
+
+
+
+\textbf{Dimension conditions.} Exactly d\_x=d\_u=3.
+
+
+
+\textbf{Constants.} Universal for the displayed fixed tuple.
+
+
+
+\textbf{Logarithmic factors.} None.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]} Corollary cor:variation; equations eq:saturation and proof
+
+
+
+The zero-input controller follows the bounded natural trajectory.. Deterministic controller.
+
+
+
+\needspace{4\baselineskip}\subsection{B6 - Variation construction at sigma=1/8.}
+
+
+\textbf{Admission.} Included in the bracket
+
+
+
+\textbf{Direction.} lower
+
+
+
+\textbf{Witness or lower-bound scope.} Randomized witness
+
+
+
+\AtlasMath{\Omega(T)}
+
+
+\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]}
+
+
+
+\textbf{Conditions.} \AtlasInlineMath{\mathfrak p=(3,3,4,2,1/2,1,8)}, \AtlasInlineMath{v\ge1/64}; m is fixed or at most logarithmic in T as above; T is sufficiently large.
+
+
+
+\textbf{Dimension conditions.} Exactly d\_x=d\_u=3.
+
+
+
+\textbf{Constants.} Universal for the displayed fixed tuple.
+
+
+
+\textbf{Logarithmic factors.} None.
+
+
+
+\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}{[1]} Corollary cor:variation; equation eq:saturation
+
+
+
+Variation construction at sigma=1/8.. Every randomized causal controller.
+
+
+
+\needspace{7\baselineskip}\section{Maintenance appendix: Native proof extensions}
+
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f\allowbreak{}9a3ecbe5ed12ab4d8e11ba87\allowbreak{}3c2f11161202b945
+
+
+
+Native value (empty\_array): []
+
+
+
+\needspace{7\baselineskip}\section{References}
+
+
+[1] Colombo\_Q6. A Near-Optimal Regret Lower Bound for Unknown Nonstochastic Linear Control. Q6\_matching\_bounds\_proof.tex.
+
+
+
+\url{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/Q6/manuscript.pdf}
+
+\end{document}

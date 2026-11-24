@@ -6,11 +6,9 @@ Single-objective optimization
 
 Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.
 
-**Status.** Other quantified gap present
+**Status.** Logarithmic gap; Other quantified gap
 
-**Gap classes present.** Other quantified gap; Logarithmic gap
-
-The regional bracket below specifies the quantified gaps and their parameter dependence.
+**Gap classes present.** Logarithmic gap; Other quantified gap
 
 **TASK tags.** formulation: Global minimization; task family: Single objective
 
@@ -24,7 +22,7 @@ The regional bracket below specifies the quantified gaps and their parameter dep
 
 **METRIC tags.** criterion: Objective gap
 
-**GUARANTEE tags.** aggregation: Per instance; mode: Deterministic; mode: Expectation; randomness: Algorithm private seed
+**GUARANTEE tags.** aggregation: Per instance; mode: Deterministic; mode: Expectation; mode: Probability; quantifier: Algorithm before instance; randomness: Algorithm private seed
 
 **RESOURCE tags.** budget: Fixed worst-case budget; measure: Component calls; precision: Bit precision not counted
 
@@ -117,6 +115,24 @@ Select an algorithm using the public parameters, and then require the following 
 $$\forall I\,\forall\mathcal{O}\in\mathcal{O}(I):\ \mathbb{E}_{A,\mathcal{O}}\ell(I,\widehat{x})\le\varepsilon$$
 
 The probability space includes the algorithm's private randomness. The instance and its admissible oracle law are fixed before randomness is averaged.
+
+#### Randomized / 2/3 success / normalized global regularity
+
+Queries, stopping decisions, and the output are measurable functions of the preceding transcript and an instance-independent private random seed. The unknown instance is fixed before the seed is realized. No span, support, zero-respecting, or memory restriction is imposed.
+
+Internal exact-real computation and storage using public inputs and received information are uncharged. The stated budget must hold on every execution path.
+
+$$
+\forall(f_i):\ \Pr(F(\widehat x)-\min_{x\in B_2^d}F(x)\le\varepsilon)\ge2/3
+$$
+
+The guarantee holds for every fixed admissible component tuple. Probability is over private algorithmic randomness, and every execution uses at most the prescribed number of component queries.
+
+Model: There are $n$ hidden globally convex differentiable functions $f_i:\mathbb R^d\to\mathbb R$. For all $x,y\in\mathbb R^d$ and all $i$, $|f_i(x)-f_i(y)|\le\|x-y\|_2$ and $\|\nabla f_i(x)-\nabla f_i(y)\|_2\le\|x-y\|_2$. Thus $L=\beta=R=1$. Component offsets are unrestricted and unknown.
+
+Model: The public feasible set is $Q=B_2^d$. Query points and the final output must belong to $Q$, although the regularity assumptions are global. The objective is $F(x)=\max_{1\le i\le n}f_i(x)$.
+
+**Budget convention.** fixed_worst_case
 
 ## 2. Notation and parameters
 
@@ -242,6 +258,20 @@ $$
 
 Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
 
+#### Q5 - minimax metric resource quantity
+
+**View.** Randomized / 2/3 success / normalized global regularity
+
+$$
+Q(n,\varepsilon)=\inf\{T:\forall d\ge1\ \exists A_d\text{ with cap }T\text{ and success }\ge2/3\}
+$$
+
+**Scope.** The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+**Optimization direction.** minimize
+
+**Resource contract.** expression: $N_{\mathrm{component\ value+gradient}}$; description: All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
 ### R1 - Sufficient dimension for the lower bound against arbitrary randomized algorithms
 
 **Region.** $\varepsilon\le c\min\{LR,\beta R^2\},\quad d\ge C\min\{A_\varepsilon^2,B_\varepsilon\}\log(2+n\min\{A_\varepsilon,B_\varepsilon\})$
@@ -330,21 +360,21 @@ $$
 
 **Region.** $\beta=0,\quad0<\varepsilon\le cLR$
 
-**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+**Views.** Deterministic / Pointwise guarantee
 
-**Quantity.** Q1; Q3
+**Quantity.** Q1
 
 **Resource.** One component value-gradient query at an algorithm-selected pair $(i,x)$ costs one unit; querying all $n$ components costs $n$. Exact internal solution of a public convex model is uncharged.
 
 **Status.** Optimal
 
-**Lower bound.** B5, B14
+**Lower bound.** B5
 
 $$
 cn
 $$
 
-**Upper bound.** B7, B16
+**Upper bound.** B7
 
 $$
 n
@@ -356,9 +386,9 @@ $$
 
 **Region.** $\varepsilon\ge LR$
 
-**Views.** Deterministic / Pointwise guarantee; Randomized / Expected loss
+**Views.** Deterministic / Pointwise guarantee
 
-**Quantity.** Q1; Q3
+**Quantity.** Q1
 
 **Resource.** One component value-gradient query at an algorithm-selected pair $(i,x)$ costs one unit; querying all $n$ components costs $n$. Exact internal solution of a public convex model is uncharged.
 
@@ -370,7 +400,7 @@ $$
 0
 $$
 
-**Upper bound.** B8, B17
+**Upper bound.** B8
 
 $$
 0
@@ -460,13 +490,87 @@ $$
 
 **Comparison argument.** Compare on the intersection of F04.ball-R.parameter-domain and F04.large-n. The term $n\epsilon^{-1/3}$ dominates $\epsilon^{-2}$. The randomized upper bound does not remove the distinction between deterministic and randomized views.
 
+### R9 - Affine-component endpoint
+
+**Region.** $\beta=0,\quad0<\varepsilon\le cLR$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q3
+
+**Resource.** One component value-gradient query at an algorithm-selected pair $(i,x)$ costs one unit; querying all $n$ components costs $n$. Exact internal solution of a public convex model is uncharged.
+
+**Status.** Optimal
+
+**Lower bound.** B14
+
+$$
+cn
+$$
+
+**Upper bound.** B16
+
+$$
+n
+$$
+
+**Gap or comparison.** $O(1)$
+
+### R10 - Return the ball center without queries
+
+**Region.** $\varepsilon\ge LR$
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q3
+
+**Resource.** One component value-gradient query at an algorithm-selected pair $(i,x)$ costs one unit; querying all $n$ components costs $n$. Exact internal solution of a public convex model is uncharged.
+
+**Status.** Optimal
+
+**Lower bound.** Nonnegativity of the compared quantity
+
+$$
+0
+$$
+
+**Upper bound.** B17
+
+$$
+0
+$$
+
+### R11 - Normalized global regularity: dimension-unrestricted probability complexity
+
+**Region.** $n\ge1$ and $0<\varepsilon<1$; the complexity takes the worst case over all finite dimensions. The upper bound holds for every finite d. The lower bound is existential in dimension, which may depend on n and epsilon; A2 Proposition prop:lower and Section sec:lower do not give an explicit dimensional formula. The normalized global-regularity view is distinct from assuming regularity only near the ball. The comparison concerns oracle calls, not arithmetic runtime.
+
+**Views.** Randomized / 2/3 success / normalized global regularity
+
+**Quantity.** Q5
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B19
+
+$$
+c(n\varepsilon^{-1/3}+\sqrt{n/\varepsilon})
+$$
+
+**Upper bound.** B18
+
+$$
+C(n\varepsilon^{-1/3}+\sqrt{n/\varepsilon})\log^6(en/\varepsilon)
+$$
+
+**Gap or comparison.**
+
+$$
+O(\log^6(en/\varepsilon))
+$$
+
 ## 4. Bounds and supporting evidence
-
-The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
-
-**Output mapping.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
-
-**Resource mapping.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 ### B1 - Accelerated iterative linearization
 
@@ -491,6 +595,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: selected component values and gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [1](https://arxiv.org/pdf/2105.01778) theorem: Theorem3 Eq.(13), PDF p.12; AppendixA.3 andD.3
 
@@ -518,7 +626,11 @@ $$
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
 
-**Local argument.** A1, A2, A3, A4
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_FINITE_MAXIMUM, FO_PROJECTED_SG, FO_CERTIFICATE, FO_NESTED_FG
 
 ### B3 - Cutting planes after full value-subgradient simulation using $n$ component calls
 
@@ -543,6 +655,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: selected component values and gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [2](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) theorem: Accuracy certificates; combined with F04 FSG simulation
 
@@ -570,6 +686,10 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound. Converting the source hard event to an expected-error statement retains the constant tolerance rescaling. Expected running costs additionally require a stopping-time truncation with its constant loss.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [1](https://arxiv.org/pdf/2105.01778) theorem: Theorem3 Eq.(13), PDF p.12; AppendixA.3 andD.3
 
 ### B5 - Hidden index in arbitrary dimension
@@ -596,7 +716,11 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
-**Local argument.** A1, A2, A3, A4
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_FINITE_MAXIMUM, FO_PROJECTED_SG, FO_CERTIFICATE, FO_NESTED_FG
 
 ### B6 - Replication of a one-dimensional smooth hard objective
 
@@ -622,7 +746,11 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
-**Local argument.** A1, A2, A3, A4
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_FINITE_MAXIMUM, FO_PROJECTED_SG, FO_CERTIFICATE, FO_NESTED_FG
 
 ### B7 - Recover all affine component formulas
 
@@ -648,7 +776,11 @@ $$
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
 
-**Local argument.** A1, A2, A3, A4
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_FINITE_MAXIMUM, FO_PROJECTED_SG, FO_CERTIFICATE, FO_NESTED_FG
 
 ### B8 - Return the ball center
 
@@ -674,7 +806,11 @@ $$
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
 
-**Local argument.** A1, A2, A3, A4
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_FINITE_MAXIMUM, FO_PROJECTED_SG, FO_CERTIFICATE, FO_NESTED_FG
 
 ### B9 - Accelerated iterative linearization
 
@@ -699,6 +835,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: selected component values and gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [1](https://arxiv.org/pdf/2105.01778) theorem: Theorem3 Eq.(13), PDF p.12; AppendixA.3 andD.3
 
@@ -726,7 +866,11 @@ $$
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
 
-**Local argument.** A1, A2, A3, A4
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_FINITE_MAXIMUM, FO_PROJECTED_SG, FO_CERTIFICATE, FO_NESTED_FG
 
 ### B11 - Cutting planes after full value-subgradient simulation using $n$ component calls
 
@@ -751,6 +895,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: selected component values and gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [2](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) theorem: Accuracy certificates; combined with F04 FSG simulation
 
@@ -778,7 +926,11 @@ $$
 
 **Guarantee conversion.** After fixing the instance and admissible response law, take expectation over the randomness declared by the target contract and control the underlying error.
 
-**Local argument.** A1, A2, A3, A4
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_FINITE_MAXIMUM, FO_PROJECTED_SG, FO_CERTIFICATE, FO_NESTED_FG
 
 **Source location.** [3](https://arxiv.org/pdf/2311.10886) theorem: Table1; §2.5 iteration/evaluation complexity; Thm8.1; §8.1
 
@@ -806,6 +958,10 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound. Converting the source hard event to an expected-error statement retains the constant tolerance rescaling. Expected running costs additionally require a stopping-time truncation with its constant loss.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [1](https://arxiv.org/pdf/2105.01778) theorem: Theorem3 Eq.(13), PDF p.12; AppendixA.3 andD.3
 
 ### B14 - Hidden index in arbitrary dimension
@@ -832,7 +988,11 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
-**Local argument.** A1, A2, A3, A4
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_FINITE_MAXIMUM, FO_PROJECTED_SG, FO_CERTIFICATE, FO_NESTED_FG
 
 ### B15 - Replication of a one-dimensional smooth hard objective
 
@@ -858,7 +1018,11 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
-**Local argument.** A1, A2, A3, A4
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_FINITE_MAXIMUM, FO_PROJECTED_SG, FO_CERTIFICATE, FO_NESTED_FG
 
 ### B16 - Recover all affine component formulas
 
@@ -884,7 +1048,11 @@ $$
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
 
-**Local argument.** A1, A2, A3, A4
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_FINITE_MAXIMUM, FO_PROJECTED_SG, FO_CERTIFICATE, FO_NESTED_FG
 
 ### B17 - Return the ball center
 
@@ -910,15 +1078,91 @@ $$
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
 
-**Local argument.** A1, A2, A3, A4
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
 
-## 5. Local arguments
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
-### A1 - Finite maxima, hidden offsets, and budget conversion
+**Local argument.** FO_FINITE_MAXIMUM, FO_PROJECTED_SG, FO_CERTIFICATE, FO_NESTED_FG
 
-**Scope.** Component values and gradients for simulation; component gradients alone for the offset impossibility.
+### B18 - Randomized affine-minorant local solver and constrained acceleration
 
-**Algorithm scope.** Deterministic simulation upper witnesses; randomized hidden-index lower bounds; randomized budget conversion when needed.
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / 2/3 success / normalized global regularity
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+C(n\varepsilon^{-1/3}+\sqrt{n/\varepsilon})\log^6(en/\varepsilon)
+$$
+
+**Sources.** [7](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/A2/manuscript.pdf)
+
+**Conditions.** $n\ge1$ and $0<\varepsilon<1$; the complexity takes the worst case over all finite dimensions.; The constructed algorithm actually succeeds with probability at least $0.99$. Every full pass costs $n$ queries.; The normalized global-regularity view is distinct from assuming regularity only near the ball. The comparison concerns oracle calls, not arithmetic runtime.
+
+**Dimension conditions.** The upper bound holds for every finite d. The lower bound is existential in dimension, which may depend on n and epsilon; A2 Proposition prop:lower and Section sec:lower do not give an explicit dimensional formula.
+
+**Constants.** Universal positive constants.
+
+**Logarithmic factors.** Only the displayed sixth power of $\log(en/\varepsilon)$.
+
+**Source location.** [7](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/A2/manuscript.pdf) Theorem thm:main, eq:upper; Sections sec:local to sec:combine
+
+Randomized affine-minorant local solver and constrained acceleration. Unrestricted adaptive randomized algorithms
+
+The constructed algorithm actually succeeds with probability at least $0.99$. Every full pass costs $n$ queries.
+
+### B19 - Carmon--Jambulapati--Jin--Sidford randomized local-oracle lower bound, with the stated normalization and terminal-query reduction
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / 2/3 success / normalized global regularity
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+c(n\varepsilon^{-1/3}+\sqrt{n/\varepsilon})
+$$
+
+**Sources.** [7](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/A2/manuscript.pdf)
+
+**Conditions.** $n\ge1$ and $0<\varepsilon<1$; the complexity takes the worst case over all finite dimensions.; The lower bound is not asserted for each fixed dimension.; The normalized global-regularity view is distinct from assuming regularity only near the ball. The comparison concerns oracle calls, not arithmetic runtime.
+
+**Dimension conditions.** The upper bound holds for every finite d. The lower bound is existential in dimension, which may depend on n and epsilon; A2 Proposition prop:lower and Section sec:lower do not give an explicit dimensional formula.
+
+**Constants.** Universal positive constants.
+
+**Logarithmic factors.** Only the displayed sixth power of $\log(en/\varepsilon)$.
+
+**Source location.** [7](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/A2/manuscript.pdf) Theorem thm:main; Proposition prop:lower; Lemma lem:constant-lower
+
+Carmon--Jambulapati--Jin--Sidford randomized local-oracle lower bound, with the stated normalization and terminal-query reduction. All unrestricted adaptive randomized algorithms
+
+The lower bound is not asserted for each fixed dimension.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: d31d35a2d645dbd785b9f519a36a1d8e323166a1b8accabcd9463a380e5bcfab
+
+### Native proof: FO_FINITE_MAXIMUM
+
+Native pointer: /proofs/0; canonical SHA-256: 821d35bc5b288862cb88bf4ad41a5f3109c1257a28db9ceb3fdffe0b29fbb4af
+
+#### Native field: title
+
+Native pointer: /proofs/0/title; canonical SHA-256: db63ec3d90ae478a08f569097f01f711e22ce793ad293a31a33aefb4bb377931
+
+Finite maxima, hidden offsets, and budget conversion
+
+#### Native field: body
+
+Native pointer: /proofs/0/body; canonical SHA-256: ed3e5d317e854275eba7a2071ffd868610b850c9e55c0a4a6366fe906efa6af2
 
 With component value-gradient access, query all $n$ components, select an active one, and use its gradient as a subgradient of $F=\max_i f_i$. This transfers subgradient and certificate algorithms at cost $n$ per full response. The maximum is $L$-Lipschitz; the center has gap at most $LR$.
 
@@ -930,15 +1174,47 @@ With component gradients alone, relative additive offsets are invisible. The pai
 
 For an imported upper bound with a constant-probability joint event of acceptable error and budget, truncate each run, repeat independently, and evaluate all components at every candidate to choose the best exact maximum. Feasible outputs have gap at most $2LR$. Reducing failure to $\epsilon/(4LR)$ therefore gives expected error at most $\epsilon$. Repetition and validation calls are charged, producing the recorded logarithmic overhead.
 
-**Limits of the argument.** Additive offsets and the guarantee/budget conversion must be kept explicit.
+#### Native field: scope
 
-**Sources.** [3](https://arxiv.org/pdf/2311.10886)
+Native pointer: /proofs/0/scope; canonical SHA-256: dd9d9d36aa8db4b6692984bc92345d4dfc1747f2c6ba246c5a5e376b6554a7a3
 
-### A2 - Projected and weighted subgradient bounds
+Component values and gradients for simulation; component gradients alone for the offset impossibility.
 
-**Scope.** Public Euclidean projection; unbiased conditional subgradient mean and a total second-moment bound, or exact subgradients.
+#### Native field: limitations
 
-**Algorithm scope.** Deterministic policies and deterministic averages; randomness may come from observations.
+Native pointer: /proofs/0/limitations; canonical SHA-256: 30096e4bead8971af01075b12f565e8fac1ec0e7e03ee9970ce1beab0154e465
+
+Additive offsets and the guarantee/budget conversion must be kept explicit.
+
+#### Native field: algorithm_scope
+
+Native pointer: /proofs/0/algorithm_scope; canonical SHA-256: 544a2cce941e4af69392892b7bc87f6122f46b22f43368551d9943e2454a1c33
+
+Deterministic simulation upper witnesses; randomized hidden-index lower bounds; randomized budget conversion when needed.
+
+#### Native field: source_refs
+
+Native pointer: /proofs/0/source_refs; canonical SHA-256: 0929d2aa40221e9b3ae9a1bd6a88a31b4f860912081307b6a1bd8c50cae83916
+
+#### Native item 1
+
+Native pointer: /proofs/0/source_refs/0; canonical SHA-256: 4d259391de34ed28606e7dedaa4bd7420cdca35d4374466ec09a76171549cfc9
+
+SO_SRC_1ccf639c7d0ff459
+
+### Native proof: FO_PROJECTED_SG
+
+Native pointer: /proofs/1; canonical SHA-256: 2097db46c9b028dabab6fcc3e9b82ce6016c473a751004b42f2697573084d90c
+
+#### Native field: title
+
+Native pointer: /proofs/1/title; canonical SHA-256: 96370c58f6530dbf1c90377d7fc9b80f22df86a70b71b137163b08ba7b7d4d10
+
+Projected and weighted subgradient bounds
+
+#### Native field: body
+
+Native pointer: /proofs/1/body; canonical SHA-256: df6b6206889b23cb4b2b33b64b228616a05fe162f308b80ea085037fc7cda3e6
 
 Projection onto a public closed convex set gives
 $$
@@ -955,13 +1231,37 @@ $$
 Multiply by $t$, sum, and use convexity. The weighted output
 $\sum_{t=1}^K2t\,x_t/[K(K+1)]$ has expected gap at most $2V/[\mu(K+1)]$. Neither output rule requires private randomness. Apply norm conversion before these inequalities, preserving all dimension factors.
 
-**Limits of the argument.** Norm-conversion factors must be applied explicitly. No noisy cutting-plane result follows from this recursion.
+#### Native field: scope
 
-### A3 - Subgradient certificates and centroid cuts
+Native pointer: /proofs/1/scope; canonical SHA-256: aefb58efc6774fa2bbc4a16c0a22ce278c301d969fa7e33f7eb67f48d0b390dd
 
-**Scope.** One full subgradient is sufficient. Public compact convex geometry and exact internal geometric computation are available.
+Public Euclidean projection; unbiased conditional subgradient mean and a total second-moment bound, or exact subgradients.
 
-**Algorithm scope.** Deterministic upper-bound witness; valid as an upper bound for randomized views.
+#### Native field: limitations
+
+Native pointer: /proofs/1/limitations; canonical SHA-256: efe5c4306e0e4faf5d2c8e1f00f38151f773bb9855ee8d9affde1fa5b9c9771f
+
+Norm-conversion factors must be applied explicitly. No noisy cutting-plane result follows from this recursion.
+
+#### Native field: algorithm_scope
+
+Native pointer: /proofs/1/algorithm_scope; canonical SHA-256: e1a31a03176516390daf9011669c9af69332f5c849e081013b0de5e2158ecd13
+
+Deterministic policies and deterministic averages; randomness may come from observations.
+
+### Native proof: FO_CERTIFICATE
+
+Native pointer: /proofs/2; canonical SHA-256: 21979664af3d9c988ec0425d315ce0b043b36ff9d545026ed3322eb72c59ff61
+
+#### Native field: title
+
+Native pointer: /proofs/2/title; canonical SHA-256: a3ebc976e1b51b6b06145bd0666cc8cefdf1c282c07da23238d9b82f3a05b3cb
+
+Subgradient certificates and centroid cuts
+
+#### Native field: body
+
+Native pointer: /proofs/2/body; canonical SHA-256: 72d8341a17456c969432c1e806fc1bc7998d07720b92420071af653c600ce2eb
 
 Let $Q\subset\mathbb R^d$ be public, compact, convex, and full dimensional, with diameter at most $D$ in the stated norm. Suppose all returned subgradients have dual norm at most $L$. Query $g_i\in\partial f(x_i)$ at the centroid of the current body and retain $\langle g_i,x_i-x\rangle\ge0$. The centroid halfspace theorem bounds the retained volume by $(1-e^{-1})^T\operatorname{vol}(Q)$.
 
@@ -978,15 +1278,59 @@ For $Q=RB_p^d$ and $\ell_q$-Lipschitz objectives, use $D=2Rd^{(1/q-1/p)_+}$. Ret
 
 For a deterministic selector with total movement at most $W(T)$ on nested convex sets, instead impose deep cuts of margin $2LW(T)/T$. If all $T$ sets are nonempty, every move has length at least $2W(T)/T$, contradicting the movement bound. At the first empty intersection, minimax gives error at most $2LW(T)/T$. Substitution of the cited stable-movement theorem yields the recorded nondual upper bound. Its deterministic information scope is distinct from the scope of randomized implementations.
 
-**Limits of the argument.** The stable-selector branch imports its movement theorem and does not claim efficient deterministic arithmetic time.
+#### Native field: scope
 
-**Sources.** [4](https://arxiv.org/pdf/1405.4980) [5](https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf) [6](https://arxiv.org/pdf/2609.20701)
+Native pointer: /proofs/2/scope; canonical SHA-256: 92d674be8fd361e7686d71fa4f979260ea491c9b015664334a0ec353e8059b63
 
-### A4 - A one-dimensional lower bound with exact values and gradients
+One full subgradient is sufficient. Public compact convex geometry and exact internal geometric computation are available.
 
-**Scope.** Exact values and gradients; unbounded real-line queries, with higher-dimensional embeddings.
+#### Native field: limitations
 
-**Algorithm scope.** Lower bounds against arbitrary randomized adaptive algorithms, including unqueried output.
+Native pointer: /proofs/2/limitations; canonical SHA-256: 3c41670d63fc68cbd9a2b20c5bdffe5abdf747751c9b855a1dcef06421a036cd
+
+The stable-selector branch imports its movement theorem and does not claim efficient deterministic arithmetic time.
+
+#### Native field: algorithm_scope
+
+Native pointer: /proofs/2/algorithm_scope; canonical SHA-256: 42d065ebafc108a64e9cee964510776065fd1792b4344749b3f72a002ccd46aa
+
+Deterministic upper-bound witness; valid as an upper bound for randomized views.
+
+#### Native field: source_refs
+
+Native pointer: /proofs/2/source_refs; canonical SHA-256: 6920d63b36e4e336e449c0c507724c9a8e022e16823935878f5a8459ea8654b1
+
+#### Native item 1
+
+Native pointer: /proofs/2/source_refs/0; canonical SHA-256: f636ed5cb2c3078753fe74a8d5e61f525482a9f5b53b6ac34ca8401dd49dc086
+
+SO_SRC_a6e5b4d495f30052
+
+#### Native item 2
+
+Native pointer: /proofs/2/source_refs/1; canonical SHA-256: 9daedb2ac95e8088053c7f30d00e8b484004c953b15791fc665f3978350e6bba
+
+SO_SRC_c314bae252a3b929
+
+#### Native item 3
+
+Native pointer: /proofs/2/source_refs/2; canonical SHA-256: f49cfd2461dd4b0132f4f0fa2a90e3f29883781b5ad0bff19390f24edc0bff0c
+
+SO_SRC_88e665bbd463b203
+
+### Native proof: FO_NESTED_FG
+
+Native pointer: /proofs/3; canonical SHA-256: b78b6a3171d3b379278a8ff8bd423f5ef452d85e374e045f39f303b55c8d770b
+
+#### Native field: title
+
+Native pointer: /proofs/3/title; canonical SHA-256: 3ef610b063d3215728ad6bd9ca0fb250506c62bb1e79d0a1f1712a9223f10515
+
+A one-dimensional lower bound with exact values and gradients
+
+#### Native field: body
+
+Native pointer: /proofs/3/body; canonical SHA-256: 8c01c6437e24e5476cf2586f5db0d4209f21418f9c6af7751dd6cd66e78e7c13
 
 Fix $1<\kappa=\beta/\mu$. Choose a fixed smooth $\psi$, equal to $-x$ on $[-1/2,1/2]$ and zero outside $[-1,1]$, and let $C_\psi=\max\{1,\|\psi''\|_\infty\}$. Set
 $$
@@ -1017,7 +1361,23 @@ Fixing $\kappa=2$, $\Delta=c\beta R^2$, gives the initial-distance logarithmic b
 $|f_b'(x)|\ge(7\beta/16)|x-u_N|$.
 Add a public quadratic to embed in higher dimension. For composite minimization, apply the construction on total curvature interval $[\mu,\mu+\beta]$, with public $h(x)=\mu x^2/2$; the unknown remainder is convex and $\beta$-smooth, and every proximal response for $h$ is independent of the hidden bits.
 
-**Limits of the argument.** Curvature, initialization, and nontrivial-accuracy restrictions remain explicit; the composite transfer lower-bounds unknown-gradient calls.
+#### Native field: scope
+
+Native pointer: /proofs/3/scope; canonical SHA-256: 9775156c58630feb2557b65d993be46ef31e5b08c31436e87aeedcf91b079fff
+
+Exact values and gradients; unbounded real-line queries, with higher-dimensional embeddings.
+
+#### Native field: limitations
+
+Native pointer: /proofs/3/limitations; canonical SHA-256: a4bee836784937754fb754972e6a463a835e8d6b43165c8906fb2a1f5aefcf46
+
+Curvature, initialization, and nontrivial-accuracy restrictions remain explicit; the composite transfer lower-bounds unknown-gradient calls.
+
+#### Native field: algorithm_scope
+
+Native pointer: /proofs/3/algorithm_scope; canonical SHA-256: ec0da73a9cb6b357abfe64f2f10f9c420bd6fc8a395b3bce0dd79883015a60f5
+
+Lower bounds against arbitrary randomized adaptive algorithms, including unqueried output.
 
 ## References
 
@@ -1044,3 +1404,7 @@ https://www2.isye.gatech.edu/~nemirovs/MOR_AccuracyCertificates.pdf
 [6] David Martínez-Rubio; Cristóbal Guzmán. Stable Movement for Nondual Lipschitz Convex Optimization: Efficiency and Nearly Optimal Oracle Rates. 2026-09-17; preprintv1.
 
 https://arxiv.org/pdf/2609.20701
+
+[7] Colombo_A2. Near-Optimal Component-Oracle Complexity for Smooth Maximum Minimization. 2026. A2_randomized_affine_minorant_matching.tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/A2/manuscript.pdf

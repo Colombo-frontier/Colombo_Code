@@ -6,11 +6,9 @@ Single-objective optimization
 
 Find an approximate global minimizer, with accuracy measured by suboptimality of the complete objective.
 
-**Status.** Other quantified gap present; Bounds missing
+**Status.** Logarithmic gap; Other quantified gap; Bounds missing
 
-**Gap classes present.** Other quantified gap; Logarithmic gap
-
-The regional bracket below specifies the quantified gaps and their parameter dependence.
+**Gap classes present.** Logarithmic gap; Other quantified gap
 
 **TASK tags.** formulation: Global minimization; task family: Single objective
 
@@ -24,7 +22,7 @@ The regional bracket below specifies the quantified gaps and their parameter dep
 
 **METRIC tags.** criterion: Objective gap
 
-**GUARANTEE tags.** aggregation: Per instance; mode: Deterministic; mode: Expectation; randomness: Algorithm private seed
+**GUARANTEE tags.** aggregation: Per instance; mode: Deterministic; mode: Expectation; mode: Probability; quantifier: Algorithm before instance; randomness: Algorithm private seed
 
 **RESOURCE tags.** budget: Fixed worst-case budget; measure: Oracle calls; precision: Bit precision not counted
 
@@ -108,6 +106,20 @@ $$\exists A\ \forall I,\mathcal{O}:\ \mathbb{E}_A[\ell(I,\widehat{x})]\le\vareps
 
 The probability space includes the algorithm's private randomness. The instance and its admissible oracle law are fixed before randomness is averaged.
 
+#### Randomized / 2/3 success
+
+Queries, stopping decisions, and the output are measurable functions of the preceding transcript and an instance-independent private random seed. The unknown instance is fixed before the seed is realized. No span, support, zero-respecting, or memory restriction is imposed.
+
+Internal exact-real computation and storage using public inputs and received information are uncharged. The stated budget must hold on every execution path.
+
+$$
+\forall f:\ \Pr(f(\widehat x)-\min_{x\in Q}f(x)\le\varepsilon)\ge2/3
+$$
+
+The guarantee is instancewise, with probability only over the private seed and a deterministic worst-case query cap.
+
+**Budget convention.** fixed_worst_case
+
 ## 2. Notation and parameters
 
 $x,\widehat{x}$: Query points and final output; their permitted spaces are specified separately by the oracle and output contracts **Domain:** $\widehat{x}\in Q$.
@@ -166,7 +178,7 @@ $q^\star$: Hölder conjugate exponent of $q$ **Domain:** $q^\star\in[1,\infty]$.
 
 $$1/q+1/q^\star=1,\quad1^\star=\infty,\quad\infty^\star=1$$
 
-$T$: Query budget used only in the exact finite-budget result; it is not another model scale. **Domain:** $T\in\mathbb{N}_{\ge1}$.
+$T$: Prespecified full first-order query horizon for finite-budget risk comparisons; it is a resource budget rather than an additional objective-model scale. **Domain:** $T\in\mathbb{N}_{\ge1}$.
 
 $S_+$: Error scale after converting the domain and smoothness geometry to Euclidean norms
 
@@ -185,6 +197,14 @@ $O,\Omega,\Theta,\widetilde{O},\widetilde\Omega$: Notation for asymptotic upper 
 $\log$: Natural logarithm; changing to another fixed base affects only a constant
 
 $\mathbb{E}$: Expectation over the declared randomness after fixing the instance and admissible response law
+
+$\rho$: Nondual geometry exponent **Domain:** $\rho>0$.
+
+$\rho=1/p-(1/q-1/2)_+$
+
+$a$: Finite-horizon error exponent **Domain:** $a>0$.
+
+$a=(1+\nu)(1+\rho)-1$
 
 ## 3. Complexity bracket
 
@@ -253,6 +273,34 @@ $$
 **Optimization direction.** minimize
 
 Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+#### Q5 - minimax metric resource quantity
+
+**View.** Randomized / 2/3 success
+
+$$
+e_T^{\rm prob}=\inf_A\inf\{e:\sup_f\Pr(f(\widehat x)-f_Q^*>e)\le1/3\}
+$$
+
+**Scope.** The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+**Optimization direction.** minimize
+
+**Resource contract.** expression: $N_{\mathrm{value+gradient}}\le T$; description: All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+#### Q6 - minimax metric resource quantity
+
+**View.** Randomized / Expected loss
+
+$$
+e_T^{\rm exp}=\inf_A\sup_f\mathbb E[f(\widehat x)-f_Q^*]
+$$
+
+**Scope.** The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+**Optimization direction.** minimize
+
+**Resource contract.** expression: $N_{\mathrm{value+gradient}}\le T$; description: All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
 
 ### R1 - Smooth minimization on a ball
 
@@ -514,13 +562,163 @@ $$
 
 **Gap or comparison.** $C_\nu\log(2+d)$
 
+### R11 - Nondual geometry: 2/3 success; q below two
+
+**Region.** $1\le p<q<2$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$. $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed. Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation. The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible. For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Views.** Randomized / 2/3 success
+
+**Quantity.** Q5
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B20
+
+$$
+\Omega_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a[\log(e(T+1))]^\nu}\right)
+$$
+
+**Upper bound.** B19
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Gap or comparison.** Only logarithmic factors in dimension and budget remain.
+
+### R12 - Nondual geometry: 2/3 success; q finite at least two
+
+**Region.** $1\le p<2\le q<\infty$, with fixed finite $q$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$. $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed. Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation. The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible. For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Views.** Randomized / 2/3 success
+
+**Quantity.** Q5
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B22
+
+$$
+\Omega_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Upper bound.** B21
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Gap or comparison.** Only logarithmic factors in dimension and budget remain.
+
+### R13 - Nondual geometry: 2/3 success; q infinite
+
+**Region.** $1\le p<2$ and $q=\infty$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$. $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed. Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation. The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible. For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Views.** Randomized / 2/3 success
+
+**Quantity.** Q5
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B24
+
+$$
+\Omega_{p,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a[\log(e(T+1))]^\nu}\right)
+$$
+
+**Upper bound.** B23
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Gap or comparison.** Only logarithmic factors in dimension and budget remain.
+
+### R14 - Nondual geometry: expected loss; q below two
+
+**Region.** $1\le p<q<2$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$. $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed. Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation. The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible. For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q6
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B26
+
+$$
+\Omega_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a[\log(e(T+1))]^\nu}\right)
+$$
+
+**Upper bound.** B25
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Gap or comparison.** Only logarithmic factors in dimension and budget remain.
+
+### R15 - Nondual geometry: expected loss; q finite at least two
+
+**Region.** $1\le p<2\le q<\infty$, with fixed finite $q$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$. $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed. Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation. The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible. For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q6
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B28
+
+$$
+\Omega_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Upper bound.** B27
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Gap or comparison.** Only logarithmic factors in dimension and budget remain.
+
+### R16 - Nondual geometry: expected loss; q infinite
+
+**Region.** $1\le p<2$ and $q=\infty$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$. $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed. Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation. The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible. For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Views.** Randomized / Expected loss
+
+**Quantity.** Q6
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B30
+
+$$
+\Omega_{p,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a[\log(e(T+1))]^\nu}\right)
+$$
+
+**Upper bound.** B29
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Gap or comparison.** Only logarithmic factors in dimension and budget remain.
+
 ## 4. Bounds and supporting evidence
-
-The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
-
-**Output mapping.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
-
-**Resource mapping.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 ### B1 - Accelerated gradient method on a ball
 
@@ -545,6 +743,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: exact function values and gradients, exact gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [1](https://optimization-online.org/wp-content/uploads/2010/12/2865.pdf) theorem: Section 5.1, Theorem 5, and equation (42); the fixed schedule reads gradients only
 
@@ -572,7 +774,11 @@ $$
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
 
-**Local argument.** A1
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_CONSTRAINED_CUT
 
 **Source location.** [4](https://arxiv.org/pdf/2609.32910) theorem: Proposition E.12, PDF pp. 51–52, extended to a general public $p$-norm ball
 
@@ -600,6 +806,10 @@ $$
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [4](https://arxiv.org/pdf/2609.32910) theorem: PropositionsE.1–E.3, PDFpp.41–43
 
 ### B4 - Randomized hard instances for mismatched geometry
@@ -625,6 +835,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: exact function values and gradients, exact gradients. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [4](https://arxiv.org/pdf/2609.32910) theorem: Theorem 1 and Proposition D.7, PDF pp. 4 and 36; randomized construction with $d\ge32T+1$
 
@@ -652,7 +866,11 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
-**Local argument.** A2, A3
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_NESTED_FG, FO_SMOOTH_LOCALIZATION
 
 ### B6 - Non-Euclidean acceleration for Hölder-smooth functions
 
@@ -677,6 +895,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: exact function values and gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [4](https://arxiv.org/pdf/2609.32910) theorem: Propositions D.8 and E.3, specialized to first-order access; PDF pp. 36 and 43
 
@@ -704,6 +926,10 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [4](https://arxiv.org/pdf/2609.32910) theorem: Propositions D.8 and E.3, specialized to first-order access; PDF pp. 36 and 43
 
 ### B8 - Conditional gradient method on a box
@@ -729,6 +955,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: exact function values and gradients, exact gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [3](https://arxiv.org/pdf/1307.5001) theorem: Section 4.1A: Frank–Wolfe on the matching infinity-norm ball with Hölder exponent $\nu$
 
@@ -756,6 +986,10 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [2](https://proceedings.mlr.press/v99/diakonikolas19c/diakonikolas19c.pdf) theorem: Second bullet following Theorem 12, PDF p. 11; $p\to\infty$, $K=1$, and constant failure probability
 
 ### B10 - Accelerated gradient method on a ball
@@ -781,6 +1015,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: exact function values and gradients, exact gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [1](https://optimization-online.org/wp-content/uploads/2010/12/2865.pdf) theorem: Section 5.1, Theorem 5, and equation (42); the fixed schedule reads gradients only
 
@@ -808,7 +1046,11 @@ $$
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
 
-**Local argument.** A1
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_CONSTRAINED_CUT
 
 **Source location.** [4](https://arxiv.org/pdf/2609.32910) theorem: Proposition E.12, PDF pp. 51–52, extended to a general public $p$-norm ball
 
@@ -836,6 +1078,10 @@ $$
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [4](https://arxiv.org/pdf/2609.32910) theorem: PropositionsE.1–E.3, PDFpp.41–43
 
 ### B13 - Randomized hard instances for mismatched geometry
@@ -861,6 +1107,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: exact function values and gradients, exact gradients. Lower bounds transfer only through the explicitly recorded simulations from a stronger interface to a weaker one.
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [4](https://arxiv.org/pdf/2609.32910) theorem: Theorem 1 and Proposition D.7, PDF pp. 4 and 36; randomized construction with $d\ge32T+1$
 
@@ -888,7 +1138,11 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
-**Local argument.** A2, A3
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
+**Local argument.** FO_NESTED_FG, FO_SMOOTH_LOCALIZATION
 
 ### B15 - Non-Euclidean acceleration for Hölder-smooth functions
 
@@ -913,6 +1167,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: exact function values and gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [4](https://arxiv.org/pdf/2609.32910) theorem: Propositions D.8 and E.3, specialized to first-order access; PDF pp. 36 and 43
 
@@ -940,6 +1198,10 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [4](https://arxiv.org/pdf/2609.32910) theorem: Propositions D.8 and E.3, specialized to first-order access; PDF pp. 36 and 43
 
 ### B17 - Conditional gradient method on a box
@@ -965,6 +1227,10 @@ $$
 **Oracle correspondence.** Applicable interfaces: exact function values and gradients, exact gradients. Algorithms may use only these interfaces and the auxiliary operations explicitly declared public.
 
 **Guarantee conversion.** A deterministic error bound for every instance also gives the same expected-error bound. Probability guarantees are used only when an explicit conversion to the target contract is recorded.
+
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
 
 **Source location.** [3](https://arxiv.org/pdf/1307.5001) theorem: Section 4.1A: Frank–Wolfe on the matching infinity-norm ball with Hölder exponent $\nu$
 
@@ -992,15 +1258,379 @@ $$
 
 **Guarantee conversion.** The hard-instance quantifiers cover the algorithm class explicitly specified for this bound. Each target setting retains its expected-error or success-probability criterion; a deterministic lower bound is not promoted to a randomized lower bound.
 
+**Output rule.** The output must lie in the declared output space and satisfy its feasibility, support, or atomic-hull restrictions. Permission to return an unqueried point does not remove these restrictions.
+
+**Resource conversion.** Every primitive response is charged. Sample, component, proximal, and communication costs use the units declared for the target setting. Resource coordinates achieved by one algorithm remain a joint vector; coordinatewise minima from different algorithms are not combined.
+
 **Source location.** [2](https://proceedings.mlr.press/v99/diakonikolas19c/diakonikolas19c.pdf) theorem: Second bullet following Theorem 12, PDF p. 11; $p\to\infty$, $K=1$, and constant failure probability
 
-## 5. Local arguments
+### B19 - Deterministic stable-selector version of the cited nondual accelerated method
 
-### A1 - Smooth constrained cuts with unrestricted affine slope
+**Admission.** Included in the bracket
 
-**Scope.** Gradient-only queries inside the public convex ball; no bound on affine slope.
+**Direction.** upper
 
-**Algorithm scope.** Deterministic upper witness.
+**View.** Randomized / 2/3 success
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<q<2$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Corollary cor:matching, eq:error-sandwich; Table tab:regimes
+
+Deterministic stable-selector version of the cited nondual accelerated method. Deterministic adaptive feasible-query algorithms
+
+### B20 - Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / 2/3 success
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a[\log(e(T+1))]^\nu}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<q<2$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Theorem thm:main, eq:threshold; Table tab:regimes
+
+Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation. All unrestricted randomized adaptive algorithms
+
+A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.
+
+### B21 - Deterministic stable-selector version of the cited nondual accelerated method
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / 2/3 success
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<2\le q<\infty$, with fixed finite $q$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Corollary cor:matching, eq:error-sandwich; Table tab:regimes
+
+Deterministic stable-selector version of the cited nondual accelerated method. Deterministic adaptive feasible-query algorithms
+
+### B22 - Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / 2/3 success
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<2\le q<\infty$, with fixed finite $q$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Theorem thm:main, eq:threshold; Table tab:regimes
+
+Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation. All unrestricted randomized adaptive algorithms
+
+A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.
+
+### B23 - Deterministic stable-selector version of the cited nondual accelerated method
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / 2/3 success
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<2$ and $q=\infty$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Corollary cor:matching, eq:error-sandwich; Table tab:regimes
+
+Deterministic stable-selector version of the cited nondual accelerated method. Deterministic adaptive feasible-query algorithms
+
+### B24 - Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / 2/3 success
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega_{p,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a[\log(e(T+1))]^\nu}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<2$ and $q=\infty$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Theorem thm:main, eq:threshold; Table tab:regimes
+
+Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation. All unrestricted randomized adaptive algorithms
+
+A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.
+
+### B25 - Deterministic stable-selector version of the cited nondual accelerated method
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<q<2$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Corollary cor:matching, eq:error-sandwich; Table tab:regimes
+
+Deterministic stable-selector version of the cited nondual accelerated method. Deterministic adaptive feasible-query algorithms
+
+### B26 - Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a[\log(e(T+1))]^\nu}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<q<2$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Theorem thm:main, eq:threshold; Table tab:regimes
+
+Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation. All unrestricted randomized adaptive algorithms
+
+A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.
+
+### B27 - Deterministic stable-selector version of the cited nondual accelerated method
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<2\le q<\infty$, with fixed finite $q$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Corollary cor:matching, eq:error-sandwich; Table tab:regimes
+
+Deterministic stable-selector version of the cited nondual accelerated method. Deterministic adaptive feasible-query algorithms
+
+### B28 - Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<2\le q<\infty$, with fixed finite $q$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Theorem thm:main, eq:threshold; Table tab:regimes
+
+Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation. All unrestricted randomized adaptive algorithms
+
+A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.
+
+### B29 - Deterministic stable-selector version of the cited nondual accelerated method
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+\widetilde O_{p,q,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<2$ and $q=\infty$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Corollary cor:matching, eq:error-sandwich; Table tab:regimes
+
+Deterministic stable-selector version of the cited nondual accelerated method. Deterministic adaptive feasible-query algorithms
+
+### B30 - Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega_{p,\nu}\!\left(\frac{\beta_\nu R^{1+\nu}}{(T+1)^a[\log(e(T+1))]^\nu}\right)
+$$
+
+**Sources.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf)
+
+**Conditions.** $1\le p<2$ and $q=\infty$; $0<\nu\le1$, $\beta_\nu,R>0$, $T\ge1$, and $d\ge32(T+1)$.; A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.; Use $\kappa=1+\nu$ and $L=\beta_\nu$ to translate the manuscript notation.; The deterministic upper bound is the Martinez-Rubio--Bullins--Guzman--Molina algorithm cited in Corollary cor:matching. Its query points are feasible.; For expected loss, the distributional probability lower bound implies the same order by nonnegativity of the objective gap; the deterministic upper bound also controls expected loss.
+
+**Dimension conditions.** $d\ge32(T+1)$ is the sufficient dimension in Theorem thm:main; no exponential dimensional factor is suppressed.
+
+**Constants.** Constants may depend on fixed p, q, and nu. The log-free finite-q lower constant is not uniform as q tends to infinity.
+
+**Logarithmic factors.** The upper bound uses the polylogarithms in Corollary cor:matching; the displayed lower logarithm is $[\log(e(T+1))]^\nu$ when $q<2$ or $q=\infty$.
+
+**Source location.** [8](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf) Theorem thm:main, eq:threshold; Table tab:regimes
+
+Signed interpolation margins, exact-local smoothing, and adaptive hidden-sign simulation. All unrestricted randomized adaptive algorithms
+
+A single pre-sampled distribution forces failure at least $4/5$; arbitrary measurable terminal outputs are permitted.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 47778c7fdf704248adfa2e369d32aa570bc259b7e382ee61d56e4fc70b3223a0
+
+### Native proof: FO_CONSTRAINED_CUT
+
+Native pointer: /proofs/0; canonical SHA-256: 841b6c87b089223de33a54396e974dacf3d6e59dd370d09f48e4360b6a2ab39b
+
+#### Native field: title
+
+Native pointer: /proofs/0/title; canonical SHA-256: a48fb6c963d35ca424737e8f1f57c5e26e597d887f85e426f366314fa23afcee
+
+Smooth constrained cuts with unrestricted affine slope
+
+#### Native field: body
+
+Native pointer: /proofs/0/body; canonical SHA-256: bf4812de9527c31f06c7f3b74e3251841ff78f4f948629f211ecb46227c634e6
 
 Suppose $Q\subset B(0,R)$ is public, compact, convex, and contains zero, and $f$ is convex and $\beta$-smooth near $Q$. Query $b=\nabla f(0)$, choose $y\in\arg\min_Q\langle b,u\rangle$, and query $\nabla f(y)$. Every point satisfying $\langle\nabla f(y),y-u\rangle\ge\epsilon$ lies in
 $$
@@ -1013,13 +1643,37 @@ $(1-a)z+aC_b$, $a=\epsilon/[2(\epsilon+4\beta R^2)]$, survives all shallow cuts.
 
 The initialization costs two calls, and all queries lie in $Q$. No bound on $\|\nabla f(0)\|$ is assumed. For $RB_p^d$ and $\ell_q$-smoothness, insert the declared Euclidean norm conversions.
 
-**Limits of the argument.** Smoothness is required near the domain. Exact geometric operations are internal; no efficient arithmetic bound is claimed.
+#### Native field: scope
 
-### A2 - A one-dimensional lower bound with exact values and gradients
+Native pointer: /proofs/0/scope; canonical SHA-256: 2eb692e2c6ebf5fe29fc3c405b71cda632b3fa34da1d12582e0f55522c607ce6
 
-**Scope.** Exact values and gradients; unbounded real-line queries, with higher-dimensional embeddings.
+Gradient-only queries inside the public convex ball; no bound on affine slope.
 
-**Algorithm scope.** Lower bounds against arbitrary randomized adaptive algorithms, including unqueried output.
+#### Native field: limitations
+
+Native pointer: /proofs/0/limitations; canonical SHA-256: 01057827f9ab410cc27049736d8987f11b3aafbfc40323ce556c9c9c75faf72b
+
+Smoothness is required near the domain. Exact geometric operations are internal; no efficient arithmetic bound is claimed.
+
+#### Native field: algorithm_scope
+
+Native pointer: /proofs/0/algorithm_scope; canonical SHA-256: f175cd28823d286c986c354da21ce4aa1614b6142d7297772cacd7c70301d956
+
+Deterministic upper witness.
+
+### Native proof: FO_NESTED_FG
+
+Native pointer: /proofs/1; canonical SHA-256: b78b6a3171d3b379278a8ff8bd423f5ef452d85e374e045f39f303b55c8d770b
+
+#### Native field: title
+
+Native pointer: /proofs/1/title; canonical SHA-256: 3ef610b063d3215728ad6bd9ca0fb250506c62bb1e79d0a1f1712a9223f10515
+
+A one-dimensional lower bound with exact values and gradients
+
+#### Native field: body
+
+Native pointer: /proofs/1/body; canonical SHA-256: 8c01c6437e24e5476cf2586f5db0d4209f21418f9c6af7751dd6cd66e78e7c13
 
 Fix $1<\kappa=\beta/\mu$. Choose a fixed smooth $\psi$, equal to $-x$ on $[-1/2,1/2]$ and zero outside $[-1,1]$, and let $C_\psi=\max\{1,\|\psi''\|_\infty\}$. Set
 $$
@@ -1050,13 +1704,37 @@ Fixing $\kappa=2$, $\Delta=c\beta R^2$, gives the initial-distance logarithmic b
 $|f_b'(x)|\ge(7\beta/16)|x-u_N|$.
 Add a public quadratic to embed in higher dimension. For composite minimization, apply the construction on total curvature interval $[\mu,\mu+\beta]$, with public $h(x)=\mu x^2/2$; the unknown remainder is convex and $\beta$-smooth, and every proximal response for $h$ is independent of the hidden bits.
 
-**Limits of the argument.** Curvature, initialization, and nontrivial-accuracy restrictions remain explicit; the composite transfer lower-bounds unknown-gradient calls.
+#### Native field: scope
 
-### A3 - Smooth localization and gradient-norm conversion
+Native pointer: /proofs/1/scope; canonical SHA-256: 9775156c58630feb2557b65d993be46ef31e5b08c31436e87aeedcf91b079fff
 
-**Scope.** Gradient access and a public ball localizing a global minimizer; public regularization when only initial gap is given.
+Exact values and gradients; unbounded real-line queries, with higher-dimensional embeddings.
 
-**Algorithm scope.** Deterministic upper witnesses; imported lower theorems retain their own deterministic or randomized scopes.
+#### Native field: limitations
+
+Native pointer: /proofs/1/limitations; canonical SHA-256: a4bee836784937754fb754972e6a463a835e8d6b43165c8906fb2a1f5aefcf46
+
+Curvature, initialization, and nontrivial-accuracy restrictions remain explicit; the composite transfer lower-bounds unknown-gradient calls.
+
+#### Native field: algorithm_scope
+
+Native pointer: /proofs/1/algorithm_scope; canonical SHA-256: ec0da73a9cb6b357abfe64f2f10f9c420bd6fc8a395b3bce0dd79883015a60f5
+
+Lower bounds against arbitrary randomized adaptive algorithms, including unqueried output.
+
+### Native proof: FO_SMOOTH_LOCALIZATION
+
+Native pointer: /proofs/2; canonical SHA-256: d51e14f76ae353f6d19ce8eac55c09c21cbd9eeee4bde8c3512c390a396b37e6
+
+#### Native field: title
+
+Native pointer: /proofs/2/title; canonical SHA-256: 3aae5cd443abef7955dd04a6655608cb10b6395f3b12c8a62a5f8214e01daa22
+
+Smooth localization and gradient-norm conversion
+
+#### Native field: body
+
+Native pointer: /proofs/2/body; canonical SHA-256: 8d4b35132c83602585f4977b5887a155d8f4ccd965bf6b5d2a12f65821daa109
 
 If a global minimizer lies within distance $R$ of $x_0$, query on $B(x_0,R)$. Since $\nabla f(x^\star)=0$, gradients there have norm at most $2\beta R$. The centroid certificate gives $O(d\log(2+\beta R^2/\epsilon))$ gradient calls. Smoothness gives $f(x_0)-f^\star\le\beta R^2/2$, including the zero-query endpoint.
 
@@ -1083,9 +1761,45 @@ $f(x)-f^\star\ge c_\nu\beta_\nu^{-1/\nu}\|\nabla f(x)\|_{p^\star}^{(1+\nu)/\nu}$
 Targeting gap $c_\nu\beta_\nu^{-1/\nu}\epsilon^{(1+\nu)/\nu}$ in the localization certificate therefore gives
 $C_\nu d\log(2+\beta_\nu R^\nu/\epsilon)$.
 
-**Limits of the argument.** An arbitrary constrained minimizer may be on the boundary and need not have zero gradient. Fixed-dimensional lower transfers retain theorem dimension windows.
+#### Native field: scope
 
-**Sources.** [5](https://arxiv.org/pdf/2101.09740v2) [6](https://arxiv.org/pdf/2609.33360v2) [7](https://arxiv.org/pdf/2609.10874)
+Native pointer: /proofs/2/scope; canonical SHA-256: 3091ece9e2f7dce20041b0906cf893c2f7d027b16d3bad6d85399aa55c7a8419
+
+Gradient access and a public ball localizing a global minimizer; public regularization when only initial gap is given.
+
+#### Native field: limitations
+
+Native pointer: /proofs/2/limitations; canonical SHA-256: d8794705c35ea24420b14f01cb7ff119c9c7926bf6951f1e120b77780dc03ef9
+
+An arbitrary constrained minimizer may be on the boundary and need not have zero gradient. Fixed-dimensional lower transfers retain theorem dimension windows.
+
+#### Native field: algorithm_scope
+
+Native pointer: /proofs/2/algorithm_scope; canonical SHA-256: 7d91225f61bb29b37b94da2479bd65ed049edd57456242e4b2feaba37b16801c
+
+Deterministic upper witnesses; imported lower theorems retain their own deterministic or randomized scopes.
+
+#### Native field: source_refs
+
+Native pointer: /proofs/2/source_refs; canonical SHA-256: 036d6bc31f87b5cca6c3679c2830d0b97c8176e2e9c43ff6000cdb083679bd61
+
+#### Native item 1
+
+Native pointer: /proofs/2/source_refs/0; canonical SHA-256: 559a56b1b57844e3c568387a9ebb4d7cbcaf1e98ec7a31a094efd65fa367c08c
+
+SO_SRC_3db9732ed66f3b8c
+
+#### Native item 2
+
+Native pointer: /proofs/2/source_refs/1; canonical SHA-256: a2cd77f7d9b231a6aa4b43e047274fe80a546f2eda06c8b43f4f125d862ff120
+
+SO_SRC_c729895b420a5000
+
+#### Native item 3
+
+Native pointer: /proofs/2/source_refs/2; canonical SHA-256: 9aa4cfa7d9a55fe74b6acccc9d4369f9379589cff2486fc75a9d717fcb9aa355
+
+SO_SRC_da45f3a56f11d157
 
 ## References
 
@@ -1116,3 +1830,7 @@ https://arxiv.org/pdf/2609.33360v2
 [7] Ohad Shamir. A Simple Complexity Lower Bound for Solving Ax=b. 2026-09-09; preprintv1.
 
 https://arxiv.org/pdf/2609.10874
+
+[8] Colombo_B1. Randomized Oracle Lower Bounds for Smooth Nondual Convex Optimization. 2026. B1_matching_randomized_bounds (1).tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/B1/manuscript.pdf

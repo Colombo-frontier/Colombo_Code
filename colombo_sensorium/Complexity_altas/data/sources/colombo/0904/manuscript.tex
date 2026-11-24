@@ -1,0 +1,1805 @@
+% Single-file manuscript: compile twice with pdfLaTeX.
+% All proofs and bibliography entries are included below.
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,array,tabularx,microtype,xurl}
+% LaTeX 2026-06-01 provides counter aliases natively.
+\IfFormatAtLeastTF{2026-06-01}{}{\usepackage{aliascnt}}
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+\setlength{\emergencystretch}{2em}
+\setlength{\parskip}{3pt}
+\brokenpenalty=10000
+\clubpenalty=10000
+\widowpenalty=10000
+\raggedbottom
+\newtheorem{theorem}{Theorem}[section]
+\IfFormatAtLeastTF{2026-06-01}{%
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+}{%
+\newaliascnt{lemma}{theorem}
+\newtheorem{lemma}[lemma]{Lemma}
+\aliascntresetthe{lemma}
+\newaliascnt{corollary}{theorem}
+\newtheorem{corollary}[corollary]{Corollary}
+\aliascntresetthe{corollary}
+\theoremstyle{remark}
+\newaliascnt{remark}{theorem}
+\newtheorem{remark}[remark]{Remark}
+\aliascntresetthe{remark}
+}
+\crefname{theorem}{theorem}{theorems}
+\Crefname{theorem}{Theorem}{Theorems}
+\crefname{lemma}{lemma}{lemmas}
+\Crefname{lemma}{Lemma}{Lemmas}
+\crefname{corollary}{corollary}{corollaries}
+\Crefname{corollary}{Corollary}{Corollaries}
+\crefname{remark}{remark}{remarks}
+\Crefname{remark}{Remark}{Remarks}
+\crefname{appendix}{appendix}{appendices}
+\Crefname{appendix}{Appendix}{Appendices}
+\newcommand{\R}{\mathbb R}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\ip}[2]{\left\langle#1,#2\right\rangle}
+\newcommand{\Lip}{\operatorname{Lip}}
+\newcommand{\dist}{\operatorname{dist}}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\G}{G_\star}
+\newcommand{\proj}{\operatorname{proj}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\allowdisplaybreaks[1]
+\title{\textbf{Sharp Deterministic Gradient--Hessian Tradeoffs\\
+for Finding Stationary Points}}
+\author{Colombo Team\\[0.4em]
+\small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+\hypersetup{
+  pdftitle={Sharp Deterministic Gradient--Hessian Tradeoffs for Finding Stationary Points},
+  pdfauthor={Colombo Team},
+  pdfsubject={Deterministic oracle complexity of nonconvex stationarity},
+  pdfkeywords={Nonconvex optimization, oracle complexity, gradient--Hessian tradeoffs}
+}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+How many exact gradient queries are needed to find an approximate stationary
+point when the number of Hessian queries is prescribed? We answer this
+question for deterministic algorithms with separately charged gradients and
+complete Hessian matrices. The objective has an $L_1$-Lipschitz gradient, an
+$L_2$-Lipschitz Hessian, and initial gap at most $\Delta$. Write
+$A=\Delta\sqrt{L_2}\eps^{-3/2}$ and
+$B=\Delta\sqrt{L_1}L_2^{1/4}\eps^{-7/4}$. For a sufficiently small universal $c>0$ and
+$0<\eps\le c\min\{L_1^2/L_2,\Delta^{2/3}L_2^{1/3}\}$, the optimal
+dimension-uniform gradient budget under a strict integer Hessian budget $h\ge1$ is
+\[
+ G_\star(h;\eps)=\Theta\!\left(
+ \max\left\{1,\min\left\{B,\frac{A^{3/2}}{\sqrt h},\frac{A^2}{h}\right\}\right\}
+ \right),
+\]
+while $G_\star(0;\eps)=\Theta(B)$. The bounds match without logarithmic
+loss. For $1\le h\le A$, a sequential composition of first-order hard instances
+limits each complete Hessian response to one new stage. For $h\ge A$, a
+one-dimensional interpolation argument proves the product obstruction
+$g(g+h)=\Omega(A^2)$, matched by an algorithm that transports gradients
+through Hessian integration. In particular, exactly one gradient query
+becomes possible at Hessian budget $\Theta(A^2)$, whereas zero gradient
+queries never suffice. An explicit integer schedule for an existing lazy
+extragradient method supplies the complementary upper bound. The result
+concerns derivative-only information: internal computation is uncharged,
+and the lower-bound dimension may grow with the query budgets.
+\end{abstract}
+
+\noindent\textbf{Keywords:}
+Nonconvex optimization; oracle complexity; stationary points;
+gradient--Hessian tradeoffs; deterministic lower bounds.
+\par\medskip
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol. 
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:intro}
+Finding an approximate stationary point is a basic task in nonconvex
+optimization. For an unknown function $f:\R^d\to\R$, an initial point
+$x_0$, and a tolerance $\eps>0$, the goal is to return $\hat x$ such that
+$\norm{\nabla f(\hat x)}\le\eps$. First- and second-order methods approach
+this task with different information: a gradient gives a local direction,
+whereas a Hessian describes how that direction changes. When the two
+derivatives are charged separately, their relative value is captured by
+a budget question:
+\emph{how many gradients are necessary if at most $h$ complete Hessians
+may be queried?}
+
+We study this question in an exact derivative oracle model. A query returns
+either $\nabla f(x)$ or $\nabla^2f(x)$, at an arbitrary point chosen by the
+algorithm. A Hessian query returns the entire matrix, without a gradient or
+function value. Internal computation is unrestricted. The objective is
+bounded below and satisfies
+\[
+ f(x_0)-\inf f\le\Delta,\qquad
+ \Lip(\nabla f)\le L_1,\qquad
+ \Lip(\nabla^2f)\le L_2,
+\]
+where $L_1,L_2,\Delta>0$ are public parameters. We seek deterministic
+worst-case guarantees that hold uniformly over all finite dimensions.
+
+Two established complexity scales locate the problem:
+\[
+ A=\Delta\sqrt{L_2}\eps^{-3/2},
+ \qquad
+ B=\Delta\sqrt{L_1}L_2^{1/4}\eps^{-7/4}.
+\]
+Cubic regularization attains the second-order scale $A$~\cite{nesterov}.
+With gradients alone, restarted acceleration attains $B$ without
+logarithmic factors~\cite{lilin}, and Zhou~\cite{zhou} proves a matching
+deterministic lower bound. The aggregate second-order obstruction
+$g+h=\Omega(A)$~\cite{carmon} does not resolve how these two resources can
+substitute for one another.
+
+\paragraph{The deterministic budget frontier.}
+Let $G_\star(h;\eps)$ be the least uniform worst-case gradient budget
+among deterministic algorithms using at most $h$ Hessian queries. For a
+sufficiently small universal constant $c_0>0$, assume
+\[
+ 0<\eps\le c_0\min\{L_1^2/L_2,\Delta^{2/3}L_2^{1/3}\}.
+\]
+Our main result is
+\begin{equation}\label{eq:intro-frontier}
+ G_\star(h;\eps)=
+ \begin{cases}
+ \Theta(B),&h=0,\\[2pt]
+ \Theta\!\left(\min\{B,A^{3/2}/\sqrt h\}\right),&1\le h\le A,\\[2pt]
+ \Theta\!\left(\max\{1,A^2/h\}\right),&h\ge A.
+ \end{cases}
+\end{equation}
+The constants are universal, and every upper bound respects the exact
+integer constraint $N_H\le h$. The branches agree at the balanced scale
+$h\asymp A$, where both derivative counts are of order $A$.
+
+This characterization identifies two different ways to use curvature.
+When Hessians are scarce, their benefit is an inverse-square-root
+reduction in the gradient count, once the mixed method improves on the
+gradient-only alternative. When Hessians are abundant, the count decreases
+inversely with $h$ until it reaches one. Thus $h\asymp A$ marks a change
+in the form of the optimal tradeoff. The smallest Hessian budget that
+allows exactly one gradient query is $\Theta(A^2)$.
+
+\paragraph{Contributions and relation to existing algorithms.}
+The paper establishes three components of this frontier.
+\begin{enumerate}
+\item \textbf{A matching lower bound when Hessians are scarce.}
+We compose calibrated first-order hard instances from Zhou~\cite{zhou}
+into sequential stages. Each complete Hessian can expose at most one
+new stage, while gradients reveal its directions layer by layer. The
+composition preserves both global smoothness bounds and works against
+arbitrary deterministic queries and unqueried outputs.
+\item \textbf{A matching characterization when Hessians are abundant.}
+A one-dimensional interpolation construction gives
+$g(g+h)=\Omega(A^2)$ and rules out $g=0$. A complementary algorithm
+uses Hessian integration between exact gradient resets, attaining
+$N_g\le k$ and $N_H=O(A^2/k)$ for $1\le k\le\lfloor A\rfloor$. Together these bounds give the
+$\Theta(\max\{1,A^2/h\})$ branch and the one-gradient threshold.
+\item \textbf{An explicit schedule under a strict integer budget.}
+Adil et al.~\cite{adil} already obtain the scarce-Hessian tradeoff with
+logarithmic factors and a strict budget. Chen et al.~\cite{chen} remove
+the logarithmic loss through lazy extragradient updates. We use their
+mechanism and specify an integer schedule that enforces $N_H\le h$,
+including $h=1$, while charging every output-selection gradient.
+\end{enumerate}
+The zero-Hessian lower endpoint is inherited from Zhou~\cite{zhou}.
+The scarce-Hessian upper algorithm is an adaptation of Chen et
+al.~\cite{chen}; the lower-bound composition and the Hessian-rich
+characterization are the substantive additions considered here.
+
+\paragraph{Why two lower-bound constructions are needed.}
+A complete Hessian can reveal many hidden directions at once. The
+scarce-Hessian construction therefore hides future stages through
+second order: before activation, each future block agrees with an
+isotropic quadratic in its value, gradient, and Hessian. A terminal
+gradient barrier forces every stationary point to reach all stages.
+If $J$ stages each require $m$ first-order revelations, stage counting
+gives $g\ge(J-h)m$. Calibrating the gap and smoothness budgets then
+yields the middle branch of \eqref{eq:intro-frontier}.
+
+For large $h$, the relevant obstruction is different. We prescribe the
+same nonzero gradient at every gradient-query location and at the final
+output, while making the Hessian vanish at all Hessian-query locations.
+A controlled interpolation realizes this transcript with an admissible
+one-dimensional objective whenever the product budget is too small.
+The matching upper bound exploits the identity
+\[
+ \nabla f(x+s)-\nabla f(x)
+ =\int_0^1\nabla^2f(x+ts)s\,dt.
+\]
+One exact gradient fixes the integration constant. A bound on the total
+length of a cubic-descent path then controls the accumulated quadrature
+error and the number of Hessian samples.
+
+\paragraph{Scope and organization.}
+The upper bounds apply in every finite dimension. The lower bounds are
+deterministic, and the scarce-Hessian construction may choose the
+dimension as a function of the proposed budgets.
+\Cref{sec:related} compares the result with earlier oracle guarantees.
+\Cref{sec:model} gives the formal model and theorem statements.
+\Cref{sec:upper} proves the upper bounds;
+\Cref{sec:oned,sec:poor} give the two lower-bound constructions.
+The appendices provide the regret calculation, source-block calibration,
+global derivative estimates, and fixed-function realization.
+
+\section{Related Work}\label{sec:related}
+\paragraph{First-order complexity.}
+Carmon et al.~\cite{guilty} developed the \emph{convex until proven guilty}
+approach, which combines accelerated progress with the exploitation of
+detected negative curvature. Under Lipschitz gradients and Hessians it
+achieves the $\widetilde O(\eps^{-7/4})$ scale. Li and Lin~\cite{lilin}
+remove the logarithmic loss by restarting; their theoretical algorithm
+uses gradients alone. Carmon et al.~\cite{carmon2} proved an
+$\Omega(\eps^{-12/7})$ first-order lower bound for fixed smoothness and
+gap parameters. Zhou~\cite{zhou} strengthens this to the matching
+$\Omega(\eps^{-7/4})$ scale, including the dependence on
+$L_1,L_2,\Delta$ used here. We import the calibrated block chain from that
+work and establish the robust terminal certificate needed to compose it
+with other blocks.
+
+\paragraph{Hessian reuse and separate query budgets.}
+Cubic regularization gives a global convergence framework for
+second-order methods~\cite{nesterov}. Doikov, Chayti, and
+Jaggi~\cite{doikov} show how reusing Hessians can reduce their
+computational cost. Adil et al.~\cite{adil} directly balance gradients
+and Hessians and also allow approximate Hessian information.
+Their exact-Hessian specialization gives the scarce-Hessian tradeoff
+with logarithmic factors under a prescribed integer budget.
+
+Chen et al.~\cite{chen} obtain a log-free refresh-period guarantee through
+lazy extragradient updates. In our notation, their Theorem~4.1 gives
+\begin{equation}\label{eq:chen-refresh}
+ N_g=O(m+A m^{1/3}),\qquad
+ N_H=O(1+A/m^{2/3}).
+\end{equation}
+For $1\le h\le A$, taking $m\asymp(A/h)^{3/2}$ yields
+$N_g=O(A^{3/2}/\sqrt h)$ and $N_H=O(h)$. Our schedule in
+\Cref{thm:strict} enforces the exact budget, while retaining their
+algorithmic mechanism. The online-to-nonconvex conversion originates in
+Cutkosky, Mehta, and Orabona~\cite{cutkosky}; its deterministic midpoint
+form is explicit in Jiang, Mokhtari, and Patitucci~\cite{jiang}.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\caption{Aligned comparison under \eqref{eq:regime}.
+$M_h=\min\{B,A^{3/2}/\sqrt h\}$; a tilde suppresses parameter
+logarithms. All displayed upper bounds are uniform in dimension, while
+lower-bound dimensions may grow. The Chen et al.\ row is the consequence
+of their refresh-period bound \eqref{eq:chen-refresh}, combined with the
+gradient-only alternative; its $O(h)$ budget differs from $N_H\le h$.}
+\label{tab:comparison}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.205\textwidth}
+>{\raggedright\arraybackslash}p{0.185\textwidth}
+>{\raggedright\arraybackslash}p{0.22\textwidth}
+>{\raggedright\arraybackslash}X@{}}
+\toprule
+Source & Hessian budget & Gradient guarantee & Qualification\\
+\midrule
+Li and Lin~\cite{lilin}
+& $N_H=0$ & $O(B)$
+& Gradient-only upper bound.\\[3pt]
+Zhou~\cite{zhou}
+& $N_H=0$ & $\Omega(B)$
+& Deterministic lower bound, even with function values.\\
+\midrule
+Adil et al.~\cite{adil}
+& $N_H\le h$\newline $1\le h\le A$
+& $\widetilde O(M_h)$
+& Exact-Hessian specialization and gradient-only alternative.\\[3pt]
+Chen et al.~\cite{chen}
+& $N_H=O(h)$\newline $1\le h\le A$
+& $O(M_h)$
+& Consequence of the refresh-period guarantee.\\
+\midrule
+This paper: upper bound
+& $N_H\le h$\newline $1\le h\le A$
+& $O(M_h)$
+& Strict schedule for the Chen et al.\ mechanism;
+\Cref{thm:strict}.\\[3pt]
+This paper: lower bound
+& $N_H\le h$\newline $1\le h\le A$
+& $\Omega(M_h)$
+& Sequential composition;
+\Cref{thm:poor-complete}.\\[3pt]
+This paper: rich regime
+& $N_H\le h$\newline $h\ge A$
+& $\Theta(\max\{1,A^2/h\})$
+& Hessian integration and one-dimensional interpolation.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Oracle strength and dimension.}
+The total-query lower bounds of Carmon et al.~\cite{carmon} hold for
+methods with higher-order derivative access, including randomized
+algorithms, but do not separate the gradient and Hessian budgets. Our full-matrix oracle requires
+the lower-bound realization to preserve every Hessian entry under
+rotations of unused directions. This is stronger than preserving only
+selected Hessian--vector products.
+
+Dimension-dependent guarantees answer a different question.
+Adil et al.~\cite{adil} use finite differences to simulate approximate
+Hessians. Jiang et al.~\cite{jiang} obtain
+$O(d^{1/4}\eps^{-13/8})$ gradient queries for fixed smoothness and gap
+parameters. The August 2026 revision of Marumo~\cite{marumo} attains the
+same dependence with a parameter-free method that uses function and
+gradient evaluations. These bounds can improve the accuracy dependence
+when dimension is controlled. They are consistent with our
+dimension-uniform frontier, whose lower-bound dimension is allowed to
+grow. Chen et al.'s Hessian-to-gradient cost ratio~\cite{chen}, termed an
+effective dimension, is distinct from the ambient dimension governing
+this lower-bound construction.
+
+\section{Oracle Model and Main Results}\label{sec:model}
+Fix public parameters $L_1,L_2,\Delta>0$ and $\eps>0$. In each finite dimension $d$, the admissible functions $f\in C^2(\R^d)$ satisfy
+\begin{equation}\label{eq:class}
+ \inf f> -\infty,\qquad f(x_0)-\inf f\le\Delta,\qquad
+ \Lip(\nabla f)\le L_1,\qquad \Lip(\nabla^2 f)\le L_2,
+\end{equation}
+where the last Lipschitz bound uses the Euclidean operator norm. The two oracles return only
+\[
+ \mathcal O_g(x)=\nabla f(x),\qquad \mathcal O_H(x)=\nabla^2f(x).
+\]
+Each query returns exactly the indicated derivative; a Hessian response is the entire matrix. These are the algorithm's sole observations of the function. Algorithms are arbitrary deterministic measurable adaptive procedures; query norms and dimension are unrestricted. Subproblem solution and internal computation are uncharged.
+
+The algorithm knows $d,x_0,L_1,L_2,\Delta,\eps,h$ and accesses the unknown function through these two oracles. Its output may be any point, including an unqueried point. For lower bounds we translate $x_0$ to zero.
+
+A successful algorithm returns a point $\hat x$ with $\norm{\nabla f(\hat x)}\le\eps$ on every instance. Write $\G(h;\eps)$ for the minimum worst-case gradient budget under the strict integer constraint $N_H\le h$. More precisely, a budget pair $(g,h)\in\mathbb N_0^2$ is feasible if a deterministic oracle procedure, supplied with these public inputs, terminates on every admissible instance in every finite dimension with $N_g\le g$, $N_H\le h$, and an $\eps$-stationary output. Then $\G(h;\eps)$ is the least feasible $g$, with value $+\infty$ if none exists. We suppress the dependence on $L_1,L_2,\Delta$. All norms are Euclidean, with the induced operator norm for matrices. Set
+\begin{equation}\label{eq:AB}
+ A=\Delta\sqrt{L_2}\eps^{-3/2},\qquad
+ B=\Delta\sqrt{L_1}L_2^{1/4}\eps^{-7/4}.
+\end{equation}
+Throughout the paper we work in the small-accuracy regime
+\begin{equation}\label{eq:regime}
+ 0<\eps\le c_0\min\{L_1^2/L_2,\Delta^{2/3}L_2^{1/3}\},
+\end{equation}
+with a sufficiently small universal $c_0$. We choose $c_0\le1/32$; in particular, $A\ge128$ and $B\ge A$. We use this numerical bound when deriving the one-gradient threshold. The assumptions also imply $2\eps^2/L_1\le\Delta$ after decreasing $c_0$.
+
+\begin{theorem}[Sharp deterministic budget bounds]\label{thm:main}
+There are universal positive constants $c,C$ such that the following hold in \eqref{eq:regime}.
+\begin{enumerate}
+\item Every successful budget pair $(g,h)$ satisfies
+\begin{equation}\label{eq:product}
+ g\ge1,\qquad g(g+h)\ge cA^2.
+\end{equation}
+Consequently,
+\begin{equation}\label{eq:global-lower}
+ \G(h;\eps)\ge c\max\left\{1,\frac{A^2}{A+h}\right\}.
+\end{equation}
+\item For every integer $1\le h\le A$, a deterministic algorithm satisfies
+\begin{equation}\label{eq:strict-upper}
+ N_H\le h,\qquad N_g\le C\min\{B,A^{3/2}/\sqrt h\}.
+\end{equation}
+Moreover,
+\[
+ \G(h;\eps)\ge c\min\{B,A^{3/2}/\sqrt h\}.
+\]
+Thus this regime is matched without logarithmic loss.
+\item For every integer $h\ge A$,
+\begin{equation}\label{eq:rich-matching}
+ \G(h;\eps)=\Theta\left(\max\left\{1,\frac{A^2}{h}\right\}\right).
+\end{equation}
+Moreover, $\G(h;\eps)=1$ whenever $h\ge CA^2$.
+\end{enumerate}
+\end{theorem}
+
+The lower bounds cover every deterministic measurable adaptive algorithm. The upper bounds are uniform in dimension; the lower-bound dimension is allowed to depend on the proposed budgets. The scarce-Hessian construction in \Cref{lem:matrix-lift} gives an explicit sufficient dimension.
+
+The upper bound in part 2 comes from the lazy extragradient mechanism of Chen et al.~\cite{chen}, with the exact schedule in \Cref{thm:strict}. Its gradient-only alternative is proved in \Cref{lem:gradient-only}. The product obstruction in \Cref{thm:lower} and the transported-gradient algorithm in \Cref{thm:transport} match the Hessian-rich branch; \Cref{thm:poor-complete} supplies the remaining lower bound.
+
+\begin{corollary}[Complete deterministic frontier]\label{cor:complete-frontier}
+Under \eqref{eq:regime}, with a sufficiently small universal constant,
+\begin{equation}\label{eq:complete-frontier}
+ \G(h;\eps)=\begin{cases}
+ \Theta(B),&h=0,\\[2pt]
+ \Theta\!\left(\min\{B,A^{3/2}/\sqrt h\}\right),&1\le h\le A,\\[2pt]
+ \Theta\!\left(\max\{1,A^2/h\}\right),&h\ge A.
+ \end{cases}
+\end{equation}
+Equivalently, for $h\ge1$,
+\begin{equation}\label{eq:unified-frontier}
+ \G(h;\eps)=\Theta\!\left(
+ \max\left\{1,\min\left\{B,\frac{A^{3/2}}{\sqrt h},\frac{A^2}{h}\right\}\right\}
+ \right).
+\end{equation}
+All upper bounds respect the exact integer budget $N_H\le h$ and have no logarithmic loss. The zero-Hessian lower endpoint uses \cite{zhou}; \Cref{lem:gradient-only} supplies a matching upper bound, consistent with \cite{lilin}. The positive-budget lower bounds are proved here.
+\end{corollary}
+\begin{proof}
+Combine \Cref{thm:poor-complete,thm:strict,lem:gradient-only} for the Hessian-saving branch. \Cref{sec:rich-match} proves the Hessian-rich branch. For $h=0$, Theorem 5.2 and the $p=2$ case of Proposition 5.1 of \cite{zhou} give the lower scale $B$. Their additional tolerance condition $\eps\le c\sqrt{\Delta L_1}$ follows from \eqref{eq:regime}: multiplying the square root of its first bound by the $3/2$ power of its second gives $\eps^2\le c_0^2\Delta L_1$. The source permits function values as well as gradients, so its lower bound applies to our gradient-only oracle. Its explicit hard instances satisfy the operator-norm derivative bounds by its Lemma 4.5. Appending an output query transfers the lower bound to algorithms that may return an unqueried point, at a cost of only one additional query. Combining the resulting inequality $g+1\ge cB$ with the universal obstruction $g\ge1$ yields $g\ge c'B$ (split into $B\le2/c$ and $B>2/c$). \Cref{lem:gradient-only} gives the matching upper bound. Since $B\ge A$, the unified expression selects the stated branch on each side of $h=A$.
+\end{proof}
+
+\paragraph{Transition scales.}
+For $1\le h\le A$, the two alternatives cross at
+\[
+ h_{\rm cross}=\frac{A^3}{B^2}=\frac{\Delta L_2}{L_1\eps}.
+\]
+If this scale lies below one, the mixed branch is already preferable at the first positive budget. Otherwise the gradient-only scale remains optimal up to this threshold, within universal constants. At $h\asymp A$ the gradient and Hessian counts are both of order $A$; for $A\lesssim h\lesssim A^2$, their product is of order $A^2$.
+
+\section{Upper Bounds with Strict Oracle Budgets}\label{sec:upper}
+We prove the upper bounds by using curvature in two ways. With many Hessian queries, numerical integration maintains a gradient estimate between exact resets. With few Hessian queries, lazy extragradient updates reuse one curvature matrix over many steps. The first method controls the gradient budget directly; the second controls the Hessian budget directly. Both return a certified stationary point using only their charged derivative observations.
+
+\subsection{Gradient transport through Hessian integration}\label{sec:transport}
+The gradient at one anchor determines gradients elsewhere up to the error of integrating the Hessian. We use bounded path length to keep both that error and the Hessian count under control.
+
+\subsubsection{Cubic steps with a transported gradient}
+Suppose that at a current point $x$ an estimate $v$ obeys
+\begin{equation}\label{eq:error-invariant}
+ \norm{v-\nabla f(x)}\le\delta,\qquad \delta=\eps/32.
+\end{equation}
+Query $H=\nabla^2f(x)$ and choose a global minimizer $s$ of
+\begin{equation}\label{eq:cubic-model}
+ q(s)=\ip{v}{s}+\frac12s^THs+\frac{4L_2}{6}\norm{s}^3.
+\end{equation}
+Write $r_s=\norm{s}$ and $r_0=\tfrac12\sqrt{\eps/L_2}$. If $r_s\le r_0$, return $x+s$. Otherwise accept the step and transport the gradient estimate to $x+s$.
+
+\begin{lemma}[Cubic descent and terminal certification]\label{lem:cubic}
+If \eqref{eq:error-invariant} holds, a terminal step returns an $\eps$-stationary point. Each nonterminal step decreases the objective by at least
+\[
+ \frac{L_2}{4}r_s^3\quad\text{and}\quad\frac{\eps}{16}r_s.
+\]
+Thus there are fewer than $32A$ nonterminal steps, and their total length $S$ satisfies
+\begin{equation}\label{eq:path-length}
+ S\le S_{\max}:=16\Delta/\eps.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The cubic objective is coercive, so a global minimizer exists. It satisfies
+\[
+ v+Hs+2L_2r_s s=0,\qquad q(s)\le q(0)=0.
+\]
+The gradient Taylor remainder is at most $L_2r_s^2/2$, hence
+\[
+ \norm{\nabla f(x+s)}\le\delta+\frac52L_2r_s^2.
+\]
+For $r_s\le r_0$, the right side is at most $21\eps/32<\eps$.
+
+The function Taylor bound and $q(s)\le0$ give
+\[
+ f(x+s)\le f(x)-\frac{L_2}{2}r_s^3+\delta r_s.
+\]
+When $r_s>r_0$, $\delta\le L_2r_s^2/8$, so the decrease is at least $L_2r_s^3/4$. Since $L_2r_s^2>\eps/4$, the decrease is also at least $\eps r_s/16$. Summation proves \eqref{eq:path-length}. The cubic decrease and $r_s>r_0$ bound the number of nonterminal steps by $32A$.
+\end{proof}
+
+\subsubsection{Transport and gradient resets}
+For a segment of length $r_s$, divide it into subsegments of length at most $a$. A left-endpoint Riemann sum of Hessians approximates the gradient increment with error at most
+\begin{equation}\label{eq:quad-error}
+ \frac{L_2a}{2}r_s.
+\end{equation}
+Indeed, on a subsegment with displacement $u$, the error is bounded by $L_2\norm{u}^2/2$; sum these inequalities and use $\norm{u}\le a$.
+
+Fix an integer $1\le k\le\lfloor A\rfloor$. Start with one gradient query at $x_0$. Along the polygonal path of accepted cubic steps, reset the estimate by an exact gradient query every path length
+\begin{equation}\label{eq:transport-parameters}
+ \ell=\frac{2S_{\max}}{k}=\frac{32\Delta}{k\eps},\qquad
+ a=\frac{\eps}{16L_2\ell}=\frac{k\eps^2}{512\Delta L_2}.
+\end{equation}
+Reset locations may lie inside a cubic step; oracle queries at such locations are allowed. Split transport segments at these reset locations. Between resets, the total integration error is at most $L_2a\ell/2=\eps/32$, which proves \eqref{eq:error-invariant} inductively. Applying \Cref{lem:cubic} at each step closes the induction and supplies the path-length bound used to count resets.
+
+\begin{theorem}[Strict gradient budget]\label{thm:transport}
+For every integer $1\le k\le\lfloor A\rfloor$, there is a deterministic algorithm with
+\begin{equation}\label{eq:transport-count}
+ N_g\le k,\qquad N_H\le8300\frac{A^2}{k}.
+\end{equation}
+It uses no function values and no final gradient query to certify the output.
+\end{theorem}
+\begin{proof}
+The number of resets after initialization is at most $\lfloor S/\ell\rfloor\le\lfloor k/2\rfloor$. For $k\ge2$, initialization plus these resets uses at most $k$ gradient queries. For $k=1$, $S/\ell\le1/2$, so no reset occurs.
+
+Let $J<32A$ be the number of nonterminal cubic steps and $R$ the number of resets. The accepted segments split into at most $J+R$ transport pieces. The sum of their quadrature counts is at most $S/a+J+R$. There are $J+1$ cubic-model Hessian queries, including the terminal step. Counting duplicate Hessian evaluations separately, the total is at most
+\[
+ N_H\le\frac{S}{a}+2J+R+1
+ \le8192\frac{A^2}{k}+64A+k.
+\]
+Since $k\le A$, the right side is at most $8257A^2/k$, and \eqref{eq:transport-count} follows. \Cref{lem:cubic} supplies the terminal certificate without querying its gradient.
+\end{proof}
+
+\begin{corollary}[One gradient is sufficient and necessary at quadratic Hessian scale]\label{cor:one-gradient}
+The smallest worst-case Hessian budget that permits just one gradient query is $\Theta(A^2)$. In particular, $\G(h;\eps)=1$ for $h\ge8300A^2$.
+\end{corollary}
+\begin{proof}
+\Cref{thm:transport} with $k=1$ gives sufficiency. \Cref{thm:lower} gives $1+h>A^2/6144$. Since $A\ge128$, this implies $h>A^2/12288$, proving necessity. The same theorem rules out zero gradient queries at every Hessian budget.
+\end{proof}
+
+\subsection{A strict Hessian-saving budget}\label{sec:lazy}
+We now give a complete analysis of a lazy extragradient scheme with an explicit integer schedule. The algorithmic mechanism is Algorithm 1 of \cite{chen}, analyzed there in Lemmas 4.1--4.3 and Theorem 4.1; these identifiers refer to its arXiv version 3. The analysis gives an exact query count, including the one-Hessian endpoint. Each quadratic subproblem is solved to global optimality; the variational inequality used below applies also to indefinite quadratics.
+
+\subsubsection{Algorithm}
+Fix integers $m,T,N$ with $T\mid N$, and let $D>0$. Set
+\[
+ \eta=\frac{1}{2(m+1)L_2D},\qquad K=N/T,\qquad d_0=v_0=0.
+\]
+For $n=0,\ldots,N-1$, set $z_n=x_n+d_n/2$ and $\pi(n)=m\lfloor n/m\rfloor$. Query $H_n=\nabla^2f(z_n)$ when $n$ is a multiple of $m$; otherwise reuse $H_n=\nabla^2f(z_{\pi(n)})$. Query $\nabla f(z_n)$ and compute
+\begin{equation}\label{eq:lazy-step}
+ d_{n+1}\in\argmin_{\norm{d}\le D}
+ \left\{\ip{\nabla f(z_n)}{d}
+ +\frac14(d-d_n)^TH_n(d-d_n)
+ +\frac{1}{2\eta}\norm{d-v_n}^2\right\}.
+\end{equation}
+Set
+\[
+ x_{n+1}=x_n+d_{n+1},\qquad y_{n+1}=x_n+d_{n+1}/2,
+ \qquad g_{n+1}=\nabla f(y_{n+1}),
+\]
+where the last expression is another charged gradient query, and update
+\[
+ v_{n+1}=\proj_{\norm{v}\le D}(v_n-\eta g_{n+1}).
+\]
+After $N$ iterations, form the $K$ averages
+\[
+ \bar y_j=\frac1T\sum_{n=(j-1)T}^{jT-1}y_{n+1},\qquad 1\le j\le K,
+\]
+query their gradients, and return the average with smallest gradient norm.
+
+\subsubsection{Quantitative guarantee}
+\begin{lemma}[Lazy-extragradient guarantee]\label{lem:lazy-bound}
+The algorithm above satisfies
+\begin{equation}\label{eq:lazy-bound}
+ \min_{1\le j\le K}\norm{\nabla f(\bar y_j)}
+ \le\frac{\Delta}{ND}
+ +\left(\frac{10m}{T}+T^2\right)L_2D^2.
+\end{equation}
+Its oracle counts are $N_g\le2N+K$ and $N_H=\lceil N/m\rceil$.
+\end{lemma}
+\begin{proof}
+Define the implicit hint
+\[
+ p_{n+1}=\nabla f(z_n)+\tfrac12H_n(d_{n+1}-d_n).
+\]
+Although \eqref{eq:lazy-step} can be nonconvex, its global minimizer on the ball satisfies the first-order variational inequality. Consequently, $d_{n+1}$ also satisfies the optimality condition of the linear prox problem with the hint $p_{n+1}$ treated as fixed. Combining that inequality with the projection update for $v_{n+1}$ gives, for any $\norm{u}\le D$,
+\begin{align}\label{eq:regret-step}
+ \ip{g_{n+1}}{d_{n+1}-u}
+ &\le\frac{\norm{u-v_n}^2-\norm{u-v_{n+1}}^2}{2\eta}
+ +\eta\norm{p_{n+1}-g_{n+1}}^2\notag\\
+ &\quad-\frac{\norm{d_{n+1}-v_n}^2}{2\eta}
+       -\frac{\norm{d_{n+1}-v_{n+1}}^2}{4\eta}.
+\end{align}
+This follows by splitting
+$\ip{g}{d-u}=\ip{g}{v^+-u}+\ip{p}{d-v^+}+\ip{g-p}{d-v^+}$,
+using both variational inequalities on the first two terms, expanding squared norms, and applying
+$\ip{g-p}{d-v^+}\le\eta\norm{g-p}^2+\norm{d-v^+}^2/(4\eta)$.
+
+Since $\norm{z_n-z_{\pi(n)}}\le mD$ and $y_{n+1}-z_n=(d_{n+1}-d_n)/2$, Hessian Lipschitzness yields
+\[
+ \norm{p_{n+1}-g_{n+1}}
+ \le\frac{(m+1)L_2D}{2}\norm{d_{n+1}-d_n}.
+\]
+Let $C_m=(m+1)L_2D$. Squaring and inserting
+$\norm{d_{n+1}-d_n}^2\le2\norm{d_{n+1}-v_n}^2+2\norm{d_n-v_n}^2$
+into \eqref{eq:regret-step}, and summing over a block of $T$ rounds with a fixed comparator, makes all interior squared-norm terms nonpositive because $\eta=1/(2C_m)$. The boundary terms are at most
+\[
+ \frac{2D^2}{\eta}+\frac{\eta C_m^2}{2}(4D^2)
+ =5C_mD^2\le10mL_2D^3.
+\]
+Therefore, for any blockwise comparators $u_j$ in the ball, the total regret obeys
+\begin{equation}\label{eq:regret}
+ R:=\sum_{j=1}^K\sum_{n=(j-1)T}^{jT-1}
+ \ip{g_{n+1}}{d_{n+1}-u_j}\le10mKL_2D^3.
+\end{equation}
+
+The midpoint integration bound is
+\[
+ \left|f(x_{n+1})-f(x_n)-\ip{g_{n+1}}{d_{n+1}}\right|
+ \le\frac{L_2}{24}\norm{d_{n+1}}^3.
+\]
+Writing $\bar g_j=T^{-1}\sum_{n=(j-1)T}^{jT-1}g_{n+1}$ and choosing
+$u_j=-D\bar g_j/\norm{\bar g_j}$ when $\bar g_j\ne0$, we obtain
+\[
+ \frac1K\sum_{j=1}^K\norm{\bar g_j}
+ \le\frac{\Delta}{ND}+\frac{R}{ND}+\frac{L_2D^2}{24}.
+\]
+Within each block, neighboring midpoints are at distance at most $D$. Taylor expansion of the gradient about $\bar y_j$ cancels its linear term on averaging, so
+\[
+ \norm{\nabla f(\bar y_j)-\bar g_j}
+ \le\frac{L_2}{2T}\sum_{n=(j-1)T}^{jT-1}\norm{y_{n+1}-\bar y_j}^2
+ \le\frac{L_2T^2D^2}{2}.
+\]
+Combine these inequalities with \eqref{eq:regret} and $T\ge1$ to get \eqref{eq:lazy-bound}. Query counts follow directly from the algorithm, including the $K$ final selection gradients.
+\end{proof}
+
+\begin{theorem}[Strict Hessian budget]\label{thm:strict}
+For every integer $1\le h\le A$, the preceding algorithm can be run with
+\[
+ N_H=h,\qquad N_g\le375\frac{A^{3/2}}{\sqrt h}.
+\]
+\end{theorem}
+\begin{proof}
+Choose
+\[
+ t=\left\lceil4\sqrt{A/h}\right\rceil,\qquad
+ m=t^3,\quad T=t,\quad N=ht^3,\quad K=ht^2,\quad
+ D=\frac1{8t}\sqrt{\eps/L_2}.
+\]
+Then the number of refreshes is exactly $N/m=h$. Substitution into \eqref{eq:lazy-bound} gives
+\[
+ \min_j\norm{\nabla f(\bar y_j)}
+ \le\frac{8A\eps}{ht^2}+\frac{11}{64}\eps
+ \le\frac{43}{64}\eps<\eps.
+\]
+Since $h\le A$, $t\le5\sqrt{A/h}$, and therefore
+\[
+ N_g\le2N+K\le3ht^3\le375A^{3/2}/\sqrt h.
+\]
+For $h=1$, the schedule sets $m=N=t^3$ and uses exactly one Hessian refresh.
+\end{proof}
+
+\subsubsection{A gradient-only specialization of the same analysis}
+Setting the Hessian hint to zero gives a second derivation of the known gradient-only $O(B)$ guarantee~\cite{lilin}. This specialization keeps both upper branches within the same analysis and explicitly counts the gradients used to select the output.
+
+\begin{lemma}[Gradient-only endpoint upper bound]\label{lem:gradient-only}
+In \eqref{eq:regime}, there is a deterministic algorithm using no Hessian or function-value queries and at most $255B$ gradient queries.
+\end{lemma}
+\begin{proof}
+Run the lazy-step algorithm with $H_n\equiv0$, making no Hessian queries, and with $\eta=1/(2L_1)$. Its implicit hint is now simply $p_{n+1}=\nabla f(z_n)$. Gradient Lipschitzness gives
+\[
+ \norm{p_{n+1}-g_{n+1}}
+ \le \frac{L_1}{2}\norm{d_{n+1}-d_n}.
+\]
+The same squared-norm cancellation in \eqref{eq:regret-step}, with $C_m$ replaced by $L_1$, gives block regret at most $5L_1D^2$. The midpoint and block-average Taylor bounds are unchanged. Thus
+\[
+ \min_j\norm{\nabla f(\bar y_j)}
+ \le\frac{\Delta}{ND}+\frac{5L_1D}{T}+L_2T^2D^2.
+\]
+Let $R=B/A=\sqrt{L_1}(\eps L_2)^{-1/4}\ge1$ and choose
+\[
+ T=\lceil4R\rceil,\qquad N=T\lceil16A\rceil,
+ \qquad D=\frac1{8T}\sqrt{\eps/L_2}.
+\]
+The right side is at most
+$\eps/2+5\eps/128+\eps/64=71\eps/128<\eps$.
+All final selection gradients are charged, and
+\[
+ N_g\le2N+N/T\le3N\le255AR=255B.
+\]
+Only gradient observations and arithmetic are used.
+\end{proof}
+
+Taking the better of \Cref{thm:strict} and \Cref{lem:gradient-only} proves \eqref{eq:strict-upper}.
+
+\subsection{Matching the Hessian-rich branch}\label{sec:rich-match}
+We now prove the Hessian-rich assertion of \Cref{thm:main}, using the product lower bound established in \Cref{thm:lower}. The lower bound for $h\ge A$ follows from \eqref{eq:global-lower}. If $h\ge16600A$, set
+\[
+ k=\max\left\{1,\left\lceil\frac{8300A^2}{h}\right\rceil\right\}.
+\]
+For $A\ge2$, this integer is at most $\lfloor A\rfloor$. \Cref{thm:transport} gives the strict Hessian budget and
+\[
+ N_g\le k\le1+\frac{8300A^2}{h}.
+\]
+For $A\le h<16600A$, instead apply \Cref{thm:strict} with $h_0=\lfloor A\rfloor$. It uses at most $h$ Hessians and $O(A)$ gradients. In this fixed-ratio interval, $O(A)$ is also $O(\max\{1,A^2/h\})$, with a universal constant. The claim for $h\ge8300A^2$ is \Cref{cor:one-gradient}.
+
+\begin{corollary}[Weighted cost when a Hessian is no more expensive]\label{cor:weighted}
+Let $0<\rho\le1$, and minimize the worst-case cost $N_g+\rho N_H$ in the same model. The optimal cost is
+\[
+ \Theta(1+A\sqrt\rho).
+\]
+\end{corollary}
+\begin{proof}
+Suppose an algorithm has finite worst-case weighted cost $T$.
+On every instance it then obeys the simultaneous integer budgets
+$g=\lfloor T\rfloor$ and $h=\lfloor T/\rho\rfloor$.
+These form a feasible budget pair, even if the two individual worst-case
+counts occur on different instances. By \eqref{eq:product}, $T\ge1$ and
+\[
+ cA^2\le g(g+h)\le T(T+T/\rho)\le 2T^2/\rho.
+\]
+Thus $T\ge c'\max\{1,A\sqrt\rho\}$, which is equivalent up to
+universal constants to the claimed lower bound.
+For the upper bound, choose $k$ of order $\max\{1,A\sqrt\rho\}$ in \Cref{thm:transport}, rounding and capping it at $\lfloor A\rfloor$. This gives
+$k+O(\rho A^2/k)=O(1+A\sqrt\rho)$.
+\end{proof}
+
+\section{A One-Dimensional Mixed-Oracle Lower Bound}\label{sec:oned}
+The central ingredient is interpolation of gradient answers while forcing every sampled Hessian to be zero. It is important that the construction can depend on the complete finite transcript of a \emph{deterministic} algorithm and is then fixed as a single admissible objective.
+
+\subsection{A flattening interpolation lemma}
+\begin{lemma}[Interpolation with flat sampled derivatives]\label{lem:flatten}
+Let $P,Q\subset\R$ be finite sets, with $P$ nonempty, $|P|=q$, $|Q|\le h$, and let $r>0$. There is a compactly supported function $w\in C^{1,1}(\R)$ such that
+\begin{align}
+ &0\le w\le1,\qquad w(p)=1\quad(p\in P),\qquad w'(s)=0\quad(s\in Q),\label{eq:interp}\\
+ &\norm{w'}_\infty\le\frac{3}{2r},\qquad
+ \Lip(w')\le\frac{15}{2r^2},\label{eq:w-smooth}\\
+ &\int_\R w(x)\,dx\le4r\bigl(q+\sqrt{qh}\bigr).\label{eq:w-area}
+\end{align}
+\end{lemma}
+\begin{proof}
+Define
+\[
+ s(x)=\min\{r,\dist(x,Q)\},\qquad
+ U(x)=\frac1{r^2}\int_0^x s(t)\,dt.
+\]
+For $Q=\varnothing$, use $s\equiv r$. The map $U$ is strictly increasing, maps $\R$ onto $\R$, and belongs to $C^{1,1}$. Furthermore,
+\[
+ 0\le U'\le r^{-1},\qquad \Lip(U')\le r^{-2},\qquad U'(s)=0\ (s\in Q).
+\]
+Let $a_1<\cdots<a_q$ be the images $U(P)$. Group consecutive $a_i$ into clusters by joining neighbors whose distance is at most $2$. For a cluster with leftmost point $a$ and rightmost point $b$, define a bump equal to $1$ on $[a,b]$, decreasing from $1$ to $0$ on each adjoining interval of length $1$, and equal to $0$ outside $[a-1,b+1]$. Use the transition
+\[
+ \beta(t)=1-3t^2+2t^3,\qquad 0\le t\le1,
+\]
+with constant extensions at either side. Sum the bumps over clusters to obtain $\theta$. Their supports are disjoint apart from possible endpoints, and
+\[
+ 0\le\theta\le1,\quad \theta(a_i)=1,\quad
+ \norm{\theta'}_\infty\le\tfrac32,\quad \Lip(\theta')\le6,
+ \quad |\supp\theta|\le2q.
+\]
+The support-length estimate follows because a cluster with $k$ points has span at most $2(k-1)$ and its two transition intervals add length $2$.
+
+Set $w=\theta\circ U$. The interpolation identities follow immediately. The chain rule gives $\norm{w'}_\infty\le3/(2r)$. For any $x,y$,
+\begin{align*}
+ |w'(x)-w'(y)|
+ &\le |\theta'(U(x))-\theta'(U(y))|\,|U'(x)|
+      +|\theta'(U(y))|\,|U'(x)-U'(y)|\\
+ &\le\frac{15}{2r^2}|x-y|.
+\end{align*}
+
+It remains to bound the area. Put $E=U^{-1}(\supp\theta)$ and $\ell=|E|$. By monotone change of variables,
+\[
+ \int_E s(x)\,dx=r^2|\supp\theta|\le2qr^2.
+\]
+For $0<t<r$, the set $\{s<t\}$ is contained in the union of at most $h$ intervals of length $2t$. Hence the layer-cake formula yields
+\[
+ \int_E s(x)\,dx\ge\int_0^r(\ell-2ht)_+\,dt.
+\]
+If $h=0$, this gives $\ell\le2qr$. If $h>0$ and $\ell\le2hr$, it gives $\ell^2/(4h)\le2qr^2$, so $\ell\le\sqrt{8qh}\,r$. If $\ell>2hr$, the right side is $r\ell-hr^2>r\ell/2$, and therefore $\ell\le4qr$. These estimates imply \eqref{eq:w-area}, since $0\le w\le1$ and $w$ is supported on $E$.
+\end{proof}
+
+\subsection{Adversarial transcript and its realization}
+\begin{theorem}[One-dimensional product obstruction]\label{thm:lower}
+Under \eqref{eq:regime}, every successful deterministic budget pair satisfies
+\[
+ g\ge1,\qquad g(g+h)>A^2/6144.
+\]
+The second assertion is witnessed by one-dimensional functions.
+\end{theorem}
+\begin{proof}
+First, zero gradient calls are impossible. Consider
+\[
+ f_\pm(x)=\frac{L_1}{2}x^2\pm2\eps x,\qquad x_0=0.
+\]
+Both have the same Hessian at every point, and their initialization gaps equal $2\eps^2/L_1\le\Delta$. Their gradients differ by $4\eps$ everywhere, so no point is $\eps$-stationary for both. Thus $g\ge1$.
+
+Now run the algorithm in dimension one and answer every gradient query with $-2\eps$ and every Hessian query with $0$. Suppose first that it returns a point $\hat x$ within its budgets. Let $P$ contain all gradient-query locations and $\hat x$, so $q:=|P|\le g+1$, and let $Q$ contain all Hessian-query locations, so $|Q|\le h$.
+
+Apply \Cref{lem:flatten} with $r=4\sqrt{\eps/L_2}$ and define the single fixed objective
+\begin{equation}\label{eq:hard-objective}
+ f(x)=-2\eps\int_0^x w(t)\,dt.
+\end{equation}
+Then $f\in C^2$, $f'=-2\eps w$, and $f''=-2\eps w'$. In particular, every oracle answer on the transcript is exact, and $|f'(\hat x)|=2\eps>\eps$. Also,
+\[
+ \norm{f''}_\infty\le\frac{3\eps}{r}
+ =\frac34\sqrt{\eps L_2}\le L_1,
+ \qquad
+ \Lip(f'')\le\frac{15\eps}{r^2}=\frac{15}{16}L_2.
+\]
+Since $w$ has compact support and is nonnegative, $f$ is bounded below and
+\begin{align}
+ f(0)-\inf f
+ &\le2\eps\int_\R w(t)\,dt\notag\\
+ &\le32\frac{\eps^{3/2}}{\sqrt{L_2}}
+       \left(g+1+\sqrt{(g+1)h}\right).\label{eq:adversarial-gap}
+\end{align}
+Thus the algorithm fails on an admissible instance whenever
+\begin{equation}\label{eq:budget-obstruction}
+ g+1+\sqrt{(g+1)h}\le A/32.
+\end{equation}
+
+The same reasoning covers a run that attempts to exceed a budget: stop the simulation immediately before the first query exceeding that budget, realize its observed transcript by the construction above (adding one arbitrary anchor if no gradient has yet been queried), and obtain an admissible instance on which the next query violates the promised bound. If the simulated run never returns, then it either requests a query beyond a budget or eventually makes no further queries. In the latter case, realize the finite observed transcript; deterministic continuation on that fixed instance also fails to terminate. Including the output in $P$ fixes its gradient in the adversarial construction and carries no algorithmic query cost.
+
+A successful pair must therefore violate \eqref{eq:budget-obstruction}. Since $g\ge1$,
+\[
+ g+1+\sqrt{(g+1)h}
+ \le2g+\sqrt{2gh}\le\sqrt{6g(g+h)}.
+\]
+Consequently, $g(g+h)>A^2/6144$.
+\end{proof}
+
+If $g<A$, the last theorem gives $g\ge A^2/[6144(A+h)]$; if $g\ge A$, the same inequality follows from $A^2/(A+h)\le A$. This proves \eqref{eq:global-lower}.
+
+\begin{remark}[Scope of the interpolation argument]
+The construction works in dimension one for arbitrary finite query locations and unqueried outputs. It realizes deterministic transcripts whose observations consist of separately queried gradients and Hessians, exactly as specified in \Cref{sec:model}.
+\end{remark}
+
+\section{The Hessian-Saving Lower Bound}\label{sec:poor}
+We prove \Cref{thm:poor-complete} in four steps: obtain a robust terminal certificate from a first-order block chain; connect copies without exceeding either smoothness budget; show that a full Hessian can expose at most one stage; and allocate the gap across stages. The composition turns a first-order revelation cost into a mixed-oracle cost while retaining arbitrary query locations and outputs.
+
+\subsection{A robust first-order terminal certificate}
+\label{sec:robust-gadget}
+The Hessian-saving lower bound uses a terminal readout to drive a smooth activation mechanism. We derive its robust gradient certificate from the normalized block chain of Zhou~\cite{zhou}, then use this certificate in the sequential composition and full-matrix oracle construction.
+
+\begin{lemma}[Local gadget]\label{lem:local-gadget}
+There are universal constants $C_{\rm loc},c_{\rm loc},C_{\rm dim}>0$ with the following property. Suppose
+\begin{equation}\label{eq:gadget-assumptions}
+ \ell\ge C_{\rm loc}\sqrt{\eps\nu},\qquad
+ \delta\ge C_{\rm loc}\frac{\eps^{3/2}}{\sqrt\nu}.
+\end{equation}
+There is a nonnegative coercive function $\varphi:\R^{d_0}\to\R$, a unit vector $b$, an integer $m$, and coordinate subspaces
+$V_0=\{0\}\subseteq V_1\subseteq\cdots\subseteq V_m=\R^{d_0}$, such that
+\begin{align}
+ &\varphi(0)\le\delta,\quad
+ \Lip(\nabla\varphi)\le\ell,\quad
+ \Lip(\nabla^2\varphi)\le\nu,\label{eq:gadget-regularity}\\
+ &m\ge c_{\rm loc}\delta\sqrt\ell\,\nu^{1/4}\eps^{-7/4},
+ \qquad d_0\le C_{\rm dim}m,\label{eq:gadget-length}\\
+ &x\in V_t\Longrightarrow\nabla\varphi(x)\in V_{t+1}
+ \quad(0\le t<m),\qquad b\perp V_{m-1},\label{eq:gadget-filtration}\\
+ &|\ip bx|\le r:=\sqrt{\eps/\nu}
+ \Longrightarrow\norm{\nabla\varphi(x)}\ge40\eps.
+ \label{eq:gadget-robust}
+\end{align}
+The bounds in \eqref{eq:gadget-regularity} are global Euclidean operator-norm bounds. The dimensions of the increments $V_{t+1}\ominus V_t$ need not equal one.
+\end{lemma}
+\begin{proof}
+We use the calibrated $p=2$ block chain in Definition 4.2, Condition 5.6, and Lemma 5.7 of \cite{zhou}, with smoothness parameters $(\ell,\nu)$, gap $\delta$, and source tolerance $E=K\eps$. Here $K$ is one sufficiently large universal constant, fixed below. Increasing $C_{\rm loc}$ guarantees all of that calibration's tolerance conditions and places its active mass scale at $\gamma\asymp\sqrt{\nu E}$, with potential parameter equal to one.  The source calibration is detailed in \Cref{app:gadget-audit}.
+
+Write its blocks as $z_s\in\R^M$, $s=1,\ldots,N$, its readouts as $u_s=a^Tz_s$, and set $u_0=1$. Let $H=\gamma I+L\mathsf P_M$, $e=e_1$, and
+\[
+ \rho=e^TH^{-1}e,\quad \alpha=a^TH^{-1}e,\quad
+ \beta=a^TH^{-1}a,\quad
+ \lambda=\alpha^{-1},\quad \tau=\beta^{-1},\quad
+ \kappa=\rho/\alpha^2.
+\]
+The source estimates give, with universal positive constants,
+\begin{equation}\label{eq:source-scales}
+ \frac{\kappa}{\tau}\le C,\qquad
+ \norm a\le C\sqrt{\nu/E},\qquad
+ \frac{\sqrt\gamma}{\sqrt\beta+\lambda\beta\sqrt\rho}\ge cE.
+\end{equation}
+They also give $N\asymp\delta\sqrt\nu E^{-3/2}$, $M\asymp\sqrt\ell(\nu E)^{-1/4}$, and a suffix index $j_*\asymp M$. Taking $m=Nj_*$ gives \eqref{eq:gadget-length}; the source block-layer subspaces give \eqref{eq:gadget-filtration}. Their last layer contains the entire last suffix, so $V_m=\R^{MN}$ and $b$ can be chosen as the normalized last-block readout.
+
+We extend the terminal certificate to small nonzero readouts. Put $u_{N+1}=0$ and
+\[
+ R_s(u)=2u_s-u_{s-1}-u_{s+1}+\Upsilon_1'(u_s),
+ \qquad s=1,\ldots,N.
+\]
+Proposition 4.1 of \cite{zhou}, which restates Lemma 3 of \cite{carmon2} with scalar-potential multiplier one, gives $\norm{R(u)}\ge1/4$ when $u_N=0$. The extra scalar gradient coordinate is then zero because $u_{N+1}=u_N=0$. Since the scalar gradient is globally Lipschitz with a universal constant,
+\begin{equation}\label{eq:robust-scalar}
+ \norm{R(u)}\ge\frac14-C|u_N|.
+\end{equation}
+Let $g_s$ be the block gradients of the source function and define
+\[
+ w_{\rm out}=H^{-1}a/\beta,\qquad
+ w_{\rm in}=H^{-1}(e-\alpha a/\beta).
+\]
+Direct expansion gives
+\begin{align}
+ \tau R_s(u)&=w_{\rm out}^Tg_s+\lambda w_{\rm in}^Tg_{s+1}
+ &&(s<N),\label{eq:robust-projection}\\
+ \tau R_N(u)&=w_{\rm out}^Tg_N+(\tau-\kappa)u_N.
+ \label{eq:robust-terminal}
+\end{align}
+The terminal identity holds for every $u_N$.
+Also,
+\[
+ D:=\norm{w_{\rm out}}+\lambda\norm{w_{\rm in}}
+ \le\frac{1}{\sqrt{\gamma\beta}}+
+       \lambda\sqrt{\rho/\gamma}.
+\]
+Combining \eqref{eq:robust-scalar}--\eqref{eq:robust-terminal} shows that for one universal $\eta>0$,
+\[
+ |u_N|\le\eta
+ \quad\Longrightarrow\quad
+ \norm{\nabla\varphi(z)}\ge\frac{\tau}{8D}\ge cE.
+\]
+This remains true after shifting the source function by its infimum. Since
+$|u_N|=\norm a\,|\ip bz|$, \eqref{eq:source-scales} gives
+$|\ip bz|\le r\Longrightarrow |u_N|\le C/\sqrt K$.
+Choose $K$ once so that $C/\sqrt K\le\eta$ and $cK\ge40$.
+The source calibration with tolerance $K\eps$ loses only universal constants in \eqref{eq:gadget-length}. This proves \eqref{eq:gadget-robust}.
+
+Coercivity follows by completing the source quadratic:
+\[
+ \frac12\sum_{s=1}^N
+ \norm{z_s-\lambda u_{s-1}H^{-1}e}_H^2
+ +\frac\kappa2(u_N^2-1).
+\]
+The residual map is block triangular with identity diagonal and is invertible in finite dimension. Adding the nonnegative potential terms preserves coercivity. The infimum is therefore attained, and subtracting it gives $\varphi\ge0$ with $\varphi(0)\le\delta$.
+\end{proof}
+
+\subsection{Bounded-curvature activation and completion}
+\label{sec:activation}
+The local certificate must remain valid when blocks are activated sequentially. We therefore connect each block to a carrier variable and a terminal completion edge. The activation hides a future block's derivatives, the guard prevents stationary points on the negative carrier side, and the edge passes a nonzero force to the successor after the terminal readout is reached. Each component must have uniformly bounded curvature.
+
+All cutoffs below are fixed independently of the budgets and the dimension. Use
+\[
+ S(t)=\begin{cases}
+ 0,&t\le0,\\
+ 10t^3-15t^4+6t^5,&0<t<1,\\
+ 1,&t\ge1.
+ \end{cases}
+\]
+It is $C^{2,1}$, nondecreasing, and $\norm{S'}_\infty=15/8$. Piecewise third derivatives are bounded. Thus the constructions below meet the $C^2$ and globally Lipschitz Hessian requirements of the oracle class.
+
+Assume \eqref{eq:gadget-assumptions}, enlarge $C_{\rm loc}$ so it is at least one, and additionally assume
+\begin{equation}\label{eq:wrapper-balance}
+ \ell\le\delta\nu/\eps.
+\end{equation}
+Set $r=\sqrt{\eps/\nu}$ and $W=\delta/\eps$. Notice the useful consequences
+\begin{equation}\label{eq:wrapper-scales}
+ \delta\ge\eps^{3/2}/\sqrt\nu,\quad
+ \ell\ge\sqrt{\eps\nu},\quad
+ \eps^2/\delta\le\ell,\quad \ell/W\le\nu.
+\end{equation}
+
+\subsubsection{Activation with global derivative bounds}
+For a local gadget $\varphi$, let
+\[
+ q(x)=\ell\norm x^2,\qquad
+ B(x)=q(x)-\varphi(x)+2\delta,
+\]
+\[
+ \alpha(t)=S(4t-1),\qquad \chi(t)=1-S(t-1),\qquad
+ \mathfrak a(s,x)=1-(1-\alpha(s/W))\chi(\norm x/W),
+\]
+and define
+\begin{equation}\label{eq:new-wrapper}
+ \Phi(s,x)=q(x)-\mathfrak a(s,x)B(x).
+\end{equation}
+
+\begin{lemma}[Wrapper bounds]\label{lem:new-wrapper}
+There is a universal $C$ such that
+\begin{align}
+ &\Phi\ge-2\delta,\quad \Phi(0,0)=0,\quad \partial_s\Phi\le0,\label{eq:wrapper-sign}\\
+ &s\le W/4,\ \norm x\le W\Longrightarrow\Phi(s,x)=q(x),\label{eq:wrapper-inactive}\\
+ &s\ge W/2\ \hbox{or}\ \norm x\ge2W
+ \Longrightarrow\Phi(s,x)=\varphi(x)-2\delta,\label{eq:wrapper-active}\\
+ &\sup_{s,x}\norm{\nabla^2\Phi(s,x)}_{\op}\le C\ell,
+ \qquad \Lip(\nabla^2\Phi)\le C\nu,\label{eq:wrapper-both-smooth}\\
+ &\nabla_x\Phi(s,x)\in\operatorname{span}\{x,\nabla\varphi(x)\}.
+ \label{eq:wrapper-reveal}
+\end{align}
+In particular, $\Phi-q$ has identically zero two-jet in a neighborhood of $(0,0)$.
+\end{lemma}
+\begin{proof}
+Nonnegativity and $\ell$-smoothness of $\varphi$ imply
+$\norm{\nabla\varphi(0)}^2\le2\ell\delta$. Consequently,
+\[
+ B(x)\ge\frac12(\sqrt\ell\norm x-\sqrt{2\delta})^2\ge0.
+\]
+The expression $\Phi=(1-\mathfrak a)q+\mathfrak a(\varphi-2\delta)$ proves the lower bound. The plateau identities are immediate, and
+$\partial_s\Phi=-(\partial_s\mathfrak a)B\le0$.
+
+Derivatives of $\mathfrak a$ of order $j\le3$ have operator norm at most $C_jW^{-j}$ wherever they exist, and are supported on $\norm x\le2W$. The radial cutoff is constant near zero; these bounds are dimension independent. On this support,
+\[
+ |B|\le C(\delta+\ell W^2),\quad
+ \norm{\nabla B}\le C(\sqrt{\ell\delta}+\ell W),\quad
+ \norm{\nabla^2B}\le C\ell,\quad
+ \Lip(\nabla^2B)\le\nu.
+\]
+The product rule bounds the Hessian by
+\[
+ C\left(\ell+\frac{\sqrt{\ell\delta}}W+\frac\delta{W^2}\right)\le C\ell.
+\]
+It bounds the Lipschitz constant of the Hessian by
+\[
+ C\left(\nu+\frac\ell W+
+ \frac{\sqrt{\ell\delta}}{W^2}+\frac\delta{W^3}\right)\le C\nu,
+\]
+using \eqref{eq:wrapper-scales} and \eqref{eq:wrapper-balance}. The same estimates follow across cutoff boundaries by continuity of the second derivatives. Finally, $\nabla_x\mathfrak a$ is a scalar multiple of $x$; expanding \eqref{eq:new-wrapper} proves \eqref{eq:wrapper-reveal}.
+\end{proof}
+
+\subsubsection{A globally bounded-curvature guard}
+Define
+\begin{equation}\label{eq:saturated-guard}
+ \mathcal R(s)=2\eps r\int_0^{-s/r} S(v)\,dv.
+\end{equation}
+Then $\mathcal R\ge0$,
+\[
+ \mathcal R'(s)=-2\eps S(-s/r)\le0,
+ \qquad \mathcal R'(s)=-2\eps\quad(s\le-r),
+\]
+\[
+ \norm{\mathcal R''}_\infty\le C\sqrt{\eps\nu}\le C\ell,
+ \qquad \Lip(\mathcal R'')\le C\nu.
+\]
+Its value, gradient, and Hessian vanish at zero and on the positive half-line.
+The saturation is needed for simultaneous control of both derivatives: an untruncated negative-side cubic would have bounded Hessian Lipschitz constant but unbounded Hessian norm, violating the $L_1$ constraint.
+
+\subsubsection{A completion edge with uniformly bounded feedback}
+Let
+\[
+ c_r(t)=2rS(2|t|/r-1),\qquad p_r(v)=S(4v/r-1),
+\]
+and set
+\begin{equation}\label{eq:new-edge}
+ \mathcal E(t,y)=\int_{c_r(t)}^{c_r(t)+y}p_r(v)\,dv.
+\end{equation}
+The plateau $c_r=0$ on $[-r/2,r/2]$ makes $c_r$ smooth at zero.
+
+\begin{lemma}[Completion bounds]\label{lem:new-edge}
+The edge satisfies
+\begin{align}
+ &|\mathcal E(t,y)|\le |y|,\quad
+ 0\le\partial_y\mathcal E\le1,\quad
+ |\partial_t\mathcal E|\le15/2,\label{eq:edge-uniform}\\
+ &\norm{\nabla^2\mathcal E}_{\op}\le C/r,
+ \qquad \Lip(\nabla^2\mathcal E)\le C/r^2.\label{eq:edge-smooth-new}
+\end{align}
+If $|t|\le r/2$ and $y=0$, its value, gradient, and Hessian are all zero. If $|t|\ge r$ and $y\ge-r$, then
+\begin{equation}\label{eq:edge-force}
+ \partial_y\mathcal E(t,y)=1,\qquad \partial_t\mathcal E(t,y)=0.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Differentiating the oriented integral gives
+\[
+ \partial_y\mathcal E=p_r(c_r+y),\qquad
+ \partial_t\mathcal E=c_r'(t)\{p_r(c_r+y)-p_r(c_r)\}.
+\]
+Since $0\le p_r\le1$ and $\norm{c_r'}_\infty\le15/2$, this proves \eqref{eq:edge-uniform}. The Hessian entries are
+\begin{align*}
+ \mathcal E_{yy}&=p_r'(c_r+y),\\
+ \mathcal E_{ty}&=c_r'p_r'(c_r+y),\\
+ \mathcal E_{tt}&=c_r''\{p_r(c_r+y)-p_r(c_r)\}
+ +(c_r')^2\{p_r'(c_r+y)-p_r'(c_r)\}.
+\end{align*}
+The bounds $c_r^{(j)}=O(r^{1-j})$, $j=1,2,3$, and $p_r^{(j)}=O(r^{-j})$, $j=1,2$, prove \eqref{eq:edge-smooth-new} uniformly in $y$.
+The exact-zero statement follows from the cutoff plateaus at $t=0,y=0$. When $|t|\ge r$, $c_r=2r$ and $c_r'=0$; if also $y\ge-r$, then $c_r+y\ge r$, where $p_r=1$.
+\end{proof}
+
+\subsection{Sequential composition and the stationarity barrier}
+\label{sec:new-composition}
+We now assemble the local components. The key property is global: every stationary point must complete all terminal readouts, even if an algorithm queries far from the origin. Orthogonal grouping keeps the smoothness cost independent of the number of stages.
+
+Take $J$ mutually orthogonal copies of the local gadget, all with the same $(\delta,\ell,\nu)$. Denote their variables by $x_j$, their terminal unit vectors by $b_j$, and let $t_j=b_j^Tx_j$. Introduce carrier coordinates $s_1,\ldots,s_{J+1}$. Let
+\[
+ a_0=4\eps,\qquad \mu=a_0/W,
+\]
+and define
+\begin{equation}\label{eq:new-composed-objective}
+ \begin{split}
+ F(s,x)={}&\frac\mu2\sum_{i=1}^{J+1}s_i^2
+  +\sum_{i=1}^{J+1}\mathcal R(s_i)-a_0s_1\\
+ &+\sum_{j=1}^J\Phi_j(s_j,x_j)
+  -a_0\sum_{j=1}^J\mathcal E(t_j,s_{j+1}).
+ \end{split}
+\end{equation}
+
+\begin{lemma}[Both smoothness bounds and the gap]\label{lem:composition-regularity}
+There is a universal $C_{\rm reg}$, independent of $J$ and the dimensions, such that
+\begin{equation}\label{eq:composition-regularity-new}
+ \sup_z\norm{\nabla^2 F(z)}_{\op}\le C_{\rm reg}\ell,
+ \quad \Lip(\nabla^2F)\le C_{\rm reg}\nu,
+ \quad F(0)-\inf F\le6J\delta.
+\end{equation}
+The function is coercive.
+\end{lemma}
+\begin{proof}
+The source-wrapper groups $(s_j,x_j)$ are disjoint. The completion-edge groups $(x_j,s_{j+1})$ are likewise disjoint within the edge sum; the terminal map $x_j\mapsto b_j^Tx_j$ has norm one. Bounds for sums of bilinear or trilinear forms follow from Cauchy--Schwarz and H\"older on these groups, with constants independent of $J$. The lemmas above give bounds $C\ell,C\nu$ for every wrapper. A scaled edge has Hessian norm $C\eps/r=C\sqrt{\eps\nu}\le C\ell$ and Hessian Lipschitz constant $C\eps/r^2=C\nu$. The guards have the same bounds, and $\mu=4\eps^2/\delta\le4\ell$. This proves the first two assertions; the dimension-free direct-sum norm calculation is written out in \Cref{app:smoothness-audit}.
+
+At zero every term vanishes. Using $\Phi_j\ge-2\delta$, $\mathcal R\ge0$, and $|\mathcal E(t,y)|\le|y|$ gives
+\[
+ F\ge\frac\mu2\sum_i s_i^2-a_0\sum_i|s_i|-2J\delta
+ \ge-\frac{(J+1)a_0^2}{2\mu}-2J\delta
+ =-(4J+2)\delta\ge-6J\delta.
+\]
+Carrier coercivity follows from the quadratic terms. Moreover,
+$\Phi_j\ge\min\{q(x_j),\varphi_j(x_j)-2\delta\}$, and both functions in the minimum are coercive; the edge terms are uniformly bounded in $x_j$ by $a_0|s_{j+1}|$. This proves full coercivity.
+\end{proof}
+
+\begin{lemma}[Global terminal barrier]\label{lem:global-barrier}
+Every point with $\norm{\nabla F}\le\eps$ satisfies
+\begin{equation}\label{eq:every-tail-complete}
+ |t_j|>r\quad(1\le j\le J),\qquad
+ s_i\ge3W/4\quad(1\le i\le J+1).
+\end{equation}
+In particular, any point with one terminal readout equal to zero is not $\eps$-stationary. This statement holds throughout the ambient space.
+\end{lemma}
+\begin{proof}
+Assume $\norm{\nabla F}\le\eps$. Every nonquadratic contribution to a carrier derivative is nonpositive: the guard, the incoming edge, the activation derivative, and the initial linear force all have this sign. If $s_i\le-r$, then
+$\partial_{s_i}F\le\mu s_i-2\eps\le-2\eps$, a contradiction. Thus all $s_i>-r$.
+
+For the first carrier, $\partial_{s_1}F\ge-\eps$ and the force $-a_0$ imply $\mu s_1\ge a_0-\eps=3\eps$. Hence $s_1\ge3W/4$, and its wrapper is fully active. If $|t_1|\le r$, then
+\[
+ \norm{\nabla_{x_1}F}
+ \ge\norm{\nabla\varphi_1(x_1)}-
+ a_0|\partial_t\mathcal E(t_1,s_2)|
+ \ge40\eps-30\eps>\eps,
+\]
+a contradiction. Therefore $|t_1|>r$. Since $s_2>-r$, the first edge supplies exactly the force $-a_0$ to $s_2$ by \eqref{eq:edge-force}.
+
+The same argument inductively forces $s_j\ge3W/4$ and $|t_j|>r$ for every stage. The last edge also forces $s_{J+1}\ge3W/4$. The induction applies to both signs of every local readout.
+\end{proof}
+
+\subsection{Full-matrix resisting oracle and exact stage counting}
+\label{sec:matrix-counting}
+We next realize the construction against arbitrary adaptive queries to a full-matrix oracle. A stage is called \emph{exposed} when its entire terminal direction has been fixed and credited to the algorithm. This is an information accounting device: it grants at least as much information as the actual response, without assuming that the algorithm has solved the local optimization problem.
+
+\begin{lemma}[Mixed-oracle lift]\label{lem:matrix-lift}
+For every deterministic algorithm with budgets $(g,h)$, in a sufficiently large finite dimension one can choose an orthogonal realization of \eqref{eq:new-composed-objective}, plus positive quadratic dummy coordinates, for which success requires
+\begin{equation}\label{eq:stage-budget}
+ g\ge(J-h)m.
+\end{equation}
+The construction works for arbitrary query norms, arbitrary adaptive query choices, and an unqueried output point. A sufficient dimension is
+$C(Jd_0+J+g+h+1)$.
+\end{lemma}
+\begin{proof}
+Reserve orthogonal carrier and gadget reservoirs, with isotropic baselines
+\begin{equation}\label{eq:isotropic-baselines}
+ \frac\mu2\norm{P_{\rm car}z}^2+
+ \ell\norm{P_{\rm gad}z}^2.
+\end{equation}
+All eventual carrier directions lie in the first reservoir; every local source block lies in the second. Unused directions retain only their baseline quadratic. Thus the final ambient function is obtained by adding the carrier guards and linear force, the corrections $\Phi_j-q$, and the completion edges to \eqref{eq:isotropic-baselines}. It is exactly the canonical function on its hard coordinates, with orthogonal positive-quadratic dummies. Its gap and regularity bounds are unchanged up to the same universal constants.
+
+The first carrier can be fixed and even disclosed initially. Maintain an exposed prefix of stages and one current, partially exposed source stage. Within a current stage maintain selected source columns spanning $V_t$, initially $t=0$. Before processing any query point, place its unexplained component in each reservoir in one new dummy direction. All not-yet-selected hard columns are chosen orthogonal to this query point, all earlier query points, and all selected columns. Consequently, the current source coordinate belongs to $V_t$, and every future carrier and source coordinate equals zero at every query preceding its selection. The stated dimension bound supplies enough columns, including one final output as a dummy point.
+
+The counting argument credits the algorithm with every fixed source direction immediately. This convention bounds the information available from the actual derivative responses from above. The oracle realization uses the specified derivative responses, and its fixed-frame invariant is proved in \Cref{app:matrix-audit}.
+
+\paragraph{Gradient response.}
+If $t<m$, the current terminal coordinate is zero. The current outgoing edge has zero two-jet at $(t_j,s_{j+1})=(0,0)$. The source part of the returned gradient is a linear combination of the current coordinate and $\nabla\varphi_j$; its carrier component may also involve the scalar $\varphi_j$. By \eqref{eq:gadget-filtration}, at most $V_{t+1}$ is needed. Choose and fix this next layer, charge one gradient query to this source stage, and increment $t$ by one. Past stages already have fixed bases. Future sources are inactive and contribute only the isotropic baseline, with zero coordinate value, gradient, and two-jet correction. Hence no future source layer is exposed by the gradient response.
+
+\paragraph{Hessian response.}
+Complete and fix all missing columns of the current source before returning the entire Hessian. Count the whole current stage as Hessian-exposed. At the query point its previously hidden terminal readout is still zero: the newly selected columns were chosen orthogonal to that point. Its outgoing completion edge therefore has zero two-jet. Every future wrapper is evaluated at $(0,0)$ and its correction $\Phi-q$ has zero two-jet. Every future guard also has zero two-jet at zero. Thus the entire matrix is invariant under all rotations of the still-unused reservoirs. The response's source-dependent information is confined to the current and past stages.
+
+\paragraph{Opening the next stage.}
+After $m$ gradient responses in a clean current stage, or after its first Hessian response, declare that stage exposed. Select its successor carrier orthogonally to all queries so far and immediately credit the algorithm with that carrier. Start the next source with $V_0=\{0\}$. Crediting the carrier before the previous terminal coordinate moves away from zero gives an upper bound on actual exposure. At the query that ends a stage, the old terminal coordinate was zero before the response. The successor wrapper therefore remains inactive at every historical point, preserving all recorded responses. The next charged query is the first opportunity to receive information from the new source stage.
+
+\paragraph{Consistency of the final objective.}
+Each clean stage's old gradient responses are preserved when its basis is extended: previous source coordinates lie in their old $V_t$, their gradients lie in the already selected $V_{t+1}$, and their scalar function values are unaffected by rotations on the unused coordinates. Any Hessian query before the stage was opened saw its isotropic baseline, with zero source-dependent correction. Once a stage has a Hessian query, its whole basis is fixed. Later carrier choices preserve all earlier gradients and Hessians because the relevant edge had zero two-jet at every point before that carrier was selected. All future wrappers and guards likewise have zero two-jet correction there. The final unchosen columns can therefore be filled orthogonally to the finite transcript, producing one fixed admissible function with exactly all the recorded answers.
+
+At most $h$ stages can be exposed by Hessian queries. Each remaining exposed stage requires $m$ gradient responses during its own current-stage interval. These intervals are disjoint, even though a query may also return information about previously exposed stages. If fewer than $J$ stages are exposed at termination, include the output in the dummy bookkeeping and complete the unused columns orthogonally to it. At least one terminal readout at the output is zero, so \Cref{lem:global-barrier} rules out success. Hence all $J$ stages must be exposed and \eqref{eq:stage-budget} follows.
+
+A run attempting to exceed a budget can be stopped immediately before the first query exceeding that budget; its finite prefix has the same fixed-function realization. A nonterminating run either exceeds a query budget or eventually stops requesting queries. In the latter case, realize its finite observed transcript; the deterministic continuation on that fixed objective also fails to terminate. The realization therefore covers every finite prefix needed for the budget and termination arguments.
+\end{proof}
+
+\subsection{Closing the Hessian-saving regime}
+\label{sec:closing-poor}
+The remaining choice is how to distribute the gap and smoothness budgets across stages. Taking twice as many stages as the Hessian budget leaves a constant fraction to be explored by gradients. The activation balance determines whether the global gradient or Hessian smoothness budget limits each local block.
+
+\begin{theorem}[Hessian-saving lower bound]\label{thm:poor-complete}
+For sufficiently small universal accuracy constant in \eqref{eq:regime}, every integer $1\le h\le A$ satisfies
+\begin{equation}\label{eq:poor-lower-complete}
+ \G(h;\eps)\ge c\min\left\{B,\frac{A^{3/2}}{\sqrt h}\right\}.
+\end{equation}
+\end{theorem}
+\begin{proof}
+Let $C_*\ge C_{\rm reg}$ be a sufficiently large universal constant and set
+\begin{equation}\label{eq:poor-calibration-final}
+ J=2(h+1),\qquad \delta=\frac{\Delta}{6J},\qquad
+ \nu=\frac{L_2}{C_*},\qquad
+ \ell=\min\left\{\frac{L_1}{C_*},\frac{\delta\nu}{\eps}\right\}.
+\end{equation}
+Choose a sufficiently small universal $\eta_*>0$. If $1\le h\le\eta_*A$, then $J\le4h$ and
+\[
+ \frac{\delta\sqrt\nu}{\eps^{3/2}}
+ =\frac{A}{6J\sqrt{C_*}}\ge\frac{1}{24\eta_*\sqrt{C_*}}.
+\]
+Taking $\eta_*$ small gives the second condition of \eqref{eq:gadget-assumptions} and makes $\delta\nu/\eps\ge C_{\rm loc}\sqrt{\eps\nu}$. Shrinking the universal constant in \eqref{eq:regime} makes $L_1/C_*\ge C_{\rm loc}\sqrt{\eps\nu}$. Thus the first condition also holds, as does \eqref{eq:wrapper-balance}.
+
+The composed function satisfies both prescribed smoothness bounds and has initialization gap at most $\Delta$, by \Cref{lem:composition-regularity}. \Cref{lem:matrix-lift} gives
+\begin{align*}
+ g&\ge(J-h)m\ge\frac J2m\\
+ &\ge cJ\delta\sqrt\ell\,\nu^{1/4}\eps^{-7/4}\\
+ &\ge c\min\left\{
+ \Delta\sqrt{L_1}L_2^{1/4}\eps^{-7/4},
+ \frac{\Delta^{3/2}L_2^{3/4}\eps^{-9/4}}{\sqrt J}
+ \right\}\\
+ &\ge c\min\{B,A^{3/2}/\sqrt h\}.
+\end{align*}
+This is a lower bound against arbitrary deterministic algorithms through the full-matrix realization in \Cref{lem:matrix-lift}.
+
+For $\eta_*A<h\le A$, the one-dimensional product lower bound already gives $g\ge cA$. In this interval,
+$\min\{B,A^{3/2}/\sqrt h\}\le A/\sqrt{\eta_*}$, so the same conclusion follows after a universal change of constant. This covers all positive integer budgets up to $A$.
+\end{proof}
+
+\section{Discussion}\label{sec:discussion}
+The optimal budget frontier separates two roles of Hessian information.
+For $h\lesssim A$, a Hessian can replace part of the first-order work
+needed to reveal a useful direction. The sequential lower bound measures
+this saving by charging each stage either one Hessian query or a full
+sequence of gradient queries. For $h\gtrsim A$, Hessians can instead
+replace repeated observations of the gradient itself. Gradient transport
+attains this saving, and the one-dimensional product obstruction proves
+that its dependence on $h$ is optimal.
+
+The one-gradient threshold makes the distinction particularly explicit.
+Hessians determine changes in the gradient but leave an additive linear
+term undetermined. The indistinguishable quadratic pair in
+\Cref{thm:lower} makes one exact gradient observation necessary, regardless
+of the Hessian budget. Once that observation is available,
+\Cref{thm:transport} shows that a budget of order $A^2$ suffices to
+maintain the gradient estimate throughout a descent path.
+
+The proof also separates inherited ingredients from the extensions
+established here. Zhou's first-order block chain~\cite{zhou} supplies the
+zero-Hessian endpoint and the local revelation mechanism. The robust
+terminal readout, globally regular activation, and full-matrix realization
+allow that mechanism to be composed across stages. Chen et al.'s lazy
+method~\cite{chen} supplies the scarce-Hessian upper mechanism; the
+integer schedule and output accounting make its budget constraint
+literal.
+
+Several questions remain outside the present characterization. A
+randomized lower bound would require a hard distribution compatible
+with the algorithm's private randomness; the deterministic resisting
+oracle does not supply one. A fixed-dimensional frontier would require
+tracking how the available hidden directions limit sequential exposure.
+Finally, arithmetic complexity would charge for linear algebra and
+the quadratic and cubic subproblems treated as free computation here.
+The present theorem specifies the information cost under its stated
+oracle model and dimension quantifiers.
+
+\appendix
+The following appendices give details of the upper-bound calculation and the lower-bound realization. They retain all constants needed for the strict schedules and identify the precise source assumptions used by the block-chain construction.
+
+
+\section{Regret Analysis and Deterministic Subproblem Selection}
+\label[appendix]{app:lazy-audit}
+
+This appendix expands the cancellation used in \Cref{lem:lazy-bound}. The boundary terms matter because the algorithm uses finitely many blocks and a strict refresh count. Put
+\[
+ d=d_{n+1},\quad v=v_n,\quad v^+=v_{n+1},\quad
+ p=p_{n+1},\quad g=g_{n+1}.
+\]
+The first-order necessary condition for a global minimizer of
+\eqref{eq:lazy-step} on the convex ball is
+\begin{equation}
+ \ip{p+\eta^{-1}(d-v)}{u-d}\ge0
+ \qquad(\norm u\le D).
+ \label{eq:app-prox-vi}
+\end{equation}
+This condition is valid even when the quadratic in \eqref{eq:lazy-step} is
+indefinite: for every feasible $u$, the line segment from $d$ to $u$ is
+feasible, and the right directional derivative at its global minimum is
+nonnegative.  The projection update gives
+\begin{equation}
+ \ip{g+\eta^{-1}(v^+-v)}{u-v^+}\ge0
+ \qquad(\norm u\le D).
+ \label{eq:app-proj-vi}
+\end{equation}
+Using \eqref{eq:app-prox-vi} with $u=v^+$ and
+\eqref{eq:app-proj-vi} with the block comparator $u$, and then writing
+\[
+ \ip g{d-u}=\ip g{v^+-u}+\ip p{d-v^+}
+                 +\ip{g-p}{d-v^+},
+\]
+gives, after the polarization identity,
+\begin{align}
+ \ip g{d-u}
+ &\le \frac{\norm{u-v}^2-\norm{u-v^+}^2}{2\eta}
+      -\frac{\norm{d-v}^2}{2\eta}
+      -\frac{\norm{d-v^+}^2}{2\eta}
+      +\ip{g-p}{d-v^+}.                 \label{eq:app-pre-young}
+\end{align}
+Young's inequality with coefficients $(\eta,1/(4\eta))$ yields exactly
+\eqref{eq:regret-step}.
+
+Let $C_m=(m+1)L_2D=1/(2\eta)$.  Since
+\[
+ y_{n+1}-z_n=\frac{d_{n+1}-d_n}{2},
+ \qquad
+ \norm{z_n-z_{\pi(n)}}\le (m-1)D+D=mD,
+\]
+the integral Taylor formula gives
+\[
+ \norm{p_{n+1}-g_{n+1}}
+ \le \frac{C_m}{2}\norm{d_{n+1}-d_n}.
+\]
+Set
+\[
+ a_n=\norm{d_{n+1}-v_n}^2,
+ \qquad b_n=\norm{d_{n+1}-v_{n+1}}^2,
+ \qquad b_{-1}=0.
+\]
+Because $d_0=v_0=0$ and
+$\norm{d_{n+1}-d_n}^2\le2a_n+2b_{n-1}$,
+\begin{equation}
+ \eta\norm{p_{n+1}-g_{n+1}}^2
+ \le \frac{a_n+b_{n-1}}{8\eta}.             \label{eq:app-error-square}
+\end{equation}
+Substituting \eqref{eq:app-error-square} into
+\eqref{eq:regret-step}, and summing from the first index $r$ of a block to
+$r+T-1$, shows that every interior $b_n$ has coefficient at most
+$-1/(8\eta)$.  Dropping all nonpositive terms leaves only
+\begin{equation}
+ \sum_{n=r}^{r+T-1}\ip{g_{n+1}}{d_{n+1}-u}
+ \le \frac{\norm{u-v_r}^2}{2\eta}
+      +\frac{\norm{d_r-v_r}^2}{8\eta}
+ \le \frac{2D^2}{\eta}+\frac{4D^2}{8\eta}
+ =5C_mD^2.                                  \label{eq:app-block-regret}
+\end{equation}
+This proves the block constant used in \eqref{eq:regret}, including all
+block-boundary terms.
+
+The two Taylor estimates used after the regret bound follow from midpoint
+quadrature. Along $t\mapsto x_n+td_{n+1}$, the second derivative is
+$L_2\norm{d_{n+1}}^3$-Lipschitz, and the midpoint quadrature formula gives
+\[
+ \left|f(x_{n+1})-f(x_n)-\ip{g_{n+1}}{d_{n+1}}\right|
+ \le \frac{L_2}{24}\norm{d_{n+1}}^3.
+\]
+Moreover, for each block, Taylor expansion of $\nabla f$ at $\bar y_j$
+with integral remainder gives
+\[
+ \left\|\nabla f(\bar y_j)-\frac{1}{T}\sum g_{n+1}\right\|
+ \le \frac{L_2}{2T}\sum\norm{y_{n+1}-\bar y_j}^2.
+\]
+Adjacent midpoints are at distance at most $D$, hence the last average is
+at most $L_2T^2D^2/2$.  Summing the midpoint identities and using
+$f(x_0)-f(x_N)\le\Delta$ proves \eqref{eq:lazy-bound} with the displayed
+constants.
+
+The same derivation proves \Cref{lem:gradient-only}: there
+$C_m$ is replaced by $L_1$, $\eta=1/(2L_1)$, and
+\eqref{eq:app-error-square} remains unchanged.
+
+\paragraph{Deterministic measurable subproblem solutions.}
+The quadratic subproblem minimizes a jointly continuous function of its
+coefficients and its decision variable on a fixed compact ball.
+The cubic subproblem has the same property after a change of scale:
+every minimizer has norm smaller than
+\[
+ R(v,H)=1+\frac{3\norm H}{2L_2}
+              +\sqrt{\frac{3\norm v}{L_2}}.
+\]
+Indeed, $q(s)\le0$ implies
+$(2L_2/3)\norm s^2\le\norm v+(\norm H/2)\norm s$ for $s\ne0$,
+which gives this bound. Writing $s=R(v,H)y$ restricts the search to
+the fixed unit ball, and $R$ is continuous in the observed coefficients.
+
+Here is a concrete Borel choice for either compact problem. Enclose its
+fixed ball in a cube. Repeatedly subdivide the chosen closed cube into
+dyadic subcubes, selecting the first subcube, in a fixed order, that
+contains a global minimizer. For each fixed subcube, the minimum over its
+intersection with the ball is continuous in the coefficients whenever
+that intersection is nonempty; this follows from uniform convergence of
+the objectives on that compact set. Equality of this minimum with the
+minimum over the whole ball is therefore a Borel condition. The selected
+nested cubes have diameters tending to zero and each meets the compact
+argmin set. Their unique limiting point is a minimizer and is a Borel
+function of the coefficients. Rescaling gives the cubic solution.
+Finite output ties are resolved by the smallest index. These choices
+establish measurability using the already observed coefficients.
+
+\section{Calibration and Robustness of the Local Block Chain}
+\label[appendix]{app:gadget-audit}
+
+This appendix records precisely what is imported from \cite{zhou} and
+proves the additional robust terminal statement used here.  To avoid a
+collision of notation, write $E=K\eps$ for the tolerance at which the
+source block chain is calibrated, and write
+$r_{\rm term}=\sqrt{\eps/\nu}$ for our terminal-readout radius.
+
+\paragraph{The imported block chain.}
+We use the normalized family of Zhou~\cite[Definition~4.2 and Condition~5.6]{zhou}.
+For $v\in\R^M$, define the path Laplacian $\mathsf P_M$ and scalar potential by
+\[
+ v^T\mathsf P_Mv=\sum_{i=1}^{M-1}(v_{i+1}-v_i)^2,
+ \qquad
+ \Upsilon_1(u)=120\int_1^u\frac{t^2(t-1)}{1+t^2}\,dt.
+\]
+Write $\vartheta=\sqrt{\gamma/L}$, and set
+\[
+ M=\lceil\vartheta^{-1}\rceil,\qquad
+ j_\star=\lfloor M/2\rfloor,\qquad
+ \mathcal S=\{j_\star,\ldots,M\},\qquad
+ a=\frac{\gamma\sqrt\vartheta}{C_WE}\mathbf{1}_{\mathcal S}.
+\]
+Here $L=\ell/8$, $C_W=512$, and
+\[
+ \gamma=\frac{1}{50000}\sqrt{\frac{\nu E}{480}},
+ \qquad
+ N=\left\lfloor\frac{\delta\gamma}{720C_W^2E^2}\right\rfloor.
+\]
+The small-tolerance conditions below ensure $M\ge4$ and $N\ge7$.
+With $H=\gamma I+L\mathsf P_M$, $e=e_1$, and
+\[
+ \rho=e^TH^{-1}e,\quad \alpha=a^TH^{-1}e,\quad
+ \beta=a^TH^{-1}a,\qquad
+ \lambda=\alpha^{-1},\quad\tau=\beta^{-1},\quad
+ \kappa=\rho/\alpha^2,
+\]
+put $u_0=1$, $u_s=a^Tz_s$, and
+\[
+ \Psi(z)=\sum_{s=1}^N
+ \left\{\frac12z_s^THz_s-\lambda u_{s-1}e^Tz_s
+       +\frac\kappa2u_s^2+\tau\Upsilon_1(u_s)\right\},
+ \qquad
+ \varphi=\Psi-\inf\Psi.
+\]
+Writing $e_{s,j}$ for the standard coordinate vector in block $s$, the layer subspaces are
+\[
+ V_t=\operatorname{span}\left\{
+ e_{s,j}:(s-1)j_\star+\min\{j,j_\star\}\le t
+ \right\},\qquad 0\le t\le m:=Nj_\star.
+\]
+Thus $V_m=\R^{MN}$, and the normalized last-block readout
+$b=(0,\ldots,0,a/\norm a)$ is orthogonal to $V_{m-1}$.
+
+\paragraph{Calibration estimates.}
+For the $p=2$ specialization of Condition 5.6 and Lemma 5.7 in
+\cite{zhou}, the following facts hold with universal constants whenever
+\begin{equation}
+ E\le c\min\{\sqrt{\delta\ell},\,\delta^{2/3}\nu^{1/3}\},
+ \qquad E\le c\ell^2/\nu.                  \label{eq:app-source-conditions}
+\end{equation}
+There is a normalized block chain with parameters
+\begin{equation}
+ \gamma\asymp\sqrt{\nu E},\quad L=\ell/8,
+ \quad N\asymp \frac{\delta\gamma}{E^2},
+ \quad j_\star\asymp\sqrt{\ell/\gamma},   \label{eq:app-source-scales-raw}
+\end{equation}
+whose gap is at most $\delta$, whose gradient and Hessian Lipschitz
+constants are at most $\ell$ and $\nu$, and whose block-layer filtration
+has depth $m=Nj_\star$.  Its Green-kernel quantities satisfy
+\begin{align}
+ &\frac{\kappa}{\tau}=\frac{\rho\beta}{\alpha^2}\le C,\qquad
+ \norm a\le C\sqrt{\nu/E},                                      \label{eq:app-source-a}\\
+ &\frac{\tau}{\norm{w_{\rm out}}+\lambda\norm{w_{\rm in}}}
+ \ge \frac{\sqrt\gamma}{\sqrt\beta+\lambda\beta\sqrt\rho}
+ \ge cE.                                                         \label{eq:app-source-cert}
+\end{align}
+These estimates follow respectively from the four
+explicit estimates in Lemma 5.7, the identities
+$\lambda=1/\alpha$, $\tau=1/\beta$, $\kappa=\rho/\alpha^2$, and the
+bounds in the proof of Lemma 4.8 of \cite{zhou}.
+
+We now verify that the hypotheses of \Cref{lem:local-gadget} imply
+\eqref{eq:app-source-conditions}.  From
+$\ell\ge C_{\rm loc}\sqrt{\eps\nu}$ and
+$\delta\ge C_{\rm loc}\eps^{3/2}/\sqrt\nu$,
+\[
+ \sqrt{\delta\ell}\ge C_{\rm loc}\eps,
+ \qquad \delta^{2/3}\nu^{1/3}\ge C_{\rm loc}^{2/3}\eps,
+ \qquad \ell^2/\nu\ge C_{\rm loc}^2\eps.
+\]
+Choose first the universal $K$, and then choose $C_{\rm loc}$ large enough in
+terms of the numerical constants in \cite{zhou} and $K$.  Since
+$E=K\eps$, all three inequalities in
+\eqref{eq:app-source-conditions} follow.  Equations
+\eqref{eq:app-source-scales-raw} then give
+\begin{equation}
+ m=Nj_\star
+ \ge c\delta\sqrt\ell\,\nu^{1/4}E^{-7/4}
+ \ge c_K\delta\sqrt\ell\,\nu^{1/4}\eps^{-7/4}.                 \label{eq:app-depth}
+\end{equation}
+Also $d_0=MN\le3Nj_\star=3m$, because
+$j_\star=\lfloor M/2\rfloor$ and the source calibration has $M\ge4$.
+The one-step support implication proved in Appendix A.2 of \cite{zhou}
+is pointwise: if $x$ is supported on its layer set $I_t$, then
+$\nabla\varphi(x)$ is supported on $I_{t+1}$.  Thus, with
+$V_t=\operatorname{span}I_t$, it is exactly
+\eqref{eq:gadget-filtration}. This pointwise property supplies the
+filtration used in the resisting-oracle construction.
+
+It remains to prove the robust terminal certificate.  Let
+$u_s=a^Tz_s$, $u_0=1$, $u_{N+1}=0$, and define
+\[
+ R_s(u)=2u_s-u_{s-1}-u_{s+1}+\Upsilon_1'(u_s),
+ \qquad 1\le s\le N.
+\]
+Let $\widetilde u$ be obtained from $u$ by replacing $u_N$ by zero.
+Proposition 4.1 of \cite{zhou} (Lemma 3 of \cite{carmon2}) applies
+with scalar multiplier one and the last two scalar coordinates zero.
+The last scalar gradient coordinate vanishes, giving
+$\norm{R(\widetilde u)}\ge1/4$. Only the last two residual coordinates
+change, and $\Lip(\Upsilon_1')\le360$, so one may take $C_R=364$ below.
+Consequently
+\begin{equation}
+ \norm{R(u)}\ge \frac14-C_R|u_N|.                              \label{eq:app-R-robust}
+\end{equation}
+To verify the projection, write $e=e_1$, $x_s=e^Tz_s$, and
+$x_{N+1}=0$. Differentiating the normalized source objective gives
+\[
+ g_s=Hz_s-\lambda u_{s-1}e
+       +(\kappa u_s+\tau\Upsilon_1'(u_s))a-\lambda x_{s+1}a.
+\]
+The definitions give
+$w_{\rm out}^THz_s=\tau u_s$,
+$w_{\rm out}^Te=\alpha\tau$,
+$w_{\rm out}^Ta=1$,
+$w_{\rm in}^THz_s=x_s-\alpha\tau u_s$,
+$w_{\rm in}^Ta=0$, and
+$w_{\rm in}^Te=\rho-\alpha^2\tau$.
+Using $\lambda\alpha=1$ and $\kappa=\lambda^2\rho$
+cancels both the $x_{s+1}$ terms and the excess $u_s$ coefficient.
+For $s<N$ this yields the identity of Lemma A.1 of \cite{zhou}:
+\[
+ \tau R_s=w_{\rm out}^Tg_s+\lambda w_{\rm in}^Tg_{s+1}.
+\]
+A direct expansion of the last block, valid for every $u_N$, gives
+\begin{equation}
+ \tau R_N=w_{\rm out}^Tg_N+(\tau-\kappa)u_N.                    \label{eq:app-last-projection}
+\end{equation}
+Therefore, with
+$D_0=\norm{w_{\rm out}}+\lambda\norm{w_{\rm in}}$,
+\begin{equation}
+ D_0\norm{\nabla\varphi(z)}
+ \ge\tau\norm{R(u)}-|\tau-\kappa|\,|u_N|.                      \label{eq:app-projection-norm}
+\end{equation}
+By \eqref{eq:app-source-a},
+$|\tau-\kappa|/\tau\le1+C$.  Fix a universal $\eta>0$ so small that
+\eqref{eq:app-R-robust} and \eqref{eq:app-projection-norm} imply
+\begin{equation}
+ |u_N|\le\eta
+ \quad\Longrightarrow\quad
+ \norm{\nabla\varphi(z)}\ge \frac{\tau}{8D_0}\ge cE.            \label{eq:app-local-robust-E}
+\end{equation}
+Let $b$ be the unit vector whose last block is $a/\norm a$.  Then
+$u_N=\norm a\,b^Tz$, and \eqref{eq:app-source-a} gives
+\[
+ |b^Tz|\le r_{\rm term}
+ \quad\Longrightarrow\quad
+ |u_N|\le C\sqrt{\nu/E}\sqrt{\eps/\nu}
+ =\frac{C}{\sqrt K}.
+\]
+Choose $K$ so that $C/\sqrt K\le\eta$ and the last lower bound in
+\eqref{eq:app-local-robust-E} is at least $40\eps$.  This proves
+\eqref{eq:gadget-robust} at the prescribed terminal-readout radius.
+
+The source objective is coercive. Its quadratic part
+can be written
+\[
+ \frac12\sum_{s=1}^N
+ \norm{z_s-\lambda u_{s-1}H^{-1}e}_H^2
+ +\frac{\kappa}{2}(u_N^2-u_0^2).
+\]
+The map
+$z\mapsto(z_s-\lambda u_{s-1}H^{-1}e)_{s=1}^N$ is block lower triangular
+with identity diagonal and hence invertible.  The source potential is
+nonnegative.  Thus the infimum is attained; subtracting it preserves all
+derivatives and gives the nonnegative $\varphi$ used in
+\Cref{lem:local-gadget}.
+
+\section{Cutoff Calculus and Dimension-Free Direct Sums}
+\label[appendix]{app:smoothness-audit}
+
+We record two elementary facts that justify all global derivative bounds
+in \Cref{sec:activation,sec:new-composition}.
+
+First, the cutoff $S$ in \Cref{sec:activation} and its first two
+derivatives match the adjacent constant pieces at both endpoints.
+Its second derivative is globally Lipschitz.  If
+$\zeta(x)=\zeta_0(\norm x/W)$ and $\zeta_0$ is constant on a neighborhood
+of zero and outside a compact interval, then, on the support of its
+nonconstant part,
+\begin{equation}
+ \norm{D^j\zeta(x)}_{\op}\le C_jW^{-j},\qquad j=1,2,3,            \label{eq:app-radial-derivatives}
+\end{equation}
+where the third derivative is understood almost everywhere.  This follows
+from the standard radial derivative formulas; every denominator
+$\norm x$ is bounded below by $W$ on that support.  Hence the constants
+are independent of the ambient dimension.
+
+Applying the product rule to
+$\Phi=q-\mathfrak a B$ gives
+\begin{align*}
+ \nabla^2(\mathfrak a B)
+ &=\mathfrak a\nabla^2B
+   +\nabla\mathfrak a\otimes\nabla B
+   +\nabla B\otimes\nabla\mathfrak a
+   +B\nabla^2\mathfrak a.
+\end{align*}
+On the cutoff support, the bounds in the proof of
+\Cref{lem:new-wrapper}, together with
+\eqref{eq:app-radial-derivatives}, yield
+\[
+ \norm{\nabla^2\Phi}
+ \le C\left(\ell+\frac{\sqrt{\ell\delta}}{W}
+                   +\frac{\delta}{W^2}\right),
+\]
+and differentiation once more yields
+\[
+ \Lip(\nabla^2\Phi)
+ \le C\left(\nu+\frac{\ell}{W}
+ +\frac{\sqrt{\ell\delta}}{W^2}+\frac{\delta}{W^3}\right).
+\]
+The four nontrivial reductions are
+\[
+ \frac{\delta}{W^2}=\frac{\eps^2}{\delta}\le\ell,
+ \quad \frac{\sqrt{\ell\delta}}{W}\le\ell,
+ \quad \frac{\ell}{W}\le\nu,
+ \quad \frac{\sqrt{\ell\delta}}{W^2},\frac{\delta}{W^3}\le\nu;
+\]
+the last two follow from
+$\ell\le\delta\nu/\eps$ and
+$\delta\ge\eps^{3/2}/\sqrt\nu$.  These estimates complete the derivative calculation in the proof of \eqref{eq:wrapper-both-smooth}.
+
+Second, let $E=\bigoplus_jE_j$ be an orthogonal direct sum and let
+$F(x)=\sum_jF_j(P_jx)$, where
+$\sup\norm{\nabla^2F_j}\le M$ and
+$\Lip(\nabla^2F_j)\le L$.  Then
+\begin{equation}
+ \sup\norm{\nabla^2F}\le M,
+ \qquad \Lip(\nabla^2F)\le L.                                  \label{eq:app-direct-sum}
+\end{equation}
+Indeed, the Hessian is block diagonal and its operator norm is the maximum
+of the block norms; the same is true for a Hessian difference, and
+$\max_j\norm{P_j(x-y)}\le\norm{x-y}$.  The wrapper family, the edge
+family, and the guard family are each of this form.  Their sum contains
+only a fixed number of families, so its two constants increase by only a
+universal factor independent of $J$. The map
+$(x_j,s_{j+1})\mapsto(b_j^Tx_j,s_{j+1})$ has operator norm one, so the
+edge pullback does not alter its derivative bounds. This proves both
+regularity bounds in \Cref{lem:composition-regularity}.
+
+\section{Fixed-Function Realization of the Full-Matrix Oracle}
+\label[appendix]{app:matrix-audit}
+
+We give the induction underlying \Cref{lem:matrix-lift}, maintaining
+consistency of every entry of the ambient Hessian.
+Let $Q=g+h+1$ and choose two known orthogonal reservoirs
+$\mathcal C$ and $\mathcal G$ of dimensions
+\begin{equation}
+ \dim\mathcal C\ge J+1+Q,
+ \qquad \dim\mathcal G\ge Jd_0+Q.                               \label{eq:app-reservoir-dim}
+\end{equation}
+Place the isotropic carrier and gadget baselines on these reservoirs.
+The extra $Q$ dimensions in each reservoir are dummy dimensions.  The
+two projectors may be regarded as known. For stage counting we credit
+the algorithm with every fixed hard direction immediately. This bounds
+the information available from actual derivative responses from above.
+
+After any finite transcript we maintain the following invariant.
+\begin{enumerate}
+\item Past stages have complete orthonormal source frames.  The current
+stage has an isometric frame on $V_t$ for some $0\le t<m$.  Future source
+frames are unchosen.  The carriers through the current stage are fixed;
+all later carriers are unchosen.
+\item In each reservoir, every past query lies in the span of the fixed
+hard directions and at most one new dummy direction introduced by that
+query.  Every unchosen hard direction is constrained to be orthogonal to
+all past queries and all fixed and dummy directions.
+\item Every recorded gradient equals the gradient of every completion
+consistent with the invariant.  Every recorded Hessian equals the
+Hessian of every such completion.
+\end{enumerate}
+The invariant is true initially, with the first carrier fixed and all
+source frames empty.
+
+Consider a new query $z$.  In each reservoir, put the component of $z$
+orthogonal to all currently fixed hard and dummy directions into one new
+dummy direction.  This uses at most one dummy per reservoir per query.
+By \eqref{eq:app-reservoir-dim}, after doing so there remains enough
+orthogonal dimension for every unchosen hard column.  Consequently, the
+coordinates of $z$ in the current source lie in $V_t$, and all future
+hard source and carrier coordinates are zero.
+
+For a gradient query, extend the current source frame from $V_t$ to
+$V_{t+1}$ using columns orthogonal to all queries so far.  The pointwise
+filtration property and \eqref{eq:wrapper-reveal} imply that the source
+part of the gradient lies in $V_{t+1}$.  The carrier part is a scalar
+multiple of an already fixed carrier and depends only on the already
+fixed coordinates.  Every future wrapper correction is identically zero
+in a neighborhood of $(0,0)$, every future guard has zero two-jet at zero,
+and every not-yet-open outgoing edge is at $(0,0)$.  Thus the returned
+gradient is independent of every remaining frame completion.  Set
+$t\leftarrow t+1$.
+
+For a Hessian query, complete the entire current source frame with columns
+orthogonal to all queries so far.  At the query point its terminal
+coordinate is still zero, and the successor carrier coordinate is zero.
+The outgoing edge therefore has zero two-jet.  All future corrections
+also have zero two-jet.  Hence the full ambient Hessian is a fixed matrix
+on the current and past hard directions and a scalar multiple of the
+identity on each unused reservoir.  It is invariant under every rotation
+of the still-unused subspaces.  Record this matrix and mark the current
+stage Hessian-exposed.
+
+A stage is closed after its $m$-th gradient response or its first Hessian
+response.  At the response that closes it, the terminal direction is
+chosen orthogonal to the current query and to every earlier query: in the
+gradient case it belongs to $V_m\ominus V_{m-1}$, and in the Hessian case
+it is part of the just-completed frame.  Therefore its terminal coordinate
+was zero at every query made before closure.  Choose the successor carrier
+orthogonal to all queries so far.  At all historical points the incoming
+edge for that carrier is then at $(0,0)$ and has zero two-jet, so this
+choice changes no recorded answer.  Start the next source with $V_0$.
+This proves the invariant by induction.
+
+After the algorithm stops, include its output among the at most $Q$
+points used in the orthogonality constraints and complete every remaining
+frame.  If some stage is not exposed, its terminal direction is still
+free and can be chosen orthogonal to the output.  The resulting completed
+orthonormal frames define one fixed finite-dimensional objective of the
+form \eqref{eq:new-composed-objective}, plus positive quadratic dummies.
+By the invariant, all recorded gradients and whole Hessian matrices are
+exact derivatives of this one function.  Its gap and regularity are those
+of \Cref{lem:composition-regularity}.
+
+At most $h$ stages can be closed early by a Hessian query.  Every other
+stage has a disjoint current-stage interval containing at least $m$
+gradient queries.  If fewer than $J$ stages are exposed at the output,
+one of its terminal coordinates is zero, contradicting
+\Cref{lem:global-barrier}.  Thus
+$g\ge(J-h)m$, proving \Cref{lem:matrix-lift}. Rotational invariance
+on the unused reservoirs preserves the entire Hessian response.
+
+
+\clearpage
+\begin{thebibliography}{12}
+
+\bibitem{nesterov}
+Y. Nesterov and B. T. Polyak.
+\emph{Cubic Regularization of Newton Method and Its Global Performance}.
+Mathematical Programming 108:177--205, 2006.
+\url{https://doi.org/10.1007/s10107-006-0706-8}.
+
+\bibitem{lilin}
+H. Li and Z. Lin.
+\emph{Restarted Nonconvex Accelerated Gradient Descent: No More Polylogarithmic Factor in the $O(\eps^{-7/4})$ Complexity}.
+Journal of Machine Learning Research 24(157):1--37, 2023.
+\url{https://jmlr.org/papers/v24/22-0522.html}.
+
+\bibitem{zhou}
+D. Zhou.
+\emph{Sharp First-Order Lower Bounds for Higher-Order Smooth Nonconvex Optimization}.
+arXiv:2606.05438v2, 21 September 2026.
+\url{https://arxiv.org/html/2606.05438v2}.
+
+\bibitem{carmon}
+Y. Carmon, J. C. Duchi, O. Hinder, and A. Sidford.
+\emph{Lower Bounds for Finding Stationary Points I}.
+Mathematical Programming 184:71--120, 2020.
+\url{https://arxiv.org/abs/1710.11606}.
+
+\bibitem{adil}
+D. Adil, B. Bullins, A. Sidford, and C. Zhang.
+\emph{Balancing Gradient and Hessian Queries in Non-Convex Optimization}.
+Advances in Neural Information Processing Systems 38, 2025.
+\url{https://arxiv.org/abs/2510.20786}.
+
+\bibitem{chen}
+L. Chen, C. Liu, L. Luo, and J. Zhang.
+\emph{Faster Newton Methods for Convex and Nonconvex Optimization in Gradient Complexity}.
+Proceedings of the 39th Conference on Learning Theory,
+PMLR 336:1088--1112, 2026.
+\url{https://proceedings.mlr.press/v336/chen26a.html}.
+The algorithm and theorem identifiers used here refer to
+arXiv:2501.17488v3, 13 July 2026:
+\url{https://arxiv.org/html/2501.17488v3}.
+
+\bibitem{guilty}
+Y. Carmon, J. C. Duchi, O. Hinder, and A. Sidford.
+\emph{``Convex Until Proven Guilty'': Dimension-Free Acceleration of Gradient Descent on Non-Convex Functions}.
+Proceedings of the 34th International Conference on Machine Learning,
+PMLR 70:654--663, 2017.
+\url{https://proceedings.mlr.press/v70/carmon17a.html}.
+
+\bibitem{carmon2}
+Y. Carmon, J. C. Duchi, O. Hinder, and A. Sidford.
+\emph{Lower Bounds for Finding Stationary Points II: First-Order Methods}.
+Mathematical Programming 185:315--355, 2021.
+\url{https://arxiv.org/abs/1711.00841}.
+
+\bibitem{doikov}
+N. Doikov, E. M. Chayti, and M. Jaggi.
+\emph{Second-Order Optimization with Lazy Hessians}.
+Proceedings of the 40th International Conference on Machine Learning,
+PMLR 202:8138--8161, 2023.
+\url{https://proceedings.mlr.press/v202/doikov23a.html}.
+
+\bibitem{cutkosky}
+A. Cutkosky, H. Mehta, and F. Orabona.
+\emph{Optimal Stochastic Non-smooth Non-convex Optimization through Online-to-Non-convex Conversion}.
+Proceedings of the 40th International Conference on Machine Learning,
+PMLR 202:6643--6670, 2023.
+\url{https://proceedings.mlr.press/v202/cutkosky23a.html}.
+
+\bibitem{jiang}
+R. Jiang, A. Mokhtari, and F. Patitucci.
+\emph{Improved Complexity for Smooth Nonconvex Optimization: A Two-Level Online Learning Approach with Quasi-Newton Methods}.
+Proceedings of the 57th Annual ACM Symposium on Theory of Computing,
+pages 2225--2236, 2025.
+\url{https://arxiv.org/abs/2412.02175}.
+
+\bibitem{marumo}
+N. Marumo.
+\emph{Parameter-Free Accelerated Quasi-Newton Method for Nonconvex Optimization}.
+arXiv:2512.09439v2, 18 August 2026.
+\url{https://arxiv.org/html/2512.09439v2}.
+\end{thebibliography}
+\end{document}

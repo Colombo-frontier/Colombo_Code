@@ -1,0 +1,1184 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,array,tabularx,enumitem}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{xcolor,hyperref}
+\setlist[enumerate]{leftmargin=*,itemsep=0.35em,topsep=0.4em}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!45!black,
+  citecolor=blue!45!black,
+  urlcolor=blue!45!black,
+  pdftitle={Sharp Constraint-Value Complexity for Weakly Convex Stochastic Programs},
+  pdfauthor={Colombo Team}
+}
+\setlength{\parindent}{1.25em}
+\setlength{\parskip}{0.2em}
+\emergencystretch=2em
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\ind}{\mathbf 1}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\ip}[2]{\left\langle#1,#2\right\rangle}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\Proj}{Proj}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\KL}{D_{KL}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\numberwithin{equation}{section}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\title{Sharp Constraint-Value Complexity for\\Weakly Convex Stochastic Programs}
+\author{Colombo Team\\[0.25em]
+  \small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{November 23, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study stochastic programs with unknown, possibly nonsmooth weakly convex expectation constraints, charging objective subgradients, constraint subgradients, and constraint values separately. Under a fixed uniform Slater-type condition, we establish the sharp constraint-value complexity
+$\Theta(\eps^{-2}\log(1/\eps))$ while keeping both subgradient budgets at $O(\eps^{-4})$.
+The output satisfies a near-KKT criterion with expected proximity, signed expected feasibility, expected stationarity, and almost-sure complementarity. Our algorithm queries constraint values at a single initial point and estimates all subsequent constraint differences by integrating stochastic subgradients along random segments. Its analysis combines localized saddle subproblems, a Moreau envelope that varies with the constraint shifts, and a stopped path-energy estimate. These ingredients yield deterministic bounds on all three oracle counts under finite second moments. A two-dimensional family with one affine constraint gives the matching lower bound for expected value-query counts, even with unlimited exact subgradient information. The logarithmic factor follows from the confidence required by the stated KKT criterion. The result determines the optimal value-query complexity under the prescribed subgradient budgets; it does not characterize the full tradeoff among all three oracles.
+\end{abstract}
+
+\noindent\textbf{Keywords.} Stochastic constrained optimization; weak convexity; oracle complexity; constraint-value estimation; approximate KKT points; information-theoretic lower bounds.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:introduction}
+An expectation constraint contains two kinds of information: how its value changes with the decision variable, and where its zero level lies. Stochastic subgradients provide the first kind; noisy function evaluations provide the second. The distinction is immediate for an affine constraint $g_\theta(x)=a^Tx-\theta$: its gradient reveals $a$ but contains no information about the unknown level $\theta$. For nonlinear constraints, the two tasks interact because an algorithm must also track the constraint as its iterates move.
+
+We study this distinction for stochastic optimization with nonsmooth weakly convex objectives and expectation constraints. The decision set is a known compact convex set with an available Euclidean projection. Constraint feasibility is unknown. We count objective-subgradient queries, vector constraint-subgradient queries, and vector constraint-value queries separately, writing their respective counts as $N_{\rm obj}$, $N_{\rm csub}$, and $N_{\rm cval}$. The question is:
+\begin{quote}
+How many constraint-value queries are necessary to obtain an approximate KKT point while both subgradient budgets remain of order $\eps^{-4}$?
+\end{quote}
+
+\subsection{Main result and its interpretation}
+With all regularity, moment, and qualification parameters fixed, we prove
+\begin{equation}
+ N_{\rm obj}=O(\eps^{-4}),\qquad
+ N_{\rm csub}=O(\eps^{-4}),\qquad
+ N_{\rm cval}=O\!\left(\eps^{-2}\log\frac1\eps\right).
+ \label{eq:intro-upper}
+\end{equation}
+All three counts have deterministic upper bounds. Conversely, a fixed class containing a two-dimensional noisy family requires
+\begin{equation}
+ \sup_P\E_P N_{\rm cval}
+ =\Omega\!\left(\eps^{-2}\log\frac1\eps\right),
+ \label{eq:intro-lower}
+\end{equation}
+even if exact objective and constraint subgradients are available without limit. Thus the value-query rate in \eqref{eq:intro-upper} is sharp under the prescribed subgradient budgets.
+
+The approximation criterion is part of the result. The returned point admits a nearby latent KKT certificate: proximity, signed feasibility, and stationarity are controlled in expectation, whereas complementarity holds almost surely. The qualification margin is independent of $\eps$. Both the upper and lower bounds use this same convention, stated precisely in Section~\ref{sec:model}. The matching result concerns the value-query coordinate; determining the optimal subgradient counts separately, or the tradeoff for other subgradient budgets, remains outside its scope.
+
+\paragraph{An algorithm that calibrates the constraint level once.}
+Our method estimates $g(c_0)$ at one initial point $c_0$. Thereafter, a stochastic subgradient sampled at a uniformly random point on the segment from $y$ to $x$ provides an unbiased estimate of $g(x)-g(y)$, with second moment proportional to $\|x-y\|^2$. This identity makes it possible to replace subsequent value evaluations by constraint-subgradient queries. The central difficulty is to do so within the $O(\eps^{-4})$ subgradient budget: a tracker designed for uniformly small error at every inner iteration can be too expensive.
+
+We address this difficulty by treating the current estimation error as a constant shift of the constraints throughout a local solve. A Moreau envelope indexed by that shift measures progress between successive solves. Its smoothness in the shift variable charges each new tracking increment through its bias and second moment. This avoids repeatedly paying for the full accumulated estimation error.
+
+\paragraph{Localization and deterministic budgets.}
+The smoothed penalty has a saddle representation. Restricting each primal subproblem to a ball of radius $\sqrt\nu$, where $\nu$ is the smoothing scale, controls the variance of its dual estimate. An implicit update handles the known anchor value, giving an $O(n^{-1})$ mean-square primal error after $n$ inner steps, uniformly over all anchor offsets. A stopped martingale argument then shows that the outer path has bounded total squared length with probability $1-O(\eps)$. An observable cap on this path energy turns the adaptive tracking costs into deterministic oracle budgets.
+
+\paragraph{A lower bound that explains the logarithm.}
+Our hard family has two possible boundary levels separated by $\Theta(\eps)$. Its relevant stationary locations are separated by $\Theta(\sqrt\eps)$. Almost-sure complementarity, together with signed expected feasibility, expected proximity, and expected stationarity, forces any valid output to distinguish the two levels with error $O(\sqrt\eps)$. Gaussian testing at this confidence requires $\Omega(\eps^{-2}\log(1/\eps))$ observations. The decoder reads only the algorithm's returned point, so the lower bound remains valid when the KKT witnesses are latent.
+
+\subsection{Comparison with prior work}
+Liu and Xu~\cite[Proposition~3.7(i), arXiv version~2]{liuxu} give the closest comparison: the same uniform qualification and near-KKT convention, with separate subgradient and value counts. Their general-distribution bound is shown in Table~\ref{tab:comparison}. Their value estimator additionally assumes
+\begin{equation}
+ \E\|g(x,\xi)-g(y,\xi)\|^2\le L_v^2\|x-y\|^2,
+ \qquad x,y\in X.
+ \label{eq:sample-lipschitz}
+\end{equation}
+Our upper bound requires only finite second moments. The quantitative comparison therefore applies directly on the common subclass satisfying \eqref{eq:sample-lipschitz}. We use their smoothed exact penalty as an analytic starting point and develop a different allocation of oracle calls through local saddle solves and shift tracking.
+
+\begin{table}[tbp]
+\centering
+\caption{Accuracy dependence with fixed problem parameters. All upper bounds target the near-KKT criterion \eqref{eq:output1}--\eqref{eq:output2}. The lower bound concerns expected value-query counts under the oracle interface of Section~\ref{sec:oracles}.}
+\label{tab:comparison}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.22}
+\begin{tabularx}{\linewidth}{@{}Yccc@{}}
+\toprule
+Result and assumptions & $N_{\rm obj}$ & $N_{\rm csub}$ & $N_{\rm cval}$\\
+\midrule
+Liu--Xu~\cite{liuxu}: uniform Slater condition; \eqref{eq:sample-lipschitz}
+ & $O(\eps^{-4})$ & $O(\eps^{-4})$ & $O(\eps^{-6})$\\
+This paper, upper: uniform Slater condition; finite second moments
+ & $O(\eps^{-4})$ & $O(\eps^{-4})$ & $O(\eps^{-2}\log(1/\eps))$\\
+This paper, lower: fixed two-dimensional Gaussian family
+ & \multicolumn{2}{c}{Unlimited exact information}
+ & $\Omega(\eps^{-2}\log(1/\eps))$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The information interface also matters for a value-query lower bound. We charge every constraint-value evaluation and permit sample reuse through an opaque handle. Free access to additional informative raw samples is a stronger interface. Our lower bound is stated for the former convention, and does not assert a lower bound for every data-access implementation of an expectation constraint.
+
+The proximal viewpoint builds on the Moreau-envelope analysis of stochastic weakly convex optimization by Davis and Drusvyatskiy~\cite{davis} and the proximally guided stochastic subgradient method of Davis and Grimmer~\cite{grimmer}. Ma, Lin, and Yang~\cite{ma} extend quadratic regularization to weakly convex constraints. Their stochastic bound is $\widetilde O(\eps^{-6})$, with a nearly feasible initialization and almost-surely bounded stochastic value and subgradient observations; their probabilistic output statement differs from \eqref{eq:output1}--\eqref{eq:output2}.
+
+Yang et al.~\cite[Corollary~5.4]{yang} develop a single-loop hinge-penalty method with $O(\eps^{-6})$ iterations for fixed batch sizes and problem parameters. They require the distance from zero to the hinge-penalty subdifferential to be uniformly positive throughout the violated region. Their proximity and stationarity conditions hold in expectation, while feasibility and complementarity are stated with probability $1-O(\eps)$. These distinctions preclude placing that rate in the same-criterion comparison of Table~\ref{tab:comparison}. The present method is double-loop and targets the separate cost of learning constraint values. Our concentration analysis uses Freedman's martingale inequality~\cite{freedman}; the required form is recalled in the proof.
+
+\paragraph{Organization.}
+Section~\ref{sec:model} states the model and matching results. Section~\ref{sec:algorithm} introduces the algorithm, segment estimator, and shifted envelopes. Sections~\ref{sec:local} and~\ref{sec:tracking} analyze the local solver and constraint tracker. Section~\ref{sec:certification} proves the upper bound, and Section~\ref{sec:lower} proves the lower bound. Explicit parameter choices and the implementation of local projections appear in the appendices.
+
+\section{Model and main results}\label{sec:model}
+\subsection{Problem class and qualification}
+Let $X\subset\R^d$ be a known compact convex set of diameter $D>0$, and assume that Euclidean projection onto $X$ is available. We consider
+\begin{equation}
+ \min_{x\in X} f(x)
+ \quad\text{subject to}\quad
+ g_i(x)=\E g_i(x,\xi)\le0,
+ \qquad i=1,\ldots,m.
+ \label{eq:problem}
+\end{equation}
+The feasible set is nonempty. The case $D=0$ is immediate and is excluded from the subsequent notation.
+
+The objective $f$ is $\rho_f$-weakly convex and each $g_i$ is $\rho_g$-weakly convex on an open convex neighborhood of $X$, where all these functions are finite. For a weakly convex function $\psi$, we use the ambient subdifferential
+\[
+ \partial\psi(x)
+ =\partial\!\left(\psi+\frac{\rho_\psi}{2}\|\cdot\|^2\right)(x)-\rho_\psi x.
+\]
+Every element of $\partial f(x)$ has norm at most $l_f$, and every element of $\partial g_i(x)$ has norm at most $l_g$, for $x\in X$. In particular, the functions are Lipschitz on $X$. The ambient convention keeps these bounded subgradients separate from the normal cone
+\[
+ N_X(x)=\{n\in\R^d:\ip n{y-x}\le0\text{ for every }y\in X\}.
+\]
+Finiteness on a neighborhood ensures the subdifferential sum rules used below, including when $X$ has empty ambient interior.
+
+Write $[r]_+=\max\{r,0\}$ and $g_+(x)=\sum_i[g_i(x)]_+$. Our uniform qualification assumption is the existence of fixed constants
+\[
+ B>0,\qquad \bar\rho>\rho_g,\qquad B_g>m\rho_gD^2
+\]
+such that every $x\in X$ with $0<g_+(x)\le B_g$ admits a point $y\in\operatorname{relint}(X)$ satisfying
+\begin{equation}
+ \max_i g_i(y)+\frac{\bar\rho}{2}\norm{y-x}^2\le-B.
+ \label{eq:cq}
+\end{equation}
+All these constants, as well as the dimension, number of constraints, and moment bounds below, are fixed as $\eps\downarrow0$. Constants in the complexity bounds may depend on them.
+
+\subsection{Oracles and information access}\label{sec:oracles}
+A fresh objective-subgradient query at $x$ returns $\zeta_f(x)$, and a fresh vector constraint-subgradient query returns $(\zeta_{g_i}(x))_{i=1}^m$. Conditional on the past and the chosen query point,
+\begin{align}
+ \E\zeta_f(x)&\in\partial f(x),&
+ \E\|\zeta_f(x)\|^2&\le S_f^2,\label{eq:objective-oracle}\\
+ \E\zeta_{g_i}(x)&\in\partial g_i(x),&
+ \E\sum_{i=1}^m\|\zeta_{g_i}(x)\|^2&\le S_g^2.
+ \label{eq:constraint-oracle}
+\end{align}
+A fresh constraint-value query returns a vector $G(x,\xi)$ satisfying
+\begin{equation}
+ \E G(x,\xi)=g(x),\qquad
+ \E\|G(x,\xi)-g(x)\|^2\le\sigma_v^2.
+ \label{eq:value-oracle}
+\end{equation}
+Fresh calls use independent oracle randomness. All displayed moment conditions hold conditional on the history before the call and the chosen query point. Random segment parameters are sampled independently of the past and of the ensuing fresh oracle randomness. A query may use any point of $X$, including a randomly selected point on a segment between earlier iterates. No continuity or smoothness of the sample subgradient maps is required. The same-sample condition \eqref{eq:sample-lipschitz} is optional.
+
+One objective query, one vector constraint-subgradient query, and one vector constraint-value evaluation are each charged to their respective counters. Projection onto $X$ and other computations involving only known quantities are free in this oracle model. A subgradient query returns only its indicated vector. A value query may also return an opaque handle that allows the same sample to be evaluated at another point; every such evaluation is charged. Algorithms have no additional free sampler revealing unknown constraint levels. This convention specifies the information available to algorithms, rather than properties of a particular data-processing implementation.
+
+Algorithms may be randomized and adaptive, and must terminate almost surely with an output in $X$. They know the set $X$ and the common bounds defining the class, while instance-dependent information is supplied through the stated oracles.
+
+\subsection{Approximate KKT criterion}
+For a target accuracy $\eps>0$, a valid output is a random point $x\in X$ for which there exist random witnesses $w\in X$ and $\lambda\in\R_+^m$ satisfying, for each $i$,
+\begin{align}
+ \E\norm{x-w}&\le\eps,\qquad \E g_i(w)\le\eps,\label{eq:output1}\\
+ |\lambda_i g_i(w)|&\le\eps\quad\text{almost surely},\nonumber\\
+ \E\dist\!\left(0,\partial f(w)+\sum_{i=1}^m\lambda_i\partial g_i(w)+N_X(w)\right)&\le\eps.
+ \label{eq:output2}
+\end{align}
+The witnesses are latent: they certify the output and need not be computed or returned. They may be defined on an extension of the output probability space. Feasibility in \eqref{eq:output1} is signed expected feasibility. Complementarity in \eqref{eq:output2} is a pathwise requirement, which will be essential to the lower bound.
+
+\subsection{Complexity statements}
+Let $\mathcal P$ be a class satisfying the preceding assumptions with specified common bounds. For subgradient budgets $B_f$ and $B_s$, define
+\begin{equation}
+ \mathfrak C_{\rm val}(\eps;B_f,B_s)
+ :=\inf_{\mathcal A}\sup_{P\in\mathcal P}\E_P N_{\rm cval}(\mathcal A),
+ \label{eq:minimax}
+\end{equation}
+where the infimum is over algorithms meeting \eqref{eq:output1}--\eqref{eq:output2} on every instance and obeying the pathwise caps $N_{\rm obj}\le B_f$ and $N_{\rm csub}\le B_s$.
+
+\begin{theorem}[Constraint-value upper bound]\label{thm:upper}
+There exist constants $C<\infty$ and $\eps_0>0$, depending only on the fixed class bounds, such that for every $0<\eps\le\eps_0$ an algorithm satisfies \eqref{eq:output1}--\eqref{eq:output2} with deterministic budgets
+\begin{align}
+ N_{\rm obj}&\le C\eps^{-4},\nonumber\\
+ N_{\rm csub}&\le C\bigl(\eps^{-4}+\eps^{-3}\log(1/\eps)\bigr)
+             =O(\eps^{-4}),\label{eq:mainupper}\\
+ N_{\rm cval}&\le C\eps^{-2}\log(1/\eps).\nonumber
+\end{align}
+Constraint values are queried only at one initial point. All subsequent constraint information is obtained from the constraint-subgradient oracle. The result applies to unknown nonlinear and nonsmooth weakly convex constraints and does not require \eqref{eq:sample-lipschitz}.
+\end{theorem}
+
+The proof is constructive. Appendix~\ref{app:constants} gives a valid $\eps_0$, the local-solver parameters, and a computable path-energy cap, all in terms of the known class bounds.
+
+\begin{theorem}[Constraint-value lower bound]\label{thm:mainlower}
+For every $0<\eps\le20^{-4}$, two instances in a fixed two-dimensional class satisfying the preceding assumptions have the following property: every algorithm satisfying \eqref{eq:output1}--\eqref{eq:output2} on both instances obeys
+\begin{equation}
+ \max_{\theta}\E_\theta N_{\rm cval}
+ \ge\frac1{32768}\eps^{-2}\log\frac1\eps.
+ \label{eq:mainlower}
+\end{equation}
+The objective is the same under both instances and may be supplied explicitly. Both subgradient oracles may provide unlimited exact answers. The constraint is affine, its value noise has unit variance, and the qualification constants are independent of $\eps$.
+\end{theorem}
+
+\begin{corollary}[Sharp value complexity under subgradient budgets]\label{cor:matching}
+Suppose $\mathcal P$ contains the fixed family constructed in Section~\ref{sec:lower}. For every sufficiently large fixed $C$ and all sufficiently small $\eps>0$,
+\[
+ \mathfrak C_{\rm val}(\eps;C\eps^{-4},C\eps^{-4})
+ =\Theta\!\left(\eps^{-2}\log\frac1\eps\right).
+\]
+\end{corollary}
+\begin{proof}
+Apply Theorem~\ref{thm:upper} for the upper bound. Theorem~\ref{thm:mainlower} gives the lower bound even without subgradient caps, and hence also under the stated caps.
+\end{proof}
+
+The upper bound holds in every fixed dimension. The matching lower bound requires a class containing the specified noisy family; it is not asserted for noiseless classes or for a fixed one-dimensional domain. Theorems~\ref{thm:upper} and~\ref{thm:mainlower} concern oracle evaluations, with arithmetic and projection costs left uncounted.
+
+\section{Algorithm and analytic framework}\label{sec:algorithm}
+The algorithm separates learning the constraint level from following its changes. It first calibrates the level at an anchor point, then uses subgradient-based difference estimates while moving between local proximal subproblems. We summarize the construction before giving its components.
+
+\subsection{Algorithm overview}
+Set $t=\eps/C_{\rm out}$, where $C_{\rm out}$ depends only on the class bounds, and choose
+\[
+ \nu=t,\qquad R=\sqrt t,\qquad
+ q=\lceil t^{-1}\rceil,\qquad K=\lceil t^{-2}\rceil,\qquad
+ n=\lceil A_1t^{-2}\rceil.
+\]
+Here $\nu$ is the penalty smoothing scale, $R$ is the local radius, $q$ is the refresh period, $K$ is the number of outer moves, and $n$ is the number of inner iterations. The fixed constants $A_1$, $C_{\rm out}$, and $E_*$ are specified in Appendix~\ref{app:constants}; the damping factor is $\vartheta=1/24$.
+
+\begin{enumerate}
+\item \textbf{Calibrate.} Choose $c_0\in X$. Form a coordinatewise median of independent block means $\widehat b$ for $g(c_0)$ using value samples, and set $b=\widehat b-t\mathbf1$ and $v_0=b$.
+\item \textbf{Solve locally.} At $c_k$, supply the anchor $u_k=v_k-t\mathbf1$ to the saddle problem \eqref{eq:localsaddle}. Run $n$ inner steps \eqref{eq:innerprimal}--\eqref{eq:innerdual} to obtain $y_k$.
+\item \textbf{Move with an energy cap.} Propose $c_{k+1}=c_k+\vartheta(y_k-c_k)$. If adding $\|c_{k+1}-c_k\|^2$ would make the accumulated squared movement exceed $E_*$, terminate and return $c_0$. Otherwise accept the move.
+\item \textbf{Track the constraint.} Every $q$ moves, refresh $v_{k+1}$ by estimating $g(c_{k+1})-g(c_0)$. At other moves, add a clipped estimate of $g(c_{k+1})-g(c_k)$. Both estimates use only constraint subgradients.
+\item \textbf{Return an iterate.} If all $K$ moves finish, return $c_J$, where $J$ is uniform on $\{0,\ldots,K-1\}$ and independent of all query decisions.
+\end{enumerate}
+
+The local projection uses only the known set $X\cap\overline B(c_k,R)$ and can be approximated by finitely many projections onto $X$; Appendix~\ref{app:projection} gives the construction and the required tolerance. The shifted proximal points and statistical failure events introduced below are used solely in the analysis. All conditional estimates are taken before the corresponding fresh observations are drawn.
+
+\subsection{Constraint differences from subgradients}
+\begin{lemma}[Random-segment integration]\label{lem:segment}
+For past-measurable $x,y\in X$, draw $U\sim\operatorname{Unif}[0,1]$ and a fresh vector constraint-subgradient at $z=y+U(x-y)$. Set
+\[
+ \Delta_i(x,y)=\ip{\zeta_{g_i}(z)}{x-y}.
+\]
+Then, conditionally on $x,y$ and the past,
+\begin{equation}
+ \E\Delta(x,y)=g(x)-g(y),\qquad
+ \E\norm{\Delta(x,y)}^2\le V\norm{x-y}^2,
+ \quad V:=1+S_g^2+m l_g^2.
+ \label{eq:segment}
+\end{equation}
+One vector constraint-subgradient call suffices. When $x=y$, return zero without a call.
+\end{lemma}
+\begin{proof}
+The restriction $t\mapsto g_i(y+t(x-y))$ is Lipschitz and absolutely continuous. Adding the weak-convexity quadratic gives a convex restriction. At almost every $t\in(0,1)$ that restriction is differentiable, and the directional projection of every ambient weak subgradient equals the derivative of the restriction. This follows directly by applying the subgradient inequality to both positive and negative displacements along the segment. Conditional unbiasedness and integration therefore give the mean identity. Cauchy--Schwarz and the total second-moment bound give the second assertion. The argument uses only conditional unbiasedness and the second-moment bound for the subgradient oracle.
+\end{proof}
+
+\subsection{Shifted penalty envelopes}
+To analyze an inexact constraint estimate, we incorporate its error into a constant shift. Choose a fixed penalty weight $\beta\ge1$ as specified in Lemma~\ref{lem:qualification}, and put
+\[
+ \rho_0=\rho_f+\beta m\rho_g,\qquad \rho=\rho_0+1.
+\]
+Let $h=g+s_0$ denote any fixed componentwise shift of the constraints; later $s_0$ is the initial anchor error. For $\nu>0$ define
+\[
+ \phi_\nu(t)=\max_{0\le a\le1}\{at-\nu a^2/2\},\qquad
+ a_\nu(t)=\Proj_{[0,1]}(t/\nu).
+\]
+For a further shift $e\in\R^m$, define
+\begin{align}
+ F_e(y)&=f(y)+\beta\sum_i \phi_\nu(h_i(y)+e_i),\label{eq:shiftedF}\\
+ M_e(c)&=\min_{y\in X}\{F_e(y)+\rho\norm{y-c}^2\},\qquad
+ w_e(c)=\argmin_{y\in X}\{F_e(y)+\rho\norm{y-c}^2\}.
+ \label{eq:shiftedenvelope}
+\end{align}
+These definitions are valid for every shift, including failed estimates. The oscillation of $F_e$ on $X$ is at most
+\[
+ H D,\qquad H:=l_f+\beta m l_g,
+\]
+independent of $e,s_0,\nu$.
+
+\begin{lemma}[Smoothness in the center and constraint shift]\label{lem:smoothness}
+For every fixed shift, $F_e$ is $\rho_0$-weakly convex and
+\[
+ \nabla_c M_e(c)=2\rho(c-w_e(c)),\qquad
+ \operatorname{Lip}(\nabla_c M_e)\le6\rho.
+\]
+For fixed $c$, the function $e\mapsto M_e(c)$ is convex and differentiable, with
+\begin{equation}
+ \norm{\nabla_e M_e(c)}_\infty\le\beta,
+ \qquad
+ M_{e+z}(c)\le M_e(c)+\ip{\nabla_e M_e(c)}z+
+ \frac{\beta}{2\nu}\norm z^2.
+ \label{eq:shiftsmooth}
+\end{equation}
+In particular $|M_{e'}(c)-M_e(c)|\le\beta\norm{e'-e}_1$.
+\end{lemma}
+\begin{proof}
+Write $F_e$ as the maximum, over $a\in[0,1]^m$, of $f+\beta\sum_i a_i(h_i+e_i)-\beta\nu\norm a^2/2$. The weak-convexity modulus of every term is at most $\rho_0$. The proximal objective is $(2\rho-\rho_0)$-strongly convex. Its minimizer is at most two-Lipschitz in $c$, by the strong monotonicity of the shifted subdifferential; the displayed bound $6\rho$ follows.
+
+For the shift variable, convex--concave minimax interchange gives
+\[
+ M_e(c)=\max_{a\in[0,1]^m}\left\{d_c(a)+\beta a^T e-\frac{\beta\nu}{2}\norm a^2\right\},
+\]
+where
+\[
+ d_c(a)=\min_{y\in X}\left\{f(y)+\beta\sum_i a_i h_i(y)+\rho\norm{y-c}^2\right\}
+\]
+is concave. The interchange is valid because the payoff is strongly convex in $y$, concave in $a$, continuous, and both domains are compact. Its maximizer $a_e$ is unique. Adding the two maximizing inequalities, or using strong monotonicity, yields
+\[
+ \beta\nu\norm{a_{e'}-a_e}^2\le\beta\ip{e'-e}{a_{e'}-a_e}.
+\]
+Thus $\norm{a_{e'}-a_e}\le\norm{e'-e}/\nu$, and the envelope derivative is $\beta a_e$. Integration proves \eqref{eq:shiftsmooth} and the Lipschitz bound.
+\end{proof}
+
+\section{Localized saddle subproblems}\label{sec:local}
+The local solver must remain accurate when the absolute anchor value is large. The following primal--dual iteration achieves this by treating the known anchor implicitly and estimating only local constraint differences.
+
+\subsection{A stochastic solver with uniform primal accuracy}
+Fix a center $c\in X$, an anchor vector $u\in\R^m$, and a radius $R>0$. The shift intended by this anchor is $e=u-h(c)$, although the algorithm does not know it. Set
+\[
+ D_c=X\cap\overline B(c,R),\qquad A=[0,1]^m.
+\]
+Consider the local saddle problem
+\begin{equation}
+ \min_{y\in D_c}\max_{a\in A}
+ L(y,a):=f(y)+\beta\sum_i a_i\{u_i+g_i(y)-g_i(c)\}
+ +\rho\norm{y-c}^2-\frac{\beta\nu}{2}\norm a^2.
+ \label{eq:localsaddle}
+\end{equation}
+Its unique primal solution is
+\[
+ p_e(c)=\argmin_{y\in D_c}\{F_e(y)+\rho\norm{y-c}^2\}.
+\]
+The primal modulus is $\mu=2\rho-\rho_0\ge1$, and the dual modulus is $\beta\nu$.
+
+At inner time $j$, draw independent fresh samples and set
+\[
+ G^p_j=\zeta_{f,j}(y_j)+\beta\sum_i a_{j,i}\zeta_{g_i,j}(y_j)+2\rho(y_j-c),
+ \qquad \widehat\Delta_j=\Delta(y_j,c).
+\]
+With $\eta_j=2/(j+2)$, use
+\begin{align}
+ y_{j+1}&=\Proj_{D_c}(y_j-\eta_jG^p_j),\label{eq:innerprimal}\\
+ a_{j+1}&=\Proj_A\left(\frac{a_j+\eta_j(u+\widehat\Delta_j)/\nu}{1+\eta_j}\right).
+ \label{eq:innerdual}
+\end{align}
+Initialize $y_0=c$ and any $a_0\in A$. Each step uses one objective call and at most two vector constraint-subgradient calls. The implicit treatment of the known linear term $u$ in \eqref{eq:innerdual} makes the stochastic moment bounds independent of its magnitude.
+
+\begin{lemma}[Uniform local primal accuracy]\label{lem:localsolver}
+Suppose $0<\nu\le1$, $R\le1$, and $R^2\le\nu$. There is a fixed constant $A_0$, independent of $c,u,\nu$, such that the last iterate of \eqref{eq:innerprimal}--\eqref{eq:innerdual} obeys
+\begin{equation}
+ \E\norm{y_n-p_e(c)}^2\le \frac{A_0}{n+2}.
+ \label{eq:inneraccuracy}
+\end{equation}
+All expectations may be conditioned on the complete past before the local solve.
+\end{lemma}
+\begin{proof}
+On $D_c\times A$, define the positive metric
+\[
+ \norm{(y,a)}_W^2=\norm y^2+\beta\nu\norm a^2,
+\]
+and the operator
+\[
+ \mathcal F(y,a)=\begin{bmatrix}
+ \partial f(y)+\beta\sum_i a_i\partial g_i(y)+2\rho(y-c)\\
+ -\beta(g(y)-g(c))
+ \end{bmatrix},
+ \qquad r(a)=\frac{\beta\nu}{2}\norm a^2-\beta u^T a.
+\]
+The weak-subgradient inequalities at two points, paired in both directions, imply
+\begin{equation}
+ \ip{F-F'}{(y-y',a-a')}\ge\mu\norm{y-y'}^2
+ \qquad(F\in\mathcal F(y,a),\ F'\in\mathcal F(y',a')).
+ \label{eq:partialstrong}
+\end{equation}
+Indeed the contribution of constraint $i$ after cancellation of the value terms is at least $-\beta\rho_g(a_i+a_i')\norm{y-y'}^2/2$.
+
+Let $z_*=(p_e(c),a_*)$ be a saddle point and select $F_*\in\mathcal F(z_*)$ with $-F_*\in\partial r(z_*)+N_{D_c\times A}(z_*)$. The stochastic forward vector is
+\[
+ G_j=(G^p_j,-\beta\widehat\Delta_j).
+\]
+Both its conditional squared $W^{-1}$ norm and the squared $W^{-1}$ norm of $F_*$ are at most a fixed $M^2$. For the dual coordinates this is precisely
+\[
+ \frac{\beta}{\nu}\E\norm{\widehat\Delta_j}^2\le\beta V R^2/\nu\le\beta V.
+\]
+The primal coordinates are uniformly bounded in second moment by the oracle moment bounds and $\norm{y_j-c}\le R$. These bounds do not involve the magnitude of $u$.
+One explicit common choice is $M^2=M_p^2+\beta V$, where
+\[
+ M_p^2=3\bigl(S_f^2+l_f^2+\beta^2mS_g^2+\beta^2m^2l_g^2+4\rho^2\bigr).
+\]
+The terms involving $l_f,l_g$ bound the particular subgradients in $F_*$, while $S_f,S_g$ bound the stochastic samples. This distinction allows the saddle-point optimality subgradient to differ from the oracle's conditional mean.
+
+The update is forward--backward in the metric $W$. Write $z_j=(y_j,a_j)$, $z_{j+1}-z_j=\delta_j$, and
+\[
+ q_{j+1}=\eta_j^{-1}W(z_j-z_{j+1})-G_j
+ \in\partial r(z_{j+1})+N_{D_c\times A}(z_{j+1}),\qquad q_*=-F_*.
+\]
+Monotonicity of the normal cone and the quadratic in $a$ imply
+\[
+ \ip{q_{j+1}-q_*}{z_{j+1}-z_*}
+ \ge \beta\nu\|a_{j+1}-a_*\|^2.
+\]
+Let $\mathcal D_j=\|y_j-p_e(c)\|^2+\beta\nu\|a_j-a_*\|^2=\mathcal D_j^p+\mathcal D_j^a$. Multiplication by $2\eta_j$, followed by the squared-distance identity, gives
+\begin{align*}
+ \mathcal D_{j+1}+2\eta_j\mathcal D^a_{j+1}
+ &\le \mathcal D_j-\|\delta_j\|_W^2
+ -2\eta_j\ip{G_j-F_*}{z_j-z_*}
+ -2\eta_j\ip{G_j-F_*}{\delta_j}.
+\end{align*}
+The last and second terms combine to at most
+$\eta_j^2\|G_j-F_*\|_{W^{-1}}^2$. Conditional unbiasedness and \eqref{eq:partialstrong} give the other pairing at least $\mu \mathcal D_j^p$ in conditional expectation. Consequently
+\begin{equation}
+ \E \mathcal D_{j+1}+2\eta_j\E \mathcal D^a_{j+1}
+ \le\E \mathcal D_j-2\eta_j\mu\E \mathcal D_j^p+4M^2\eta_j^2.
+ \label{eq:FB}
+\end{equation}
+Projection nonexpansiveness in the primal update gives
+\[
+ \mathcal D^p_j\ge\tfrac12\mathcal D^p_{j+1}-\eta_j^2\norm{G^p_j}^2.
+\]
+Using $\mu\ge1$ in \eqref{eq:FB}, and $\eta_j\le1$, therefore gives $C_0=4M^2+2\mu M_p^2$ with
+\begin{equation}
+ (1+\eta_j)\E \mathcal D_{j+1}\le\E \mathcal D_j+C_0\eta_j^2.
+ \label{eq:contract}
+\end{equation}
+Since $\mathcal D_0\le R^2+\beta\nu m$ and $\nu\le1$ in the use below, choose $A_0\ge\max\{2\mathcal D_0,6C_0\}$. An induction gives $\E \mathcal D_j\le A_0/(j+2)$: substituting $\eta_j=2/(j+2)$ in \eqref{eq:contract} verifies the induction using $A_0\ge6C_0$. This proves \eqref{eq:inneraccuracy}.
+\end{proof}
+
+\subsection{From local motion to global envelope descent}
+The local minimizer need not coincide with the global proximal point. The next lemma relates their directions and shows why the localized step still decreases the global envelope.
+Use $R=\sqrt\nu$ and a damping constant $\vartheta=1/24$. For a local solution approximation $y$ set
+\[
+ c^+=c+\vartheta(y-c),\quad d=c-w_e(c),\quad s=c-p_e(c),\quad z=y-p_e(c),
+ \quad S=\min\{\norm d^2,R^2\}.
+\]
+
+\begin{lemma}[Trust-region geometry]\label{lem:geometry}
+The exact local proximal step satisfies
+\[
+ \norm s^2=S,\qquad \ip ds\ge\norm s^2.
+\]
+\end{lemma}
+\begin{proof}
+If the global proximal point is in $\overline B(c,R)$, then $p_e(c)=w_e(c)$. Otherwise the local solution is on the sphere and its optimality relation can be written
+\[
+ (2\rho+\lambda)(c-p_e(c))\in\partial F_e(p_e(c))+N_X(p_e(c)),\qquad\lambda>0.
+\]
+At the global proximal point the analogous vector is $2\rho(c-w_e(c))$. Weak monotonicity with modulus $\rho_0$ gives
+\[
+ \lambda\bigl(\ip sd-\norm s^2\bigr)
+ \ge(2\rho-\rho_0)\norm{d-s}^2\ge0.
+\]
+The normal-cone sum rule is valid by the relative-interior observation in Appendix~\ref{app:projection}.
+\end{proof}
+
+\begin{lemma}[Local-solve drift, motion, and variance]\label{lem:outerdrift}
+Suppose $\E[\norm z^2\mid c,u]\le h_*^2$ and $y\in D_c$. If $h_*\le c_*R^2$ for a sufficiently small fixed $c_*>0$, then fixed $a,C>0$ satisfy
+\begin{align}
+ \E[M_e(c^+)-M_e(c)\mid c,u]&\le-aS+C h_*^2,\label{eq:outerdrift}\\
+ \E[\norm{c^+-c}^2\mid c,u]&\le2\vartheta^2(S+h_*^2),\label{eq:motion}\\
+ \Var(M_e(c^+)\mid c,u)&\le C h_*^2(\norm d^2+R^2).
+ \label{eq:outervariance}
+\end{align}
+These estimates are uniform in the anchor offset $u$. With $\vartheta=1/24$, one may take
+\[
+ c_* = c_h:=\frac1{64\max\{1,D\}},\qquad
+ a=\rho/64,
+\]
+use $\rho h_*^2$ for the additive term in \eqref{eq:outerdrift}, and $10\rho^2h_*^2(\|d\|^2+R^2)$ for \eqref{eq:outervariance}. These conservative choices are used in Appendix~\ref{app:constants}.
+\end{lemma}
+\begin{proof}
+Smoothness in $c$ and Lemma~\ref{lem:geometry} imply
+\[
+ M_e(c^+)\le M_e(c)-(2\rho\vartheta-6\rho\vartheta^2)S
+ +2\rho\vartheta\norm d\norm z+6\rho\vartheta^2\norm z^2.
+\]
+If $\norm d\le R$, use Young's inequality on the mixed term and $S=\norm d^2$. If $\norm d>R$, use $\norm d\le D$, $S=R^2$, and $\E\norm z\le h_*\le c_*R^2$ to absorb the mixed term into the negative drift. Choosing $c_*$ sufficiently small proves \eqref{eq:outerdrift}. The motion bound is the squared triangle inequality.
+
+For the variance, compare $Q(y)=M_e(c+\vartheta(y-c))$ with its value at $p_e(c)$. Its gradient at that comparison point has norm at most a constant times $\norm d$, because $\norm s\le\norm d$. Smoothness gives
+\[
+ |Q(y)-Q(p_e(c))|\le C\norm d\norm z+C\norm z^2.
+\]
+Since $\norm z\le2R$, its squared expectation is at most
+$C h_*^2(\norm d^2+R^2)$. Variance is no larger than squared deviation from this fixed comparison value.
+\end{proof}
+
+\section{Constraint tracking and path-energy control}\label{sec:tracking}
+The tracker combines robust refreshes with clipped difference estimates. Both are designed for finite second moments, and all post-calibration observations are constraint subgradients. Let $0<t<1$ be an internal accuracy scale and take
+\begin{equation}
+ \nu=t,\quad R=\sqrt t,\quad q=\lceil t^{-1}\rceil,
+ \quad K=\lceil t^{-2}\rceil,
+ \quad n=\lceil A_1t^{-2}\rceil,
+ \quad \ell=\log\frac{16m(K+2)}t.
+ \label{eq:parameters}
+\end{equation}
+Take $A_1=4A_0/c_h^2$ and implement the approximate projections in Appendix~\ref{app:projection}. Then the actual local output has $\E\|z_k^p\|^2\le h_*^2:=c_h^2t^2$. For $0<t\le1/2$,
+$K\le2t^{-2}$, $t^{-1}\le q\le2t^{-1}$, and there are at most $K/q\le2/t$ positive refresh times.
+
+\subsection{Finite-variance means and initial calibration}
+\begin{lemma}[Median of independent block means]\label{lem:mom}
+Let a scalar block mean have expectation $\mu$ and variance at most $v$. Let $L\ge5$ be odd and let $T_L$ be the median of $L$ independent such means. Then
+\[
+ \Pr(|T_L-\mu|>z)
+ \le \min\{1,2^L(v/z^2)^{(L+1)/2}\},\qquad
+ \E|T_L-\mu|^2\le8v.
+\]
+The conclusions hold conditionally on any past on which the query point is fixed.
+\end{lemma}
+\begin{proof}
+A median error larger than $z$ requires at least $(L+1)/2$ block errors larger than $z$. Chebyshev's inequality and a union bound over subsets of blocks give the tail. Put $p=(L+1)/2$ and $z_0^2=2^{L/p}v\le4v$. Integrating the tail for $|T_L-\mu|^2$ gives
+\[
+ \E|T_L-\mu|^2\le z_0^2+\int_{z_0^2}^\infty2^Lv^ps^{-p}\,ds
+ =z_0^2\left(1+\frac1{p-1}\right)\le8v.
+\]
+For a vector, apply the scalar statement coordinatewise and sum the squared errors. Independence across coordinates is unnecessary.
+\end{proof}
+
+At $c_0\in X$, use blocks of
+$\lceil2^{16}(1+\sigma_v^2)t^{-2}\rceil$ fresh value samples and the least odd number of blocks not smaller than $\max\{5,\log(16m/t)\}$. The coordinatewise median $\widehat b$ satisfies
+\[
+ \Pr(\|\widehat b-g(c_0)\|_\infty>t)\le t.
+\]
+This uses $O((1+\sigma_v^2)t^{-2}\log(2m/t))$ value calls. Set
+\[
+ b=\widehat b-t\mathbf1,\qquad s_0=b-g(c_0),\qquad h(x)=g(x)+s_0.
+\]
+On successful calibration, $s_0\in[-2t,0]^m$. For every calibration outcome, including failures, the identity $h(c_0)=b$ holds. The shift $s_0$ is an analysis object; only $b$ is known. No later value calls are made.
+
+\subsection{Robust refreshes}
+Set $v_0=b$. At each positive multiple $k$ of $q$, draw independent random-segment observations $\Delta(c_k,c_0)$. Use block size
+\[
+ b_r=\left\lceil2^{16}V D_0^2t^{-2}\right\rceil,\qquad D_0=\max\{1,D\},
+\]
+and the least odd block count $L\ge\max\{5,\ell\}$. Let $v_k=b+\operatorname{MOM}\{\Delta(c_k,c_0)\}$. Conditional on the past before these samples, $r_k=v_k-h(c_k)$ obeys
+\begin{equation}
+ \Pr(\|r_k\|_\infty>t/4\mid\text{past})\le2m e^{-\ell},\qquad
+ \E[\|r_k\|^2\mid\text{past}]\le\frac{m t^2}{8192}.
+ \label{eq:refresh}
+\end{equation}
+Indeed each block-coordinate variance is at most $t^2/2^{16}$; apply Lemma~\ref{lem:mom} with threshold $t/4$ and sum over coordinates. If $c_k=c_0$ one may simply return $b$ without observations. The median estimator may be biased. The analysis uses the displayed moment bounds without requiring its mean to vanish.
+
+\subsection{Clipped difference updates}
+After the local move $c_k\mapsto c_{k+1}$, if $k+1$ is not a refresh time, let $a_k=\norm{c_{k+1}-c_k}$. If $a_k=0$, set $v_{k+1}=v_k$. Otherwise set
+\begin{equation}
+ H_k=\frac{16qV a_k^2}{t},\qquad
+ B_k=\left\lceil\frac{4096qV a_k^2\ell}{t^2}\right\rceil.
+ \label{eq:clipbatch}
+\end{equation}
+Draw $B_k$ independent $\Delta(c_{k+1},c_k)$ observations, clip each component to $[-H_k,H_k]$, average the resulting vectors to $\widehat D_k$, and set
+\[
+ v_{k+1}=v_k+\widehat D_k.
+\]
+At every center the anchor supplied to the local solver is
+\begin{equation}
+ u_k=v_k-t\mathbf1,
+ \qquad e_k=u_k-h(c_k)=v_k-h(c_k)-t\mathbf1.
+ \label{eq:shifttracker}
+\end{equation}
+Thus the local solver optimizes the fixed shifted problem $F_{e_k}$ during its inner run. Across outer steps, the shift changes only through the tracking noise.
+
+\begin{lemma}[Uniform tracking, local drift, and second moments]\label{lem:tracker}
+For any adaptive center path with increments of norm at most $\vartheta R$, the preceding scheme satisfies, conditional on the initial anchor,
+\begin{equation}
+ \Pp\left(\max_{0\le k\le K}\norm{v_k-h(c_k)}_\infty>t\right)\le t.
+ \label{eq:trackgood}
+\end{equation}
+For a nonrefresh transition, let $z_k=e_{k+1}-e_k$. Conditional on the past through $c_{k+1}$, its mean and second moment satisfy
+\begin{align}
+ \norm{\E z_k}_\infty&\le t/(16q),\label{eq:bias}\\
+ \E\norm{z_k}^2&\le C\{t^2/(q\ell)+t^2/q^2\}\le Ct^2/q.
+ \label{eq:incrementsecond}
+\end{align}
+For a refresh, if $e_k\in[-2t,0]^m$, then
+\[
+ \E\norm{e_{k+1}-e_k}^2\le3mt^2,
+ \qquad \E\norm{e_{k+1}-e_k}_1\le2mt.
+\]
+Moreover the total tracking calls over a path of energy $\mathcal A=\sum_{k<K}\norm{c_{k+1}-c_k}^2$ are at most
+\begin{equation}
+ C\left(\left(1+\frac Kq\right)\frac\ell{t^2}+K+
+ \frac{q\ell}{t^2}\mathcal A\right).
+ \label{eq:trackcost}
+\end{equation}
+Every one of these calls is a vector constraint-subgradient call.
+\end{lemma}
+\begin{proof}
+Let $Y=\Delta(c_{k+1},c_k)$ and let $\mu=\E Y$. Coordinatewise clipping has bias at most
+\[
+ \E[|Y_i|\ind_{|Y_i|>H_k}]\le\frac{\E Y_i^2}{H_k}\le\frac{t}{16q}.
+\]
+The conditional total variance of its batch average is at most $Va_k^2/B_k\le t^2/(4096q\ell)$. Adding the squared bias gives \eqref{eq:incrementsecond}.
+
+Within one epoch, expose the centered clipped samples separately, with each sample divided by its batch size. For each coordinate, these form martingale differences bounded in magnitude by
+\[
+ 2H_k/B_k\le t/(128\ell).
+\]
+Their total predictable variance during an epoch is at most $t^2/(4096\ell)$. The accumulated predictable bias is at most $t/16$. The scalar maximal Freedman inequality gives
+\[
+ \Pp\left(\max_{\text{prefixes}}|\text{centered sum}|>t/2\right)\le2e^{-\ell}.
+\]
+For completeness, this inequality follows by the conditional estimate
+$\E e^{\lambda X}\le\exp\{\lambda^2\E X^2/[2(1-\lambda b/3)]\}$ for centered $|X|\le b$, the associated exponential supermartingale, and stopping at the first crossing; optimizing $\lambda$ gives $\exp\{-a^2/[2(v+ba/3)]\}$. This is the scalar inequality of Freedman~\cite{freedman}.
+
+Combining this bound with \eqref{eq:refresh} and a union bound over epochs and coordinates proves \eqref{eq:trackgood}. Adaptive centers and batch sizes are allowed: endpoints, $H_k$, and $B_k$ are chosen before the corresponding fresh samples; the predictable variance and increment bounds just proved are uniform. The number of samples is finitely bounded because $a_k\le\vartheta R$.
+
+The refresh claims follow from \eqref{eq:refresh}, since $e_{k+1}=r_{k+1}-t\mathbf1$ and the old shift is bounded on the stated event. Counting the refresh batches and summing the ceilings in \eqref{eq:clipbatch} proves \eqref{eq:trackcost}.
+\end{proof}
+
+\subsection{A stopped potential and expected motion}\label{sec:stopped}
+The preceding cost estimate is proportional to the total squared movement. We now prove that this energy is bounded with probability $1-O(t)$. The argument first controls the expected stopped motion and then the variance of the stopped potential.
+First analyze the algorithm without a path-energy cap. At each $k<K$, use the local solver with $(c_k,u_k)$ for $n$ iterations, obtain $y_k$, and move to
+\[
+ c_{k+1}=c_k+\vartheta(y_k-c_k).
+\]
+Then perform the appropriate tracker transition, including at index $K$. The last tracker value is only for the analysis; charging it preserves all bounds.
+
+Condition on any successful initial calibration. All constants below are uniform in that calibration.
+Let $\mathcal H_k$ contain all randomness through the tracker at center $c_k$, before the local solve. Let $\mathcal G_k$ additionally contain all randomness used by that local solve and the proposed center $c_{k+1}$, but no randomness used to update the tracker to index $k+1$. Thus
+\[
+ \mathcal H_k\subseteq\mathcal G_k\subseteq\mathcal H_{k+1}.
+\]
+All batch sizes and clipping thresholds for this transition are $\mathcal G_k$-measurable. At the sample level, insert the successive fresh clipped observations into this filtration. Conditional martingale statements remain valid although the number of inserted observations is adaptive; it has a deterministic finite bound in the uncapped process because each outer displacement is at most $\vartheta R$. Let $\tau$ be the first index with $\norm{v_k-h(c_k)}_\infty>t$, or $K+1$ if there is no such index. Let
+\[
+ I_k=\ind_{\{k<\tau\}},\quad
+ d_k=c_k-w_{e_k}(c_k),\quad
+ S_k=\min\{\norm{d_k}^2,t\},\quad
+ z_k^p=y_k-p_{e_k}(c_k).
+\]
+The indicators are measurable after the tracker at index $k$, before the fresh local solve. Analyze the potential $Y_k=M_{e_k}(c_k)$ stopped at $\min\{\tau,K\}$, including the first failed tracker value in its terminal potential.
+
+\begin{lemma}[Expected stopped motion]\label{lem:stoppedenergy}
+There is a fixed constant $C$ such that
+\begin{equation}
+ \E\sum_{k<K}I_k S_k\le C.
+ \label{eq:expectedS}
+\end{equation}
+\end{lemma}
+\begin{proof}
+The local drift \eqref{eq:outerdrift} is $-aS_k+Ct^2$. At a nonrefresh, Lemma~\ref{lem:smoothness} and \eqref{eq:bias}--\eqref{eq:incrementsecond} imply
+\begin{align}
+ \E[M_{e_{k+1}}(c_{k+1})-M_{e_k}(c_{k+1})\mid\text{past through }c_{k+1}]
+ &\le C\left\{\frac tq+\frac{t^2}{\nu q\ell}+\frac{t^2}{\nu q^2}\right\}
+ \le Ct^2.\label{eq:potentialincrement}
+\end{align}
+The first-order term depends on the clipping bias of the new increment; the accumulated error $e_k$ is held fixed in this calculation. At a refresh, provided $I_k=1$, the Lipschitz-in-shift bound and the refresh first moment give an upper bound $Ct$.
+
+It remains to justify the terminal potential rather than assume that the failure shift is bounded. Summing \eqref{eq:incrementsecond} and the refresh second-moment estimate over predictable $I_k$ gives
+\begin{equation}
+ \sum_{k<K}\E\left[I_k\norm{e_{k+1}-e_k}^2\right]
+ \le (m+1)\frac{Kt^2}{q}
+ +3m\left\lfloor\frac Kq\right\rfloor t^2
+ \le Q_0t,\qquad Q_0:=10(m+1).
+ \label{eq:totalshiftvariance}
+\end{equation}
+On every transition before a first failure the old shift has norm at most $2\sqrt m\,t$. Since $\Pp(\tau\le K)\le t$, Cauchy--Schwarz on the disjoint first-failure events gives
+\[
+ \E\norm{e_{\min(\tau,K)}}_1
+ \le2mt+C\sqrt{\Pp(\tau\le K)\sum_{k<K}\E[I_k\norm{e_{k+1}-e_k}^2]}
+ \le Ct.
+\]
+Here $e_0=-t\mathbf1$, so there is no initial tracker failure. Therefore
+\[
+ \E Y_{\min(\tau,K)}\ge\min_{c\in X}M_0(c)-Ct,
+ \qquad Y_0\le M_0(c_0)+\beta mt.
+\]
+The reference envelope gap is at most $HD$. Telescoping the predictable stopped drift now yields
+\[
+ a\E\sum_{k<K}I_kS_k
+ \le HD+Ct+CKt^2+C(1+K/q)t\le C,
+\]
+which proves the assertion. Every stopped increment is selected by the predictable indicator $I_k$, so its conditional drift bound remains valid.
+\end{proof}
+
+\subsection{A high-probability energy bound}
+An expected energy bound alone would give only a constant-probability guarantee at a fixed cap. The next estimate strengthens it to failure probability $O(t)$, which is needed for the final expected KKT bounds.
+
+\begin{lemma}[Constant path-energy cap]\label{lem:energycap}
+There is a fixed $E_*>0$ such that the uncapped path satisfies
+\begin{equation}
+ \Pp\left(\sum_{k<K}\norm{c_{k+1}-c_k}^2>E_*\right)\le Ct
+ \label{eq:energytail}
+\end{equation}
+conditional on successful initial calibration.
+\end{lemma}
+\begin{proof}
+Define the local and tracker potential changes
+\[
+ A_k=M_{e_k}(c_{k+1})-M_{e_k}(c_k),\qquad
+ B_k^{\rm pot}=M_{e_{k+1}}(c_{k+1})-M_{e_k}(c_{k+1}).
+\]
+The stopped centered increments are
+\[
+ U_k=I_k\{A_k-\E[A_k\mid\mathcal H_k]\},\qquad
+ V_k^{\rm pot}=I_k\{B_k^{\rm pot}-\E[B_k^{\rm pot}\mid\mathcal G_k]\}.
+\]
+In the interleaved filtration they form martingale differences: $U_k$ is $\mathcal G_k$-measurable with zero conditional mean given $\mathcal H_k$, and $V_k^{\rm pot}$ is $\mathcal H_{k+1}$-measurable with zero conditional mean given $\mathcal G_k$. In particular their cross terms vanish. Set $Z=\sum_{k<K}(U_k+V_k^{\rm pot})$. The first failed tracker increment remains included because $I_k=1$ on the transition $\tau=k+1$.
+
+For the local part, \eqref{eq:outervariance}, $h_*^2\le Ct^2$, and $R^2=t$ give
+\[
+ \sum_{k<K}\E[I_k\Var(M_{e_k}(c_{k+1})\mid\mathcal H_k)]
+ \le Ct^2\E\sum_{k<K}I_k(\norm{d_k}^2+t).
+\]
+Because $c_k,w_{e_k}(c_k)\in X$,
+\[
+ \norm{d_k}^2\le\max\{1,D^2/t\}S_k\le\frac{C}{t}S_k.
+\]
+Thus Lemma~\ref{lem:stoppedenergy} bounds this variance by $Ct$. For the tracker part, its potential change is at most $\beta\norm{e_{k+1}-e_k}_1$ in absolute value. Equation~\eqref{eq:totalshiftvariance} bounds the sum of its conditional variances by $Ct$. Consequently
+\begin{equation}
+ \E Z^2\le Ct.\label{eq:potentialvariance}
+\end{equation}
+On the event of no tracker failure, the terminal and initial shifts both lie in $[-2t,0]^m$. The drift decomposition used above holds pathwise after the martingale differences have been added, so
+\[
+ a\sum_{k<K}S_k\le HD+4\beta mt+CKt^2+C(1+K/q)t+Z\le C_1+Z.
+\]
+Choose a fixed $B_1>(C_1+1)/a$. Chebyshev and \eqref{eq:potentialvariance} show that
+\[
+ \Pp\left(\sum_{k<K}S_k>B_1,\ \tau>K\right)\le Ct.
+\]
+
+The local primal errors obey $\norm{z_k^p}\le2R$ and conditional squared mean at most $h_*^2$. Therefore the martingale sum
+\[
+ Z_p=\sum_{k<K}I_k\{\norm{z_k^p}^2-\E[\norm{z_k^p}^2\mid\mathcal H_k]\}
+\]
+has variance at most $4KR^2h_*^2\le Ct$. On no tracker failure, another Chebyshev bound gives
+\[
+ \Pp\left(\sum_{k<K}\norm{z_k^p}^2>B_2,\ \tau>K\right)\le Ct
+\]
+for a fixed $B_2>Kh_*^2+1$, with a uniform upper bound used for $Kh_*^2$. Finally,
+\[
+ \sum_{k<K}\norm{c_{k+1}-c_k}^2
+ \le2\vartheta^2\sum_{k<K}S_k+2\vartheta^2\sum_{k<K}\norm{z_k^p}^2.
+\]
+Take $E_*=2\vartheta^2(B_1+B_2)$ and add the tracker-failure probability $t$. Appendix~\ref{app:constants} specifies these constants from the known class bounds and therefore gives an implementable cap.
+\end{proof}
+
+\section{KKT certification and oracle complexity}\label{sec:certification}
+We now transfer the shifted proximal guarantees to the original constraints. The downward shifts used by the algorithm preserve the uniform qualification, and the energy cap controls the number of tracking queries on every outcome.
+
+\subsection{Qualification under small downward shifts}
+\begin{lemma}[Uniform shifted qualification and separation]\label{lem:qualification}
+Put $A_g=B_g-m\rho_gD^2>0$ and $B_*=(B_g+m\rho_gD^2)/2$. For all sufficiently small $t$, every shift $s\in[-4t,0]^m$ preserves nonempty feasibility and the qualification with the same $B,\bar\rho$ and threshold $B_*$. There are fixed $\beta,\gamma>0$ such that for the global proximal point $w$ of the penalty for $g+s$,
+\begin{equation}
+ \max_i(g_i(w)+s_i)>\nu\quad\Longrightarrow\quad
+ \norm{2\rho(c-w)}\ge\gamma.
+ \label{eq:separation}
+\end{equation}
+The same constants work for all these shifts.
+\end{lemma}
+\begin{proof}
+A negative shift expands the feasible set. If $0<(g+s)_+(x)\le B_*$ and $4mt\le A_g/2$, then $0<g_+(x)\le B_g$; the original Slater witness also works for $g+s$.
+
+Let $C_f=l_fD+(\rho_f+1)D^2$ and $\kappa=\sqrt{2B(\bar\rho-\rho_g)}$. Choose
+\[
+ \beta\ge\max\left\{1,\frac{8C_f}{A_g},\frac{l_f+1}{\kappa}\right\},
+ \qquad\rho=\rho_f+1+\beta m\rho_g,\quad \gamma=\beta\kappa-l_f\ge1.
+\]
+Comparison of the proximal objective at $w$ with an arbitrary shifted-feasible point, and $\phi_\nu(z)\ge[z]_+-\nu/2$, gives
+\[
+ (g+s)_+(w)\le m\rho_gD^2+C_f/\beta+m\nu/2<B_*
+\]
+when $\nu$ is sufficiently small. Write the proximal optimality relation as
+\[
+ 2\rho(c-w)=r_f+\beta\sum_i a_i r_i+n,
+ \quad a_i=a_\nu(g_i(w)+s_i),\quad
+ r_f\in\partial f(w),\ r_i\in\partial g_i(w),\ n\in N_X(w).
+\]
+ If some constraint exceeds $\nu$, at least one $a_i=1$. Let $y$ be the qualification witness at $w$. For each $a_i>0$, weak convexity gives
+\[
+ \ip{r_i}{y-w}\le-B-\frac{\bar\rho-\rho_g}{2}\norm{y-w}^2-(g_i(w)+s_i).
+\]
+Together with the normal-cone sign and $\sum_i a_i\ge1$, this implies
+\[
+ \norm{\sum_i a_i r_i+n/\beta}
+ \ge\frac B{\norm{y-w}}+\frac{\bar\rho-\rho_g}{2}\norm{y-w}\ge\kappa.
+\]
+The objective subgradient has norm at most $l_f$, which proves \eqref{eq:separation}.
+\end{proof}
+
+\subsection{Deterministic oracle budgets}
+Run the preceding method, but before processing a proposed outer move, check whether adding its squared length would make the cumulative path energy exceed $E_*$. In that case terminate and return $c_0$. Otherwise accept the move and update the tracker. If all $K$ moves finish, return $x=c_J$ for an independent uniform $J\in\{0,\ldots,K-1\}$. One may sample $J$ in advance without using it in any query decisions.
+
+The capped and uncapped algorithms couple identically until termination. By Lemma~\ref{lem:energycap}, early termination has probability $O(t)$ on good initial calibration. The algorithm does not need to recognize failed statistical estimates. The cap bounds the actually processed movement energy by $E_*$ on every outcome.
+
+The numbers of objective and inner constraint-subgradient calls are at most $Kn$ and $2Kn$. Equation~\eqref{eq:trackcost} gives a deterministic additional constraint-subgradient budget
+\[
+ C\left(\left(1+\frac Kq\right)\frac\ell{t^2}+K+
+ \frac{q\ell E_*}{t^2}\right)=O(t^{-3}\log(1/t)).
+\]
+Only the initial calibration uses values, in number $O(t^{-2}\log(1/t))$. Hence
+\begin{equation}
+ N_{\rm obj}=O(t^{-4}),\quad
+ N_{\rm csub}=O(t^{-4}+t^{-3}\log(1/t)),\quad
+ N_{\rm cval}=O(t^{-2}\log(1/t)),
+ \label{eq:tcounts}
+\end{equation}
+with deterministic upper bounds. The bound holds for every realization, including those on which statistical estimates fail.
+
+
+\subsection{Proof of the upper bound}
+\begin{proof}[Proof of Theorem~\ref{thm:upper}]
+Condition initially on a good value calibration. Coupling the capped algorithm to the uncapped one, use its independent uniform $J$. Call an outcome good for certification if there is no initial failure, no tracker failure, no energy-cap termination, and
+\[
+ \norm{d_J}\le R.
+\]
+Equation~\eqref{eq:expectedS} implies
+\[
+ \E[I_J S_J]\le C/K\le Ct^2,
+ \qquad
+ \Pp(\norm{d_J}>R,\ J<\tau)\le\frac{C}{KR^2}\le Ct.
+\]
+The initial failure, tracking failure, and energy-cap termination probabilities are each $O(t)$. Thus the complement of the good certification event has probability $O(t)$. This event is used only to define latent witnesses; it need not be recognized by the algorithm.
+
+On a good outcome, let $w=w_{e_J}(c_J)$ be the global proximal point. The actual constraint shift relative to $g$ is $s_0+e_J\in[-4t,0]^m$. For sufficiently small $t$, $2\rho R<\gamma$, so Lemma~\ref{lem:qualification} implies
+\[
+ g_i(w)+(s_0+e_J)_i\le\nu=t\quad\text{for every }i.
+\]
+Set $\lambda_i=\beta a_\nu(g_i(w)+(s_0+e_J)_i)\in[0,\beta]$. Proximal optimality and the fact that constant shifts preserve subdifferentials give
+\begin{align*}
+ g_i(w)&\le5t,\\
+ |\lambda_i g_i(w)|&\le\beta\nu+4\beta t=5\beta t,\\
+ \dist\left(0,\partial f(w)+\sum_i\lambda_i\partial g_i(w)+N_X(w)\right)
+ &\le2\rho\norm{d_J},\\
+ \norm{x-w}&=\norm{d_J}.
+\end{align*}
+On every other outcome define $w=x$ and $\lambda=0$. Then proximity and complementarity are exactly zero. Its stationarity residual is at most $l_f$. Comparison with any feasible point of \eqref{eq:problem} gives $g_i(x)\le l_gD$.
+
+Cauchy--Schwarz and \eqref{eq:expectedS} bound the good-event expected distance by $Ct$; the bad-event contributions to signed expected feasibility and stationarity are also $Ct$. Complementarity is pointwise at most $5\beta t$ on good outcomes and zero on all others. Hence all four output errors are at most $C_{\rm out}t$ for a fixed, computable constant $C_{\rm out}$. Take $t=\eps/C_{\rm out}$, increasing $C_{\rm out}$ if needed for complementarity, and restrict $\eps$ to a fixed sufficiently small interval ensuring the qualification and separation conditions. Equation~\eqref{eq:tcounts} proves the claimed deterministic budgets.
+\end{proof}
+
+\section{A sharp value-query lower bound}\label{sec:lower}
+We prove Theorem~\ref{thm:mainlower} by constructing two affine constraints with different unknown levels. Their subgradient responses are identical, as is the objective. The proof has two steps: a valid approximate KKT output yields a reliable test of the level, and each new value sample carries only $O(\eps^2)$ information about that test.
+
+
+\subsection{Construction and fixed constants}
+Put
+\[
+ c=8\sqrt\eps,\qquad X=[-1,1]^2,\qquad
+ \theta\in\{-c^2,+c^2\}.
+\]
+For coordinates $(u,v)$, define
+\begin{equation}
+ f_\eps(u,v)=|v-u^2|-2v+cu,
+ \qquad g_\theta(u,v)=v-\theta.
+ \label{eq:hardfamily}
+\end{equation}
+The objective is identical under the two hypotheses. Its weak-convexity constant is at most two: indeed
+\[
+ f_\eps(u,v)+u^2+v^2
+ =\max\{v^2-v+cu,\;2u^2+v^2-3v+cu\}
+\]
+is convex. Every subgradient of $f_\eps$ has the form
+\begin{equation}
+ (c-2ut,\ t-2),\qquad
+ t\in\operatorname{Sign}(v-u^2),
+ \label{eq:subgrad}
+\end{equation}
+where $\operatorname{Sign}(0)=[-1,1]$. Since $c\le1/4$, its norm is at most four on $X$. The constraint is affine, with exact subgradient $(0,1)$.
+
+A fresh charged value call at $(u,v)$ returns $v+\xi$, with $\xi\sim N(-\theta,1)$. Reusing its sample handle at another point returns the same $\xi$ plus the new vertical coordinate, hence gives the deterministic difference $v-v'$. Even if $\xi$ is revealed at its first charged evaluation, it is only the same noisy observation of the unknown mean. The objective and constraint-subgradient oracles return their deterministic vectors and no such $\xi$. A free independent sampler of $\xi$ is not part of the oracle model. The value variance is one and
+\[
+ \E|g_\theta((u,v),\xi)-g_\theta((u',v'),\xi)|^2
+ =|v-v'|^2\le\norm{(u,v)-(u',v')}^2.
+\]
+
+Take $D=2\sqrt2$, $\rho_g=0$, $B=1/2$, $\bar\rho=1/16$, and $B_g=2$. The fixed point $y=(0,-3/4)$ is in $\operatorname{relint}(X)$ and, for every $x\in X$,
+\[
+ g_\theta(y)+\frac{\bar\rho}{2}\norm{y-x}^2
+ \le-\frac34+c^2+\frac{65}{512}
+ \le-\frac{287}{512}<-\frac12,
+\]
+where $c^2\le1/16$. Hence the qualification holds uniformly, in fact with a witness valid at every point. The feasible set is nonempty. Exact KKT points exist, for example
+\[
+ (-c/2,-c^2),\ \lambda=3\quad(\theta=-c^2),
+ \qquad
+ (-c,c^2),\ \lambda=5/2\quad(\theta=c^2).
+\]
+Define the fixed class to contain both instances for every $0<\eta\le20^{-4}$, with $c=8\sqrt\eta$. At target accuracy $\eps$, select the pair with $\eta=\eps$. Thus the class itself is independent of the requested accuracy, and every regularity, moment, and qualification bound remains fixed.
+
+\subsection{From the exact KKT convention to a reliable binary test}
+Let the returned point be $x=(U,V)$, with witnesses $w=(u,v)$ and $\lambda\ge0$. Write
+\[
+ s=v-\theta,\qquad
+ d=\dist\bigl(0,\partial f_\eps(u,v)+\lambda(0,1)+N_X(u,v)\bigr).
+\]
+Thus $\E s\le\eps$, $\lambda|s|\le\eps$ almost surely, $\E d\le\eps$, and $\E|U-u|\le\eps$.
+
+\begin{lemma}[Negative violation and the top face]\label{lem:negative}
+For either hypothesis,
+\[
+ \E([s]_-)\le(2+c^2)\eps,
+ \qquad
+ \Pp(v=1)\le4\eps.
+\]
+Here $[s]_-:=\max\{-s,0\}$.
+\end{lemma}
+\begin{proof}
+Whenever $v<1$, the vertical component of a normal to the box is nonpositive, and $t\le1$ in \eqref{eq:subgrad}. The residual therefore implies
+\begin{equation}
+ \lambda\ge1-d.\label{eq:lambdalower}
+\end{equation}
+This remains true on the bottom face. In particular, on $s<0$ one has $v<1$, $|s|\le1+c^2$, and
+\[
+ |s|\le\lambda|s|+d|s|\le\eps+(1+c^2)d.
+\]
+Taking expectations proves the first assertion. Signed expected feasibility now gives
+\[
+ \E([s]_+)=\E s+\E([s]_-)\le(3+c^2)\eps.
+\]
+On $v=1$, one has $s\ge1-c^2$, so
+\[
+ \Pp(v=1)\le\frac{3+c^2}{1-c^2}\eps\le4\eps.
+\]
+This step accounts for the signed feasibility convention in \eqref{eq:output1}.
+\end{proof}
+
+\begin{lemma}[Output-only decoder]\label{lem:decoder}
+The test
+\[
+ \widehat\theta=-c^2\quad\Longleftrightarrow\quad
+ U\in[-5c/8,-3c/8]
+\]
+has error at most $5\sqrt\eps$ under either hypothesis.
+\end{lemma}
+\begin{proof}
+Consider the event
+\[
+ \mathcal G=\{v<1,\ d\le c/16,\ |U-u|\le c/16\}.
+\]
+Since $c/16<1/2$, \eqref{eq:lambdalower} and almost-sure complementarity imply, on this event,
+\begin{equation}
+ \lambda\ge\tfrac12,\qquad |v-\theta|\le2\eps.
+ \label{eq:boundaryaccuracy}
+\end{equation}
+The coordinate $u$ cannot equal $-1$ or $1$: when $v<1$ and $u^2=1$, necessarily $t=-1$; the horizontal gradient $c+2u$ and the outward normal have the same sign, giving $d\ge2-c>c/16$. Thus $u$ is interior and
+\[
+ |c-2ut|\le d.
+\]
+
+If $\theta=-c^2$, \eqref{eq:boundaryaccuracy} gives $v\le-c^2+2\eps<0$, hence $t=-1$ and
+\[
+ |u+c/2|\le d/2\le c/32.
+\]
+Consequently $U\in[-19c/32,-13c/32]\subset[-5c/8,-3c/8]$.
+
+If $\theta=c^2$ but the decoder outputs $-c^2$, then
+\[
+ u\in[-11c/16,-5c/16]\subset[-3c/4,-c/4].
+\]
+At the same time,
+\[
+ v\ge c^2-2\eps=\frac{31}{32}c^2>\frac9{16}c^2\ge u^2.
+\]
+Therefore $t=1$, and $c-2u\ge3c/2$, contradicting $d\le c/16$. The decoder is thus correct on $\mathcal G$ for both hypotheses.
+
+By Lemma~\ref{lem:negative} and Markov's inequality,
+\[
+ \Pp(\mathcal G^c)
+ \le4\eps+\frac{16\E d}{c}+\frac{16\E|U-u|}{c}
+ \le4\eps+\frac{32\eps}{c}
+ =4\eps+4\sqrt\eps\le5\sqrt\eps.
+\]
+The decoder is measurable with respect to the actual output coordinate $U$. The auxiliary witnesses may live on an extension of the output probability space; their existence is sufficient for the probability estimate and gives the decoder no additional information.
+\end{proof}
+
+\subsection{Adaptive information accounting}
+All objective and constraint-subgradient answers can be chosen to be identical under the two hypotheses. After subtracting the queried vertical coordinate, every new value sample reveals just one independent $N(-\theta,1)$ observation. Reusing an existing sample gives no additional information. Consequently, for the complete transcript laws $P_+$ and $P_-$,
+\begin{equation}
+ \KL(P_+\Vert P_-)
+ \le2c^4\E_+N_{\rm cval}
+ =8192\eps^2\E_+N_{\rm cval}.
+ \label{eq:transcriptkl}
+\end{equation}
+To see this with random stopping, index fresh value samples in their order of first use and pad the transcript by a null symbol after stopping. At each fresh sample, conditional KL is
+$\tfrac12(2c^2)^2=2c^4$; adaptive query locations are already fixed by the past. A reused-sample response and every subgradient response are deterministic conditional transformations with zero additional KL. The chain rule for the first $n$ fresh samples therefore bounds the truncated-transcript KL by $2c^4\E_+\min\{N_{\rm fresh},n\}$. Relative entropy on increasing sigma-fields converges to that of the complete transcript, so monotone convergence gives the displayed bound for integrable counts, using $N_{\rm fresh}\le N_{\rm cval}$. Infinite expected counts already imply the conclusion. This argument assumes an almost-surely terminating algorithm; randomized outputs and all internal random bits can be included without increasing the conditional KL.
+
+For completeness, any binary test with errors $p_+,p_-$ satisfies
+\begin{equation}
+ p_++p_-\ge\tfrac12\exp[-\KL(P_+\Vert P_-)].
+ \label{eq:bh}
+\end{equation}
+Indeed the Hellinger affinity $A=\int\sqrt{dP_+dP_-}$ obeys $A\ge e^{-\KL/2}$ by Jensen, total variation is at most $\sqrt{1-A^2}$ by Cauchy--Schwarz, and
+$1-\sqrt{1-A^2}\ge A^2/2$.
+
+Lemma~\ref{lem:decoder} gives $p_++p_-\le10\sqrt\eps$. Therefore
+\[
+ \KL(P_+\Vert P_-)
+ \ge\log\frac{1}{20\sqrt\eps}
+ \ge\frac14\log\frac1\eps,
+ \qquad 0<\eps\le20^{-4}.
+\]
+Together with \eqref{eq:transcriptkl}, this proves Theorem~\ref{thm:mainlower}.
+
+\begin{remark}[Why the logarithm appears]
+An unknown boundary is separated by $\Theta(\eps)$, but the relevant horizontal stationary sets are separated by $\Theta(\sqrt\eps)$. Almost-sure complementarity confines a low-residual latent certificate to an $O(\eps)$ boundary layer. Expected proximity and stationarity then force testing error $O(\sqrt\eps)$, rather than merely a constant. The Slater margin remains fixed throughout the construction. Replacing almost-sure complementarity by expected complementarity invalidates the pathwise step \eqref{eq:boundaryaccuracy}; that output convention requires a separate lower-bound argument.
+\end{remark}
+
+
+\section{Discussion}\label{sec:discussion}
+The sharp value-query complexity reflects the cost of locating an unknown constraint level under the prescribed KKT criterion. Nonlinear variation can be followed with subgradients: after one value calibration, random-segment integration supplies every subsequent constraint difference. The resulting algorithm keeps both subgradient budgets at $O(\eps^{-4})$ while attaining the optimal $\Theta(\eps^{-2}\log(1/\eps))$ value rate.
+
+\paragraph{Why the allocation improves.}
+The main analytical change is to keep each constraint estimate fixed during a local solve and to index the potential by its induced shift. Between solves, the potential pays
+\[
+ \text{bias of the new shift increment}
+ \; +\;\nu^{-1}\E\|\text{new shift increment}\|^2.
+\]
+With $R^2=\nu=t$, the local dual estimates have bounded scaled second moments. There are $O(t^{-2})$ outer solves and $O(t^{-2})$ inner iterations per solve. The stopped path-energy estimate makes the additional tracking cost only $O(t^{-3}\log(1/t))$, which fits within the constraint-subgradient budget. A single $O(t^{-2}\log(1/t))$ calibration accounts for every value query.
+
+\paragraph{Dependence on the output and information models.}
+On the event used by the decoder, almost-sure complementarity turns a small stationarity residual into a pathwise bound on distance to the unknown boundary. Expected complementarity would require a different argument. Similarly, a value-query lower bound depends on the absence of free informative raw samples. Sample reuse is allowed here, but it adds no information about the level in the hard Gaussian family.
+
+\paragraph{Remaining questions.}
+The theorem fixes the regularity and qualification parameters and optimizes the accuracy dependence. Sharp joint dependence on those parameters, the full three-oracle tradeoff, and the value complexity of a fixed one-dimensional class remain open in this analysis. It is also natural to ask whether a single-loop method can attain the same allocation. The present result is an oracle theorem: the number and precision of the free projection and arithmetic operations are not optimized, and computational performance would require a separate implementation study.
+
+\appendix
+\section{Explicit parameter choices}\label{app:constants}
+This appendix gives one conservative, sequential choice of all parameters. In particular, it makes the energy cap an explicit algorithmic input. Every quantity depends only on known class bounds. Assume $m\ge1$, $D>0$, and put
+\[
+ D_0=\max\{1,D\},\quad A_g=B_g-m\rho_gD^2>0,\quad
+ C_f=l_fD+(\rho_f+1)D^2,\quad
+ \kappa=\sqrt{2B(\bar\rho-\rho_g)}.
+\]
+Choose
+\[
+ \beta=\max\left\{1,\frac{8C_f}{A_g},\frac{l_f+1}{\kappa}\right\},\quad
+ \rho=\rho_f+1+\beta m\rho_g,\quad
+ \mu=2\rho-(\rho_f+\beta m\rho_g),\quad
+ \gamma=\beta\kappa-l_f\ge1.
+\]
+Let $V=1+S_g^2+m l_g^2$, $\vartheta=1/24$, $c_h=1/(64D_0)$, and define
+\begin{align*}
+ M_p^2&=3(S_f^2+l_f^2+\beta^2mS_g^2+\beta^2m^2l_g^2+4\rho^2),\\
+ M^2&=M_p^2+\beta V,\qquad C_0=4M^2+2\mu M_p^2,\\
+ A_0&=\max\{2(1+\beta m),6C_0\},\qquad A_1=4A_0/c_h^2.
+\end{align*}
+The local solver with $n=\lceil A_1t^{-2}\rceil$ and the projection tolerance in Appendix~\ref{app:projection} gives actual mean-square primal error at most $c_h^2t^2$.
+
+For the outer drift one may use $a=\rho/64$ and additive term $\rho h_*^2$. Indeed
+\[
+ 2\rho\vartheta-6\rho\vartheta^2=7\rho/96.
+\]
+When $\|d\|\le R$, Young's inequality absorbs half this coefficient; the remaining coefficient of $h_*^2$ is less than $\rho$. When $\|d\|>R$, the mixed term is at most
+$2\rho\vartheta D c_h R^2\le\rho R^2/768$, again leaving more than $aR^2$ of descent. The variance bound in Lemma~\ref{lem:outerdrift} holds with coefficient $10\rho^2$.
+
+For $0<t\le1/2$, $K\le2/t^2$ and the positive refresh count is at most $2/t$. The exact tracker bounds above imply
+\[
+ Q_0=10(m+1),\qquad
+ \sum_{k<K}\E[I_k\|e_{k+1}-e_k\|^2]\le Q_0t.
+\]
+Let
+\begin{align*}
+ H&=l_f+\beta m l_g, & T_0&=2m+\sqrt{mQ_0},\\
+ D_{\rm drift}&=2\rho+8\beta(m+1), &
+ C_E&=\frac{HD+\beta(m+T_0)+D_{\rm drift}}{a}.
+\end{align*}
+To justify these choices, a nonrefresh has conditional shift-potential drift at most $\beta(m+1)t^2$, a refresh at most $2\beta mt$, and local drift at most $-aS_k+\rho c_h^2t^2$. Their total nonnegative deterministic allowance is at most $D_{\rm drift}$. The terminal overshoot calculation gives
+$\E\|e_{\min(\tau,K)}\|_1\le T_0t$. Hence $\E\sum I_kS_k\le C_E$.
+
+A valid variance bound for the stopped potential martingale is
+\[
+ C_Z=10\rho^2c_h^2(D_0^2C_E+2)+\beta^2mQ_0,
+ \qquad \E Z^2\le C_Zt.
+\]
+Define
+\begin{align*}
+ C_1&=HD+4\beta m+D_{\rm drift},\qquad
+ B_1=(C_1+1)/a,\\
+ B_2&=2c_h^2+1,\qquad
+ E_*=2\vartheta^2(B_1+B_2),\\
+ C_{\rm cap}&=1+C_Z+8c_h^2,\qquad
+ C_{\rm bad}=2+C_{\rm cap}+C_E.
+\end{align*}
+On no tracker failure, $a\sum S_k\le C_1+Z$. Therefore the event $\sum S_k>B_1$ implies $Z>1$ and has probability at most $C_Zt$. The squared local-error sum exceeds $B_2$ with probability at most $8c_h^2t$. Adding tracker failure proves the claimed energy-cap probability $C_{\rm cap}t$. Including initial failure and a random-index displacement larger than $\sqrt t$ bounds all certification failures by $C_{\rm bad}t$.
+
+One may finally take
+\begin{align*}
+ C_{\rm out}=1+\max\bigl\{&C_{\rm bad},\sqrt{C_E},
+ 5+l_gD C_{\rm bad},5\beta,
+ 2\rho\sqrt{C_E}+l_f C_{\rm bad}\bigr\},\\
+ t_0&=\min\left\{\frac12,\frac{A_g}{16m},
+ \left(\frac\gamma{4\rho}\right)^2\right\},\qquad
+ \eps_0=\min\{1/2,C_{\rm out}t_0\}.
+\end{align*}
+For $0<\eps\le\eps_0$, set $t=\eps/C_{\rm out}$. The shift qualification, global-proximal separation, local accuracy, tracker, pathwise budget, and all four KKT tolerances now hold simultaneously. These choices are uniform over all additive constraint offsets and all stopping outcomes. They are conservative values for the oracle-complexity proof.
+
+
+\section{Computing the local projections}\label{app:projection}
+The domain $D_c$ is known and does not use the expectation-feasible set. For a vector $z$, if $\Proj_X(z)\in\overline B(c,R)$, it is the desired projection. Otherwise the projection has the form
+\[
+ \Proj_X\left(\frac{z+\lambda c}{1+\lambda}\right),\qquad \lambda\ge0,
+\]
+where the distance to $c$ is $R$. The distance is continuous and nonincreasing in $\lambda$, and is at most $\norm{z-c}/(1+\lambda)$. Bisection between $0$ and a finite feasible upper endpoint gives any prescribed accuracy using only $\Proj_X$. Choosing the feasible side of the bisection keeps the point in $D_c$. The strong duality justification uses $\operatorname{relint}(X)\cap B(c,R)\ne\varnothing$.
+
+For a computable stopping rule, projection nonexpansiveness yields
+\[
+ \left\|\Proj_X\left(\frac{z+\lambda c}{1+\lambda}\right)
+ -\Proj_X\left(\frac{z+\lambda'c}{1+\lambda'}\right)\right\|
+ \le \|z-c\|\frac{|\lambda-\lambda'|}{(1+\lambda)(1+\lambda')}.
+\]
+Thus a sufficiently small multiplier bracket certifies any prescribed absolute point error; no limit point is supplied for free.
+
+In the algorithm let $D_0=\max\{1,D\}$, $c_h=1/(64D_0)$, choose $n\ge4A_0/(c_h^2t^2)$, and compute each primal projection from the feasible side to error at most
+\[
+ \chi=\min\left\{R,\frac{c_h^2t^2}{100(n+1)(1+R)}\right\}.
+\]
+At any actual inner state, compare one exact update with the computed update. The squared-distance error changes by at most $4R\chi+\chi^2\le5(1+R)\chi$, since both primal points are in $D_c$; the dual update is unchanged. Apply \eqref{eq:contract} at each actual state and unroll the resulting perturbed recurrence. The accumulated addition is at most $5n(1+R)\chi\le c_h^2t^2/20$. Together with $A_0/(n+2)\le c_h^2t^2/4$, this proves
+\[
+ \E\|y_n-p_e(c)\|^2\le c_h^2t^2.
+\]
+Every computed point remains in $D_c$, so the geometric support and fourth-moment bounds used in Section~\ref{sec:tracking} are unchanged. The number of projection evaluations is finite for every realization; it is not included in the three stochastic-oracle budgets. The complexity statement counts stochastic-oracle queries only.
+
+\begin{thebibliography}{9}
+\bibitem{liuxu}
+W. Liu and Y. Xu.
+\newblock A SPIDER-type stochastic subgradient method for expectation-constrained nonconvex nonsmooth optimization.
+\newblock \emph{SIAM Journal on Optimization}, 36(2):1125--1153, 2026.
+\newblock \href{https://doi.org/10.1137/25M1730703}{doi:10.1137/25M1730703}.
+\newblock Open preprint: \href{https://arxiv.org/abs/2501.19214v2}{arXiv:2501.19214v2}, September 10, 2025.
+
+\bibitem{davis}
+D. Davis and D. Drusvyatskiy.
+\newblock Stochastic model-based minimization of weakly convex functions.
+\newblock \emph{SIAM Journal on Optimization}, 29(1):207--239, 2019.
+\newblock \href{https://doi.org/10.1137/18M1178244}{doi:10.1137/18M1178244}.
+
+\bibitem{grimmer}
+D. Davis and B. Grimmer.
+\newblock Proximally guided stochastic subgradient method for nonsmooth, nonconvex problems.
+\newblock \emph{SIAM Journal on Optimization}, 29(3):1908--1930, 2019.
+\newblock \href{https://doi.org/10.1137/17M1151031}{doi:10.1137/17M1151031}.
+
+\bibitem{ma}
+R. Ma, Q. Lin, and T. Yang.
+\newblock Quadratically regularized subgradient methods for weakly convex optimization with weakly convex constraints.
+\newblock In \emph{Proceedings of the 37th International Conference on Machine Learning}, volume~119 of \emph{Proceedings of Machine Learning Research}, pages 6554--6564, 2020.
+\newblock \url{https://proceedings.mlr.press/v119/ma20d.html}.
+
+\bibitem{yang}
+M. Yang, G. Li, Q. Hu, Q. Lin, and T. Yang.
+\newblock Single-loop algorithms for stochastic non-convex optimization with weakly-convex constraints.
+\newblock \emph{Transactions on Machine Learning Research}, January 2026.
+\newblock \url{https://openreview.net/forum?id=aCgOR2KvAI}.
+\newblock Also available as \href{https://arxiv.org/abs/2504.15243v2}{arXiv:2504.15243v2}.
+
+\bibitem{freedman}
+D. A. Freedman.
+\newblock On tail probabilities for martingales.
+\newblock \emph{The Annals of Probability}, 3(1):100--118, 1975.
+\newblock \href{https://doi.org/10.1214/aop/1176996452}{doi:10.1214/aop/1176996452}.
+\end{thebibliography}
+\end{document}

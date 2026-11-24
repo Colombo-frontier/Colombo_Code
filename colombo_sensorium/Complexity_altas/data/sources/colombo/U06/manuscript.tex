@@ -1,0 +1,2378 @@
+% Complete standalone source. Compile with pdfLaTeX (two passes).
+\documentclass[11pt,letterpaper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage[authoryear,round]{natbib}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{bookmark}
+\usepackage{fancyhdr}
+\definecolor{linkblue}{RGB}{22,62,100}
+\hypersetup{colorlinks=true,linkcolor=linkblue,citecolor=linkblue,urlcolor=linkblue,
+ pdfauthor={Colombo Team},
+ pdftitle={Unrestricted Randomized Complexity of Finite-Sum Nonconvex-Strongly-Concave Minimax Optimization},
+ pdfsubject={Oracle complexity under individual component smoothness},
+ pdfkeywords={minimax optimization, finite sums, randomized lower bounds, individual smoothness}}
+\urlstyle{same}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\PP}{\mathbb P}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\cF}{\mathcal F}
+\newcommand{\cR}{\mathcal R}
+\newcommand{\T}{\mathfrak T}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\ip}[2]{\left\langle#1,#2\right\rangle}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\range}{range}
+\DeclareMathOperator{\spanop}{span}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\setlist{nosep,leftmargin=*}
+\setlength{\emergencystretch}{1.5em}
+\setlength{\headheight}{14pt}
+\setlength{\parskip}{0.2em}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Unrestricted randomized finite-sum minimax complexity}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0pt}
+\title{\bfseries Unrestricted Randomized Complexity of Finite-Sum\\
+ Nonconvex--Strongly-Concave Minimax Optimization}
+\author{Colombo Team\\[3pt]
+ \small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{plain}
+\begin{abstract}
+We study the randomized incremental first-order complexity of smooth finite-sum
+nonconvex--strongly-concave minimax optimization on unconstrained Euclidean
+domains. With $n$ components, smoothness $L$, average dual strong concavity
+$\mu$, initial primal gap $\Delta$, and $\kappa=L/\mu$, we establish the lower bound
+\[
+ \Omega\!\left(n+\frac{L\Delta}{\varepsilon^2}
+ \min\{\sqrt n\,\kappa,\ n^{3/4}\sqrt\kappa\}\right)
+\]
+under individual component smoothness. The bound holds against unrestricted
+randomized adaptive algorithms, even when a query returns the exact component
+value and full gradient. Together with existing upper bounds under
+mean-squared averaged smoothness, it characterizes both classes up to
+logarithmic factors, under exact dual initialization and a universal
+small-accuracy condition. The construction separates information recovery
+from curvature calibration. A fixed distribution of orthogonally branched
+linear maps remains hard under arbitrary forward and transpose probes.
+Quadratic saddle relays turn this information cost into primal interactions:
+a long relay covers large condition numbers, while a one-edge relay uses a
+public scalar correction to tune the entire eliminated energy. A globally
+smooth primal activation mechanism then forces sequential source recovery.
+The result covers expected query cost with expected squared-gradient accuracy
+and fixed query budgets with constant success probability. The worst case is
+taken over finite dimensions, and strong concavity is required only of the
+average objective; the componentwise-concave individually smooth subclass
+remains outside the characterization.
+\end{abstract}
+
+\noindent\textbf{Keywords:} minimax optimization; finite-sum optimization;
+oracle complexity; randomized lower bounds; individual smoothness;
+averaged smoothness.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}
+\label{sec:introduction}
+
+Consider the finite-sum minimax problem
+\begin{equation}
+ \min_{x\in\R^{d_x}}\max_{y\in\R^{d_y}} f(x,y),
+ \qquad f(x,y)=\frac1n\sum_{i=1}^n f_i(x,y),
+ \qquad \Phi(x)=\max_y f(x,y).
+ \label{eq:problem}
+\end{equation}
+The average objective is strongly concave in $y$ and may be nonconvex in $x$.
+Strong concavity makes the value function $\Phi$ differentiable, so a natural
+goal is to find an $x$ with small $\|\nabla\Phi(x)\|$. The finite-sum structure
+allows algorithms to query individual components and reuse information
+across iterations. The resulting complexity depends jointly on the number
+of components and the conditioning of the inner maximization.
+
+Let $L$ denote smoothness, $\mu$ average dual strong concavity, and $\Delta$
+an upper bound on the initial primal gap. Write
+\begin{equation}
+ A=\frac{L\Delta}{\varepsilon^2},\qquad
+ \kappa=\frac L\mu,\qquad
+ \cR(n,\kappa)=\min\{\sqrt n\,\kappa,\ n^{3/4}\sqrt\kappa\}.
+ \label{eq:rate-notation}
+\end{equation}
+The polynomial rate $n+A\cR(n,\kappa)$ is now understood under
+mean-squared averaged smoothness. \citet{zhou2026} establish it for randomized
+zero-respecting first-order methods, and \citet{pengprox2026} establish an
+unrestricted randomized lower bound even with exact component proximal
+access. A distinct question remains: does the same difficulty persist when
+\emph{every} component has smoothness constant at most the same numerical $L$?
+
+This regularity distinction matters. Mean-squared averaged smoothness permits
+individual component constants as large as $\sqrt n\,L$. A construction
+that concentrates an interaction in one component may use precisely this
+extra curvature. Renormalizing such a construction to make each component
+$L$-smooth can change both the condition number and the initial gap, and
+therefore change the resulting lower bound. The unrestricted algorithm model
+adds a separate difficulty: an algorithm may query an arbitrary dense
+direction, use an arbitrarily large norm, or output a point it has never
+queried. An exact oracle can reveal information through an arbitrarily small
+nonzero response.
+
+We prove that individual smoothness still permits the full rate
+$\Omega(n+A\cR(n,\kappa))$ against unrestricted randomized algorithms.
+Existing averaged-smooth algorithms give the matching upper bound, up to
+logarithms. The theorem applies for every $n\ge1$ and $\kappa\ge1$ under
+a universal condition $A\ge A_*$; it imposes no additional relation between
+accuracy, $n$, and $\kappa$.
+
+\paragraph{Main contributions.}
+The contribution is an individually smooth lower-bound construction with
+three interacting parts.
+\begin{enumerate}[label=(\roman*)]
+ \item \textbf{A fixed information law for arbitrary probes.}
+ Hidden isometries are distributed across orthogonal component branches.
+ A chronological accounting argument bounds source recovery even when each
+ round supplies forward and transpose actions on every layer and the oracle
+ may reveal intermediate sources. The instance distribution is fixed before
+ the algorithm's random seed is drawn.
+ \item \textbf{Two compatible curvature calibrations.}
+ A long quadratic saddle relay gives the $n^{3/4}\sqrt\kappa$ regime.
+ A one-edge relay covers the $\sqrt n\,\kappa$ regime by cancelling an
+ order-one endpoint self-energy with a public scalar quadratic. Both
+ constructions retain uniform individual smoothness.
+ \item \textbf{A global primal stationarity certificate.}
+ All nonlinear activation terms depend only on primal variables. The
+ components are globally smooth on the entire primal--dual space, and a
+ small value-function gradient forces recovery of the terminal source.
+ The reduction includes random stopping and unqueried outputs.
+\end{enumerate}
+
+The hard instances require strong concavity of the \emph{average} dual
+objective. Individual dual quadratics may be indefinite. This property is
+part of the model and is essential to the construction; the result does not
+settle the smaller individually smooth class with componentwise dual
+concavity.
+
+\section{Model and main theorem}
+\label{sec:model}
+
+All spaces are finite-dimensional Euclidean spaces. Norms of vectors are
+Euclidean, and norms of linear or multilinear maps are the induced operator
+norms. The dimension is known to the algorithm and is unrestricted in the
+worst case.
+
+\subsection{Function classes and initialization}
+
+Each $f_i:\R^{d_x+d_y}\to\R$ is continuously differentiable. We distinguish
+two smoothness conditions, using the same numerical parameter $L$:
+\begin{align}
+ \|\nabla f_i(z)-\nabla f_i(z')\|
+ &\le L\|z-z'\| \quad (i\in[n]),
+ &&\text{individual smoothness (IS)},\label{eq:IS}\\
+ \frac1n\sum_{i=1}^n\|\nabla f_i(z)-\nabla f_i(z')\|^2
+ &\le L^2\|z-z'\|^2,
+ &&\text{averaged smoothness (AS)}.\label{eq:AS}
+\end{align}
+Here $z=(x,y)$ and $[n]=\{1,\ldots,n\}$. IS implies AS; AS implies that
+the average $f$ is $L$-smooth by Jensen's inequality. Smoothness of $f$
+alone is weaker than AS.
+
+For every $x$, assume that $f(x,\cdot)$ is $\mu$-strongly concave, with
+$0<\mu\le L$. Its maximizer
+$y^*(x)=\argmax_y f(x,y)$ is unique, and
+$\nabla\Phi(x)=\nabla_x f(x,y^*(x))$. We impose
+\begin{equation}
+ \Phi(0)-\inf_x\Phi(x)\le\Delta,
+ \qquad y^*(0)=0.
+ \label{eq:initialization}
+\end{equation}
+The second condition is \emph{exact dual initialization}. There is no bound
+on query norms, component gradient magnitudes, or $\|y^*(x)\|$ away from the
+initial point. We denote the two classes by
+$\cF^0_{\mathrm{IS}}(n,L,\mu,\Delta)$ and
+$\cF^0_{\mathrm{AS}}(n,L,\mu,\Delta)$. The parameters $L$ and $\mu$ are
+bounds and need not be attained.
+
+\subsection{Oracle access and performance criteria}
+
+An enriched incremental first-order oracle returns
+\begin{equation}
+ \mathcal O_f(i,x,y)
+ =\bigl(f_i(x,y),\nabla_x f_i(x,y),\nabla_y f_i(x,y)\bigr).
+ \label{eq:oracle}
+\end{equation}
+The usual gradient-only oracle omits the value. A component query costs one
+unit and a full pass costs $n$ units. An algorithm chooses component indices,
+points, stopping times, and its output using arbitrary measurable functions
+of its transcript and an independent private random seed. Computation and
+memory are free. Its first query is unrestricted, and its output need not be
+a previously queried point. The instance is fixed independently of the seed.
+
+For $s\in\{\mathrm{IS},\mathrm{AS}\}$, let $\T_s^{\mathrm E}$ be the infimum
+of the worst-case expected number of queries among algorithms satisfying
+\begin{equation}
+ \E\|\nabla\Phi(\widehat x)\|^2\le\varepsilon^2
+ \quad\text{on every instance in }\cF_s^0.
+ \label{eq:expected-criterion}
+\end{equation}
+Let $\T_s^{\mathrm P}$ be the smallest deterministic query budget guaranteeing
+\begin{equation}
+ \PP\bigl(\|\nabla\Phi(\widehat x)\|\le\varepsilon\bigr)\ge\frac23
+ \quad\text{on every instance in }\cF_s^0.
+ \label{eq:probability-criterion}
+\end{equation}
+These criteria are treated separately: truncating a random-time algorithm
+controls its success probability, but need not preserve an expected
+squared-gradient guarantee for a fallback output.
+
+\begin{theorem}[Unrestricted randomized complexity]
+\label{thm:main}
+There are universal constants $A_*,c>0$ such that, for every integer $n\ge1$,
+every $L,\Delta,\varepsilon>0$, and every $\mu\in(0,L]$ with
+$A=L\Delta/\varepsilon^2\ge A_*$,
+\begin{equation}
+ c\bigl[n+A\cR(n,\kappa)\bigr]
+ \le \T^{\mathrm E}_{\mathrm{IS}}
+ \le \T^{\mathrm E}_{\mathrm{AS}}
+ \le \widetilde O\bigl(n+A\cR(n,\kappa)\bigr).
+ \label{eq:main-complexity}
+\end{equation}
+The same inequalities hold with $\T^{\mathrm E}$ replaced by
+$\T^{\mathrm P}$. The lower bounds hold for the enriched oracle
+\eqref{eq:oracle}, and the upper bounds use only gradients. The lower bound
+has no logarithmic loss. All constants are independent of $n,L,\mu,\Delta,
+\varepsilon$ and the dimension.
+\end{theorem}
+
+The two branches meet at $\kappa=\sqrt n$. Equivalently, for either
+smoothness class and either performance criterion, the complexity is
+\begin{equation}
+ \begin{cases}
+ \widetilde\Theta\!\left(n+\dfrac{L\Delta}{\varepsilon^2}
+                 \sqrt n\,\kappa\right),
+       &1\le\kappa\le\sqrt n,\\[5pt]
+ \widetilde\Theta\!\left(n+\dfrac{L\Delta}{\varepsilon^2}
+                 n^{3/4}\sqrt\kappa\right),
+       &\kappa\ge\sqrt n.
+ \end{cases}
+ \label{eq:two-regimes}
+\end{equation}
+The notation $\widetilde O$ and $\widetilde\Theta$ suppresses the
+logarithmic factors in the cited upper algorithms. The theorem concerns
+worst-case complexity over finite dimensions, rather than a dimension bound
+uniform in the other parameters. The universal accuracy threshold is not
+optimized.
+
+\paragraph{Structure of the hard instances.}
+Both condition-number-dependent constructions have the form
+\begin{equation}
+ f_i(x,y)=h(x)+\langle Cx,y\rangle-\frac12\langle y,H_i y\rangle,
+ \qquad \frac1n\sum_{i=1}^n H_i\succeq\mu I,
+ \label{eq:bilinear-structure}
+\end{equation}
+with common $h$ and common $C$. Component-dependent nonlinear
+primal--dual coupling is therefore unnecessary. The component dual matrices
+$H_i$ may be indefinite. The separate minimization and component-search
+families used for bounded $\kappa$ and for the additive $n$ term need not
+share the common-$h$ representation.
+
+\section{Comparison with prior work}
+\label{sec:related}
+
+\paragraph{Rates, regularity, and admissible algorithms.}
+\citet{zhang2021} established finite-sum NC--SC lower bounds for linear-span
+methods and a Catalyst upper bound. \citet{han2024} developed a
+partitioned-chain construction for a restricted proximal incremental
+first-order protocol. Table~\ref{tab:lower-comparison} aligns the polynomial
+rates, parameter ranges, regularity assumptions, and algorithm classes.
+For the earlier results, it displays a common sufficient range rather than
+their largest individual ranges.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\textwidth}{@{}p{0.20\textwidth}p{0.19\textwidth}p{0.11\textwidth}p{0.08\textwidth}Y@{}}
+\toprule
+Reference & Lower bound & Range & Class & Algorithms and replies\\
+\midrule
+\citet{zhang2021}
+ & $\Omega(n+A\sqrt{n\kappa})$ & $\kappa\ge2n$ & AS
+ & Linear-span; component gradients\\
+\citet{han2024}
+ & $\Omega(n+A\sqrt{n\kappa})$ & $\kappa\ge2n$ & AS
+ & Restricted PIFO protocol; values, gradients, and proximal replies\\
+\citet{zhou2026}
+ & $\Omega(n+A\cR)$ & All $\kappa\ge1$ & AS
+ & Randomized zero-respecting; component gradients\\
+\citet{pengprox2026}
+ & $\Omega(n+A\cR)$ & All $\kappa\ge1$ & AS
+ & Unrestricted randomized; values, gradients, and exact component proximal replies\\
+Theorem~\ref{thm:main}
+ & $\Omega(n+A\cR)$ & All $\kappa\ge1$ & IS
+ & Unrestricted randomized; values and full component gradients\\
+\bottomrule
+\end{tabularx}
+\caption{Lower-bound comparison, with $A=L\Delta/\varepsilon^2$ and
+$\cR=\min\{\sqrt n\,\kappa,n^{3/4}\sqrt\kappa\}$.
+For a uniform comparison, take $n\ge2$ and
+$\varepsilon^2\le cL\Delta$ for a sufficiently small universal $c$.
+The first two rows use sufficient common ranges; the Han et al. row takes
+the primal weak-convexity parameter to be $L$.
+AS and IS use the same numerical $L$. Zhou's result and the two
+unrestricted lower bounds admit exact dual initialization; the earlier rows
+retain their original initialization conventions. Each oracle and algorithm
+restriction is part of the result.}
+\label{tab:lower-comparison}
+\end{table}
+
+The unrestricted AS result of \citet{pengprox2026} is particularly relevant:
+its hard family has polynomial dimension and individually strongly concave
+dual components, but its individual smoothness constants may scale as
+$\sqrt n\,L$. Our theorem establishes the same rate under IS, using a
+larger-dimensional construction and average dual strong concavity. The two
+results strengthen different aspects of the model. In particular, our
+value-and-gradient lower bound does not imply a component-proximal lower
+bound. Their upper bound allows inexact dual initialization but assumes
+$\|\nabla f(0,0)\|^2\le2L\Delta$; the matching upper bounds used here
+assume $y^*(0)=0$.
+
+\paragraph{A componentwise-concave bilinear subclass.}
+The IS bilinear comparison in \citet{zhou2026} assumes
+$f_i(x,y)=g_i(x)+\langle A_i x,y\rangle-h_i(y)$ with each $h_i$
+$\mu$-strongly convex. Its lower bound is
+$\Omega(n+A\min\{\kappa,\sqrt{n\kappa}\})$ for zero-respecting methods.
+The separable algorithms of \citet{jin2022} exploit additional structure
+of this kind. Our construction generally lies outside that subclass;
+Table~\ref{tab:lower-comparison} therefore concerns the general NC--SC class.
+
+\paragraph{Information hiding and saddle constructions.}
+Random rotations are a standard tool for unrestricted stationary-point
+lower bounds \citep{carmon2020}. For finite sums,
+\citet{zhougu2019} study structured linear-span lower bounds, while
+\citet{pengdense2026} give an unrestricted individually smooth minimization
+benchmark. We use the latter only for bounded condition numbers.
+Our information problem instead uses orthogonal component branches and
+explicitly accounts for source disclosures and transpose probes under one
+fixed product-Haar law. Dual-path constructions for NC--SC problems are
+developed in \citet{li2021}. Here the endpoint normalization and the
+one-edge cancellation are tailored to individual smoothness and to a
+single global primal stationarity certificate.
+
+\paragraph{Algorithmic inputs.}
+The upper bound is supplied by existing methods, as summarized in
+Table~\ref{tab:upper-regimes}. The present work contributes the IS lower
+bound and its unrestricted information reduction.
+
+\begin{table}[t]
+\centering
+\small
+\renewcommand{\arraystretch}{1.22}
+\begin{tabularx}{\textwidth}{@{}p{0.19\textwidth}p{0.25\textwidth}Y@{}}
+\toprule
+Condition number & Matching complexity & Gradient-only upper algorithm\\
+\midrule
+$1\le\kappa\le\sqrt n$
+ & $\widetilde\Theta(n+A\sqrt n\,\kappa)$
+ & RPDA \citep[Theorem 3]{zhou2026}\\
+$\kappa\ge\sqrt n$
+ & $\widetilde\Theta(n+An^{3/4}\sqrt\kappa)$
+ & Catalyst with variance reduction \citep[Theorem 4.1, Corollary 4.1, and Section 4.2]{zhang2021}\\
+\bottomrule
+\end{tabularx}
+\caption{The two regimes in Theorem~\ref{thm:main}. Both upper algorithms
+apply under AS, average dual strong concavity, and exact dual initialization.
+The lower bounds hold under IS. For $n=1$, an upper algorithm for two
+identical components changes the cost only by a universal factor.}
+\label{tab:upper-regimes}
+\end{table}
+
+\section{How the lower bound is assembled}
+\label{sec:overview}
+
+The proof has three interfaces: a source-recovery problem, a quadratic
+realization of source transport, and an activation mechanism that makes
+small primal gradients require successful transport. This section explains
+their roles and the resulting rate. The appendices give the full
+construction and proofs.
+
+\subsection{Orthogonal branches and chronological information cost}
+
+At depth $t$, let $\mathcal H_t=(\R^n)^{\otimes t}\otimes\R^D$.
+The canonical branch map is $J_{t,i}a=e_i\otimes a$. Independent rotations
+$O_t$ define
+\begin{equation}
+ A_{t,i}=O_{t+1}J_{t,i}O_t^{\mathsf T},\qquad
+ U_t=\frac1{\sqrt n}\sum_i A_{t,i},\qquad
+ u_t=O_t(s^{\otimes t}\otimes e),
+ \label{eq:overview-source}
+\end{equation}
+where $s=n^{-1/2}(1,\ldots,1)$ and $O_0$ fixes the public unit vector $e$.
+The branches have orthogonal ranges, $U_t$ is an isometry, and
+$U_tu_t=u_{t+1}$. Thus all $n$ branches contribute equally to the next
+source direction.
+
+We analyze an oracle stronger than the component oracle: one round can
+request a forward and a transpose action on every edge, using different
+component indices across edges. All inputs precede all replies. The oracle
+may also disclose entire intermediate sources at designated sites. A source
+at site $j$ is eligible only once the represented fraction $p_j$ reaches
+a fixed threshold $\rho$; disclosure then fills the accounting sets through
+depth $j$. If $p_t(K)$ is the represented fraction after $K$ rounds and
+$r_K$ is the number of disclosures, the key bound is
+\begin{equation}
+ p_t(K)\le\min\left\{1,\rho^{-r_K}\frac{\binom Kt}{n^t}\right\}.
+ \label{eq:overview-mass}
+\end{equation}
+A disclosure increases represented mass by at most a factor $\rho^{-1}$.
+This charge preserves information cached before a stage becomes active.
+
+Arbitrary dense inputs are handled by an exact conditional-Haar exposure.
+Each new input requires at most one fresh Gaussian direction in the analysis. The last-factor
+slices of all these directions span a subspace $V\subset\R^D$ with
+$\E\|P_Ve\|^2=\dim(V)/D$. Every represented unit vector $z$ at depth $t$
+satisfies
+\begin{equation}
+ |\langle u_t,z\rangle|^2
+ \le p_t+(1-p_t)\|P_Ve\|^2.
+ \label{eq:overview-correlation}
+\end{equation}
+Choosing a sufficiently large finite $D$ makes the second term small.
+The resulting serial lower bound is $\Omega(nH)$ for a path of $H$ edges,
+including arbitrary query norms, private randomness, and an unqueried
+output. Appendix~\ref{app:source} proves this statement without choosing a
+resisting instance after the algorithm's seed.
+
+\subsection{Quadratic relays with a common endpoint geometry}
+
+The information maps enter a component only through dual bilinear terms.
+After maximizing the average over the dual variables, both relay families
+produce
+\begin{equation}
+ \theta Q(a,b)
+ =\theta\bigl(\|a\|^2-\langle b,Pa\rangle+\langle b,Db\rangle\bigr),
+ \quad \frac15I\preceq D\preceq I,\quad DP=P,
+ \label{eq:overview-endpoint}
+\end{equation}
+where $P$ is the product of the average isometries along the relay.
+The same endpoint geometry is essential: it permits one stationarity
+argument to cover both regimes, including directions orthogonal to the
+hidden source.
+
+\paragraph{The long relay.}
+Let $\beta=n^{-1/2}$ and take $N\ge2$ vertices. The negative average dual
+Hessian is $\beta\mathcal M_N$, where
+\[
+ \langle w,\mathcal M_Nw\rangle
+ =N^{-2}\sum_{t=0}^{N-1}\|w_t\|^2
+   +\sum_{t=0}^{N-2}\|w_{t+1}-U_tw_t\|^2.
+\]
+The smallest eigenvalue of $\mathcal M_N$ is $N^{-2}$, so the average dual
+curvature is $\beta/N^2$. Public endpoint coefficients normalize
+the eliminated energy to \eqref{eq:overview-endpoint} with $\theta=1$.
+Each raw component is globally $8$-smooth, even though the average
+curvature is $\beta/N^2$. The proof in
+Theorem~\ref{thm:long-relay} decomposes the entire terminal space into
+source and innovation subspaces.
+
+\paragraph{The one-edge relay.}
+For a prescribed $\mu_0\in(0,1]$, define
+\begin{equation}
+ t=\mu_0+\beta,\qquad \theta=\frac\beta t,\qquad
+ r^2=t-\frac{\beta^2}{t},\qquad d=\theta-\frac12.
+ \label{eq:overview-short-parameters}
+\end{equation}
+With primal connectors $a,b$ and dual variables $w_0,w_1$, set
+\begin{equation}
+\begin{split}
+ \mathcal J_i(a,b;w_0,w_1)
+ ={}&d(\|a\|^2+\|b\|^2)
+       +r(\langle a,w_0\rangle-\langle b,w_1\rangle)\\
+ &-\frac t2(\|w_0\|^2+\|w_1\|^2)
+       +\langle w_1,A_iw_0\rangle.
+\end{split}
+\label{eq:overview-short-relay}
+\end{equation}
+The average is $\mu_0$-strongly concave, every component is globally
+$8$-smooth, and its value is \eqref{eq:overview-endpoint} with
+\[
+ P=U,\qquad D=I-\frac\theta2(I-UU^{\mathsf T}).
+\]
+The scalar $d$ cancels the order-one endpoint energy created by dual
+elimination, leaving the whole interaction at amplitude $\theta$.
+The hidden projector $UU^{\mathsf T}$ appears only in the eliminated
+value, never in the component oracle. Negative $d$ is admissible because
+primal convexity is not required. Lemma~\ref{lem:short-relay} gives the exact
+Schur complement calculation.
+
+\subsection{From stationarity to sequential recovery}
+
+Place $M$ relays in series, with $m$ edges per relay. Stage $j$ has source
+$v_j=u_{jm}$, state $S_j$, and connectors $a_j,b_j$. A smooth bounded radial
+map $Z$ defines the score $t_j=\langle v_j,Z(S_j)\rangle$. Gates with exactly
+flat inactive regions activate a stage only after its predecessor is
+recovered. The exit uses the public vector inner product
+$\langle Z(S_j),E_\nu(b_j)\rangle$, where $E_\nu$ is another radial cap.
+All nonlinear terms are purely primal.
+
+The explicit normalized components satisfy, with universal constants
+$L_*,C_\Delta,\tau_*>0$,
+\begin{equation}
+\begin{gathered}
+ \operatorname{Lip}(\nabla f_i^0)\le L_*,\qquad
+ y^*(0)=0,\qquad \Phi_0(0)=0,\\
+ \Phi_0(0)-\inf\Phi_0\le C_\Delta\theta M,\qquad
+ \|\nabla\Phi_0(x)\|\le\theta\tau_*
+       \ \Longrightarrow\ t_M\ge1.
+\end{gathered}
+\label{eq:overview-interface}
+\end{equation}
+The first line follows from local derivative bounds and bounded incidence
+between adjacent stages. For the last implication, the proof first
+localizes every unfinished state, then excludes intermediate scores and a
+low score followed by a high score. There is consequently at most one
+unfinished frontier. Connector coercivity makes the radial caps inactive
+there, and the projected connector equations force a state derivative
+bounded away from zero. Appendices~\ref{sec:construction}
+and~\ref{app:stationarity} give the constants and estimates.
+
+Before a source is disclosed, $q,h,V$ and their first derivatives vanish
+at its score on the common hiding event; complementary gates reduce to
+public constants. A component value
+and full gradient can therefore be simulated exactly using one forward and
+one transpose action per edge. A small-gradient output reveals a vector
+correlated with $v_M$. The source theorem then gives
+\begin{equation}
+ \Omega(nMm)
+ \label{eq:overview-information-cost}
+\end{equation}
+component queries. This product follows from the chronological theorem
+for the full serialized construction.
+
+\subsection{Scaling and the two regimes}
+
+Scale variables by $s>0$ and function values by $\alpha=Ls^2/L_*$.
+Taking
+\[
+ s=\frac{4L_*\varepsilon}{L\theta\tau_*}
+\]
+makes the normalized certificate threshold correspond to $4\varepsilon$.
+The physical gap is at most a universal constant times
+$(\varepsilon^2/L)M/\theta$. Thus $M=\Theta(A\theta)$ stages fit when
+$A\theta$ exceeds a universal constant, and
+\eqref{eq:overview-information-cost} becomes $\Omega(An\theta m)$.
+The calibrations are
+\begin{equation}
+\begin{array}{c|c|c|c}
+ \text{relay} & \theta & m & An\theta m\\ \hline
+ \text{one edge} & \asymp \kappa/\sqrt n & 1 & \asymp A\sqrt n\,\kappa\\
+ \text{long path} & 1 & \asymp\sqrt\kappa/n^{1/4}
+                  & \asymp An^{3/4}\sqrt\kappa.
+\end{array}
+\label{eq:overview-calibration}
+\end{equation}
+These comparisons apply in the respective regimes up to universal
+constant-width overlaps. The exact short-relay choice is
+$\theta=\kappa/(L_*\sqrt n+\kappa)$.
+When $A\theta$ is below the integer-calibration threshold,
+$A\cR(n,\kappa)=O(n)$, so an explicit
+hidden-component search supplies the required bound. Bounded condition
+numbers use the minimization benchmark. Appendices~\ref{app:calibration}
+and~\ref{app:protocols} cover all integer and boundary cases without an
+$n$- or $\kappa$-dependent accuracy restriction.
+
+\section{Upper bounds and performance protocols}
+\label{sec:upper}
+
+For $n\ge2$ and $\kappa\le\sqrt n$, RPDA has a fixed query budget
+$\widetilde O(n+A\sqrt n\,\kappa)$ and guarantees
+\eqref{eq:expected-criterion} \citep[Theorem 3]{zhou2026}. For
+$\kappa\ge\sqrt n$, Catalyst with a variance-reduced inner solver has
+expected cost $\widetilde O(A(n+n^{3/4}\sqrt\kappa))$ with the same
+accuracy criterion \citep[Theorem 4.1, Corollary 4.1, and Section 4.2]{zhang2021}.
+Since $n^{3/4}\sqrt\kappa\ge n$ in this range, these costs give the upper
+bound in Theorem~\ref{thm:main}.
+For $n=1$, duplicate the single component as in
+Section~\ref{sec:upper-interfaces}.
+
+Both algorithms require AS and strong concavity of the average. Exact dual
+initialization removes their initial dual-error term. The relevant variance
+estimate, for a fresh uniform index $I$ and history-measurable points
+$z,z'$, is
+\[
+ \E_I\|\nabla f_I(z)-\nabla f_I(z')
+           -[\nabla f(z)-\nabla f(z')]\|^2
+ \le L^2\|z-z'\|^2.
+\]
+It follows directly from AS and does not replace $L$ by $\sqrt n\,L$.
+
+\paragraph{Expected query cost.}
+Below a fixed budget $B\asymp nMm$, the scaled hard distribution allows
+success at gradient threshold $4\varepsilon$ with probability at most
+$1/16$. An algorithm satisfying \eqref{eq:expected-criterion} has success
+probability at least $15/16$ at that threshold. Truncating an algorithm of
+worst-case expected cost $Q$ after $B$ calls loses at most $Q/B$ in success
+probability, and hence $Q\ge7B/8$. Appendix~\ref{sec:expected-lower}
+handles sub-unit budgets explicitly.
+
+\paragraph{Fixed budgets and constant confidence.}
+Run an upper algorithm at accuracy $\varepsilon/4$, and stop it after
+$\lceil12Q_0\rceil$ calls, where $Q_0$ is its public expected-cost bound.
+The probabilities of runtime overflow and of an inaccurate untruncated
+output are at most $1/12$ and $1/16$, respectively. The success probability
+therefore exceeds $2/3$, with the same asymptotic cost. This proves the
+fixed-budget statement without asserting an expected-square guarantee for
+the truncated fallback.
+
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{Where individual nonconcavity enters.}
+For the one-edge relay, the negative component dual Hessian is
+\[
+ H_i=\begin{pmatrix}tI&-A_i^{\mathsf T}\\-A_i&tI\end{pmatrix}.
+\]
+Its selected-branch eigenvalues are $t-1$ and $t+1$. When $t<1$, a component
+is not dual-concave, whereas the average has minimum eigenvalue
+$t-1/\sqrt n=\mu_0>0$. Individual smoothness bounds the magnitude of the
+Hessian and permits this sign pattern. Extending the same rate to the
+individually smooth componentwise-concave class would require a different
+construction or a sharper algorithm for that class.
+
+\paragraph{Dimension and initialization.}
+The source construction has finite dimension that can grow exponentially
+with the serialized path length. The theorem is therefore a query-complexity
+characterization over dimensions, and does not establish a fixed-dimensional
+or arithmetic-runtime lower bound. Exact dual initialization is built into
+every hard instance. Removing it preserves the lower bound, but an upper
+bound may then require an additional initialization term.
+
+\paragraph{Scope of the characterization.}
+The result concerns exact incremental first-order information and direct
+stationarity of $\Phi$. It makes no claim for component-proximal,
+higher-order, finite-precision, or fresh-stochastic oracles. All
+lower-construction formulas, simulations, and parameter choices are given
+below; only the identified minimization benchmark and upper algorithms are
+imported. The main conclusion is that, for the general average-strongly-concave
+class, requiring individual component smoothness does not improve the
+worst-case polynomial rate available under AS.
+
+
+\clearpage
+\begin{thebibliography}{99}
+\setlength{\bibsep}{5pt}
+\bibitem[Carmon et~al.(2020)Carmon, Duchi, Hinder, and Sidford]{carmon2020}
+Yair Carmon, John~C. Duchi, Oliver Hinder, and Aaron Sidford.
+\newblock Lower bounds for finding stationary points I.
+\newblock \emph{Mathematical Programming}, 184:71--120, 2020.
+\newblock \url{https://doi.org/10.1007/s10107-019-01406-y}.
+
+\bibitem[Han et~al.(2024)Han, Xie, and Zhang]{han2024}
+Yuze Han, Guangzeng Xie, and Zhihua Zhang.
+\newblock Lower complexity bounds of finite-sum optimization problems: The results and construction.
+\newblock \emph{Journal of Machine Learning Research}, 25(2):1--86, 2024.
+\newblock \url{https://jmlr.org/papers/v25/21-0264.html}.
+
+\bibitem[Jin et~al.(2022)Jin, Sidford, and Tian]{jin2022}
+Yujia Jin, Aaron Sidford, and Kevin Tian.
+\newblock Sharper rates for separable minimax and finite sum optimization via primal-dual extragradient methods.
+\newblock In \emph{Proceedings of the 35th Conference on Learning Theory}, volume~178 of \emph{Proceedings of Machine Learning Research}, pages 4362--4415, 2022.
+\newblock \url{https://proceedings.mlr.press/v178/jin22b.html}.
+
+\bibitem[Li et~al.(2021)Li, Tian, Zhang, and Jadbabaie]{li2021}
+Haochuan Li, Yi Tian, Jingzhao Zhang, and Ali Jadbabaie.
+\newblock Complexity lower bounds for nonconvex-strongly-concave min-max optimization.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume~34, 2021.
+\newblock \url{https://arxiv.org/abs/2104.08708}.
+
+\bibitem[Peng et~al.(2026a)Peng, Tang, and Jia]{pengdense2026}
+Yuxing Peng, Zhiqing Tang, and Weijia Jia.
+\newblock Dense weak hiding: Closing complexity gaps in nonconvex and {PL} finite-sum optimization under individual smoothness.
+\newblock \emph{arXiv preprint arXiv:2609.00045v3}, 2026a.
+\newblock \url{https://arxiv.org/abs/2609.00045v3}.
+
+\bibitem[Peng et~al.(2026b)Peng, Tang, and Jia]{pengprox2026}
+Yuxing Peng, Zhiqing Tang, and Weijia Jia.
+\newblock On the complexity of finite-sum nonconvex-strongly-concave minimax optimization with exact proximal oracles.
+\newblock \emph{arXiv preprint arXiv:2611.04806v2}, 2026b.
+\newblock \url{https://arxiv.org/abs/2611.04806v2}.
+
+\bibitem[Zhang et~al.(2021)Zhang, Yang, Guzm\'an, Kiyavash, and He]{zhang2021}
+Siqi Zhang, Junchi Yang, Crist\'obal Guzm\'an, Negar Kiyavash, and Niao He.
+\newblock The complexity of nonconvex-strongly-concave minimax optimization.
+\newblock In \emph{Proceedings of the 37th Conference on Uncertainty in Artificial Intelligence}, volume~161 of \emph{Proceedings of Machine Learning Research}, pages 482--492, 2021.
+\newblock \url{https://proceedings.mlr.press/v161/zhang21c.html}.
+
+\bibitem[Zhou(2026)]{zhou2026}
+Qihao Zhou.
+\newblock Near-optimal complexity of finite-sum nonconvex-strongly-concave minimax optimization.
+\newblock \emph{arXiv preprint arXiv:2610.04944v1}, 2026.
+\newblock \url{https://arxiv.org/abs/2610.04944}.
+
+\bibitem[Zhou and Gu(2019)]{zhougu2019}
+Dongruo Zhou and Quanquan Gu.
+\newblock Lower bounds for smooth nonconvex finite-sum optimization.
+\newblock In \emph{Proceedings of the 36th International Conference on Machine Learning}, volume~97 of \emph{Proceedings of Machine Learning Research}, pages 7574--7583, 2019.
+\newblock \url{https://proceedings.mlr.press/v97/zhou19b.html}.
+\end{thebibliography}
+
+\clearpage
+\appendix
+\section*{Appendices: complete construction and proofs}
+\addcontentsline{toc}{section}{Appendices: complete construction and proofs}
+The appendices follow the logical order of the lower bound.
+Appendix~\ref{app:source} establishes the fixed-law source problem.
+Appendix~\ref{sec:relays} realizes the two quadratic relays, and
+Appendix~\ref{sec:construction} defines the global primal activation terms.
+Appendix~\ref{app:stationarity} proves the gradient certificate and the
+exact oracle simulation. Appendix~\ref{app:calibration} chooses the
+parameters, and Appendix~\ref{app:protocols} completes the stopping-time,
+baseline, and upper-bound arguments.
+
+\section{A fixed-distribution source-recovery bound}
+\label{app:source}
+
+This appendix separates the information argument from the optimization
+construction.  We define a distribution of hidden isometries and prove that
+transporting a known source through $H$ layers requires order $nH$ oracle
+rounds.  The oracle is deliberately stronger than an incremental gradient
+oracle: every round can query every layer, transpose actions are available,
+and selected intermediate sources can be disclosed.  Accounting for those
+disclosures is essential when the result is used to serialize optimization
+stages.
+
+\subsection{Orthogonal branches and the enlarged oracle}
+\label{app:source:model}
+
+Fix integers $n,H\geq 1$ and a multiplicity $D\geq 1$.  For
+$0\leq t\leq H$, let
+\[
+  \mathcal H_t=(\mathbb R^n)^{\otimes t}\otimes\mathbb R^D,
+  \qquad d_t=n^tD.
+\]
+Let $e\in\mathbb R^D$ be a fixed unit vector, put
+$s=n^{-1/2}(1,\ldots,1)$, and set $\xi_t=s^{\otimes t}$, with
+$\xi_0=1$.  For $i\in[n]$, define the canonical branch maps
+\[
+  J_{t,i}a=e_i\otimes a,
+  \qquad
+  J_{t,s}=\frac1{\sqrt n}\sum_{i=1}^n J_{t,i}.
+\]
+They satisfy $J_{t,i}^{\mathsf T}J_{t,j}=\mathbf 1_{\{i=j\}}I$,
+and $J_{t,s}$ is an isometry.
+
+Sample $O_t$ independently from Haar measure on the orthogonal group
+$O(d_t)$ for $1\leq t\leq H$.  Independently, sample $O_0$ from Haar
+measure on the subgroup of $O(D)$ fixing $e$.  The entire instance is
+sampled before interaction.  Define
+\begin{equation}
+  \begin{split}
+    A_{t,i}&=O_{t+1}J_{t,i}O_t^{\mathsf T},
+    \qquad U_t=O_{t+1}J_{t,s}O_t^{\mathsf T},\\
+    u_t&=O_t(\xi_t\otimes e).
+  \end{split}
+  \label{eq:source-law}
+\end{equation}
+Thus $u_0=e$, $U_tu_t=u_{t+1}$, and
+\[
+  A_{t,i}^{\mathsf T}A_{t,j}=\mathbf 1_{\{i=j\}}I,
+  \qquad \|A_{t,i}\|_{\mathrm{op}}=1,
+  \qquad \frac1n\sum_{i=1}^n A_{t,i}=\frac1{\sqrt n}U_t.
+\]
+
+\paragraph{Matrix queries.}
+In round $k$, the algorithm chooses an index $i_{t,k}\in[n]$ and
+vectors $a_t\in\mathcal H_t$, $b_t\in\mathcal H_{t+1}$ for every
+edge $0\leq t<H$.  All inputs must be chosen before any reply from
+that round is returned.  The replies are
+\begin{equation}
+  \bigl(A_{t,i_{t,k}}a_t,\ A_{t,i_{t,k}}^{\mathsf T}b_t\bigr)_{0\leq t<H}.
+  \label{eq:source-round}
+\end{equation}
+Indices may differ between edges.  Query norms, adaptive computation,
+memory, and the final output are otherwise unrestricted.
+
+\paragraph{Intermediate source disclosures.}
+Fix $a\in(0,1)$ and write $\rho=a^2/2$.  Let
+$\mathcal S\subseteq\{1,\ldots,H\}$ be a public set with at most
+$M\leq H$ sites.  Each source at a site in $\mathcal S$ can be
+disclosed once.  We track sets of words
+$\Lambda_t\subseteq[n]^t$, initialized by
+$\Lambda_0=\{\varnothing\}$ and $\Lambda_t=\varnothing$ for $t>0$.
+A matrix round updates all sets simultaneously according to
+\begin{equation}
+  \widetilde\Lambda_0=\{\varnothing\},\qquad
+  \widetilde\Lambda_t=
+  \Lambda_t\cup
+  \{(i_{t-1,k},w):w\in\Lambda_{t-1}\},\quad t\geq1.
+  \label{eq:source-word-update}
+\end{equation}
+Here the right-hand sides use the sets from before the round.  Define
+the represented mass at depth $t$ by
+$p_t=|\Lambda_t|/n^t$.  After the matrix update, an undisclosed source
+$u_j$ with $j\in\mathcal S$ is eligible for disclosure if $p_j\geq\rho$.
+A disclosure returns the entire physical vector $u_j$ and resets
+the accounting sets to
+\begin{equation}
+  \Lambda_t\leftarrow[n]^t,\qquad 0\leq t\leq j.
+  \label{eq:source-reset}
+\end{equation}
+This reset grants additional accounting support; it does not reveal
+bases or rotations at earlier layers.  Eligible disclosures can be
+performed in any order, including immediately and exhaustively after
+each round.  The sets, indices, and disclosure flags may be public.
+Eligibility depends only on the available history and the accounting
+sets, so it never conditions on an unexposed part of a rotation.
+
+\subsection{Chronological accounting}
+\label{app:source:counting}
+
+\begin{lemma}[Deletion closure and the cost of a reset]
+\label{lem:source-reset}
+At every time, $(i,w)\in\Lambda_{t+1}$ implies
+$w\in\Lambda_t$.  Consequently,
+$p_0\geq p_1\geq\cdots\geq p_H$.
+A legal disclosure increases each coordinate of the mass vector by
+at most a factor $\rho^{-1}$.
+\end{lemma}
+
+\begin{proof}
+Deletion closure holds initially.  Every word inserted by
+\eqref{eq:source-word-update} has a suffix in the old lower set,
+which remains in the new lower set.  Previously present words keep
+their suffixes.  A reset fills all layers through its disclosure
+site and therefore preserves closure, including at the interface
+with the next layer.
+
+There are at most $n$ possible words with any given suffix, whence
+$|\Lambda_{t+1}|\leq n|\Lambda_t|$ and $p_{t+1}\leq p_t$.
+If site $j$ is disclosed, then $p_t\geq p_j\geq\rho$ for all
+$t\leq j$.  Replacing these entries by one multiplies each by at
+most $\rho^{-1}$; the other entries remain unchanged.
+\end{proof}
+
+\begin{theorem}[Reachable mass under adaptive disclosures]
+\label{thm:source-counting}
+After $K$ matrix rounds and $r_K$ source disclosures,
+\begin{equation}
+  p_t(K)\leq
+  \min\left\{1,\ \rho^{-r_K}\frac{\binom Kt}{n^t}\right\},
+  \qquad 0\leq t\leq H.
+  \label{eq:source-mass}
+\end{equation}
+The inequality holds pathwise, for every adaptive choice of indices
+and every allowed disclosure schedule.  We use $\binom Kt=0$ for
+$t>K$.
+\end{theorem}
+
+\begin{proof}
+Before the disclosures following a round, the simultaneous update
+satisfies
+\[
+  \widetilde p_t\leq p_t+\frac1n p_{t-1},\qquad t\geq1.
+\]
+Induct on rounds and insert each disclosure as a separate operation.
+The update preserves the claimed bound by Pascal's identity:
+\[
+  \frac{\binom{k-1}{t}}{n^t}
+  +\frac1n\frac{\binom{k-1}{t-1}}{n^{t-1}}
+  =\frac{\binom kt}{n^t}.
+\]
+For $t=0$, the right-hand side of the untruncated bound is at least
+one.  Each disclosure contributes at most one factor $\rho^{-1}$
+by Lemma~\ref{lem:source-reset}.  Finally, $p_t\leq1$ gives
+\eqref{eq:source-mass}.  The argument uses no probabilistic
+independence.
+\end{proof}
+
+The disclosure factor cannot simply be omitted: revealing $u_j$
+can insert all $n^j$ source coordinates at layer $j$.  The factor
+$\rho^{-r_K}$ charges for that information while retaining all
+probes cached before disclosure.  Since there are at most $M\leq H$
+disclosures, the propagation deficit in the binomial term will
+dominate their total contribution.
+
+\subsection{Exact exposure of the fixed rotations}
+\label{app:source:coupling}
+
+The counting result controls source directions generated by branch
+actions.  Arbitrary dense queries require a second argument.  We
+expose the already sampled rotations only as needed and place every
+new direction in a common Gaussian subspace.  Formal coordinates
+in this proof are an analysis device; they are not extra information
+given to the algorithm.
+
+\begin{lemma}[Lazy Haar exposure with source disclosures]
+\label{lem:source-lazy}
+Fix a deterministic algorithm, a budget of $K$ matrix rounds, an
+allowed disclosure schedule, and a terminal output.  The experiment
+admits a coupling with mutually independent standard Gaussian vectors
+\[
+  g_{t,j}\sim N(0,I_{d_t}),\qquad
+  0\leq t\leq H,\quad 1\leq j\leq2K+1,
+\]
+with the following properties.  The formal coordinate $O_t^{\mathsf T}x$
+of each new physical input lies in the span of previously exposed
+formal vectors at depth $t$ and one fresh raw Gaussian $g_{t,j}$.
+Matrix replies have exactly their canonical $J_{t,i}$ or
+$J_{t,i}^{\mathsf T}$ coordinates.  A disclosed source has formal
+coordinate $\xi_t\otimes e$ and uses no Gaussian slot.  One
+additional slot covers the final output.  The instance marginal is
+the fixed product-Haar law in \eqref{eq:source-law}.
+\end{lemma}
+
+\begin{proof}
+At vertex $t$, maintain an exposed formal subspace $K_t$, an
+exposed physical subspace $L_t$, and an isometry
+$V_t:K_t\to L_t$ specifying the exposed restriction of $O_t$.
+Initially only $e\mapsto e$ at the root is prescribed.
+Conditional on this augmented exposure history, the unexposed
+completions are independent uniform isometries between the
+corresponding orthogonal complements.
+
+Consider a physical input $x$.  Its known part has formal coordinate
+$V_t^*P_{L_t}x$.  If $x_\perp=(I-P_{L_t})x\neq0$, take the next
+independent raw Gaussian $g$ and put
+\[
+  h=\frac{(I-P_{K_t})g}{\|(I-P_{K_t})g\|},
+  \qquad
+  O_t^{\mathsf T}x=V_t^*P_{L_t}x+\|x_\perp\|h.
+\]
+Declare $O_th=x_\perp/\|x_\perp\|$.  This is precisely the
+conditional Haar law of the inverse image of a fixed complementary
+physical direction.  The new formal vector lies in
+$\operatorname{span}(K_t,g)$.  If $x_\perp=0$, no new direction is
+needed.
+
+For a matrix reply, its formal coordinate is already determined by
+the appropriate canonical branch action.  Map its component
+orthogonal to $K_t$ to a uniform physical direction orthogonal to
+$L_t$.  This is the conditional Haar forward-image law.  Process a
+source disclosure in the same way, using the specified formal vector
+$\xi_t\otimes e$.  The disclosure decision is measurable with
+respect to the exposure history and accounting sets, so it imposes
+no further condition on an unexposed completion.  Each update fixes
+only an additional restriction of one rotation; the remaining
+completions preserve the stated conditional independence.
+
+Process all inputs in a round before its replies.  There are at
+most two physical inputs per vertex per round: one for the forward
+action on the outgoing edge and one for the transpose action on
+the incoming edge.  Process the terminal output by one more
+inverse-image step.  Generate all unused Gaussian slots independently.
+Finally complete the remaining partial rotations according to their
+conditional Haar laws.  The resulting joint experiment has exactly
+the distribution obtained by sampling all rotations before
+interaction.
+\end{proof}
+
+Identify each $g_{t,j}$ with $n^t$ vectors in $\mathbb R^D$ by
+taking slices in its last tensor factor.  Define
+\begin{equation}
+  S_H=\sum_{t=0}^H n^t,\qquad
+  m_G=(2K+1)S_H,\qquad
+  V=\operatorname{span}\{\text{all last-factor slices of all }g_{t,j}\}.
+  \label{eq:source-gaussian-space}
+\end{equation}
+Including unused slots is useful: these are exactly $m_G$
+independent standard Gaussian vectors, without adaptive selection.
+For $D>m_G$, rotational invariance and almost-sure rank $m_G$ imply
+\begin{equation}
+  \mathbb E\|P_Ve\|^2=\frac{m_G}{D}.
+  \label{eq:source-gaussian-projection}
+\end{equation}
+Indeed, the expected projector is $(m_G/D)I$.
+
+\begin{lemma}[Represented space and source correlation]
+\label{lem:source-correlation}
+Every exposed formal vector at depth $t$ lies in
+\begin{equation}
+  \mathcal R_t=
+  \bigl(E_t\otimes\operatorname{span}\{e\}\bigr)
+  +\bigl((\mathbb R^n)^{\otimes t}\otimes V\bigr),
+  \qquad E_t=\operatorname{span}\{e_w:w\in\Lambda_t\}.
+  \label{eq:source-represented-space}
+\end{equation}
+This includes inputs before a matrix reply, all replies, disclosed
+sources, and the final output, using the current accounting sets and
+the common Gaussian space $V$.  If $O_t^{\mathsf T}z\in\mathcal R_t$
+and $\|z\|\leq1$, then
+\begin{equation}
+  |\langle u_t,z\rangle|^2
+  \leq p_t+(1-p_t)\|P_Ve\|^2
+  \leq p_t+\|P_Ve\|^2.
+  \label{eq:source-correlation}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Write $\mathcal N_t=(\mathbb R^n)^{\otimes t}\otimes V$.
+Every raw Gaussian belongs to its corresponding $\mathcal N_t$,
+and canonical forward and transpose maps carry these spaces into
+one another.  Lemma~\ref{lem:source-lazy} therefore places a new
+arbitrary input in the represented space.  A forward reply inserts
+one branch index, exactly as recorded in
+\eqref{eq:source-word-update}.  A transpose reply deletes a branch
+index from an old source word; deletion closure places the result
+in the existing lower set.  A disclosed source is covered by the
+full support granted at its site in \eqref{eq:source-reset}.
+Induction over the exposure steps proves
+\eqref{eq:source-represented-space}.  The extra Gaussian slots cover
+unqueried outputs.
+
+Put $v=\|P_Ve\|^2$.  Split the last tensor factor into $V$ and
+$V^\perp$.  The represented space is unrestricted on the $V$
+part.  On the $V^\perp$ part, it contains precisely the word
+coordinates in $\Lambda_t$ along the vector $P_{V^\perp}e$.
+Every coordinate of $\xi_t$ has squared magnitude $n^{-t}$.
+Consequently, the squared norm of the projection of the unit target
+$\xi_t\otimes e$ onto $\mathcal R_t$ is
+\[
+  v+p_t(1-v)=p_t+(1-p_t)v.
+\]
+Cauchy--Schwarz applied to this projection proves
+\eqref{eq:source-correlation}.
+\end{proof}
+
+\subsection{The serial recovery theorem}
+\label{app:source:theorem}
+
+\begin{theorem}[Source recovery with arbitrary cached probes]
+\label{thm:source-recovery}
+Fix $a\in(0,1)$, let $\rho=a^2/2$, and allow at most $M\leq H$
+disclosures.  Set
+\begin{equation}
+  K_* =\left\lfloor\frac{\rho^2nH}{4\mathrm e}\right\rfloor,
+  \qquad
+  D=\left\lceil\frac{32(2K_*+1)}{a^2}\sum_{t=0}^H n^t\right\rceil.
+  \label{eq:source-dimension}
+\end{equation}
+For the fixed product-Haar instance law in these finite dimensions,
+every adaptive randomized algorithm using at most $K_*$ enlarged
+oracle rounds and returning a vector $\widehat v$ with
+$\|\widehat v\|\leq1$ satisfies
+\begin{equation}
+  \mathbb P\bigl(|\langle u_H,\widehat v\rangle|<a\bigr)
+  \geq\frac{15}{16}.
+  \label{eq:source-hardness}
+\end{equation}
+Conversely, $nH$ rounds suffice to recover $u_H$ exactly.  Thus,
+for fixed $a$, the success-probability-$2/3$ terminal-source
+complexity is $\Theta_a(nH)$.
+\end{theorem}
+
+\begin{proof}
+Fix the private random seed and pad the algorithm to $K_*$ rounds
+with zero inputs if necessary.  By
+\eqref{eq:source-gaussian-projection} and the choice of $D$,
+Markov's inequality gives
+\[
+  \mathbb P\bigl(\|P_Ve\|^2>\rho\bigr)
+  \leq\frac{a^2/32}{a^2/2}=\frac1{16}.
+\]
+If $K_*<H$, Theorem~\ref{thm:source-counting} gives $p_H=0$.
+Otherwise, using $\binom{K_*}{H}\leq(\mathrm e K_*/H)^H$
+and $r_{K_*}\leq M\leq H$, it gives
+\[
+  p_H\leq\rho^{-M}
+  \left(\frac{\mathrm e K_*}{nH}\right)^H
+  \leq\rho^{-M}\left(\frac{\rho^2}{4}\right)^H
+  \leq\left(\frac\rho4\right)^H
+  \leq\frac\rho4.
+\]
+On the common event $\|P_Ve\|^2\leq\rho$,
+Lemma~\ref{lem:source-correlation} therefore yields
+\[
+  |\langle u_H,\widehat v\rangle|^2
+  \leq\frac\rho4+\rho=\frac{5a^2}{8}<a^2.
+\]
+Integrating over the independent private seed proves
+\eqref{eq:source-hardness} for randomized algorithms under the
+same fixed instance law.  In particular, a worst-case success
+guarantee would also hold on this distribution, contradicting the
+displayed bound.  An integer budget that succeeds must exceed
+$\lfloor\rho^2nH/(4\mathrm e)\rfloor$, and hence must exceed
+$\rho^2nH/(4\mathrm e)$.  This also covers $K_*=0$.
+
+For the converse, $u_0=e$ is public.  Once $u_t$ is known, query
+all $n$ branches on that vector and form
+\[
+  u_{t+1}=\frac1{\sqrt n}\sum_{i=1}^n A_{t,i}u_t.
+\]
+Applying this procedure successively to all $H$ edges uses $nH$
+rounds and recovers the terminal source exactly, without any
+disclosures.
+\end{proof}
+
+\begin{corollary}[Serial stages]
+\label{cor:source-stages}
+For $M$ stages with $m\geq1$ edges per stage, set $H=Mm$ and
+allow one source disclosure at each stage endpoint.  Recovering
+constant correlation with the terminal source requires
+$\Omega_a(nMm)$ enlarged oracle rounds.
+\end{corollary}
+
+\begin{proof}
+Apply Theorem~\ref{thm:source-recovery} with disclosure sites
+$\{m,2m,\ldots,Mm\}$.  The factor $nMm$ comes from one
+chronological information bound that includes all disclosures and
+cached probes.
+\end{proof}
+
+\paragraph{Additional local input channels.}
+The same proof accommodates at most $b$ physical input vectors per
+vertex per round and at most $b_{\mathrm{out}}$ final vectors per
+vertex.  These extra vectors are exposed through inverse-image
+steps and receive no additional matrix actions.  Replace $2K+1$
+by $bK+b_{\mathrm{out}}$ in
+\eqref{eq:source-gaussian-space} and
+\eqref{eq:source-dimension}.  The counting and correlation bounds
+are unchanged.  Thus a fixed number of state, connector, and dual
+blocks sharing a vertex rotation changes only the required finite
+dimension.
+
+\section{Quadratic relay constructions}
+\label{sec:relays}
+
+This section constructs the quadratic modules used by the lower bound.
+Each module has a globally smooth component representation, although an
+individual component need not be concave in the dual variable.  Maximizing
+the average over the entire dual space produces a positive quadratic
+interaction between two primal connectors.  We first construct a long
+relay and then give a one-edge relay whose entire primal energy has a
+tunable amplitude.
+
+\subsection{The long relay}
+\label{sec:long-relay}
+
+Fix $N\ge 2$ and consecutive vertex spaces
+$\mathcal H_0,\ldots,\mathcal H_{N-1}$.  For each edge, let
+$A_{t,i}:\mathcal H_t\to\mathcal H_{t+1}$ be the branch maps from the
+information construction, so that
+\[
+ A_{t,i}^{\mathsf T}A_{t,j}=\mathbf 1_{\{i=j\}}I,
+ \qquad
+ U_t=\frac1{\sqrt n}\sum_{i=1}^n A_{t,i},
+ \qquad U_t^{\mathsf T}U_t=I.
+\]
+Write $P=U_{N-2}\cdots U_0$.  The primal connectors are
+$a\in\mathcal H_0$ and $b\in\mathcal H_{N-1}$; the dual variable is
+$w=(w_0,\ldots,w_{N-1})$, with $w_t\in\mathcal H_t$.
+
+\subsubsection{Scalar endpoint normalization}
+
+Let $L_N$ be the Neumann path Laplacian: its endpoint diagonal entries are
+one, its interior diagonal entries are two, and its adjacent off-diagonal
+entries are minus one.  Define
+\begin{equation}
+\begin{split}
+ \lambda_N&=N^{-2},\qquad M_N=\lambda_N I+L_N,
+ \qquad k_N=(M_N^{-1})_{0,N-1},\\
+ c_N&=\frac{(M_N^{-1})_{0,0}}{k_N},
+ \qquad d_N=\frac{2-c_N}{2}.
+\end{split}
+\label{eq:scalar-endpoint-normalization}
+\end{equation}
+
+\begin{lemma}[Uniform endpoint constants]
+\label{lem:endpoint-constants}
+For every $N\ge2$,
+\[
+ \frac N2<k_N\le N,
+ \qquad 1\le c_N<\cosh 1<\frac85,
+ \qquad \frac15<d_N\le\frac12.
+\]
+\end{lemma}
+
+\begin{proof}
+Put $\vartheta=2\operatorname{arsinh}(1/(2N))$.  Then
+$2\cosh\vartheta-2=N^{-2}$ and $0<N\vartheta<1$.
+The last column of $M_N^{-1}$ is
+\[
+ x_j=C\cosh((j+\tfrac12)\vartheta),\qquad
+ C=\frac1{2\sinh(N\vartheta)\sinh(\vartheta/2)},
+ \qquad 0\le j<N.
+\]
+Indeed, the root equation follows from the fictitious boundary condition
+$x_{-1}=x_0$, and the interior equations follow from the hyperbolic
+recurrence.  At the other endpoint, the required normalization is
+\[
+ \cosh((N+\tfrac12)\vartheta)
+ -\cosh((N-\tfrac12)\vartheta)
+ =2\sinh(N\vartheta)\sinh(\vartheta/2).
+\]
+Reflection symmetry makes the two diagonal endpoint Green coefficients
+equal.  Since $\sinh(\vartheta/2)=1/(2N)$, we obtain
+\[
+ k_N=\frac{N\cosh(\vartheta/2)}{\sinh(N\vartheta)}
+ >\frac N{\sinh1}>\frac N2,
+ \qquad
+ c_N=\frac{\cosh((N-\tfrac12)\vartheta)}
+ {\cosh(\vartheta/2)}<\cosh1.
+\]
+Every $x_j$ is at least $x_0=k_N$.  Moreover,
+$\mathbf 1^{\mathsf T}M_N=N^{-2}\mathbf 1^{\mathsf T}$ implies
+$\sum_jx_j=N^2$, whence $Nk_N\le N^2$.  Finally,
+$c_N\ge1$ and $\cosh1<8/5$ give the stated bounds on $d_N$.
+\end{proof}
+
+Set
+\begin{equation}
+ \beta=n^{-1/2},\qquad r_N=\sqrt{\beta/k_N}.
+ \label{eq:long-relay-coefficients}
+\end{equation}
+For each component $i$, define
+\begin{equation}
+\begin{split}
+ \mathcal H_i(a,b;w)
+ ={}&d_N(\|a\|^2+\|b\|^2)
+       +r_N\bigl(\langle a,w_0\rangle
+                   -\langle b,w_{N-1}\rangle\bigr)\\
+ &-\frac\beta2\left[
+      \lambda_N\sum_{t=0}^{N-1}\|w_t\|^2
+      +\sum_{t=0}^{N-2}(\|w_t\|^2+\|w_{t+1}\|^2)
+   \right]
+   +\sum_{t=0}^{N-2}\langle w_{t+1},A_{t,i}w_t\rangle.
+\end{split}
+\label{eq:long-component}
+\end{equation}
+Its average is exactly
+\begin{equation}
+\begin{split}
+ \mathcal H(a,b;w)
+ ={}&d_N(\|a\|^2+\|b\|^2)
+       +r_N\bigl(\langle a,w_0\rangle
+                   -\langle b,w_{N-1}\rangle\bigr)\\
+ &-\frac\beta2\left[
+     \lambda_N\sum_{t=0}^{N-1}\|w_t\|^2
+     +\sum_{t=0}^{N-2}\|w_{t+1}-U_tw_t\|^2
+   \right].
+\end{split}
+\label{eq:long-average}
+\end{equation}
+
+\begin{theorem}[The long relay]
+\label{thm:long-relay}
+The components in \eqref{eq:long-component} have the following properties.
+\begin{enumerate}
+\item Each component has a globally $8$-Lipschitz joint gradient,
+independently of $n$, $N$, and the dimensions.  Their average is
+$\beta/N^2$-strongly concave in $w$.
+\item There is a self-adjoint operator $\mathcal D_N$ on
+$\mathcal H_{N-1}$ such that
+\begin{equation}
+\begin{split}
+ Q(a,b):=\max_w\mathcal H(a,b;w)
+ &=\|a\|^2-\langle b,Pa\rangle
+       +\langle b,\mathcal D_Nb\rangle,\\
+ d_N I\preceq\mathcal D_N&\preceq I,
+ \qquad \mathcal D_NP=P.
+\end{split}
+\label{eq:long-endpoint-energy}
+\end{equation}
+Consequently, for $(a,b)\ne(0,0)$,
+\begin{equation}
+ \frac15(\|a\|^2+\|b\|^2)
+ <Q(a,b)\le\frac32(\|a\|^2+\|b\|^2).
+ \label{eq:long-coercivity}
+\end{equation}
+In particular, $Q$ has a dimension-independent positive Hessian lower
+bound.  On the aligned source line
+$a=a_0u_0$, $b=b_0u_{N-1}$, its value is
+$a_0^2-a_0b_0+b_0^2$.
+\item The unique unconstrained dual maximizer satisfies
+\begin{equation}
+ \|w^*(a,b)\|
+ \le\sqrt3\,Nn^{1/4}\sqrt{\|a\|^2+\|b\|^2}.
+ \label{eq:long-dual-radius}
+\end{equation}
+\item One value-and-gradient query to a selected component is simulated
+exactly by one forward and one transpose action of its selected branch
+map on each internal edge, followed by public arithmetic.  The component
+formula contains no hidden source vector.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Let $\mathcal M$ denote the operator in the square bracket of
+\eqref{eq:long-average}.  We have $\mathcal M\succeq N^{-2}I$.
+Equality is attained on a nonzero tuple satisfying
+$w_{t+1}=U_tw_t$, so the smallest eigenvalue is exactly $N^{-2}$.
+This proves the average strong-concavity assertion.
+For a component Hessian, the diagonal blocks have norm at most three,
+the symmetric off-diagonal dual part has norm at most two, and the
+endpoint primal--dual coupling has norm at most $2r_N\le2$.
+The last inequality follows from $k_N>N/2\ge1$ and $\beta\le1$.
+The sum is at most seven and is therefore bounded by eight.
+
+To compute the endpoint blocks of $\mathcal M^{-1}$, we must also account
+for directions orthogonal to the transmitted source.  Define the
+innovation spaces
+\[
+ \mathcal K_0=\mathcal H_0,
+ \qquad \mathcal K_j=\ker U_{j-1}^{\mathsf T}\quad(j\ge1).
+\]
+Because every $U_t$ is an isometry,
+\[
+ \mathcal H_t
+ =\bigoplus_{j=0}^t U_{t-1}\cdots U_j\mathcal K_j,
+\]
+where the product is the identity when $j=t$.
+This orthogonal decomposition separates $\mathcal M$ into scalar suffix
+chains.  The $j=0$ chain is $M_N$.  For $j>0$, it is the trailing
+principal submatrix of $M_N$: the incoming edge adds a unit anchoring term
+at the first vertex of that suffix.  It follows that
+\begin{equation}
+ (\mathcal M^{-1})_{0,0}=c_Nk_NI,
+ \qquad
+ (\mathcal M^{-1})_{N-1,0}=k_NP.
+ \label{eq:long-root-green}
+\end{equation}
+Writing $G=(\mathcal M^{-1})_{N-1,N-1}$, we also have
+\begin{equation}
+ 0\prec G\preceq c_Nk_NI,
+ \qquad GP=c_Nk_NP.
+ \label{eq:long-terminal-green}
+\end{equation}
+For the upper bound, the inverse of a positive principal submatrix is
+bounded above by the corresponding block of the inverse of the full
+matrix.  This is the Schur-complement inequality.  Apply it to each
+scalar suffix chain and then use the orthogonal decomposition above.
+On the root-generated chain, equality holds, which gives the identity
+for $GP$.
+
+Let $E(a,b)$ insert $a$ at layer zero and $-b$ at layer $N-1$.
+Completing the square yields
+\[
+ Q(a,b)=d_N(\|a\|^2+\|b\|^2)
+       +\frac1{2k_N}
+        \langle E(a,b),\mathcal M^{-1}E(a,b)\rangle.
+\]
+Equations \eqref{eq:long-root-green}--\eqref{eq:long-terminal-green}
+give \eqref{eq:long-endpoint-energy} with
+$\mathcal D_N=d_NI+G/(2k_N)$, since $d_N+c_N/2=1$.
+To verify coercivity, decompose $b=Pc+b_\perp$, where
+$P^{\mathsf T}b_\perp=0$.  Self-adjointness and
+$\mathcal D_NP=P$ give
+\[
+ Q(a,b)=\|a\|^2-\langle a,c\rangle+\|c\|^2
+          +\langle b_\perp,\mathcal D_Nb_\perp\rangle.
+\]
+The first three terms lie between one half and three halves of
+$\|a\|^2+\|c\|^2$.  Combining this with
+$d_N>1/5$ and $\mathcal D_N\preceq I$ proves
+\eqref{eq:long-coercivity}.  The source-line formula follows from
+$Pu_0=u_{N-1}$.
+
+The dual maximizer is
+\[
+ w^*(a,b)=\frac1{\sqrt{\beta k_N}}
+                  \mathcal M^{-1}E(a,b).
+\]
+Since $\mathcal M\succeq N^{-2}I$, spectral calculus implies
+$\mathcal M^{-2}\preceq N^2\mathcal M^{-1}$.
+The endpoint compression of $\mathcal M^{-1}$ has norm at most
+$k_N(c_N+1)$ by
+\eqref{eq:long-root-green}--\eqref{eq:long-terminal-green}.  Hence
+\begin{align*}
+ \|w^*(a,b)\|^2
+ &\le\frac{N^2}{\beta k_N}
+       \langle E(a,b),\mathcal M^{-1}E(a,b)\rangle\\
+ &\le\frac{(c_N+1)N^2}{\beta}
+                  (\|a\|^2+\|b\|^2)\\
+ &<3N^2n^{1/2}(\|a\|^2+\|b\|^2),
+\end{align*}
+which proves \eqref{eq:long-dual-radius}.
+
+Finally, every hidden matrix in \eqref{eq:long-component} occurs in a
+local bilinear term.  One forward and one transpose action per edge
+provide its value and both gradients.  All remaining terms are public.
+\end{proof}
+
+\subsection{A one-edge relay with adjustable amplitude}
+\label{sec:short-relay}
+
+The long relay has condition number of order $\sqrt n\,N^2$.
+For smaller condition numbers, we retain a single branching edge and
+adjust the scalar normalization of the eliminated primal energy.
+Let $A_i:\mathcal H_0\to\mathcal H_1$ be one layer of branch maps, and set
+\[
+ \beta=n^{-1/2},\qquad
+ U=\frac1{\sqrt n}\sum_{i=1}^nA_i,
+ \qquad U^{\mathsf T}U=I.
+\]
+For any $\mu_0\in(0,1]$, define
+\begin{equation}
+ t=\mu_0+\beta,
+ \qquad\theta=\frac\beta t,
+ \qquad r^2=t-\frac{\beta^2}{t},
+ \qquad d=\theta-\frac12.
+ \label{eq:short-relay-coefficients}
+\end{equation}
+For primal connectors $a,b$ and dual variables $w_0,w_1$, use
+\begin{equation}
+\begin{split}
+ \mathcal J_i(a,b;w_0,w_1)
+ ={}&d(\|a\|^2+\|b\|^2)
+       +r\bigl(\langle a,w_0\rangle-\langle b,w_1\rangle\bigr)\\
+ &-\frac t2(\|w_0\|^2+\|w_1\|^2)
+       +\langle w_1,A_iw_0\rangle.
+\end{split}
+\label{eq:short-component}
+\end{equation}
+The coefficient $d$ may be negative, consistently with the absence of a
+primal convexity assumption.  After maximizing the average, however,
+the value divided by $\theta$ is uniformly positive definite.
+
+\begin{lemma}[The one-edge relay]
+\label{lem:short-relay}
+Every component in \eqref{eq:short-component} has a globally
+$8$-Lipschitz joint gradient.  Its average is $\mu_0$-strongly concave
+in the entire dual space, and its exact value is
+\begin{equation}
+\begin{split}
+ \max_{w_0,w_1}\frac1n\sum_{i=1}^n
+             \mathcal J_i(a,b;w_0,w_1)
+ &=\theta\bigl[\|a\|^2-\langle b,Ua\rangle
+                         +\langle b,D_\theta b\rangle\bigr],\\
+ D_\theta&=I-\frac\theta2(I-UU^{\mathsf T}).
+\end{split}
+\label{eq:short-endpoint-energy}
+\end{equation}
+In particular, $\tfrac12I\preceq D_\theta\preceq I$ and
+$D_\theta U=U$.  At $a=b=0$, the unique dual maximizer is zero.
+A component query is simulated by one forward and one transpose action
+of its selected $A_i$, together with public arithmetic.
+\end{lemma}
+
+\begin{proof}
+The negative dual Hessian of the average is
+\[
+ H=\begin{pmatrix}
+ tI&-\beta U^{\mathsf T}\\
+ -\beta U&tI
+ \end{pmatrix}.
+\]
+On $\mathcal H_0\oplus\operatorname{range}(U)$ its eigenvalues are
+$t-\beta=\mu_0$ and $t+\beta$.  On the terminal complement
+$\operatorname{range}(U)^\perp$, it acts as $tI$.
+Thus $H$ is positive definite with minimum eigenvalue $\mu_0$.
+Its inverse blocks are
+\begin{align*}
+ (H^{-1})_{00}&=\frac t{t^2-\beta^2}I,
+ & (H^{-1})_{10}&=\frac\beta{t^2-\beta^2}U,\\
+ (H^{-1})_{11}&=\frac1tI
+          +\frac{\beta^2}{t(t^2-\beta^2)}UU^{\mathsf T}.
+\end{align*}
+Completing the square adds
+$\tfrac{r^2}{2}\langle(a,-b),H^{-1}(a,-b)\rangle$
+to the raw primal quadratic.  Using
+$r^2=(t^2-\beta^2)/t$ and $d=\beta/t-1/2$, the root coefficient becomes
+$d+1/2=\theta$, and the cross coefficient becomes
+$-r^2\beta/(t^2-\beta^2)=-\theta$.
+The terminal coefficient is
+\begin{align*}
+ dI+\frac{r^2}{2t}I
+       +\frac{r^2\beta^2}{2t(t^2-\beta^2)}UU^{\mathsf T}
+ &=\theta I-\frac{\theta^2}{2}(I-UU^{\mathsf T})\\
+ &=\theta D_\theta.
+\end{align*}
+This proves \eqref{eq:short-endpoint-energy}.  The assertions about
+$D_\theta$ follow because $UU^{\mathsf T}$ is an orthogonal projector
+and $0<\theta<1$.
+
+For component smoothness, observe that
+$|2d|\le1$, $t\le2$, $r\le\sqrt2$, and $\|A_i\|=1$.
+The diagonal Hessian part has norm at most two, the dual off-diagonal
+part has norm at most one, and the connector--dual coupling has norm
+at most $r$.  Their sum is less than eight.  This estimate holds
+globally.  At zero connectors, the average equals
+$-\langle w,Hw\rangle/2$, whose unique maximizer is zero.
+The oracle statement follows directly from the single hidden bilinear
+term in \eqref{eq:short-component}.
+\end{proof}
+
+The scalar correction $d=\theta-1/2$ is the key to this normalization.
+Without it, elimination produces an endpoint self-energy of order one
+and a transmitted cross term of order $\theta$.
+The correction makes the entire value, including the terminal
+orthogonal directions, have amplitude $\theta$.
+The projector $UU^{\mathsf T}$ appears only in the eliminated value;
+it is absent from the component formula and therefore is not exposed
+by a component query.
+
+\section{Global construction and regularity}
+\label{sec:construction}
+
+We next assemble the relay modules into a serial instance.
+All nonlinear terms will depend only on primal variables.  This
+separation permits arbitrary dual query norms while retaining global
+component smoothness.
+
+\subsection{Scalar profiles and radial caps}
+\label{sec:profiles-caps}
+
+Define the smooth monotone step
+\[
+ \omega(t)=
+ \begin{cases}
+ 0,&t\le0,\\
+ \displaystyle\frac{e^{-1/t}}{e^{-1/t}+e^{-1/(1-t)}},&0<t<1,\\
+ 1,&t\ge1.
+ \end{cases}
+\]
+It is flat at both endpoints, satisfies
+$\omega(t)+\omega(1-t)=1$, and obeys
+\begin{equation}
+ 0\le\omega'\le8,\qquad |\omega''|\le128.
+ \label{eq:omega-bounds}
+\end{equation}
+For an explicit verification, take $0<t\le1/2$ and put $u=1/t\ge2$.
+The logistic derivative gives
+\[
+ \omega'
+ =\omega(1-\omega)\bigl[t^{-2}+(1-t)^{-2}\bigr],
+ \qquad \omega(1-\omega)\le e^{2-u}.
+\]
+Thus $\omega'\le e^{2-u}(u^2+4)\le8$.
+Differentiating once more gives
+\[
+ |\omega''|
+ \le e^{2-u}(u^4+2u^3+8u^2+32)<128.
+\]
+The last inequality follows by bounding separately the four monomials
+times $e^{-u}$ on $[2,\infty)$.
+Symmetry treats $1/2\le t<1$.
+
+Let $p(t)=0$ for $t\le0$ and
+$p(t)=\int_0^t\omega(v)\,dv$ for $t>0$.  Symmetry implies
+$p(t)=t-1/2$ for $t\ge1$.  Set
+\begin{equation}
+ q(t)=\omega((5t-1)/4),\qquad
+ e_s(t)=p(t+3)-p(t-2)-\frac52.
+ \label{eq:scalar-profiles}
+\end{equation}
+Then $q=0$ on $(-\infty,1/5]$, $q=1$ on $[1,\infty)$,
+$0\le q'\le10$, and $|q''|\le200$.
+Also, $e_s(t)=t$ on $[-2,2]$, $|e_s|\le5/2$,
+$0\le e_s'\le1$, $|e_s''|\le16$, and $e_s'=0$ outside $[-3,3]$.
+
+For $C>0$, define
+\[
+ f_C(r)=
+ \begin{cases}
+ r,&0\le r\le C,\\
+ \displaystyle C+C\int_0^{(r-C)/C}(1-\omega(v))\,dv,
+     &C<r<2C,\\
+ 3C/2,&r\ge2C.
+ \end{cases}
+\]
+On any Euclidean space, let
+\begin{equation}
+ \rho_C(x)=
+ \begin{cases}
+ f_C(\|x\|)x/\|x\|,&x\ne0,\\
+ 0,&x=0.
+ \end{cases}
+ \label{eq:radial-cap}
+\end{equation}
+This smooth map equals the identity when $\|x\|\le C$ and is always a
+scalar multiple of $x$.  Its bounds are independent of the dimension:
+\begin{equation}
+ \|\rho_C(x)\|\le\min\{\|x\|,2C\},\qquad
+ \|D\rho_C(x)\|\le1,\qquad
+ \|D^2\rho_C(x)\|\le18/C.
+ \label{eq:radial-cap-bounds}
+\end{equation}
+Indeed, $0\le f_C'\le1$, $f_C(r)\le r$, $f_C(r)\ge C$ for $r\ge C$,
+and $|f_C''|\le8/C$.  With $g(r)=f_C(r)/r$, differentiation gives
+\[
+ \|D^2(g(\|x\|)x)\|
+ \le3|g'(r)|+r|g''(r)|
+ \le|f_C''(r)|+\frac{10}r\qquad(r>C),
+\]
+which implies the last bound in \eqref{eq:radial-cap-bounds}.
+Flatness of $\omega$ makes the pieces glue smoothly.
+In particular, for any unit vector $u$, the score
+$x\mapsto\langle u,\rho_C(x)\rangle$ is $1$-Lipschitz.
+
+\subsection{A common outer construction for both relays}
+\label{sec:outer-construction}
+
+Let $H=Mm$, where $M,m\ge1$, and place a source site at each depth
+$jm$.  Write $v_j=u_{jm}$ for $1\le j\le M$ and $v_0=e$.
+Stage $j$ has connectors
+$a_j\in\mathcal H_{(j-1)m}$ and $b_j\in\mathcal H_{jm}$,
+and a state $S_j\in\mathcal H_{jm}$.
+Let $P_j$ be the product of the $m$ average isometries in that stage.
+The only properties required of its eliminated quadratic are
+\begin{equation}
+\begin{split}
+ Q_j(a,b)&=\|a\|^2-\langle b,P_ja\rangle
+                        +\langle b,D_jb\rangle,\\
+ \frac15I\preceq D_j&\preceq I,\qquad D_jP_j=P_j,
+ \qquad P_jv_{j-1}=v_j.
+\end{split}
+\label{eq:endpoint-geometry}
+\end{equation}
+The module has value $\theta Q_j$.
+For the long relay, $m=N-1$ and $\theta=1$.
+For the one-edge relay, $m=1$ and $\theta$ is given by
+\eqref{eq:short-relay-coefficients}.
+All stages in one instance use the same amplitude.
+
+\subsubsection{State penalties and couplings}
+
+Fix the numerical constants
+\begin{equation}
+\begin{gathered}
+ C_\nu=21,\qquad \sigma=42,\qquad \gamma=4300,
+ \qquad K_s=172,\qquad R_s=10,\\
+ \delta_g=\frac1{430000},\qquad c_R=32416,
+ \qquad \tau_* =\frac1{20}.
+\end{gathered}
+\label{eq:outer-constants}
+\end{equation}
+Put $E_\nu=\rho_{21}$ and $Z=\rho_{10}$.  Define
+\begin{equation}
+\begin{split}
+ t_j&=\langle v_j,Z(S_j)\rangle,\qquad t_0=1,\\
+ h(t)&=t\,\omega((t-\delta_g)/\delta_g),\\
+ V(t)&=-\frac{c_R+1}{10}
+                 \bigl[p(10t-1)-p(10t-10)\bigr],\\
+ P_j^{\mathrm{st}}(S_j)
+ &=\frac\gamma2\|S_j\|^2-\frac\gamma2h(t_j)^2+V(t_j).
+\end{split}
+\label{eq:outer-state}
+\end{equation}
+The notation $P_j^{\mathrm{st}}$ denotes the state penalty and is
+distinct from the isometry $P_j$ in \eqref{eq:endpoint-geometry}.
+The three couplings are
+\begin{align}
+ G_{\mathrm{en},j}
+ &=-4q(t_{j-1})(1-q(t_j))
+                      \langle v_{j-1},E_\nu(a_j)\rangle,
+ \label{eq:outer-entrance}\\
+ G_{\mathrm{ex},j}
+ &=-q(t_{j-1})(1-q(t_j))
+                      \langle Z(S_j),E_\nu(b_j)\rangle,
+ \label{eq:outer-exit}\\
+ G_{\mathrm{st},j}
+ &=K_sq(t_j)(1-e_s(t_{j-1}))(1-q(t_{j-1})).
+ \label{eq:outer-coupling}
+\end{align}
+The root data $t_0=1$ and $v_0=e$ are public.
+In particular, the exit term uses an ordinary vector inner product;
+it does not apply a hidden rank-one projection to the terminal
+connector.
+For $\nu=((a_j,b_j))_{j=1}^M$, let
+\begin{equation}
+\begin{split}
+ R(S,\nu)&=\sum_{j=1}^M
+   \bigl(G_{\mathrm{en},j}+G_{\mathrm{ex},j}
+                 +G_{\mathrm{st},j}+P_j^{\mathrm{st}}\bigr),\\
+ F_Q(S,\nu)&=R(S,\nu)+\sum_{j=1}^M Q_j(a_j,b_j).
+\end{split}
+\label{eq:outer-objective}
+\end{equation}
+The raw components are
+\begin{equation}
+ f_i^0(S,\nu,w)
+   =\sum_{j=1}^M\mathcal K_i^{(j)}(a_j,b_j;w^{(j)})
+       +\theta R(S,\nu),
+ \label{eq:assembled}
+\end{equation}
+where $\mathcal K_i^{(j)}$ is either the long module
+$\mathcal H_i$ or the short module $\mathcal J_i$.
+Different stages have distinct dual tuples, including when their
+endpoints occupy the same vertex space.
+Maximization over the full dual space gives the exact identity
+\begin{equation}
+ \Phi_0(S,\nu)
+ :=\max_{w\in\mathbb R^{d_y}}\frac1n\sum_{i=1}^n
+                    f_i^0(S,\nu,w)
+ =\theta F_Q(S,\nu).
+ \label{eq:value-identity}
+\end{equation}
+
+\begin{lemma}[Global admissibility]
+\label{lem:global-admissibility}
+Every component in \eqref{eq:assembled} is jointly
+$L_*=10^8$-smooth on its entire Euclidean domain.
+The average dual strong-concavity constant is $\beta/N^2$ for the long
+family and $\mu_0$ for the short family.
+Moreover, $y^*(0)=0$, $\Phi_0(0)=0$, and
+\begin{equation}
+ \Phi_0(0)-\inf\Phi_0\le\theta C_\Delta M,
+ \qquad C_\Delta=31000.
+ \label{eq:normalized-gap}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The relay modules are globally eight-smooth and block diagonal across
+stages.  We give explicit derivative bounds for the remaining terms;
+their bounded incidence will make the final estimate independent of
+the number of stages.
+
+On the score range $[-20,20]$,
+$\|Dt_j\|\le1$ and $\|D^2t_j\|\le2$.
+Thus the composed profile $q(t_j)$ has gradient and Hessian bounds
+$10$ and $220$, respectively, while $e_s(t_j)$ has bounds $1$ and $18$.
+The connector cap has image bound $42$, derivative bound one, and
+second-derivative bound one.  The state cap has image bound $20$ and
+second-derivative bound two.
+For the remaining scalar terms,
+\[
+ |(h^2)'|\le680,\qquad |(h^2)''|\le1666,
+ \qquad |V'|\le32417,
+ \qquad |V''|\le160\cdot32417.
+\]
+To see why the narrow transition of $h$ is harmless, within that
+transition we have
+$|h|\le2\delta_g$, $|h'|\le17$, and
+$|h''|\le272/\delta_g$.
+Consequently,
+$|(h^2)''|\le2\cdot17^2+4\delta_g(272/\delta_g)=1666$.
+Outside the transition, $h$ is either zero or the identity.
+After composition with the score, these inequalities bound the Hessian
+of every state penalty by $12\cdot10^6$.
+
+The product rule gives the following local Hessian bounds:
+\[
+ \|\nabla^2G_{\mathrm{en},j}\|\le2\cdot10^5,
+ \qquad
+ \|\nabla^2G_{\mathrm{ex},j}\|\le6\cdot10^5,
+ \qquad
+ \|\nabla^2G_{\mathrm{st},j}\|\le4\cdot10^5.
+\]
+For example, the exit inner product has absolute value at most $840$,
+gradient norm at most $62$, and Hessian norm at most $106$.
+Its gate product has derivative norm at most $20$ and Hessian norm at
+most $640$.  Therefore its Hessian is bounded by
+$840\cdot640+2\cdot20\cdot62+106<6\cdot10^5$.
+The entrance bound follows in the same way from the capped linear
+functional, with bounds $42$, $1$, and $1$.
+For the state coupling, the factor
+$(1-e_s(t_{j-1}))(1-q(t_{j-1}))$ has value, gradient, and Hessian bounds
+$7/2$, $36$, and $808$.  Hence a bound is
+$172[(7/2)\cdot220+808+2\cdot10\cdot36]<4\cdot10^5$.
+
+Each state is incident only to its own penalty and the two neighboring
+stages.  To formalize the resulting operator bound, let $H_r$ be local
+Hessians supported on block sets $I_r$.  For any vector $z$,
+\[
+ \left|\left\langle z,\sum_r H_rz\right\rangle\right|
+ \le\sum_r\|H_r\|\,\|z_{I_r}\|^2
+ \le\left(\max_b\sum_{r:\,b\in I_r}\|H_r\|\right)\|z\|^2.
+\]
+The maximum incident sum is below $4\cdot10^7$, so
+$\|\nabla^2R\|<4\cdot10^7$ independently of $M$, $n$, $N$, and
+the dimension.  Since $0<\theta\le1$, adding the relay modules is
+covered by $L_*=10^8$.
+All added terms are purely primal, so average dual strong concavity
+follows directly from the corresponding relay lemma.
+
+For the gap bound, write $b=P_jc+b_\perp$ with
+$P_j^{\mathsf T}b_\perp=0$.  From
+\eqref{eq:endpoint-geometry},
+\[
+ Q_j(a,b)
+ =\|a\|^2-\langle a,c\rangle+\|c\|^2
+          +\langle b_\perp,D_jb_\perp\rangle
+ \ge\frac15(\|a\|^2+\|b\|^2).
+\]
+Thus $\sum_jQ_j$ is nonnegative and its Hessian is at least $2I/5$.
+Also, $|h(t_j)|\le|t_j|\le\|S_j\|$, so the two quadratic terms
+in $P_j^{\mathrm{st}}$ have nonnegative sum.
+The state coupling is nonnegative: whenever $q(t)<1$,
+we have $e_s(t)\le1$.
+The absolute sizes of the remaining negative contributions per stage
+are bounded by
+\[
+ \frac9{10}(32417)+4\sigma+2R_s\sigma<31000.
+\]
+This proves \eqref{eq:normalized-gap} from the eliminated value
+\eqref{eq:value-identity}.  The argument does not require the raw
+primal quadratic in the short module to be coercive.
+At the primal origin, all outer terms and connectors vanish.
+The average dual objective is then a strictly concave quadratic with
+unique maximizer zero, proving $y^*(0)=0$ and $\Phi_0(0)=0$.
+Finally, the explicit eliminated formula establishes smoothness of
+the primal value; no uniform bound on its smoothness constant is
+needed here.
+\end{proof}
+
+\section{Stationarity and exact oracle simulation}
+\label{app:stationarity}
+
+This section completes the interface between the analytic construction and
+the information problem. First, a small gradient of the eliminated primal
+objective forces the terminal score to be high. Second, the original
+component values and full gradients can be simulated exactly by the
+source-release oracle until that recovery occurs.
+
+\begin{samepage}
+\subsection{A direct primal-gradient certificate}
+
+\begin{theorem}[Direct primal-gradient certificate]
+\label{thm:gradient-certificate}
+For every choice of isometries and self-adjoint operators satisfying
+\eqref{eq:endpoint-geometry}, the function $F_Q$ in
+\eqref{eq:outer-objective} satisfies
+\begin{equation}
+ \|\nabla F_Q(S,\nu)\|\le\tau_*
+ \quad\Longrightarrow\quad t_M\ge1.
+ \label{eq:gradient-certificate}
+\end{equation}
+Consequently, $\|\nabla\Phi_0(S,\nu)\|\le\theta\tau_*$ forces terminal
+source recovery. The implication holds for arbitrary primal points, with
+no restriction to source-aligned directions or bounded domains.
+\end{theorem}
+\end{samepage}
+
+\begin{proof}
+Let $G$ be the sum of the entrance, exit, and state couplings in
+\eqref{eq:outer-entrance}--\eqref{eq:outer-coupling}, excluding the state
+penalties. We use the constants in \eqref{eq:outer-constants} throughout.
+Assume $\|\nabla F_Q\|\le1/20$.
+
+\paragraph{Step 1: isolate the scalar and vector derivatives.}
+Separate the direct occurrence of $Z(S_j)$ in the exit inner product from
+its occurrences through the score $t_j$. Then
+\begin{equation}
+\begin{split}
+ \nabla_{S_j}F_Q
+ ={}&\gamma S_j+B_j\nabla t_j\\
+ &-q(t_{j-1})(1-q(t_j))\,DZ(S_j)^{\mathsf T}E_\nu(b_j),
+\end{split}
+\label{eq:state-gradient}
+\end{equation}
+where
+\[
+ B_j=-\gamma h(t_j)h'(t_j)+V'(t_j)+C_j,
+\]
+and $C_j$ is the score derivative of $G$, holding its direct vector
+occurrences fixed. For clarity, put
+\[
+ \ell_j=\langle v_{j-1},E_\nu(a_j)\rangle,
+ \qquad b_j^{\mathrm{ex}}=\langle Z(S_j),E_\nu(b_j)\rangle,
+ \qquad r_0(t)=(1-e_s(t))(1-q(t)).
+\]
+For $j=M$, terms with index $M+1$ below are absent. Direct differentiation
+gives
+\begin{align*}
+ C_j={}&4q'(t_j)\bigl[q(t_{j-1})\ell_j
+                   -(1-q(t_{j+1}))\ell_{j+1}\bigr]\\
+ &+q'(t_j)\bigl[q(t_{j-1})b_j^{\mathrm{ex}}
+                   -(1-q(t_{j+1}))b_{j+1}^{\mathrm{ex}}\bigr]\\
+ &+K_s\bigl[q'(t_j)r_0(t_{j-1})+q(t_{j+1})r_0'(t_j)\bigr].
+\end{align*}
+Using $|\ell_j|\le\sigma$, $|b_j^{\mathrm{ex}}|\le2R_s\sigma$,
+$|1-e_s|\le7/2$, $0\le e_s'\le1$, and $0\le q'\le10$, we obtain
+\begin{align}
+ |C_j|&\le K_s(1+7\cdot10)+8\cdot10\sigma
+                     +4R_s\cdot10\sigma=32372,\label{eq:C-bound}\\
+ |t_jC_j|&\le K_s(3+7\cdot10)+8\cdot10\sigma
+                     +4R_s\cdot10\sigma=32716
+                     \quad(t_j\le1).\label{eq:tC-bound}
+\end{align}
+For the second inequality, $q'$ is supported on $[1/5,1]$ and
+$|te_s'(t)|\le3$. Also, for $t\le1$,
+$|th(t)h'(t)|\le17$ and $|tV'(t)|\le32417$. Hence
+\begin{equation}
+ |t_jB_j|\le4300\cdot17+32417+32716=138233
+ \qquad(t_j\le1).
+ \label{eq:tB-bound}
+\end{equation}
+
+\paragraph{Step 2: localize unfinished states.}
+Suppose $t_j\le1$ and $\|S_j\|=r\ge R_s=10$. The radial cap has
+$Z(S_j)=f_{10}(r)S_j/r$, with $f_{10}(r)\ge10$ and
+$0\le f_{10}'(r)\le1$. Along the radial direction,
+\[
+ \frac{dt_j}{dr}=t_j\frac{f_{10}'(r)}{f_{10}(r)}.
+\]
+Equations~\eqref{eq:state-gradient} and \eqref{eq:tB-bound} therefore
+bound the radial derivative below by
+\[
+ 4300r-\frac{138233}{10}-42\ge29134.7>1.
+\]
+This contradicts the assumed gradient bound. Thus every state with
+$t_j\le1$ lies in the identity region of $Z$, and
+$t_j=\langle v_j,S_j\rangle$. This step uses only capped connector bounds,
+so it does not presuppose bounded connectors.
+
+\paragraph{Step 3: exclude intermediate scores.}
+If $t_j\le-1/10$, then $q=q'=h=V'=0$. The derivative of the outgoing
+state coupling is nonpositive, and the direct exit contributes at most
+$42$. The derivative along $v_j$ is consequently at most
+$4300t_j+42\le-388$, a contradiction.
+
+If $1/5<t_j<1$, then $h(t_j)=t_j$, and the derivatives of the quadratic
+state terms cancel. On this interval $V'(t_j)=-32417$. By
+\eqref{eq:C-bound}, the derivative along $v_j$ is at most
+\[
+ -32417+32372+42=-3,
+\]
+again a contradiction. Each state is therefore either
+\emph{low}, with $-1/10<t_j\le1/5$, or \emph{high}, with $t_j\ge1$.
+
+For a low score, define its scalar penalty derivative by
+\[
+ D_0(t)=\gamma t-\gamma h(t)h'(t)+V'(t).
+\]
+It satisfies
+\begin{equation}
+ D_0(t)\le2\gamma\delta_g=\frac1{50}.
+ \label{eq:low-penalty}
+\end{equation}
+Indeed, for $t\le\delta_g$ we have $h=0$ and $V'\le0$; for
+$\delta_g<t<2\delta_g$, $hh'\ge0$ and $t<2\delta_g$; and for
+$t\ge2\delta_g$ the quadratic derivatives cancel and $V'\le0$.
+
+\paragraph{Step 4: identify the single unfinished frontier.}
+A low state cannot precede a high state. In that configuration the outgoing
+state-coupling derivative is $-K_s=-172$; the remaining score derivatives
+vanish, and the direct exit contributes at most $42$. The directional
+derivative is at most
+\[
+ \frac1{50}+42-172<-1.
+\]
+Suppose for contradiction that $t_M\le1/5$. Since the public root has
+$t_0=1$, the high states form an initial segment followed by low states.
+There is a unique high-to-low frontier, say stage $j$. Only this stage has
+active connector forcing.
+
+Projecting its state gradient onto $v_j^\perp$ gives
+\[
+ P_{v_j^\perp}\nabla_{S_j}F_Q
+ =4300P_{v_j^\perp}S_j-P_{v_j^\perp}E_\nu(b_j).
+\]
+It follows that
+\[
+ \|P_{v_j^\perp}S_j\|
+ \le\frac{42+1/20}{4300}<\frac1{100},
+ \qquad \|S_j\|<\frac14.
+\]
+The entrance and exit connector forcing norms are thus at most $4$ and
+$1/4$, respectively.
+
+\paragraph{Step 5: remove the connector caps and obtain a contradiction.}
+The quadratic $\sum_jQ_j$ has Hessian at least $2I/5$ and gradient zero at
+the origin. Its strong monotonicity yields
+\[
+ \|\nu\|\le\frac52\bigl(\|\nabla_\nu F_Q\|+
+                               \|\nabla_\nu G\|\bigr)
+ \le\frac52\left(\frac1{20}+4+\frac14\right)
+ =\frac{43}{4}<21.
+\]
+All connector caps are therefore identities. Write
+$a_{\mathrm{sc}}=\langle v_{j-1},a_j\rangle$,
+$b_{\mathrm{sc}}=\langle v_j,b_j\rangle$, and $s=t_j$.
+Since $P_jv_{j-1}=v_j$ and $D_jv_j=v_j$, the projected connector gradients
+satisfy
+\[
+ g_a=2a_{\mathrm{sc}}-b_{\mathrm{sc}}-4,
+ \qquad g_b=-a_{\mathrm{sc}}+2b_{\mathrm{sc}}-s,
+ \qquad |g_a|,|g_b|\le\frac1{20}.
+\]
+Solving these two equations gives
+\[
+ b_{\mathrm{sc}}=\frac{4+2s+g_a+2g_b}{3}
+ >\frac{4-1/5-3/20}{3}=\frac{73}{60}.
+\]
+The state derivative along $v_j$ is $D_0(s)-b_{\mathrm{sc}}$, which by
+\eqref{eq:low-penalty} is less than $1/50-73/60<-1$. This contradiction
+excludes a low terminal state. The conclusion for $\Phi_0$ follows from
+the exact identity \eqref{eq:value-identity}.
+\end{proof}
+
+\begin{remark}[Existence of stationary points]
+Taking $S_j=2v_j$ at every stage and all connectors zero gives a stationary
+point of $F_Q$. The average dual maximizer is also zero there. Thus the
+certificate does not rely on the absence of stationary points.
+\end{remark}
+
+\subsection{Exact simulation of unrestricted component queries}
+
+\begin{theorem}[Distributional direct-gradient hardness]
+\label{thm:distributional-hardness}
+Fix $M,m\ge1$ and either assembled family \eqref{eq:assembled}. There is
+a universal $c_{\mathrm{inf}}>0$ and a fixed distribution of instances in
+finite dimensions such that every unrestricted randomized algorithm using
+at most $\lfloor c_{\mathrm{inf}}nMm\rfloor$ component queries satisfies
+\begin{equation}
+ \PP\bigl(\|\nabla\Phi_0(\widehat x)\|\le\theta\tau_*\bigr)
+ \le\frac1{16}.
+ \label{eq:distributional-hardness}
+\end{equation}
+Queries may have arbitrary norms and return exact values and full gradients.
+The output need not have been queried, and the instance law is independent
+of the private seed.
+\end{theorem}
+
+\begin{proof}
+Use the source-release oracle of Appendix~\ref{app:source}, with source
+sites $jm$ and
+\begin{equation}
+ a_* =\frac{\delta_g}{2R_s}=\frac1{8600000},\qquad
+ \rho=\frac{a_*^2}{2},\qquad
+ c_{\mathrm{inf}}=\frac{\rho^2}{4\mathrm e},\qquad H=Mm.
+ \label{eq:information-constants}
+\end{equation}
+Put $K_* =\lfloor c_{\mathrm{inf}}nH\rfloor$ and choose
+\begin{equation}
+ D=\left\lceil\frac{32(8K_*+8)}{a_*^2}
+                    \sum_{t=0}^{H}n^t\right\rceil.
+ \label{eq:optimization-dimension}
+\end{equation}
+At a shared endpoint depth, at most five physical vectors enter a query:
+a state, two adjacent connectors, and two dual endpoints. Every radial cap
+is a scalar multiple of its input. Eight input slots per vertex per round,
+and eight final-output slots, therefore suffice for the additional-channel
+extension of the source theorem. These slots increase the analysis
+dimension but do not add matrix actions.
+
+Fix the private seed. A deterministic algorithm is run on simulated
+numerical component replies. Process all query inputs before matrix replies.
+After the matrix round, release eligible sources \emph{exhaustively}, before
+evaluating the primal part of the simulated reply. This is an allowed
+release schedule: at its end every unreleased site has $p_{jm}<\rho$, and
+whenever a source is released all preceding source sites are released as
+well. The formal-coordinate exposure remains analysis-side information.
+
+On the common Gaussian event in the source proof,
+$\|P_Ve\|^2\le\rho$. For every unreleased source, the correlation estimate
+applied to the bounded score input gives
+\[
+ \frac{|t_j|}{2R_s}
+ =\left|\left\langle v_j,\frac{Z(S_j)}{2R_s}\right\rangle\right|
+ <\sqrt{2\rho}=a_*,
+ \qquad |t_j|<\delta_g.
+\]
+Consequently $q,q',h,h',V,V'$ vanish at that score. Complementary gates
+such as $1-q$ reduce to known constants. We check each source-dependent
+term in the raw component formula.
+\begin{itemize}
+ \item The source-dependent part of the state penalty has zero value and
+ derivative; its isotropic quadratic part is public.
+ \item An entrance vanishes with its full first derivative when its
+ predecessor is unreleased. If the predecessor is released but the current
+ source is not, dependence on the current source occurs only through a
+ constant gate.
+ \item The exit uses a public vector inner product. Its source-specific
+ dependence is confined to the same flat gates.
+ \item The state coupling vanishes with its full first derivative if the
+ current source is unreleased. If that source is released, the predecessor
+ is available under the exhaustive release schedule.
+\end{itemize}
+Thus the entire value and joint gradient of the primal part are computable
+exactly from disclosed sources. Multiplying by the public amplitude
+$\theta>0$ does not change this conclusion.
+
+Each dual module requires one forward and one transpose action of the
+selected branch map per edge; its values follow from the same actions by
+inner products. No bound on the dual vectors is needed. The component
+replies therefore agree with the actual fixed instance on the common
+event. Equivalently, a first mismatching reply is impossible on that event.
+
+For the final, possibly unqueried output, use the public decoder
+\[
+ \widehat v=\frac{Z(\widehat S_M)}{2R_s},\qquad\|\widehat v\|\le1.
+\]
+If the output gradient is at most $\theta\tau_*$,
+Theorem~\ref{thm:gradient-certificate} implies
+\[
+ \langle v_M,\widehat v\rangle\ge\frac1{2R_s}>a_*.
+\]
+Theorem~\ref{thm:source-recovery}, with the dimension enlargement in
+\eqref{eq:optimization-dimension}, excludes this on an event of probability
+at least $15/16$. Integrating over the independent private seed preserves
+the same product-Haar instance law and proves
+\eqref{eq:distributional-hardness}.
+\end{proof}
+
+The dual maximization in \eqref{eq:value-identity} is exact and
+unconstrained. The preceding certificate is consequently a statement about
+$\nabla\Phi_0$ itself, with no change of dual domain or of stationarity
+criterion.
+
+\section{Parameter calibration in every regime}
+\label{app:calibration}
+
+Fix
+\begin{equation}
+ L_*=10^8,\qquad C_\Delta=31000,\qquad\tau_*=\frac1{20},
+ \qquad C_{\mathrm{sc}}=\frac{16L_*C_\Delta}{\tau_*^2}.
+ \label{eq:scaling-constant}
+\end{equation}
+Suppose the normalized family has amplitude $\theta$ and average dual
+curvature at least $L_*/\kappa$. Set
+\begin{equation}
+ s=\frac{4L_*\varepsilon}{L\theta\tau_*},\qquad
+ \alpha=\frac{Ls^2}{L_*},\qquad
+ f_i^{\mathrm{phys}}(x,y)=\alpha f_i^0(x/s,y/s).
+ \label{eq:physical-scaling}
+\end{equation}
+Every component is then $L$-smooth, average dual curvature is at least
+$L/\kappa=\mu$, and $y^*(0)=0$. Moreover,
+\begin{align}
+ \Phi^{\mathrm{phys}}(0)-\inf\Phi^{\mathrm{phys}}
+ &\le\frac{\varepsilon^2}{L}\,
+              \frac{C_{\mathrm{sc}}M}{\theta},\label{eq:physical-gap}\\
+ \|\nabla\Phi^{\mathrm{phys}}(sx)\|\le4\varepsilon
+ &\quad\Longrightarrow\quad
+ \|\nabla\Phi_0(x)\|\le\theta\tau_*.
+ \label{eq:physical-gradient}
+\end{align}
+One physical component query is simulated by one normalized component query
+and public scaling, including its function value. When
+$A\theta\ge2C_{\mathrm{sc}}$, choose
+\begin{equation}
+ M=\left\lfloor\frac{A\theta}{C_{\mathrm{sc}}}\right\rfloor
+ \ge\frac{A\theta}{2C_{\mathrm{sc}}}.
+ \label{eq:stage-count}
+\end{equation}
+This respects the gap budget. The remaining small-stage case is covered
+below by the separate component-search lower bound.
+
+\subsection{Large condition numbers}
+
+If $\kappa\ge4L_*\sqrt n$, use the long relay with
+\begin{equation}
+ N=\left\lfloor\sqrt{\frac{\kappa}{L_*\sqrt n}}\right\rfloor\ge2,
+ \qquad m=N-1,\qquad\theta=1.
+ \label{eq:long-calibration}
+\end{equation}
+Its normalized curvature $\beta/N^2$ is at least $L_*/\kappa$.
+If exact attainment of the curvature parameter is desired, append to every
+component the same independent dual term $-(L_*/\kappa)u^2/2$. Its
+maximizer is zero, its value is zero, and it reveals no hidden information.
+It preserves the smoothness bound.
+
+For $A\ge2C_{\mathrm{sc}}$, \eqref{eq:stage-count} and the elementary
+rounding bound
+\[
+ N-1\ge\frac14\sqrt{\frac\kappa{L_*\sqrt n}}
+\]
+give the information cost
+\begin{equation}
+ \Omega(nM(N-1))=\Omega(An^{3/4}\sqrt\kappa).
+ \label{eq:large-lower}
+\end{equation}
+All suppressed factors depend only on the displayed numerical constants.
+
+\subsection{Small and intermediate condition numbers}
+
+For $L_*\le\kappa\le4L_*\sqrt n$, use the one-edge relay with
+\begin{equation}
+ \mu_0=\frac{L_*}{\kappa}\in(0,1],\qquad
+ \theta=\frac\beta{\mu_0+\beta}
+       =\frac\kappa{L_*\sqrt n+\kappa},\qquad m=1.
+ \label{eq:short-calibration}
+\end{equation}
+The physical curvature is exactly $\mu$. When
+$A\theta\ge2C_{\mathrm{sc}}$, Theorem~\ref{thm:distributional-hardness}
+gives
+\begin{equation}
+ \Omega(nM)=\Omega(An\theta).
+ \label{eq:short-lower}
+\end{equation}
+To compare this expression across the full overlap, put $r=\kappa/\sqrt n$.
+Then
+\[
+ \frac{\cR(n,\kappa)}{n\theta}
+ =\begin{cases}
+   L_*+r,&r\le1,\\[2pt]
+   (L_*+r)/\sqrt r,&1\le r\le4L_*.
+  \end{cases}
+\]
+Both expressions are at most $5L_*$. Hence
+\begin{equation}
+ \cR(n,\kappa)\le5L_*n\theta
+ \qquad(L_*\le\kappa\le4L_*\sqrt n).
+ \label{eq:short-comparison}
+\end{equation}
+This gives the desired $\Omega(A\cR)$ term whenever stages fit.
+If $A\theta<2C_{\mathrm{sc}}$, instead
+\begin{equation}
+ A\cR(n,\kappa)<10L_*C_{\mathrm{sc}}n,
+ \label{eq:no-stage}
+\end{equation}
+so the explicit $\Omega(n)$ construction in
+Section~\ref{sec:search-lower} covers this entire case. No extra
+requirement such as $A\gtrsim\sqrt n/\kappa$ enters the main theorem.
+
+Finally, if $1\le\kappa<L_*$, then
+$\cR(n,\kappa)\le L_*\sqrt n$. The unrestricted minimization baseline in
+Section~\ref{sec:minimization-baseline}, embedded with a decoupled dual
+quadratic, gives the required bound throughout this bounded range.
+
+\section{Stopping times, baseline instances, and upper-bound interfaces}
+\label{app:protocols}
+
+\subsection{From distributional hardness to expected query cost}
+\label{sec:expected-lower}
+
+Suppose an algorithm has expected query count at most $Q$ on every physical
+instance and satisfies
+$\E\|\nabla\Phi(\widehat x)\|^2\le\varepsilon^2$.
+Under the fixed hard distribution, Markov's inequality gives
+\[
+ \PP\bigl(\|\nabla\Phi(\widehat x)\|\le4\varepsilon\bigr)
+ \ge\frac{15}{16}.
+\]
+Let $b=c_{\mathrm{inf}}nMm$ and $B=\lfloor b\rfloor$. If $B\ge1$,
+truncate the algorithm after $B$ calls, using a fixed fallback output on
+overflow. Its success probability at threshold $4\varepsilon$ is at least
+$15/16-Q/B$. By Theorem~\ref{thm:distributional-hardness} and
+\eqref{eq:physical-gradient}, it is at most $1/16$. Therefore
+\[
+ Q\ge\frac78B\ge\frac7{16}b.
+\]
+If $b<1$, the same hard distribution defeats every zero-query output.
+Compare the algorithm with its zero-query truncation. Their outputs can
+differ only if at least one query is made, an event of probability at most
+the expected number of calls, hence at most $Q$. It follows that
+$Q\ge7/8\ge7b/8$. Thus all cases yield $\Omega(nMm)$ without a rounding
+gap. A worst-case expected guarantee holds on each instance, so it also
+holds after averaging over the fixed hard distribution.
+
+The fixed-budget constant-confidence lower bound follows directly from
+Theorem~\ref{thm:distributional-hardness}: success at threshold
+$\varepsilon$ implies success at threshold $4\varepsilon$. An integer
+budget exceeding $\lfloor b\rfloor$ is strictly larger than $b$.
+
+\subsection{An explicit additive component-search lower bound}
+\label{sec:search-lower}
+
+Let $J$ be uniform on $[n]$, and let $s_0$ be an independent uniform sign.
+With scalar primal and dual variables, define
+\begin{equation}
+ f_i(x,y)=\frac L2x^2-nb_0s_0\mathbf1_{\{i=J\}}x-\frac\mu2y^2,
+ \qquad b_0=8\varepsilon.
+ \label{eq:search-instance}
+\end{equation}
+Every component is $L$-smooth, $y^*(0)=0$, and
+\[
+ \Phi(x)=\frac L2x^2-b_0s_0x,\qquad
+ \Phi(0)-\inf\Phi=\frac{32\varepsilon^2}{L}\le\Delta
+\]
+whenever $A\ge32$. Before a query to $J$, values and gradients are
+independent of $s_0$. A $q$-query algorithm hits $J$ with probability at
+most $q/n$. On the no-hit event, an output cannot satisfy
+$|Lx-b_0s_0|\le4\varepsilon$ for both signs. Its success probability is
+at most
+\begin{equation}
+ \frac12+\frac{q}{2n}.
+ \label{eq:search-success}
+\end{equation}
+For expected-cost algorithms, take $q=\lfloor n/4\rfloor$ when $n\ge4$.
+The truncation comparison gives
+$15/16-Q/q\le5/8$, hence $Q\ge5q/16=\Omega(n)$.
+For $n<4$, zero-query success is at most $1/2$, which forces
+$Q\ge7/16=\Omega(n)$ by the same comparison with a zero-query
+truncation. For deterministic budgets, success probability $2/3$ in
+\eqref{eq:search-success} requires at least $n/3$ queries. This proves the
+additive term under both performance criteria.
+
+\subsection{The imported minimization baseline}
+\label{sec:minimization-baseline}
+
+We use the individually smooth nonconvex finite-sum lower bound of
+\citet[Theorem 3.1 and Appendices F.3 and G.1]{pengdense2026}.
+For a universal accuracy condition and all $n\ge n_0$, it gives
+$\Omega(n+A\sqrt n)$ against unrestricted randomized value-and-gradient
+queries, including worst-case expected query cost with expected gradient
+norm and fixed-budget success probability $2/3$.
+The specified failure constant is $11/16$, so the latter confidence is
+covered. Expected squared-gradient accuracy implies expected-norm accuracy
+by Jensen's inequality.
+
+For a hard minimization finite sum $n^{-1}\sum_i g_i(x)$, set
+\begin{equation}
+ f_i(x,y)=g_i(x)-\frac\mu2\|y\|^2.
+ \label{eq:baseline-embedding}
+\end{equation}
+The embedding is $L$-smooth and exactly initialized, leaves the primal
+value unchanged, and uses one minimization query per minimax query.
+
+For $n<n_0$, fix $N_0=n_0$ and an $N_0$-component hard average $G$.
+Make every target component $G(x)-\mu\|y\|^2/2$; each target query costs
+$N_0$ source queries. The inherited bound
+$\Omega(1+A/\sqrt{N_0})$ is $\Omega(n+A\sqrt n)$ after changing universal
+constants, since $1\le n<N_0$ and $N_0$ is fixed.
+
+\subsection{Combining the lower bounds}
+\label{sec:combine-lower}
+
+Choose $A_*$ larger than $2C_{\mathrm{sc}}$, $32$, and the reciprocals of
+the universal accuracy thresholds in the imported baseline and upper
+algorithms. There are three cases.
+\begin{enumerate}[label=(\roman*)]
+ \item If $\kappa\ge4L_*\sqrt n$, use \eqref{eq:large-lower}.
+ \item If $L_*\le\kappa\le4L_*\sqrt n$, use
+ \eqref{eq:short-lower}--\eqref{eq:short-comparison} when stages fit, and
+ \eqref{eq:no-stage} with the search lower bound otherwise.
+ \item If $1\le\kappa<L_*$, use the minimization baseline and
+ $\cR(n,\kappa)\le L_*\sqrt n$.
+\end{enumerate}
+The separate $n$ term is always available. Taking the maximum of these
+hard families and using $\max\{u,v\}\ge(u+v)/2$ gives
+\[
+ \T^{\mathrm E}_{\mathrm{IS}}\ge c[n+A\cR(n,\kappa)]
+\]
+for universal $c>0$, under both performance protocols. All instances satisfy
+IS and hence AS. The factor $nMm$ comes from the serial information theorem.
+
+\subsection{Imported AS upper bounds and fixed-confidence truncation}
+\label{sec:upper-interfaces}
+
+Under AS, average dual strong concavity, and \eqref{eq:initialization},
+RPDA has fixed cost $\widetilde O(n+A\sqrt n\,\kappa)$ for $n\ge2$ and
+$\kappa\le\sqrt n$ \citep[Theorem 3 and Appendix H]{zhou2026}.
+For $\kappa\ge\sqrt n$, Catalyst--SVRG has expected cost
+$\widetilde O(A(n+n^{3/4}\sqrt\kappa))$
+\citep[Theorem 4.1, Corollary 4.1, and Section 4.2]{zhang2021}.
+Both guarantee $\E\|\nabla\Phi(\widehat x)\|^2\le\varepsilon^2$ using
+only gradients; the initial dual-error term is zero.
+Since $n^{3/4}\sqrt\kappa\ge n$ in the second regime and $A\ge1$, the
+combined cost is $\widetilde O(n+A\cR)$.
+For $n=1$, simulate the $n=2$ algorithm on two identical copies,
+at one actual call per simulated component call.
+
+For a deterministic budget, run at accuracy $\varepsilon/4$ and truncate
+after $\lceil12Q_0\rceil$ calls, where $Q_0$ is the public expected-cost
+bound. Markov's inequality bounds overflow by $1/12$ and the untruncated
+gradient error probability by $1/16$, giving success at least
+$1-1/12-1/16=41/48>2/3$. The accuracy change multiplies $A$ by $16$
+and leaves $\kappa$ unchanged. This proves Theorem~\ref{thm:main}; no
+expected-square claim is made for the fallback output.
+
+
+\end{document}

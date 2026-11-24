@@ -1,0 +1,907 @@
+{
+  "schema_version": "6.1.0",
+  "setting_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI",
+  "title": "Short-lived high-volume Bernoulli bandits with bounded-density priors",
+  "primary_domain": "online_bandit",
+  "summary": "Long-run Bayesian average loss with random arriving arms, finite lifetimes, and entire-round batched feedback.",
+  "common_specification": {
+    "task": {
+      "description_paragraphs": [
+        "Minimize long-run Bayesian average loss relative to the best currently alive arm in a streaming short-lived high-volume bandit."
+      ],
+      "navigation_domains": [
+        "online_bandit"
+      ],
+      "formulation": "Minimize long-run Bayesian average loss relative to the best currently alive arm in a streaming short-lived high-volume bandit.",
+      "solution_goal": "short_lived_bayesian_bandit"
+    },
+    "model": {
+      "description_paragraphs": [
+        "At the start of every calendar round t, a new disjoint cohort A_t of k arms arrives. An arm born at t remains available through t+w inclusive. Thus there are w+1 alive cohorts after initialization and w useful feedback opportunities before its last allocation.",
+        "Each arm mean is drawn independently from a distribution D on [0,1]. Conditional on all means, rewards are independent Bernoulli draws across arms and plays. The prior density satisfies $c_1\\le f(u)\\le c_2$ almost everywhere, where $0<c_1\\le1\\le c_2<\\infty$. Arrival identities and times contain no mean information. The parameters w,c_1,c_2 are fixed for the rate statements."
+      ],
+      "assumptions": [
+        {
+          "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_assumption_65c4642f8d40",
+          "property_code": "explicit_model_clause",
+          "subject_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__instance",
+          "description": "At the start of every calendar round t, a new disjoint cohort A_t of k arms arrives. An arm born at t remains available through t+w inclusive. Thus there are w+1 alive cohorts after initialization and w useful feedback opportunities before its last allocation.",
+          "scope": "The domain stated in this clause."
+        },
+        {
+          "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_assumption_0989a6ee0f6d",
+          "property_code": "explicit_model_clause",
+          "subject_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__instance",
+          "description": "Each arm mean is drawn independently from a distribution D on [0,1]. Conditional on all means, rewards are independent Bernoulli draws across arms and plays. The prior density satisfies $c_1\\le f(u)\\le c_2$ almost everywhere, where $0<c_1\\le1\\le c_2<\\infty$. Arrival identities and times contain no mean information. The parameters w,c_1,c_2 are fixed for the rate statements.",
+          "scope": "The domain stated in this clause."
+        }
+      ]
+    },
+    "oracle": {
+      "description_paragraphs": [
+        "At each round the policy chooses nonnegative integer allocations $\\pi_t(a)$ to alive arms, with $\\sum_{a\\in\\mathcal A_t}\\pi_t(a)=n$. The entire allocation is measurable before any reward from that round is revealed. All rewards from these n plays are revealed together afterward; no within-round adaptation or stopping is permitted.",
+        "The values n,k,w,c_1,c_2 are public. The policy may be given D; the upper policy uses only its density bounds, and the lower bound holds even when D is the known uniform prior. The arm means are hidden."
+      ],
+      "operation": "At each round the policy chooses nonnegative integer allocations $\\pi_t(a)$ to alive arms, with $\\sum_{a\\in\\mathcal A_t}\\pi_t(a)=n$. The entire allocation is measurable before any reward from that round is revealed. All rewards from these n plays are revealed together afterward; no within-round adaptation or stopping is permitted. The values n,k,w,c_1,c_2 are public. The policy may be given D; the upper policy uses only its density bounds, and the lower bound holds even when D is the known uniform prior. The arm means are hidden.",
+      "hidden_objects": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__instance"
+      ],
+      "public_inputs": [
+        {
+          "kind": "parameters",
+          "refs": [
+            "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_46a3ae93aa7a",
+            "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_37664d5895f7",
+            "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_7265b875feb0",
+            "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_e8c8fcf0765d",
+            "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_8f097023401b",
+            "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_57cb45de78dd",
+            "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_88ebf08fac00",
+            "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_f0712acb1a11"
+          ]
+        }
+      ],
+      "operations": [
+        {
+          "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_oracle_96c604e5a850",
+          "operation_code": "batched_bernoulli_rewards",
+          "target_object": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__instance",
+          "derivative_order": "not_applicable",
+          "feedback_quality": {
+            "code": "stochastic_bernoulli",
+            "description": "The conditional law and exact response packet are specified in the oracle paragraphs."
+          },
+          "query_signature": "The query domain and ordering stated in the oracle paragraphs.",
+          "response_signature": "batched_bernoulli_rewards",
+          "cost_rule": "The explicitly retained resource counters."
+        }
+      ]
+    },
+    "output": {
+      "description_paragraphs": [
+        "The output is the executed sequence of batch allocations. Exactly n plays must be assigned each round, always to arms that are alive."
+      ],
+      "feasibility": "The output is the executed sequence of batch allocations. Exactly n plays must be assigned each round, always to arms that are alive."
+    },
+    "metric": {
+      "description_paragraphs": [
+        "Let $\\mu_t^*=\\max_{a\\in\\mathcal A_t}\\mu_a$. For a finite evaluation horizon T, $\\mathcal L_{n,T}(\\pi;D)=(nT)^{-1}\\mathbb E_D\\sum_{t=1}^T\\sum_{a\\in\\mathcal A_t}\\pi_t(a)(\\mu_t^*-\\mu_a)$. The expectation includes the prior, rewards, and policy randomness.",
+        "The long-run risk uses $\\overline{\\mathcal L}_n(\\pi;D)=\\limsup_{T\\to\\infty}\\mathcal L_{n,T}(\\pi;D)$. Define $\\mathcal L_n^*(c_1,c_2)=\\inf_\\pi\\sup_{D\\in\\mathfrak D(c_1,c_2)}\\overline{\\mathcal L}_n(\\pi;D)$, allowing a policy to take D as input. The expectation precedes the limit superior; this is not an expectation-of-limsup criterion."
+      ],
+      "base_expression": "Let $\\mu_t^*=\\max_{a\\in\\mathcal A_t}\\mu_a$. For a finite evaluation horizon T, $\\mathcal L_{n,T}(\\pi;D)=(nT)^{-1}\\mathbb E_D\\sum_{t=1}^T\\sum_{a\\in\\mathcal A_t}\\pi_t(a)(\\mu_t^*-\\mu_a)$. The expectation includes the prior, rewards, and policy randomness. The long-run risk uses $\\overline{\\mathcal L}_n(\\pi;D)=\\limsup_{T\\to\\infty}\\mathcal L_{n,T}(\\pi;D)$. Define $\\mathcal L_n^*(c_1,c_2)=\\inf_\\pi\\sup_{D\\in\\mathfrak D(c_1,c_2)}\\overline{\\mathcal L}_n(\\pi;D)$, allowing a policy to take D as input. The expectation precedes the limit superior; this is not an expectation-of-limsup criterion.",
+      "criterion": "long_run_average_loss"
+    },
+    "resource": {
+      "description_paragraphs": [
+        "The resource parameters are n plays per calendar round, k arriving arms per round, and lifetime w+1 rounds. There are nT rewards over a finite T-round evaluation. The asymptotic rate sends n to infinity at fixed w,c_1,c_2, with k possibly depending on n; T is sent to infinity inside the long-run performance criterion."
+      ],
+      "budget": "The resource parameters are n plays per calendar round, k arriving arms per round, and lifetime w+1 rounds. There are nT rewards over a finite T-round evaluation. The asymptotic rate sends n to infinity at fixed w,c_1,c_2, with k possibly depending on n; T is sent to infinity inside the long-run performance criterion.",
+      "components": [
+        {
+          "code": "plays_per_round",
+          "description": "Its accounting convention is stated in the resource paragraphs."
+        },
+        {
+          "code": "arrivals_per_round",
+          "description": "Its accounting convention is stated in the resource paragraphs."
+        },
+        {
+          "code": "lifetime",
+          "description": "Its accounting convention is stated in the resource paragraphs."
+        }
+      ]
+    }
+  },
+  "views": [
+    {
+      "view_id": "randomized__long_run_expected_loss",
+      "label": "Long-run expected Bayesian average loss",
+      "algorithms": {
+        "randomization": "randomized_allowed",
+        "description_paragraphs": [
+          "All randomized policies with allocations measurable before current-round feedback are allowed. Arms may be sampled multiple times in a round, but allocations cannot adapt within that round. The prior may be known."
+        ]
+      },
+      "guarantees": [
+        {
+          "guarantee_id": "g1",
+          "complete_expression": "\\sup_{D\\in\\mathfrak D(c_1,c_2)}\\limsup_{T\\to\\infty}\\mathcal L_{n,T}(\\pi;D)\\le\\ell",
+          "quantifier_order": "exists_algorithm_forall_instance_forall_legal_oracle",
+          "description_paragraphs": [
+            "$$\n\\sup_{D\\in\\mathfrak D(c_1,c_2)}\\limsup_{T\\to\\infty}\\mathcal L_{n,T}(\\pi;D)\\le\\ell\n$$",
+            "One upper policy depending only on n,k,w,c_1,c_2 handles every density in the class. The lower bound holds for every policy under the fixed known uniform prior and even for liminf of the finite-horizon expected losses."
+          ]
+        }
+      ],
+      "budget": {
+        "budget_semantics": "fixed_per_round_play_count"
+      },
+      "specification_overrides": {},
+      "alias_ids": [],
+      "display_qualifications": []
+    }
+  ],
+  "parameters": [
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_46a3ae93aa7a",
+      "symbol": "n",
+      "symbol_latex": "n",
+      "meaning": "Number of plays allocated in every round",
+      "kind": "independent",
+      "domain": "$n\\ge1$ integer",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_37664d5895f7",
+      "symbol": "k",
+      "symbol_latex": "k",
+      "meaning": "Number of newly arriving arms each round",
+      "kind": "independent",
+      "domain": "$k\\ge1$ integer",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_7265b875feb0",
+      "symbol": "w",
+      "symbol_latex": "w",
+      "meaning": "Number of feedback opportunities before an arm final-age allocation",
+      "kind": "independent",
+      "domain": "$w\\ge1$ integer; lifespan is w+1 rounds",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_e8c8fcf0765d",
+      "symbol": "c_1,c_2",
+      "symbol_latex": "c_1,c_2",
+      "meaning": "Prior density lower and upper bounds",
+      "kind": "independent",
+      "domain": "$0<c_1\\le1\\le c_2<\\infty$",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_8f097023401b",
+      "symbol": "D",
+      "symbol_latex": "D",
+      "meaning": "Prior distribution of independent arm means",
+      "kind": "independent",
+      "domain": "Density between c_1 and c_2 on [0,1]",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_57cb45de78dd",
+      "symbol": "T",
+      "symbol_latex": "T",
+      "meaning": "Finite evaluation horizon before the long-run limit",
+      "kind": "independent",
+      "domain": "$T\\ge1$ integer",
+      "public": true,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_88ebf08fac00",
+      "symbol": "\\alpha_w",
+      "symbol_latex": "\\alpha_w",
+      "meaning": "Optimal finite-lifetime exponent",
+      "kind": "derived",
+      "domain": "$0<\\alpha_w<1/2$",
+      "public": true,
+      "definition": "$\\alpha_w=(2^w-1)/(2^{w+1}-1)$",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_f0712acb1a11",
+      "symbol": "\\rho",
+      "symbol_latex": "\\rho",
+      "meaning": "Fixed polynomial arrival exponent",
+      "kind": "auxiliary",
+      "domain": "$\\rho>0$",
+      "public": true,
+      "definition": "$k=\\lfloor n^\\rho\\rfloor$ in the polynomial-arrival regime",
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_c9c607273473",
+      "symbol": "n_0",
+      "symbol_latex": "n_0",
+      "meaning": "Source asymptotic threshold",
+      "kind": "auxiliary",
+      "domain": "$n_0=n_0(w,c_1,c_2)$ finite",
+      "public": false,
+      "definition": null,
+      "dependencies": [],
+      "constant_dependencies": [],
+      "numeric_value": null
+    }
+  ],
+  "symbols": [
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_symbol_46a3ae93aa7a",
+      "symbol_latex": "n",
+      "meaning": "Number of plays allocated in every round",
+      "domain": "$n\\ge1$ integer",
+      "definition": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_symbol_37664d5895f7",
+      "symbol_latex": "k",
+      "meaning": "Number of newly arriving arms each round",
+      "domain": "$k\\ge1$ integer",
+      "definition": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_symbol_7265b875feb0",
+      "symbol_latex": "w",
+      "meaning": "Number of feedback opportunities before an arm final-age allocation",
+      "domain": "$w\\ge1$ integer; lifespan is w+1 rounds",
+      "definition": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_symbol_e8c8fcf0765d",
+      "symbol_latex": "c_1,c_2",
+      "meaning": "Prior density lower and upper bounds",
+      "domain": "$0<c_1\\le1\\le c_2<\\infty$",
+      "definition": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_symbol_8f097023401b",
+      "symbol_latex": "D",
+      "meaning": "Prior distribution of independent arm means",
+      "domain": "Density between c_1 and c_2 on [0,1]",
+      "definition": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_symbol_57cb45de78dd",
+      "symbol_latex": "T",
+      "meaning": "Finite evaluation horizon before the long-run limit",
+      "domain": "$T\\ge1$ integer",
+      "definition": null
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_symbol_88ebf08fac00",
+      "symbol_latex": "\\alpha_w",
+      "meaning": "Optimal finite-lifetime exponent",
+      "domain": "$0<\\alpha_w<1/2$",
+      "definition": "$\\alpha_w=(2^w-1)/(2^{w+1}-1)$"
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_symbol_f0712acb1a11",
+      "symbol_latex": "\\rho",
+      "meaning": "Fixed polynomial arrival exponent",
+      "domain": "$\\rho>0$",
+      "definition": "$k=\\lfloor n^\\rho\\rfloor$ in the polynomial-arrival regime"
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_symbol_c9c607273473",
+      "symbol_latex": "n_0",
+      "meaning": "Source asymptotic threshold",
+      "domain": "$n_0=n_0(w,c_1,c_2)$ finite",
+      "definition": null
+    }
+  ],
+  "quantities": [
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_q_3599cba7a2c3",
+      "kind": "minimax_metric_resource_quantity",
+      "specification_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI",
+      "view_id": "randomized__long_run_expected_loss",
+      "guarantee_id": "g1",
+      "expression_latex": "\\mathcal L_n^*(c_1,c_2)",
+      "analysis_scope": "The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.",
+      "regime_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__r",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__r"
+      ],
+      "optimization_direction": "minimize",
+      "resource_contract": {
+        "expression": "$(n,k,w)$",
+        "description": "Exactly n plays per round, k arrivals per round, and a fixed finite lifetime."
+      }
+    }
+  ],
+  "resource_projections": [
+    {
+      "resource_projection_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_resource_5cc347600319",
+      "description": "Exactly n plays per round, k arrivals per round, and a fixed finite lifetime.",
+      "expression": "(n,k,w)",
+      "mode": "explicit_source_quantity"
+    },
+    {
+      "resource_projection_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_resource_2d9730f19d8e",
+      "description": "Per-round n, polynomial k, and fixed w; the performance is a long-run average.",
+      "expression": "(n,k,w)",
+      "mode": "explicit_source_quantity"
+    }
+  ],
+  "regimes": [
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__r",
+      "specification_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI",
+      "name": "Finite lifetime with arbitrary arrival count",
+      "predicate_text": "Fix integer $w\\ge1$ and $0<c_1\\le1\\le c_2<\\infty$; require $n\\ge n_0(w,c_1,c_2)$ and any integer $k\\ge1$. No ambient Euclidean dimension; the number of alive arms is at most k(w+1). The lower bound is for liminf of expected averages, hence also bounds the same limsup-risk used by the upper bound.",
+      "predicate": {
+        "description": "Fix integer $w\\ge1$ and $0<c_1\\le1\\le c_2<\\infty$; require $n\\ge n_0(w,c_1,c_2)$ and any integer $k\\ge1$. No ambient Euclidean dimension; the number of alive arms is at most k(w+1). The lower bound is for liminf of expected averages, hence also bounds the same limsup-risk used by the upper bound."
+      },
+      "kind": "source_window",
+      "parameter_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_46a3ae93aa7a",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_37664d5895f7",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_7265b875feb0",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_e8c8fcf0765d",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_8f097023401b",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_57cb45de78dd",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_88ebf08fac00",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_f0712acb1a11",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_c9c607273473"
+      ],
+      "source_refs": [
+        "COLOMBO_U09"
+      ],
+      "evidence_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__upper__evidence",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__lower__evidence"
+      ]
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__r",
+      "specification_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI",
+      "name": "Optimal exponent for polynomial arm arrivals",
+      "predicate_text": "Fix $w,c_1,c_2$ as above and $\\rho>0$; let $k=\\lfloor n^\\rho\\rfloor$ and $n\\ge n_0$ sufficiently large. Alive-arm count grows as (w+1)floor(n^rho); no Euclidean dimension.",
+      "predicate": {
+        "description": "Fix $w,c_1,c_2$ as above and $\\rho>0$; let $k=\\lfloor n^\\rho\\rfloor$ and $n\\ge n_0$ sufficiently large. Alive-arm count grows as (w+1)floor(n^rho); no Euclidean dimension."
+      },
+      "kind": "source_window",
+      "parameter_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_46a3ae93aa7a",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_37664d5895f7",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_7265b875feb0",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_e8c8fcf0765d",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_8f097023401b",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_57cb45de78dd",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_88ebf08fac00",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_f0712acb1a11",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_c9c607273473"
+      ],
+      "source_refs": [
+        "COLOMBO_U09"
+      ],
+      "evidence_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__upper__evidence",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__lower__evidence"
+      ]
+    }
+  ],
+  "bounds": [
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__upper",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "formula_latex": "O_{w,c_1,c_2}\\!\\left(\\min\\{1,(\\log n)/k+((\\log n)/n)^{\\alpha_w}\\}\\right)",
+      "quantity_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_q_3599cba7a2c3",
+      "region_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__r"
+      ],
+      "method": "Capped all-success screening across increasing cohort sampling depths.",
+      "algorithm_class_scope": "One batching policy independent of the exact prior.",
+      "source_refs": [
+        "COLOMBO_U09"
+      ],
+      "evidence_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__upper__evidence"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__c"
+      ],
+      "applicability": {
+        "conditions": [
+          "Fix integer $w\\ge1$ and $0<c_1\\le1\\le c_2<\\infty$; require $n\\ge n_0(w,c_1,c_2)$ and any integer $k\\ge1$.",
+          "The lower bound is for liminf of expected averages, hence also bounds the same limsup-risk used by the upper bound."
+        ],
+        "dimension_conditions": [
+          "No ambient Euclidean dimension; the number of alive arms is at most k(w+1)."
+        ]
+      },
+      "hidden_constants": "Upper constants may depend on fixed w,c_1,c_2; lower constants may depend on w. No uniform-in-lifetime claim is made.",
+      "hidden_logs": [
+        "Powers of log(n) only, not powers of n."
+      ],
+      "witness_type": "randomized",
+      "view_id": "randomized__long_run_expected_loss",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__lower",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "formula_latex": "\\Omega_w(\\max\\{k^{-1},n^{-\\alpha_w}\\})",
+      "quantity_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_q_3599cba7a2c3",
+      "region_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__r"
+      ],
+      "method": "A batched posterior-discovery inequality and the arrival floor under a uniform prior.",
+      "algorithm_class_scope": "Every randomized admissible policy, including policies knowing the prior.",
+      "source_refs": [
+        "COLOMBO_U09"
+      ],
+      "evidence_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__lower__evidence"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__c"
+      ],
+      "applicability": {
+        "conditions": [
+          "Fix integer $w\\ge1$ and $0<c_1\\le1\\le c_2<\\infty$; require $n\\ge n_0(w,c_1,c_2)$ and any integer $k\\ge1$.",
+          "The lower bound is for liminf of expected averages, hence also bounds the same limsup-risk used by the upper bound."
+        ],
+        "dimension_conditions": [
+          "No ambient Euclidean dimension; the number of alive arms is at most k(w+1)."
+        ]
+      },
+      "hidden_constants": "Upper constants may depend on fixed w,c_1,c_2; lower constants may depend on w. No uniform-in-lifetime claim is made.",
+      "hidden_logs": [
+        "Powers of log(n) only, not powers of n."
+      ],
+      "witness_type": "randomized",
+      "view_id": "randomized__long_run_expected_loss",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__upper",
+      "direction": "upper",
+      "direction_when_defined": "upper",
+      "formula_latex": "\\widetilde O_{w,c_1,c_2,\\rho}(n^{-\\min\\{\\rho,\\alpha_w\\}})",
+      "quantity_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_q_3599cba7a2c3",
+      "region_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__r"
+      ],
+      "method": "The same prior-uniform capped screening policy.",
+      "algorithm_class_scope": "Admissible batched policies.",
+      "source_refs": [
+        "COLOMBO_U09"
+      ],
+      "evidence_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__upper__evidence"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__c"
+      ],
+      "applicability": {
+        "conditions": [
+          "Fix $w,c_1,c_2$ as above and $\\rho>0$; let $k=\\lfloor n^\\rho\\rfloor$ and $n\\ge n_0$ sufficiently large."
+        ],
+        "dimension_conditions": [
+          "Alive-arm count grows as (w+1)floor(n^rho); no Euclidean dimension."
+        ]
+      },
+      "hidden_constants": "Fixed w,c_1,c_2,rho may enter constants; no uniform growing-w rate is claimed.",
+      "hidden_logs": [
+        "Powers of log(n) only."
+      ],
+      "witness_type": "randomized",
+      "view_id": "randomized__long_run_expected_loss",
+      "guarantee_id": "g1"
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__lower",
+      "direction": "lower",
+      "direction_when_defined": "lower",
+      "formula_latex": "\\widetilde\\Omega_{w,\\rho}(n^{-\\min\\{\\rho,\\alpha_w\\}})",
+      "quantity_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_q_3599cba7a2c3",
+      "region_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__r"
+      ],
+      "method": "Uniform-prior posterior-discovery and arrival lower bounds.",
+      "algorithm_class_scope": "Every admissible policy, even with the uniform prior known.",
+      "source_refs": [
+        "COLOMBO_U09"
+      ],
+      "evidence_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__lower__evidence"
+      ],
+      "included_in_bracket": true,
+      "eligible_for_bracket": true,
+      "selected_in_regimes": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__c"
+      ],
+      "applicability": {
+        "conditions": [
+          "Fix $w,c_1,c_2$ as above and $\\rho>0$; let $k=\\lfloor n^\\rho\\rfloor$ and $n\\ge n_0$ sufficiently large."
+        ],
+        "dimension_conditions": [
+          "Alive-arm count grows as (w+1)floor(n^rho); no Euclidean dimension."
+        ]
+      },
+      "hidden_constants": "Fixed w,c_1,c_2,rho may enter constants; no uniform growing-w rate is claimed.",
+      "hidden_logs": [
+        "Powers of log(n) only."
+      ],
+      "witness_type": "randomized",
+      "view_id": "randomized__long_run_expected_loss",
+      "guarantee_id": "g1"
+    }
+  ],
+  "comparisons": [
+    {
+      "comparison_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__c",
+      "label": "Finite lifetime with arbitrary arrival count",
+      "view_id": "randomized__long_run_expected_loss",
+      "guarantee_id": "g1",
+      "quantity_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_q_3599cba7a2c3",
+      "resource_projection_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_resource_5cc347600319",
+      "regime_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__r",
+      "comparison_key": {
+        "setting_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI",
+        "view_id": "randomized__long_run_expected_loss",
+        "guarantee_id": "g1",
+        "quantity_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_q_3599cba7a2c3",
+        "resource_projection_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_resource_5cc347600319",
+        "regime_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__r"
+      },
+      "predicate": {
+        "description": "Fix integer $w\\ge1$ and $0<c_1\\le1\\le c_2<\\infty$; require $n\\ge n_0(w,c_1,c_2)$ and any integer $k\\ge1$. No ambient Euclidean dimension; the number of alive arms is at most k(w+1). The lower bound is for liminf of expected averages, hence also bounds the same limsup-risk used by the upper bound."
+      },
+      "predicate_text": "Fix integer $w\\ge1$ and $0<c_1\\le1\\le c_2<\\infty$; require $n\\ge n_0(w,c_1,c_2)$ and any integer $k\\ge1$. No ambient Euclidean dimension; the number of alive arms is at most k(w+1). The lower bound is for liminf of expected averages, hence also bounds the same limsup-risk used by the upper bound.",
+      "parameter_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_46a3ae93aa7a",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_37664d5895f7",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_7265b875feb0",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_e8c8fcf0765d",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_8f097023401b",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_57cb45de78dd",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_88ebf08fac00",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_f0712acb1a11",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_c9c607273473"
+      ],
+      "source_region_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__r",
+      "status": {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap",
+        "missing_sides": []
+      },
+      "bracket": {
+        "upper_refs": [
+          "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__upper"
+        ],
+        "lower_refs": [
+          "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__lower"
+        ],
+        "quantity_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_q_3599cba7a2c3",
+        "comparison_mode": "same_metric_resource_scope",
+        "resource_projection": "(n,k,w)",
+        "resource_projection_description": "Exactly n plays per round, k arrivals per round, and a fixed finite lifetime.",
+        "ratio_or_gap": "At most logarithmic factors in n; max and sum of the two positive scales differ only by a factor of two.",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "O_{w,c_1,c_2}\\!\\left(\\min\\{1,(\\log n)/k+((\\log n)/n)^{\\alpha_w}\\}\\right)",
+            "bound_refs": [
+              "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__upper"
+            ]
+          },
+          "lower": {
+            "expression_latex": "\\Omega_w(\\max\\{k^{-1},n^{-\\alpha_w}\\})",
+            "bound_refs": [
+              "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__lower"
+            ]
+          }
+        },
+        "claim_guards": {
+          "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__upper": [
+            {
+              "region_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__r",
+              "predicate_text": "Fix integer $w\\ge1$ and $0<c_1\\le1\\le c_2<\\infty$; require $n\\ge n_0(w,c_1,c_2)$ and any integer $k\\ge1$. No ambient Euclidean dimension; the number of alive arms is at most k(w+1). The lower bound is for liminf of expected averages, hence also bounds the same limsup-risk used by the upper bound."
+            }
+          ],
+          "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__lower": [
+            {
+              "region_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__r",
+              "predicate_text": "Fix integer $w\\ge1$ and $0<c_1\\le1\\le c_2<\\infty$; require $n\\ge n_0(w,c_1,c_2)$ and any integer $k\\ge1$. No ambient Euclidean dimension; the number of alive arms is at most k(w+1). The lower bound is for liminf of expected averages, hence also bounds the same limsup-risk used by the upper bound."
+            }
+          ]
+        },
+        "dispatch": [],
+        "achievable_refs": [],
+        "necessary_refs": []
+      }
+    },
+    {
+      "comparison_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__c",
+      "label": "Optimal exponent for polynomial arm arrivals",
+      "view_id": "randomized__long_run_expected_loss",
+      "guarantee_id": "g1",
+      "quantity_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_q_3599cba7a2c3",
+      "resource_projection_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_resource_2d9730f19d8e",
+      "regime_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__r",
+      "comparison_key": {
+        "setting_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI",
+        "view_id": "randomized__long_run_expected_loss",
+        "guarantee_id": "g1",
+        "quantity_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_q_3599cba7a2c3",
+        "resource_projection_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_resource_2d9730f19d8e",
+        "regime_id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__r"
+      },
+      "predicate": {
+        "description": "Fix $w,c_1,c_2$ as above and $\\rho>0$; let $k=\\lfloor n^\\rho\\rfloor$ and $n\\ge n_0$ sufficiently large. Alive-arm count grows as (w+1)floor(n^rho); no Euclidean dimension."
+      },
+      "predicate_text": "Fix $w,c_1,c_2$ as above and $\\rho>0$; let $k=\\lfloor n^\\rho\\rfloor$ and $n\\ge n_0$ sufficiently large. Alive-arm count grows as (w+1)floor(n^rho); no Euclidean dimension.",
+      "parameter_refs": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_46a3ae93aa7a",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_37664d5895f7",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_7265b875feb0",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_e8c8fcf0765d",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_8f097023401b",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_57cb45de78dd",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_88ebf08fac00",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_f0712acb1a11",
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_p_c9c607273473"
+      ],
+      "source_region_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__r",
+      "status": {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap",
+        "missing_sides": []
+      },
+      "bracket": {
+        "upper_refs": [
+          "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__upper"
+        ],
+        "lower_refs": [
+          "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__lower"
+        ],
+        "quantity_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_q_3599cba7a2c3",
+        "comparison_mode": "same_metric_resource_scope",
+        "resource_projection": "(n,k,w)",
+        "resource_projection_description": "Per-round n, polynomial k, and fixed w; the performance is a long-run average.",
+        "ratio_or_gap": "The polynomial exponent is matched; only logarithmic factors remain.",
+        "envelopes": {
+          "upper": {
+            "expression_latex": "\\widetilde O_{w,c_1,c_2,\\rho}(n^{-\\min\\{\\rho,\\alpha_w\\}})",
+            "bound_refs": [
+              "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__upper"
+            ]
+          },
+          "lower": {
+            "expression_latex": "\\widetilde\\Omega_{w,\\rho}(n^{-\\min\\{\\rho,\\alpha_w\\}})",
+            "bound_refs": [
+              "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__lower"
+            ]
+          }
+        },
+        "claim_guards": {
+          "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__upper": [
+            {
+              "region_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__r",
+              "predicate_text": "Fix $w,c_1,c_2$ as above and $\\rho>0$; let $k=\\lfloor n^\\rho\\rfloor$ and $n\\ge n_0$ sufficiently large. Alive-arm count grows as (w+1)floor(n^rho); no Euclidean dimension."
+            }
+          ],
+          "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__lower": [
+            {
+              "region_ref": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__r",
+              "predicate_text": "Fix $w,c_1,c_2$ as above and $\\rho>0$; let $k=\\lfloor n^\\rho\\rfloor$ and $n\\ge n_0$ sufficiently large. Alive-arm count grows as (w+1)floor(n^rho); no Euclidean dimension."
+            }
+          ]
+        },
+        "dispatch": [],
+        "achievable_refs": [],
+        "necessary_refs": []
+      }
+    }
+  ],
+  "proofs": [],
+  "evidence": [
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__upper__evidence",
+      "source_ref": "COLOMBO_U09",
+      "source_refs": [
+        "COLOMBO_U09"
+      ],
+      "locator": {
+        "description": "Theorem thm:main; equation eq:main-upper",
+        "theorem": "Theorem thm:main; equation eq:main-upper",
+        "pdf_pages": [],
+        "printed_pages": [],
+        "equations": []
+      },
+      "location": "Theorem thm:main; equation eq:main-upper",
+      "supports": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__upper",
+      "statement_summary": "Capped all-success screening across increasing cohort sampling depths.. One batching policy independent of the exact prior.",
+      "applicability_review": ""
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__lower__evidence",
+      "source_ref": "COLOMBO_U09",
+      "source_refs": [
+        "COLOMBO_U09"
+      ],
+      "locator": {
+        "description": "Theorem thm:main; equation eq:main-lower",
+        "theorem": "Theorem thm:main; equation eq:main-lower",
+        "pdf_pages": [],
+        "printed_pages": [],
+        "equations": []
+      },
+      "location": "Theorem thm:main; equation eq:main-lower",
+      "supports": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__lower",
+      "statement_summary": "A batched posterior-discovery inequality and the arrival floor under a uniform prior.. Every randomized admissible policy, including policies knowing the prior.",
+      "applicability_review": ""
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__upper__evidence",
+      "source_ref": "COLOMBO_U09",
+      "source_refs": [
+        "COLOMBO_U09"
+      ],
+      "locator": {
+        "description": "Corollary cor:rho",
+        "theorem": "Corollary cor:rho",
+        "pdf_pages": [],
+        "printed_pages": [],
+        "equations": []
+      },
+      "location": "Corollary cor:rho",
+      "supports": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__upper",
+      "statement_summary": "The same prior-uniform capped screening policy.. Admissible batched policies.",
+      "applicability_review": ""
+    },
+    {
+      "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__lower__evidence",
+      "source_ref": "COLOMBO_U09",
+      "source_refs": [
+        "COLOMBO_U09"
+      ],
+      "locator": {
+        "description": "Corollary cor:rho",
+        "theorem": "Corollary cor:rho",
+        "pdf_pages": [],
+        "printed_pages": [],
+        "equations": []
+      },
+      "location": "Corollary cor:rho",
+      "supports": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__lower",
+      "statement_summary": "Uniform-prior posterior-discovery and arrival lower bounds.. Every admissible policy, even with the uniform prior known.",
+      "applicability_review": ""
+    }
+  ],
+  "references": [
+    {
+      "id": "COLOMBO_U09",
+      "authors": [
+        "Colombo_U09"
+      ],
+      "title": "Optimal Exponents for Short-Lived High-Volume Bandits",
+      "year": null,
+      "version": "short_lived_high_volume_bandits.tex",
+      "url": "https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U09/manuscript.pdf",
+      "publication_status": "unpublished_manuscript",
+      "local_path": "data/sources/colombo/U09/manuscript.pdf",
+      "source_tex_path": "data/sources/colombo/U09/manuscript.tex",
+      "source_pdf_sha256": "84a5f949230870f6c9e75b62b6002cbf97f29e325cebb0bccfd6142356c109d4",
+      "source_tex_sha256": "0439a6f4b04395c95bf47311c399d8f36b17b41262eab7ada437318d3daf7c5d"
+    }
+  ],
+  "facets": [],
+  "relations": [],
+  "aliases": [],
+  "bracket_rows": [
+    {
+      "row_id": "row_1",
+      "comparison_ids": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_all_arrival_counts_20261124__c"
+      ],
+      "view_ids": [
+        "randomized__long_run_expected_loss"
+      ]
+    },
+    {
+      "row_id": "row_2",
+      "comparison_ids": [
+        "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__colombo_polynomial_arrivals_20261124__c"
+      ],
+      "view_ids": [
+        "randomized__long_run_expected_loss"
+      ]
+    }
+  ],
+  "registry": {
+    "objects": [
+      {
+        "id": "ONX_SHORT_LIVED_HIGH_VOLUME_BERNOULLI__instance",
+        "type": "declared_instance",
+        "role_code": "instance",
+        "definition": "Minimize long-run Bayesian average loss relative to the best currently alive arm in a streaming short-lived high-volume bandit.",
+        "depends_on": []
+      }
+    ],
+    "variable_blocks": [],
+    "domains": [],
+    "norms": [],
+    "protocols": [],
+    "comparators": []
+  },
+  "provenance": {
+    "source_schema_version": "6.1.0",
+    "source_snapshot": "colombo-manuscripts-20261124",
+    "source_json_sha256": "6834a3bca808720ee4aed066175072f5ece952a05f26596f4a88076d071471a2",
+    "source_order": 460,
+    "source_updates": [
+      {
+        "source_snapshot": "colombo-manuscripts-20261124",
+        "source_json_sha256": "6834a3bca808720ee4aed066175072f5ece952a05f26596f4a88076d071471a2",
+        "source_refs": [
+          "COLOMBO_U09"
+        ]
+      }
+    ]
+  },
+  "summary_status": {
+    "scope": "documented_comparison_domain",
+    "badges": [
+      {
+        "code": "logarithmic_gap",
+        "label": "Logarithmic gap"
+      }
+    ],
+    "gap_classes": [
+      "logarithmic_gap"
+    ],
+    "missing_sides": [],
+    "special_statuses": [],
+    "comparison_count": 2,
+    "status_counts": {
+      "logarithmic_gap": 2
+    },
+    "gap_details": []
+  }
+}

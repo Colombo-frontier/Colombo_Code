@@ -6,7 +6,7 @@ Online learning and bandits
 
 All arms evolve with calendar time, including unpulled arms. Their fixed unknown means are increasing and concave in time. The learner sees only a fresh reward from the selected arm and competes with the current best mean. The variation budget is known.
 
-**Status.** Polynomial gap present
+**Status.** Logarithmic gap
 
 **TASK tags.** formulation: Onx rising concave knownv; task family: Online bandit
 
@@ -156,6 +156,14 @@ $N$: Cumulative observations counted according to the declared feedback type. **
 
 The quantity $N=T$ counts cumulative native scalar feedback under a one-point or one-arm protocol.
 
+$v$: Clipped variation **Domain:** $0\le v\le1$.
+
+$v=\min\{1,V\}$
+
+$S$: Stationary regret scale **Domain:** $S>0$.
+
+$S=\sigma\sqrt{KT}$
+
 ## 3. Complexity bracket
 
 ### Compared quantities
@@ -170,29 +178,29 @@ $$
 
 **Optimization direction.** minimize
 
-### R1 - SUPPORTED
+### R1 - Concave rising means: all expected-regret regimes
 
-**Region.** Assume $\sigma\ge1$ and $0<V\le K$, with the respective horizon windows of both bounds. At fixed $K,V,\sigma$, the horizon exponents are $7/11$ and $3/5$.
+**Region.** $K,T\ge2$ integers, $\sigma\ge1$, and $0\le V\le K$; let $v=\min\{1,V\}$. Finite K arms; no Euclidean action dimension. The saturated regime is $T\le\sigma^2K$. When $T>\sigma^2K$, the stationary term dominates for $v\le\sigma\sqrt{K/T}$ and the concave nonstationary term dominates above that threshold. No theorem here claims a sharp minimax rate for sigma<1.
 
 **Quantity.** Q1
 
 **Resource.** Fixed native online budget, with computational, communication, and privacy resources retained separately.
 
-**Status.** Polynomial gap
+**Status.** Logarithmic gap
 
-**Lower bound.** B1
-
-$$
-2^{-14}\sigma^{4/5}K^{2/5}\min\{1,V\}^{1/5}T^{3/5}
-$$
-
-**Upper bound.** B2, B3
+**Lower bound.** B5
 
 $$
-\widetilde{O}\!\left(\min\left\{\sigma^{14/11}K^{27/11}T^{6/11}V^{-3/11}+\sigma^{9/11}K^{15/11}T^{7/11}V^{2/11},\ \sigma K^3T^{6/11}+K^3VT^{7/11}+\sigma KT^{7/11}\right\}\right)
+\Omega\!\left(\min\{T,\sigma\sqrt{KT}+\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}\}\right)
 $$
 
-**Gap or comparison.** At fixed positive $K,V,\sigma$, the horizon-exponent gap is $7/11-3/5=2/55$. Joint parameter gaps are computed from the two explicit bounds.
+**Upper bound.** B4
+
+$$
+O\!\left(\min\{T,[\log(2KT)]^{3/2}(\sigma\sqrt{KT}+\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5})\}\right)
+$$
+
+**Gap or comparison.** An $O([\log(2KT)]^{3/2})$ factor remains, uniformly in K,T,V,sigma in the stated domain.
 
 ## 4. Bounds and supporting evidence
 
@@ -276,8 +284,76 @@ $$
 
 **Source location.** [1](https://proceedings.nips.cc/paper_files/paper/2025/file/1aa670dafbd4b32ebf483f8372e612c5-Paper-Conference.pdf) Theorem 4.4, alpha=8/3, PDF p.9
 
+### B4 - Suffix-OLS-UCB with confidence level delta=T^(-2), all observation suffixes, and an adaptive piecewise-affine approximation inequality.
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+O\!\left(\min\{T,[\log(2KT)]^{3/2}(\sigma\sqrt{KT}+\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5})\}\right)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U12/manuscript.pdf)
+
+**Conditions.** $K,T\ge2$ integers, $\sigma\ge1$, and $0\le V\le K$; let $v=\min\{1,V\}$.; The original upper theorem permits conditional sub-Gaussian noise, so it applies to this independent-noise subclass.; The saturated regime is $T\le\sigma^2K$. When $T>\sigma^2K$, the stationary term dominates for $v\le\sigma\sqrt{K/T}$ and the concave nonstationary term dominates above that threshold.; No theorem here claims a sharp minimax rate for sigma<1.
+
+**Dimension conditions.** Finite K arms; no Euclidean action dimension.
+
+**Constants.** Universal constants.
+
+**Logarithmic factors.** Only the explicitly displayed logarithm in K,T.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U12/manuscript.pdf) Corollary cor:expected-main; Theorem cor:minimax-main; equations eq:expected-rate and eq:minimax-main
+
+Suffix-OLS-UCB with confidence level delta=T^(-2), all observation suffixes, and an adaptive piecewise-affine approximation inequality.. A causal policy using K,T,sigma but no variation budget or slope-change information.
+
+The original upper theorem permits conditional sub-Gaussian noise, so it applies to this independent-noise subclass.
+
+### B5 - Stationary Gaussian lower bound combined with the cited concave nonstationary hard prior in its valid horizon window.
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+\Omega\!\left(\min\{T,\sigma\sqrt{KT}+\sigma^{4/5}K^{2/5}v^{1/5}T^{3/5}\}\right)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U12/manuscript.pdf)
+
+**Conditions.** $K,T\ge2$ integers, $\sigma\ge1$, and $0\le V\le K$; let $v=\min\{1,V\}$.; Independent Gaussian rewards witness the lower bound. The stationary term covers the parameter region outside the nonstationary source lower-bound window.; The saturated regime is $T\le\sigma^2K$. When $T>\sigma^2K$, the stationary term dominates for $v\le\sigma\sqrt{K/T}$ and the concave nonstationary term dominates above that threshold.; No theorem here claims a sharp minimax rate for sigma<1.
+
+**Dimension conditions.** Finite K arms; no Euclidean action dimension.
+
+**Constants.** Universal constants.
+
+**Logarithmic factors.** Only the explicitly displayed logarithm in K,T.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U12/manuscript.pdf) Theorem cor:minimax-main; stationary lower bound eq:stationary-lower; Appendix app:main-proof
+
+Stationary Gaussian lower bound combined with the cited concave nonstationary hard prior in its valid horizon window.. Every causal randomized policy, even if V is supplied.
+
+Independent Gaussian rewards witness the lower bound. The stationary term covers the parameter region outside the nonstationary source lower-bound window.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
 ## References
 
 [1] Cristiano Migali; Marco Mussi; Gianmarco Genalti; Alberto Maria Metelli. Tightening Regret Lower and Upper Bounds in Restless Rising Bandits. 2025. NeurIPS 2025 publisher PDF.
 
 https://proceedings.nips.cc/paper_files/paper/2025/file/1aa670dafbd4b32ebf483f8372e612c5-Paper-Conference.pdf
+
+[2] Colombo_U12. Minimax Regret for Restless Rising Concave Bandits via Suffix Least-Squares Optimism. Suffix_OLS_UCB_Colombo_Team.tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U12/manuscript.pdf

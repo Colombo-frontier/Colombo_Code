@@ -150,6 +150,14 @@ $\omega$: A complete realization of algorithmic and sample randomness. **Domain:
 
 $O,\Omega,\Theta,\widetilde O$: Asymptotic upper and lower bounds, constant-factor matching, and upper bounds hiding the stated logarithmic factors, within the corresponding regions. **Domain:** Nonnegative complexity function; subscript p permits additional dependence only on fixed p.
 
+$N_\varepsilon$: Geometric stage scale **Domain:** $N_\varepsilon>0$.
+
+$N_\varepsilon=(\beta R_0/\varepsilon)^2$
+
+$A_\varepsilon$: Noise inflation factor **Domain:** $A_\varepsilon\ge1$.
+
+$A_\varepsilon=1+\sigma^2/\varepsilon^2$
+
 ## 3. Complexity bracket
 
 ### Compared quantities
@@ -161,6 +169,18 @@ $O,\Omega,\Theta,\widetilde O$: Asymptotic upper and lower bounds, constant-fact
 **Resource contract.** budget: sup_instance E[N_oracle] (expected stopping-work budget); primary: N_operator_sample; unit: one declared oracle call; auxiliary: projection and known prox evaluations separately retained
 
 This is the native source metric/resource guarantee. Joint precision, block size, runtime and oracle components stay separate; do not infer a scalar optimal query complexity.
+
+#### Q2 - minimax metric resource quantity
+
+$$
+C^\star_\infty=\sup_{d\ge1}\inf_A\sup_{I,\mathcal O}\mathbb E\tau_A
+$$
+
+**Scope.** The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+**Optimization direction.** minimize
+
+**Resource contract.** expression: $\sup_{I,\mathcal O}\mathbb E\tau$; description: Worst-instance expected work under the linked expected-residual guarantee.
 
 ### R1 - The bound’s native applicability window.
 
@@ -176,11 +196,31 @@ This is the native source metric/resource guarantee. Joint precision, block size
 
 **Upper bound.** B1
 
+### R2 - Dimension-uniform expected-work weak-Minty complexity
+
+**Region.** $R_0,\beta>0$, $\sigma\ge0$, $0\le\rho\beta\le1/4$, $0<\varepsilon\le c_0\beta R_0$. One explicit source choice is $c_0=1/(256\sqrt{514})$. The upper bound holds in every finite dimension. Theorem matching supplies a lower-bound dimension $d_\varepsilon\le C_2N_\varepsilon\log(2+N_\varepsilon A_\varepsilon)$; the primary quantity is the supremum over finite dimensions. The hard mean has a unique root and satisfies the stronger Minty condition rho=0.
+
+**Quantity.** Q2
+
+**Resource.** Worst-instance expected work under the linked expected-residual guarantee.
+
+**Status.** Optimal
+
+**Lower bound.** B3
+
+$$
+\Omega(N_\varepsilon A_\varepsilon)
+$$
+
+**Upper bound.** B2
+
+$$
+O(N_\varepsilon A_\varepsilon)
+$$
+
+**Gap or comparison.** Universal constant-factor matching.
+
 ## 4. Bounds and supporting evidence
-
-The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
-
-**Conditions.** Set the convex term and the state-dependent variance slope to zero in the composite weak Minty theorem. Tighten the internal target using the source residual conversion. Expected work remains an expected-resource quantity. This record certifies accuracy dependence only at fixed structural parameters.
 
 ### B1 - See the cited theorem
 
@@ -198,6 +238,8 @@ $$
 
 **Sources.** [1](https://raw.githubusercontent.com/mlresearch/v306/main/assets/alacaoglu26a/alacaoglu26a.pdf)
 
+**Conditions.** Set the convex term and the state-dependent variance slope to zero in the composite weak Minty theorem. Tighten the internal target using the source residual conversion. Expected work remains an expected-resource quantity. This record certifies accuracy dependence only at fixed structural parameters.
+
 **Constants.** Use the source theorem’s universal constants except where derivative order or structural budgets are explicitly fixed. Unspecified sufficient thresholds remain symbolic.
 
 **Source location.** [1](https://raw.githubusercontent.com/mlresearch/v306/main/assets/alacaoglu26a/alacaoglu26a.pdf) Assumptions1,3; Theorem3.1; Lemma3.5; Remark3.2
@@ -206,8 +248,76 @@ Expected-work resolvent displacement upper, with root specialization and same-po
 
 For r=0 and B=0, oracle is fixed-distribution fresh field with uniform variance. Choose rho<eta<1/L. Source notation has -rho||F||^2. For u=J_etaF(z), ||F(z)||<= (L+eta^(-1))||z-u||. Therefore source expected displacement at scaled tolerance yields same-point expected root norm. No free computation of u required by output mapping; all MLMC samples counted. No full joint-parameter optimal lower inferred.
 
+### B2 - Minibatch damped extragradient
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+O(N_\varepsilon A_\varepsilon)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N03/manuscript.pdf)
+
+**Conditions.** $R_0,\beta>0$, $\sigma\ge0$, $0\le\rho\beta\le1/4$, $0<\varepsilon\le c_0\beta R_0$. One explicit source choice is $c_0=1/(256\sqrt{514})$.; The source upper proof allows the broader conditional-noise class, hence applies to independent fresh responses.
+
+**Dimension conditions.** The upper bound holds in every finite dimension. Theorem matching supplies a lower-bound dimension $d_\varepsilon\le C_2N_\varepsilon\log(2+N_\varepsilon A_\varepsilon)$; the primary quantity is the supremum over finite dimensions. The hard mean has a unique root and satisfies the stronger Minty condition rho=0.
+
+**Constants.** All unmarked constants are universal.
+
+**Logarithmic factors.** None.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N03/manuscript.pdf) Theorem matching; Theorem upper; equation matching; verified labels: thm:matching (line 216), eq:matching (line 220), sec:upper (line 422), thm:upper (line 514)
+
+Minibatch damped extragradient. Adaptive algorithms with a deterministic upper sample cap.
+
+The source upper proof allows the broader conditional-noise class, hence applies to independent fresh responses.
+
+### B3 - Gated hidden codewords and Bernoulli masking with expected-work truncation
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+\Omega(N_\varepsilon A_\varepsilon)
+$$
+
+**Sources.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N03/manuscript.pdf)
+
+**Conditions.** $R_0,\beta>0$, $\sigma\ge0$, $0\le\rho\beta\le1/4$, $0<\varepsilon\le c_0\beta R_0$. One explicit source choice is $c_0=1/(256\sqrt{514})$.; The hard oracle uses independent Bernoulli randomness and lies inside the existing fresh model.
+
+**Dimension conditions.** The upper bound holds in every finite dimension. Theorem matching supplies a lower-bound dimension $d_\varepsilon\le C_2N_\varepsilon\log(2+N_\varepsilon A_\varepsilon)$; the primary quantity is the supremum over finite dimensions. The hard mean has a unique root and satisfies the stronger Minty condition rho=0.
+
+**Constants.** All unmarked constants are universal.
+
+**Logarithmic factors.** None.
+
+**Source location.** [2](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N03/manuscript.pdf) Theorem matching; Sections scaling and expected-work lower bounds; verified labels: thm:matching (line 216), eq:matching (line 220)
+
+Gated hidden codewords and Bernoulli masking with expected-work truncation. All randomized adaptive algorithms, arbitrary queries and outputs, and almost surely finite stopping.
+
+The hard oracle uses independent Bernoulli randomness and lies inside the existing fresh model.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
 ## References
 
 [1] Ahmet Alacaoglu; Jun-Hyun Kim. Solving Stochastic Variational Inequalities without the Bounded Variance Assumption. 2026. ICML PMLR306:1647--1679.
 
 https://raw.githubusercontent.com/mlresearch/v306/main/assets/alacaoglu26a/alacaoglu26a.pdf
+
+[2] Colombo_N03. Optimal Sample Complexity of Stochastic Weak-Minty Root Finding. N03_weak_minty_root_finding.tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N03/manuscript.pdf

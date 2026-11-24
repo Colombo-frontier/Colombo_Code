@@ -6,7 +6,9 @@ Single-objective optimization
 
 Minimize $f$ globally over $B_2(0,R)$ and return a point with small objective gap.
 
-**Status.** Logarithmic gap present
+**Status.** Logarithmic gap; Other quantified gap; Bounds missing
+
+**Gap classes present.** Logarithmic gap; Other quantified gap
 
 **TASK tags.** formulation: Global minimization; solution concept: Global minimization; task family: Single objective
 
@@ -20,7 +22,7 @@ Minimize $f$ globally over $B_2(0,R)$ and return a point with small objective ga
 
 **METRIC tags.** criterion: Objective gap
 
-**GUARANTEE tags.** aggregation: Per instance; mode: Deterministic; mode: Probability
+**GUARANTEE tags.** aggregation: Per instance; mode: Deterministic; mode: Expectation; mode: Probability; quantifier: Algorithm before instance; randomness: Algorithm private seed
 
 **RESOURCE tags.** budget: Fixed worst-case budget
 
@@ -86,6 +88,54 @@ Oracle cost uses a deterministic worst-case budget: $N\le T$ on every possible e
 
 **Output qualification.** Random selection among previously queried points is permitted, subject to the declared success guarantee.
 
+#### Randomized / Expected loss / Full slack range
+
+Queries, stopping decisions, and the output are measurable functions of the preceding transcript and an instance-independent private random seed. The unknown instance is fixed before the seed is realized. No span, support, zero-respecting, or memory restriction is imposed.
+
+Internal exact-real computation and storage using public inputs and received information are uncharged. The stated budget must hold on every execution path.
+
+$$
+\forall f:\ \mathbb E[f(\widehat x)-\min_{B_2(0,R)}f]\le\varepsilon
+$$
+
+Expectation is only over the independent private seed after the objective is fixed. Every execution has the same worst-case scalar-query cap.
+
+Model: The hidden objective $f:B_2(0,R)\to\mathbb R$ is continuous, $f(x)-\mu\|x\|_2^2/2$ is convex, and $|f(x)-f(y)|\le L\|x-y\|_2$ for every pair in the ball. Here $L$ bounds the whole objective, not only a residual. Differentiability and an interior minimizer are not assumed.
+
+Model: The admissible nonempty parameter range is $L\ge\mu R>0$, with no fixed separation from equality. No definition or regularity outside the ball is assumed. The gap from the feasibility boundary is $\Delta=L-\mu R\ge0$.
+
+Model: For $\Delta=0$, every objective is $f(x)=f(0)+\mu\|x\|_2^2/2$. For $\Delta>0$, define $$S_\Delta=\max_{0\le r\le R}\{\Delta r-\mu r^2/2\}=\begin{cases}\Delta^2/(2\mu),&0\le\Delta\le\mu R,\\ \Delta R-\mu R^2/2,&\Delta>\mu R.\end{cases}$$
+
+Oracle: At a feasible point $x\in B_2(0,R)$, the oracle returns only the exact scalar $f(x)$. The unknown function is fixed before an independent private seed is drawn. No values outside the ball, derivatives, or hidden minimizers are supplied.
+
+Oracle: The public inputs are $d,L,\mu,R,\varepsilon$ and the ball. All scalar values, including the two values of a paired estimate, are charged. Projection and operations on the known ball are free.
+
+**Budget convention.** fixed_worst_case
+
+#### Randomized / 1/2 success / Full slack range
+
+Queries, stopping decisions, and the output are measurable functions of the preceding transcript and an instance-independent private random seed. The unknown instance is fixed before the seed is realized. No span, support, zero-respecting, or memory restriction is imposed.
+
+Internal exact-real computation and storage using public inputs and received information are uncharged. The stated budget must hold on every execution path.
+
+$$
+\forall f:\ \Pr(f(\widehat x)-\min_{B_2(0,R)}f>\varepsilon)\le1/2
+$$
+
+The fixed success level is exactly the manuscript convention, at least one half on each instance. The call budget is pathwise, and only the private seed is randomized.
+
+Model: The hidden objective $f:B_2(0,R)\to\mathbb R$ is continuous, $f(x)-\mu\|x\|_2^2/2$ is convex, and $|f(x)-f(y)|\le L\|x-y\|_2$ for every pair in the ball. Here $L$ bounds the whole objective, not only a residual. Differentiability and an interior minimizer are not assumed.
+
+Model: The admissible nonempty parameter range is $L\ge\mu R>0$, with no fixed separation from equality. No definition or regularity outside the ball is assumed. The gap from the feasibility boundary is $\Delta=L-\mu R\ge0$.
+
+Model: For $\Delta=0$, every objective is $f(x)=f(0)+\mu\|x\|_2^2/2$. For $\Delta>0$, define $$S_\Delta=\max_{0\le r\le R}\{\Delta r-\mu r^2/2\}=\begin{cases}\Delta^2/(2\mu),&0\le\Delta\le\mu R,\\ \Delta R-\mu R^2/2,&\Delta>\mu R.\end{cases}$$
+
+Oracle: At a feasible point $x\in B_2(0,R)$, the oracle returns only the exact scalar $f(x)$. The unknown function is fixed before an independent private seed is drawn. No values outside the ball, derivatives, or hidden minimizers are supplied.
+
+Oracle: The public inputs are $d,L,\mu,R,\varepsilon$ and the ball. All scalar values, including the two values of a paired estimate, are charged. Projection and operations on the known ball are free.
+
+**Budget convention.** fixed_worst_case
+
 ## 2. Notation and parameters
 
 $d$: Dimension of the variable space **Domain:** $d\in\mathbb{N},\ d\ge1$.
@@ -110,21 +160,21 @@ $\theta$: Compatibility ratio of the strong-convexity and Lipschitz budgets **Do
 
 $\theta=\mu R/L$
 
-$\Xi$: Saturation scale involving dimension, Lipschitz accuracy, and strongly convex accuracy **Domain:** $\Xi>0$.
+$\Xi$: Lipschitz-based saturation scale used in the parameter-separated comparisons. **Domain:** $\Xi>0$.
 
-$\Xi=\min\{d,A^2,L^2/(\mu\varepsilon)\}$
+$\Xi=\min\{d,(LR/\varepsilon)^2,L^2/(\mu\varepsilon)\}$ in views deterministic and randomized. The full-slack comparisons use $m_\varepsilon$ instead.
 
-$\theta_0$: Upper bound on budget-compatibility slack, fixed in advance **Domain:** $0<\theta_0<1$.
+$\theta_0$: Fixed separation parameter used only in the parameter-separated deterministic and randomized comparisons. **Domain:** $0<\theta_0<1$.
 
-$\mu R/L\le\theta_0$
+In views deterministic and randomized only: $0<\theta_0<1$ is fixed and $\mu R/L\le\theta_0$. The full-slack views impose no such separation.
 
-$d_0$: Universal dimension threshold required by the lower bound **Domain:** $d_0>0$.
+$d_0$: Universal sufficient-dimension threshold in the parameter-separated lower-bound comparisons. **Domain:** $d_0>0$.
 
-Determined by the applicable theorem conditions; retain a symbolic threshold when no numerical value is supplied.
+The threshold is determined by the applicable parameter-separated theorem and pertains only to views deterministic and randomized.
 
-$c_{\theta_0}$: Accuracy-threshold constant depending only on the fixed compatibility slack **Domain:** $c_{\theta_0}>0$.
+$c_{\theta_0}$: Accuracy-threshold constant for the parameter-separated lower-bound comparisons. **Domain:** $c_{\theta_0}>0$.
 
-The numerical value is determined by the lower-bound theorem and cannot be replaced by an arbitrary unit threshold.
+The positive constant depends only on the fixed $\theta_0$ in views deterministic and randomized; it is not a restriction in the full-slack views.
 
 $x,y,u$: Function arguments and dummy variables in the formulas **Domain:** $x,y,u\in\mathbb{R}^d$; spherical domains are embedded in $\mathbb{R}^{d+1}$.
 
@@ -190,6 +240,30 @@ $N^*$: Optimal worst-case oracle complexity satisfying the complete guarantee **
 
 Take the infimum over admissible algorithms, followed by the worst case over the instances of this profile. With multiple resources, use this scalar only for an explicitly specified resource projection.
 
+$\Delta$: Total-Lipschitz slack **Domain:** $\Delta\ge0$.
+
+$\Delta=L-\mu R$
+
+$S_\Delta$: Exact minimax zero-query expected risk **Domain:** $S_\Delta\ge0$.
+
+$S_\Delta=\Delta^2/(2\mu)$ if $0\le\Delta\le\mu R$, and $S_\Delta=\Delta R-\mu R^2/2$ otherwise.
+
+$a_\varepsilon$: Radius branch scale **Domain:** $a_\varepsilon\ge0$.
+
+$a_\varepsilon=(\Delta R/\varepsilon)^2$
+
+$b_\varepsilon$: Strong-convexity branch scale **Domain:** $b_\varepsilon\ge0$.
+
+$b_\varepsilon=\Delta^2/(\mu\varepsilon)$
+
+$m_\varepsilon$: Active polynomial branch **Domain:** $m_\varepsilon\ge0$.
+
+$m_\varepsilon=\min\{d,a_\varepsilon,b_\varepsilon\}$
+
+$c_0$: Universal relative-accuracy threshold **Domain:** $0<c_0<1$.
+
+A sufficiently small universal constant in Theorem thm:main.
+
 ## 3. Complexity bracket
 
 ### Compared quantities
@@ -225,6 +299,34 @@ $$
 **Optimization direction.** minimize
 
 Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
+
+#### Q3 - minimax metric resource quantity
+
+**View.** Randomized / Expected loss / Full slack range
+
+$$
+T_\varepsilon^{\rm exp}(d,L,\mu,R)
+$$
+
+**Scope.** The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+**Optimization direction.** minimize
+
+**Resource contract.** expression: $N_{\mathrm{exact\ scalar\ value}}$; description: All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+#### Q4 - minimax metric resource quantity
+
+**View.** Randomized / 1/2 success / Full slack range
+
+$$
+T_\varepsilon^{\rm prob(1/2)}(d,L,\mu,R)
+$$
+
+**Scope.** The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+
+**Optimization direction.** minimize
+
+**Resource contract.** expression: $N_{\mathrm{exact\ scalar\ value}}$; description: All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
 
 ### R1 - Parameter regime E02.R1
 
@@ -282,21 +384,21 @@ $$
 
 **Region.** $0<\mu R\le L,\ \varepsilon\ge\min\{LR,(L-\mu R)^2/(2\mu)\}$.
 
-**Views.** Deterministic; Randomized
+**Views.** Deterministic
 
-**Quantity.** Q1; Q2
+**Quantity.** Q1
 
 **Resource.** one exact scalar function value
 
 **Status.** Optimal
 
-**Lower bound.** B5, B11
+**Lower bound.** B5
 
 $$
 0
 $$
 
-**Upper bound.** B4, B10
+**Upper bound.** B4
 
 $$
 0
@@ -354,15 +456,311 @@ $$
 
 **Gap or comparison.** $O_{\theta_0}(\log^2(ed)\log(4A))$
 
+### R6 - Parameter regime E02.NEW.zero_region
+
+**Region.** $0<\mu R\le L,\ \varepsilon\ge\min\{LR,(L-\mu R)^2/(2\mu)\}$.
+
+**Views.** Randomized
+
+**Quantity.** Q2
+
+**Resource.** one exact scalar function value
+
+**Status.** Optimal
+
+**Lower bound.** B11
+
+$$
+0
+$$
+
+**Upper bound.** B10
+
+$$
+0
+$$
+
+### R7 - Radius branch / Expected loss
+
+**Region.** $\varepsilon\ge\max\{\mu R^2,\Delta R/\sqrt d\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$. All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously. For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row. The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Views.** Randomized / Expected loss / Full slack range
+
+**Quantity.** Q3
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B13
+
+$$
+\Omega(da_\varepsilon/\log(ea_\varepsilon))
+$$
+
+**Upper bound.** B12
+
+$$
+O(da_\varepsilon)
+$$
+
+**Gap or comparison.**
+
+$$
+O(\log(ea_\varepsilon))
+$$
+
+### R8 - Strong-convexity branch, including small positive slack / Expected loss
+
+**Region.** $\Delta^2/(\mu d)\le\varepsilon\le\mu R^2$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$. All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously. For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row. The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Views.** Randomized / Expected loss / Full slack range
+
+**Quantity.** Q3
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B15
+
+$$
+\Omega(db_\varepsilon/\log(eb_\varepsilon))
+$$
+
+**Upper bound.** B14
+
+$$
+O(db_\varepsilon)
+$$
+
+**Gap or comparison.**
+
+$$
+O(\log(eb_\varepsilon))
+$$
+
+### R9 - Dimension-limited branch / Expected loss
+
+**Region.** $\varepsilon\le\min\{\Delta R/\sqrt d,\Delta^2/(\mu d)\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$. All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously. For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row. The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Views.** Randomized / Expected loss / Full slack range
+
+**Quantity.** Q3
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B17
+
+$$
+\Omega(d^2/\log(ed))
+$$
+
+**Upper bound.** B16
+
+$$
+O\!\left(d^2\log(d+1)\log(128S_\Delta/\varepsilon)\right)
+$$
+
+**Gap or comparison.**
+
+$$
+O\!\left(\log(ed)\log(d+1)\log(128S_\Delta/\varepsilon)\right)
+$$
+
+### R10 - Relative-accuracy transition without a matching polynomial bracket
+
+**Region.** $d\ge1$, $L>\mu R>0$, and $c_0S_\Delta<\varepsilon<S_\Delta$. All d>=1. The exact zero-query risk assertion is an expected-loss statement and is not used as a sharp zero-query probability threshold.
+
+**Views.** Randomized / Expected loss / Full slack range
+
+**Quantity.** Q3
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Other quantified gap
+
+**Lower bound.** B19
+
+$$
+1
+$$
+
+**Upper bound.** B18
+
+$$
+C\min\left\{da_\varepsilon,db_\varepsilon,d^2\log(d+1)\log(128S_\Delta/\varepsilon)\right\}
+$$
+
+**Gap or comparison.** Upper-to-lower ratio at most the displayed upper expression; no nontrivial matching rate is established.
+
+### R11 - Zero-query range, including the degenerate boundary
+
+**Region.** $d\ge1$, $L\ge\mu R>0$, and $\varepsilon\ge S_\Delta$. In particular, every $\varepsilon>0$ is included when $L=\mu R$. All d>=1. At $\Delta=0$ the minimizer is known to be the origin. For expected loss the zero-query minimax error is exactly $S_\Delta$; a converse zero-query threshold is not asserted for the 1/2-success view.
+
+**Views.** Randomized / Expected loss / Full slack range
+
+**Quantity.** Q3
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Optimal
+
+**Lower bound.** B21
+
+$$
+0
+$$
+
+**Upper bound.** B20
+
+$$
+0
+$$
+
+**Gap or comparison.** Exact zero calls in the displayed range.
+
+### R12 - Radius branch / 1/2 success
+
+**Region.** $\varepsilon\ge\max\{\mu R^2,\Delta R/\sqrt d\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$. All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously. For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row. The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Views.** Randomized / 1/2 success / Full slack range
+
+**Quantity.** Q4
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B23
+
+$$
+\Omega(da_\varepsilon/\log(ea_\varepsilon))
+$$
+
+**Upper bound.** B22
+
+$$
+O(da_\varepsilon)
+$$
+
+**Gap or comparison.**
+
+$$
+O(\log(ea_\varepsilon))
+$$
+
+### R13 - Strong-convexity branch, including small positive slack / 1/2 success
+
+**Region.** $\Delta^2/(\mu d)\le\varepsilon\le\mu R^2$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$. All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously. For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row. The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Views.** Randomized / 1/2 success / Full slack range
+
+**Quantity.** Q4
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B25
+
+$$
+\Omega(db_\varepsilon/\log(eb_\varepsilon))
+$$
+
+**Upper bound.** B24
+
+$$
+O(db_\varepsilon)
+$$
+
+**Gap or comparison.**
+
+$$
+O(\log(eb_\varepsilon))
+$$
+
+### R14 - Dimension-limited branch / 1/2 success
+
+**Region.** $\varepsilon\le\min\{\Delta R/\sqrt d,\Delta^2/(\mu d)\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$. All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously. For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row. The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Views.** Randomized / 1/2 success / Full slack range
+
+**Quantity.** Q4
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B27
+
+$$
+\Omega(d^2/\log(ed))
+$$
+
+**Upper bound.** B26
+
+$$
+O\!\left(d^2\log(d+1)\log(128S_\Delta/\varepsilon)\right)
+$$
+
+**Gap or comparison.**
+
+$$
+O\!\left(\log(ed)\log(d+1)\log(128S_\Delta/\varepsilon)\right)
+$$
+
+### R15 - Relative-accuracy transition without a matching polynomial bracket
+
+**Region.** $d\ge1$, $L>\mu R>0$, and $c_0S_\Delta<\varepsilon<S_\Delta$. All d>=1. The exact zero-query risk assertion is an expected-loss statement and is not used as a sharp zero-query probability threshold.
+
+**Views.** Randomized / 1/2 success / Full slack range
+
+**Quantity.** Q4
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Lower bound missing
+
+**Lower bound.** No admitted bound for this comparison
+
+**Upper bound.** B28
+
+$$
+C\min\left\{da_\varepsilon,db_\varepsilon,d^2\log(d+1)\log(128S_\Delta/\varepsilon)\right\}
+$$
+
+**Gap or comparison.** The manuscript does not give a matching lower direction for this probability window.
+
+### R16 - Zero-query range, including the degenerate boundary
+
+**Region.** $d\ge1$, $L\ge\mu R>0$, and $\varepsilon\ge S_\Delta$. In particular, every $\varepsilon>0$ is included when $L=\mu R$. All d>=1. At $\Delta=0$ the minimizer is known to be the origin. For expected loss the zero-query minimax error is exactly $S_\Delta$; a converse zero-query threshold is not asserted for the 1/2-success view.
+
+**Views.** Randomized / 1/2 success / Full slack range
+
+**Quantity.** Q4
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Optimal
+
+**Lower bound.** B30
+
+$$
+0
+$$
+
+**Upper bound.** B29
+
+$$
+0
+$$
+
+**Gap or comparison.** Exact zero calls in the displayed range.
+
 ## 4. Bounds and supporting evidence
-
-The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
-
-**Oracle mapping.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
-
-**Output mapping.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
-
-**Resource mapping.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
 
 ### B1 - Deterministic convex localization
 
@@ -382,7 +780,13 @@ $$
 
 **Conditions.** Localization algorithm for the original convex class.
 
+**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
 **Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
 
 **Source location.** [3](https://arxiv.org/html/2607.16558v2) theorem: Z26 Proposition 4
 
@@ -408,9 +812,15 @@ $$
 
 **Conditions.** Deterministic; $0<\varepsilon\le LR/8$ and $\mu R\le L$.
 
+**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
 **Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
 
-**Local argument.** A1
+**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
+
+**Local argument.** ZO_PROOF_DET_SUBGRAD
 
 **Source location.** [3](https://arxiv.org/html/2607.16558v2) theorem: Proposition 4, PDF/printed page 12: deterministic value localization
 
@@ -436,7 +846,13 @@ $$
 
 **Conditions.** $d\ge d_0,\varepsilon\le c_{\theta_0}\min\{LR,L^2/\mu\}$.
 
+**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
 **Guarantee conversion.** The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
 
 **Source location.** [1](https://arxiv.org/html/2610.00345v1) theorem: Corollary K.14; Theorem K.2 provides explicit slack
 
@@ -462,9 +878,15 @@ $$
 
 **Conditions.** $0<\mu R\le L,\ \varepsilon\ge\min\{LR,(L-\mu R)^2/(2\mu)\}$.
 
+**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
 **Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
 
-**Local argument.** A2, A3
+**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
+
+**Local argument.** ZO_PROOF_ZERO, ZO_PROOF_SLACK_CENTER
 
 ### B5 - Nonnegative oracle cost
 
@@ -482,9 +904,15 @@ $$
 
 **Conditions.** $0<\mu R\le L,\ \varepsilon\ge\min\{LR,(L-\mu R)^2/(2\mu)\}$.
 
+**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
 **Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
 
-**Local argument.** A2, A3
+**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
+
+**Local argument.** ZO_PROOF_ZERO, ZO_PROOF_SLACK_CENTER
 
 ### B6 - Two-point smoothing with strongly convex restarts, or convex localization
 
@@ -504,9 +932,15 @@ $$
 
 **Conditions.** The objective is convex and $L$-Lipschitz on the ball, and $\mu$-strongly convex in the Euclidean norm. The two-point estimator has second moment $O(dL^2)$. Staged strongly convex restarts give the middle branch; the other branches use convex optimization and localization, respectively.
 
+**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
 **Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
 
-**Local argument.** A5, A6
+**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
+
+**Local argument.** ZO_PROOF_PAIRED_UPPER, ZO_PROOF_GEOMETRY_BASE
 
 **Source location.** [5](https://jmlr.org/papers/volume18/16-632/16-632.pdf) theorem: Symmetric ball smoothing combined with epoch SGD; a localization bound
 
@@ -532,7 +966,13 @@ $$
 
 **Conditions.** Localization algorithm for the original convex class.
 
+**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
 **Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
 
 **Source location.** [3](https://arxiv.org/html/2607.16558v2) theorem: Z26 Proposition 4
 
@@ -558,9 +998,15 @@ $$
 
 **Conditions.** Deterministic; $0<\varepsilon\le LR/8$ and $\mu R\le L$.
 
+**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
 **Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
 
-**Local argument.** A1
+**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
+
+**Local argument.** ZO_PROOF_DET_SUBGRAD
 
 **Source location.** [3](https://arxiv.org/html/2607.16558v2) theorem: Proposition 4, PDF/printed page 12: deterministic value localization
 
@@ -586,7 +1032,13 @@ $$
 
 **Conditions.** $d\ge d_0,\varepsilon\le c_{\theta_0}\min\{LR,L^2/\mu\}$.
 
+**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
 **Guarantee conversion.** The source lower bound covers adaptive randomized algorithms. The subclass reduction preserves the objective gap and accuracy window; deterministic algorithms are included in this quantifier range.
+
+**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
 
 **Source location.** [1](https://arxiv.org/html/2610.00345v1) theorem: Corollary K.14; Theorem K.2 provides explicit slack
 
@@ -612,9 +1064,15 @@ $$
 
 **Conditions.** $0<\mu R\le L,\ \varepsilon\ge\min\{LR,(L-\mu R)^2/(2\mu)\}$.
 
+**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
 **Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
 
-**Local argument.** A2, A3
+**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
+
+**Local argument.** ZO_PROOF_ZERO, ZO_PROOF_SLACK_CENTER
 
 ### B11 - Nonnegative oracle cost
 
@@ -632,15 +1090,587 @@ $$
 
 **Conditions.** $0<\mu R\le L,\ \varepsilon\ge\min\{LR,(L-\mu R)^2/(2\mu)\}$.
 
+**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
 **Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
 
-**Local argument.** A2, A3
+**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
 
-## 5. Local arguments
+**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
 
-### A1 - Deterministic extraction of an approximate subgradient
+**Local argument.** ZO_PROOF_ZERO, ZO_PROOF_SLACK_CENTER
 
-**Scope.** Exact real scalar values; finite positive probe scales; free real arithmetic and no bit-precision charge. Ball-restricted variants keep all probes inside the ball; global variants allow all-space probes.
+### B12 - Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss / Full slack range
+
+**Witness or lower-bound scope.** randomized_or_deterministic
+
+$$
+O(da_\varepsilon)
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\varepsilon\ge\max\{\mu R^2,\Delta R/\sqrt d\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:main, eq:main-two-sided; Table tab:regimes; Theorem thm:upper
+
+Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization. Unrestricted randomized algorithms
+
+### B13 - Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss / Full slack range
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega(da_\varepsilon/\log(ea_\varepsilon))
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\varepsilon\ge\max\{\mu R^2,\Delta R/\sqrt d\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorems thm:main, thm:expected-lower, thm:prob-lower; Table tab:regimes
+
+Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families. All adaptive randomized algorithms with arbitrary feasible outputs
+
+### B14 - Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss / Full slack range
+
+**Witness or lower-bound scope.** randomized_or_deterministic
+
+$$
+O(db_\varepsilon)
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\Delta^2/(\mu d)\le\varepsilon\le\mu R^2$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:main, eq:main-two-sided; Table tab:regimes; Theorem thm:upper
+
+Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization. Unrestricted randomized algorithms
+
+### B15 - Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss / Full slack range
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega(db_\varepsilon/\log(eb_\varepsilon))
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\Delta^2/(\mu d)\le\varepsilon\le\mu R^2$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorems thm:main, thm:expected-lower, thm:prob-lower; Table tab:regimes
+
+Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families. All adaptive randomized algorithms with arbitrary feasible outputs
+
+### B16 - Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss / Full slack range
+
+**Witness or lower-bound scope.** randomized_or_deterministic
+
+$$
+O\!\left(d^2\log(d+1)\log(128S_\Delta/\varepsilon)\right)
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\varepsilon\le\min\{\Delta R/\sqrt d,\Delta^2/(\mu d)\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:main, eq:main-two-sided; Table tab:regimes; Theorem thm:upper
+
+Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization. Unrestricted randomized algorithms
+
+### B17 - Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss / Full slack range
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega(d^2/\log(ed))
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\varepsilon\le\min\{\Delta R/\sqrt d,\Delta^2/(\mu d)\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorems thm:main, thm:expected-lower, thm:prob-lower; Table tab:regimes
+
+Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families. All adaptive randomized algorithms with arbitrary feasible outputs
+
+### B18 - Localized upper-envelope algorithm
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss / Full slack range
+
+**Witness or lower-bound scope.** randomized_or_deterministic
+
+$$
+C\min\left\{da_\varepsilon,db_\varepsilon,d^2\log(d+1)\log(128S_\Delta/\varepsilon)\right\}
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $d\ge1$, $L>\mu R>0$, and $c_0S_\Delta<\varepsilon<S_\Delta$.; The exact zero-query risk assertion is an expected-loss statement and is not used as a sharp zero-query probability threshold.
+
+**Dimension conditions.**
+
+$$
+All d>=1.
+$$
+
+**Constants.** Universal upper constant.
+
+**Logarithmic factors.** Only the displayed upper logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:upper, eq:upper-envelope
+
+Localized upper-envelope algorithm. Unrestricted randomized algorithms
+
+### B19 - Any zero-query randomized output has worst-instance expected error at least S_Delta
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss / Full slack range
+
+**Witness or lower-bound scope.** elementary
+
+$$
+1
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $d\ge1$, $L>\mu R>0$, and $c_0S_\Delta<\varepsilon<S_\Delta$.; The exact zero-query risk assertion is an expected-loss statement and is not used as a sharp zero-query probability threshold.
+
+**Dimension conditions.**
+
+$$
+All d>=1.
+$$
+
+**Constants.** Universal upper constant.
+
+**Logarithmic factors.** Only the displayed upper logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:main, exact zero-query expected risk assertion
+
+Any zero-query randomized output has worst-instance expected error at least S_Delta. All randomized algorithms
+
+### B20 - Return the center of the known ball
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / Expected loss / Full slack range
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+0
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $d\ge1$, $L\ge\mu R>0$, and $\varepsilon\ge S_\Delta$. In particular, every $\varepsilon>0$ is included when $L=\mu R$.; At $\Delta=0$ the minimizer is known to be the origin. For expected loss the zero-query minimax error is exactly $S_\Delta$; a converse zero-query threshold is not asserted for the 1/2-success view.
+
+**Dimension conditions.**
+
+$$
+All d>=1.
+$$
+
+**Constants.** No suppressed constants.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:main; Theorem thm:slack-geometry
+
+Return the center of the known ball. Deterministic algorithm
+
+### B21 - Nonnegative query count
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / Expected loss / Full slack range
+
+**Witness or lower-bound scope.** elementary
+
+$$
+0
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $d\ge1$, $L\ge\mu R>0$, and $\varepsilon\ge S_\Delta$. In particular, every $\varepsilon>0$ is included when $L=\mu R$.; At $\Delta=0$ the minimizer is known to be the origin. For expected loss the zero-query minimax error is exactly $S_\Delta$; a converse zero-query threshold is not asserted for the 1/2-success view.
+
+**Dimension conditions.**
+
+$$
+All d>=1.
+$$
+
+**Constants.** No suppressed constants.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:main
+
+Nonnegative query count. All algorithms
+
+### B22 - Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / 1/2 success / Full slack range
+
+**Witness or lower-bound scope.** randomized_or_deterministic
+
+$$
+O(da_\varepsilon)
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\varepsilon\ge\max\{\mu R^2,\Delta R/\sqrt d\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:main, eq:main-two-sided; Table tab:regimes; Theorem thm:upper
+
+Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization. Unrestricted randomized algorithms
+
+### B23 - Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / 1/2 success / Full slack range
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega(da_\varepsilon/\log(ea_\varepsilon))
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\varepsilon\ge\max\{\mu R^2,\Delta R/\sqrt d\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorems thm:main, thm:expected-lower, thm:prob-lower; Table tab:regimes
+
+Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families. All adaptive randomized algorithms with arbitrary feasible outputs
+
+### B24 - Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / 1/2 success / Full slack range
+
+**Witness or lower-bound scope.** randomized_or_deterministic
+
+$$
+O(db_\varepsilon)
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\Delta^2/(\mu d)\le\varepsilon\le\mu R^2$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:main, eq:main-two-sided; Table tab:regimes; Theorem thm:upper
+
+Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization. Unrestricted randomized algorithms
+
+### B25 - Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / 1/2 success / Full slack range
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega(db_\varepsilon/\log(eb_\varepsilon))
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\Delta^2/(\mu d)\le\varepsilon\le\mu R^2$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorems thm:main, thm:expected-lower, thm:prob-lower; Table tab:regimes
+
+Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families. All adaptive randomized algorithms with arbitrary feasible outputs
+
+### B26 - Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / 1/2 success / Full slack range
+
+**Witness or lower-bound scope.** randomized_or_deterministic
+
+$$
+O\!\left(d^2\log(d+1)\log(128S_\Delta/\varepsilon)\right)
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\varepsilon\le\min\{\Delta R/\sqrt d,\Delta^2/(\mu d)\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:main, eq:main-two-sided; Table tab:regimes; Theorem thm:upper
+
+Localize the unknown convex residual, then select two-point estimation or value-oracle convex localization. Unrestricted randomized algorithms
+
+### B27 - Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / 1/2 success / Full slack range
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega(d^2/\log(ed))
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $\varepsilon\le\min\{\Delta R/\sqrt d,\Delta^2/(\mu d)\}$; additionally $d\ge1$, $L>\mu R>0$, and $0<\varepsilon\le c_0S_\Delta$.; For $0<\Delta\le\mu R$, $S_\Delta=\Delta^2/(2\mu)$, so the strong-convexity row is nonempty only when $\Delta^2/(\mu d)\le c_0\Delta^2/(2\mu)$. This enforces $d\ge2/c_0$ for that near-boundary row.; The constant-width transition $c_0S_\Delta<\varepsilon<S_\Delta$ is excluded from every two-sided near-optimal claim. Boundary equalities may be assigned to either adjacent active branch.
+
+**Dimension conditions.** All integer dimensions d>=1, including d=1; a row can be empty because all its predicates must hold simultaneously.
+
+**Constants.** All constants are universal; none depend on the positive slack Delta.
+
+**Logarithmic factors.** Only the displayed logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorems thm:main, thm:expected-lower, thm:prob-lower; Table tab:regimes
+
+Quadratic regularization of a fixed support-function prior, plus spherical and one-dimensional endpoint families. All adaptive randomized algorithms with arbitrary feasible outputs
+
+### B28 - Localized upper-envelope algorithm
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / 1/2 success / Full slack range
+
+**Witness or lower-bound scope.** randomized_or_deterministic
+
+$$
+C\min\left\{da_\varepsilon,db_\varepsilon,d^2\log(d+1)\log(128S_\Delta/\varepsilon)\right\}
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $d\ge1$, $L>\mu R>0$, and $c_0S_\Delta<\varepsilon<S_\Delta$.; The exact zero-query risk assertion is an expected-loss statement and is not used as a sharp zero-query probability threshold.
+
+**Dimension conditions.**
+
+$$
+All d>=1.
+$$
+
+**Constants.** Universal upper constant.
+
+**Logarithmic factors.** Only the displayed upper logarithms.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:upper, eq:upper-envelope
+
+Localized upper-envelope algorithm. Unrestricted randomized algorithms
+
+### B29 - Return the center of the known ball
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized / 1/2 success / Full slack range
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+0
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $d\ge1$, $L\ge\mu R>0$, and $\varepsilon\ge S_\Delta$. In particular, every $\varepsilon>0$ is included when $L=\mu R$.; At $\Delta=0$ the minimizer is known to be the origin. For expected loss the zero-query minimax error is exactly $S_\Delta$; a converse zero-query threshold is not asserted for the 1/2-success view.
+
+**Dimension conditions.**
+
+$$
+All d>=1.
+$$
+
+**Constants.** No suppressed constants.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:main; Theorem thm:slack-geometry
+
+Return the center of the known ball. Deterministic algorithm
+
+### B30 - Nonnegative query count
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized / 1/2 success / Full slack range
+
+**Witness or lower-bound scope.** elementary
+
+$$
+0
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf)
+
+**Conditions.** $d\ge1$, $L\ge\mu R>0$, and $\varepsilon\ge S_\Delta$. In particular, every $\varepsilon>0$ is included when $L=\mu R$.; At $\Delta=0$ the minimizer is known to be the origin. For expected loss the zero-query minimax error is exactly $S_\Delta$; a converse zero-query threshold is not asserted for the 1/2-success view.
+
+**Dimension conditions.**
+
+$$
+All d>=1.
+$$
+
+**Constants.** No suppressed constants.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf) Theorem thm:main
+
+Nonnegative query count. All algorithms
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 8b02250d017cc357f0365c337f3c6c6e6adb00d488ed00a18b1051a374ab0fea
+
+### Native proof: ZO_PROOF_DET_SUBGRAD
+
+Native pointer: /proofs/0; canonical SHA-256: 407c5df5e344384419290b1738e9bef775ee3cb0a66626433c2cb6decdf4fe2c
+
+#### Native field: title
+
+Native pointer: /proofs/0/title; canonical SHA-256: 9b122cc20ebbcbb8c7d338e1124a537a201bd66352037e20d3c520fe88f01dba
+
+Deterministic extraction of an approximate subgradient
+
+#### Native field: body
+
+Native pointer: /proofs/0/body; canonical SHA-256: 5302a8df00b684fda4ba426691ee465e9cb0c9988936fa01b2026ed2eb070a28
 
 A deterministic procedure obtains an $\eta$-accurate subgradient at a point within distance $\zeta$ of the requested point using at most $7d\lceil\log_2(2L\sqrt d/\eta)\rceil$ values. It yields the convex upper $O(dA^2\log(edA))$ and the strongly convex upper $O(dL^2\log(edA)/(\mu\varepsilon))$, with $A=LR/\varepsilon$.
 
@@ -660,13 +1690,51 @@ Multiply by $t$ and sum. The initial distance coefficient is zero, and the remai
 
 For a known body $B_2(r_{\rm in})\subseteq K\subseteq B_2(R_{\rm out})$, the identity $(1-a)K+aB_2(r_{\rm in})\subseteq K$ supplies feasible probe room. Choose $a=\gamma/(16LR_{\rm out})$ and probe radius at most $ar_{\rm in}/2$. Shrinkage costs at most $LaR_{\rm out}$. The query count is independent of the probe radius and uses $R_{\rm out}$ in place of $R$. A finite-sum mean value costs $n$ component values, multiplying these deterministic bounds by $n$.
 
-**Limits of the argument.** Local argument and specification transfer; cited external theorems remain primary dependencies.
+#### Native field: scope
 
-**Sources.** [3](https://arxiv.org/html/2607.16558v2) [2](https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper)
+Native pointer: /proofs/0/scope; canonical SHA-256: 877cdb9cd795caed0e13c33ad2863f0ada58ec1582a858a422039d398b8d6202
 
-### A2 - Zero-query certificates
+Exact real scalar values; finite positive probe scales; free real arithmetic and no bit-precision charge. Ball-restricted variants keep all probes inside the ball; global variants allow all-space probes.
 
-**Scope.** The stated sufficient accuracy regions only; no assertion that every certificate is sharp.
+#### Native field: limitations
+
+Native pointer: /proofs/0/limitations; canonical SHA-256: d1bbc07ef50fae6de1ba167edc51c87b2aa1290f00e732d359785af5f606d21c
+
+#### Native item 1
+
+Native pointer: /proofs/0/limitations/0; canonical SHA-256: e9d58ffd13d1e57cf0514abf00beb521f4079e5d6034541c0bf100c0037e9afc
+
+Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+#### Native field: source_refs
+
+Native pointer: /proofs/0/source_refs; canonical SHA-256: afe187f3be4db81d4b193c8a2c5076055a0f310fb0d5c7839d30f66b59332f42
+
+#### Native item 1
+
+Native pointer: /proofs/0/source_refs/0; canonical SHA-256: 5d3a21acbc96f86af54cdb21c87600b772611ef8808f1128555236a2c6c69dd0
+
+SO_SRC_8baf287e5cfc8672
+
+#### Native item 2
+
+Native pointer: /proofs/0/source_refs/1; canonical SHA-256: 5cc5a4e23e9fe4e1da65b0023dcdf67e4094dafafdb9e941785ab6101731747c
+
+SO_SRC_77682e60a35290df
+
+### Native proof: ZO_PROOF_ZERO
+
+Native pointer: /proofs/1; canonical SHA-256: 1d6580814630c8e2805d1bef988f17262747efcfe8580ea0d6eaace3086f220c
+
+#### Native field: title
+
+Native pointer: /proofs/1/title; canonical SHA-256: a1c4db43e97db238b9e152f2d0f29dccb6ee901b91806fdf8840d239abdee28f
+
+Zero-query certificates
+
+#### Native field: body
+
+Native pointer: /proofs/1/body; canonical SHA-256: e337fe1bbdc7a8471c27bff8578ac9695fda39f5bd738324501658aee12cbc83
 
 A public feasible point whose objective gap is at most $G_0$ solves every target $\varepsilon\ge G_0$ with exactly zero calls.
 
@@ -678,11 +1746,35 @@ For a known positive semidefinite quadratic matrix $A$, the center has gap at mo
 
 Call counts are nonnegative. Together with the stated algorithm, this proves exact zero complexity on each certified region. The upper/lower ratio is undefined, so it is stored as null rather than as $0/0$.
 
-**Limits of the argument.** Local argument and specification transfer; cited external theorems remain primary dependencies.
+#### Native field: scope
 
-### A3 - The center certificate for a strongly convex Lipschitz function
+Native pointer: /proofs/1/scope; canonical SHA-256: 1415baad26ae3bdb7a7f19af0ab941587cafa672fc7447677224c888ab47c12b
 
-**Scope.** A convex function on $B_2(R)$, $\mu$-strongly convex and $L$-Lipschitz; interior subgradients are taken without an artificial boundary normal cone.
+The stated sufficient accuracy regions only; no assertion that every certificate is sharp.
+
+#### Native field: limitations
+
+Native pointer: /proofs/1/limitations; canonical SHA-256: d1bbc07ef50fae6de1ba167edc51c87b2aa1290f00e732d359785af5f606d21c
+
+#### Native item 1
+
+Native pointer: /proofs/1/limitations/0; canonical SHA-256: e9d58ffd13d1e57cf0514abf00beb521f4079e5d6034541c0bf100c0037e9afc
+
+Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+### Native proof: ZO_PROOF_SLACK_CENTER
+
+Native pointer: /proofs/2; canonical SHA-256: 55bf69c4febf9a9281d7fbfa7e458a6c239ad3559fc0df66180b690cb3acfc6f
+
+#### Native field: title
+
+Native pointer: /proofs/2/title; canonical SHA-256: 517ecf32e097a6c5a437bd5f95f826436c8351a973b941b1fc798fdebbb3704d
+
+The center certificate for a strongly convex Lipschitz function
+
+#### Native field: body
+
+Native pointer: /proofs/2/body; canonical SHA-256: 34a1fe8db0e58b6f2746f5a9669ebbeb033cfda43a4f2202dbee4246c97709d8
 
 The class is nonempty only if $\mu R\le L$, and
 $$f(0)-\min_{B_2(R)} f\le\min\{LR,(L-\mu R)^2/(2\mu)\}.$$
@@ -692,11 +1784,45 @@ Let $g_0\in\partial f(0)$. If $g_0\ne0$, put $u=g_0/\|g_0\|$ and choose $g_t\in\
 
 Strong convexity implies $f(z)\ge f(0)+\langle g_0,z\rangle+\mu\|z\|^2/2\ge f(0)-\|g_0\|^2/(2\mu)$. Combine this with the independent Lipschitz center bound $LR$. The argument uses only the mean function, so it also applies when a finite-sum mean is strongly convex only on the feasible ball.
 
-**Limits of the argument.** Local argument and specification transfer; cited external theorems remain primary dependencies.
+#### Native field: scope
 
-### A4 - Ball smoothing and the same-sample directional moment
+Native pointer: /proofs/2/scope; canonical SHA-256: 46a98e0c8f04c6d71b8a1f1bb47a703040db3484c023f1f81cc43470b1ec87f2
 
-**Scope.** A fresh sample each round; the same sample supplies both values; sample Lipschitz modulus $G$ on the stated query neighborhood; $\mathbb E G^r\le L^r$, $1<r\le2$.
+A convex function on $B_2(R)$, $\mu$-strongly convex and $L$-Lipschitz; interior subgradients are taken without an artificial boundary normal cone.
+
+#### Native field: limitations
+
+Native pointer: /proofs/2/limitations; canonical SHA-256: d1bbc07ef50fae6de1ba167edc51c87b2aa1290f00e732d359785af5f606d21c
+
+#### Native item 1
+
+Native pointer: /proofs/2/limitations/0; canonical SHA-256: e9d58ffd13d1e57cf0514abf00beb521f4079e5d6034541c0bf100c0037e9afc
+
+Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+#### Native field: module_dependencies
+
+Native pointer: /proofs/2/module_dependencies; canonical SHA-256: c342637a4b1efcd5b0aad863488ba6e59d8020114eddab59351d9b9336fb523b
+
+#### Native item 1
+
+Native pointer: /proofs/2/module_dependencies/0; canonical SHA-256: b0a31a9c3978e4f0bd22d685df94eae34b1086bfebe92c4f0dbcb3e63bdfca0b
+
+ZO_PROOF_ZERO
+
+### Native proof: ZO_PROOF_PAIRED_MOMENT
+
+Native pointer: /proofs/3; canonical SHA-256: 1590ade2e6787fe33d10f650f8ab64ef46bf6350869f6f4f185dad60be780bd6
+
+#### Native field: title
+
+Native pointer: /proofs/3/title; canonical SHA-256: 293f2ab735f268a2ffbfdb19ec489b03f31469acbe264107320d5061ad83ae63
+
+Ball smoothing and the same-sample directional moment
+
+#### Native field: body
+
+Native pointer: /proofs/3/body; canonical SHA-256: 3ad958d5da6f01b544d353454c3372bc69148946dc23d87a9f02d9c83e87957c
 
 With ball smoothing $f_h(x)=\mathbb E_{U\sim\operatorname{Unif}(B_2)}f(x+hU)$ and a sphere direction $u$,
 $$g_h(x)=\frac d{2h}[F(x+hu;Z)-F(x-hu;Z)]u,\quad\mathbb E g_h=\nabla f_h,\quad\mathbb E\|g_h\|^r\le(\sqrt{2d}L)^r.$$
@@ -706,13 +1832,45 @@ For each fixed sample, the scalar difference $a(u)=F(x+hu;Z)-F(x-hu;Z)$ is odd o
 $$\mathbb E_{Z,u}\|g_h\|^r\le\mathbb E_Z(\mathbb E_u\|g_h\|^2)^{r/2}\le(2d)^{r/2}\mathbb E G^r.$$
 No second moment of $G$ is needed when $r<2$. The divergence theorem for ball convolution gives the unbiasedness identity. Integrability follows from the Lipschitz difference bound. Convexity gives $f_h\ge f$, and $|f_h-f|\le hL$; mean strong convexity is preserved on the region where every translated point satisfies it. All statements hold conditionally on the past when the next sample and direction are fresh. Reusing an old adaptively explored sample does not automatically preserve this conditional moment calculation.
 
-**Limits of the argument.** Local argument and specification transfer; cited external theorems remain primary dependencies.
+#### Native field: scope
 
-**Sources.** [5](https://jmlr.org/papers/volume18/16-632/16-632.pdf)
+Native pointer: /proofs/3/scope; canonical SHA-256: 8b49ec7dca2985f462ed168dfff1ed752288e50486b8b7133d5d5ea0e91edc18
 
-### A5 - Projected optimization with same-sample two-point values
+A fresh sample each round; the same sample supplies both values; sample Lipschitz modulus $G$ on the stated query neighborhood; $\mathbb E G^r\le L^r$, $1<r\le2$.
 
-**Scope.** Optimization/output in $B_2(R)$; all two-point queries remain in the prescribed ball; mean strong convexity suffices. A uniformly sampled finite-sum component is also a valid fresh sample.
+#### Native field: limitations
+
+Native pointer: /proofs/3/limitations; canonical SHA-256: d1bbc07ef50fae6de1ba167edc51c87b2aa1290f00e732d359785af5f606d21c
+
+#### Native item 1
+
+Native pointer: /proofs/3/limitations/0; canonical SHA-256: e9d58ffd13d1e57cf0514abf00beb521f4079e5d6034541c0bf100c0037e9afc
+
+Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+#### Native field: source_refs
+
+Native pointer: /proofs/3/source_refs; canonical SHA-256: 2b913a5fb0aabb726f77d1aae7fd6ffc8d2d2a43974d8a9a576b6ed5f74e86bc
+
+#### Native item 1
+
+Native pointer: /proofs/3/source_refs/0; canonical SHA-256: 7ec8d4ed8f91c132a1de87534a55d39252f47d06682b98ca5b170368ee0a8388
+
+SO_SRC_072506cc03b2f8a7
+
+### Native proof: ZO_PROOF_PAIRED_UPPER
+
+Native pointer: /proofs/4; canonical SHA-256: 2e0e54fd584fc5d48d0ce8a9dba241d65ebbaa7375747bcc8134ff73f2fcfc4e
+
+#### Native field: title
+
+Native pointer: /proofs/4/title; canonical SHA-256: e508c27dccb22eb6891bf8af030dc2253349aaf59b1ef7a90b2a3177a1b6408f
+
+Projected optimization with same-sample two-point values
+
+#### Native field: body
+
+Native pointer: /proofs/4/body; canonical SHA-256: 685be49a225f461c5aad1c8f1a5c7d6be838d104f66a8c19ee8e9caada27dac4
 
 For a $\mu$-strongly-convex mean with $\mathbb E G^2\le L^2$, $K$ rounds and $T=2K$ scalar calls give
 $$\mathbb E[f(\bar x_K)-f_*]\le\frac{4dL^2}{\mu(K+1)}+2hL.$$
@@ -724,11 +1882,45 @@ Multiply by $t$, telescope, and average with weights $2t/[K(K+1)]$. The initial 
 
 For convex objectives, the projected averaging recursion with step $R/\sqrt{VK}$ gives expected optimization error at most $R\sqrt{V/K}$, plus the same smoothing/shrinkage error. Uniform component sampling makes the estimator unbiased for the finite-sum mean and costs exactly two selected-component values per round. Neither the oracle nor the components need be stochastic in that case; the algorithm supplies the randomness. These bounds also hold under an almost-sure Lipschitz promise, since it implies the required second moment. The Gaussian lower construction in the separate lower lemma does not acquire that stronger promise.
 
-**Limits of the argument.** Local argument and specification transfer; cited external theorems remain primary dependencies.
+#### Native field: scope
 
-### A6 - Norm conversion, penalized localization, and affine equivalence
+Native pointer: /proofs/4/scope; canonical SHA-256: 1cee90c0ade7a1c76974664107d84323ced5a0094233ab2475673590acf69a2f
 
-**Scope.** Globally defined objectives, the declared regularity norm, a public feasible or localization body, and the stated free geometric operations.
+Optimization/output in $B_2(R)$; all two-point queries remain in the prescribed ball; mean strong convexity suffices. A uniformly sampled finite-sum component is also a valid fresh sample.
+
+#### Native field: limitations
+
+Native pointer: /proofs/4/limitations; canonical SHA-256: d1bbc07ef50fae6de1ba167edc51c87b2aa1290f00e732d359785af5f606d21c
+
+#### Native item 1
+
+Native pointer: /proofs/4/limitations/0; canonical SHA-256: e9d58ffd13d1e57cf0514abf00beb521f4079e5d6034541c0bf100c0037e9afc
+
+Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+#### Native field: module_dependencies
+
+Native pointer: /proofs/4/module_dependencies; canonical SHA-256: 0f93027dd13c1fc76f53eafc5f7af337161f3e067e9523895d0587c084c781f1
+
+#### Native item 1
+
+Native pointer: /proofs/4/module_dependencies/0; canonical SHA-256: 89f132536e860e550967b3b720a81cd0588e96be63dd5faf8219129f756df13e
+
+ZO_PROOF_PAIRED_MOMENT
+
+### Native proof: ZO_PROOF_GEOMETRY_BASE
+
+Native pointer: /proofs/5; canonical SHA-256: d6b8eb7b837b547d07112f9065a4fff7b241625efffba7e56094a8b8f9d6c4fd
+
+#### Native field: title
+
+Native pointer: /proofs/5/title; canonical SHA-256: 1ab0b833ad81901c161d28bf8c7db1cfbea162415c9eb514997fbae0a1895d3c
+
+Norm conversion, penalized localization, and affine equivalence
+
+#### Native field: body
+
+Native pointer: /proofs/5/body; canonical SHA-256: 4468fc6d9bbf4a1ea74651e295f99626443555521dac386c650e090b3f22dbb9
 
 Let $a_B=\max_{\|u\|_2=1}\|u\|_B$ and let $R_2(K)$ be a public Euclidean enclosing radius. Then $\beta_2=a_B^2\beta$, $L_2=a_BL$, and $D_2=a_BR_2(K)$ give the deterministic smooth envelope
 $$O\!\left(1+\min\{d\sqrt{\beta D_2^2/\varepsilon},d^2\log(e+\beta D_2^2/\varepsilon)\}\right)$$
@@ -740,9 +1932,43 @@ For a Lipschitz objective minimized over a known convex set $K$, define $g(x)=f(
 
 If $B=UB_2(1)$ and $K=c+RB$ for a public invertible matrix $U$, set $g(y)=f(c+Uy)$. Then $\|Uv\|_B=\|v\|_2$ and $\|U^\top w\|_2=\|w\|_{B,*}$. Thus both the Lipschitz and smoothness budgets are unchanged, the feasible or localization body becomes $B_2(R)$, and one value plus the inverse output map preserves the exact gap, budget, and guarantee. No condition-number factor appears. Deterministic acceleration/localization and randomized two-point methods keep their original algorithm permissions.
 
-**Limits of the argument.** Local argument and specification transfer; cited external theorems remain primary dependencies.
+#### Native field: scope
 
-**Sources.** [1](https://arxiv.org/html/2610.00345v1) [3](https://arxiv.org/html/2607.16558v2) [2](https://www.mathnet.ru/php/archive.phtml?jrnid=mzm&option_lang=eng&paperid=1697&wshow=paper)
+Native pointer: /proofs/5/scope; canonical SHA-256: e5bf34af7950d8ee2664d09b259b1849e4fa3ae1ee7a4405a616ac92a8ff6664
+
+Globally defined objectives, the declared regularity norm, a public feasible or localization body, and the stated free geometric operations.
+
+#### Native field: limitations
+
+Native pointer: /proofs/5/limitations; canonical SHA-256: d1bbc07ef50fae6de1ba167edc51c87b2aa1290f00e732d359785af5f606d21c
+
+#### Native item 1
+
+Native pointer: /proofs/5/limitations/0; canonical SHA-256: e9d58ffd13d1e57cf0514abf00beb521f4079e5d6034541c0bf100c0037e9afc
+
+Local argument and specification transfer; cited external theorems remain primary dependencies.
+
+#### Native field: source_refs
+
+Native pointer: /proofs/5/source_refs; canonical SHA-256: a1795be38e4c9c395f3571ba8859982c16974469de33e616917508807f2842b6
+
+#### Native item 1
+
+Native pointer: /proofs/5/source_refs/0; canonical SHA-256: 74ca633bf39c086deed99631293bb2ed5e84f8d20b7758d8448b19d09d96e9c9
+
+SO_SRC_9557f7498abe575b
+
+#### Native item 2
+
+Native pointer: /proofs/5/source_refs/1; canonical SHA-256: 5d3a21acbc96f86af54cdb21c87600b772611ef8808f1128555236a2c6c69dd0
+
+SO_SRC_8baf287e5cfc8672
+
+#### Native item 3
+
+Native pointer: /proofs/5/source_refs/2; canonical SHA-256: 5cc5a4e23e9fe4e1da65b0023dcdf67e4094dafafdb9e941785ab6101731747c
+
+SO_SRC_77682e60a35290df
 
 ## References
 
@@ -765,3 +1991,7 @@ https://arxiv.org/pdf/1006.2425
 [5] Ohad Shamir. An Optimal Algorithm for Bandit and Zero-Order Convex Optimization with Two-Point Feedback. JMLR 18(52):1--11, 2017.
 
 https://jmlr.org/papers/volume18/16-632/16-632.pdf
+
+[6] Colombo_U10. Exact-Value Complexity of Nonsmooth Strongly Convex Optimization: Uniform Bounds and Boundary Geometry. strongly_convex_exact_value.tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf

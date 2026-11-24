@@ -8,9 +8,9 @@ $$
 \min_x\Phi(x),\quad\Phi(x)=\max_y\frac1n\sum_{i=1}^n f_i(x,y).
 $$
 
-**Status.** Polynomial gap present; Bounds missing
+**Status.** Logarithmic gap; Polynomial gap; Bounds missing
 
-**Gap classes present.** Polynomial gap; Logarithmic gap
+**Gap classes present.** Logarithmic gap; Polynomial gap
 
 **TASK tags.** formulation: Minimize finite sum value; task family: Minimax
 
@@ -234,6 +234,8 @@ $\log_+(t)=\log(\max\{1,t\})$
 
 $N$: A uniform cap on principal information calls for every admissible instance and execution path. **Domain:** Nonnegative integer.
 
+$a_{\rm U06}$: Source sufficient small-accuracy threshold **Domain:** $a_{\rm U06}>0$ is the universal constant A_* in Theorem main.
+
 ## 3. Complexity bracket
 
 ### Compared quantities
@@ -336,21 +338,21 @@ $$
 
 **Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. The value $a_\star$ is a common sufficient constant for all cited lower-bound thresholds. Also require $\kappa=1$.
 
-**Views.** Randomized unrestricted expected rms; Randomized unrestricted fixed probability
+**Views.** Randomized unrestricted expected rms
 
-**Quantity.** Q2; Q3
+**Quantity.** Q2
 
 **Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
 
 **Status.** Optimal
 
-**Lower bound.** B9, B15
+**Lower bound.** B9
 
 $$
 \Omega(n+\sqrt n\,a)
 $$
 
-**Upper bound.** B8, B14
+**Upper bound.** B8
 
 $$
 O(n+\sqrt n\,a)
@@ -358,9 +360,235 @@ $$
 
 **Gap or comparison.** $O(1)$
 
-### R4 - Small-condition-number regime
+### R4 - Boundary regime with a universally bounded condition number
 
-**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. The value $a_\star$ is a common sufficient constant for all cited lower-bound thresholds. Also require $1<\kappa\le\sqrt n$.
+**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. The value $a_\star$ is a common sufficient constant for all cited lower-bound thresholds. Also require $\sqrt n<\kappa<\kappa_0$.
+
+**Views.** Randomized unrestricted expected rms
+
+**Quantity.** Q2
+
+**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
+
+**Status.** Optimal
+
+**Lower bound.** B9
+
+$$
+\Omega(n+\sqrt n\,a)
+$$
+
+**Upper bound.** B7, B6
+
+$$
+O\!\left(\min\{n^{3/4}\sqrt\kappa(1+a)\log^2(2+\kappa),(n+\kappa^2)(1+a+\ell_R)\}\right)
+$$
+
+**Gap or comparison.** $O(1)$
+
+**Comparison argument.** The budget $\kappa<\kappa_0$ constrains both $n<\kappa_0^2$, which are universally bounded. The component lower bound requiring $\kappa\ge\kappa_0$ is not invoked in this regime.
+
+### R5 - Outside the lower-bound accuracy threshold
+
+**Region.** Assume $n\ge2$, $\kappa\ge1$, and $0<a<a_\star$.
+
+**Views.** Randomized unrestricted expected rms
+
+**Quantity.** Q2
+
+**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
+
+**Status.** Lower bound missing
+
+**Lower bound.** No admitted bound for this comparison
+
+**Upper bound.** B5, B6, B7, B8
+
+Choose the registered upper bound for the relevant $\kappa$ region.
+
+**Comparison argument.** Enforce each upper bound's condition-number restriction separately. Complete matching is unavailable outside the lower bounds' common accuracy window.
+
+### R6 - Condition number exactly equal to $1$
+
+**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. The value $a_\star$ is a common sufficient constant for all cited lower-bound thresholds. Also require $\kappa=1$.
+
+**Views.** Randomized unrestricted fixed probability
+
+**Quantity.** Q3
+
+**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
+
+**Status.** Optimal
+
+**Lower bound.** B15
+
+$$
+\Omega(n+\sqrt n\,a)
+$$
+
+**Upper bound.** B14
+
+$$
+O(n+\sqrt n\,a)
+$$
+
+**Gap or comparison.** $O(1)$
+
+### R7 - Boundary regime with a universally bounded condition number
+
+**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. The value $a_\star$ is a common sufficient constant for all cited lower-bound thresholds. Also require $\sqrt n<\kappa<\kappa_0$.
+
+**Views.** Randomized unrestricted fixed probability
+
+**Quantity.** Q3
+
+**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
+
+**Status.** Optimal
+
+**Lower bound.** B15
+
+$$
+\Omega(n+\sqrt n\,a)
+$$
+
+**Upper bound.** B13, B12
+
+$$
+O\!\left(\min\{n^{3/4}\sqrt\kappa(1+a)\log^2(2+\kappa),(n+\kappa^2)(1+a+\ell_R)\}\right)
+$$
+
+**Gap or comparison.** $O(1)$
+
+**Comparison argument.** The budget $\kappa<\kappa_0$ constrains both $n<\kappa_0^2$, which are universally bounded. The component lower bound requiring $\kappa\ge\kappa_0$ is not invoked in this regime.
+
+### R8 - Outside the lower-bound accuracy threshold
+
+**Region.** Assume $n\ge2$, $\kappa\ge1$, and $0<a<a_\star$.
+
+**Views.** Randomized unrestricted fixed probability
+
+**Quantity.** Q3
+
+**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
+
+**Status.** Lower bound missing
+
+**Lower bound.** No admitted bound for this comparison
+
+**Upper bound.** B11, B12, B13, B14
+
+Choose the registered upper bound for the relevant $\kappa$ region.
+
+**Comparison argument.** Enforce each upper bound's condition-number restriction separately. Complete matching is unavailable outside the lower bounds' common accuracy window.
+
+### R9 - AS / Expected RMS and work / small condition
+
+**Region.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $1<\kappa\le\sqrt n$. Exact dual initialization is imposed. Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Views.** Randomized unrestricted expected rms
+
+**Quantity.** Q2
+
+**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B18
+
+$$
+\Omega(n+a\sqrt n\,\kappa)
+$$
+
+**Upper bound.** B17
+
+$$
+\widetilde O(n+a\sqrt n\,\kappa)
+$$
+
+**Gap or comparison.** Only the logarithmic overheads of the cited upper algorithms remain.
+
+### R10 - AS / Expected RMS and work / large condition
+
+**Region.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$. Exact dual initialization is imposed. Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Views.** Randomized unrestricted expected rms
+
+**Quantity.** Q2
+
+**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B20
+
+$$
+\Omega(n+a n^{3/4}\sqrt\kappa)
+$$
+
+**Upper bound.** B19
+
+$$
+\widetilde O(n+a n^{3/4}\sqrt\kappa)
+$$
+
+**Gap or comparison.** Only the logarithmic overheads of the cited upper algorithms remain.
+
+### R11 - AS / Constant probability and fixed budget / small condition
+
+**Region.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $1<\kappa\le\sqrt n$. Exact dual initialization is imposed. Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Views.** Randomized unrestricted fixed probability
+
+**Quantity.** Q3
+
+**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B22
+
+$$
+\Omega(n+a\sqrt n\,\kappa)
+$$
+
+**Upper bound.** B21
+
+$$
+\widetilde O(n+a\sqrt n\,\kappa)
+$$
+
+**Gap or comparison.** Only the logarithmic overheads of the cited upper algorithms remain.
+
+### R12 - AS / Constant probability and fixed budget / large condition
+
+**Region.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$. Exact dual initialization is imposed. Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Views.** Randomized unrestricted fixed probability
+
+**Quantity.** Q3
+
+**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
+
+**Status.** Logarithmic gap
+
+**Lower bound.** B24
+
+$$
+\Omega(n+a n^{3/4}\sqrt\kappa)
+$$
+
+**Upper bound.** B23
+
+$$
+\widetilde O(n+a n^{3/4}\sqrt\kappa)
+$$
+
+**Gap or comparison.** Only the logarithmic overheads of the cited upper algorithms remain.
+
+### R13 - Small-condition-number regime — remaining domain
+
+**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. The value $a_\star$ is a common sufficient constant for all cited lower-bound thresholds. Also require $1<\kappa\le\sqrt n$. Restricted to the complement of: ($\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $1<\kappa\le\sqrt n$. Exact dual initialization is imposed. Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.).
 
 **Views.** Randomized unrestricted expected rms
 
@@ -386,9 +614,9 @@ $$
 
 **Comparison argument.** When n, $\kappa$, and a vary jointly, the envelope permits a polynomial gap $\kappa$. The gap may shrink if $\kappa$ is fixed or the n term dominates. If $\kappa\ge\kappa_0$, also take the maximum with the identical-component lower bound.
 
-### R5 - Large-condition-number regime
+### R14 - Large-condition-number regime — remaining domain
 
-**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. Choose $a_\star$ as a common sufficient constant for all cited lower-bound thresholds. Also require $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$.
+**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. Choose $a_\star$ as a common sufficient constant for all cited lower-bound thresholds. Also require $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$. Restricted to the complement of: ($\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$. Exact dual initialization is imposed. Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.).
 
 **Views.** Randomized unrestricted expected rms
 
@@ -414,57 +642,9 @@ $$
 
 **Comparison argument.** Minimize upper bounds over complete algorithms and maximize lower bounds. Both lower bounds allow arbitrary randomized algorithms.
 
-### R6 - Boundary regime with a universally bounded condition number
+### R15 - Small-condition-number regime — remaining domain
 
-**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. The value $a_\star$ is a common sufficient constant for all cited lower-bound thresholds. Also require $\sqrt n<\kappa<\kappa_0$.
-
-**Views.** Randomized unrestricted expected rms; Randomized unrestricted fixed probability
-
-**Quantity.** Q2; Q3
-
-**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
-
-**Status.** Optimal
-
-**Lower bound.** B9, B15
-
-$$
-\Omega(n+\sqrt n\,a)
-$$
-
-**Upper bound.** B7, B6, B13, B12
-
-$$
-O\!\left(\min\{n^{3/4}\sqrt\kappa(1+a)\log^2(2+\kappa),(n+\kappa^2)(1+a+\ell_R)\}\right)
-$$
-
-**Gap or comparison.** $O(1)$
-
-**Comparison argument.** The budget $\kappa<\kappa_0$ constrains both $n<\kappa_0^2$, which are universally bounded. The component lower bound requiring $\kappa\ge\kappa_0$ is not invoked in this regime.
-
-### R7 - Outside the lower-bound accuracy threshold
-
-**Region.** Assume $n\ge2$, $\kappa\ge1$, and $0<a<a_\star$.
-
-**Views.** Randomized unrestricted expected rms
-
-**Quantity.** Q2
-
-**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
-
-**Status.** Lower bound missing
-
-**Lower bound.** No admitted bound for this comparison
-
-**Upper bound.** B5, B6, B7, B8
-
-Choose the registered upper bound for the relevant $\kappa$ region.
-
-**Comparison argument.** Enforce each upper bound's condition-number restriction separately. Complete matching is unavailable outside the lower bounds' common accuracy window.
-
-### R8 - Small-condition-number regime
-
-**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. The value $a_\star$ is a common sufficient constant for all cited lower-bound thresholds. Also require $1<\kappa\le\sqrt n$.
+**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. The value $a_\star$ is a common sufficient constant for all cited lower-bound thresholds. Also require $1<\kappa\le\sqrt n$. Restricted to the complement of: ($\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $1<\kappa\le\sqrt n$. Exact dual initialization is imposed. Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.).
 
 **Views.** Randomized unrestricted fixed probability
 
@@ -490,9 +670,9 @@ $$
 
 **Comparison argument.** When n, $\kappa$, and a vary jointly, the envelope permits a polynomial gap $\kappa$. The gap may shrink if $\kappa$ is fixed or the n term dominates. If $\kappa\ge\kappa_0$, also take the maximum with the identical-component lower bound.
 
-### R9 - Large-condition-number regime
+### R16 - Large-condition-number regime — remaining domain
 
-**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. Choose $a_\star$ as a common sufficient constant for all cited lower-bound thresholds. Also require $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$.
+**Region.** Assume $n\ge2$ and $a=\beta\Delta/\varepsilon^2\ge a_\star$. Choose $a_\star$ as a common sufficient constant for all cited lower-bound thresholds. Also require $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$. Restricted to the complement of: ($\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$. Exact dual initialization is imposed. Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.).
 
 **Views.** Randomized unrestricted fixed probability
 
@@ -517,26 +697,6 @@ $$
 **Gap or comparison.** $\frac{\min\{n^{3/4}\sqrt\kappa(1+a)\log^2(2+\kappa),(n+\kappa^2)(1+a+\ell_R)\}}{\max\{n+\sqrt n\,a,\sqrt\kappa a\}}$
 
 **Comparison argument.** Minimize upper bounds over complete algorithms and maximize lower bounds. Both lower bounds allow arbitrary randomized algorithms.
-
-### R10 - Outside the lower-bound accuracy threshold
-
-**Region.** Assume $n\ge2$, $\kappa\ge1$, and $0<a<a_\star$.
-
-**Views.** Randomized unrestricted fixed probability
-
-**Quantity.** Q3
-
-**Resource.** The principal resource specified in the resource section. Primitive operations and unit costs are measured along this axis.
-
-**Status.** Lower bound missing
-
-**Lower bound.** No admitted bound for this comparison
-
-**Upper bound.** B11, B12, B13, B14
-
-Choose the registered upper bound for the relevant $\kappa$ region.
-
-**Comparison argument.** Enforce each upper bound's condition-number restriction separately. Complete matching is unavailable outside the lower bounds' common accuracy window.
 
 ## 4. Bounds and supporting evidence
 
@@ -1188,6 +1348,246 @@ Set every component equal to one hard payoff. One component-gradient call then e
 
 Retain the source condition-number threshold, nontrivial-accuracy window, and worst-case quantifier allowing finite dimension to grow with the budget.
 
+### B17 - RPDA in the small-condition branch; Catalyst with a variance-reduced inner solver in the large-condition branch
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized unrestricted expected rms
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+\widetilde O(n+a\sqrt n\,\kappa)
+$$
+
+**Sources.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf)
+
+**Conditions.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $1<\kappa\le\sqrt n$. Exact dual initialization is imposed.; The upper analysis requires only AS and average dual strong concavity; IS implies AS with the same beta. For constant confidence, the source uses a stricter target and runtime truncation, not an unjustified transfer of the RMS guarantee to the fallback.
+
+**Dimension conditions.** Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Constants.** Constants are independent of n,beta,mu_y,Delta,epsilon and dimension.
+
+**Logarithmic factors.** The tilde hides the polylogarithmic factors in the RPDA and Catalyst upper bounds, retained by the source theorem.
+
+**Source location.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf) Theorem main; equations main-complexity and two-regimes; Section upper and appendix upper-interfaces; verified labels: thm:main (line 252), eq:main-complexity (line 261), eq:two-regimes (line 281), sec:upper (line 609), sec:upper-interfaces (line 2354)
+
+RPDA in the small-condition branch; Catalyst with a variance-reduced inner solver in the large-condition branch. Unrestricted randomized algorithms.
+
+The upper analysis requires only AS and average dual strong concavity; IS implies AS with the same beta. For constant confidence, the source uses a stricter target and runtime truncation, not an unjustified transfer of the RMS guarantee to the fallback.
+
+### B18 - Orthogonal source recovery, quadratic saddle relays and globally smooth primal activation
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized unrestricted expected rms
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+\Omega(n+a\sqrt n\,\kappa)
+$$
+
+**Sources.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf)
+
+**Conditions.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $1<\kappa\le\sqrt n$. Exact dual initialization is imposed.; The hard family satisfies individual smoothness and average strong concavity but may have nonconcave components. Its enriched value-gradient lower bound also applies after deleting the value channel.
+
+**Dimension conditions.** Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Constants.** Constants are independent of n,beta,mu_y,Delta,epsilon and dimension.
+
+**Logarithmic factors.** The tilde hides the polylogarithmic factors in the RPDA and Catalyst upper bounds, retained by the source theorem.
+
+**Source location.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf) Theorem main; equation main-complexity; Theorem distributional-hardness; verified labels: thm:main (line 252), eq:main-complexity (line 261), thm:distributional-hardness (line 2024), eq:distributional-hardness (line 2032)
+
+Orthogonal source recovery, quadratic saddle relays and globally smooth primal activation. All randomized adaptive component queries and arbitrary measurable outputs.
+
+The hard family satisfies individual smoothness and average strong concavity but may have nonconcave components. Its enriched value-gradient lower bound also applies after deleting the value channel.
+
+### B19 - RPDA in the small-condition branch; Catalyst with a variance-reduced inner solver in the large-condition branch
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized unrestricted expected rms
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+\widetilde O(n+a n^{3/4}\sqrt\kappa)
+$$
+
+**Sources.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf)
+
+**Conditions.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$. Exact dual initialization is imposed.; The upper analysis requires only AS and average dual strong concavity; IS implies AS with the same beta. For constant confidence, the source uses a stricter target and runtime truncation, not an unjustified transfer of the RMS guarantee to the fallback.
+
+**Dimension conditions.** Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Constants.** Constants are independent of n,beta,mu_y,Delta,epsilon and dimension.
+
+**Logarithmic factors.** The tilde hides the polylogarithmic factors in the RPDA and Catalyst upper bounds, retained by the source theorem.
+
+**Source location.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf) Theorem main; equations main-complexity and two-regimes; Section upper and appendix upper-interfaces; verified labels: thm:main (line 252), eq:main-complexity (line 261), eq:two-regimes (line 281), sec:upper (line 609), sec:upper-interfaces (line 2354)
+
+RPDA in the small-condition branch; Catalyst with a variance-reduced inner solver in the large-condition branch. Unrestricted randomized algorithms.
+
+The upper analysis requires only AS and average dual strong concavity; IS implies AS with the same beta. For constant confidence, the source uses a stricter target and runtime truncation, not an unjustified transfer of the RMS guarantee to the fallback.
+
+### B20 - Orthogonal source recovery, quadratic saddle relays and globally smooth primal activation
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized unrestricted expected rms
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+\Omega(n+a n^{3/4}\sqrt\kappa)
+$$
+
+**Sources.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf)
+
+**Conditions.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$. Exact dual initialization is imposed.; The hard family satisfies individual smoothness and average strong concavity but may have nonconcave components. Its enriched value-gradient lower bound also applies after deleting the value channel.
+
+**Dimension conditions.** Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Constants.** Constants are independent of n,beta,mu_y,Delta,epsilon and dimension.
+
+**Logarithmic factors.** The tilde hides the polylogarithmic factors in the RPDA and Catalyst upper bounds, retained by the source theorem.
+
+**Source location.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf) Theorem main; equation main-complexity; Theorem distributional-hardness; verified labels: thm:main (line 252), eq:main-complexity (line 261), thm:distributional-hardness (line 2024), eq:distributional-hardness (line 2032)
+
+Orthogonal source recovery, quadratic saddle relays and globally smooth primal activation. All randomized adaptive component queries and arbitrary measurable outputs.
+
+The hard family satisfies individual smoothness and average strong concavity but may have nonconcave components. Its enriched value-gradient lower bound also applies after deleting the value channel.
+
+### B21 - RPDA in the small-condition branch; Catalyst with a variance-reduced inner solver in the large-condition branch
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized unrestricted fixed probability
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+\widetilde O(n+a\sqrt n\,\kappa)
+$$
+
+**Sources.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf)
+
+**Conditions.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $1<\kappa\le\sqrt n$. Exact dual initialization is imposed.; The upper analysis requires only AS and average dual strong concavity; IS implies AS with the same beta. For constant confidence, the source uses a stricter target and runtime truncation, not an unjustified transfer of the RMS guarantee to the fallback.
+
+**Dimension conditions.** Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Constants.** Constants are independent of n,beta,mu_y,Delta,epsilon and dimension.
+
+**Logarithmic factors.** The tilde hides the polylogarithmic factors in the RPDA and Catalyst upper bounds, retained by the source theorem.
+
+**Source location.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf) Theorem main; equations main-complexity and two-regimes; Section upper and appendix upper-interfaces; verified labels: thm:main (line 252), eq:main-complexity (line 261), eq:two-regimes (line 281), sec:upper (line 609), sec:upper-interfaces (line 2354)
+
+RPDA in the small-condition branch; Catalyst with a variance-reduced inner solver in the large-condition branch. Unrestricted randomized algorithms.
+
+The upper analysis requires only AS and average dual strong concavity; IS implies AS with the same beta. For constant confidence, the source uses a stricter target and runtime truncation, not an unjustified transfer of the RMS guarantee to the fallback.
+
+### B22 - Orthogonal source recovery, quadratic saddle relays and globally smooth primal activation
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized unrestricted fixed probability
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+\Omega(n+a\sqrt n\,\kappa)
+$$
+
+**Sources.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf)
+
+**Conditions.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $1<\kappa\le\sqrt n$. Exact dual initialization is imposed.; The hard family satisfies individual smoothness and average strong concavity but may have nonconcave components. Its enriched value-gradient lower bound also applies after deleting the value channel.
+
+**Dimension conditions.** Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Constants.** Constants are independent of n,beta,mu_y,Delta,epsilon and dimension.
+
+**Logarithmic factors.** The tilde hides the polylogarithmic factors in the RPDA and Catalyst upper bounds, retained by the source theorem.
+
+**Source location.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf) Theorem main; equation main-complexity; Theorem distributional-hardness; verified labels: thm:main (line 252), eq:main-complexity (line 261), thm:distributional-hardness (line 2024), eq:distributional-hardness (line 2032)
+
+Orthogonal source recovery, quadratic saddle relays and globally smooth primal activation. All randomized adaptive component queries and arbitrary measurable outputs.
+
+The hard family satisfies individual smoothness and average strong concavity but may have nonconcave components. Its enriched value-gradient lower bound also applies after deleting the value channel.
+
+### B23 - RPDA in the small-condition branch; Catalyst with a variance-reduced inner solver in the large-condition branch
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized unrestricted fixed probability
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+\widetilde O(n+a n^{3/4}\sqrt\kappa)
+$$
+
+**Sources.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf)
+
+**Conditions.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$. Exact dual initialization is imposed.; The upper analysis requires only AS and average dual strong concavity; IS implies AS with the same beta. For constant confidence, the source uses a stricter target and runtime truncation, not an unjustified transfer of the RMS guarantee to the fallback.
+
+**Dimension conditions.** Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Constants.** Constants are independent of n,beta,mu_y,Delta,epsilon and dimension.
+
+**Logarithmic factors.** The tilde hides the polylogarithmic factors in the RPDA and Catalyst upper bounds, retained by the source theorem.
+
+**Source location.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf) Theorem main; equations main-complexity and two-regimes; Section upper and appendix upper-interfaces; verified labels: thm:main (line 252), eq:main-complexity (line 261), eq:two-regimes (line 281), sec:upper (line 609), sec:upper-interfaces (line 2354)
+
+RPDA in the small-condition branch; Catalyst with a variance-reduced inner solver in the large-condition branch. Unrestricted randomized algorithms.
+
+The upper analysis requires only AS and average dual strong concavity; IS implies AS with the same beta. For constant confidence, the source uses a stricter target and runtime truncation, not an unjustified transfer of the RMS guarantee to the fallback.
+
+### B24 - Orthogonal source recovery, quadratic saddle relays and globally smooth primal activation
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**View.** Randomized unrestricted fixed probability
+
+**Witness or lower-bound scope.** All randomized adaptive algorithms
+
+$$
+\Omega(n+a n^{3/4}\sqrt\kappa)
+$$
+
+**Sources.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf)
+
+**Conditions.** $\beta,\Delta,\varepsilon>0$, $0<\mu_y\le\beta$, $a\ge\max\{a_\star,a_{\rm U06}\}$, $n\ge2$, and $\kappa>\sqrt n$ and $\kappa\ge\kappa_0$. Exact dual initialization is imposed.; The hard family satisfies individual smoothness and average strong concavity but may have nonconcave components. Its enriched value-gradient lower bound also applies after deleting the value channel.
+
+**Dimension conditions.** Upper algorithms apply to every finite pair of block dimensions. Lower bounds are worst cases over finite dimensions and can require exponential growth with the serialized path length, not merely polynomial dimension. In equation optimization-dimension the source block dimension is $D_0=\lceil32(8K_*+8)a_*^{-2}\sum_{t=0}^{H_0}n^t\rceil$, where $a_*=1/8600000$, $K_*=\lfloor c_{\rm inf}nH_0\rfloor$, $c_{\rm inf}=(a_*^2/2)^2/(4e)$, and $H_0=M_0m_0$ is the construction serial depth. The primal and dual blocks are assembled from this source as in Theorem distributional-hardness and Section parameter calibration. No fixed-dimensional or arithmetic-runtime matching conclusion follows.
+
+**Constants.** Constants are independent of n,beta,mu_y,Delta,epsilon and dimension.
+
+**Logarithmic factors.** The tilde hides the polylogarithmic factors in the RPDA and Catalyst upper bounds, retained by the source theorem.
+
+**Source location.** [5](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf) Theorem main; equation main-complexity; Theorem distributional-hardness; verified labels: thm:main (line 252), eq:main-complexity (line 261), thm:distributional-hardness (line 2024), eq:distributional-hardness (line 2032)
+
+Orthogonal source recovery, quadratic saddle relays and globally smooth primal activation. All randomized adaptive component queries and arbitrary measurable outputs.
+
+The hard family satisfies individual smoothness and average strong concavity but may have nonconcave components. Its enriched value-gradient lower bound also applies after deleting the value channel.
+
 ## Maintenance appendix: Native proof extensions
 
 Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
@@ -1213,3 +1613,7 @@ https://arxiv.org/pdf/2103.15888v1
 [4] Wendao Wu; Haihan Zhang; Chenheng Zhang; Yanyi Li; Chunyuan Zheng; Cong Fang; Haoxuan Li; Zhouchen Lin. Sharp Fresh-Gradient Complexity of Nonconvex--Strongly-Concave Minimax Optimization. 2026. arXiv:2610.00229v2, 2026-10-19.
 
 https://arxiv.org/pdf/2610.00229v2
+
+[5] Colombo_U06. Unrestricted Randomized Complexity of Finite-Sum Nonconvex--Strongly-Concave Minimax Optimization. NCSC_Unrestricted_Randomized_Paper.tex.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U06/manuscript.pdf

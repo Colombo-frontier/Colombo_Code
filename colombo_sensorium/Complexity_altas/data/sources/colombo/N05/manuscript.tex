@@ -1,0 +1,1336 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,array,tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage[nameinlink,capitalize,noabbrev]{cleveref}
+
+\hypersetup{colorlinks=true,linkcolor=blue!45!black,
+  citecolor=blue!45!black,urlcolor=blue!45!black,
+  pdftitle={Near-Optimal Smooth Nonconvex Optimization with an Unknown Tail Index},
+  pdfauthor={Colombo Team}}
+\allowdisplaybreaks[2]
+\setlength{\parskip}{0.25em}
+\setlength{\parindent}{1.15em}
+\setlist[itemize]{leftmargin=*,itemsep=0.25em,topsep=0.4em}
+\setlist[enumerate]{leftmargin=*,itemsep=0.35em,topsep=0.4em}
+\emergencystretch=2em
+\renewcommand{\arraystretch}{1.2}
+\floatstyle{ruled}
+\newfloat{algorithm}{tbp}{loa}
+\floatname{algorithm}{Algorithm}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prb}{\mathbb{P}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cP}{\mathcal{P}}
+\newcommand{\cT}{\mathcal{T}}
+\newcommand{\cG}{\mathcal{G}}
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\inner}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\FB}{\mathsf{BatchNSGD}}
+\newcommand{\OtwoNC}{\mathsf{O2NC}}
+\newcommand{\OAdaGradR}{\mathsf{OAdaGradR}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\crefname{proposition}{Proposition}{Propositions}
+\crefname{lemma}{Lemma}{Lemmas}
+\crefname{corollary}{Corollary}{Corollaries}
+\crefname{definition}{Definition}{Definitions}
+\crefname{assumption}{Assumption}{Assumptions}
+\crefname{algorithm}{Algorithm}{Algorithms}
+
+\title{Near-Optimal Smooth Nonconvex Optimization\\
+with an Unknown Tail Index}
+\author{Colombo Team\\[0.25em]
+\small\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{November 23, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study smooth nonconvex optimization with unbiased stochastic gradients whose
+noise has a bounded centered $p$th moment for an unknown $p\in(1,2]$.
+We construct a single algorithm that, given a query budget and bounds on
+smoothness and the initial objective gap, uses neither $p$ nor the noise scale.
+In the normalized model, its output satisfies
+$\E\norm{\nabla F(\widehat x_T)}
+\le C_p(\log(eT)/T)^{(p-1)/(3p-2)}$ for every fixed $p$.
+The algorithm runs ordinary minibatch normalized gradient descent over a
+dyadic grid of batch sizes and selects a candidate using fresh empirical
+gradients. A martingale moment bound makes this selection rule valid without
+tail estimation, including for conditionally unbiased, history-dependent noise.
+All training and validation queries are included in the budget.
+Combined with the existing lower bound for arbitrary randomized methods,
+the result gives sample complexity
+$O_p(\eps^{-(3p-2)/(p-1)}\log(e/\eps))$, within one logarithmic
+factor of the known-index optimum. We also show that validation can use
+a vanishing fraction of the total budget and establish a sharp logarithmic
+barrier for a specified class of one-sided rate-grid certificates.
+The latter is not a lower bound for general adaptive algorithms.
+An exact rate without the logarithmic factor remains unresolved here.
+\end{abstract}
+
+\noindent\textbf{Keywords.} Stochastic nonconvex optimization; heavy-tailed noise;
+unknown tail index; normalized gradient descent; oracle complexity; adaptation.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}\label{sec:introduction}
+
+The moment assumptions imposed on a stochastic gradient determine how much
+averaging is needed before its direction becomes useful. When the noise has
+only a finite $p$th moment, with $1<p<2$, a sample mean remains consistent,
+but the familiar square-root averaging rate cannot in general be guaranteed. In smooth
+nonconvex optimization this changes the optimal expected-gradient rate from
+$T^{-1/4}$ to $T^{-(p-1)/(3p-2)}$. Normalization and
+online-to-nonconvex conversion attain the latter expected-gradient rate,
+with optimal tuning that generally depends on $p$
+\cite{hubler2025normalization,liuzhou2025,liu2026oco}.
+
+The exponent $p$ is often unavailable to the algorithm. Moreover, a noise law
+may satisfy several moment conditions at once, so identifying a unique tail
+index is neither necessary nor a well-defined prerequisite for optimization.
+The appropriate question is whether one procedure, with the same inputs and
+update rules, can obtain the correct rate on every moment class.
+Liu and Zhou \cite{liuzhou2025} and H\"ubler, Fatkhullin, and He
+\cite{hubler2025normalization} obtained unknown-index guarantees with rate
+$T^{-(p-1)/(2p)}$. For $1<p<2$, this exponent is smaller than the
+known-index exponent.
+
+This paper addresses a focused version of the adaptation problem: the
+algorithm knows a query budget $T$ and bounds $L$ and $\Delta$ on smoothness
+and the initial objective gap, but knows neither $p$ nor the noise scale
+$\sigma$. We prove that a dyadic grid of batch sizes, followed by a fully
+charged validation step, achieves the known-index exponent up to a logarithm.
+The proof uses standard normalized descent and a standard martingale moment
+inequality. Its essential observation is that the batch size is the only
+unknown scale that must be searched in this setting.
+
+\subsection{Main result and mechanism}
+
+Write
+\begin{equation}\label{eq:exponents-intro}
+ a(p)=\frac{p-1}{3p-2},\qquad
+ b(p)=\frac{p-1}{p},\qquad
+ r(p)=\frac{1}{a(p)}=\frac{3p-2}{p-1}.
+\end{equation}
+With $n$ training queries and a fixed batch size $\tau$, minibatch normalized
+gradient descent gives the bound
+\begin{equation}\label{eq:intro-batch}
+ \E\norm{\nabla F(Y_{\tau,n})}
+ \le C\sqrt{\frac{L\Delta\tau}{n}}
+       +C_p\sigma\tau^{-b(p)}.
+\end{equation}
+The first term accounts for the number of optimization steps; the second
+accounts for estimation error within a batch. Crucially, the stepsize
+realizing \eqref{eq:intro-batch} uses $L,\Delta,n,\tau$, but neither
+$p$ nor $\sigma$. This is the familiar minibatch NSGD tradeoff
+\cite{hubler2025normalization}, for which we give a complete proof under
+the conditional-moment oracle used here.
+
+In the normalized model $L=\Delta=\sigma=1$, balancing the terms gives
+$\tau\asymp n^{p/(3p-2)}$ and rate $n^{-a(p)}$.
+A dyadic grid covers this scale to within a factor of two. Dividing the
+training budget among $O(\log T)$ runs therefore supplies a candidate of
+quality $O_p((\log T/T)^{a(p)})$.
+Selecting that candidate is the remaining issue: neither objective values
+nor exact gradients are available.
+
+We select the smallest norm of a fresh empirical gradient. For $M$ candidates
+and $m$ validation queries at each candidate, the selection error is at most
+$C_p\sigma M^{1/p}m^{-b(p)}$. Because
+\begin{equation}\label{eq:exponent-gap}
+ b(p)-a(p)=\frac{2(p-1)^2}{p(3p-2)}>0,
+\end{equation}
+validation is asymptotically less expensive than optimization for each fixed
+$p>1$. Neither the estimator nor the selector uses the exponent appearing
+in its analysis.
+
+The resulting statement has the quantifier order
+\[
+ \exists\,\mathsf A\quad\forall\,p\in(1,2]\quad
+ \exists\,C_p<\infty\quad\forall\,T\ge1:
+ \quad\mathfrak R_T^{\mathsf A}(p)
+ \le C_p\left(\frac{\log(eT)}{T}\right)^{a(p)}.
+\]
+The algorithm $\mathsf A$ is fixed before $p$ is chosen. The constants
+and the point at which validation becomes a lower-order term may depend
+on $p$. We do not assert uniform asymptotics as $p\downarrow1$.
+
+The paper makes three contributions within this scope. First, it gives a
+self-contained, one-dimensional batch-size reduction with explicit query
+accounting. Second, it proves that a single logarithm in sample complexity
+suffices and that fresh validation can use $o(T)$ queries. Third, it
+separates a sharp limitation of one-sided rate-grid certificates from the
+unresolved question of exact adaptation by general algorithms.
+Appendix~\ref{sec:beyond-log} records a sufficient descent condition for
+a possible exact-rate method; it is not an additional unconditional
+convergence result.
+
+\subsection{Comparison with related work}\label{sec:related}
+
+\paragraph{Clipping and normalization.}
+Early heavy-tail analyses established convergence of clipped methods
+\cite{zhang2020adaptive,nguyen2023clipped}.
+H\"ubler et al.\ \cite{hubler2025normalization} proved optimal tuned
+minibatch NSGD bounds and an algorithm-specific limitation for prescribed
+single-run schedules. Liu and Zhou \cite{liuzhou2025} analyzed normalized
+momentum, including relaxed smoothness and more general noise models.
+Our comparison uses their classical smooth, additive-noise specialization.
+Their unknown-index guarantees require fewer problem parameters than our
+main algorithm, whereas our guarantee has the sharper exponent for
+$1<p<2$. At $p=2$, those earlier guarantees already attain $T^{-1/4}$;
+our uniform construction adds a logarithmic overhead at that endpoint.
+
+\paragraph{Grid search and validation.}
+The use of restarted runs and empirical-gradient selection has direct
+precedent in the tuning-free method of Khaled and Jin
+\cite{khaled2024tuning}. Their nonconvex result uses a stronger noise
+condition, parameter hints, and a high-probability criterion, so it is not
+a like-for-like rate comparison with the finite-moment expectation bounds
+here. We use the same general selection principle with a moment estimate
+valid for martingale differences. The moment inequality and normalized
+descent are established tools, rather than new components of this paper.
+
+\paragraph{A closely related online result.}
+The LongTails project reports a parameter-free heavy-tail stationarity
+result based on restarted normalized-momentum runs and fresh empirical
+gradients \cite{longtails2026stationarity}. For fixed $p$ and normalized
+positive parameters, its displayed budget is
+$O_p(\eps^{-r(p)}\log^2(e/\eps))$.
+Its algorithm does not take $L,\Delta,p,\sigma$, or the horizon as inputs.
+Our result concerns the narrower adaptation problem with $L,\Delta,T$
+available, has one logarithm in the corresponding budget, and permits
+conditional moment bounds without an IID assumption.
+Table~\ref{tab:comparison} keeps these distinctions explicit. In particular,
+the general idea of near-optimal unknown-index optimization is already
+present in that online result.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}
+>{\raggedright\arraybackslash}p{0.28\textwidth}
+>{\raggedright\arraybackslash}p{0.20\textwidth}
+>{\raggedright\arraybackslash}p{0.17\textwidth}
+>{\raggedright\arraybackslash}X@{}}
+\toprule
+Result & Tuning information & Oracle / scope & Queries for
+$\E\norm{\nabla F(\widehat x)}\le\eps$\\
+\midrule
+H\"ubler et al.\ \cite{hubler2025normalization}, Cor.~3;
+Liu--Zhou \cite{liuzhou2025}, Thm.~3.2
+& $p$ and problem parameters available
+& IID (H\"ubler et al.); conditional (Liu--Zhou)
+& $O_p(\eps^{-r(p)})$\\[0.35em]
+Liu--Zhou \cite{liuzhou2025}, Thm.~3.6
+& Horizon only in the classical specialization
+& Conditional centered $p$th moment
+& $O_p(\eps^{-2p/(p-1)})$\\[0.35em]
+H\"ubler et al.\ \cite{hubler2025normalization}, Eq.~(4)
+& Prescribed horizon; no $p,\sigma,L,\Delta$
+& IID centered $p$th moment
+& $O_p(\eps^{-2p/(p-1)})$\\[0.35em]
+LongTails \cite{longtails2026stationarity}, online result
+& No $p,\sigma,L,\Delta,T$
+& IID centered $p$th moment
+& $O_p(\eps^{-r(p)}\log^2(e/\eps))$\\[0.35em]
+This paper, \cref{thm:main-upper,cor:sample-complexity}
+& $L,\Delta,T$; no $p,\sigma$
+& Conditional centered $p$th moment
+& $O_p(\eps^{-r(p)}\log(e/\eps))$\\[0.35em]
+Liu \cite{liu2026oco}, Thm.~11
+& Even with $p$ known
+& All randomized methods; IID hard oracle
+& $\Omega_p(\eps^{-r(p)})$\\
+\bottomrule
+\end{tabularx}
+\caption{Comparison on $L=\Delta=\sigma=1$, for each fixed
+$p\in(1,2]$ and sufficiently small $\eps$. All costs count individual
+stochastic-gradient calls and all rates concern the expected gradient
+norm. The Liu--Zhou rows specialize their results to $L_1=\sigma_1=0$.
+The LongTails row is the normalized asymptotic specialization of its
+displayed online budget, consulted November 23, 2026; it is not a claim
+that the general parameter dependence coincides. The lower bound permits
+dimension to grow with accuracy.}\label{tab:comparison}
+\end{table}
+
+\paragraph{Online-to-nonconvex conversion and lower bounds.}
+The conversion of Cutkosky, Mehta, and Orabona
+\cite{cutkosky2023o2nc}, combined with Liu's heavy-tail optimistic
+online-learning analysis \cite{liu2026oco}, provides another candidate
+generator with the same batch-scale tradeoff. We retain that construction
+in Appendix~\ref{app:o2nc}; the main proof uses minibatch NSGD to avoid
+an unnecessary dependence on online regret machinery.
+For optimality, we invoke Liu's lower bound for arbitrary randomized
+methods \cite[Theorem~11]{liu2026oco}. Its algorithmic scope matters:
+a lower bound restricted to zero-respecting methods would not, by itself,
+justify an unrestricted minimax comparison. The finite-variance endpoint
+is also consistent with the stochastic lower bounds of Arjevani et al.
+\cite{arjevani2023lower}.
+
+\section{Oracle model and performance criteria}\label{sec:model}
+
+Let $F:\R^d\to\R$ be differentiable and lower bounded, with
+$F_\star=\inf_xF(x)$. We are given $x_0\in\R^d$, a smoothness bound
+$L>0$, and a gap bound $\Delta>0$ satisfying
+\begin{equation}\label{eq:objective}
+ F(x_0)-F_\star\le\Delta,\qquad
+ \norm{\nabla F(x)-\nabla F(y)}\le L\norm{x-y}
+ \quad(x,y\in\R^d).
+\end{equation}
+At call $t$, the query $x_t$ is measurable with respect to the history
+$\cF_{t-1}$, which includes the algorithm's randomness available before
+the response. The oracle returns $g_t$ with
+\begin{equation}\label{eq:oracle}
+ \E[g_t\mid\cF_{t-1}]=\nabla F(x_t),\qquad
+ \E[\norm{g_t-\nabla F(x_t)}^p\mid\cF_{t-1}]\le\sigma^p
+ \quad\text{a.s.}
+\end{equation}
+Here $p\in(1,2]$ and $\sigma\ge0$ are unknown to the algorithm.
+The term \emph{fresh query} means a new response obeying
+\eqref{eq:oracle} conditional on the complete current history; it does
+not impose independence beyond this condition. IID stochastic gradients
+are a special case.
+
+The algorithm receives no function values. It cannot evaluate one random
+sample at several points, and no smoothness of sample gradients is assumed.
+Every call, including one made for output selection, counts toward the
+budget. The output criterion is $\E\norm{\nabla F(\widehat x)}$.
+The model allows infinite noise variance when $p<2$.
+
+\begin{definition}[One common algorithm family]
+A common family is a fixed collection
+$\mathsf A=\{\mathsf A_T:T\in\mathbb N\}$ whose inputs may include
+$T,L,\Delta,x_0$, but not $p$ or $\sigma$. Its formulas and its
+rule for choosing queries are the same on every moment class.
+\end{definition}
+
+Let $\cP_p$ be the union, over all finite dimensions, of instances
+satisfying \eqref{eq:objective}--\eqref{eq:oracle} with
+$L=\Delta=\sigma=1$. For a common family, define
+\begin{equation}\label{eq:risk-definition}
+ \mathfrak R_T^{\mathsf A}(p)
+ =\sup_{\mathcal I\in\cP_p}
+ \E_{\mathcal I,\mathsf A}\norm{\nabla F(\widehat x_T)},\qquad
+ N_p^{\mathsf A}(\eps)
+ =\inf\{T\in\mathbb N:\mathfrak R_T^{\mathsf A}(p)\le\eps\}.
+\end{equation}
+Thus $N_p^{\mathsf A}(\eps)$ is a pointwise inversion of a
+fixed-budget guarantee. It is not a stopping rule that chooses $T$
+without $p$. Let $N_p^\star(\eps)$ denote the usual minimax query
+complexity on $\cP_p$, allowing the algorithm to know $p$.
+The upper bounds below hold in every dimension; their matching lower
+bounds concern the union over dimensions.
+
+We use $a(p),b(p),r(p)$ from \eqref{eq:exponents-intro} and
+\begin{equation}\label{eq:identities}
+ \alpha(p):=\frac{p}{3p-2}=1-2a(p),\qquad
+ \alpha(p)b(p)=a(p),\qquad \frac1p+b(p)=1.
+\end{equation}
+Constants denoted by $C$ are universal; $C_p,c_p$ may depend only on
+$p$. Their values may change between displays. All unmarked logarithms
+are natural.
+
+\begin{lemma}[Initial-gradient bound]\label[lemma]{lem:initial-gradient}
+Under \eqref{eq:objective}, $\norm{\nabla F(x_0)}\le\sqrt{2L\Delta}$.
+\end{lemma}
+\begin{proof}
+The descent lemma gives
+$F_\star\le F(x_0-L^{-1}\nabla F(x_0))
+\le F(x_0)-\norm{\nabla F(x_0)}^2/(2L)$.
+\end{proof}
+If a supplied gap bound is zero, this lemma allows immediate termination.
+If $L=0$, the gradient is constant and lower boundedness forces it to be
+zero, so this case is trivial as well.
+
+\section{Validation without the tail index}\label{sec:validation}
+
+The following estimate is a Hilbert-space martingale moment inequality.
+We include a proof to make the conditional oracle argument explicit;
+sharper constants are available, for example in
+\cite[Lemma~10]{hubler2025normalization}.
+
+\begin{lemma}[Empirical means of martingale differences]\label[lemma]{lem:martingale-mean}
+Let $\xi_1,\ldots,\xi_m$ be Euclidean martingale differences
+relative to $(\cF_i)_{i=0}^m$, with
+$\E[\norm{\xi_i}^p\mid\cF_{i-1}]\le\sigma^p$ for
+$1<p\le2$. There is a numerical constant $M_p\le16$ such that
+\begin{equation}\label{eq:martingale-moment}
+ \E\left[\left\|\frac1m\sum_{i=1}^m\xi_i\right\|^p
+          \,\middle|\,\cF_0\right]
+ \le M_p\sigma^p m^{1-p}.
+\end{equation}
+The constant does not depend on the dimension.
+\end{lemma}
+\begin{proof}
+For $1<p\le2$,
+\begin{equation}\label{eq:norm-smoothness}
+ \norm{x+y}^p\le\norm{x}^p
+ +p\norm{x}^{p-2}\inner{x}{y}+16\norm{y}^p,
+\end{equation}
+with the linear term set to zero at $x=0$.
+For completeness, if $\norm y\ge\norm x/2$, the remainder after
+subtracting the first two terms is at most
+$(3^p+p2^{p-1})\norm y^p\le13\norm y^p$.
+If $\norm y<\norm x/2$, the Hessian of $z\mapsto\norm z^p$
+has operator norm at most $p\norm z^{p-2}$ on the segment
+$x+[0,1]y$. Taylor's formula bounds the remainder by
+$(p/2)(\norm x/2)^{p-2}\norm y^2\le\norm y^p$.
+This proves \eqref{eq:norm-smoothness} in both cases.
+
+Apply \eqref{eq:norm-smoothness} to the partial sums
+$S_i=\sum_{j=1}^i\xi_j$. Conditional expectation removes the linear
+term, and iteration gives
+$\E[\norm{S_m}^p\mid\cF_0]\le16m\sigma^p$.
+Division by $m^p$ proves the claim. The relevant products are integrable
+by H\"older's inequality and induction on $i$.
+\end{proof}
+
+\begin{lemma}[Selection by fresh empirical gradients]\label[lemma]{lem:selection}
+Let $Y_1,\ldots,Y_M$ be candidates determined before validation begins.
+At each candidate obtain $m$ fresh gradients and set
+\[
+ \bar g_j=\frac1m\sum_{s=1}^m g_{j,s},\qquad
+ \widehat j\in\argmin_{1\le j\le M}\norm{\bar g_j},
+\]
+breaking ties by the smallest index. Under \eqref{eq:oracle},
+\begin{equation}\label{eq:selection}
+ \E\norm{\nabla F(Y_{\widehat j})}
+ \le \min_{1\le j\le M}\E\norm{\nabla F(Y_j)}
+       +2M_p^{1/p}\sigma M^{1/p}m^{-b(p)}.
+\end{equation}
+The candidates and the validation errors need not be independent.
+\end{lemma}
+\begin{proof}
+Put $e_j=\norm{\bar g_j-\nabla F(Y_j)}$. For any fixed index $j$,
+\[
+ \norm{\nabla F(Y_{\widehat j})}
+ \le\norm{\bar g_{\widehat j}}+e_{\widehat j}
+ \le\norm{\nabla F(Y_j)}+e_j+e_{\widehat j}
+ \le\norm{\nabla F(Y_j)}+2\max_i e_i.
+\]
+During candidate $i$'s validation, its query point is fixed.
+Conditioning on the history before that batch, applying
+\cref{lem:martingale-mean}, and then taking expectations gives
+$\E e_i^p\le M_p\sigma^pm^{1-p}$.
+Consequently,
+\[
+ \E\max_i e_i
+ \le\E\left(\sum_i e_i^p\right)^{1/p}
+ \le\left(\sum_i\E e_i^p\right)^{1/p}
+ \le M_p^{1/p}\sigma M^{1/p}m^{-b(p)}.
+\]
+Taking expectations in the pointwise comparison and minimizing over $j$
+proves \eqref{eq:selection}.
+\end{proof}
+
+This argument does not need a good-candidate event or a bound on the
+largest candidate gradient. It directly controls the expected loss from
+selection, even when some candidates perform poorly.
+
+\section{A fixed-batch candidate with no tail tuning}\label{sec:fixed-block}
+
+We now give the elementary candidate generator used in the main algorithm.
+It is ordinary minibatch normalized SGD, with its stepsize determined
+by the number of updates. The algorithm and its tradeoff are standard
+\cite{hubler2025normalization}; the proof below records precisely the
+version required for our reduction.
+
+\begin{algorithm}[H]
+\caption{Fixed-batch normalized descent $\FB(x_0,L,\Delta;n,\tau)$}
+\label{alg:batch}
+\textbf{Input:} $L,\Delta>0$; integers $n\ge8$ and $1\le\tau\le n/2$.
+\begin{enumerate}[label=\arabic*.,itemsep=0.2em,topsep=0.3em]
+\item Set $K=\lfloor n/\tau\rfloor$,
+$\eta=\sqrt{2\Delta/(LK)}$, and $x^{(0)}=x_0$.
+\item For $k=0,\ldots,K-1$, obtain $\tau$ fresh gradients
+$g_{k,1},\ldots,g_{k,\tau}$ at $x^{(k)}$. Set
+\[
+ v_k=\frac1\tau\sum_{s=1}^\tau g_{k,s},\qquad
+ d_k=\begin{cases}v_k/\norm{v_k},&v_k\ne0,\\0,&v_k=0,\end{cases}
+ \qquad x^{(k+1)}=x^{(k)}-\eta d_k.
+\]
+\item Draw $R$ uniformly from $\{0,\ldots,K-1\}$,
+independently of the run, and return $Y_{\tau,n}=x^{(R)}$.
+\end{enumerate}
+\end{algorithm}
+
+\begin{proposition}[Fixed-batch oracle inequality]\label[proposition]{prop:fixed-block}
+Under \eqref{eq:objective}--\eqref{eq:oracle}, \cref{alg:batch} uses
+$K\tau\le n$ queries, does not use $p$ or $\sigma$, and satisfies
+\begin{align}
+ \E\norm{\nabla F(Y_{\tau,n})}
+ &\le\sqrt{\frac{2L\Delta}{K}}
+       +2M_p^{1/p}\sigma\tau^{-b(p)}\notag\\
+ &\le2\sqrt{\frac{L\Delta\tau}{n}}
+       +2M_p^{1/p}\sigma\tau^{-b(p)}.
+ \label{eq:fixed-block-bound}
+\end{align}
+\end{proposition}
+\begin{proof}
+For any vectors $h,v$, with $d=v/\norm v$ if $v\ne0$ and $d=0$
+otherwise,
+\begin{equation}\label{eq:direction}
+ \inner{h}{d}\ge\norm h-2\norm{v-h}.
+\end{equation}
+For $v\ne0$, this follows from
+$\inner{h}{d}\ge\norm v-\norm{v-h}$ and the triangle inequality;
+the zero case is immediate. Let $h_k=\nabla F(x^{(k)})$.
+By \cref{lem:martingale-mean} and conditional Jensen's inequality,
+\[
+ \E[\norm{v_k-h_k}\mid\text{history before batch }k]
+ \le M_p^{1/p}\sigma\tau^{-b(p)}.
+\]
+Smoothness and \eqref{eq:direction} give
+\[
+ F(x^{(k+1)})\le F(x^{(k)})-\eta\norm{h_k}
+       +2\eta\norm{v_k-h_k}+\frac{L\eta^2}{2}.
+\]
+Sum over $k$, take expectations, and use the initial gap to obtain
+\[
+ \frac1K\sum_{k=0}^{K-1}\E\norm{h_k}
+ \le\frac{\Delta}{K\eta}+\frac{L\eta}{2}
+       +2M_p^{1/p}\sigma\tau^{-b(p)}.
+\]
+Our choice of $\eta$ makes the first two terms equal and their sum
+$\sqrt{2L\Delta/K}$. The random output realizes the average on the
+left. Finally, $\tau\le n/2$ implies $K\ge n/(2\tau)$.
+All quantities are integrable: the path length is at most $K\eta$,
+and smoothness bounds the true gradients on that deterministic-radius ball.
+\end{proof}
+
+For a known $p$ and $\sigma>0$, the balancing scale is
+\begin{equation}\label{eq:oracle-block}
+ \tau_p(n)=\left(\frac{\sigma^2n}{L\Delta}\right)^{\alpha(p)}.
+\end{equation}
+When this scale lies within the feasible range, both terms of
+\eqref{eq:fixed-block-bound} are of order
+\begin{equation}\label{eq:balanced-value}
+ \left(\frac{L\Delta\,\sigma^{p/(p-1)}}{n}\right)^{a(p)}.
+\end{equation}
+Equation~\eqref{eq:oracle-block} is used only in the analysis; no part
+of the proposed algorithm evaluates it.
+
+\section{Dyadic adaptation and its guarantees}\label{sec:main-upper}
+
+\begin{algorithm}[H]
+\caption{Dyadic batch-size portfolio $\mathsf A_{\rm dyad}$}
+\label{alg:portfolio}
+\textbf{Input:} Query budget $T\ge1$, point $x_0$, bounds $L,\Delta>0$.
+\begin{enumerate}[label=\arabic*.,itemsep=0.25em,topsep=0.3em]
+\item Set $J=\lceil\log_2(eT)\rceil$ and
+$n=m=\lfloor T/(2J)\rfloor$. If $n<8$, return $x_0$.
+\item Form $\cT_n=\{2^j:j\in\mathbb Z_{\ge0},\ 2^j\le n/2\}$.
+For each $\tau\in\cT_n$, in increasing order, run
+$Y_\tau=\FB(x_0,L,\Delta;n,\tau)$ using fresh queries.
+\item After all training runs, obtain $m$ fresh gradients at each
+$Y_\tau$ and form their mean $\bar g_\tau$.
+\item Choose $\widehat\tau\in\argmin_{\tau\in\cT_n}\norm{\bar g_\tau}$,
+breaking ties by the smaller batch size, and return
+$\widehat x_T=Y_{\widehat\tau}$.
+\end{enumerate}
+\end{algorithm}
+
+There are $M:=|\cT_n|\le J$ candidates. The total number of calls is
+at most $M(n+m)\le T$, including all validation calls.
+Each run starts from $x_0$; the runs need not be probabilistically
+independent under \eqref{eq:oracle}.
+
+\begin{theorem}[Near-optimal adaptation]\label{thm:main-upper}
+In the normalized model, \cref{alg:portfolio} is one common family
+such that, for every fixed $p\in(1,2]$,
+\begin{equation}\label{eq:main-upper}
+ \mathfrak R_T^{\mathsf A_{\rm dyad}}(p)
+ \le C_p\left(\frac{\log(eT)}{T}\right)^{a(p)}
+ \qquad(T\ge1).
+\end{equation}
+More explicitly, whenever $n\ge8$, its risk is at most
+\begin{equation}\label{eq:finite-horizon}
+ C\left(\frac JT\right)^{a(p)}+CJT^{-b(p)},
+\end{equation}
+where $C$ can be chosen independently of $p\in(1,2]$.
+Every candidate generator and the selection rule use neither $p$ nor
+$\sigma$.
+\end{theorem}
+\begin{proof}
+Fix $p$, and abbreviate $a=a(p)$, $b=b(p)$, and $\alpha=\alpha(p)$.
+Suppose first that $n\ge8$. Put
+$u=\min\{n^\alpha,n/2\}$ and choose the largest dyadic
+$\tau\le u$, so that $u/2<\tau\le u$.
+If $n^\alpha\le n/2$, then
+\[
+ \sqrt{\tau/n}\le n^{-a},\qquad
+ \tau^{-b}\le2^b n^{-\alpha b}=2^b n^{-a}.
+\]
+If $n^\alpha>n/2$, then $n^{-a}>1/\sqrt2$ and
+$n/4<\tau\le n/2$. Consequently,
+\[
+ \sqrt{\tau/n}\le1/\sqrt2<n^{-a},\qquad
+ \tau^{-b}\le4^b n^{-b}\le2n^{-a}.
+\]
+Here $0<b\le1/2$ and $b\ge a$.
+In either case, \cref{prop:fixed-block} supplies a candidate with
+\begin{equation}\label{eq:good-candidate}
+ \E\norm{\nabla F(Y_\tau)}\le Cn^{-a},
+\end{equation}
+with a universal constant because $M_p^{1/p}\le16$.
+
+By \cref{lem:selection}, the additional validation error is at most
+$CM^{1/p}m^{-b}\le CJ^{1/p}n^{-b}$.
+Since $n\ge8$ and $n=\lfloor T/(2J)\rfloor$, we have
+$n\ge T/(4J)$. The identity $1/p+b=1$ now yields
+\[
+ \mathfrak R_T^{\mathsf A_{\rm dyad}}(p)
+ \le C(J/T)^a+CJT^{-b},
+\]
+proving \eqref{eq:finite-horizon}.
+For each fixed $p>1$, \eqref{eq:exponent-gap} implies
+\[
+ \frac{JT^{-b}}{(J/T)^a}
+ =J^{1-a}T^{-(b-a)}\longrightarrow0.
+\]
+As $J\asymp\log(eT)$, this proves \eqref{eq:main-upper} for
+$n\ge8$ after increasing $C_p$ to cover a finite initial range.
+When $n<8$, \cref{lem:initial-gradient} bounds the returned gradient
+by $\sqrt2$, which is absorbed in the same way.
+\end{proof}
+
+The two-term form \eqref{eq:finite-horizon} distinguishes the training
+cost from the validation cost. In particular, it avoids hiding a
+$p$-dependent crossover inside the algorithm itself.
+
+\subsection{General parameters}\label{sec:general-parameters}
+
+\begin{theorem}[Portfolio oracle inequality]\label{thm:parameter-oracle}
+For each $\tau\in\cT_n$, generate $Y_{\tau,n}$ by
+\cref{alg:batch} with at most $n\ge8$ training calls, and give every
+candidate $m\ge1$ fresh validation calls.
+For $M=|\cT_n|$, the resulting output satisfies
+\begin{align}
+ \E\norm{\nabla F(\widehat x)}
+ \le {}&\min_{\tau\in\cT_n}
+ \left\{2\sqrt{\frac{L\Delta\tau}{n}}
+       +2M_p^{1/p}\sigma\tau^{-b(p)}\right\}\notag\\
+ &+2M_p^{1/p}\sigma M^{1/p}m^{-b(p)}.
+ \label{eq:parameter-oracle}
+\end{align}
+\end{theorem}
+\begin{proof}
+Apply \cref{lem:selection} to the candidate with the smallest bound
+in \cref{prop:fixed-block}.
+\end{proof}
+
+If $2\le\tau_p(n)\le n/2$, dyadic rounding gives
+\begin{equation}\label{eq:general-interior}
+ \E\norm{\nabla F(\widehat x)}
+ \le C_p\left[
+ \left(\frac{L\Delta\,\sigma^{p/(p-1)}}{n}\right)^{a(p)}
+ +\sigma M^{1/p}m^{-b(p)}\right].
+\end{equation}
+For fixed $L,\Delta,\sigma>0$ this interior condition eventually holds.
+Outside it, \eqref{eq:parameter-oracle} remains valid, with a boundary
+batch size available. If $\sigma=0$, choosing $\tau=1$ gives
+$O(\sqrt{L\Delta/n})$ and validation is exact.
+We do not turn the interior simplification into a uniform matching claim
+over all joint regimes of $L,\Delta,\sigma,T$.
+
+\subsection{Lower bound and sample complexity}\label{sec:lower}
+
+We use the following existing lower bound, rather than a new hard-instance
+construction. Liu \cite[Theorem~11]{liu2026oco} proves that, for
+fixed $p\in(1,2]$, any randomized stochastic first-order method needs
+\begin{equation}\label{eq:liu-lower}
+ \Omega_p\left(L\Delta\eps^{-2}
+       +L\Delta\sigma^{p/(p-1)}\eps^{-r(p)}\right)
+\end{equation}
+queries in the worst case to guarantee an expected gradient norm at most
+$\eps$, for $\eps$ at most a universal constant times
+$\sqrt{L\Delta}$. The oracle in the hard family satisfies the centered
+moment condition, and the construction allows the dimension to grow.
+
+\begin{corollary}[Pointwise near-matching complexity]\label[corollary]{cor:sample-complexity}
+For every fixed $p\in(1,2]$ and sufficiently small $\eps>0$,
+\begin{equation}\label{eq:sample-complexity}
+ c_p\eps^{-r(p)}
+ \le N_p^\star(\eps)
+ \le N_p^{\mathsf A_{\rm dyad}}(\eps)
+ \le C_p\eps^{-r(p)}\log\frac e\eps.
+\end{equation}
+The lower bound also has the following fixed-budget form: for every
+sufficiently large $T$ and every randomized
+$T$-query method, there is a normalized instance, in a dimension that
+may depend on $T$, with expected output gradient at least
+$c_pT^{-a(p)}$.
+\end{corollary}
+\begin{proof}
+The first inequality is \eqref{eq:liu-lower} in the normalized model.
+The middle inequality follows because the fixed-$p$ minimax class allows
+the common algorithm. For the last inequality, substitute
+$T=\lceil C_p\eps^{-r(p)}\log(e/\eps)\rceil$ into
+\eqref{eq:main-upper} and choose the constant sufficiently large.
+The fixed-budget lower statement follows by taking
+$\eps=c_pT^{-a(p)}$ in \eqref{eq:liu-lower}.
+\end{proof}
+
+For example, at $p=3/2$ the earlier unknown-index exponent gives
+$O(\eps^{-6})$, the present bound is
+$O(\eps^{-5}\log(e/\eps))$, and the lower bound is
+$\Omega(\eps^{-5})$. The polynomial gain is strict only for $p<2$,
+since
+\[
+ \frac{2p}{p-1}-\frac{3p-2}{p-1}=\frac{2-p}{p-1}.
+\]
+No fixed-dimensional optimality statement is inferred from
+\cref{cor:sample-complexity}.
+
+\section{The role of the logarithm}\label{sec:logarithm}
+
+\subsection{Validation can use a vanishing budget share}\label{sec:sublinear-validation}
+
+The equal split between training and validation in \cref{alg:portfolio}
+keeps its query accounting simple. It is not needed for the asymptotic
+rate.
+
+\begin{proposition}[A common sublinear validation schedule]\label[proposition]{prop:sublinear-validation}
+Suppose $1\le M=O(\log T)$ candidates are available, and set
+\begin{equation}\label{eq:sublinear-schedule}
+ m_T=\left\lceil T\exp\{-\sqrt{\log(eT)}\}\right\rceil.
+\end{equation}
+Then $Mm_T=o(T)$ and, for every fixed $p>1$,
+\begin{equation}\label{eq:sublinear-error}
+ M^{1/p}m_T^{-b(p)}
+ =o_p\bigl((M/T)^{a(p)}\bigr).
+\end{equation}
+Neither the schedule nor the selection rule uses $p$.
+\end{proposition}
+\begin{proof}
+The total cost is at most
+$MT\exp\{-\sqrt{\log(eT)}\}+M=o(T)$.
+The ratio of the left side of \eqref{eq:sublinear-error} to its
+comparison rate is bounded by
+\[
+ M^{1/p-a(p)}T^{-(b(p)-a(p))}
+ \exp\{b(p)\sqrt{\log(eT)}\},
+\]
+which tends to zero since $b(p)>a(p)$ and $M=O(\log T)$.
+\end{proof}
+
+A concrete budgeted variant fixes
+$n_0=\lfloor T/(4J)\rfloor$, uses the dyadic grid $\cT_{n_0}$,
+and spends $m_T$ queries per candidate on validation. If
+$n_0<8$ or $M(n_0+m_T)>T$, it returns $x_0$.
+These fallback conditions cease to occur for sufficiently large $T$.
+The grid still contains a constant-factor approximation to the optimal
+scale for a training budget of order $T/\log T$, so the same main rate
+follows. Thus validation does not require a positive asymptotic share
+of the budget. In this construction, the leading logarithm arises from
+training separate candidates at logarithmically many scales.
+
+\subsection{What the certificate barrier establishes}
+
+There is a precise sense in which a one-sided rate-grid proof cannot
+remove the logarithm. Suppose a portfolio runs algorithms tuned to
+guessed exponents and uses only guarantees of the form $n_j^{-s_j}$,
+valid when $s_j\le s$ for the true rate coordinate $s$.
+If the training budgets are disjoint and sum to $T$, then on any
+nondegenerate interval $[u,v]\subset(0,1/4]$ the worst relative
+certificate overhead is at least
+$(\log T)^{v-o(1)}$. A uniform grid achieves
+$O((\log T)^v)$. Appendix~\ref{sec:static-barrier} gives the exact
+model and proof.
+
+This statement concerns those certificates, not the realized risk of
+every portfolio. In particular, the fixed-batch bound
+\eqref{eq:fixed-block-bound} holds at every $p$ and has two terms; it
+is not itself a one-sided guessed-exponent certificate. The barrier
+therefore does not establish that the logarithm in our algorithm, or
+in the unrestricted adaptation problem, is necessary.
+
+\section{Discussion}\label{sec:discussion}
+
+A finite grid suffices to recover the optimal heavy-tail exponent
+without estimating the tail index. The reason is specific and simple:
+the training tradeoff depends on one batching scale, while empirical
+gradient validation converges faster than the target optimization rate
+for every fixed $p>1$. The method uses elementary normalized descent,
+and its upper bound is independent of dimension.
+
+The main unresolved issue is whether a single common algorithm can
+attain $O_p(T^{-a(p)})$ without a logarithmic loss. The static-certificate
+result does not answer this question. Appendix~\ref{sec:beyond-log}
+gives a shared-trajectory descent reduction in which exact adaptation
+would follow from controlling two explicit error budgets. Those bounds
+are sufficient conditions, not a characterization of all successful
+algorithms. Likewise, small observed variation does not by itself
+certify the accuracy of a heavy-tailed mean; the appendix records this
+limitation without turning it into an impossibility theorem.
+
+The present results concern expected stationarity and a prescribed
+query budget. A high-probability guarantee, a stopping rule that
+recognizes a requested accuracy without knowing $p$, and comparable
+adaptation when $L$ and $\Delta$ are unavailable require separate
+analysis. The stronger parameter adaptivity reported by LongTails
+\cite{longtails2026stationarity} illustrates why these distinctions
+should be kept separate from the precision exponent alone.
+
+\appendix
+
+
+\section{An alternative construction through online-to-nonconvex conversion}
+\label{app:o2nc}
+
+The main algorithm uses normalized minibatch descent.  An alternative
+tail-index-free candidate follows from the online-to-nonconvex framework of
+Cutkosky, Mehta, and Orabona~\cite{cutkosky2023o2nc} and Liu's optimistic
+heavy-tail analysis~\cite{liu2026oco}.  We record the construction to make
+its relationship with the fixed-block tradeoff explicit.  This appendix
+assumes $L\Delta>0$, $n\ge8$, and $2\le\tau\le n/2$.  For $\tau=1$, use
+the normalized minibatch candidate from \cref{sec:fixed-block} instead.
+
+\paragraph{The online learner and the queried path.}
+Let $K=\lfloor n/\tau\rfloor$, choose $\delta>0$, and set $D=\delta/\tau$.
+Write $B_D=\{u\in\R^d:\norm u\le D\}$, and define its linear minimizer by
+\[
+ \mathsf{LM}_D(v)=
+ \begin{cases}
+  -Dv/\norm v,&v\ne0,\\
+  0,&v=0.
+ \end{cases}
+\]
+Initialize $y_0=x_0$, $u_1=0$, $g_0=0$, and $V_0=0$.
+At round $s=1,\ldots,K\tau$, draw a fresh $q_s\sim\mathrm{Unif}[0,1]$,
+query a fresh gradient $g_s$ at
+\[
+ z_s=y_{s-1}+q_su_s,
+ \qquad y_s=y_{s-1}+u_s,
+\]
+and update
+\[
+ V_s=
+ \begin{cases}
+  \norm{g_s-g_{s-1}}^2,&\text{$s$ is the first round of a block},\\
+  V_{s-1}+\norm{g_s-g_{s-1}}^2,&\text{otherwise}.
+ \end{cases}
+\]
+If $s$ is the last round of a block, set $u_{s+1}=\mathsf{LM}_D(g_s)$.
+Otherwise, set
+\begin{equation}\label{eq:o2nc-online-update}
+ u_{s+1}\in\argmin_{u\in B_D}
+ \left\{\inner{2g_s-g_{s-1}}{u}
+       +\frac{\sqrt{V_s}}{2\sqrt2D}\norm{u-u_s}^2\right\}.
+\end{equation}
+When $V_s>0$, this is the Euclidean projection of
+$u_s-\sqrt2D(2g_s-g_{s-1})/\sqrt{V_s}$ onto $B_D$.
+When $V_s=0$, use the well-defined linear minimizer
+$\mathsf{LM}_D(2g_s-g_{s-1})$.
+
+These are Liu's $\OAdaGradR$ updates (Algorithm~6), used inside $\OtwoNC$
+(Algorithm~4).  The previous-gradient hint is retained across blocks;
+only the variation accumulator is cleared.  The boundary action
+$\mathsf{LM}_D(g_s)$ is essential to the stated regret guarantee.
+Neither update uses $p$ or $\sigma$.
+Define the block averages
+\[
+ \bar z_k=\frac1\tau\sum_{s=(k-1)\tau+1}^{k\tau}z_s,
+ \qquad k=1,\ldots,K,
+\]
+and return one of them uniformly at random.  Exactly $K\tau\le n$
+oracle calls are used.
+
+\begin{proposition}[Liu's smooth specialization]\label[proposition]{prop:liu-specialization}
+Under the oracle assumptions of this paper, the preceding construction satisfies
+\begin{equation}\label{eq:liu-specialization}
+ \E\!\left[\frac1K\sum_{k=1}^K\norm{\nabla F(\bar z_k)}\right]
+ \le C_p\left[
+  \frac{\norm{\nabla F(x_0)}}{K\tau}
+  +\frac{\Delta}{\delta K}
+  +\sigma\tau^{-b(p)}+L\delta\right].
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+This is Theorem~17 of the full version of~\cite{liu2026oco}, with its
+H\"older parameters set to $\nu=1$, $H=L$, and $G=0$, and its block
+length $T$ identified with $\tau$.  The conditional moment assumption
+here implies the moment assumption used there.
+\end{proof}
+
+\paragraph{Recovering the fixed-block bound.}
+Choose $\delta=\sqrt{\Delta\tau/(Ln)}$.  Since $\tau\le n/2$,
+$K\ge n/(2\tau)$ and $K\tau\ge n/2$.  Consequently,
+\[
+ \frac{\Delta}{\delta K}
+ \le2\sqrt{\frac{L\Delta\tau}{n}},
+ \qquad
+ L\delta=\sqrt{\frac{L\Delta\tau}{n}}.
+\]
+For the returned point $Y^{\rm O2NC}_{\tau,n}$,
+\begin{equation}\label{eq:o2nc-fixed-block-bound}
+ \E\norm{\nabla F(Y^{\rm O2NC}_{\tau,n})}
+ \le C_p\left[
+  \frac{\norm{\nabla F(x_0)}}n
+  +\sqrt{\frac{L\Delta\tau}{n}}
+  +\sigma\tau^{-b(p)}\right].
+\end{equation}
+The initial-gradient term is at most $\sqrt{2L\Delta}/n$ and can be
+absorbed into the square-root term.  Hence this alternative candidate
+has the same tradeoff, and the same dyadic selection argument applies.
+The normalized minibatch construction is used in the main text because
+its proof and implementation are shorter.
+
+
+\section{A sharp limitation of static rate-grid certificates}\label{sec:static-barrier}
+
+This appendix concerns a specified class of numerical performance certificates.
+It does not impose a restriction on arbitrary stochastic first-order algorithms.
+In particular, the one-sided validity condition below describes a portfolio of
+guessed tail exponents; it need not describe every block-length portfolio.
+
+Write
+\[
+ s=a(q)=\frac{q-1}{3q-2}\in(0,1/4],
+ \qquad q=\frac{1-2s}{1-3s},
+\]
+and fix a nondegenerate interval $I=[u,v]\subset(0,1/4]$.
+At horizon $T$, a static rate-grid certificate consists of finitely many
+coordinates $s_{T,j}\in(0,1/4]$ and training budgets $n_{T,j}\ge1$ satisfying
+$\sum_j n_{T,j}\le T$. Candidate $j$ has certificate $n_{T,j}^{-s_{T,j}}$,
+which is valid at true coordinate $s$ only when $s_{T,j}\le s$.
+We study the resulting normalized overhead
+\begin{equation}\label{eq:overhead}
+ h_T(s):=\min_{j:s_{T,j}\le s}
+ T^{s-s_{T,j}}\left(\frac{T}{n_{T,j}}\right)^{s_{T,j}},
+ \qquad H_T(I):=\sup_{s\in I}h_T(s),
+\end{equation}
+where a minimum over the empty set is $+\infty$.
+A common positive prefactor in all certificates changes $H_T(I)$ by that
+prefactor and has no effect on the logarithmic exponent below.
+
+\begin{lemma}[Weighted covering inequality]\label[lemma]{lem:weighted-cover}
+For $r>0$, $R\ge1$, and any finite sequence $w_j>0$ with
+$\sum_jw_j\le1$,
+\[
+ \sum_j[\log R+r\log w_j]_+\le\frac re R^{1/r}.
+\]
+\end{lemma}
+\begin{proof}
+Let $A=\{j:\log R+r\log w_j>0\}$ and $M=|A|$.
+The claim is immediate if $M=0$. Otherwise, concavity of the logarithm gives
+\[
+ \sum_{j\in A}\log w_j
+ \le M\log\left(\frac{\sum_{j\in A}w_j}{M}\right)
+ \le-M\log M.
+\]
+The left side of the claimed inequality is at most
+$M\log R-rM\log M$. Its maximum over real $M>0$ is
+$(r/e)R^{1/r}$, attained at $M=R^{1/r}/e$.
+\end{proof}
+
+\begin{theorem}[Static certificate barrier]\label{thm:static-barrier}
+For every sequence of the static certificates defined above,
+\[
+ \liminf_{T\to\infty}\frac{\log H_T(I)}{\log\log T}\ge v.
+\]
+Thus, on $I=[a(p_0),1/4]$ with $1<p_0<2$, the worst-case certificate
+overhead is at least $(\log T)^{1/4-o(1)}$.
+\end{theorem}
+\begin{proof}
+Set $L_T=\log T$, $h=(\log L_T)^{-1/2}$, and $R=H_T(I)$.
+For sufficiently large $T$, the interval $J=[v-h,v]$ lies in $I$ and
+$r:=v-3h/2$ is positive. Each finite overhead in \eqref{eq:overhead}
+is at least one. We may assume $1\le R<\infty$.
+Put $w_j=n_{T,j}/T$, so $\sum_jw_j\le1$.
+
+Candidate $j$ covers a coordinate $s\ge s_{T,j}$ at overhead at most $R$
+only if
+\[
+ (s-s_{T,j})L_T-s_{T,j}\log w_j\le\log R.
+\]
+Its covered interval therefore has length at most
+$[\log R+s_{T,j}\log w_j]_+/L_T$.
+If $R\ge T^{h/2}$, then
+$\log R/\log\log T\ge hL_T/(2\log L_T)\to\infty$.
+For all other horizons, let $B$ be the indices of candidates covering
+at least one point of $J$. Since $\log w_j\le0$, such a candidate satisfies
+$s-s_{T,j}\le\log R/L_T<h/2$ and hence $s_{T,j}\ge r$.
+Their intervals cover $J$, so
+\[
+ hL_T
+ \le\sum_{j\in B}[\log R+s_{T,j}\log w_j]_+
+ \le\sum_j[\log R+r\log w_j]_+
+ \le\frac reR^{1/r}.
+\]
+The last inequality is \cref{lem:weighted-cover}.
+Consequently $R\ge(ehL_T/r)^r$.
+As $r\to v$ and $\log h=o(\log L_T)$, this implies
+$\log R\ge(v-o(1))\log\log T$. Together with the other case, this proves
+the asserted lower limit.
+\end{proof}
+
+\begin{proposition}[Matching envelope]\label[proposition]{prop:static-upper}
+For every fixed $I=[u,v]\subset(0,1/4]$, a grid of mesh $1/\log T$
+with equal training budgets satisfies
+$H_T(I)=O((\log T)^v)$.
+\end{proposition}
+\begin{proof}
+Take the grid points $u+k/\log T$ that lie in $I$, together with $v$.
+Their number is $K=O(\log T)$. Allocate $n_j=\lfloor T/K\rfloor$.
+For all sufficiently large $T$, $n_j\ge T/(2K)$.
+For each $s\in I$, there is a grid point $s_j\le s$ with
+$s-s_j\le1/\log T$. Therefore
+\[
+ T^{s-s_j}(T/n_j)^{s_j}\le e(2K)^v=O((\log T)^v).
+\]
+\end{proof}
+
+The two results characterize the worst-case logarithmic exponent of this
+certificate model. They leave open the possibility that a different analysis,
+sample sharing, or a common trajectory removes the logarithm in optimization.
+
+\section{Shared-trajectory benchmarks and sufficient conditions}\label{sec:beyond-log}
+
+The following results give a known-tail benchmark and a sufficient condition
+for exact adaptation. They do not improve the unconditional guarantee of
+\cref{thm:main-upper}. Their role is to state precisely what an adaptive
+selection argument would still need to establish.
+
+\subsection{Lagged moving-average normalized descent}
+
+Let $T\ge2$, $1\le w\le T-1$, and $\eta>0$.
+Set $x_1=x_0$ and $x_2=x_1$, and obtain fresh oracle responses $g_t$ at
+$x_t$. For $t=2,\ldots,T$, define
+\[
+ \ell_t=\min\{w,t-1\},\qquad
+ m_t=\frac1{\ell_t}\sum_{i=t-\ell_t}^{t-1}g_i,\qquad
+ d_t=\begin{cases}m_t/\norm{m_t},&m_t\ne0,\\0,&m_t=0,\end{cases}
+\]
+and update $x_{t+1}=x_t-\eta d_t$.
+The direction uses only past responses. The construction needs at most $T$
+queries; the response at $x_T$ may be omitted because it is never used.
+
+\begin{proposition}[Moving-average guarantee]\label[proposition]{prop:moving-average}
+Under \eqref{eq:oracle},
+\begin{equation}\label{eq:moving-average-bound}
+ \frac1{T-1}\sum_{t=2}^T\E\norm{\nabla F(x_t)}
+ \le\frac{\Delta}{\eta(T-1)}+L\eta(w+2)
+ +C_p\sigma\left(w^{-b(p)}+\frac{w^{1/p}}T\right).
+\end{equation}
+\end{proposition}
+\begin{proof}
+Write $\xi_i=g_i-\nabla F(x_i)$. The martingale mean estimate
+(\cref{lem:martingale-mean}) and Jensen's inequality give
+\[
+ \E\norm{\frac1{\ell_t}\sum_{i=t-\ell_t}^{t-1}\xi_i}
+ \le C_p\sigma\ell_t^{-b(p)}.
+\]
+Since each displacement has length at most $\eta$,
+\[
+ \frac1{\ell_t}\sum_{i=t-\ell_t}^{t-1}
+ \norm{\nabla F(x_i)-\nabla F(x_t)}
+ \le\frac{L\eta}{\ell_t}\sum_{r=1}^{\ell_t}r
+ =\frac{L\eta(\ell_t+1)}2.
+\]
+For $b=b(p)\in(0,1)$,
+$\sum_{r=1}^w r^{-b}\le w^{1-b}/(1-b)$.
+Splitting the initial windows from the full windows therefore yields
+\[
+ \frac1{T-1}\sum_{t=2}^T\ell_t^{-b(p)}
+ \le C_p\left(w^{-b(p)}+\frac{w^{1/p}}T\right).
+\]
+For any vectors $h,m$, with $d=m/\norm m$ and the zero convention,
+$\inner{h}{d}\ge\norm h-2\norm{h-m}$.
+The descent lemma consequently gives
+\[
+ F(x_{t+1})\le F(x_t)-\eta\norm{\nabla F(x_t)}
+ +2\eta\norm{m_t-\nabla F(x_t)}+\frac{L\eta^2}2.
+\]
+Sum from $t=2$ to $T$, use $x_2=x_0$ and the gap bound, and substitute
+the preceding estimates. Since $\ell_t\le w$, the deterministic error
+contributes at most $L\eta(w+3/2)\le L\eta(w+2)$ after division by
+$\eta(T-1)$.
+\end{proof}
+
+\begin{corollary}[Known-tail shared-trajectory rate]\label[corollary]{cor:moving-average-rate}
+In the normalized model, fix $p\in(1,2]$, put $s=a(p)$, and choose
+\[
+ w=\min\{T-1,\lceil T^{1-2s}\rceil\},\qquad \eta=T^{s-1}.
+\]
+An iterate sampled uniformly from $\{x_2,\ldots,x_T\}$ satisfies
+$\E\norm{\nabla F(\widehat x_T)}\le C_pT^{-s}$.
+\end{corollary}
+\begin{proof}
+For $T\ge2$, the chosen window lies between
+$T^{1-2s}/2$ and $2T^{1-2s}$.
+The identity $b(p)(1-2a(p))=a(p)$ gives
+$w^{-b(p)}\le C_pT^{-s}$, while
+$1/(\eta(T-1))\le2T^{-s}$ and $\eta(w+2)\le4T^{-s}$.
+Finally, $w^{1/p}/T\le C_pT^{-3s}$.
+Apply \cref{prop:moving-average} and average over the output index.
+\end{proof}
+
+\subsection{A thresholded selection criterion}
+
+Fix $0<s_1<\cdots<s_K\le1/4$ and set
+\begin{equation}\label{eq:rate-scales}
+ c_j=T^{-s_j},\qquad \eta_j=T^{s_j-1}=\frac1{Tc_j},
+ \qquad w_j=\lceil Tc_j^2\rceil.
+\end{equation}
+At round $t$, a predictable selector chooses $J_t\in\{0,1,\ldots,K\}$
+and a predictor $m_{t,J_t}$ from the common history.
+For $J_t\ge1$, use its normalized direction and update
+$x_{t+1}=x_t-\eta_{J_t}d_t$.
+The action $J_t=0$ means no update; set $\eta_0=0$ and $m_{t,0}=d_t=0$.
+Start at $x_1=x_0$ and write
+\[
+ h_t=\nabla F(x_t),\qquad H_t=\norm{h_t},\qquad
+ e_t=\norm{m_{t,J_t}-h_t}.
+\]
+For a comparator index $k$, define
+\begin{align}
+ \mathcal A_T&=\E\sum_{t=1}^T
+ \eta_{J_t}(e_t-H_t/4)_+,\label{eq:A-budget}\\
+ \mathcal Q_T&=\E\sum_{t=1}^T\eta_{J_t}^2,\label{eq:Q-budget}\\
+ \mathcal D_{T,k}&=\E\sum_{t=1}^T
+ \eta_k(H_t-4c_k)_+\ind\{J_t<k\}.\label{eq:D-budget}
+\end{align}
+
+\begin{theorem}[Thresholded shared-trajectory reduction]\label{thm:thresholded-reduction}
+For every such selector and every $k$,
+\begin{equation}\label{eq:thresholded-reduction}
+ \frac1T\sum_{t=1}^T\E H_t
+ \le4c_k+
+ \frac{2\Delta+4\mathcal A_T+L\mathcal Q_T+\mathcal D_{T,k}}
+ {\eta_kT}.
+\end{equation}
+In the normalized model, suppose a common selector satisfies
+$\mathcal A_T+\mathcal D_{T,k}=O_p(1)$ for some grid index with
+$s_k=a(p)+O_p(1/\log T)$.
+Then a uniformly sampled iterate has expected gradient norm
+$O_p(T^{-a(p)})$.
+\end{theorem}
+\begin{proof}
+The normalized-direction inequality implies
+\[
+ \inner{h_t}{d_t}
+ \ge\frac12H_t-2(e_t-H_t/4)_+
+\]
+whenever an update is made. Multiplying by $\eta_{J_t}$ also covers
+the no-update action. Smoothness and telescoping therefore give
+\begin{equation}\label{eq:weighted-descent}
+ \E\sum_{t=1}^T\eta_{J_t}H_t
+ \le2\Delta+4\mathcal A_T+L\mathcal Q_T.
+\end{equation}
+If $J_t\ge k$, monotonicity of the step sizes yields
+$\eta_k(H_t-4c_k)_+\le\eta_{J_t}H_t$.
+On the remaining rounds, this quantity is included in
+$\mathcal D_{T,k}$. Consequently,
+\[
+ \eta_k\sum_{t=1}^T\E(H_t-4c_k)_+
+ \le2\Delta+4\mathcal A_T+L\mathcal Q_T+\mathcal D_{T,k}.
+\]
+Use $H_t\le4c_k+(H_t-4c_k)_+$ and divide by $\eta_kT$.
+For the final assertion,
+$\mathcal Q_T\le T\eta_K^2\le T^{-1/2}$,
+$\eta_kT=1/c_k$, and $c_k=\Theta_p(T^{-a(p)})$.
+\end{proof}
+
+The budget $\mathcal A_T$ charges direction errors exceeding a fraction
+of the gradient norm. The quantity $\mathcal D_{T,k}$ charges rounds
+where the gradient is above scale $c_k$ but the chosen step is smaller
+than $\eta_k$. Bounding these two quantities is a sufficient condition;
+no necessity statement is asserted.
+
+\subsection{What observed variation can establish}
+
+The variation statistic used by optimistic online learners such as
+$\mathsf{OAdaGradR}$ \cite{liu2026oco} admits the following estimate.
+
+\begin{lemma}[Variation moment]\label[lemma]{lem:variation}
+Let $\cG$ be the history before a block. Query $g_0$ at a
+$\cG$-measurable point $z_0$ and then query $g_i$ at predictable points
+$z_i$, where $\norm{z_i-z_{i-1}}\le2D$ for $1\le i\le\tau$.
+Assume \eqref{eq:oracle} at every query, including the initial query
+conditionally on $\cG$. For
+$V_\tau=\sum_{i=1}^{\tau}\norm{g_i-g_{i-1}}^2$, one has
+\begin{equation}\label{eq:variation-moment}
+ \E[V_\tau^{p/2}\mid\cG]\le C_p\tau(\sigma^p+(LD)^p).
+\end{equation}
+If $D=(N\tau)^{-1/2}$ and $B_\tau=\kappa\tau^{3/2}/\sqrt N$,
+where $N,\kappa>0$, then
+\begin{equation}\label{eq:variation-tail}
+ \Prb(\sqrt{V_\tau}>B_\tau\mid\cG)
+ \le C_p\kappa^{-p}
+ \left[\sigma^pN^{p/2}\tau^{1-3p/2}+L^p\tau^{1-2p}\right].
+\end{equation}
+\end{lemma}
+\begin{proof}
+Since $p/2\le1$,
+$V_\tau^{p/2}\le\sum_{i=1}^{\tau}\norm{g_i-g_{i-1}}^p$.
+Write $g_i=\nabla F(z_i)+\xi_i$ and use
+\[
+ \norm{g_i-g_{i-1}}^p
+ \le3^{p-1}\left(\norm{\xi_i}^p+\norm{\xi_{i-1}}^p+(2LD)^p\right).
+\]
+Conditional expectation, the tower property, and summation prove
+\eqref{eq:variation-moment}. Markov's inequality at threshold
+$B_\tau^p$, followed by substitution of $D$, proves
+\eqref{eq:variation-tail}.
+\end{proof}
+
+For $L=\sigma=1$ and $N\ge1$, put $\tau_p(N)=N^{p/(3p-2)}$.
+At a probe length $\tau\ge2^j\tau_p(N)$, $j\ge0$,
+\eqref{eq:variation-tail} bounds the conditional rejection probability
+by $C_p\kappa^{-p}2^{-j(3p-2)/2}$.
+Thus a sufficiently long fresh probe has a small rejection probability.
+This statement does not certify the accuracy of a block that passes
+the test. For general $L,\sigma$, both terms in
+\eqref{eq:variation-tail} must be retained.
+
+\subsection{A limitation of local agreement certificates}
+
+\begin{lemma}[Rare-outlier indistinguishability]\label[lemma]{lem:rare-outlier}
+Fix $p\in(1,2]$, $0<\delta\le1/2$, and
+$\mu=\tfrac12\delta^{(p-1)/p}$. Consider
+\[
+ P_0:\ Y=-\mu\ \text{almost surely},\qquad
+ P_1:\ Y=\begin{cases}
+ -\mu,&\text{with probability }1-\delta,\\
+ (1-\delta)\mu/\delta,&\text{with probability }\delta.
+ \end{cases}
+\]
+Their means are $-\mu$ and zero, respectively. Both have centered
+$p$th moment at most one, and, for $N$ independent observations,
+\[
+ \operatorname{TV}(P_0^{\otimes N},P_1^{\otimes N})
+ =1-(1-\delta)^N\le N\delta.
+\]
+\end{lemma}
+\begin{proof}
+The assertions for $P_0$ and the mean of $P_1$ are immediate. Moreover,
+\[
+ \E_{P_1}|Y|^p
+ =2^{-p}\left[(1-\delta)\delta^{p-1}+(1-\delta)^p\right]
+ \le2^{1-p}\le1.
+\]
+The only transcript under $P_0^{\otimes N}$ is the all-$-\mu$
+transcript, whose probability under $P_1^{\otimes N}$ is
+$(1-\delta)^N$. This proves the equality; Bernoulli's inequality
+gives the upper bound.
+\end{proof}
+
+Set $\delta=1/w$ and $N=w\ge2$. With probability
+$(1-1/w)^w$, which is bounded away from zero, every observation under
+$P_1$ equals $-\mu$. All window means then agree and all observed
+variation vanishes, yet the empirical mean differs from the true mean
+by $\tfrac12w^{-b(p)}$.
+The implication is limited to deterministic certification from observed
+agreement. The example is consistent with the usual statistical error
+scale and leaves open control of the budgets in
+\cref{thm:thresholded-reduction}.
+
+
+\begin{thebibliography}{99}
+
+\bibitem{arjevani2023lower}
+Yossi Arjevani, Yair Carmon, John C. Duchi, Dylan J. Foster,
+Nathan Srebro, and Blake Woodworth.
+\newblock Lower bounds for non-convex stochastic optimization.
+\newblock \emph{Mathematical Programming}, 199(1--2):165--214, 2023.
+\newblock \url{https://arxiv.org/abs/1912.02365}.
+
+\bibitem{cutkosky2023o2nc}
+Ashok Cutkosky, Harsh Mehta, and Francesco Orabona.
+\newblock Optimal stochastic non-smooth non-convex optimization through
+online-to-non-convex conversion.
+\newblock In \emph{Proceedings of the 40th International Conference on
+Machine Learning}, volume 202 of PMLR, pages 6643--6670, 2023.
+\newblock \url{https://proceedings.mlr.press/v202/cutkosky23a.html}.
+
+\bibitem{hubler2025normalization}
+Florian H\"ubler, Ilyas Fatkhullin, and Niao He.
+\newblock From gradient clipping to normalization for heavy tailed SGD.
+\newblock In \emph{Proceedings of the 28th International Conference on
+Artificial Intelligence and Statistics}, volume 258 of PMLR,
+pages 2413--2421, 2025.
+\newblock \url{https://proceedings.mlr.press/v258/hubler25a.html}.
+\newblock Extended version: \url{https://arxiv.org/abs/2410.13849v3}.
+
+\bibitem{khaled2024tuning}
+Ahmed Khaled and Chi Jin.
+\newblock Tuning-free stochastic optimization.
+\newblock In \emph{Proceedings of the 41st International Conference on
+Machine Learning}, volume 235 of PMLR, pages 23622--23661, 2024.
+\newblock \url{https://proceedings.mlr.press/v235/khaled24a.html}.
+
+\bibitem{liu2026oco}
+Zijian Liu.
+\newblock Online convex optimization with heavy tails: Old algorithms,
+new regrets, and applications.
+\newblock Extended version, arXiv:2508.07473v3, March 19, 2026.
+\newblock \url{https://arxiv.org/abs/2508.07473v3}.
+\newblock A shorter version appeared at ALT 2026. The theorem numbers
+cited in this paper refer to the extended version.
+
+\bibitem{liuzhou2025}
+Zijian Liu and Zhengyuan Zhou.
+\newblock Nonconvex stochastic optimization under heavy-tailed noises:
+Optimal convergence without gradient clipping.
+\newblock In \emph{International Conference on Learning Representations}, 2025.
+\newblock \url{https://arxiv.org/abs/2412.19529v4}.
+
+\bibitem{nguyen2023clipped}
+Ta Duy Nguyen, Thien Hang Nguyen, Alina Ene, and Huy Le Nguyen.
+\newblock Improved convergence in high probability of clipped gradient
+methods with heavy tailed noise.
+\newblock In \emph{Advances in Neural Information Processing Systems 36},
+pages 24191--24222, 2023.
+
+\bibitem{longtails2026stationarity}
+Alexander Tyurin, QuocViet Pham, Valentin Khrulkov, and Ivan Oseledets.
+\newblock LongTails: Automated research in optimization.
+\newblock Online result: \emph{Parameter-Free Heavy-Tailed Stationarity},
+2026. Consulted November 23, 2026.
+\newblock \url{https://k3nfalt.github.io/longtails/setups/ParameterFreeHeavyTailedSmooth/}.
+\newblock Algorithm and theorem sources:
+\href{https://github.com/k3nfalt/longtails/blob/main/LongTails/Algorithms/ParameterFreeNsgdm.lean}{\texttt{ParameterFreeNsgdm.lean}} and
+\href{https://github.com/k3nfalt/longtails/blob/main/LongTails/Theorems/ParameterFreeHeavyTailedNsgdm.lean}{\texttt{ParameterFreeHeavyTailedNsgdm.lean}}.
+
+\bibitem{zhang2020adaptive}
+Jingzhao Zhang, Sai Praneeth Karimireddy, Andreas Veit, Seungyeon Kim,
+Sashank Reddi, Sanjiv Kumar, and Suvrit Sra.
+\newblock Why are adaptive methods good for attention models?
+\newblock In \emph{Advances in Neural Information Processing Systems 33},
+pages 15383--15393, 2020.
+
+\end{thebibliography}
+\end{document}

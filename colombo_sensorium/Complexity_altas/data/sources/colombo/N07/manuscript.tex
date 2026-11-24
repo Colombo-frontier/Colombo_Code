@@ -1,0 +1,2027 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools,mathrsfs}
+\usepackage{booktabs,array,longtable,tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,
+  urlcolor=blue!45!black,
+  pdftitle={Optimal Fresh-Oracle Complexity for Nonconvex-PL Minimax Optimization},
+  pdfauthor={Colombo Team},
+  pdfkeywords={minimax optimization, Polyak-Lojasiewicz condition, stochastic oracle, randomized lower bound}}
+\setlength{\parindent}{1.25em}
+\setlength{\parskip}{0.15em}
+\emergencystretch=2em
+\allowdisplaybreaks[1]
+\setlist[itemize]{leftmargin=*,itemsep=0.3em,topsep=0.4em}
+\setlist[enumerate]{leftmargin=*,itemsep=0.3em,topsep=0.4em}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\ip}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\one}{\mathbf 1}
+\newcommand{\ind}{\mathbf 1}
+\newcommand{\cA}{\mathcal A}
+\newcommand{\cF}{\mathcal F}
+\newcommand{\cR}{\mathcal R}
+\newcommand{\rprog}{\operatorname{rprog}}
+\newcommand{\prog}{\operatorname{prog}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\Lip}{\operatorname{Lip}}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\res}{\mathcal S_\kappa}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\numberwithin{equation}{section}
+\title{Optimal Fresh-Oracle Complexity for\\Nonconvex--P\L{} Minimax Optimization}
+\author{Colombo Team\\[3pt]
+\normalsize\href{mailto:colombo.2026@outlook.com}{\texttt{colombo.2026@outlook.com}}}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study the stochastic first-order oracle complexity of smooth nonconvex
+minimax optimization under a Polyak--\L{}ojasiewicz condition in the
+maximization variable. The oracle returns an unbiased joint-gradient
+estimate with variance at most $\sigma^2$, using an independent fresh seed
+at each call. For the weighted stationarity criterion
+$\E[\norm{\nabla_x f}^2+\kappa\norm{\nabla_y f}^2]\le\eps^2$,
+where $\kappa=L/\mu$, we prove the lower bound
+\[
+ \Omega\!\left(\frac{L\kappa H}{\eps^2}
+       +\frac{L\kappa^2H\sigma^2}{\eps^4}\right).
+\]
+Here $H$ bounds the initial value gap together with an auxiliary
+primal--dual gap. The result holds for arbitrary adaptive randomized
+algorithms, with unrestricted queries and outputs, when $\kappa$ is
+larger than a universal constant and $\eps^2\le cLH$.
+It matches the stochastic Smoothed-AGDA upper bound of Yang et al.
+under the same stationarity criterion and initialization budget.
+The proof extends the deterministic weighted saddle chain of Pan and Li
+using a globally smooth cap that preserves the dual P\L{} inequality,
+Bernoulli masking of complete gradient increments, and independently
+rotated hidden frames. Prefix-truncated functions give an ideal oracle
+whose responses depend only on revealed directions; an exact coupling
+then transfers the information bound to a fixed oracle on a fixed
+objective. The construction also provides explicit smoothness,
+P\L{}, scaling, and dimension bounds.
+\end{abstract}
+
+\noindent\textbf{Keywords.}
+Minimax optimization; Polyak--\L{}ojasiewicz condition; stochastic first-order
+oracles; randomized lower bounds; oracle complexity.
+
+\begin{samepage}
+\noindent\textbf{AI Usage.}
+Nearly the entire research pipeline for this paper was carried out by
+Colombo, powered by GPT-5.6 Sol.
+\par
+\end{samepage}
+
+\section{Introduction}
+\label{sec:introduction}
+
+Consider the minimax problem
+\[
+ \min_{x\in\R^{d_x}}\Phi(x),\qquad
+ \Phi(x):=\max_{y\in\R^{d_y}}f(x,y),
+\]
+where $f$ has an $L$-Lipschitz gradient and its dependence on $y$ satisfies
+a $\mu$-Polyak--\L{}ojasiewicz (P\L{}) inequality. The outer objective may
+be nonconvex, and the inner problem need not be concave. The P\L{}
+condition nevertheless relates the inner objective gap to the dual
+gradient, making quantitative stationarity guarantees possible.
+The resulting nonconvex--P\L{} (NC--P\L{}) class raises a basic complexity
+question: how much of the dependence on the condition parameter
+$\kappa:=L/\mu$ is unavoidable when an algorithm receives noisy gradients?
+
+We answer this question for the weighted joint-gradient residual
+\begin{equation}
+ \res(x,y):=\norm{\nabla_x f(x,y)}^2
+                +\kappa\norm{\nabla_y f(x,y)}^2.
+ \label{eq:residual}
+\end{equation}
+The target is $\E\res(\widehat x,\widehat y)\le\eps^2$.
+We charge both the initial value gap and the auxiliary gap used in the
+analysis of stochastic Smoothed-AGDA to a single budget $H$; the precise
+definition is given in Section~\ref{sec:model}. In a fresh oracle model,
+each call returns one unbiased estimate of the joint gradient, and the
+random seed is independent of all previous calls.
+
+\paragraph{Main result.}
+For sufficiently large $\kappa$ and sufficiently small
+$\eps^2/(LH)$, both in the sense of universal numerical thresholds,
+the minimax number of fresh oracle calls is
+\begin{equation}
+ \Theta\!\left(
+ \frac{L\kappa H}{\eps^2}
+ +\frac{L\kappa^2H\sigma^2}{\eps^4}
+ \right).
+ \label{eq:intro-rate}
+\end{equation}
+The lower bound allows arbitrary randomized algorithms, including
+methods that query outside the span of earlier responses or return an
+unqueried point. The hard objective and oracle are fixed before the run.
+The dimensions are finite and may grow with the query budget. Thus the
+claim concerns the worst case over dimensions; it does not assert an
+optimal rate in a prescribed fixed dimension.
+
+\paragraph{Why randomized lifting requires additional structure.}
+A deterministic chain can hide the next useful coordinate from a
+method that respects the coordinates already exposed. An unrestricted
+algorithm can instead probe arbitrary directions, and stochastic
+responses must remain unbiased at every query. A random rotation alone
+does not resolve either issue: sufficiently large queries can expose
+hidden directions, and masking a single dual component can leave the
+same direction encoded in another component of the full gradient.
+The construction below addresses both difficulties while preserving
+global smoothness and the inner P\L{} inequality.
+
+The proof uses three ingredients. First, a radial cap makes each dual
+block independent of its hidden frame outside a bounded cone, while
+retaining its exact maximum and a uniform P\L{} estimate. Second, the
+oracle masks the gradient of the entire scalar increment associated
+with the next coordinate. Its norm is $O(\eps/\sqrt\kappa)$ after
+scaling, which produces the extra factor of $\kappa$ in the stochastic
+term. Third, each ideal response is defined by a prefix-truncated
+function before any concentration event is imposed. This makes the
+conditional distribution of unrevealed directions explicit and permits
+an exact coupling to the fixed oracle.
+
+\subsection{Relation to previous work}
+\label{sec:related}
+
+Yang et al.~\cite{yang} established the stochastic Smoothed-AGDA upper
+bound for the weighted residual in \eqref{eq:residual}. We use their
+potential estimate with the complete initialization budget $H$.
+Pan and Li~\cite{panli} proved a deterministic lower bound with linear
+dependence on $\kappa$ for value-gradient stationarity, under a bound on
+the initial value gap alone. Table~\ref{tab:comparison} records the
+different targets and budgets explicitly.
+
+\begin{table}[t]
+\centering
+\caption{Related complexity bounds for smooth NC--P\L{} problems.
+In the first and third rows the target is $\E\res\le\eps^2$ and the
+budget is the charged initialization $H$ in \eqref{eq:charged-init};
+these two rows match. In the middle row,
+the budget is $\Phi(0)-\inf\Phi\le\Delta$ and the target is the value gradient.
+All lower bounds are worst-case bounds over finite dimensions.}
+\label{tab:comparison}
+\small
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.19\textwidth}
+ >{\raggedright\arraybackslash}p{0.22\textwidth}
+ >{\raggedright\arraybackslash}p{0.20\textwidth}
+ >{\raggedright\arraybackslash}X@{}}
+\toprule
+Work and guarantee & Oracle and algorithm & Target and budget & Complexity and regime\\
+\midrule
+Yang et al.~\cite{yang}, upper bound & Fresh stochastic gradients;
+Smoothed-AGDA & $\E\res\le\eps^2$; charged $H$
+ & $O\!\left(1+\dfrac{L\kappa H}{\eps^2}
+ +\dfrac{L\kappa^2H\sigma^2}{\eps^4}\right)$\par
+ $\kappa\ge1$, $\eps>0$ \\
+\addlinespace[4pt]
+Pan--Li~\cite{panli}, lower bound & Exact first-order oracle;
+arbitrary deterministic methods & $\norm{\nabla\Phi}\le\eps$; value gap $\Delta$
+ & $\Omega\!\left(\dfrac{L\kappa\Delta}{\eps^2}\right)$\par
+ $\kappa\ge c_0$, $\eps^2\le c_1L\Delta$ \\
+\addlinespace[4pt]
+This work, lower bound & Fresh stochastic gradients;
+arbitrary randomized methods & $\E\res\le\eps^2$; charged $H$
+ & $\Omega\!\left(\dfrac{L\kappa H}{\eps^2}
+ +\dfrac{L\kappa^2H\sigma^2}{\eps^4}\right)$\par
+ $\kappa\ge\kappa_0$, $\eps^2\le c_\eps LH$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Our deterministic starting point is the weighted dual chain and
+perspective coupling of Pan and Li~\cite{panli}. We use the outer chain
+and randomized-embedding framework of Carmon et al.~\cite{carmon},
+together with the normalization and soft
+projection recorded by Arjevani et al.~\cite{arjevani}, whose
+probabilistic zero-chain construction also motivates the Bernoulli
+masking. The additional work here is to make these components compatible
+with a globally valid fresh oracle and an unrestricted randomized
+algorithm, while proving the weighted joint-gradient obstruction.
+The cap, complete-increment estimate, and prefix-based coupling are
+proved explicitly below.
+
+The stationarity distinction matters. A guarantee for
+$\res(x,y)$ is a statement about the two gradients of $f$ at one pair;
+a guarantee for $\norm{\nabla\Phi(x)}$ concerns the maximized value
+function. Our lower-bound construction has an explicit comparison
+between these quantities, but that comparison is not assumed for the
+whole function class. The matching conclusion in
+\eqref{eq:intro-rate} therefore concerns the weighted joint residual.
+
+\paragraph{Organization.}
+Section~\ref{sec:model} specifies the model and states the matching
+bounds. Section~\ref{sec:overview} explains the parameter mechanism.
+Section~\ref{sec:construction} constructs the globally smooth saddle
+family. Sections~\ref{sec:prefix} and~\ref{sec:scaling} establish its
+information structure and scaling. Sections~\ref{sec:oracle}
+and~\ref{sec:haar} define the oracle and complete the randomized lower
+bound. The appendices collect auxiliary derivative estimates and
+explicit constants.
+
+\section{Oracle model and matching bounds}
+\label{sec:model}
+
+All norms are Euclidean; matrix norms are the corresponding operator
+norms. A continuously differentiable function is $L$-smooth if its
+gradient is globally $L$-Lipschitz. We write $C^{1,1}$ for this regularity
+when no particular Lipschitz constant is specified. Constants in
+$O(\cdot)$, $\Omega(\cdot)$, and $\Theta(\cdot)$ are numerical and
+independent of all problem parameters.
+
+\subsection{Function class, oracle, and initialization}
+
+Let $L,H>0$, $\sigma\ge0$, and $\kappa\ge1$, and set $\mu=L/\kappa$.
+The objective $f:\R^{d_x}\times\R^{d_y}\to\R$ is jointly $L$-smooth.
+For every $x$, the maximum
+$\Phi(x):=\max_y f(x,y)$ is finite and attained. We assume
+$\inf_x\Phi(x)>-\infty$ and the dual P\L{} inequality
+\begin{equation}
+ \norm{\nabla_y f(x,y)}^2
+ \ge 2\mu\bigl(\Phi(x)-f(x,y)\bigr)
+ \qquad\text{for all }(x,y).
+ \label{eq:model-pl}
+\end{equation}
+The parameters $L$ and $\mu$ are admissible bounds; they need not be
+the smallest smoothness constant or the largest P\L{} modulus.
+
+A fresh stochastic first-order oracle is a fixed measurable map
+$G_f(z;\xi)$, where $z=(x,y)$, satisfying
+\begin{equation}
+ \E_\xi G_f(z;\xi)=\nabla f(z),\qquad
+ \E_\xi\norm{G_f(z;\xi)-\nabla f(z)}^2\le\sigma^2
+ \quad\text{for every }z.
+ \label{eq:model-oracle}
+\end{equation}
+Different calls use independent seeds with the same fixed law, also
+independent of the algorithm's internal randomness. One call returns
+both gradient blocks at one point. Obtaining the blocks at two different
+points costs two calls. The oracle supplies no function values, and
+seeds cannot be reused at a second point. No smoothness or
+conservativity of the individual random vector field $G_f(\cdot;\xi)$
+is required. In particular, this model does not assume that each
+response is the gradient of a globally defined sample loss.
+
+The algorithm may choose arbitrary adaptive query points, perform
+unrestricted computation between calls, and return any measurable
+output $(\widehat x,\widehat y)$, including a point that it has never
+queried. The output requirement is
+\begin{equation}
+ \E\res(\widehat x,\widehat y)
+ =\E\!\left[
+ \norm{\nabla_x f(\widehat x,\widehat y)}^2
+ +\kappa\norm{\nabla_y f(\widehat x,\widehat y)}^2
+ \right]\le\eps^2,
+ \label{eq:output-criterion}
+\end{equation}
+where the expectation includes both sources of randomness.
+
+Following the potential used by Yang et al.~\cite{yang}, we supply
+initial points $x_0,z_0\in\R^{d_x}$ and $y_0\in\R^{d_y}$ and impose
+\begin{equation}
+ \begin{gathered}
+ \Phi(z_0)-\inf\Phi+b_0\le H,\\
+ b_0=2\left[
+   \sup_y\widehat f_{z_0}(x_0,y)
+   -\inf_x\widehat f_{z_0}(x,y_0)
+ \right],\qquad
+ \widehat f_{z_0}(x,y)=f(x,y)+L\norm{x-z_0}^2.
+ \end{gathered}
+ \label{eq:charged-init}
+\end{equation}
+We call this the \emph{charged initialization budget}. It includes the
+cost represented by the initial auxiliary primal--dual gap, rather than
+bounding only the value gap. The lower-bound instances use
+$x_0=z_0=0$ and $y_0=0$; algorithms remain free to make their first
+query elsewhere.
+
+Let $\mathsf Q^*(\eps;L,\kappa,H,\sigma)$ be the least integer $Q$
+for which a randomized algorithm, operating in every finite pair of
+dimensions, uses at most $Q$ calls on every run and guarantees
+\eqref{eq:output-criterion} for every admissible objective and oracle.
+The query bound is a fixed horizon, not a bound only on the expected
+stopping time.
+
+\subsection{Main lower bound}
+
+\begin{theorem}[Randomized lower bound]
+\label{thm:main-lower}
+There are universal constants $c,c_\eps>0$ and $\kappa_0\ge1$ with
+the following property. Let $L,H>0$, $\sigma\ge0$,
+$\kappa\ge\kappa_0$, and $0<\eps^2\le c_\eps LH$.
+For every adaptive randomized algorithm using at most
+\[
+ Q\le c\left(
+   \frac{L\kappa H}{\eps^2}
+   +\frac{L\kappa^2H\sigma^2}{\eps^4}
+ \right)
+\]
+fresh oracle calls, there exist finite dimensions, an admissible,
+jointly $L$-smooth deterministic objective satisfying
+\eqref{eq:model-pl} and \eqref{eq:charged-init},
+and a fixed oracle satisfying \eqref{eq:model-oracle}, such that
+\[
+ \E\res(\widehat x,\widehat y)>\eps^2.
+\]
+The objective and oracle may depend on the algorithm and its query
+horizon, but neither depends on the realized transcript or the realized
+internal random seed.
+\end{theorem}
+
+The theorem is proved in Section~\ref{sec:completion}. Explicit valid
+choices of $\kappa_0$ and $c_\eps$ are given in
+Section~\ref{sec:scaling}. Their numerical values are conservative;
+the result concerns the parameter exponents and matching absolute-factor
+complexity in the stated regime.
+
+\subsection{Upper bound under the same budget}
+
+For completeness, we spell out how the known upper bound uses
+\eqref{eq:charged-init}. Stochastic Smoothed-AGDA~\cite{yang} maintains
+an anchor $z_t$ and performs
+\begin{equation}
+ \begin{aligned}
+ x_{t+1}&=x_t-\eta\bigl(G_x(x_t,y_t;\xi_t^x)+2L(x_t-z_t)\bigr),\\
+ y_{t+1}&=y_t+\frac{\eta}{48}G_y(x_{t+1},y_t;\xi_t^y),\\
+ z_{t+1}&=z_t+\beta(x_{t+1}-z_t),
+ \qquad \beta=\frac{\eta\mu}{48\cdot1600}.
+ \end{aligned}
+ \label{eq:upper-algorithm}
+\end{equation}
+The two seeds at iteration $t$ are independent and fresh.
+
+\begin{proposition}[Smoothed-AGDA upper bound]
+\label{prop:upper-bound}
+There is a universal constant $C\ge1$ such that, for every
+$0<\eta\le1/(3L)$, the iterates in \eqref{eq:upper-algorithm} satisfy
+\begin{equation}
+ \frac1T\sum_{t=0}^{T-1}\E\res(x_t,y_t)
+ \le C\kappa\left(\frac{H}{\eta T}+L\eta\sigma^2\right).
+ \label{eq:upper-potential}
+\end{equation}
+Consequently, a uniformly random iterate satisfies
+\eqref{eq:output-criterion} within
+\[
+ O\!\left(1+\frac{L\kappa H}{\eps^2}
+              +\frac{L\kappa^2H\sigma^2}{\eps^4}\right)
+\]
+fresh oracle calls.
+\end{proposition}
+
+\begin{proof}
+The potential argument in the proof of Theorem~4.1 of
+Yang et al.~\cite{yang}, Supplement~C, immediately after its
+equation~(41), gives
+\eqref{eq:upper-potential}: its initial potential gap is at most
+$\Phi(z_0)-\inf\Phi+b_0\le H$.
+Our joint smoothness and variance assumptions imply the corresponding
+blockwise assumptions in that argument. Choose
+\[
+ \eta=\min\left\{\frac1{3L},
+       \frac{\eps^2}{2C\kappa L\sigma^2}\right\},\qquad
+ T=\left\lceil\frac{2C\kappa H}{\eta\eps^2}\right\rceil,
+\]
+omitting the second entry of the minimum when $\sigma=0$.
+The two terms in \eqref{eq:upper-potential} are at most
+$\eps^2/2$ each. A uniform output index converts their average into
+the output expectation, and every iteration costs two calls.
+\end{proof}
+
+\begin{corollary}[Matching fresh-oracle complexity]
+\label{cor:matching}
+Under the parameter conditions of Theorem~\ref{thm:main-lower},
+\begin{equation}
+ \mathsf Q^*(\eps;L,\kappa,H,\sigma)
+ =\Theta\!\left(\frac{L\kappa H}{\eps^2}
+                  +\frac{L\kappa^2H\sigma^2}{\eps^4}\right).
+ \label{eq:matching-rate}
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+Combine Theorem~\ref{thm:main-lower} and
+Proposition~\ref{prop:upper-bound}. The additive constant in the upper
+bound is absorbed by the first term in the stated regime.
+\end{proof}
+
+The ratio of the stochastic term to the deterministic term is
+$\kappa\sigma^2/\eps^2$. Thus the deterministic rate governs when
+$\sigma^2\lesssim\eps^2/\kappa$, and the stochastic term governs
+when $\sigma^2\gtrsim\eps^2/\kappa$. The theorem covers both regimes,
+including the exact-gradient case $\sigma=0$.
+
+\section{Proof strategy and the source of the rate}
+\label{sec:overview}
+
+The construction has $M$ primal links, each preceded by a dual chain
+of length $N$. The lengths will satisfy
+\[
+ M\asymp\frac{LH}{\eps^2},\qquad N\asymp\kappa,
+\]
+with small universal proportionality constants. Maximizing each dual
+block recovers one link of the Carmon chain exactly. The initial gap
+is therefore $O(M)$ before scaling, whereas the dual P\L{} modulus
+is of order $1/N$. A local-deficit estimate transfers the outer
+gradient obstruction to the weighted residual in
+\eqref{eq:residual}.
+
+The information order is
+\[
+ \underbrace{y^{(1)}_1,\ldots,y^{(1)}_N}_{\text{first dual block}},x_1,
+ \underbrace{y^{(2)}_1,\ldots,y^{(2)}_N}_{\text{second dual block}},x_2,
+ \ldots,x_M.
+\]
+These are latent coordinates in independently rotated frames. The
+terminal dual coordinate opens the next primal link, and that primal
+link activates the next dual block. Flat regions in the scalar gates
+ensure that one response cannot make a two-coordinate jump at either
+boundary.
+
+The first $N-1$ coordinates of each dual block have a complete
+gradient increment of norm at most
+$\Gamma=64\eps/\sqrt N$. The fixed oracle reveals that increment
+with probability
+\[
+ p=\frac{\Gamma^2}{\Gamma^2+\sigma^2},
+ \qquad
+ \frac1p=1+\frac{N\sigma^2}{64^2\eps^2}.
+\]
+The resulting variance is at most $\sigma^2$ everywhere. Reaching the
+last primal direction requires $M(N-1)$ such revelations, giving
+\begin{equation}
+ \frac{M(N-1)}p
+ \asymp MN+\frac{MN^2\sigma^2}{\eps^2}
+ \asymp\frac{L\kappa H}{\eps^2}
+          +\frac{L\kappa^2H\sigma^2}{\eps^4}.
+ \label{eq:rate-mechanism}
+\end{equation}
+This calculation identifies the two distinct sources of condition
+dependence: $N$ coordinates must be traversed at each primal link,
+and the variance constraint introduces a further factor $N$ in the
+waiting time for a revelation.
+
+Unrestricted queries are handled on both sides of the saddle.
+A soft projection bounds the effective primal query, while the dual
+cap removes all hidden-frame dependence outside a bounded cone.
+Random-frame concentration then controls the remaining queries.
+The proof includes the algorithm's final output as one additional
+projection test. Prefix-truncated functions make this concentration
+argument valid for an adaptive transcript without allowing the true
+oracle to depend on that transcript.
+
+\section{A globally smooth saddle family}
+\label{sec:construction}
+
+This section constructs an unscaled saddle function with $M$ primal
+links and $M$ dual blocks of length $N$. The primal ambient dimension
+is $d_x$; each dual block has ambient dimension $d_b$, so the total
+dual dimension is $Md_b$. The hidden frames are
+$U\in\R^{d_x\times M}$ and
+$V_i\in\R^{d_b\times N}$, all with orthonormal columns.
+They are fixed throughout this section and randomized only in
+Section~\ref{sec:haar}.
+
+\subsection{Outer geometry and soft projection}
+\label{sec:outer}
+
+We use the Carmon chain~\cite{carmon} in the normalization of
+Arjevani et al.~\cite{arjevani}. Define
+\[
+ \psi(t)=
+ \begin{cases}
+ 0,&t\le\frac12,\\
+ \exp\!\left(1-\dfrac1{(2t-1)^2}\right),&t>\frac12,
+ \end{cases}
+ \qquad
+ \phi(t)=\sqrt e\int_{-\infty}^t e^{-u^2/2}\,du,
+\]
+and
+\begin{equation}
+ h(s,t)=\psi(-s)\phi(-t)-\psi(s)\phi(t),\qquad
+ F_M(s)=\sum_{i=1}^M h(s_{i-1},s_i),\quad s_0=1.
+ \label{eq:outer-chain}
+\end{equation}
+For a vector $s\in\R^M$ and a threshold $a\ge0$, write
+\[
+ \prog_a(s)=\max\bigl(\{i\in\{1,\ldots,M\}:|s_i|>a\}\cup\{0\}\bigr).
+\]
+The standard chain estimates are
+\begin{equation}
+ F_M(0)-\inf F_M\le12M,\qquad
+ \Lip(\nabla F_M)\le152,\qquad
+ \norm{\nabla F_M(s)}_\infty\le23.
+ \label{eq:carmon-basic}
+\end{equation}
+These numerical bounds are recorded in Lemma~2 of
+Arjevani et al.~\cite{arjevani}. We also use a direct sign observation:
+every first partial derivative of $h$ is nonpositive. If $j$ is the
+first index with $|s_j|<1$, then $|s_{j-1}|\ge1$ and
+\begin{equation}
+ [\nabla F_M(s)]_j\le-\phi'(s_j)<-1.
+ \label{eq:outer-sign}
+\end{equation}
+Indeed, the incoming term has magnitude at least $\phi'(s_j)$, and
+the outgoing term has the same sign.
+
+For $R_x=230\sqrt M$, define the soft projection and regularized value
+function
+\begin{equation}
+ \varrho(x)=\frac{x}{\sqrt{1+\norm{x}^2/R_x^2}},\qquad
+ \widehat\Phi_{M,U}(x)=F_M(U^\top\varrho(x))+
+                           \frac1{10}\norm x^2.
+ \label{eq:outer-soft}
+\end{equation}
+This is the soft-projection construction of
+Arjevani et al.~\cite{arjevani}, equation~(27). We give the obstruction
+argument to make its numerical normalization explicit.
+
+\begin{lemma}[Gradient obstruction after soft projection]
+\label{lem:soft-projection}
+For every $x$,
+\begin{equation}
+ \prog_{1/4}(U^\top\varrho(x))<M
+ \quad\Longrightarrow\quad
+ \norm{\nabla\widehat\Phi_{M,U}(x)}\ge\frac12.
+ \label{eq:soft-obstruction}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Put $R=R_x$, $r=\norm x$,
+$\alpha=(1+r^2/R^2)^{-1/2}$, $s=U^\top\alpha x$, and
+$g=\nabla F_M(s)$. Differentiation gives
+\[
+ \nabla\widehat\Phi(x)
+ =\alpha Ug+
+ \left(\frac15-\alpha\frac{\ip{x}{Ug}}{R^2+r^2}\right)x.
+\]
+The Jacobian of $\varrho$ has norm at most $\alpha$.
+If $r\ge R/2$, then
+\[
+ \norm{\nabla\widehat\Phi(x)}
+ \ge\frac r5-\alpha\,23\sqrt M
+ \ge23\sqrt M\left(1-\frac2{\sqrt5}\right)>\frac12.
+\]
+For $r\le R/2$, we have $\alpha\ge2/\sqrt5$ and
+\[
+ c:=\frac{\ip{x}{Ug}}{R^2+r^2},\qquad
+ |c|\le\frac{\norm g}{2R}\le\frac1{20}.
+\]
+Thus $b:=1/(5\alpha)-c$ is positive and at most
+$\sqrt5/10+1/20$. The hypothesis gives $|s_M|\le1/4$,
+so there is a first $j$ with $|s_j|<1$. By
+\eqref{eq:outer-sign},
+\[
+ \ip{u_j}{\nabla\widehat\Phi(x)}
+ =\alpha g_j+bs_j
+ <-\frac2{\sqrt5}+\frac{\sqrt5}{10}+\frac1{20}
+ <-\frac12.
+\]
+This proves the claim in both cases.
+\end{proof}
+
+To express each link as a saddle block, use the scale and nonnegative
+target from Pan and Li~\cite{panli}:
+\begin{equation}
+ \rho(s)=\sqrt{\psi(s)+\psi(-s)},\qquad
+ \widetilde h(s,t)=h(s,t)+5\rho(s)^2.
+ \label{eq:outer-rho-target}
+\end{equation}
+They satisfy
+\begin{equation}
+ \widetilde h(s,t)=
+ \begin{cases}
+  \rho(s)^2(5-\phi(t)),&s>1/2,\\
+  0,&|s|\le1/2,\\
+  \rho(s)^2(5+\phi(-t)),&s<-1/2.
+ \end{cases}
+ \label{eq:target-branches}
+\end{equation}
+In particular, $0\le\widetilde h\le10\rho^2$. The derivative bounds
+needed below are
+\begin{equation}
+ 0\le\rho\le2,\qquad
+ \norm{\rho'}_\infty\le4,\qquad
+ \Lip(\rho')\le40,
+ \label{eq:rho-bounds}
+\end{equation}
+and $\rho=\rho'=0$ on $[-1/2,1/2]$. Define
+\begin{equation}
+ a_+(t)=5-\phi(t),\qquad a_-(t)=5+\phi(-t).
+ \label{eq:a-branches}
+\end{equation}
+Both branches obey
+\begin{equation}
+ 0<a_\pm(t)<10,\qquad |a_\pm'(t)|\le3,\qquad
+ |a_\pm''(t)|\le3.
+ \label{eq:a-bounds}
+\end{equation}
+Appendix~\ref{app:rho} verifies \eqref{eq:rho-bounds}.
+
+The local block constructed in
+Sections~\ref{sec:robust-chain}--\ref{sec:perspective} will have the
+exact value
+\begin{equation}
+ \max_y C_V(s,t;y)=h(s,t).
+ \label{eq:block-value}
+\end{equation}
+The next lemma records the consequences for assembly; its local
+hypotheses are verified in Proposition~\ref{prop:local-block}.
+
+\begin{lemma}[Assembly and primal compression]
+\label{lem:outer-compat}
+Suppose the local block satisfies \eqref{eq:block-value}, has a jointly
+$L_C$-Lipschitz gradient with $L_C=4\cdot10^7$, and has primal-gradient
+norm at most $2\cdot10^6$. Define
+\begin{equation}
+ \widehat f_{M,N,U,V}(x,y)
+ =\sum_{i=1}^M C_{V_i}(s_{i-1},s_i;y^{(i)})
+   +\frac1{10}\norm x^2,
+ \quad s=U^\top\varrho(x),\quad s_0=1.
+ \label{eq:rotated-saddle}
+\end{equation}
+Its value function is exactly \eqref{eq:outer-soft}, the primal
+compression preserves every dual P\L{} inequality, and the full
+function is jointly $\ell_0$-smooth with
+\begin{equation}
+ \ell_0=10^8.
+ \label{eq:ell0}
+\end{equation}
+The initial value gap is at most $12M$, and
+\eqref{eq:soft-obstruction} applies to this value function.
+\end{lemma}
+
+\begin{proof}
+The dual blocks are disjoint, so their exact maxima add. Compression
+acts only on $x$, and hence leaves the dual P\L{} inequality unchanged.
+Also $\widehat\Phi(0)=F_M(0)$ and
+$\inf\widehat\Phi\ge\inf F_M$, proving the gap bound.
+
+For smoothness, color the path blocks by parity. Blocks of one color
+have disjoint latent supports, so their sum has Hessian norm at most
+$L_C$. The latent saddle therefore has Hessian norm at most
+$2L_C=8\cdot10^7$. Each primal coordinate belongs to at most two
+blocks, giving
+$\norm{\nabla_s\sum_iC_{V_i}}\le4\cdot10^6\sqrt M$.
+The compression has Jacobian norm at most one and a Jacobian
+Lipschitz constant at most $3/R_x$. Its additional chain-rule
+curvature is at most
+\[
+ \frac3{230\sqrt M}\,4\cdot10^6\sqrt M<5.3\cdot10^4.
+\]
+The public quadratic adds $1/5$. These bounds are below $10^8$.
+The local blocks are $C^{1,1}$, and the same chain-rule estimates
+bound gradient differences globally, so twice differentiability at the
+scalar interfaces is not required. The gradient obstruction follows from
+Lemma~\ref{lem:soft-projection}.
+\end{proof}
+
+\subsection{A dual chain with flat activation regions}
+\label{sec:robust-chain}
+
+The weighted chain follows Pan and Li~\cite{panli}. We shift both its
+activation gate and its negative-part penalty so that an unrevealed
+coordinate has a genuine interval of first-order silence. Set $\tau=1/4$
+and define
+\[
+ q_0(t)=
+ \begin{cases}
+ 0,&t\le0,\\
+ 3t^2-2t^3,&0<t<1,\\
+ 1,&t\ge1,
+ \end{cases}
+ \quad
+ p(t)=q_0\!\left(\frac{t+1}{2}\right),
+ \quad
+ q_\tau(t)=q_0\!\left(\frac{t-\tau}{1-\tau}\right),
+ \quad
+ r_\tau(t)=(-t-\tau)_+.
+ \label{eq:gates-def}
+\]
+The shift is applied both to the activation gate and to the negative-part penalty.  This is essential: shifting only $q$ leaves a first-order side channel in the nominal dead zone.
+
+\begin{lemma}[Scalar gate estimates]
+\label{lem:scalar-ledger}
+For every $t\in\R$,
+\begin{align}
+ &0\le q_\tau(t)\le p(t)\le1,
+ \qquad
+ 1-q_\tau(t)\le3\bigl(p'(t)^2+r_\tau(t)^2\bigr),
+ \label{eq:scalar-main}\\
+ &\norm{q_\tau'}_\infty\le2,
+ \quad \Lip(q_\tau')\le\frac{32}{3},
+ \quad \norm{p'}_\infty\le\frac34,
+ \quad \Lip(p')\le\frac32.
+ \label{eq:scalar-derivs}
+\end{align}
+Both $q_\tau$ and the derivative of $r_\tau^2/2$ vanish on $[-\tau,\tau]$.
+\end{lemma}
+
+\begin{proof}
+The derivative bounds follow from $\norm{q_0'}_\infty=3/2$ and $\Lip(q_0')=6$.  For $t\le1$,
+$(t-\tau)/(1-\tau)\le(t+1)/2$, and for $t\ge1$ both gates equal one; hence $q_\tau\le p$.
+For \eqref{eq:scalar-main}, four intervals suffice.  On $[\tau,1)$, direct substitution gives
+\[
+ \frac{1-q_\tau(t)}{p'(t)^2}
+ =\frac{256(8t+1)}{243(1+t)^2}\le\frac{4096}{1701}<3.
+\]
+For $t\ge1$, both sides vanish. On $[-\tau,\tau]$, $q_\tau=0$ and $p'(t)\ge45/64$, so $3p'(t)^2>1$.
+On $(-1,-\tau)$, writing $s=-t$ gives
+\[
+ p'(t)^2+r_\tau(t)^2
+ =\frac9{16}(1-s^2)^2+(s-1/4)^2\ge\frac{25}{72}>\frac13.
+\]
+Finally, for $t\le-1$, $r_\tau(t)^2\ge9/16$.  The flat-zone assertion is immediate.
+\end{proof}
+
+For $N\ge2$, define weights by
+\begin{equation}
+ \omega_{N-1}=\omega_N=1,
+ \qquad
+ \omega_{j-1}=\sqrt{\omega_j/N},
+ \quad j=1,\ldots,N-1.
+ \label{eq:weights}
+\end{equation}
+They obey
+\begin{equation}
+ \frac1N\le\omega_0\le\cdots\le\omega_N=1,
+ \quad
+ \sum_{j=1}^N\omega_{j-1}<3,
+ \quad
+ \sum_{j=1}^N\frac{\omega_{j-1}^2}{\omega_j}<2,
+ \quad
+ \sum_{j=1}^N\omega_j<4.
+ \label{eq:weight-ledger}
+\end{equation}
+The choice of weights is due to Pan and Li~\cite{panli}; the estimates
+can be checked directly. The recursion gives
+$\omega_{N-1-k}=N^{-1+2^{-k}}$ for $0\le k\le N-1$, proving their
+ordering. Since $N^t\le1+(N-1)t$ for $0\le t\le1$,
+\[
+ \sum_{j=1}^N\omega_{j-1}
+ =\frac1N\sum_{k=0}^{N-1}N^{2^{-k}}
+ \le1+\left(1-\frac1N\right)\sum_{k=0}^{N-1}2^{-k}<3.
+\]
+Moreover,
+$\sum_{j=1}^N\omega_{j-1}^2/\omega_j=(N-1)/N+1<2$,
+and adding $\omega_N$ while removing $\omega_0$ gives the last estimate.
+
+Set $u_0=1$ and
+\begin{align}
+ H_\tau(u)
+ &=\sum_{j=1}^N\left[
+   \omega_{j-1}\bigl(1-q_\tau(u_{j-1})p(u_j)\bigr)
+   +\frac{\omega_j}{2}r_\tau(u_j)^2
+ \right],
+ \label{eq:Htau}\\
+ D_a^{\rm n}(u)
+ &=H_\tau(u)+a\bigl(1-q_\tau(u_N)\bigr),
+ \qquad 0\le a\le10.
+ \label{eq:Dnatural}
+\end{align}
+Let $W=\diag(\sqrt{\omega_1},\ldots,\sqrt{\omega_N})$ and define the physical-coordinate deficit
+\begin{equation}
+ D_a(z):=D_a^{\rm n}(W^{-1}z).
+ \label{eq:Dphysical}
+\end{equation}
+
+\begin{lemma}[Dual-chain estimates]
+\label{lem:robust-chain}
+For every $N\ge2$ and $a\in[0,10]$:
+\begin{enumerate}
+\item $D_a\ge0$, $D_a(W\one)=0$, and
+\begin{equation}
+ \norm{\nabla D_a(z)}^2\ge\frac{1}{385N}D_a(z).
+ \label{eq:D-PL}
+\end{equation}
+\item $\nabla D_a$ is $128$-Lipschitz.
+\item Every coordinate of $\nabla D_a$ is nonpositive, and $\partial_jD_a(z)=0$ for $z_j\ge\sqrt{\omega_j}$.
+\item On $\norm z\le32$,
+\begin{equation}
+ 0\le D_a(z)\le1040,
+ \qquad
+ \norm{\nabla D_a(z)}\le4097.
+ \label{eq:D-ball}
+\end{equation}
+\item If $|u_j|\le\tau$ for all $j\ge k$, then no coordinate later than $k$ occurs in the gradient; the only nonconstant scalar term involving this suffix is its incoming $p(u_k)$ factor, whose derivative contains $p'(u_k)$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Write $\norm v_{*,\omega}^2=\sum_jv_j^2/\omega_j$.  Direct differentiation gives, for $j<N$,
+\[
+ \partial_jH_\tau
+ =-\omega_{j-1}q_\tau(u_{j-1})p'(u_j)
+  -\omega_jr_\tau(u_j)
+  -\omega_jq_\tau'(u_j)p(u_{j+1}),
+\]
+and the same expression without the final term for $j=N$.  Every summand is nonpositive.  Hence
+\begin{equation}
+ \norm{\nabla H_\tau(u)}_{*,\omega}^2
+ \ge\frac1N\sum_{j=1}^N
+ \left[(q_\tau(u_{j-1})p'(u_j))^2+r_\tau(u_j)^2\right].
+ \label{eq:H-grad-lower}
+\end{equation}
+Fix $k$.  If $q_\tau(u_k)<1$, choose the smallest $j\le k$ with
+$1-q_\tau(u_j)\ge\tfrac12(1-q_\tau(u_k))$.  Then $q_\tau(u_{j-1})\ge1/2$, and Lemma~\ref{lem:scalar-ledger} gives
+\begin{equation}
+ 1-q_\tau(u_k)
+ \le24N\norm{\nabla H_\tau(u)}_{*,\omega}^2.
+ \label{eq:activation-24}
+\end{equation}
+Also,
+\[
+ 1-q_\tau(u_{j-1})p(u_j)
+ \le1-q_\tau(u_{j-1})+1-q_\tau(u_j).
+\]
+Using \eqref{eq:weight-ledger} and \eqref{eq:activation-24}, the total gate part is at most
+$144N\norm{\nabla H_\tau}_{*,\omega}^2$.  The penalty part is at most
+$\tfrac N2\norm{\nabla H_\tau}_{*,\omega}^2$, and the terminal term is at most
+$240N\norm{\nabla H_\tau}_{*,\omega}^2$.  Therefore
+\[
+ D_a^{\rm n}(u)
+ \le385N\norm{\nabla H_\tau(u)}_{*,\omega}^2.
+\]
+The extra terminal derivative in $D_a^{\rm n}$ has the same sign as the terminal derivative of $H_\tau$, so its weighted gradient norm can only increase.  The change $z=Wu$ converts the weighted dual norm into the Euclidean norm and proves \eqref{eq:D-PL}.
+
+For smoothness, each gate has diagonal physical second derivatives bounded by
+$32/3$ and $3/2$, and mixed derivative bounded by $3/2$.  The shifted quadratic penalty contributes at most one.  The only larger term is the terminal $a$-term, whose physical second derivative is at most $10(32/3)$.  Gershgorin's bound gives an almost-everywhere Hessian norm below $128$; continuity of the first derivative gives global $128$-smoothness.
+
+The sign and saturation claims follow from monotonicity and the flat portions of the gates.  For the ball bound, use
+\[
+ H_\tau(u)\le3+\norm z^2+\tau^2\sum_j\omega_j
+ \le\norm z^2+\frac{13}{4},
+\]
+then add the terminal term $a\le10$.  At the origin only the first physical coordinate of the gradient can be nonzero, with magnitude at most $3/4$; smoothness then gives
+$\norm{\nabla D_a(z)}\le3/4+128\norm z\le4097$ on the radius-$32$ ball.  The final assertion follows because both $q_\tau$ and the derivative of the shifted penalty vanish on $[-\tau,\tau]$.
+\end{proof}
+
+\subsection{A radial cap that preserves the dual P\L{} inequality}
+\label{sec:cap}
+
+Set
+\begin{equation}
+ R=16,
+ \qquad A=1,
+ \qquad C=32,
+ \qquad T_a(r)=a+C+Ar^2.
+ \label{eq:cap-constants}
+\end{equation}
+Let
+\[
+ \chi(r)=
+ \begin{cases}
+ 1,&r\le R,\\
+ 1-q_0((r-R)/R),&R<r<2R,\\
+ 0,&r\ge2R.
+ \end{cases}
+\]
+On the annulus,
+\begin{equation}
+ R^2\chi'(r)^2\ge4\min\{\chi(r),1-\chi(r)\},
+ \quad
+ |\chi'|\le\frac{3}{2R},
+ \quad
+ \norm{\nabla^2\chi(\norm\cdot)}\le\frac6{R^2}.
+ \label{eq:chi-ledger}
+\end{equation}
+Let $V\in\R^{d\times N}$ have orthonormal columns.  Define
+\begin{equation}
+ \mathscr D_{a,V}(w)
+ =\chi(\norm w)D_a(V^\top w)
+ +(1-\chi(\norm w))T_a(\norm w).
+ \label{eq:capped-deficit}
+\end{equation}
+
+\begin{lemma}[Capped deficit]
+\label{lem:cap}
+Uniformly over $N\ge2$, $d\ge N$, $a\in[0,10]$, and $V$,
+\begin{align}
+ &\norm{\nabla\mathscr D_{a,V}(w)}^2
+ \ge\frac{10^{-5}}{N}\mathscr D_{a,V}(w),
+ \label{eq:cap-pl}\\
+ &\Lip(\nabla\mathscr D_{a,V})\le1024.
+ \label{eq:cap-smooth}
+\end{align}
+The minimum is zero and is attained at $w=VW\one$.  For $\norm w\ge32$,
+\begin{equation}
+ \mathscr D_{a,V}(w)=a+32+\norm w^2,
+ \label{eq:public-tail}
+\end{equation}
+which is independent of the hidden frame.
+\end{lemma}
+
+\begin{proof}
+On $\norm w\le16$ this is Lemma~\ref{lem:robust-chain}; on $\norm w\ge32$ it is a radial quadratic.  Consider $16<r:=\norm w<32$, set $z=V^\top w$, $e=w/r$, and $g=V\nabla D_a(z)$.  The sharper estimate obtained in the proof of Lemma~\ref{lem:robust-chain},
+$D_a(z)\le\norm z^2+53/4$, gives
+\[
+ T_a(r)-D_a(z)
+ \ge a+32+r^2-\norm z^2-\frac{53}{4}
+ \ge32-\frac{53}{4}>18.
+\]
+Differentiation gives
+\begin{equation}
+ \nabla\mathscr D_{a,V}=\chi g+be,
+ \qquad
+ b=2r(1-\chi)+(-\chi')(T_a-D_a)\ge0.
+ \label{eq:cap-gradient-decomp}
+\end{equation}
+A negative component of $\nabla D_a$ can oppose the outward radial direction only when
+$0<z_j<\sqrt{\omega_j}$.  Since $\sum_j\omega_j<4$ and $r\ge16$,
+\[
+ \ip{g}{e}\ge-\frac18\norm g.
+\]
+Therefore
+\begin{equation}
+ \norm{\chi g+be}^2
+ \ge\frac78\bigl(\chi^2\norm g^2+b^2\bigr).
+ \label{eq:cap-no-cancel}
+\end{equation}
+If $\chi\ge1/2$, then
+$\chi^2\norm g^2\ge\chi D_a/(770N)$.  Also
+$T_a\le1066$ on the annulus and \eqref{eq:chi-ledger} gives
+$b^2\ge5(1-\chi)\ge(1-\chi)T_a/214$.  If $\chi<1/2$, then
+$b\ge2r(1-\chi)\ge16$, while
+$\mathscr D_{a,V}\le1066$.  In both cases \eqref{eq:cap-pl} follows with the deliberately conservative constant $10^{-5}$.
+
+For smoothness on the annulus, use
+\[
+ \norm{\nabla^2D_a}\le128,
+ \quad \norm{\nabla D_a}\le4097,
+ \quad D_a\le1040,
+ \quad \norm{\nabla T_a}\le64,
+ \quad T_a\le1066.
+\]
+Twice differentiating \eqref{eq:capped-deficit} and using \eqref{eq:chi-ledger} gives the operator-norm bound
+\[
+ 128+2+2\frac{3}{32}(4097+64)+\frac6{16^2}(1040+1066)<1024.
+\]
+The value and first derivative match at both annulus boundaries, hence the global gradient is $1024$-Lipschitz.  Finally $\norm{W\one}<2<16$, so the zero of $D_a$ lies in the uncapped region.
+\end{proof}
+
+\subsection{The capped perspective block}
+\label{sec:perspective}
+
+Set
+\begin{equation}
+ Q_{a,V}(w)=a-\mathscr D_{a,V}(w).
+ \label{eq:Qdef}
+\end{equation}
+On $\norm w\le32$, Lemma~\ref{lem:cap} and the preceding bounds imply
+\begin{equation}
+ |Q_{a,V}(w)|\le1100,
+ \quad \norm{\nabla_wQ_{a,V}(w)}\le4500,
+ \quad \norm{\nabla^2_{ww}Q_{a,V}(w)}\le1024.
+ \label{eq:Q-spatial-bounds}
+\end{equation}
+The parameter dependence is affine and
+\begin{equation}
+ \partial_aQ_{a,V}(w)
+ =\chi(\norm w)q_\tau(v_N^\top w),
+ \label{eq:Qa-formula}
+\end{equation}
+so on the same ball
+\begin{equation}
+ |Q_a|\le1,
+ \qquad \norm{\nabla_wQ_a}\le3,
+ \qquad \norm{\nabla^2_{ww}Q_a}\le12.
+ \label{eq:Qa-bounds}
+\end{equation}
+For $\norm w\ge32$, one has exactly
+\begin{equation}
+ Q_{a,V}(w)=-32-\norm w^2,
+ \label{eq:Q-tail}
+\end{equation}
+independently of $a$ and $V$.
+
+For $\eta>0$ and $0\le\alpha\le10\eta^2$, define
+\begin{equation}
+ \mathscr B_V(\eta,\alpha;y)
+ =\eta^2Q_{\alpha/\eta^2,V}(y/\eta),
+ \label{eq:Bcap}
+\end{equation}
+and set $\mathscr B_V(0,0;y)=-\norm y^2$.
+
+\begin{lemma}[Global perspective extension]
+\label{lem:perspective-extension}
+Let $a(t)$ be either branch $a_+(t)$ or $a_-(t)$ from \eqref{eq:a-branches}.  The function
+\begin{equation}
+ P_{V,a}(\eta,t,y)=
+ \begin{cases}
+ \eta^2Q_{a(t),V}(y/\eta),&\eta>0,\\
+ -\norm y^2,&\eta=0,
+ \end{cases}
+ \label{eq:Pdef}
+\end{equation}
+has globally Lipschitz gradient on $[0,2]\times\R\times\R^d$.  In the hidden cone
+$\norm y\le32\eta$, its almost-everywhere second derivatives obey
+\begin{align}
+ |P_{\eta\eta}|&\le1.4\cdot10^6,
+ &\norm{P_{y\eta}}&\le3.8\cdot10^4,
+ &\norm{P_{yy}}&\le1024,
+ \label{eq:P-hess-1}\\
+ |P_{\eta t}|&\le588,
+ &\norm{P_{yt}}&\le18,
+ &|P_{tt}|&\le12.
+ \label{eq:P-hess-2}
+\end{align}
+Outside the hidden cone, $P_{V,a}=-32\eta^2-\norm y^2$ exactly.
+\end{lemma}
+
+\begin{proof}
+For $w=y/\eta$ and $\eta>0$,
+\begin{align*}
+ P_\eta&=\eta(2Q-\ip{w}{Q_w}),
+ &P_y&=\eta Q_w,\\
+ P_{\eta\eta}&=2Q-2\ip{w}{Q_w}+w^\top Q_{ww}w,
+ &P_{y\eta}&=Q_w-Q_{ww}w,
+ &P_{yy}&=Q_{ww},\\
+ P_{\eta t}&=\eta(2Q_a-\ip{w}{Q_{aw}})a'(t),
+ &P_{yt}&=\eta Q_{aw}a'(t),
+ &P_{tt}&=\eta^2Q_a a''(t).
+\end{align*}
+The bounds follow from \eqref{eq:Q-spatial-bounds}--\eqref{eq:Qa-bounds},
+$\norm w\le32$, $\eta\le2$, and \eqref{eq:a-bounds}.  In the complement of the cone,
+\eqref{eq:Q-tail} gives the stated public quadratic.  For every positive lower bound on $\eta$, the formula is locally
+$C^{1,1}$, so its gradient is absolutely continuous along line segments.
+The displayed Hessian estimates give a Lipschitz bound independent of
+that lower bound. In the cone, $\norm y\le32\eta$, all first derivatives
+converge to their prescribed values as $\eta\downarrow0$; outside the
+cone this follows from the exact quadratic formula. Approximating
+boundary segments by segments with $\eta>0$ proves the same Lipschitz
+estimate up to $\eta=0$.
+\end{proof}
+
+Define the capped local saddle block directly from the target parameter:
+\begin{equation}
+ C_V(s,t;y)
+ =-5\rho(s)^2
+  +\mathscr B_V\bigl(\rho(s),\widetilde h(s,t);y\bigr),
+ \label{eq:local-block}
+\end{equation}
+where the value at \(\rho(s)=0\) is the extension
+\(\mathscr B_V(0,0;y)=-\norm y^2\).  On the two nonzero branches this is
+\(-5\rho(s)^2+P_{V,a_+}(\rho(s),t,y)\) and
+\(-5\rho(s)^2+P_{V,a_-}(\rho(s),t,y)\), respectively.  Thus the sign branch is part of the definition and is not inferred from the symmetric scale \(\rho(s)\).
+
+\begin{proposition}[Local saddle-block properties]
+\label{prop:local-block}
+For all $s,t,y$ and every hidden frame $V$:
+\begin{enumerate}
+\item
+\begin{equation}
+ \max_yC_V(s,t;y)=h(s,t),
+ \label{eq:local-value}
+\end{equation}
+and a maximizer is $y=\rho(s)VW\one$.
+\item
+\begin{equation}
+ \norm{\nabla_yC_V(s,t;y)}^2
+ \ge\frac{10^{-5}}{N}\bigl(h(s,t)-C_V(s,t;y)\bigr).
+ \label{eq:local-dual-pl}
+\end{equation}
+Thus, in the convention \eqref{eq:model-pl}, the unscaled dual P\L{} modulus is
+\begin{equation}
+ \frac{\mu_0}{N},
+ \qquad \mu_0=5\cdot10^{-6}.
+ \label{eq:mu0}
+\end{equation}
+\item $C_V$ has jointly $L_C$-Lipschitz gradient with
+\begin{equation}
+ L_C=4\cdot10^7.
+ \label{eq:LC}
+\end{equation}
+Its primal-gradient norm is at most $2\cdot10^6$.
+\item If $\rho(s)=0$, then $C_V(s,t;y)=-\norm y^2$, independent of $t$ and $V$.
+\item For $\rho(s)>0$,
+\begin{equation}
+ \partial_{\widetilde h}\mathscr B_V
+ =\chi(\norm y/\rho(s))
+ q_\tau\!\left(
+  \frac{v_N^\top y}{\rho(s)\sqrt{\omega_N}}
+ \right).
+ \label{eq:successor-gate}
+\end{equation}
+Hence the successor primal variable is absent from the gradient whenever the terminal normalized dual coordinate belongs to $[-\tau,\tau]$, and also throughout the public tail.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+On the positive branch set $a_\star(t)=a_+(t)$ and on the negative branch set $a_\star(t)=a_-(t)$.  The gap is
+\[
+ h(s,t)-C_V(s,t;y)
+ =\rho(s)^2\mathscr D_{a_\star(t),V}(y/\rho(s)),
+\]
+when $\rho(s)>0$. Lemma~\ref{lem:cap} proves the value and P\L{}
+claims in this case. At $\rho(s)=0$, the gap is $\norm y^2$ and
+$\norm{\nabla_yC_V}^2=4\norm y^2$, so the same inequality holds
+directly, with maximizer $y=0$. Formula~\eqref{eq:Qa-formula} gives
+\eqref{eq:successor-gate}.
+
+For smoothness, apply Lemma~\ref{lem:perspective-extension} on each sign branch and substitute \eqref{eq:rho-bounds} into the chain rule for
+$-5\rho^2+P_{V,a_\star}(\rho,t,y)$.  The largest entry is
+\[
+ |C_{ss}|
+ \le(1.4\cdot10^6+10)\,4^2
+ +(3.0\cdot10^5+20)\,40
+ <3.5\cdot10^7.
+\]
+The remaining mixed entries are below $1.6\cdot10^5$.  Inside $\norm y\le32\rho(s)$, we used the first-derivative consequences of \eqref{eq:Q-spatial-bounds},
+\[
+ |P_\eta|\le3.0\cdot10^5,
+ \qquad
+ \norm{P_y}\le9.0\cdot10^3,
+ \qquad
+ |P_t|\le12.
+\]
+Outside this cone, $P=-32\eta^2-\norm y^2$, so
+$P_\eta=-64\eta$, $P_t=0$, and $P_{yy}=-2I$. A block row-sum bound
+therefore gives $L_C=4\cdot10^7$ globally, and the same estimates bound
+the primal gradient. At $s=\pm1/2$, the identities $\rho=\rho'=0$
+make the value and first derivatives agree with the public quadratic.
+The uniform branchwise Lipschitz bounds consequently extend across
+both interfaces.
+\end{proof}
+
+Combining Proposition~\ref{prop:local-block} with Lemma~\ref{lem:outer-compat} gives uniform constants for the complete unscaled construction:
+\begin{equation}
+ \boxed{
+ \ell_0=10^8,
+ \quad \mu_0=5\cdot10^{-6},
+ \quad c_{\rm cap}=10^{-5},
+ \quad L_C=4\cdot10^7.
+ }
+ \label{eq:common-ledger}
+\end{equation}
+These conservative choices are independent of both chain lengths and all ambient dimensions.
+
+\subsection{From the value gradient to the weighted joint residual}
+\label{sec:transfer}
+
+For block $i$, define the nonnegative local deficit
+\[
+ d_i(s_{i-1},s_i;y^{(i)})
+ =h(s_{i-1},s_i)-C_{V_i}(s_{i-1},s_i;y^{(i)}).
+\]
+For fixed $y^{(i)}$, the deficit is nonnegative as a function of its
+two primal arguments. The bounds in \eqref{eq:rho-bounds} and
+\eqref{eq:a-bounds} give $\Lip(\nabla h)\le2000$; together with
+Proposition~\ref{prop:local-block}, they allow the primal smoothness
+constant
+\begin{equation}
+ L_{\rm def}=5\cdot10^7.
+ \label{eq:Ldef}
+\end{equation}
+The self-bounding inequality for a nonnegative $L_{\rm def}$-smooth function gives
+$\norm{\nabla_{s,t}d_i}^2\le2L_{\rm def}d_i$.
+
+\begin{lemma}[Local-deficit comparison]
+\label{lem:joint-transfer}
+For the soft-projected saddle construction \eqref{eq:rotated-saddle},
+\begin{equation}
+ \norm{\nabla\widehat\Phi(x)-\nabla_x\widehat f(x,y)}^2
+ \le4L_{\rm def}\bigl(\widehat\Phi(x)-\widehat f(x,y)\bigr)
+ \le K_{\rm tr}^2N\norm{\nabla_y\widehat f(x,y)}^2,
+ \label{eq:transfer-chain}
+\end{equation}
+where one may take
+\begin{equation}
+ K_{\rm tr}^2=\frac{4L_{\rm def}}{10^{-5}}=2\cdot10^{13}.
+ \label{eq:Ktr}
+\end{equation}
+If
+\begin{equation}
+ N\le\frac{\kappa}{16K_{\rm tr}^2},
+ \label{eq:N-transfer-condition}
+\end{equation}
+then
+\begin{equation}
+ \norm{\nabla_x\widehat f(x,y)}^2
+ +\kappa\norm{\nabla_y\widehat f(x,y)}^2
+ \ge\frac14\norm{\nabla\widehat\Phi(x)}^2.
+ \label{eq:joint-transfer-final}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Each latent primal coordinate occurs in at most two neighboring deficits.  Hence
+\[
+ \norm{\nabla_sF_M(s)-\nabla_s\bar f(s,y)}^2
+ \le2\sum_i\norm{\nabla_{s,t}d_i}^2
+ \le4L_{\rm def}\sum_i d_i.
+\]
+The Jacobian of the primal compression and the frame $U$ are contractions; the public quadratic cancels from the gradient difference.  This proves the first inequality.  Summing \eqref{eq:local-dual-pl} over the disjoint dual blocks gives
+$\sum_id_i\le10^5N\norm{\nabla_y\widehat f}^2$, proving the second.
+Let $a=\norm{\nabla_x\widehat f}$ and
+$b=\sqrt\kappa\norm{\nabla_y\widehat f}$.  Under \eqref{eq:N-transfer-condition},
+$\norm{\nabla\widehat\Phi}\le a+b/4$.  Cauchy--Schwarz yields
+$(a+b/4)^2\le(17/16)(a^2+b^2)$, which is stronger than \eqref{eq:joint-transfer-final}.
+\end{proof}
+
+In particular, the low-progress value-gradient obstruction \eqref{eq:soft-obstruction} implies the unscaled pointwise obstruction
+\begin{equation}
+ \norm{\nabla_x\widehat f(x,y)}^2
+ +\kappa\norm{\nabla_y\widehat f(x,y)}^2
+ \ge\frac1{16}.
+ \label{eq:unscaled-joint-obstruction}
+\end{equation}
+
+\section{Information revealed by one oracle response}
+\label{sec:prefix}
+
+The construction imposes an order on the latent coordinates. This order
+is used only in the proof; admissible algorithms are not required to
+respect it. The interleaved order is
+\begin{equation}
+ y^{(1)}_1,\ldots,y^{(1)}_N,x_1,
+ y^{(2)}_1,\ldots,y^{(2)}_N,x_2,\ldots,
+ y^{(M)}_1,\ldots,y^{(M)}_N,x_M.
+ \label{eq:global-order}
+\end{equation}
+Write $K=M(N+1)$ for its length and let $\pi_r$ denote the $r$th position.  A dual position $(i,j)$ is associated with the hidden column $v_{i,j}$ of $V_i$; a primal connector $i$ is associated with the hidden column $u_i$ of $U$.
+
+For an ambient query $z=(x,y)$, put $s=U^\top\varrho(x)$.  In block $i$ with $\eta_i=\rho(s_{i-1})>0$, define
+\[
+ w_i=y^{(i)}/\eta_i,
+ \qquad
+ u_{i,j}=\frac{v_{i,j}^\top y^{(i)}}{\eta_i\sqrt{\omega_j}}.
+\]
+A block with $\eta_i=0$ is public.  A block with $\norm{w_i}\ge32$ is also public by \eqref{eq:public-tail}.  Public blocks are ignored by the hidden progress statistic.
+
+The robust dead zones are
+\begin{equation}
+ \begin{aligned}
+  |s_i|&\le\frac14
+  &&\text{for an unrevealed primal position},\\
+  |u_{i,j}|&\le\tau=\frac14
+  &&\text{for an unrevealed dual position}.
+ \end{aligned}
+ \label{eq:robust-dead-zones}
+\end{equation}
+For the concentration argument we use the stronger, weight-adapted dual threshold
+\begin{equation}
+ |v_{i,j}^\top y^{(i)}|
+ \le c_*\eta_i\sqrt{\omega_{j-1}},
+ \qquad c_*:=\frac18.
+ \label{eq:weight-threshold}
+\end{equation}
+Since $\omega_{j-1}/\omega_j\le1$, this implies $|u_{i,j}|\le1/8<\tau$.
+
+\subsection{Prefix-truncated functions}
+
+A conditional-Haar argument requires every ideal response to be a
+function of revealed columns before conditioning on a favorable
+projection event. We enforce this requirement by truncating latent
+coordinates in the scalar objective before differentiating.
+
+For $r\in\{0,1,\ldots,K\}$, define a prefix-truncated latent representation as follows.
+For every primal coordinate $i$, retain $s_i=u_i^\top\varrho(x)$ if the connector position $(i,N+1)$ is at most $r$, and replace it by zero otherwise.  For every dual coordinate $(i,j)$, retain $v_{i,j}^\top y^{(i)}$ if its position is at most $r$, and replace it by zero otherwise.  The public radial quantity $\norm{y^{(i)}}$ is never truncated.  Substituting these values into the capped saddle construction defines a globally $C^{1,1}$ scalar function
+\begin{equation}
+ \widehat f^{[r]}(x,y).
+ \label{eq:prefix-function}
+\end{equation}
+It depends only on the public constants and on hidden frame columns whose positions are at most $r$.  Set
+\begin{equation}
+ \Delta_r(z)=\nabla\widehat f^{[r]}(z)-\nabla\widehat f^{[r-1]}(z),
+ \qquad r=1,\ldots,K.
+ \label{eq:prefix-increment}
+\end{equation}
+
+\begin{lemma}[Prefix identity]
+\label{lem:prefix-identity}
+Fix $0\le r<K$ and a query $z$.  Suppose that every primal position
+after $r$ satisfies $|s_i|\le1/4$, and that every nonpublic dual position
+after $r$ satisfies
+\begin{equation}
+ |u_{i,j}|\le\tau.
+ \label{eq:prefix-dead-zone}
+\end{equation}
+Then
+\begin{equation}
+ \nabla\widehat f(z)=\nabla\widehat f^{[r+1]}(z).
+ \label{eq:prefix-equality}
+\end{equation}
+If position $r+1$ belongs to a public dual block, then this gradient also
+equals $\nabla\widehat f^{[r]}(z)$.  For every query, without any
+projection hypothesis, $\nabla\widehat f^{[r]}(z)$ depends only on $z$
+and the frame columns in positions at most $r$.
+\end{lemma}
+
+\begin{proof}
+The last assertion follows directly from the definition of the prefix
+function.  To prove the identity, first consider a dual frontier
+$(i,k)$.  Within this block, all normalized coordinates from $k$ onward
+lie in $[-\tau,\tau]$.  Their activation gates and gate derivatives,
+and their shifted-penalty derivatives, vanish.  Consequently, the only
+possibly nonconstant term involving this suffix is the incoming factor
+$p(u_{i,k})$, which is retained in prefix $r+1$.  The terminal activation
+factor vanishes, so neither the value nor its first derivatives depend
+on the unrevealed connector $s_i$.  Since every later predecessor
+primal coordinate lies in $[-1/4,1/4]$, every later block has
+$\rho=\rho'=0$ and is the public quadratic.  If block $i$ is itself
+public, it has no hidden dependence either, and prefix $r$ suffices.
+
+If the frontier is a primal connector $i$, its entire predecessor dual
+block is retained, and prefix $r+1$ also retains this connector.  All
+later blocks have predecessor scale and scale derivative zero.  Thus
+truncating every later latent projection changes no value or
+first-derivative term.  The radial norms and the public primal
+quadratic are never truncated, so the same conclusion holds after all
+chain-rule terms are included.
+\end{proof}
+
+\subsection{The three boundary cases}
+
+\begin{lemma}[Separation of adjacent blocks]
+\label{lem:boundary-audit}
+On the event in Lemma~\ref{lem:prefix-identity}, one oracle response can introduce at most the current position in \eqref{eq:global-order}.  More precisely:
+\begin{enumerate}
+\item If the current position is $y^{(i)}_j$ with $j<N$, the only new frame column on which the full increment can depend is
+$v_{i,j}$. It may also have components along previously revealed columns
+and public radial vectors. The next column $v_{i,j+1}$ is absent because
+$q_\tau(u_{i,j})=q_\tau'(u_{i,j})=0$ at the current coordinate.
+\item If the current position is $y^{(i)}_N$, an exact response may depend on $v_{i,N}$, but it can be computed without the unrevealed connector column
+$u_i$ or any later column: its latent derivative with respect to $s_i$
+vanishes by \eqref{eq:successor-gate}.
+\item If the current position is the connector $x_i$, an exact response may depend on $u_i$, but it contains no column of $V_{i+1}$: before $u_i$ is revealed, $|s_i|\le1/4$, so $\rho(s_i)=\rho'(s_i)=0$ and block $i+1$ is public.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+The first claim is the flat-zone statement in Lemma~\ref{lem:robust-chain}.  In the terminal case, $|u_{i,N}|\le\tau$, so both $q_\tau(u_{i,N})$ and $q_\tau'(u_{i,N})$ vanish; the target derivative with respect to $s_i$ is therefore zero.  In the connector case, the outer flat zone and all of its derivatives are zero on $[-1/2,1/2]$, and the stronger threshold $1/4$ lies strictly inside it.
+\end{proof}
+
+These statements concern dependence on hidden frame columns, not
+orthogonality of the ambient response: public radial terms may have
+nonzero projections onto unrevealed directions. The identities prevent
+a terminal dual reveal and its successor connector, or a connector and
+the next dual coordinate, from being revealed in the same response.
+
+\subsection{Bounding the complete frontier increment}
+\label{sec:increment}
+
+Let position $r$ be an inner dual frontier $(i,k)$ with $k<N$.
+At a query where its normalized coordinate lies in the flat region,
+the only nonconstant scalar difference between prefix $r$ and prefix
+$r-1$ is
+\begin{equation}
+ R_k(\eta,y)
+ =\eta^2\chi(\norm y/\eta)\,
+ \omega_{k-1}q_\tau(u_{k-1})
+ \bigl(p(u_k)-p(0)\bigr).
+ \label{eq:Rk}
+\end{equation}
+It is important to mask the gradient of the entire scalar $R_k$, not only its component along $v_{i,k}$.
+
+\begin{lemma}[Uniform whole-gradient frontier bound]
+\label{lem:frontier-bound}
+Assume $\eta>0$, $\norm y\le32\eta$, and that the current coordinate satisfies
+$|v_{i,k}^\top y|\le c_*\eta\sqrt{\omega_{k-1}}$.  Then the difference between the complete ambient gradients of the two neighboring prefix functions obeys
+\begin{equation}
+ \norm{\Delta_r(z)}\le\frac{8}{\sqrt N}.
+ \label{eq:increment-unscaled}
+\end{equation}
+The vector $\nabla\widehat f^{[r-1]}(z)$ is a measurable function of
+the query and the previously revealed columns only. The increment
+$\Delta_r(z)$ additionally uses the current column, but no later column.
+\end{lemma}
+
+\begin{proof}
+Put
+\[
+ \alpha_k:=\sqrt{\frac{\omega_{k-1}}{\omega_k}}\le1,
+ \qquad
+ \beta_k:=\frac{\omega_{k-1}}{\sqrt{\omega_k}}=\frac1{\sqrt N}.
+\]
+The threshold gives $|u_k|\le\alpha_k/8$, and hence
+\begin{equation}
+ |p(u_k)-p(0)|
+ \le\frac34|u_k|
+ \le\frac{3\alpha_k}{32}.
+ \label{eq:delta-p-bound}
+\end{equation}
+Differentiate the scalar $R_k$ in \eqref{eq:Rk}.  Its $y$-gradient is the sum of the direct current-column term, the predecessor-gate term, and the radial-cutoff term.  Their norms are respectively at most
+\begin{align*}
+ &\eta\frac{\omega_{k-1}}{\sqrt{\omega_k}}\norm{p'}_\infty
+   \le\frac{3\eta}{4\sqrt N},\\
+ &\eta\sqrt{\omega_{k-1}}\norm{q_\tau'}_\infty
+   |p(u_k)-p(0)|
+   \le\frac{3\eta}{16\sqrt N},\\
+ &\eta\norm{\chi'}_\infty\omega_{k-1}|p(u_k)-p(0)|
+   \le\frac{9\eta}{1024\sqrt N}.
+\end{align*}
+For the derivative with respect to the perspective scale $\eta$, the prefactor, radial cutoff, predecessor normalization, and current normalization contribute at most
+\[
+ \frac{3\eta}{16\sqrt N},
+ \qquad
+ \frac{9\eta}{32\sqrt N},
+ \qquad
+ \frac{3\eta}{16\sqrt N},
+ \qquad
+ \frac{3\eta}{32\sqrt N},
+\]
+respectively.  In the predecessor term we used that
+$q_\tau'(u_{k-1})\ne0$ implies $|u_{k-1}|\le1$; the term is absent for $k=1$ because $u_0\equiv1$.
+Thus
+\[
+ \norm{\nabla_yR_k}<\frac{\eta}{\sqrt N},
+ \qquad
+ |\partial_\eta R_k|\le\frac{3\eta}{4\sqrt N}.
+\]
+Composition with $\eta=\rho(s_{i-1})$ multiplies the second bound by at most
+$\norm{\rho'}_\infty\le4$, and the primal frame and soft projection are contractions.  Since $\eta\le2$, the sum of the ambient primal and dual gradient norms is below $8/\sqrt N$, proving \eqref{eq:increment-unscaled}.
+
+All later latent coordinates are set to zero in both prefix functions.
+The prefix definition removes the current column from the base before
+differentiation. Thus the base uses only earlier columns, and the
+increment uses the current column but no later one.
+\end{proof}
+
+\section{Scaling and initialization}
+\label{sec:scaling}
+
+Define
+\begin{equation}
+ c_N:=\min\left\{
+  \frac{\mu_0}{4\ell_0},
+  \frac{1}{16K_{\rm tr}^2}
+ \right\},
+ \qquad
+ c_M:=\frac{1}{12800\ell_0}.
+ \label{eq:cN-cM}
+\end{equation}
+With the constants \eqref{eq:common-ledger} and \eqref{eq:Ktr}, these are positive absolute constants; numerically $c_N\le3.125\cdot10^{-15}$.  Set
+\begin{equation}
+ N=\lfloor c_N\kappa\rfloor,
+ \qquad
+ M=\left\lfloor c_M\frac{LH}{\eps^2}\right\rfloor.
+ \label{eq:MN}
+\end{equation}
+One explicit choice of regime constants is
+\begin{equation}
+ \kappa_0=\frac8{c_N},\qquad c_\eps=\frac{c_M}{8}.
+ \label{eq:regime-constants}
+\end{equation}
+The hypotheses of Theorem~\ref{thm:main-lower} then give $N,M\ge8$.
+In particular, $S=M(N-1)\ge56$, so rounding the query horizon only
+changes a universal constant.
+
+Let
+\begin{equation}
+ \lambda=8\ell_0\frac{\eps}{L},
+ \qquad
+ f(x,y)=\frac{L\lambda^2}{\ell_0}
+ \widehat f_{M,N,U,V}(x/\lambda,y/\lambda).
+ \label{eq:scaled-function}
+\end{equation}
+The same formula defines every scaled prefix function $f^{[r]}$.
+
+\begin{lemma}[Admissibility after scaling]
+\label{lem:scaled-admissible}
+The function \eqref{eq:scaled-function} is $L$-smooth, satisfies the dual P\L{} condition with modulus at least $L/\kappa$, has finite attained inner maxima, and obeys the charged initialization \eqref{eq:charged-init} at $z_0=x_0=y_0=0$.
+\end{lemma}
+
+\begin{proof}
+Smoothness follows from \eqref{eq:ell0}.  The scaled dual modulus is
+\[
+ \frac{L\mu_0}{\ell_0N}
+ \ge\frac{L}{\kappa}
+\]
+by the first choice in \eqref{eq:cN-cM}.  Attainment follows from the explicit maximizer of each capped block.
+
+The unscaled value gap is at most $12M$.  At $y=0$, the target parameter cancels and
+$C_V(s,t;0)=-(5+H_\tau(0))\rho(s)^2\ge-32$,
+since $H_\tau(0)<3$ and $\rho^2\le4$. Hence
+\[
+ \inf_x\left[
+   \widehat f_{M,N,U,V}(x,0)+\ell_0\norm x^2
+ \right]\ge-32M.
+\]
+At $x=0$, all latent primal coordinates except the fixed $s_0=1$ vanish.  Since
+$|h(s,t)|\le5\rho(s)^2\le20$ and $h(0,0)=0$, the initial value obeys
+$|\widehat\Phi(0)|\le20$.  Denoting the auxiliary gap at the unscaled parameters by $\widehat b_0$, we obtain
+\[
+ \widehat b_0
+ \le2(20+32M),
+ \qquad
+ \widehat\Phi(0)-\inf\widehat\Phi+\widehat b_0
+ \le12M+40+64M\le96M
+\]
+for $M\ge2$.  We use the round bound $100M$.  Under the scaling, both the value gap and the auxiliary gap are multiplied by
+\[
+ \frac{L\lambda^2}{\ell_0}
+ =64\ell_0\frac{\eps^2}{L}.
+\]
+By \eqref{eq:MN} and the definition of $c_M$, their sum is at most $H/2$ (with room for floors), proving \eqref{eq:charged-init}.
+\end{proof}
+
+\begin{lemma}[Scaled low-progress obstruction and stochastic signal]
+\label{lem:scaled-obstruction}
+At every point $(x,y)$ satisfying
+$\prog_{1/4}(U^\top\varrho(x/\lambda))<M$,
+\begin{equation}
+ \norm{\nabla_x f(x,y)}^2
+ +\kappa\norm{\nabla_y f(x,y)}^2\ge4\eps^2.
+ \label{eq:scaled-joint-obstruction}
+\end{equation}
+If position $r$ is an inner dual frontier and its unscaled query
+satisfies the hypotheses of Lemma~\ref{lem:frontier-bound}, then
+$\norm{\nabla f^{[r]}-\nabla f^{[r-1]}}\le64\eps/\sqrt N$.
+\end{lemma}
+
+\begin{proof}
+The gradient multiplier in \eqref{eq:scaled-function} is
+$L\lambda/\ell_0=8\eps$.  At the stated low-progress point,
+\eqref{eq:unscaled-joint-obstruction} applies to $(x/\lambda,y/\lambda)$.
+Multiplication by $(8\eps)^2$ proves
+\eqref{eq:scaled-joint-obstruction}.  Under the stated frontier hypotheses,
+Lemma~\ref{lem:frontier-bound} gives a scaled increment norm at most
+$8\eps\cdot8/\sqrt N=64\eps/\sqrt N$.
+\end{proof}
+
+\section{A fixed globally valid stochastic first-order oracle}
+\label{sec:oracle}
+
+The oracle must satisfy its moment conditions at every query, including queries
+outside the region used in the lower-bound argument.  We therefore use the
+prefix construction only after a deterministic test of the query and return
+the exact gradient otherwise.  The test is part of a single fixed oracle map;
+it does not depend on the transcript.
+
+Let $f$ be the scaled construction in \eqref{eq:scaled-function}, and write
+$\bar z=(\bar x,\bar y)=(x/\lambda,y/\lambda)$ for the corresponding unscaled
+query.  Every progress statistic, cone condition, and projection threshold in
+this section is evaluated at $\bar z$.  In particular,
+\[
+ s=U^\top\varrho(\bar x),\qquad
+ \eta_i=\rho(s_{i-1}),\qquad
+ u_{i,j}=\frac{v_{i,j}^\top\bar y^{(i)}}{\eta_i\sqrt{\omega_j}}
+ \quad(\eta_i>0).
+\]
+Define $r=\rprog(\bar z)$ to be the largest position in
+\eqref{eq:global-order} outside its robust dead zone, ignoring dual positions
+in public blocks; set $r=0$ if there is no such position.  Thus every later primal position and every later nonpublic dual
+position lies in its robust dead zone.  The simultaneous test asks whether
+every later primal position satisfies $|s_i|\le1/4$ and every later nonpublic
+dual position satisfies \eqref{eq:weight-threshold}, with $y^{(i)}$ there
+replaced by $\bar y^{(i)}$.
+
+Set
+\begin{equation}
+ \Gamma=\frac{64\eps}{\sqrt N},\qquad
+ p=\frac{\Gamma^2}{\Gamma^2+\sigma^2},
+ \label{eq:p-Gamma}
+\end{equation}
+and draw an independent $B\sim\operatorname{Bernoulli}(p)$ on each call.
+If the simultaneous test passes and $r+1$ is an inner dual position
+$(i,k)$ with $k<N$ in a nonpublic block, return
+\begin{equation}
+ G(z;B)=\nabla f^{[r]}(z)
+   +\frac{B}{p}\bigl(\nabla f^{[r+1]}(z)-\nabla f^{[r]}(z)\bigr).
+ \label{eq:fixed-oracle}
+\end{equation}
+In all other cases, return $\nabla f(z)$.  These exact cases include a failed
+test, a public frontier, a terminal dual frontier, a primal connector, and
+$r=K$, when there is no remaining frontier.  The Bernoulli variable is unused
+on an exact branch.  All quantities defining this map are measurable
+functions of $z$ and the fixed instance.
+
+\begin{lemma}[Global oracle validity]
+\label{lem:oracle-valid}
+For every fixed hard instance and every query $z$,
+\[
+ \E_B[G(z;B)]=\nabla f(z),\qquad
+ \E_B\norm{G(z;B)-\nabla f(z)}^2\le\sigma^2.
+\]
+The same identities hold conditionally on the past at every adaptive call.
+\end{lemma}
+
+\begin{proof}
+There is nothing to prove on an exact branch.  On a masked branch, the
+prefix identity at the unscaled query $\bar z$ gives
+$\nabla f(z)=\nabla f^{[r+1]}(z)$.  Define
+$\Delta^f_{r+1}(z)=\nabla f^{[r+1]}(z)-\nabla f^{[r]}(z)$.
+The gradient multiplier in \eqref{eq:scaled-function} is $8\eps$, so
+Lemma~\ref{lem:frontier-bound}, applied at $\bar z$, gives
+$\norm{\Delta^f_{r+1}(z)}\le\Gamma$.  Consequently,
+\[
+ \E_B G(z;B)=\nabla f^{[r+1]}(z)=\nabla f(z),
+\]
+and
+\[
+ \E_B\norm{G(z;B)-\nabla f(z)}^2
+ =\left(\frac1p-1\right)\norm{\Delta^f_{r+1}(z)}^2
+ \le\left(\frac1p-1\right)\Gamma^2=\sigma^2.
+\]
+Freshness of $B$ gives the conditional statements.
+\end{proof}
+
+The construction uses exactly the oracle assumptions in
+\eqref{eq:model-oracle}: a fixed unbiased vector-valued map with a uniform
+second-moment bound.  It does not impose samplewise smoothness, or require
+$G(\cdot;\xi)$ to be the gradient of a globally defined sample loss.  The
+algorithm receives only the returned gradient vector and cannot reuse a
+sample seed at a second query.
+
+\section{Randomized lower bound}
+\label{sec:haar}
+
+\subsection{Concentration for adaptively queried frames}
+
+We draw the primal frame $U$ and the $M$ dual frames $V_i$ independently from
+their Haar distributions.  Let $d_b$ denote the ambient dimension of each
+dual block, so that the total dual dimension is $d_y=Md_b$.  The proof uses
+an ideal process whose revealed columns always form an initial segment of
+\eqref{eq:global-order}.  Revealing a column means adjoining the entire
+column to the proof's filtration; the algorithm itself still observes only
+the prescribed oracle response.
+
+We use the standard spherical tail bound: if $v$ is uniform on the unit
+sphere of a $D$-dimensional subspace and $q$ is fixed, then
+\begin{equation}
+ \Pp\{|v^\top q|>a\}
+ \le2\exp\!\left(-\frac{(D-1)a^2}{2\norm q^2}\right).
+ \label{eq:spherical-tail}
+\end{equation}
+When $q=0$, the relevant probability is zero.
+
+\begin{lemma}[Concentration for a prefix-revealing protocol]
+\label{lem:adaptive-frame}
+Consider a protocol that makes at most $Q$ queries and one final output
+test.  Assume its next query is measurable with respect to its independent
+random seeds and the columns already revealed in an initial segment of
+\eqref{eq:global-order}.  Each new column is revealed only after that query
+has been chosen, and the decision to reveal it does not inspect its value
+or any later column.  If $0<\delta<1$ and
+\begin{align}
+ d_b&\ge2N+2^{20}N\log\frac{64MN(Q+1)}{\delta},
+ \label{eq:dy-bound}\\
+ d_x&\ge2M+2^{24}M\log\frac{64M(Q+1)}{\delta},
+ \label{eq:dx-bound}
+\end{align}
+then, with probability at least $1-\delta$, at all these queries and at the
+final output every still-unrevealed primal column satisfies
+$|u_i^\top\varrho(\bar x)|\le1/4$, and every still-unrevealed dual column
+satisfies \eqref{eq:weight-threshold} at $\bar z$ whenever its block is in
+the hidden cone.
+\end{lemma}
+
+\begin{proof}
+Condition on the protocol seeds used so far and on all previously revealed
+columns.  By the stipulated revelation rule, the unused columns of each
+frame remain Haar in the orthogonal complement of its revealed columns;
+the unused parts of distinct frames remain conditionally independent.
+The next query is fixed under this conditioning.
+
+For a dual frame $V_i$, condition further on the entire primal frame and
+all other dual frames.  This fixes
+$\eta_i=\rho(u_{i-1}^\top\varrho(\bar x))$ without changing the conditional
+Haar law of the unused part of $V_i$.  For $i=1$, the scale is the fixed
+number $\rho(1)$.  If the block is in its hidden cone, then
+$\norm{\bar y^{(i)}/\eta_i}\le32$, while
+$c_*\sqrt{\omega_{j-1}}\ge1/(8\sqrt N)$.  The remaining dimension is at
+least $d_b-N$.  Thus \eqref{eq:spherical-tail} bounds each dual failure
+probability by
+\[
+ 2\exp\!\left(-\frac{d_b-N-1}{2^{17}N}\right).
+\]
+If the block is public, no dual projection test is required.  The extra
+conditioning is used only to estimate this probability; it is not added
+to the protocol's filtration.
+
+For the primal frame, use
+$\norm{\varrho(\bar x)}\le230\sqrt M$, threshold $1/4$, and remaining
+dimension at least $d_x-M$.  Each primal failure probability is at most
+\[
+ 2\exp\!\left(-\frac{d_x-M-1}{1{,}692{,}800M}\right).
+\]
+The dimensions in \eqref{eq:dy-bound}--\eqref{eq:dx-bound} make the sum of
+these bounds over at most $MN(Q+1)$ dual tests and $M(Q+1)$ primal tests
+less than $\delta$.  The argument applies to each ideal query without
+conditioning on earlier projection tests having passed.  A union bound
+therefore proves the simultaneous statement, including the final output.
+\end{proof}
+
+\subsection{An ideal process and exact coupling}
+
+\begin{lemma}[Exact prefix-based filtration coupling]
+\label{lem:filtration}
+Fix the algorithm's internal random seed.  There is an ideal process with
+filtration $(\cF_t^{\rm id})$ and a revealed prefix of length $R_t$ such
+that the following hold.
+\begin{enumerate}
+\item The next ideal query is $\cF_t^{\rm id}$-measurable.  Conditional on
+this filtration, all unrevealed frame columns retain their Haar laws in
+the appropriate orthogonal complements.
+\item A Bernoulli failure reveals no new column.  A success can reveal
+only the current inner dual column.  An exact terminal or connector
+response can reveal only its current column.  A public-frontier response
+reveals no column.
+\item The ideal oracle makes branch decisions using only the query,
+previously revealed columns, and a fresh Bernoulli seed; it never tests
+an unrevealed projection.
+\item On the simultaneous projection event in
+Lemma~\ref{lem:adaptive-frame}, the ideal and true transcripts coincide
+at every call, and hence have the same final output.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Initialize the filtration with the public parameters and the algorithm's
+fixed seed, and let $R_0=0$.  Suppose that positions
+$1,\ldots,R_{t-1}$ have been revealed.  At the next ideal query, evaluate
+all previously revealed latent projections at $\bar z=z/\lambda$,
+replace all unrevealed latent projections by zero, and retain the public
+radial norms.  Compute the resulting robust progress $r\le R_{t-1}$ and
+public-block status.  Test the stronger projection thresholds only at
+already revealed positions in $(r,R_{t-1}]$; provisionally treat every
+unrevealed position as passing.
+
+If $r=K$, all columns have been revealed and the ideal response is the
+exact full gradient.  Otherwise, form the response as follows.
+\begin{enumerate}
+\item If a revealed later position fails its stronger threshold, return
+$\nabla f^{[r+1]}(z)$.  Here $r+1\le R_{t-1}$, so no new column is used.
+\item If the tests pass and $r+1$ is an inner dual position in a
+nonpublic block, use \eqref{eq:fixed-oracle}.  On failure, the response
+$\nabla f^{[r]}(z)$ uses only previously revealed columns.  On success,
+adjoin the current column if $r+1=R_{t-1}+1$ and return the prescribed
+prefix formula.  The decision to reveal precedes any inspection of
+that column.
+\item If the frontier is nonpublic and $r+1$ is a terminal dual
+position, or if $r+1$ is a primal connector, adjoin
+that column if it is new and return $\nabla f^{[r+1]}(z)$.
+\item If the frontier is public, return $\nabla f^{[r]}(z)$ and reveal
+no new column.
+\end{enumerate}
+Every prefix gradient is, by definition, a function only of the columns
+in that prefix, even when a projection test would fail.  Thus each ideal
+response is measurable with respect to the old filtration and at most
+one newly revealed column.  Append the response, the fresh seed, and any
+new column to the filtration.  The decision to reveal a new column uses
+only the old filtration and the fresh seed, so the conditional Haar law
+is preserved.  This proves that the ideal process satisfies the
+hypotheses of Lemma~\ref{lem:adaptive-frame}.
+
+For transcript equality, work on that lemma's simultaneous event.
+Every unrevealed coordinate lies in its robust dead zone and passes its
+stronger threshold.  Replacing these coordinates by zero leaves the
+robust progress unchanged.  It also leaves public-block status
+unchanged: if a predecessor primal column is unrevealed, then
+$|s_{i-1}|\le1/4$ and $\rho(s_{i-1})=0$; otherwise its projection is
+retained exactly.  The true simultaneous test therefore fails exactly
+when the ideal test detects a failing revealed position.
+
+If the test fails, all positions after $r$ are nevertheless in their
+robust dead zones, by the definition of $r$.  The prefix identity gives
+$\nabla f(z)=\nabla f^{[r+1]}(z)$, so the two exact responses agree.
+On a passing inner frontier they use identical prefixes and the same
+Bernoulli seed.  At terminal and connector frontiers the boundary
+identities give the same equality with the exact full gradient.  At a
+public frontier the current block has no hidden dependence, and all
+later blocks have zero predecessor scale; hence the exact gradient
+equals $\nabla f^{[r]}(z)$.  The $r=K$ case is immediate.
+Induction proves equality at every call.  The final output is a
+measurable function of the common transcript and is covered by the
+additional projection test.
+\end{proof}
+
+\begin{lemma}[One-coordinate progress for unrestricted algorithms]
+\label{lem:progress}
+In the ideal process, each call reveals at most one new position in
+\eqref{eq:global-order}.  Each inner dual position $(i,j)$ with $j<N$
+requires a Bernoulli success before it can be revealed.  Consequently,
+revealing the terminal primal column $u_M$ requires at least
+\begin{equation}
+ S=M(N-1)
+ \label{eq:S}
+\end{equation}
+Bernoulli successes.  On the simultaneous projection event, the same
+information restriction applies to the true transcript and its final
+output.
+\end{lemma}
+
+\begin{proof}
+The revealed set is an initial segment.  At a new inner frontier a
+failed stronger test is impossible in the ideal process, since any
+position that could fail that test is already revealed.  A public
+frontier reveals no column, and a Bernoulli failure returns the previous
+prefix gradient.  Thus only a success reveals a new inner column.
+Exact terminal and connector responses add at most their own column
+and cannot bypass an inner position.  The initial segment ending at
+$u_M$ contains precisely $M(N-1)$ inner positions.  Transcript equality
+and the output projection test give the final assertion.
+\end{proof}
+\subsection{Completion of the proof of Theorem~\ref{thm:main-lower}}
+\label{sec:completion}
+
+Fix an arbitrary algorithm, including its measurable query and output
+maps in every finite dimension. Let $S=M(N-1)$ and choose
+\begin{equation}
+ Q=\left\lfloor\frac{S}{16p}\right\rfloor,
+ \qquad
+ p=\frac{\Gamma^2}{\Gamma^2+\sigma^2}.
+ \label{eq:Qchoice}
+\end{equation}
+Because $S/p\ge S\ge56$, the floor satisfies
+\begin{equation}
+ Q\ge\frac{S}{32p}.
+ \label{eq:Q-floor-lower}
+\end{equation}
+Any algorithm using fewer calls may be padded by query repetitions, so it is enough to prove failure through this horizon.  Choose $d_b$ and $d_x$ according to
+\eqref{eq:dy-bound}--\eqref{eq:dx-bound} with $\delta=1/16$, and let
+$\mathcal E$ be the simultaneous projection event for the ideal
+process, including its final output.  Draw independent Bernoulli
+variables $B_1,\ldots,B_Q$ at every call, including the exact calls on
+which they are unused.  The total number of newly revealed inner
+columns is at most $\sum_{t=1}^Q B_t$.  Lemma~\ref{lem:progress}
+therefore implies
+\[
+ \mathcal E\cap\{\text{the terminal primal column is revealed}\}
+ \subseteq
+ \left\{\sum_{t=1}^Q B_t\ge S\right\}.
+\]
+The Bernoulli sum is binomial unconditionally; no independence after
+conditioning on $\mathcal E$ is needed.  Markov's inequality yields
+\begin{equation}
+ \Pp\!\left\{\sum_{t=1}^Q B_t\ge S\right\}
+ \le\frac{pQ}{S}\le\frac1{16}.
+ \label{eq:markov-progress}
+\end{equation}
+With probability at least $1-1/16-1/16=7/8$, the event
+$\mathcal E$ holds and the terminal primal column is still unrevealed.
+The final-output test then gives
+$|u_M^\top\varrho(\widehat x/\lambda)|\le1/4$, hence
+$\prog_{1/4}(U^\top\varrho(\widehat x/\lambda))<M$.
+Transcript equality transfers this conclusion to the true oracle.
+Lemma~\ref{lem:scaled-obstruction} now gives
+\[
+ \E\!\left[
+  \norm{\nabla_xf(\widehat x,\widehat y)}^2
+  +\kappa\norm{\nabla_yf(\widehat x,\widehat y)}^2
+ \right]\ge\frac78\,4\eps^2>\eps^2.
+\]
+
+Finally,
+\begin{equation}
+ \frac1p=1+\frac{\sigma^2}{\Gamma^2}
+ =1+\frac{N\sigma^2}{64^2\eps^2},
+ \label{eq:pinv}
+\end{equation}
+so, since $M,N\ge8$,
+\begin{align}
+ \frac{S}{p}
+ &\ge c\left(MN+\frac{MN^2\sigma^2}{\eps^2}\right)\notag\\
+ &\ge c'\left(
+  \frac{L\kappa H}{\eps^2}
+  +\frac{L\kappa^2H\sigma^2}{\eps^4}
+ \right),
+ \label{eq:final-rate}
+\end{align}
+where $c,c'>0$ are universal because $c_M,c_N$ are fixed numerical constants.
+
+The construction parameters and frame distribution are independent of
+the algorithm's realized seed. For every fixed seed, the same coupling
+and bounds apply; averaging over that seed therefore preserves the
+displayed expectation bound, jointly over the Haar frames, the
+algorithm's internal seed, and the fresh oracle seeds. Hence some fixed
+realization of all hidden frames has expected residual greater than
+$\eps^2$, where only the algorithm and oracle remain random. This
+realization determines a deterministic hard objective and a fixed
+oracle map. Together with \eqref{eq:Q-floor-lower} and
+\eqref{eq:final-rate}, this proves Theorem~\ref{thm:main-lower}.
+
+\section{Discussion}
+\label{sec:discussion}
+
+The matching rate in \eqref{eq:matching-rate} identifies the optimal
+dependence on the condition parameter for weighted joint stationarity
+in the fresh unbiased-gradient model. The deterministic term reflects
+the number of coordinates in the interleaved saddle chain. The
+stochastic term also reflects the size of the full gradient signal
+that reveals one coordinate. Controlling that full signal, rather than
+one selected gradient component, is what makes the variance calculation
+compatible with the perspective construction.
+
+The information argument is separated from the analytical properties
+of the hard family. The radial cap preserves global smoothness and
+the dual P\L{} inequality while bounding the region that can expose a
+hidden frame. Prefix functions define a measurable ideal transcript
+for every query, and concentration is used only to identify that
+transcript with the fixed true oracle. This order of definitions is
+essential: a response that is independent of future directions only
+on a favorable event does not by itself justify a deferred-decision
+argument.
+
+The theorem has three specific scope boundaries. Its stationarity
+target is the weighted residual of $f$; its initialization parameter
+is the charged budget $H$; and its oracle is a fixed unbiased vector
+oracle with independent fresh calls. Matching rates for value-gradient
+stationarity with an uncharged value gap, for prescribed small
+dimensions, or for additional sample-function regularity require
+separate arguments. The present dimension bounds and numerical
+constants establish existence and uniformity; they are not optimized.
+
+\clearpage
+\appendix
+\section{Derivative bounds for the outer scale}
+\label{app:rho}
+
+For $s>1/2$, put $t=2s-1>0$.  Then
+\[
+ \rho(s)=\exp\!\left(\frac12-\frac1{2t^2}\right),
+ \quad
+ \rho'(s)=2\rho(s)t^{-3},
+ \quad
+ \rho''(s)=4\rho(s)t^{-6}-12\rho(s)t^{-4}.
+\]
+Writing $u=t^{-2}$ gives
+$|\rho'|=2e^{1/2}u^{3/2}e^{-u/2}$, whose maximum occurs at $u=3$ and is below $4$.  Likewise,
+$|\rho''|=4e^{1/2}e^{-u/2}u^2|u-3|$, whose maximum is below $40$.  The negative branch is symmetric and all derivatives vanish at the flat-zone interfaces.  This proves \eqref{eq:rho-bounds}.
+
+\section{Explicit constants and dimensions}
+\label{app:constants}
+
+The table collects constants used by the construction. All are
+independent of $M,N,d_x,d_b$ and the target problem parameters.
+The per-block dimension is $d_b$ and the total dual dimension is $Md_b$.
+
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.33\textwidth}p{0.57\textwidth}}
+\toprule
+Quantity & Value or bound \\
+\midrule
+\endfirsthead
+\toprule
+Quantity & Value or bound \\
+\midrule
+\endhead
+Shift and cap parameters & $\tau=1/4$, $R=16$, $A=1$, $C=32$, $a\in[0,10]$ \\
+Scalar derivatives & $\norm{q_\tau'}_\infty\le2$, $\Lip(q_\tau')\le32/3$, $\norm{p'}_\infty\le3/4$, $\Lip(p')\le3/2$ \\
+Dual-chain P\L{} and smoothness & $\norm{\nabla D_a}^2\ge D_a/(385N)$; $\Lip(\nabla D_a)\le128$ \\
+Radius-$32$ robust-chain bounds & $D_a\le1040$, $\norm{\nabla D_a}\le4097$ \\
+Cap P\L{} and smoothness & $\norm{\nabla\mathscr D}^2\ge10^{-5}\mathscr D/N$; $\Lip(\nabla\mathscr D)\le1024$ \\
+Local block & $L_C=4\cdot10^7$; primal-gradient norm $\le2\cdot10^6$ \\
+Full unscaled saddle & $\ell_0=10^8$; dual P\L{} modulus $\mu_0/N$ with $\mu_0=5\cdot10^{-6}$ \\
+Transfer coefficient & $L_{\rm def}=5\cdot10^7$, $K_{\rm tr}^2=2\cdot10^{13}$ \\
+Chain lengths & $N=\lfloor c_N\kappa\rfloor$, $M=\lfloor c_MLH/\eps^2\rfloor$ with \eqref{eq:cN-cM} \\
+Global scaling & $\lambda=8\ell_0\eps/L$; gradient multiplier $8\eps$ \\
+Inner stochastic signal & unscaled $\le8/\sqrt N$; scaled $\Gamma=64\eps/\sqrt N$ \\
+Frame dimensions & \eqref{eq:dy-bound} and \eqref{eq:dx-bound} \\
+Failure probabilities & projection-test failure $\le1/16$; enough Bernoulli successes $\le1/16$ \\
+\bottomrule
+\end{longtable}
+
+\begin{thebibliography}{9}
+
+\bibitem{arjevani}
+Yossi Arjevani, Yair Carmon, John C. Duchi, Dylan J. Foster,
+Nathan Srebro, and Blake Woodworth.
+Lower bounds for non-convex stochastic optimization.
+\emph{Mathematical Programming}, 199:165--214, 2023.
+\href{https://doi.org/10.1007/s10107-022-01822-7}{doi:10.1007/s10107-022-01822-7}.
+
+\bibitem{carmon}
+Yair Carmon, John C. Duchi, Oliver Hinder, and Aaron Sidford.
+Lower bounds for finding stationary points I.
+\emph{Mathematical Programming}, 184:71--120, 2020.
+\href{https://doi.org/10.1007/s10107-019-01406-y}{doi:10.1007/s10107-019-01406-y}.
+
+\bibitem{panli}
+Siyu Pan and Jiajin Li.
+Lower bounds for nonconvex--P\L{} minimax optimization.
+\emph{arXiv preprint arXiv:2608.26799}, 2026.
+\url{https://arxiv.org/abs/2608.26799}.
+
+\bibitem{yang}
+Junchi Yang, Antonio Orvieto, Aurelien Lucchi, and Niao He.
+Faster single-loop algorithms for minimax optimization without strong concavity.
+In \emph{Proceedings of the 25th International Conference on Artificial
+Intelligence and Statistics}, volume 151 of \emph{Proceedings of Machine
+Learning Research}, pages 5485--5517, 2022.
+\url{https://proceedings.mlr.press/v151/yang22b.html}.
+
+\end{thebibliography}
+\end{document}
