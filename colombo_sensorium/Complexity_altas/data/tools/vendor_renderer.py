@@ -46,7 +46,7 @@ def mathclean(x):
     x=unicodedata.normalize('NFC',str(x or '').strip().strip('$'))
     greek={'α':'alpha','β':'beta','γ':'gamma','δ':'delta','ε':'varepsilon','ϵ':'varepsilon','ζ':'zeta','η':'eta','θ':'theta','κ':'kappa','λ':'lambda','μ':'mu','ν':'nu','ξ':'xi','π':'pi','ρ':'rho','σ':'sigma','τ':'tau','φ':'varphi','χ':'chi','ψ':'psi','ω':'omega','Γ':'Gamma','Δ':'Delta','Θ':'Theta','Λ':'Lambda','Π':'Pi','Σ':'Sigma','Φ':'Phi','Ω':'Omega'}
     for a,b in greek.items():x=x.replace(a,'\\'+b+' ')
-    for a,b in {'∞':r'\infty ','≤':r'\le ','≥':r'\ge ','∈':r'\in ','∉':r'\notin ','×':r'\times ','→':r'\to ','↦':r'\mapsto ','∇':r'\nabla ','∂':r'\partial ','∑':r'\sum ','√':r'\sqrt ','≈':r'\approx ','≍':r'\asymp ','≲':r'\lesssim ','≳':r'\gtrsim ','≫':r'\gg ','≪':r'\ll ','≻':r'\succ ','⪰':r'\succeq ','⊂':r'\subset ','⊆':r'\subseteq ','ℓ':r'\ell ','−':'-','–':'-','—':'-','²':'^2','³':'^3','⁴':'^4','⁵':'^5','⁶':'^6','⁷':'^7','⁸':'^8','⁹':'^9','⁻':'^-','Õ':r'\widetilde O','Õ':r'\widetilde O','𝒳':r'\mathcal X','𝒰':r'\mathcal U','ᵀ':r'^{\mathsf T}','ᵈ':'^{d}','∘':r'\circ ','₀':'_0','₁':'_1','₂':'_2','₃':'_3','₄':'_4','₅':'_5','₆':'_6','₇':'_7','₈':'_8','₉':'_9'}.items():x=x.replace(a,b)
+    for a,b in {'∩':r'\cap ','∞':r'\infty ','≤':r'\le ','≥':r'\ge ','∈':r'\in ','∉':r'\notin ','×':r'\times ','→':r'\to ','↦':r'\mapsto ','∇':r'\nabla ','∂':r'\partial ','∑':r'\sum ','√':r'\sqrt ','≈':r'\approx ','≍':r'\asymp ','≲':r'\lesssim ','≳':r'\gtrsim ','≫':r'\gg ','≪':r'\ll ','≻':r'\succ ','⪰':r'\succeq ','⊂':r'\subset ','⊆':r'\subseteq ','ℓ':r'\ell ','−':'-','–':'-','—':'-','²':'^2','³':'^3','⁴':'^4','⁵':'^5','⁶':'^6','⁷':'^7','⁸':'^8','⁹':'^9','⁻':'^-','Õ':r'\widetilde O','Õ':r'\widetilde O','𝒳':r'\mathcal X','𝒰':r'\mathcal U','ᵀ':r'^{\mathsf T}','ᵈ':'^{d}','∘':r'\circ ','₀':'_0','₁':'_1','₂':'_2','₃':'_3','₄':'_4','₅':'_5','₆':'_6','₇':'_7','₈':'_8','₉':'_9'}.items():x=x.replace(a,b)
     x=re.sub(r'\^\s*-\s*(\d+)',r'^{-\1}',x)
     x=re.sub(r'\^\(([^()]*)\)',r'^{\1}',x)
     x=re.sub(r'(?<![A-Za-z\\])sqrt\(([^()]*)\)',r'\\sqrt{\1}',x)
@@ -120,14 +120,14 @@ def escape(x):
     table={'\\':r'\textbackslash{}','&':r'\&','%':r'\%','$':r'\$','#':r'\#','_':r'\_','{':r'\{','}':r'\}','~':r'\textasciitilde{}','^':r'\textasciicircum{}'}
     out=[]
     for c in x:
-        if c in 'αβγδεϵζηθκλμνξπρστφχψωΓΔΘΛΠΣΦΩ∞≤≥∈∉×→↦∇∂∑√≈≍≲≳≫≪≻⪰⊂⊆ℓ𝒳𝒰':out.append(r'\ensuremath{'+mathclean(c)+'}')
+        if c in 'αβγδεϵζηθκλμνξπρστφχψωΓΔΘΛΠΣΦΩ∩∞≤≥∈∉×→↦∇∂∑√≈≍≲≳≫≪≻⪰⊂⊆ℓ𝒳𝒰':out.append(r'\ensuremath{'+mathclean(c)+'}')
         elif c in '₀₁₂₃₄₅₆₇₈₉':out.append(r'\textsubscript{'+str('₀₁₂₃₄₅₆₇₈₉'.index(c))+'}')
         elif c=='ᵀ':out.append(r'\textsuperscript{T}')
         elif c in '²³⁴⁵⁶⁷⁸⁹':out.append(r'\textsuperscript{'+str('²³⁴⁵⁶⁷⁸⁹'.index(c)+2)+'}')
         else:out.append(table.get(c,c))
     return ''.join(out)
 def prose_escape_math(x):
-    symbols='αβγδεϵζηθκλμνξπρστφχψωΓΔΘΛΠΣΦΩ∞≤≥∈∉×→↦∇∂∑√≈≍≲≳≫≪≻⪰⊂⊆ℓ𝒳𝒰ᵀᵈ∘₀₁₂₃₄₅₆₇₈₉²³⁴⁵⁶⁷⁸⁹'
+    symbols='αβγδεϵζηθκλμνξπρστφχψωΓΔΘΛΠΣΦΩ∩∞≤≥∈∉×→↦∇∂∑√≈≍≲≳≫≪≻⪰⊂⊆ℓ𝒳𝒰ᵀᵈ∘₀₁₂₃₄₅₆₇₈₉²³⁴⁵⁶⁷⁸⁹'
     chars=r'A-Za-z0-9_{}()\[\].,+*/^=<>:|!\-'
     pattern='['+chars+re.escape(symbols)+']*['+re.escape(symbols)+']['+chars+re.escape(symbols)+']*'
     out=[];last=0

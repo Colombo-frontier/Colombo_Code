@@ -4,11 +4,9 @@
 
 Single-objective optimization
 
-Minimize $f$ globally over $\mathbb{R}^d$ and return a point with small objective gap.
+Minimize a globally smooth convex objective using exact comparisons. Deterministic and randomized fixed-budget complexities agree up to logarithmic factors throughout the documented joint domain $Q=\beta R^2/\varepsilon\ge32$.
 
-**Status.** Polynomial gap present
-
-**Gap classes present.** Polynomial gap; Logarithmic gap
+**Status.** Logarithmic gap present
 
 **TASK tags.** formulation: Global minimization; solution concept: Global minimization; task family: Single objective
 
@@ -192,7 +190,7 @@ $$
 C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}
 $$
 
-**Definition.** One binary comparison reply
+**Definition.** One exact point-pair comparison reply, including ties
 
 **Scope.** declared_joint_parameter_window
 
@@ -208,7 +206,7 @@ $$
 C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}
 $$
 
-**Definition.** One binary comparison reply
+**Definition.** One exact point-pair comparison reply, including ties
 
 **Optimization direction.** minimize
 
@@ -222,7 +220,7 @@ $$
 C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}
 $$
 
-**Definition.** One binary comparison reply
+**Definition.** One exact point-pair comparison reply, including ties
 
 **Scope.** declared_joint_parameter_window
 
@@ -238,7 +236,7 @@ $$
 C^\star_{v,\pi}(\varepsilon;\theta)=\inf\{B\ge0:\exists\mathcal A\in\mathfrak A_v,\ C_\pi(\mathcal A,I)\le B\ \text{and}\ G_v(\mathcal A,I;\varepsilon)\ \forall I\}
 $$
 
-**Definition.** One binary comparison reply
+**Definition.** One exact point-pair comparison reply, including ties
 
 **Optimization direction.** minimize
 
@@ -248,105 +246,53 @@ Here v is the selected algorithm view, G_v its complete success guarantee, I an 
 
 **Region.** $32\le Q=\beta R^2/\varepsilon\le d^2$.
 
-**Views.** Deterministic
+**Views.** Deterministic; Randomized
 
-**Quantity.** Q1
+**Quantity.** Q1; Q3
 
-**Resource.** One binary comparison reply
+**Resource.** One exact point-pair comparison reply, including ties
 
-**Status.** Polynomial gap
+**Status.** Logarithmic gap
 
-**Lower bound.** B3, B10
+**Lower bound.** B3, B10, B6, B12
 
 $$
 \Omega(d\sqrt Q)
 $$
 
-**Upper bound.** B7, B9
+**Upper bound.** B13, B15
 
 $$
-O(d\min\{Q,d\log Q\}\log(dQ))
+O\!\left(\sqrt Q\,[d\log(2dQ)+\log^2(2Q)]\right)
 $$
 
-**Gap or comparison.** $O(\min\{\sqrt Q,d\log Q/\sqrt Q\}\log(dQ))$
+**Gap or comparison.** $O(\log(2dQ)+d^{-1}\log^2(2Q))=O(\log d)$ on $32\le Q\le d^2$.
 
 ### R2 - Parameter regime O01.R2
 
 **Region.** $Q=\beta R^2/\varepsilon\ge32$ and $Q>d^2$.
 
-**Views.** Deterministic
+**Views.** Deterministic; Randomized
 
-**Quantity.** Q1
+**Quantity.** Q1; Q3
 
-**Resource.** One binary comparison reply
+**Resource.** One exact point-pair comparison reply, including ties
 
 **Status.** Logarithmic gap
 
-**Lower bound.** B3, B10
+**Lower bound.** B3, B10, B6, B12
 
 $$
 \Omega(d\max\{d,\log Q\})
 $$
 
-**Upper bound.** B7, B9
+**Upper bound.** B13, B9, B15, B11
 
 $$
-O(d^2\log Q\log(dQ))
+O\!\left(\min\!\left\{\sqrt Q\,[d\log(2dQ)+\log^2(2Q)],\ d^2\log Q\log(dQ)\right\}\right)
 $$
 
-**Gap or comparison.** $O(\min\{d,\log Q\}\log(dQ))$
-
-### R3 - Parameter regime O01.R1
-
-**Region.** $32\le Q=\beta R^2/\varepsilon\le d^2$.
-
-**Views.** Randomized
-
-**Quantity.** Q3
-
-**Resource.** One binary comparison reply
-
-**Status.** Polynomial gap
-
-**Lower bound.** B6, B12
-
-$$
-\Omega(d\sqrt Q)
-$$
-
-**Upper bound.** B8, B11
-
-$$
-O(d\min\{Q,d\log Q\}\log(dQ))
-$$
-
-**Gap or comparison.** $O(\min\{\sqrt Q,d\log Q/\sqrt Q\}\log(dQ))$
-
-### R4 - Parameter regime O01.R2
-
-**Region.** $Q=\beta R^2/\varepsilon\ge32$ and $Q>d^2$.
-
-**Views.** Randomized
-
-**Quantity.** Q3
-
-**Resource.** One binary comparison reply
-
-**Status.** Logarithmic gap
-
-**Lower bound.** B6, B12
-
-$$
-\Omega(d\max\{d,\log Q\})
-$$
-
-**Upper bound.** B8, B11
-
-$$
-O(d^2\log Q\log(dQ))
-$$
-
-**Gap or comparison.** $O(\min\{d,\log Q\}\log(dQ))$
+**Gap or comparison.** $O\!\left(\frac{\min\{\sqrt Q[d\log(2dQ)+\log^2(2Q)],d^2\log Q\log(dQ)\}}{d\max\{d,\log Q\}}\right)\le O(\min\{d,\log Q\}\log(dQ))$.
 
 ## 4. Bounds and supporting evidence
 
@@ -436,7 +382,7 @@ $$
 \Omega(d\min\{d,\sqrt Q\})
 $$
 
-**Sources.** [1](https://arxiv.org/html/2610.00345v1) [3](https://arxiv.org/html/2610.19652v1)
+**Sources.** [1](https://arxiv.org/html/2610.00345v1) [3](https://arxiv.org/html/2610.19652v1) [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf)
 
 **Conditions.** $Q=\beta R^2/\varepsilon \ge 32$; $d\ge 1$.
 
@@ -451,6 +397,10 @@ $$
 **Local argument.** ZO_PROOF_COMPARE_TRANSFER
 
 **Source location.** [1](https://arxiv.org/html/2610.00345v1) pdf pages: 3; theorem: Theorem 2.1; simulation of comparisons using exact values
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf) [1](https://arxiv.org/html/2610.00345v1) theorem: Theorem 2; Section 4; external Theorem 2.1 of arXiv:2610.00345v1; pdf pages: 4; 5; 6; printed pages: 4; 5; 6
+
+Online use of two exact values per comparison preserves the private seed, full transcript, arbitrary full-space outputs, success event and deterministic pathwise cap, giving the dimension-accuracy lower bound.
 
 ### B4 - Comparison-based gradient estimation and convex localization
 
@@ -538,7 +488,7 @@ $$
 \Omega(d\min\{d,\sqrt Q\})
 $$
 
-**Sources.** [1](https://arxiv.org/html/2610.00345v1) [3](https://arxiv.org/html/2610.19652v1)
+**Sources.** [1](https://arxiv.org/html/2610.00345v1) [3](https://arxiv.org/html/2610.19652v1) [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf)
 
 **Conditions.** $Q=\beta R^2/\varepsilon \ge 32$; $d\ge 1$.
 
@@ -554,9 +504,13 @@ $$
 
 **Source location.** [1](https://arxiv.org/html/2610.00345v1) pdf pages: 3; theorem: Theorem 2.1; simulation of comparisons using exact values
 
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf) [1](https://arxiv.org/html/2610.00345v1) theorem: Theorem 2; Section 4; external Theorem 2.1 of arXiv:2610.00345v1; pdf pages: 4; 5; 6; printed pages: 4; 5; 6
+
+Online use of two exact values per comparison preserves the private seed, full transcript, arbitrary full-space outputs, success event and deterministic pathwise cap, giving the dimension-accuracy lower bound.
+
 ### B7 - Deterministic comparison direction estimation and uniform projected normalized descent
 
-**Admission.** Included in the bracket
+**Admission.** Eligible evidence; not selected in the displayed bracket
 
 **Direction.** upper
 
@@ -588,7 +542,7 @@ Immutable PDF SHA256 150ea20d6fd61257782c67fe15fe135ee03ab828d84a3dc26f236b57ef4
 
 ### B8 - Deterministic comparison direction estimation and uniform projected normalized descent
 
-**Admission.** Included in the bracket
+**Admission.** Eligible evidence; not selected in the displayed bracket
 
 **Direction.** upper
 
@@ -632,7 +586,7 @@ $$
 O(d^2\log Q\log(dQ))
 $$
 
-**Sources.** [4](https://arxiv.org/pdf/1405.4980v2)
+**Sources.** [4](https://arxiv.org/pdf/1405.4980v2) [5](https://arxiv.org/html/2611.29533v1) [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf)
 
 **Conditions.** d integer>=1; beta,R,epsilon>0; Q=beta R^2/epsilon>=32.
 
@@ -645,6 +599,14 @@ $$
 **Resource conversion.** All actual gradient/comparison calls are counted; no hidden oracle access. See complete proof ZO_PROOF_COMPARE_CENTROID_20261116
 
 **Local argument.** ZO_PROOF_COMPARE_CENTROID_20261116
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf) theorem: Theorem 4; pdf pages: 8; printed pages: 8
+
+The same full-space comparison model admits a deterministic fixed-cap centroid method with O(d^2 log Q log(d sqrt(Q))) comparisons for Q>=32.
+
+**Source location.** [5](https://arxiv.org/html/2611.29533v1) theorem: Proposition E.1; pdf pages: 23; 24; printed pages: 23; 24
+
+An independent deterministic centroid comparison method has O(d^2 log Q log(dQ)) fixed cap for Q>=32; its binary replies are implemented by one ternary native reply.
 
 ### B10 - Finite ternary transcript counting on disjoint quadratic-success balls
 
@@ -686,7 +648,7 @@ $$
 O(d^2\log Q\log(dQ))
 $$
 
-**Sources.** [4](https://arxiv.org/pdf/1405.4980v2)
+**Sources.** [4](https://arxiv.org/pdf/1405.4980v2) [5](https://arxiv.org/html/2611.29533v1) [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf)
 
 **Conditions.** d integer>=1; beta,R,epsilon>0; Q=beta R^2/epsilon>=32.
 
@@ -699,6 +661,14 @@ $$
 **Resource conversion.** All actual gradient/comparison calls are counted; no hidden oracle access. See complete proof ZO_PROOF_COMPARE_CENTROID_20261116
 
 **Local argument.** ZO_PROOF_COMPARE_CENTROID_20261116
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf) theorem: Theorem 4; pdf pages: 8; printed pages: 8
+
+The same full-space comparison model admits a deterministic fixed-cap centroid method with O(d^2 log Q log(d sqrt(Q))) comparisons for Q>=32.
+
+**Source location.** [5](https://arxiv.org/html/2611.29533v1) theorem: Proposition E.1; pdf pages: 23; 24; printed pages: 23; 24
+
+An independent deterministic centroid comparison method has O(d^2 log Q log(dQ)) fixed cap for Q>=32; its binary replies are implemented by one ternary native reply.
 
 ### B12 - Finite ternary transcript counting on disjoint quadratic-success balls
 
@@ -725,6 +695,126 @@ $$
 **Resource conversion.** All actual gradient/comparison calls are counted; no hidden oracle access. See complete proof ZO_PROOF_COMPARE_PACKING_20261116
 
 **Local argument.** ZO_PROOF_COMPARE_PACKING_20261116
+
+### B13 - Deterministic normalized two-dimensional subspace acceleration
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Deterministic
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+O\!\left(\sqrt Q\,[d\log(2dQ)+\log^2(2Q)]\right)
+$$
+
+**Sources.** [5](https://arxiv.org/html/2611.29533v1)
+
+**Conditions.** $d\ge1$; $\beta,R,\varepsilon>0$; $Q=\beta R^2/\varepsilon\ge1$.
+
+**Oracle correspondence.** One native ternary reply implements the source bit $1\{f(x)\ge f(y)\}$: map 0 and +1 to 1, and -1 to 0. All queries remain finite full-space pairs.
+
+**Guarantee conversion.** Deterministic objective gap at most $\varepsilon$ on every instance. The same strategy gives probability one under the randomized view, hence satisfies its per-instance 2/3 guarantee.
+
+**Output rule.** The output is an arbitrary finite full-space iterate; it need not lie in the localization ball and no objective value or optimality certificate accompanies it.
+
+**Resource conversion.** The prescribed horizon $K=\lceil10\sqrt Q\rceil$ and fixed inner schedules count every comparison. Lemma F.1 also bounds the number on every possible reply sequence.
+
+**Source location.** [5](https://arxiv.org/html/2611.29533v1) Theorem 3.4; Algorithm 2; Appendix B; Lemma F.1
+
+A deterministic comparison-only algorithm minimizes over one- and two-dimensional bounded subproblems and returns an epsilon-optimal point with the stated fixed cap.
+
+### B14 - Deterministic full-history acceleration with bounded affine optimization
+
+**Admission.** Eligible evidence; not selected in the displayed bracket
+
+**Direction.** upper
+
+**View.** Deterministic
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+O\!\left(d\sqrt Q\log(dQ)+Q^{3/2}\log^2 Q\right)
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf)
+
+**Conditions.** $d\ge1$; $\beta,R,\varepsilon>0$; $32\le Q=\beta R^2/\varepsilon\le d^2$.
+
+**Oracle correspondence.** The source uses the same full-space ternary exact comparison oracle, including zero on ties. Direction probes, inner solves and selection use only comparisons.
+
+**Guarantee conversion.** Deterministic objective gap at most $\varepsilon$ on every instance. The same strategy gives probability one under the randomized view, hence satisfies its per-instance 2/3 guarantee.
+
+**Output rule.** The output is an arbitrary finite full-space iterate; it need not lie in the localization ball and no objective value or optimality certificate accompanies it.
+
+**Resource conversion.** The prescribed horizon $N=\lceil16\sqrt Q/3\rceil$ and equation (2) count all direction probes, bounded affine solves, bounded line searches and incumbent comparisons on every path.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf) Theorem 5; Section 7; equation (2); Lemma 1; Proposition 1; Lemma 2
+
+A deterministic full-history algorithm retains all estimated directions, approximately minimizes in the resulting bounded subspace and uses charged incumbent selection; its full fixed cap is the stated sum.
+
+### B15 - Deterministic normalized two-dimensional subspace acceleration
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**View.** Randomized
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+O\!\left(\sqrt Q\,[d\log(2dQ)+\log^2(2Q)]\right)
+$$
+
+**Sources.** [5](https://arxiv.org/html/2611.29533v1)
+
+**Conditions.** $d\ge1$; $\beta,R,\varepsilon>0$; $Q=\beta R^2/\varepsilon\ge1$.
+
+**Oracle correspondence.** One native ternary reply implements the source bit $1\{f(x)\ge f(y)\}$: map 0 and +1 to 1, and -1 to 0. All queries remain finite full-space pairs.
+
+**Guarantee conversion.** Deterministic objective gap at most $\varepsilon$ on every instance. The same strategy gives probability one under the randomized view, hence satisfies its per-instance 2/3 guarantee.
+
+**Output rule.** The output is an arbitrary finite full-space iterate; it need not lie in the localization ball and no objective value or optimality certificate accompanies it.
+
+**Resource conversion.** The prescribed horizon $K=\lceil10\sqrt Q\rceil$ and fixed inner schedules count every comparison. Lemma F.1 also bounds the number on every possible reply sequence.
+
+**Source location.** [5](https://arxiv.org/html/2611.29533v1) Theorem 3.4; Algorithm 2; Appendix B; Lemma F.1
+
+A deterministic comparison-only algorithm minimizes over one- and two-dimensional bounded subproblems and returns an epsilon-optimal point with the stated fixed cap.
+
+### B16 - Deterministic full-history acceleration with bounded affine optimization
+
+**Admission.** Eligible evidence; not selected in the displayed bracket
+
+**Direction.** upper
+
+**View.** Randomized
+
+**Witness or lower-bound scope.** Deterministic witness
+
+$$
+O\!\left(d\sqrt Q\log(dQ)+Q^{3/2}\log^2 Q\right)
+$$
+
+**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf)
+
+**Conditions.** $d\ge1$; $\beta,R,\varepsilon>0$; $32\le Q=\beta R^2/\varepsilon\le d^2$.
+
+**Oracle correspondence.** The source uses the same full-space ternary exact comparison oracle, including zero on ties. Direction probes, inner solves and selection use only comparisons.
+
+**Guarantee conversion.** Deterministic objective gap at most $\varepsilon$ on every instance. The same strategy gives probability one under the randomized view, hence satisfies its per-instance 2/3 guarantee.
+
+**Output rule.** The output is an arbitrary finite full-space iterate; it need not lie in the localization ball and no objective value or optimality certificate accompanies it.
+
+**Resource conversion.** The prescribed horizon $N=\lceil16\sqrt Q/3\rceil$ and equation (2) count all direction probes, bounded affine solves, bounded line searches and incumbent comparisons on every path.
+
+**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf) Theorem 5; Section 7; equation (2); Lemma 1; Proposition 1; Lemma 2
+
+A deterministic full-history algorithm retains all estimated directions, approximately minimizes in the resulting bounded subspace and uses charged incumbent selection; its full fixed cap is the stated sum.
 
 ## Maintenance appendix: Native proof extensions
 
@@ -994,19 +1084,19 @@ Read-only presentation of the stored native record. Integrity hashes identify so
 
 ### Native joint analysis
 
-Native pointer: /joint_analysis; canonical SHA-256: 5511fa1fa1d908f5d8127377b092f452dcafd853fe34a70a1f43cf3688bbc200
+Native pointer: /joint_analysis; canonical SHA-256: 822c70f598ea11a75455af039077d41d2f717b64b4014ebad2917d71fd7f6b65
 
 #### Native field: comparisons
 
-Native pointer: /joint_analysis/comparisons; canonical SHA-256: afc11f60c78169fe2629f187005bd9bac9945549bc8d7beef55b1cf76ec47c3f
+Native pointer: /joint_analysis/comparisons; canonical SHA-256: 1c13a14423f47da735d7f3e2565281f824a6f62f3f9632f5d4e71db9112815e1
 
 #### Native item 1
 
-Native pointer: /joint_analysis/comparisons/0; canonical SHA-256: 7197168fa764c6ee729b4ea5ef28268a171508ae14913ba31a1b9ae12e022d22
+Native pointer: /joint_analysis/comparisons/0; canonical SHA-256: bd44aed4a253bec1928815f68f85e3d873f7be20e1df03509277620691c0d74b
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses; canonical SHA-256: e31f7b463ba8bb45e0591c063e67cc950fdb54684a51c1a4c763a0a94be2afb8
+Native pointer: /joint_analysis/comparisons/0/bound_uses; canonical SHA-256: 6c1b1a64905d1ca3b40f1fd1c79cf051881138d73f823beb690ab2c8483de4fa
 
 #### Native item 1
 
@@ -1142,13 +1232,13 @@ Q>=32, d>=1, exact frozen guard in /bounds/2/applicability
 
 #### Native item 4
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/3; canonical SHA-256: b5e9a2d5f1e56d1c838306a8710deacdc4bc7936d23211572b76dc283e6e1241
+Native pointer: /joint_analysis/comparisons/0/bound_uses/3; canonical SHA-256: b3a7e4735ec4558ac1e07963c7a3c27a0a78706d131600fe840498fffafb46f6
 
 #### Native field: adopted_region
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/3/adopted_region; canonical SHA-256: e9865214587940cf09761cc1ce224e9f092314a4af47482f75603ab03b3c6b1b
+Native pointer: /joint_analysis/comparisons/0/bound_uses/3/adopted_region; canonical SHA-256: e6845188b1d2aebdf19d13c1613d7a49b5806a7fe336ec775fa182b36719bbc1
 
-J1
+empty
 
 #### Native field: bound_id
 
@@ -1158,9 +1248,9 @@ SO_ZO_O01__deterministic__b4
 
 #### Native field: disposition
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/3/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+Native pointer: /joint_analysis/comparisons/0/bound_uses/3/disposition; canonical SHA-256: 6c23c78a0102a9e2da3aa478cd9cf4aecd86c88debd51020733eca2126deb18d
 
-included
+dominated
 
 #### Native field: mapping_proof_refs
 
@@ -1174,9 +1264,9 @@ ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/3/reason; canonical SHA-256: 7f7271242de3a962eed145c5f150716bc80c9eb1c5e757e0655046dae0ee939a
+Native pointer: /joint_analysis/comparisons/0/bound_uses/3/reason; canonical SHA-256: fd92dbace71db0f7a48ab7769f0417e721fc5da695da688be5db327c7cfb1513
 
-The explicit fixed-schedule projected-descent derivation gives deterministic O(dQ log(dQ)) with charged output selection and universal constants; deterministic containment covers randomized g1.
+A compatible deterministic accelerated upper bound gives the selected envelope in this parameter region.
 
 #### Native field: validity_region
 
@@ -1186,13 +1276,13 @@ d>=1; beta,R,epsilon>0; Q>=32.
 
 #### Native item 5
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/4; canonical SHA-256: 9b39f8e78226cd75b5f3b6382d111cbf470f04bb1676e8c7195a950150d834ee
+Native pointer: /joint_analysis/comparisons/0/bound_uses/4; canonical SHA-256: 60d6bc16a218c3a92a7f60a79fc6bc88a59f3e2bbfb828313e10b07f5e1e7d0b
 
 #### Native field: adopted_region
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/4/adopted_region; canonical SHA-256: 2b8dea31a21cf686ceeb0d6df6eda4747d5a1655fca0f738c9e3304bc01593e9
+Native pointer: /joint_analysis/comparisons/0/bound_uses/4/adopted_region; canonical SHA-256: e6845188b1d2aebdf19d13c1613d7a49b5806a7fe336ec775fa182b36719bbc1
 
-$32\le Q=\beta R^2/\varepsilon\le d^2$.
+empty
 
 #### Native field: bound_id
 
@@ -1202,9 +1292,9 @@ SO_ZO_O01__deterministic__b5
 
 #### Native field: disposition
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/4/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+Native pointer: /joint_analysis/comparisons/0/bound_uses/4/disposition; canonical SHA-256: 6c23c78a0102a9e2da3aa478cd9cf4aecd86c88debd51020733eca2126deb18d
 
-included
+dominated
 
 #### Native field: mapping_proof_refs
 
@@ -1218,9 +1308,9 @@ ZO_PROOF_COMPARE_CENTROID_20261116
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/4/reason; canonical SHA-256: a79d2f14db7a67252089ba2bee4146fbf4ee4056e36418eb9a9625df71ffd8f3
+Native pointer: /joint_analysis/comparisons/0/bound_uses/4/reason; canonical SHA-256: fd92dbace71db0f7a48ab7769f0417e721fc5da695da688be5db327c7cfb1513
 
-Included as an explicit quantity-matched native participant.
+A compatible deterministic accelerated upper bound gives the selected envelope in this parameter region.
 
 #### Native field: validity_region
 
@@ -1272,39 +1362,113 @@ Native pointer: /joint_analysis/comparisons/0/bound_uses/5/validity_region; cano
 
 Exact bound guard; see native applicability.
 
+#### Native item 7
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/6; canonical SHA-256: 8182911f05dda37e85c0c69dcfd8d1c2dc7a6da55c99dde436efce7f25137845
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/6/bound_id; canonical SHA-256: b952f88b796514dfc643f8bcd2843a229051a68a0ebd25d5a81f69aa04437472
+
+SO_ZO_O01__deterministic__public_acceleration_20261124
+
+#### Native field: disposition
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/6/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+
+included
+
+#### Native field: adopted_region
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/6/adopted_region; canonical SHA-256: 2b8dea31a21cf686ceeb0d6df6eda4747d5a1655fca0f738c9e3304bc01593e9
+
+$32\le Q=\beta R^2/\varepsilon\le d^2$.
+
+#### Native field: validity_region
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/6/validity_region; canonical SHA-256: c1db85e4f2d169498d0ced1d03dd56b3b992ad5442c262d481a482a1145f2a99
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $Q=\beta R^2/\varepsilon\ge1$.
+
+#### Native field: mapping_proof_refs
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/6/mapping_proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
+#### Native field: reason
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/6/reason; canonical SHA-256: bd2442e88fa38f483ce7c244ad572371747aa35a2ed2e52c56408545ddad68b1
+
+The deterministic witness has the native fixed-cap objective-gap guarantee; source binary replies cost one native comparison.
+
+#### Native item 8
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/7; canonical SHA-256: 00a8150902d5704a3c3b5c027b64ecdaa8425da8da2ee89de44dec0f354f2bf3
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/7/bound_id; canonical SHA-256: 0eb79b631c7cf7804e3bcb32dde1a433bc5dd53a801eacd290bb2480c7db9ddb
+
+SO_ZO_O01__deterministic__kimi_full_history_20261124
+
+#### Native field: disposition
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/7/disposition; canonical SHA-256: 6c23c78a0102a9e2da3aa478cd9cf4aecd86c88debd51020733eca2126deb18d
+
+dominated
+
+#### Native field: adopted_region
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/7/adopted_region; canonical SHA-256: e6845188b1d2aebdf19d13c1613d7a49b5806a7fe336ec775fa182b36719bbc1
+
+empty
+
+#### Native field: validity_region
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/7/validity_region; canonical SHA-256: ebc80cacc2cff1e6654547026e0e9d7a85a5453b8c465b5c17551cf3fafbb050
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $32\le Q=\beta R^2/\varepsilon\le d^2$.
+
+#### Native field: mapping_proof_refs
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/7/mapping_proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
+#### Native field: reason
+
+Native pointer: /joint_analysis/comparisons/0/bound_uses/7/reason; canonical SHA-256: 6362835cabc35b6ec4be5bcfc8722f9a52350945d783384dd26f3050266dab15
+
+The valid full-history witness has a larger recorded upper order in this region.
+
 #### Native field: boundary_checks
 
-Native pointer: /joint_analysis/comparisons/0/boundary_checks; canonical SHA-256: 3d2cb86d42c49867edf60e6ac43ef967b27ca461a13c4e7f08914e429156f7f0
+Native pointer: /joint_analysis/comparisons/0/boundary_checks; canonical SHA-256: 37d777769bc774a9718833e8d563403523db27ba30659ad2fb759db18fd3b875
 
 #### Native item 1
 
-Native pointer: /joint_analysis/comparisons/0/boundary_checks/0; canonical SHA-256: 3eb6539c4438ae3504bd58458e35207e9f6b642f864dda746a018fcfb89e6e49
+Native pointer: /joint_analysis/comparisons/0/boundary_checks/0; canonical SHA-256: 1b83fb6d7496f18aea8752942223656b58a4c11a0eed5549c6fff8b7ed96c9b0
 
-Q=32 is included by the new proof and the retained lower guard.
+$Q=32$ is included. $Q=d^2$ belongs to the first regime; that regime is empty for $d\le5$.
 
 #### Native item 2
 
-Native pointer: /joint_analysis/comparisons/0/boundary_checks/1; canonical SHA-256: c48e1adcdd6c3bae752f224c7672c49696bf69f659a92889c350b10f221c49a2
+Native pointer: /joint_analysis/comparisons/0/boundary_checks/1; canonical SHA-256: d0907a49aec11ef20b3d6d6620b8e83b5911ddaacc7221de6e3e588ccad3f135
 
-Q=d^2 belongs to J1; both lower expressions agree there. J1 is empty for d<=5.
+The accelerated upper applies for all $Q\ge1$; its selected lower comparison uses the common guard $Q\ge32$.
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/0/boundary_checks/2; canonical SHA-256: ad299689ad12e73118d5909d92743a83ae1bd613aca82b6a13d7d1f2f1707957
+Native pointer: /joint_analysis/comparisons/0/boundary_checks/2; canonical SHA-256: 5770c045496a43b0c68c8da6d665b55967dcd2e18117c217dae7e06080d10d8a
 
-The discarded min switched algebraically at Q=d; this was an envelope crossover, not a theorem-activation threshold.
+The high-accuracy envelope includes the direct ternary-packing lower $\Omega(d\log Q)$ on its original guard $Q\ge32$.
 
 #### Native item 4
 
-Native pointer: /joint_analysis/comparisons/0/boundary_checks/3; canonical SHA-256: 84c76a6dfdf6835c67baa7a8193c7d57fadc8e3c3b6d12bc31262a3812838694
+Native pointer: /joint_analysis/comparisons/0/boundary_checks/3; canonical SHA-256: b793fa087ac64102c83a8abbecf35d1db7db2b87bf6e3db695537677d3dc8c0e
 
-For Q<=2, smoothness gives a zero-query output 0; this is outside all current comparisons and is not registered by this patch.
-
-#### Native item 5
-
-Native pointer: /joint_analysis/comparisons/0/boundary_checks/4; canonical SHA-256: e69f89134d53bad26f6eec8ddb07227d00e57177337adab6ec97dd8a594d22cd
-
-Q>=32 is the common exact source/analyst guard. Q=d^2 remains c1. The c2 quotient has at most polylog growth; no precision-independent saturation is claimed.
+Only the stated parameter domains and guarantees are compared; the coarse-accuracy complement is separate.
 
 #### Native field: comparison_id
 
@@ -1326,9 +1490,9 @@ Native value (empty_array): []
 
 #### Native field: gap
 
-Native pointer: /joint_analysis/comparisons/0/gap; canonical SHA-256: 22dc06a88a70028fc1870d68f1d15b612753e67ca31f1f9ded3a8b139f276557
+Native pointer: /joint_analysis/comparisons/0/gap; canonical SHA-256: cc2adcdeb65a438290336ef59b9e53c064be187cbbb60d5d9055c35bad62c634
 
-O(\min\{\sqrt Q,d\log Q/\sqrt Q\}\log(dQ))
+$O(\log(2dQ)+d^{-1}\log^2(2Q))=O(\log d)$ on $32\le Q\le d^2$.
 
 #### Native field: lower_envelope
 
@@ -1338,9 +1502,9 @@ Native pointer: /joint_analysis/comparisons/0/lower_envelope; canonical SHA-256:
 
 #### Native field: remaining_gap
 
-Native pointer: /joint_analysis/comparisons/0/remaining_gap; canonical SHA-256: ff3e955aee78194f2f40010bc4055d8187da329e74598f1d9d94059688445288
+Native pointer: /joint_analysis/comparisons/0/remaining_gap; canonical SHA-256: d1893136fdd4e759fc9a23b87bf5220063c2f8b658b25518054a4a09613b6cc9
 
-This is the ratio of explicitly adopted compatible bounds, not a mature-open-problem certificate. Fine improvements, sharper low-dimensional rates and broader discovery remain unassessed.
+The ratio is at most logarithmic in the joint dimension-accuracy variables; constants and logarithmic exponents are not matched.
 
 #### Native field: role
 
@@ -1356,17 +1520,17 @@ Native value (null): null
 
 #### Native field: upper_envelope
 
-Native pointer: /joint_analysis/comparisons/0/upper_envelope; canonical SHA-256: 9691a92d50767fd63ff710aac8af9eda31c89253ec5e337d6276aa92ff117c13
+Native pointer: /joint_analysis/comparisons/0/upper_envelope; canonical SHA-256: a04447034ae1b8240b691f6a269573ee1e2cede8a42fbe2def4df7797fe71122
 
-O(d\min\{Q,d\log Q\}\log(dQ))
+O\!\left(\sqrt Q\,[d\log(2dQ)+\log^2(2Q)]\right)
 
 #### Native item 2
 
-Native pointer: /joint_analysis/comparisons/1; canonical SHA-256: b58b6a286f0b5604c7c55ba4d9490877f351a9220173ca8c479f0dc5aa05e6a8
+Native pointer: /joint_analysis/comparisons/1; canonical SHA-256: 0d83f98d7b8dd0fa930b0ff703fba84daeb1ff30a28b903cfbdb5d3ffb62158f
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses; canonical SHA-256: 94f8487b5a75431ffa08119af85bfadeeb1d538f4afa9db70baa885b70d3cd7f
+Native pointer: /joint_analysis/comparisons/1/bound_uses; canonical SHA-256: 2e57ddd0eea5866a85d0c9310fb3e3063ca585dc1980eb2ae5f12431c0177403
 
 #### Native item 1
 
@@ -1502,13 +1666,13 @@ Q>=32, d>=1, exact frozen guard in /bounds/2/applicability
 
 #### Native item 4
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses/3; canonical SHA-256: 58bffbfc4bb40e32035cbc0b0a10e2aeebd87a9ee569bd0df2790a7707b5ebce
+Native pointer: /joint_analysis/comparisons/1/bound_uses/3; canonical SHA-256: b3a7e4735ec4558ac1e07963c7a3c27a0a78706d131600fe840498fffafb46f6
 
 #### Native field: adopted_region
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses/3/adopted_region; canonical SHA-256: 4377b596e107dcc0b1035360b02736c84885f3ffb13058a0abbc7b2ffa67670d
+Native pointer: /joint_analysis/comparisons/1/bound_uses/3/adopted_region; canonical SHA-256: e6845188b1d2aebdf19d13c1613d7a49b5806a7fe336ec775fa182b36719bbc1
 
-J2
+empty
 
 #### Native field: bound_id
 
@@ -1518,9 +1682,9 @@ SO_ZO_O01__deterministic__b4
 
 #### Native field: disposition
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses/3/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+Native pointer: /joint_analysis/comparisons/1/bound_uses/3/disposition; canonical SHA-256: 6c23c78a0102a9e2da3aa478cd9cf4aecd86c88debd51020733eca2126deb18d
 
-included
+dominated
 
 #### Native field: mapping_proof_refs
 
@@ -1534,9 +1698,9 @@ ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses/3/reason; canonical SHA-256: 7f7271242de3a962eed145c5f150716bc80c9eb1c5e757e0655046dae0ee939a
+Native pointer: /joint_analysis/comparisons/1/bound_uses/3/reason; canonical SHA-256: fd92dbace71db0f7a48ab7769f0417e721fc5da695da688be5db327c7cfb1513
 
-The explicit fixed-schedule projected-descent derivation gives deterministic O(dQ log(dQ)) with charged output selection and universal constants; deterministic containment covers randomized g1.
+A compatible deterministic accelerated upper bound gives the selected envelope in this parameter region.
 
 #### Native field: validity_region
 
@@ -1632,39 +1796,113 @@ Native pointer: /joint_analysis/comparisons/1/bound_uses/5/validity_region; cano
 
 Exact bound guard; see native applicability.
 
+#### Native item 7
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/6; canonical SHA-256: ce17b09e3421db8176c473df0d1242e24861d104385cb14938b3542c28eb312e
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/6/bound_id; canonical SHA-256: b952f88b796514dfc643f8bcd2843a229051a68a0ebd25d5a81f69aa04437472
+
+SO_ZO_O01__deterministic__public_acceleration_20261124
+
+#### Native field: disposition
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/6/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+
+included
+
+#### Native field: adopted_region
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/6/adopted_region; canonical SHA-256: d8d35e6d16826e60f26624407b143f862fa3f8dd8c38f052626682ca2f5ef993
+
+$Q=\beta R^2/\varepsilon\ge32$ and $Q>d^2$.
+
+#### Native field: validity_region
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/6/validity_region; canonical SHA-256: c1db85e4f2d169498d0ced1d03dd56b3b992ad5442c262d481a482a1145f2a99
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $Q=\beta R^2/\varepsilon\ge1$.
+
+#### Native field: mapping_proof_refs
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/6/mapping_proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
+#### Native field: reason
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/6/reason; canonical SHA-256: bd2442e88fa38f483ce7c244ad572371747aa35a2ed2e52c56408545ddad68b1
+
+The deterministic witness has the native fixed-cap objective-gap guarantee; source binary replies cost one native comparison.
+
+#### Native item 8
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/7; canonical SHA-256: 6a3c30cc930ebc7d6d7272f2342d8553ebfbb6fe8034d1aa2aed5f7f912ca527
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/7/bound_id; canonical SHA-256: 0eb79b631c7cf7804e3bcb32dde1a433bc5dd53a801eacd290bb2480c7db9ddb
+
+SO_ZO_O01__deterministic__kimi_full_history_20261124
+
+#### Native field: disposition
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/7/disposition; canonical SHA-256: cd3dc2faf64131ada5c13311e93814ad6ada2d5b7ae8b2c083062a1f704cc84e
+
+inapplicable
+
+#### Native field: adopted_region
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/7/adopted_region; canonical SHA-256: e6845188b1d2aebdf19d13c1613d7a49b5806a7fe336ec775fa182b36719bbc1
+
+empty
+
+#### Native field: validity_region
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/7/validity_region; canonical SHA-256: ebc80cacc2cff1e6654547026e0e9d7a85a5453b8c465b5c17551cf3fafbb050
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $32\le Q=\beta R^2/\varepsilon\le d^2$.
+
+#### Native field: mapping_proof_refs
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/7/mapping_proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
+#### Native field: reason
+
+Native pointer: /joint_analysis/comparisons/1/bound_uses/7/reason; canonical SHA-256: 67637da03f9ff3d650f6976fc73d1936afd0e20f146905367cf0cae8aa702b26
+
+The full-history theorem is stated only through Q<=d^2.
+
 #### Native field: boundary_checks
 
-Native pointer: /joint_analysis/comparisons/1/boundary_checks; canonical SHA-256: 3d2cb86d42c49867edf60e6ac43ef967b27ca461a13c4e7f08914e429156f7f0
+Native pointer: /joint_analysis/comparisons/1/boundary_checks; canonical SHA-256: 37d777769bc774a9718833e8d563403523db27ba30659ad2fb759db18fd3b875
 
 #### Native item 1
 
-Native pointer: /joint_analysis/comparisons/1/boundary_checks/0; canonical SHA-256: 3eb6539c4438ae3504bd58458e35207e9f6b642f864dda746a018fcfb89e6e49
+Native pointer: /joint_analysis/comparisons/1/boundary_checks/0; canonical SHA-256: 1b83fb6d7496f18aea8752942223656b58a4c11a0eed5549c6fff8b7ed96c9b0
 
-Q=32 is included by the new proof and the retained lower guard.
+$Q=32$ is included. $Q=d^2$ belongs to the first regime; that regime is empty for $d\le5$.
 
 #### Native item 2
 
-Native pointer: /joint_analysis/comparisons/1/boundary_checks/1; canonical SHA-256: c48e1adcdd6c3bae752f224c7672c49696bf69f659a92889c350b10f221c49a2
+Native pointer: /joint_analysis/comparisons/1/boundary_checks/1; canonical SHA-256: d0907a49aec11ef20b3d6d6620b8e83b5911ddaacc7221de6e3e588ccad3f135
 
-Q=d^2 belongs to J1; both lower expressions agree there. J1 is empty for d<=5.
+The accelerated upper applies for all $Q\ge1$; its selected lower comparison uses the common guard $Q\ge32$.
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/1/boundary_checks/2; canonical SHA-256: ad299689ad12e73118d5909d92743a83ae1bd613aca82b6a13d7d1f2f1707957
+Native pointer: /joint_analysis/comparisons/1/boundary_checks/2; canonical SHA-256: 5770c045496a43b0c68c8da6d665b55967dcd2e18117c217dae7e06080d10d8a
 
-The discarded min switched algebraically at Q=d; this was an envelope crossover, not a theorem-activation threshold.
+The high-accuracy envelope includes the direct ternary-packing lower $\Omega(d\log Q)$ on its original guard $Q\ge32$.
 
 #### Native item 4
 
-Native pointer: /joint_analysis/comparisons/1/boundary_checks/3; canonical SHA-256: 84c76a6dfdf6835c67baa7a8193c7d57fadc8e3c3b6d12bc31262a3812838694
+Native pointer: /joint_analysis/comparisons/1/boundary_checks/3; canonical SHA-256: b793fa087ac64102c83a8abbecf35d1db7db2b87bf6e3db695537677d3dc8c0e
 
-For Q<=2, smoothness gives a zero-query output 0; this is outside all current comparisons and is not registered by this patch.
-
-#### Native item 5
-
-Native pointer: /joint_analysis/comparisons/1/boundary_checks/4; canonical SHA-256: e69f89134d53bad26f6eec8ddb07227d00e57177337adab6ec97dd8a594d22cd
-
-Q>=32 is the common exact source/analyst guard. Q=d^2 remains c1. The c2 quotient has at most polylog growth; no precision-independent saturation is claimed.
+Only the stated parameter domains and guarantees are compared; the coarse-accuracy complement is separate.
 
 #### Native field: comparison_id
 
@@ -1686,9 +1924,9 @@ Native value (empty_array): []
 
 #### Native field: gap
 
-Native pointer: /joint_analysis/comparisons/1/gap; canonical SHA-256: 1a39b18cfe5e113ed9cbbca58e078bb3e8b2d337731e1e586e26a1ad439deb3a
+Native pointer: /joint_analysis/comparisons/1/gap; canonical SHA-256: 736c71428e7dcfdfb994b59904379424681d84cf84c6e7ec6ddd617f60f508e3
 
-O(\min\{d,\log Q\}\log(dQ))
+$O\!\left(\frac{\min\{\sqrt Q[d\log(2dQ)+\log^2(2Q)],d^2\log Q\log(dQ)\}}{d\max\{d,\log Q\}}\right)\le O(\min\{d,\log Q\}\log(dQ))$.
 
 #### Native field: lower_envelope
 
@@ -1698,9 +1936,9 @@ Native pointer: /joint_analysis/comparisons/1/lower_envelope; canonical SHA-256:
 
 #### Native field: remaining_gap
 
-Native pointer: /joint_analysis/comparisons/1/remaining_gap; canonical SHA-256: ff3e955aee78194f2f40010bc4055d8187da329e74598f1d9d94059688445288
+Native pointer: /joint_analysis/comparisons/1/remaining_gap; canonical SHA-256: d1893136fdd4e759fc9a23b87bf5220063c2f8b658b25518054a4a09613b6cc9
 
-This is the ratio of explicitly adopted compatible bounds, not a mature-open-problem certificate. Fine improvements, sharper low-dimensional rates and broader discovery remain unassessed.
+The ratio is at most logarithmic in the joint dimension-accuracy variables; constants and logarithmic exponents are not matched.
 
 #### Native field: role
 
@@ -1716,17 +1954,17 @@ Native value (null): null
 
 #### Native field: upper_envelope
 
-Native pointer: /joint_analysis/comparisons/1/upper_envelope; canonical SHA-256: 7706e694930772ce5fc10c4e7d29b7164076932cc9185e1814d9030a0792f173
+Native pointer: /joint_analysis/comparisons/1/upper_envelope; canonical SHA-256: ed64b4fd2921cd28e826a9d2abb50bc019181963ee068345ff5ab3702fbbdfe8
 
-O(d^2\log Q\log(dQ))
+O\!\left(\min\!\left\{\sqrt Q\,[d\log(2dQ)+\log^2(2Q)],\ d^2\log Q\log(dQ)\right\}\right)
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/2; canonical SHA-256: f37092186947c508d3f08e936572f17399dd4ddf5288499d442b990b978203f8
+Native pointer: /joint_analysis/comparisons/2; canonical SHA-256: ddd581f290e350faffa470963731e35cef5518e0561f83cfbdf0fcf1eab31ab5
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses; canonical SHA-256: e9de2d4ac451c204cb0d3920cfe64d90507075d23780111d2182f06bdb00d183
+Native pointer: /joint_analysis/comparisons/2/bound_uses; canonical SHA-256: 12450b66ef6edd26e5ae6c92cd09cbd1a1db28bef0ba3f3a87cb673fa2cfa367
 
 #### Native item 1
 
@@ -1862,13 +2100,13 @@ Q>=32, d>=1, exact frozen guard in /bounds/5/applicability
 
 #### Native item 4
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/3; canonical SHA-256: 21e02c4f03247e798ae530660d3d3b74a021a53dea6c25ec22307adc7d337c4c
+Native pointer: /joint_analysis/comparisons/2/bound_uses/3; canonical SHA-256: 138056ed8115351be56b4a91b178b9ba7550ac1273ae0b4443c3d09631938c76
 
 #### Native field: adopted_region
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/3/adopted_region; canonical SHA-256: e9865214587940cf09761cc1ce224e9f092314a4af47482f75603ab03b3c6b1b
+Native pointer: /joint_analysis/comparisons/2/bound_uses/3/adopted_region; canonical SHA-256: e6845188b1d2aebdf19d13c1613d7a49b5806a7fe336ec775fa182b36719bbc1
 
-J1
+empty
 
 #### Native field: bound_id
 
@@ -1878,9 +2116,9 @@ SO_ZO_O01__randomized__b4
 
 #### Native field: disposition
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/3/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+Native pointer: /joint_analysis/comparisons/2/bound_uses/3/disposition; canonical SHA-256: 6c23c78a0102a9e2da3aa478cd9cf4aecd86c88debd51020733eca2126deb18d
 
-included
+dominated
 
 #### Native field: mapping_proof_refs
 
@@ -1894,9 +2132,9 @@ ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/3/reason; canonical SHA-256: 7f7271242de3a962eed145c5f150716bc80c9eb1c5e757e0655046dae0ee939a
+Native pointer: /joint_analysis/comparisons/2/bound_uses/3/reason; canonical SHA-256: fd92dbace71db0f7a48ab7769f0417e721fc5da695da688be5db327c7cfb1513
 
-The explicit fixed-schedule projected-descent derivation gives deterministic O(dQ log(dQ)) with charged output selection and universal constants; deterministic containment covers randomized g1.
+A compatible deterministic accelerated upper bound gives the selected envelope in this parameter region.
 
 #### Native field: validity_region
 
@@ -1906,13 +2144,13 @@ d>=1; beta,R,epsilon>0; Q>=32.
 
 #### Native item 5
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/4; canonical SHA-256: 8a630356a9b0fd124479eab27f9797612a7fa9f24c5dc7bc55f1d21fe1b77f27
+Native pointer: /joint_analysis/comparisons/2/bound_uses/4; canonical SHA-256: c33a1d724af26fc7e5fe86545fb10ea2969a5482d85d421ffd091c266c690f07
 
 #### Native field: adopted_region
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/4/adopted_region; canonical SHA-256: 2b8dea31a21cf686ceeb0d6df6eda4747d5a1655fca0f738c9e3304bc01593e9
+Native pointer: /joint_analysis/comparisons/2/bound_uses/4/adopted_region; canonical SHA-256: e6845188b1d2aebdf19d13c1613d7a49b5806a7fe336ec775fa182b36719bbc1
 
-$32\le Q=\beta R^2/\varepsilon\le d^2$.
+empty
 
 #### Native field: bound_id
 
@@ -1922,9 +2160,9 @@ SO_ZO_O01__randomized__b5
 
 #### Native field: disposition
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/4/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+Native pointer: /joint_analysis/comparisons/2/bound_uses/4/disposition; canonical SHA-256: 6c23c78a0102a9e2da3aa478cd9cf4aecd86c88debd51020733eca2126deb18d
 
-included
+dominated
 
 #### Native field: mapping_proof_refs
 
@@ -1938,9 +2176,9 @@ ZO_PROOF_COMPARE_CENTROID_20261116
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/4/reason; canonical SHA-256: a79d2f14db7a67252089ba2bee4146fbf4ee4056e36418eb9a9625df71ffd8f3
+Native pointer: /joint_analysis/comparisons/2/bound_uses/4/reason; canonical SHA-256: fd92dbace71db0f7a48ab7769f0417e721fc5da695da688be5db327c7cfb1513
 
-Included as an explicit quantity-matched native participant.
+A compatible deterministic accelerated upper bound gives the selected envelope in this parameter region.
 
 #### Native field: validity_region
 
@@ -1992,39 +2230,113 @@ Native pointer: /joint_analysis/comparisons/2/bound_uses/5/validity_region; cano
 
 Exact bound guard; see native applicability.
 
+#### Native item 7
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/6; canonical SHA-256: 08c6453a1982bd4401a4090333669a1238999eff0aba12c33ae63336433d3404
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/6/bound_id; canonical SHA-256: fee9340f3ff00a34adbe5cd0ab111e70b7d2eee02f202c41854a3388a70dc7e7
+
+SO_ZO_O01__randomized__public_acceleration_20261124
+
+#### Native field: disposition
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/6/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+
+included
+
+#### Native field: adopted_region
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/6/adopted_region; canonical SHA-256: 2b8dea31a21cf686ceeb0d6df6eda4747d5a1655fca0f738c9e3304bc01593e9
+
+$32\le Q=\beta R^2/\varepsilon\le d^2$.
+
+#### Native field: validity_region
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/6/validity_region; canonical SHA-256: c1db85e4f2d169498d0ced1d03dd56b3b992ad5442c262d481a482a1145f2a99
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $Q=\beta R^2/\varepsilon\ge1$.
+
+#### Native field: mapping_proof_refs
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/6/mapping_proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
+#### Native field: reason
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/6/reason; canonical SHA-256: bd2442e88fa38f483ce7c244ad572371747aa35a2ed2e52c56408545ddad68b1
+
+The deterministic witness has the native fixed-cap objective-gap guarantee; source binary replies cost one native comparison.
+
+#### Native item 8
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/7; canonical SHA-256: 683743befccea558aeac5214d0a67730c97bc709dd5da9a1c233a89634e7a087
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/7/bound_id; canonical SHA-256: fbe33af89a83937981738d13a11070125a4bc1ac710a460e0effc1264cf3d844
+
+SO_ZO_O01__randomized__kimi_full_history_20261124
+
+#### Native field: disposition
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/7/disposition; canonical SHA-256: 6c23c78a0102a9e2da3aa478cd9cf4aecd86c88debd51020733eca2126deb18d
+
+dominated
+
+#### Native field: adopted_region
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/7/adopted_region; canonical SHA-256: e6845188b1d2aebdf19d13c1613d7a49b5806a7fe336ec775fa182b36719bbc1
+
+empty
+
+#### Native field: validity_region
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/7/validity_region; canonical SHA-256: ebc80cacc2cff1e6654547026e0e9d7a85a5453b8c465b5c17551cf3fafbb050
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $32\le Q=\beta R^2/\varepsilon\le d^2$.
+
+#### Native field: mapping_proof_refs
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/7/mapping_proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
+#### Native field: reason
+
+Native pointer: /joint_analysis/comparisons/2/bound_uses/7/reason; canonical SHA-256: 6362835cabc35b6ec4be5bcfc8722f9a52350945d783384dd26f3050266dab15
+
+The valid full-history witness has a larger recorded upper order in this region.
+
 #### Native field: boundary_checks
 
-Native pointer: /joint_analysis/comparisons/2/boundary_checks; canonical SHA-256: 3d2cb86d42c49867edf60e6ac43ef967b27ca461a13c4e7f08914e429156f7f0
+Native pointer: /joint_analysis/comparisons/2/boundary_checks; canonical SHA-256: 37d777769bc774a9718833e8d563403523db27ba30659ad2fb759db18fd3b875
 
 #### Native item 1
 
-Native pointer: /joint_analysis/comparisons/2/boundary_checks/0; canonical SHA-256: 3eb6539c4438ae3504bd58458e35207e9f6b642f864dda746a018fcfb89e6e49
+Native pointer: /joint_analysis/comparisons/2/boundary_checks/0; canonical SHA-256: 1b83fb6d7496f18aea8752942223656b58a4c11a0eed5549c6fff8b7ed96c9b0
 
-Q=32 is included by the new proof and the retained lower guard.
+$Q=32$ is included. $Q=d^2$ belongs to the first regime; that regime is empty for $d\le5$.
 
 #### Native item 2
 
-Native pointer: /joint_analysis/comparisons/2/boundary_checks/1; canonical SHA-256: c48e1adcdd6c3bae752f224c7672c49696bf69f659a92889c350b10f221c49a2
+Native pointer: /joint_analysis/comparisons/2/boundary_checks/1; canonical SHA-256: d0907a49aec11ef20b3d6d6620b8e83b5911ddaacc7221de6e3e588ccad3f135
 
-Q=d^2 belongs to J1; both lower expressions agree there. J1 is empty for d<=5.
+The accelerated upper applies for all $Q\ge1$; its selected lower comparison uses the common guard $Q\ge32$.
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/2/boundary_checks/2; canonical SHA-256: ad299689ad12e73118d5909d92743a83ae1bd613aca82b6a13d7d1f2f1707957
+Native pointer: /joint_analysis/comparisons/2/boundary_checks/2; canonical SHA-256: 5770c045496a43b0c68c8da6d665b55967dcd2e18117c217dae7e06080d10d8a
 
-The discarded min switched algebraically at Q=d; this was an envelope crossover, not a theorem-activation threshold.
+The high-accuracy envelope includes the direct ternary-packing lower $\Omega(d\log Q)$ on its original guard $Q\ge32$.
 
 #### Native item 4
 
-Native pointer: /joint_analysis/comparisons/2/boundary_checks/3; canonical SHA-256: 84c76a6dfdf6835c67baa7a8193c7d57fadc8e3c3b6d12bc31262a3812838694
+Native pointer: /joint_analysis/comparisons/2/boundary_checks/3; canonical SHA-256: b793fa087ac64102c83a8abbecf35d1db7db2b87bf6e3db695537677d3dc8c0e
 
-For Q<=2, smoothness gives a zero-query output 0; this is outside all current comparisons and is not registered by this patch.
-
-#### Native item 5
-
-Native pointer: /joint_analysis/comparisons/2/boundary_checks/4; canonical SHA-256: e69f89134d53bad26f6eec8ddb07227d00e57177337adab6ec97dd8a594d22cd
-
-Q>=32 is the common exact source/analyst guard. Q=d^2 remains c1. The c2 quotient has at most polylog growth; no precision-independent saturation is claimed.
+Only the stated parameter domains and guarantees are compared; the coarse-accuracy complement is separate.
 
 #### Native field: comparison_id
 
@@ -2046,9 +2358,9 @@ Native value (empty_array): []
 
 #### Native field: gap
 
-Native pointer: /joint_analysis/comparisons/2/gap; canonical SHA-256: 22dc06a88a70028fc1870d68f1d15b612753e67ca31f1f9ded3a8b139f276557
+Native pointer: /joint_analysis/comparisons/2/gap; canonical SHA-256: cc2adcdeb65a438290336ef59b9e53c064be187cbbb60d5d9055c35bad62c634
 
-O(\min\{\sqrt Q,d\log Q/\sqrt Q\}\log(dQ))
+$O(\log(2dQ)+d^{-1}\log^2(2Q))=O(\log d)$ on $32\le Q\le d^2$.
 
 #### Native field: lower_envelope
 
@@ -2058,9 +2370,9 @@ Native pointer: /joint_analysis/comparisons/2/lower_envelope; canonical SHA-256:
 
 #### Native field: remaining_gap
 
-Native pointer: /joint_analysis/comparisons/2/remaining_gap; canonical SHA-256: ff3e955aee78194f2f40010bc4055d8187da329e74598f1d9d94059688445288
+Native pointer: /joint_analysis/comparisons/2/remaining_gap; canonical SHA-256: d1893136fdd4e759fc9a23b87bf5220063c2f8b658b25518054a4a09613b6cc9
 
-This is the ratio of explicitly adopted compatible bounds, not a mature-open-problem certificate. Fine improvements, sharper low-dimensional rates and broader discovery remain unassessed.
+The ratio is at most logarithmic in the joint dimension-accuracy variables; constants and logarithmic exponents are not matched.
 
 #### Native field: role
 
@@ -2076,17 +2388,17 @@ Native value (null): null
 
 #### Native field: upper_envelope
 
-Native pointer: /joint_analysis/comparisons/2/upper_envelope; canonical SHA-256: 9691a92d50767fd63ff710aac8af9eda31c89253ec5e337d6276aa92ff117c13
+Native pointer: /joint_analysis/comparisons/2/upper_envelope; canonical SHA-256: a04447034ae1b8240b691f6a269573ee1e2cede8a42fbe2def4df7797fe71122
 
-O(d\min\{Q,d\log Q\}\log(dQ))
+O\!\left(\sqrt Q\,[d\log(2dQ)+\log^2(2Q)]\right)
 
 #### Native item 4
 
-Native pointer: /joint_analysis/comparisons/3; canonical SHA-256: 745c0297bed904d68d4253f2971e657832ab8214181e0beebea5c28c58617dd7
+Native pointer: /joint_analysis/comparisons/3; canonical SHA-256: 321f188dd3aa7eb987b910edebe5d17e1604849df7acf522e7a4887fcf2982a4
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses; canonical SHA-256: 9a9745eaf56a9e2f3c25002cb42612ccaec90457952255bb2ccf3c8ad05f7b14
+Native pointer: /joint_analysis/comparisons/3/bound_uses; canonical SHA-256: 9d3f84719471dc2531725e49dfe50dd595978cd12d4244ac2e077edf82af4ec7
 
 #### Native item 1
 
@@ -2222,13 +2534,13 @@ Q>=32, d>=1, exact frozen guard in /bounds/5/applicability
 
 #### Native item 4
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses/3; canonical SHA-256: 9566c4203fc864b29700a3992fa78dc0455d5427ad55724ac577f132c976f3b5
+Native pointer: /joint_analysis/comparisons/3/bound_uses/3; canonical SHA-256: 138056ed8115351be56b4a91b178b9ba7550ac1273ae0b4443c3d09631938c76
 
 #### Native field: adopted_region
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses/3/adopted_region; canonical SHA-256: 4377b596e107dcc0b1035360b02736c84885f3ffb13058a0abbc7b2ffa67670d
+Native pointer: /joint_analysis/comparisons/3/bound_uses/3/adopted_region; canonical SHA-256: e6845188b1d2aebdf19d13c1613d7a49b5806a7fe336ec775fa182b36719bbc1
 
-J2
+empty
 
 #### Native field: bound_id
 
@@ -2238,9 +2550,9 @@ SO_ZO_O01__randomized__b4
 
 #### Native field: disposition
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses/3/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+Native pointer: /joint_analysis/comparisons/3/bound_uses/3/disposition; canonical SHA-256: 6c23c78a0102a9e2da3aa478cd9cf4aecd86c88debd51020733eca2126deb18d
 
-included
+dominated
 
 #### Native field: mapping_proof_refs
 
@@ -2254,9 +2566,9 @@ ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses/3/reason; canonical SHA-256: 7f7271242de3a962eed145c5f150716bc80c9eb1c5e757e0655046dae0ee939a
+Native pointer: /joint_analysis/comparisons/3/bound_uses/3/reason; canonical SHA-256: fd92dbace71db0f7a48ab7769f0417e721fc5da695da688be5db327c7cfb1513
 
-The explicit fixed-schedule projected-descent derivation gives deterministic O(dQ log(dQ)) with charged output selection and universal constants; deterministic containment covers randomized g1.
+A compatible deterministic accelerated upper bound gives the selected envelope in this parameter region.
 
 #### Native field: validity_region
 
@@ -2352,39 +2664,113 @@ Native pointer: /joint_analysis/comparisons/3/bound_uses/5/validity_region; cano
 
 Exact bound guard; see native applicability.
 
+#### Native item 7
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/6; canonical SHA-256: 4defbbd4cdae11a52b33b5832b6de4d01ac811cd700c7f2e5c3607fce7a891b8
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/6/bound_id; canonical SHA-256: fee9340f3ff00a34adbe5cd0ab111e70b7d2eee02f202c41854a3388a70dc7e7
+
+SO_ZO_O01__randomized__public_acceleration_20261124
+
+#### Native field: disposition
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/6/disposition; canonical SHA-256: 531cecca496a7f46e4aa9ef40641db12f8bef53aaa6b67c429d2c0717dc599ce
+
+included
+
+#### Native field: adopted_region
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/6/adopted_region; canonical SHA-256: d8d35e6d16826e60f26624407b143f862fa3f8dd8c38f052626682ca2f5ef993
+
+$Q=\beta R^2/\varepsilon\ge32$ and $Q>d^2$.
+
+#### Native field: validity_region
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/6/validity_region; canonical SHA-256: c1db85e4f2d169498d0ced1d03dd56b3b992ad5442c262d481a482a1145f2a99
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $Q=\beta R^2/\varepsilon\ge1$.
+
+#### Native field: mapping_proof_refs
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/6/mapping_proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
+#### Native field: reason
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/6/reason; canonical SHA-256: bd2442e88fa38f483ce7c244ad572371747aa35a2ed2e52c56408545ddad68b1
+
+The deterministic witness has the native fixed-cap objective-gap guarantee; source binary replies cost one native comparison.
+
+#### Native item 8
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/7; canonical SHA-256: 589f225cf0fc4b3ed1d1802fe121c576a690de6dc79d1818c1a93a93af0d930b
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/7/bound_id; canonical SHA-256: fbe33af89a83937981738d13a11070125a4bc1ac710a460e0effc1264cf3d844
+
+SO_ZO_O01__randomized__kimi_full_history_20261124
+
+#### Native field: disposition
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/7/disposition; canonical SHA-256: cd3dc2faf64131ada5c13311e93814ad6ada2d5b7ae8b2c083062a1f704cc84e
+
+inapplicable
+
+#### Native field: adopted_region
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/7/adopted_region; canonical SHA-256: e6845188b1d2aebdf19d13c1613d7a49b5806a7fe336ec775fa182b36719bbc1
+
+empty
+
+#### Native field: validity_region
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/7/validity_region; canonical SHA-256: ebc80cacc2cff1e6654547026e0e9d7a85a5453b8c465b5c17551cf3fafbb050
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $32\le Q=\beta R^2/\varepsilon\le d^2$.
+
+#### Native field: mapping_proof_refs
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/7/mapping_proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
+#### Native field: reason
+
+Native pointer: /joint_analysis/comparisons/3/bound_uses/7/reason; canonical SHA-256: 67637da03f9ff3d650f6976fc73d1936afd0e20f146905367cf0cae8aa702b26
+
+The full-history theorem is stated only through Q<=d^2.
+
 #### Native field: boundary_checks
 
-Native pointer: /joint_analysis/comparisons/3/boundary_checks; canonical SHA-256: 3d2cb86d42c49867edf60e6ac43ef967b27ca461a13c4e7f08914e429156f7f0
+Native pointer: /joint_analysis/comparisons/3/boundary_checks; canonical SHA-256: 37d777769bc774a9718833e8d563403523db27ba30659ad2fb759db18fd3b875
 
 #### Native item 1
 
-Native pointer: /joint_analysis/comparisons/3/boundary_checks/0; canonical SHA-256: 3eb6539c4438ae3504bd58458e35207e9f6b642f864dda746a018fcfb89e6e49
+Native pointer: /joint_analysis/comparisons/3/boundary_checks/0; canonical SHA-256: 1b83fb6d7496f18aea8752942223656b58a4c11a0eed5549c6fff8b7ed96c9b0
 
-Q=32 is included by the new proof and the retained lower guard.
+$Q=32$ is included. $Q=d^2$ belongs to the first regime; that regime is empty for $d\le5$.
 
 #### Native item 2
 
-Native pointer: /joint_analysis/comparisons/3/boundary_checks/1; canonical SHA-256: c48e1adcdd6c3bae752f224c7672c49696bf69f659a92889c350b10f221c49a2
+Native pointer: /joint_analysis/comparisons/3/boundary_checks/1; canonical SHA-256: d0907a49aec11ef20b3d6d6620b8e83b5911ddaacc7221de6e3e588ccad3f135
 
-Q=d^2 belongs to J1; both lower expressions agree there. J1 is empty for d<=5.
+The accelerated upper applies for all $Q\ge1$; its selected lower comparison uses the common guard $Q\ge32$.
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/3/boundary_checks/2; canonical SHA-256: ad299689ad12e73118d5909d92743a83ae1bd613aca82b6a13d7d1f2f1707957
+Native pointer: /joint_analysis/comparisons/3/boundary_checks/2; canonical SHA-256: 5770c045496a43b0c68c8da6d665b55967dcd2e18117c217dae7e06080d10d8a
 
-The discarded min switched algebraically at Q=d; this was an envelope crossover, not a theorem-activation threshold.
+The high-accuracy envelope includes the direct ternary-packing lower $\Omega(d\log Q)$ on its original guard $Q\ge32$.
 
 #### Native item 4
 
-Native pointer: /joint_analysis/comparisons/3/boundary_checks/3; canonical SHA-256: 84c76a6dfdf6835c67baa7a8193c7d57fadc8e3c3b6d12bc31262a3812838694
+Native pointer: /joint_analysis/comparisons/3/boundary_checks/3; canonical SHA-256: b793fa087ac64102c83a8abbecf35d1db7db2b87bf6e3db695537677d3dc8c0e
 
-For Q<=2, smoothness gives a zero-query output 0; this is outside all current comparisons and is not registered by this patch.
-
-#### Native item 5
-
-Native pointer: /joint_analysis/comparisons/3/boundary_checks/4; canonical SHA-256: e69f89134d53bad26f6eec8ddb07227d00e57177337adab6ec97dd8a594d22cd
-
-Q>=32 is the common exact source/analyst guard. Q=d^2 remains c1. The c2 quotient has at most polylog growth; no precision-independent saturation is claimed.
+Only the stated parameter domains and guarantees are compared; the coarse-accuracy complement is separate.
 
 #### Native field: comparison_id
 
@@ -2406,9 +2792,9 @@ Native value (empty_array): []
 
 #### Native field: gap
 
-Native pointer: /joint_analysis/comparisons/3/gap; canonical SHA-256: 1a39b18cfe5e113ed9cbbca58e078bb3e8b2d337731e1e586e26a1ad439deb3a
+Native pointer: /joint_analysis/comparisons/3/gap; canonical SHA-256: 736c71428e7dcfdfb994b59904379424681d84cf84c6e7ec6ddd617f60f508e3
 
-O(\min\{d,\log Q\}\log(dQ))
+$O\!\left(\frac{\min\{\sqrt Q[d\log(2dQ)+\log^2(2Q)],d^2\log Q\log(dQ)\}}{d\max\{d,\log Q\}}\right)\le O(\min\{d,\log Q\}\log(dQ))$.
 
 #### Native field: lower_envelope
 
@@ -2418,9 +2804,9 @@ Native pointer: /joint_analysis/comparisons/3/lower_envelope; canonical SHA-256:
 
 #### Native field: remaining_gap
 
-Native pointer: /joint_analysis/comparisons/3/remaining_gap; canonical SHA-256: ff3e955aee78194f2f40010bc4055d8187da329e74598f1d9d94059688445288
+Native pointer: /joint_analysis/comparisons/3/remaining_gap; canonical SHA-256: d1893136fdd4e759fc9a23b87bf5220063c2f8b658b25518054a4a09613b6cc9
 
-This is the ratio of explicitly adopted compatible bounds, not a mature-open-problem certificate. Fine improvements, sharper low-dimensional rates and broader discovery remain unassessed.
+The ratio is at most logarithmic in the joint dimension-accuracy variables; constants and logarithmic exponents are not matched.
 
 #### Native field: role
 
@@ -2436,21 +2822,21 @@ Native value (null): null
 
 #### Native field: upper_envelope
 
-Native pointer: /joint_analysis/comparisons/3/upper_envelope; canonical SHA-256: 7706e694930772ce5fc10c4e7d29b7164076932cc9185e1814d9030a0792f173
+Native pointer: /joint_analysis/comparisons/3/upper_envelope; canonical SHA-256: ed64b4fd2921cd28e826a9d2abb50bc019181963ee068345ff5ab3702fbbdfe8
 
-O(d^2\log Q\log(dQ))
+O\!\left(\min\!\left\{\sqrt Q\,[d\log(2dQ)+\log^2(2Q)],\ d^2\log Q\log(dQ)\right\}\right)
 
 #### Native field: domain_map
 
-Native pointer: /joint_analysis/domain_map; canonical SHA-256: 602404ecb8ec6a86a0223aeacaae9adfbfbff1aa06e27a69a882e31cf77b7e1f
+Native pointer: /joint_analysis/domain_map; canonical SHA-256: 6d3f621d4df39631c0154c9df1046f7017e26a377ac242014a305f56f5387e54
 
 #### Native field: cells
 
-Native pointer: /joint_analysis/domain_map/cells; canonical SHA-256: 08eed150c75b597b8d99b9974d3b2fa49b3c818902bb7fbe70baebc9e3fd09ee
+Native pointer: /joint_analysis/domain_map/cells; canonical SHA-256: 66767dd9684b4b2369491c22d58ec6b83d0b7d587e7be6fec604420014cb82a3
 
 #### Native item 1
 
-Native pointer: /joint_analysis/domain_map/cells/0; canonical SHA-256: 62b911daafc4470e6023c8e17e8b1adb65d8bd0225a6728c4897f1f9215d2ca3
+Native pointer: /joint_analysis/domain_map/cells/0; canonical SHA-256: 946fa1f73a3a3ebbda4d05b516a69ee4a8bb9650cd30c43d1b7fbe09e1848867
 
 #### Native field: cell_id
 
@@ -2488,9 +2874,9 @@ SO_ZO_O01__randomized__c1
 
 #### Native field: note
 
-Native pointer: /joint_analysis/domain_map/cells/0/note; canonical SHA-256: a7408aae5a4444418ff54b9970152ce18adba1cbdeeaa2c2c4e8ac0517d6baf8
+Native pointer: /joint_analysis/domain_map/cells/0/note; canonical SHA-256: 44c6db5006da55f9921e9860c554210dcd524c885fb14fd37ef589ccbbf2e080
 
-Both views recorded separately. Bounds refer to their exact native quantities and guarantees; no fixed-parameter slice. Empty for d<=5.
+Both algorithm views have a compatible deterministic upper and unrestricted randomized lower; the displayed ratio is at most logarithmic.
 
 #### Native field: predicate
 
@@ -2518,7 +2904,7 @@ bounds_recorded
 
 #### Native item 2
 
-Native pointer: /joint_analysis/domain_map/cells/1; canonical SHA-256: fecc8a3a83ed4ff95ef4104c5946da3f73d0c2bf8e4c26c7c1ee0130544740ac
+Native pointer: /joint_analysis/domain_map/cells/1; canonical SHA-256: a431d6038233c1ed438923e754882105f6fe88bd85f810c9dbb201dd2907b873
 
 #### Native field: cell_id
 
@@ -2556,9 +2942,9 @@ SO_ZO_O01__randomized__c2
 
 #### Native field: note
 
-Native pointer: /joint_analysis/domain_map/cells/1/note; canonical SHA-256: 2a13ba518552e192408739dfcd0b078a161e65a76df1179641a1ae8389ab7235
+Native pointer: /joint_analysis/domain_map/cells/1/note; canonical SHA-256: 44c6db5006da55f9921e9860c554210dcd524c885fb14fd37ef589ccbbf2e080
 
-Both views adopt the valid centroid upper and direct packing lower; the guarded ratio is at most polylogarithmic. Old suspect single-log upper remains quarantined.
+Both algorithm views have a compatible deterministic upper and unrestricted randomized lower; the displayed ratio is at most logarithmic.
 
 #### Native field: predicate
 
@@ -3202,7 +3588,7 @@ This is feedback-guided curation, not a new blind or exhaustive literature searc
 
 #### Native field: provenance
 
-Native pointer: /joint_analysis/provenance; canonical SHA-256: 09ecd719b3b0256741b4a357823f9320c0e2f33bf0404cc63a099268afc80d33
+Native pointer: /joint_analysis/provenance; canonical SHA-256: 8d9fc3b6d3ec0d008f196cb1a9d6b3c38e4c3dbfbc51ebe5adbb30cce0c7251c
 
 #### Native item 1
 
@@ -3688,9 +4074,233 @@ Native pointer: /joint_analysis/provenance/7/target_domain; canonical SHA-256: 2
 
 d integer>=1; beta,R,epsilon>0; Q=beta R^2/epsilon>=32.
 
+#### Native item 9
+
+Native pointer: /joint_analysis/provenance/8; canonical SHA-256: b957e7619d8a8d783f581e9c8e3547a61e3c9bd2def53bfce96b6cc63fe04d6c
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/provenance/8/bound_id; canonical SHA-256: b952f88b796514dfc643f8bcd2843a229051a68a0ebd25d5a81f69aa04437472
+
+SO_ZO_O01__deterministic__public_acceleration_20261124
+
+#### Native field: origin
+
+Native pointer: /joint_analysis/provenance/8/origin; canonical SHA-256: 0ca1a4b8d8757ab03e2cc84f47f117ca352255f4d4434159b8d9e6363c72f259
+
+cited_theorem
+
+#### Native field: source_refs
+
+Native pointer: /joint_analysis/provenance/8/source_refs; canonical SHA-256: aaf70ec4323ec339aa6667fd3942cd052ef0966552bf4e45961b2398940b7fd9
+
+#### Native item 1
+
+Native pointer: /joint_analysis/provenance/8/source_refs/0; canonical SHA-256: 5042086d69173ca6eec770806ca8e14d3e2d3846edff44d457dbf5301d05fad7
+
+SO_SRC_RICHTARIK_MAHRAN_2611_29533V1
+
+#### Native field: source_locator
+
+Native pointer: /joint_analysis/provenance/8/source_locator; canonical SHA-256: 9fd52e6dfb20132e5d74cac939f0350c12df73bca66a271c6a9fc714db8bb1ba
+
+Theorem 3.4; Algorithm 2; Appendix B; Lemma F.1
+
+#### Native field: source_domain
+
+Native pointer: /joint_analysis/provenance/8/source_domain; canonical SHA-256: c1db85e4f2d169498d0ced1d03dd56b3b992ad5442c262d481a482a1145f2a99
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $Q=\beta R^2/\varepsilon\ge1$.
+
+#### Native field: target_domain
+
+Native pointer: /joint_analysis/provenance/8/target_domain; canonical SHA-256: 2df18b3327384b7d8d1a8eee1cb6a1bbdc9dfd82225b5bb3c5c3b815ffec5bad
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $Q=\beta R^2/\varepsilon\ge1$. Native deterministic g1 and q1.
+
+#### Native field: mapping
+
+Native pointer: /joint_analysis/provenance/8/mapping; canonical SHA-256: 6963ca4b289b7caf126f537bbdddd6de652e9ba6554e57fcbf89226e398b4f26
+
+One native ternary reply implements the source bit $1\{f(x)\ge f(y)\}$: map 0 and +1 to 1, and -1 to 0. All queries remain finite full-space pairs. Deterministic objective gap at most $\varepsilon$ on every instance. The same strategy gives probability one under the randomized view, hence satisfies its per-instance 2/3 guarantee.
+
+#### Native field: proof_refs
+
+Native pointer: /joint_analysis/provenance/8/proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
+#### Native item 10
+
+Native pointer: /joint_analysis/provenance/9; canonical SHA-256: 0b7ff673da3a71c78c36fe72ebb8d9e5bdba5945a4a644c5290b06ea317db071
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/provenance/9/bound_id; canonical SHA-256: 0eb79b631c7cf7804e3bcb32dde1a433bc5dd53a801eacd290bb2480c7db9ddb
+
+SO_ZO_O01__deterministic__kimi_full_history_20261124
+
+#### Native field: origin
+
+Native pointer: /joint_analysis/provenance/9/origin; canonical SHA-256: 0ca1a4b8d8757ab03e2cc84f47f117ca352255f4d4434159b8d9e6363c72f259
+
+cited_theorem
+
+#### Native field: source_refs
+
+Native pointer: /joint_analysis/provenance/9/source_refs; canonical SHA-256: 8b9dd81aa011e1914d549a29c21e54580557cff1bf98354f36b8daa27e088770
+
+#### Native item 1
+
+Native pointer: /joint_analysis/provenance/9/source_refs/0; canonical SHA-256: 2e0b09f5e204690ae81af9ccb225721f6cb7b23e62a6c36b360cdb946ae4a07e
+
+COLOMBO_KIMI_002
+
+#### Native field: source_locator
+
+Native pointer: /joint_analysis/provenance/9/source_locator; canonical SHA-256: 63cca7957a86caed667c239bbf5b44ac804a4634ccaaf1caa50d609c716f1393
+
+Theorem 5; Section 7; equation (2); Lemma 1; Proposition 1; Lemma 2
+
+#### Native field: source_domain
+
+Native pointer: /joint_analysis/provenance/9/source_domain; canonical SHA-256: ebc80cacc2cff1e6654547026e0e9d7a85a5453b8c465b5c17551cf3fafbb050
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $32\le Q=\beta R^2/\varepsilon\le d^2$.
+
+#### Native field: target_domain
+
+Native pointer: /joint_analysis/provenance/9/target_domain; canonical SHA-256: 9fd772629fcbe141e093fb4f35693b4b305216691d80bdb77b141f655518d2c2
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $32\le Q=\beta R^2/\varepsilon\le d^2$. Native deterministic g1 and q1.
+
+#### Native field: mapping
+
+Native pointer: /joint_analysis/provenance/9/mapping; canonical SHA-256: 91f5a3497e0cb94ee72bd9c6f9bc629b9f18713df2611bb0b8ca1c3209134e29
+
+The source uses the same full-space ternary exact comparison oracle, including zero on ties. Direction probes, inner solves and selection use only comparisons. Deterministic objective gap at most $\varepsilon$ on every instance. The same strategy gives probability one under the randomized view, hence satisfies its per-instance 2/3 guarantee.
+
+#### Native field: proof_refs
+
+Native pointer: /joint_analysis/provenance/9/proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
+#### Native item 11
+
+Native pointer: /joint_analysis/provenance/10; canonical SHA-256: b0c35aae83e7f705bb91731ec2182469fd7e7f37ee51bad089e170f78a9a912c
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/provenance/10/bound_id; canonical SHA-256: fee9340f3ff00a34adbe5cd0ab111e70b7d2eee02f202c41854a3388a70dc7e7
+
+SO_ZO_O01__randomized__public_acceleration_20261124
+
+#### Native field: origin
+
+Native pointer: /joint_analysis/provenance/10/origin; canonical SHA-256: 0ca1a4b8d8757ab03e2cc84f47f117ca352255f4d4434159b8d9e6363c72f259
+
+cited_theorem
+
+#### Native field: source_refs
+
+Native pointer: /joint_analysis/provenance/10/source_refs; canonical SHA-256: aaf70ec4323ec339aa6667fd3942cd052ef0966552bf4e45961b2398940b7fd9
+
+#### Native item 1
+
+Native pointer: /joint_analysis/provenance/10/source_refs/0; canonical SHA-256: 5042086d69173ca6eec770806ca8e14d3e2d3846edff44d457dbf5301d05fad7
+
+SO_SRC_RICHTARIK_MAHRAN_2611_29533V1
+
+#### Native field: source_locator
+
+Native pointer: /joint_analysis/provenance/10/source_locator; canonical SHA-256: 9fd52e6dfb20132e5d74cac939f0350c12df73bca66a271c6a9fc714db8bb1ba
+
+Theorem 3.4; Algorithm 2; Appendix B; Lemma F.1
+
+#### Native field: source_domain
+
+Native pointer: /joint_analysis/provenance/10/source_domain; canonical SHA-256: c1db85e4f2d169498d0ced1d03dd56b3b992ad5442c262d481a482a1145f2a99
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $Q=\beta R^2/\varepsilon\ge1$.
+
+#### Native field: target_domain
+
+Native pointer: /joint_analysis/provenance/10/target_domain; canonical SHA-256: 12a9f1bb5562008a2136c705a5510f96f01a3a49a9d3e8726b54ee497fedab50
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $Q=\beta R^2/\varepsilon\ge1$. Native randomized g1 and q1.
+
+#### Native field: mapping
+
+Native pointer: /joint_analysis/provenance/10/mapping; canonical SHA-256: 6963ca4b289b7caf126f537bbdddd6de652e9ba6554e57fcbf89226e398b4f26
+
+One native ternary reply implements the source bit $1\{f(x)\ge f(y)\}$: map 0 and +1 to 1, and -1 to 0. All queries remain finite full-space pairs. Deterministic objective gap at most $\varepsilon$ on every instance. The same strategy gives probability one under the randomized view, hence satisfies its per-instance 2/3 guarantee.
+
+#### Native field: proof_refs
+
+Native pointer: /joint_analysis/provenance/10/proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
+#### Native item 12
+
+Native pointer: /joint_analysis/provenance/11; canonical SHA-256: 8d98437572649d21a9ffc7670b90e5440bd1d07bb6c7cb1ca5e6cdf53bfceb56
+
+#### Native field: bound_id
+
+Native pointer: /joint_analysis/provenance/11/bound_id; canonical SHA-256: fbe33af89a83937981738d13a11070125a4bc1ac710a460e0effc1264cf3d844
+
+SO_ZO_O01__randomized__kimi_full_history_20261124
+
+#### Native field: origin
+
+Native pointer: /joint_analysis/provenance/11/origin; canonical SHA-256: 0ca1a4b8d8757ab03e2cc84f47f117ca352255f4d4434159b8d9e6363c72f259
+
+cited_theorem
+
+#### Native field: source_refs
+
+Native pointer: /joint_analysis/provenance/11/source_refs; canonical SHA-256: 8b9dd81aa011e1914d549a29c21e54580557cff1bf98354f36b8daa27e088770
+
+#### Native item 1
+
+Native pointer: /joint_analysis/provenance/11/source_refs/0; canonical SHA-256: 2e0b09f5e204690ae81af9ccb225721f6cb7b23e62a6c36b360cdb946ae4a07e
+
+COLOMBO_KIMI_002
+
+#### Native field: source_locator
+
+Native pointer: /joint_analysis/provenance/11/source_locator; canonical SHA-256: 63cca7957a86caed667c239bbf5b44ac804a4634ccaaf1caa50d609c716f1393
+
+Theorem 5; Section 7; equation (2); Lemma 1; Proposition 1; Lemma 2
+
+#### Native field: source_domain
+
+Native pointer: /joint_analysis/provenance/11/source_domain; canonical SHA-256: ebc80cacc2cff1e6654547026e0e9d7a85a5453b8c465b5c17551cf3fafbb050
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $32\le Q=\beta R^2/\varepsilon\le d^2$.
+
+#### Native field: target_domain
+
+Native pointer: /joint_analysis/provenance/11/target_domain; canonical SHA-256: f1e6833546bf46bb70dbb47b40c468fe2c7c1212c85eca2d1f07682a93c6a4da
+
+$d\ge1$; $\beta,R,\varepsilon>0$; $32\le Q=\beta R^2/\varepsilon\le d^2$. Native randomized g1 and q1.
+
+#### Native field: mapping
+
+Native pointer: /joint_analysis/provenance/11/mapping; canonical SHA-256: 91f5a3497e0cb94ee72bd9c6f9bc629b9f18713df2611bb0b8ca1c3209134e29
+
+The source uses the same full-space ternary exact comparison oracle, including zero on ties. Direction probes, inner solves and selection use only comparisons. Deterministic objective gap at most $\varepsilon$ on every instance. The same strategy gives probability one under the randomized view, hence satisfies its per-instance 2/3 guarantee.
+
+#### Native field: proof_refs
+
+Native pointer: /joint_analysis/provenance/11/proof_refs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
+
 #### Native field: synthesis_coverage
 
-Native pointer: /joint_analysis/synthesis_coverage; canonical SHA-256: 1d7a7d0802b667cbfb3c33d92633f046a316338c5e6ed0eab069f74aa62195f6
+Native pointer: /joint_analysis/synthesis_coverage; canonical SHA-256: 66569f0da34e5f96d8a082bf1daf72a10a7059a7af8e66aec5f43e8c54e237e4
 
 #### Native field: comparison_ids
 
@@ -3744,11 +4354,11 @@ partial
 
 #### Native field: obligations
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations; canonical SHA-256: be1856b3fe3ece1525b7a45e250f3f362ea414da9cb37dbc1408cbcf51f1cdaf
+Native pointer: /joint_analysis/synthesis_coverage/obligations; canonical SHA-256: 852a252619b9c1e67d57f7ed7a2178aa08233e02cf63011d819c597f593124a2
 
 #### Native item 1
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/0; canonical SHA-256: e77e2056792316c186188cba23456a1df970bc66bc52c576f5a86b52ad0a3390
+Native pointer: /joint_analysis/synthesis_coverage/obligations/0; canonical SHA-256: 74951c162352d92dd760c2009d1a3ce3bab76caaf6681abf243dd583723f85e4
 
 #### Native field: affects_gap
 
@@ -3758,35 +4368,29 @@ Native value (boolean): true
 
 #### Native field: argument
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/0/argument; canonical SHA-256: bc869566bdb60926242ef5557b743eceee66c4c8437c9bd3f5a2a38c26316c26
+Native pointer: /joint_analysis/synthesis_coverage/obligations/0/argument; canonical SHA-256: 85bd74e003ad4315f9ce6b929e00f262e0d72db16e2f922bed8e0b9760a2a740
 
-Both active compatible uppers enter a pointwise minimum and both compatible lowers a maximum, each on Q>=32. Historical suspect b1 remains ineligible; its alleged single-log branch is not restored. Packing dlogQ is proved directly for ternary comparisons. J1/J2 ratios use the full max/min, not a single precision slice. SO_ZO_O01__deterministic__b3: included — Unchanged q1 lower retained conditionally from the frozen baseline and its exact-value simulation proof; not freshly recertified.; SO_ZO_O01__deterministic__b4: included — The explicit fixed-schedule projected-descent derivation gives deterministic O(dQ log(dQ)) with charged output selection and universal constants; deterministic containment covers randomized g1.; SO_ZO_O01__deterministic__b5: included — Included as an explicit quantity-matched native participant.; SO_ZO_O01__deterministic__b6: included — Included as an explicit quantity-matched native participant.
+The selected upper is the minimum of compatible deterministic witnesses where both apply. The lower is the maximum of dimension-accuracy hardness and direct ternary-packing hardness. All share the native quantity, guarantee and fixed scalar-comparison resource.
 
 #### Native field: bound_refs
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/0/bound_refs; canonical SHA-256: a2da70f90de13d8a3345ea4c098632231ba0e259a03b1c9d61a90ddaf244a956
+Native pointer: /joint_analysis/synthesis_coverage/obligations/0/bound_refs; canonical SHA-256: 6c1216df22e1dd905c93e890879f3d28992840d8108a9be51e318439e8805973
 
 #### Native item 1
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/0/bound_refs/0; canonical SHA-256: 32a4728c80f62576358af5b408e940b383d6ca1f4528d86e51c699c57e1a0da5
+Native pointer: /joint_analysis/synthesis_coverage/obligations/0/bound_refs/0; canonical SHA-256: b952f88b796514dfc643f8bcd2843a229051a68a0ebd25d5a81f69aa04437472
 
-SO_ZO_O01__deterministic__b3
+SO_ZO_O01__deterministic__public_acceleration_20261124
 
 #### Native item 2
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/0/bound_refs/1; canonical SHA-256: dc2f63ea57ebae0831a35a8ae5589c6858967000c05b9c516c2444c26a296bc8
+Native pointer: /joint_analysis/synthesis_coverage/obligations/0/bound_refs/1; canonical SHA-256: 32a4728c80f62576358af5b408e940b383d6ca1f4528d86e51c699c57e1a0da5
 
-SO_ZO_O01__deterministic__b4
+SO_ZO_O01__deterministic__b3
 
 #### Native item 3
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/0/bound_refs/2; canonical SHA-256: b53e7b0873c06f88f5bffea2268f8de5ed4c33bea1d9734fb432abf2200948db
-
-SO_ZO_O01__deterministic__b5
-
-#### Native item 4
-
-Native pointer: /joint_analysis/synthesis_coverage/obligations/0/bound_refs/3; canonical SHA-256: 4564df58db2937c9f80324ec6f350bc311995c0e0b7bcb2851329b287561dff7
+Native pointer: /joint_analysis/synthesis_coverage/obligations/0/bound_refs/2; canonical SHA-256: 4564df58db2937c9f80324ec6f350bc311995c0e0b7bcb2851329b287561dff7
 
 SO_ZO_O01__deterministic__b6
 
@@ -3826,23 +4430,17 @@ Native value (null): null
 
 #### Native field: proof_refs
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/0/proof_refs; canonical SHA-256: c1deb1c710084c84ebff1c053d2fbdb282c8fd3f99bd5183d85f1e785ac56115
+Native pointer: /joint_analysis/synthesis_coverage/obligations/0/proof_refs; canonical SHA-256: 872112880ca08ba014986d9efa8d0d6c9fea415c373a5155aa40859c8f85090d
 
 #### Native item 1
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/0/proof_refs/0; canonical SHA-256: f058a36ede1d8055c583234579be7ab841fcf21df085076edc60add65a9ba355
+Native pointer: /joint_analysis/synthesis_coverage/obligations/0/proof_refs/0; canonical SHA-256: 02d552170c59ae7589e4ae3af9204dd2a679ee69689372df99a84687fb96b8ae
 
-ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
+ZO_PROOF_COMPARE_TRANSFER
 
 #### Native item 2
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/0/proof_refs/1; canonical SHA-256: 2ff70ff2e71c0814360472ade1a9ceefa94cb2ce744805f0092e4820514aeb0f
-
-ZO_PROOF_COMPARE_CENTROID_20261116
-
-#### Native item 3
-
-Native pointer: /joint_analysis/synthesis_coverage/obligations/0/proof_refs/2; canonical SHA-256: ec48da0f578d5f8d6392345f168150827ad7a683056f89e112fa7c68675bd97b
+Native pointer: /joint_analysis/synthesis_coverage/obligations/0/proof_refs/1; canonical SHA-256: ec48da0f578d5f8d6392345f168150827ad7a683056f89e112fa7c68675bd97b
 
 ZO_PROOF_COMPARE_PACKING_20261116
 
@@ -3854,7 +4452,7 @@ resolved
 
 #### Native item 2
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/1; canonical SHA-256: 1369ad274a8ea6048c73480a8f558813f51d59d2c778308a067942fd76e33d9c
+Native pointer: /joint_analysis/synthesis_coverage/obligations/1; canonical SHA-256: 219c2bff0ca9c2914135b37f21ed2ddfcd5a13103663f487bd2ccde255e9018a
 
 #### Native field: affects_gap
 
@@ -3864,31 +4462,31 @@ Native value (boolean): true
 
 #### Native field: argument
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/1/argument; canonical SHA-256: bc869566bdb60926242ef5557b743eceee66c4c8437c9bd3f5a2a38c26316c26
+Native pointer: /joint_analysis/synthesis_coverage/obligations/1/argument; canonical SHA-256: 85bd74e003ad4315f9ce6b929e00f262e0d72db16e2f922bed8e0b9760a2a740
 
-Both active compatible uppers enter a pointwise minimum and both compatible lowers a maximum, each on Q>=32. Historical suspect b1 remains ineligible; its alleged single-log branch is not restored. Packing dlogQ is proved directly for ternary comparisons. J1/J2 ratios use the full max/min, not a single precision slice. SO_ZO_O01__deterministic__b3: included — Unchanged q1 lower retained conditionally from the frozen baseline and its exact-value simulation proof; not freshly recertified.; SO_ZO_O01__deterministic__b4: included — The explicit fixed-schedule projected-descent derivation gives deterministic O(dQ log(dQ)) with charged output selection and universal constants; deterministic containment covers randomized g1.; SO_ZO_O01__deterministic__b5: included — Included as an explicit quantity-matched native participant.; SO_ZO_O01__deterministic__b6: included — Included as an explicit quantity-matched native participant.
+The selected upper is the minimum of compatible deterministic witnesses where both apply. The lower is the maximum of dimension-accuracy hardness and direct ternary-packing hardness. All share the native quantity, guarantee and fixed scalar-comparison resource.
 
 #### Native field: bound_refs
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/1/bound_refs; canonical SHA-256: a2da70f90de13d8a3345ea4c098632231ba0e259a03b1c9d61a90ddaf244a956
+Native pointer: /joint_analysis/synthesis_coverage/obligations/1/bound_refs; canonical SHA-256: 20963becb0f19f621d6fad664e392be7bdec33e74cbe1797d323441f90f4832a
 
 #### Native item 1
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/1/bound_refs/0; canonical SHA-256: 32a4728c80f62576358af5b408e940b383d6ca1f4528d86e51c699c57e1a0da5
+Native pointer: /joint_analysis/synthesis_coverage/obligations/1/bound_refs/0; canonical SHA-256: b952f88b796514dfc643f8bcd2843a229051a68a0ebd25d5a81f69aa04437472
 
-SO_ZO_O01__deterministic__b3
+SO_ZO_O01__deterministic__public_acceleration_20261124
 
 #### Native item 2
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/1/bound_refs/1; canonical SHA-256: dc2f63ea57ebae0831a35a8ae5589c6858967000c05b9c516c2444c26a296bc8
+Native pointer: /joint_analysis/synthesis_coverage/obligations/1/bound_refs/1; canonical SHA-256: b53e7b0873c06f88f5bffea2268f8de5ed4c33bea1d9734fb432abf2200948db
 
-SO_ZO_O01__deterministic__b4
+SO_ZO_O01__deterministic__b5
 
 #### Native item 3
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/1/bound_refs/2; canonical SHA-256: b53e7b0873c06f88f5bffea2268f8de5ed4c33bea1d9734fb432abf2200948db
+Native pointer: /joint_analysis/synthesis_coverage/obligations/1/bound_refs/2; canonical SHA-256: 32a4728c80f62576358af5b408e940b383d6ca1f4528d86e51c699c57e1a0da5
 
-SO_ZO_O01__deterministic__b5
+SO_ZO_O01__deterministic__b3
 
 #### Native item 4
 
@@ -3932,19 +4530,19 @@ Native value (null): null
 
 #### Native field: proof_refs
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/1/proof_refs; canonical SHA-256: c1deb1c710084c84ebff1c053d2fbdb282c8fd3f99bd5183d85f1e785ac56115
+Native pointer: /joint_analysis/synthesis_coverage/obligations/1/proof_refs; canonical SHA-256: 23d5e2dc9c3d53ae566541305705f3d9308aec86b56c12717fe6005c3a13b056
 
 #### Native item 1
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/1/proof_refs/0; canonical SHA-256: f058a36ede1d8055c583234579be7ab841fcf21df085076edc60add65a9ba355
+Native pointer: /joint_analysis/synthesis_coverage/obligations/1/proof_refs/0; canonical SHA-256: 2ff70ff2e71c0814360472ade1a9ceefa94cb2ce744805f0092e4820514aeb0f
 
-ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
+ZO_PROOF_COMPARE_CENTROID_20261116
 
 #### Native item 2
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/1/proof_refs/1; canonical SHA-256: 2ff70ff2e71c0814360472ade1a9ceefa94cb2ce744805f0092e4820514aeb0f
+Native pointer: /joint_analysis/synthesis_coverage/obligations/1/proof_refs/1; canonical SHA-256: 02d552170c59ae7589e4ae3af9204dd2a679ee69689372df99a84687fb96b8ae
 
-ZO_PROOF_COMPARE_CENTROID_20261116
+ZO_PROOF_COMPARE_TRANSFER
 
 #### Native item 3
 
@@ -3960,7 +4558,7 @@ resolved
 
 #### Native item 3
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/2; canonical SHA-256: 07b69b700d0b1a2978a045f47cba4e0e366f3ad3b726df1748b0594232031832
+Native pointer: /joint_analysis/synthesis_coverage/obligations/2; canonical SHA-256: 86f252e030621b18e974ccec653501fbdd4649194a127ae8c2fa7430da57cc8a
 
 #### Native field: affects_gap
 
@@ -3970,35 +4568,29 @@ Native value (boolean): true
 
 #### Native field: argument
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/2/argument; canonical SHA-256: 40b70ccd8dbedab1733a0f2e2461b1faf6f3afb4d3fcd6fe8ba9d801539b310b
+Native pointer: /joint_analysis/synthesis_coverage/obligations/2/argument; canonical SHA-256: 85bd74e003ad4315f9ce6b929e00f262e0d72db16e2f922bed8e0b9760a2a740
 
-Both active compatible uppers enter a pointwise minimum and both compatible lowers a maximum, each on Q>=32. Historical suspect b1 remains ineligible; its alleged single-log branch is not restored. Packing dlogQ is proved directly for ternary comparisons. J1/J2 ratios use the full max/min, not a single precision slice. SO_ZO_O01__randomized__b3: included — Unchanged q1 lower retained conditionally from the frozen baseline and its exact-value simulation proof; not freshly recertified.; SO_ZO_O01__randomized__b4: included — The explicit fixed-schedule projected-descent derivation gives deterministic O(dQ log(dQ)) with charged output selection and universal constants; deterministic containment covers randomized g1.; SO_ZO_O01__randomized__b5: included — Included as an explicit quantity-matched native participant.; SO_ZO_O01__randomized__b6: included — Included as an explicit quantity-matched native participant.
+The selected upper is the minimum of compatible deterministic witnesses where both apply. The lower is the maximum of dimension-accuracy hardness and direct ternary-packing hardness. All share the native quantity, guarantee and fixed scalar-comparison resource.
 
 #### Native field: bound_refs
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/2/bound_refs; canonical SHA-256: ca6af42489f49f9842a4312e27657487e6b6486dd5b1a3a1826e65ffe9e1e306
+Native pointer: /joint_analysis/synthesis_coverage/obligations/2/bound_refs; canonical SHA-256: 181c3039934e275f6e8f167debdefe09599fecad56d14263e33a4bda0d335461
 
 #### Native item 1
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/2/bound_refs/0; canonical SHA-256: 6d92c38962e03a044299705004005375c85d0c7f856966cf613f460685a9e226
+Native pointer: /joint_analysis/synthesis_coverage/obligations/2/bound_refs/0; canonical SHA-256: fee9340f3ff00a34adbe5cd0ab111e70b7d2eee02f202c41854a3388a70dc7e7
 
-SO_ZO_O01__randomized__b3
+SO_ZO_O01__randomized__public_acceleration_20261124
 
 #### Native item 2
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/2/bound_refs/1; canonical SHA-256: 260ce8d2b58f7636db409761b59817a9603b0b5036978b2ef8b267f1a5d36cee
+Native pointer: /joint_analysis/synthesis_coverage/obligations/2/bound_refs/1; canonical SHA-256: 6d92c38962e03a044299705004005375c85d0c7f856966cf613f460685a9e226
 
-SO_ZO_O01__randomized__b4
+SO_ZO_O01__randomized__b3
 
 #### Native item 3
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/2/bound_refs/2; canonical SHA-256: 001fe84b5cb801569ba3daa58c323122399a8e776c74c0c12ed1c81d2f60bdbd
-
-SO_ZO_O01__randomized__b5
-
-#### Native item 4
-
-Native pointer: /joint_analysis/synthesis_coverage/obligations/2/bound_refs/3; canonical SHA-256: 8395bb94fe4392c3e7b9ceab418cb7460e53e8367dad2845b7cf064a23134efd
+Native pointer: /joint_analysis/synthesis_coverage/obligations/2/bound_refs/2; canonical SHA-256: 8395bb94fe4392c3e7b9ceab418cb7460e53e8367dad2845b7cf064a23134efd
 
 SO_ZO_O01__randomized__b6
 
@@ -4038,23 +4630,17 @@ Native value (null): null
 
 #### Native field: proof_refs
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/2/proof_refs; canonical SHA-256: c1deb1c710084c84ebff1c053d2fbdb282c8fd3f99bd5183d85f1e785ac56115
+Native pointer: /joint_analysis/synthesis_coverage/obligations/2/proof_refs; canonical SHA-256: 872112880ca08ba014986d9efa8d0d6c9fea415c373a5155aa40859c8f85090d
 
 #### Native item 1
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/2/proof_refs/0; canonical SHA-256: f058a36ede1d8055c583234579be7ab841fcf21df085076edc60add65a9ba355
+Native pointer: /joint_analysis/synthesis_coverage/obligations/2/proof_refs/0; canonical SHA-256: 02d552170c59ae7589e4ae3af9204dd2a679ee69689372df99a84687fb96b8ae
 
-ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
+ZO_PROOF_COMPARE_TRANSFER
 
 #### Native item 2
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/2/proof_refs/1; canonical SHA-256: 2ff70ff2e71c0814360472ade1a9ceefa94cb2ce744805f0092e4820514aeb0f
-
-ZO_PROOF_COMPARE_CENTROID_20261116
-
-#### Native item 3
-
-Native pointer: /joint_analysis/synthesis_coverage/obligations/2/proof_refs/2; canonical SHA-256: ec48da0f578d5f8d6392345f168150827ad7a683056f89e112fa7c68675bd97b
+Native pointer: /joint_analysis/synthesis_coverage/obligations/2/proof_refs/1; canonical SHA-256: ec48da0f578d5f8d6392345f168150827ad7a683056f89e112fa7c68675bd97b
 
 ZO_PROOF_COMPARE_PACKING_20261116
 
@@ -4066,7 +4652,7 @@ resolved
 
 #### Native item 4
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/3; canonical SHA-256: d2fc074d3606ad0eb077b37b06a18f3a8c026c41a5cb1b541000928a017f048d
+Native pointer: /joint_analysis/synthesis_coverage/obligations/3; canonical SHA-256: 12c522faaa129cce7224878014f5729aedf5a2250be8304b114c04daaf776d4a
 
 #### Native field: affects_gap
 
@@ -4076,31 +4662,31 @@ Native value (boolean): true
 
 #### Native field: argument
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/3/argument; canonical SHA-256: 40b70ccd8dbedab1733a0f2e2461b1faf6f3afb4d3fcd6fe8ba9d801539b310b
+Native pointer: /joint_analysis/synthesis_coverage/obligations/3/argument; canonical SHA-256: 85bd74e003ad4315f9ce6b929e00f262e0d72db16e2f922bed8e0b9760a2a740
 
-Both active compatible uppers enter a pointwise minimum and both compatible lowers a maximum, each on Q>=32. Historical suspect b1 remains ineligible; its alleged single-log branch is not restored. Packing dlogQ is proved directly for ternary comparisons. J1/J2 ratios use the full max/min, not a single precision slice. SO_ZO_O01__randomized__b3: included — Unchanged q1 lower retained conditionally from the frozen baseline and its exact-value simulation proof; not freshly recertified.; SO_ZO_O01__randomized__b4: included — The explicit fixed-schedule projected-descent derivation gives deterministic O(dQ log(dQ)) with charged output selection and universal constants; deterministic containment covers randomized g1.; SO_ZO_O01__randomized__b5: included — Included as an explicit quantity-matched native participant.; SO_ZO_O01__randomized__b6: included — Included as an explicit quantity-matched native participant.
+The selected upper is the minimum of compatible deterministic witnesses where both apply. The lower is the maximum of dimension-accuracy hardness and direct ternary-packing hardness. All share the native quantity, guarantee and fixed scalar-comparison resource.
 
 #### Native field: bound_refs
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/3/bound_refs; canonical SHA-256: ca6af42489f49f9842a4312e27657487e6b6486dd5b1a3a1826e65ffe9e1e306
+Native pointer: /joint_analysis/synthesis_coverage/obligations/3/bound_refs; canonical SHA-256: f682a9a639b93473cb470f5d74faa6ed073b60add729cfa6f689ed0f379166f0
 
 #### Native item 1
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/3/bound_refs/0; canonical SHA-256: 6d92c38962e03a044299705004005375c85d0c7f856966cf613f460685a9e226
+Native pointer: /joint_analysis/synthesis_coverage/obligations/3/bound_refs/0; canonical SHA-256: fee9340f3ff00a34adbe5cd0ab111e70b7d2eee02f202c41854a3388a70dc7e7
 
-SO_ZO_O01__randomized__b3
+SO_ZO_O01__randomized__public_acceleration_20261124
 
 #### Native item 2
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/3/bound_refs/1; canonical SHA-256: 260ce8d2b58f7636db409761b59817a9603b0b5036978b2ef8b267f1a5d36cee
+Native pointer: /joint_analysis/synthesis_coverage/obligations/3/bound_refs/1; canonical SHA-256: 001fe84b5cb801569ba3daa58c323122399a8e776c74c0c12ed1c81d2f60bdbd
 
-SO_ZO_O01__randomized__b4
+SO_ZO_O01__randomized__b5
 
 #### Native item 3
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/3/bound_refs/2; canonical SHA-256: 001fe84b5cb801569ba3daa58c323122399a8e776c74c0c12ed1c81d2f60bdbd
+Native pointer: /joint_analysis/synthesis_coverage/obligations/3/bound_refs/2; canonical SHA-256: 6d92c38962e03a044299705004005375c85d0c7f856966cf613f460685a9e226
 
-SO_ZO_O01__randomized__b5
+SO_ZO_O01__randomized__b3
 
 #### Native item 4
 
@@ -4144,19 +4730,19 @@ Native value (null): null
 
 #### Native field: proof_refs
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/3/proof_refs; canonical SHA-256: c1deb1c710084c84ebff1c053d2fbdb282c8fd3f99bd5183d85f1e785ac56115
+Native pointer: /joint_analysis/synthesis_coverage/obligations/3/proof_refs; canonical SHA-256: 23d5e2dc9c3d53ae566541305705f3d9308aec86b56c12717fe6005c3a13b056
 
 #### Native item 1
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/3/proof_refs/0; canonical SHA-256: f058a36ede1d8055c583234579be7ab841fcf21df085076edc60add65a9ba355
+Native pointer: /joint_analysis/synthesis_coverage/obligations/3/proof_refs/0; canonical SHA-256: 2ff70ff2e71c0814360472ade1a9ceefa94cb2ce744805f0092e4820514aeb0f
 
-ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
+ZO_PROOF_COMPARE_CENTROID_20261116
 
 #### Native item 2
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/3/proof_refs/1; canonical SHA-256: 2ff70ff2e71c0814360472ade1a9ceefa94cb2ce744805f0092e4820514aeb0f
+Native pointer: /joint_analysis/synthesis_coverage/obligations/3/proof_refs/1; canonical SHA-256: 02d552170c59ae7589e4ae3af9204dd2a679ee69689372df99a84687fb96b8ae
 
-ZO_PROOF_COMPARE_CENTROID_20261116
+ZO_PROOF_COMPARE_TRANSFER
 
 #### Native item 3
 
@@ -5083,3 +5669,11 @@ https://arxiv.org/html/2610.19652v1
 [4] Sebastien Bubeck. Convex Optimization: Algorithms and Complexity. arXiv:1405.4980v2, 2015-11-16.
 
 https://arxiv.org/pdf/1405.4980v2
+
+[5] Peter Richtárik; Ammar Mahran. Near-Optimal Smooth Convex Optimization with a Comparison Oracle. 2026. arXiv:2611.29533v1, 2026-11-22.
+
+https://arxiv.org/html/2611.29533v1
+
+[6] Colombo_KIMI_002. Deterministic Full-History Acceleration with Exact Comparison Feedback. Uploaded manuscript, Kimi K3.1 Pro, 2026-11-24.
+
+https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/COLOMBO_KIMI_002/kimi_002.pdf

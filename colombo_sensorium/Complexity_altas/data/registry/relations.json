@@ -2,6 +2,51 @@
   "schema_version": "1.0.0",
   "relations": [
     {
+      "declared_in_setting": "ON_BCO1_STO_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "ON_REL_LIN_TO_BCO",
+        "source_ref": "ON_LINSTO_S",
+        "target_ref": "ON_BCO1_STO_S",
+        "relation_kind": "subclass_lower_bound",
+        "conditions": [
+          "Actions lie in the unit ball. Negate rewards to obtain losses, with additive scalar Gaussian noise of variance one."
+        ],
+        "instance_map": "f(x)=−<θ,x>",
+        "output_map": "same actions",
+        "error_map": "identical pseudo-regret",
+        "oracle_simulation": "negate observations; Gaussian noise symmetric",
+        "cost_map": {
+          "expression": "one scalar observation per round unchanged",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_BCO1_STO_S__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_FS_NCSC_AS",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "CV_S_FS_NCSC_IS",
+        "relation_kind": "contains_instance_class",
+        "description": "Individual component smoothness implies mean-square averaged smoothness with the same numerical beta; individual dual concavity is not imposed in either class."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "SO_ZO_E09c_ball",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "SO_ZO_E09c",
+        "relation_kind": "different_query_domain",
+        "description": "The existing profile requires globally convex Lipschitz components and allows full-space queries. This contract requires only ball-domain functions and permits only ball-domain queries."
+      },
+      "target_in_pilot": true
+    },
+    {
       "declared_in_setting": "SO_HO_HOI09_S_joint_L1L2",
       "source_pointer": "/relations/0",
       "relation": {
@@ -22,75 +67,59 @@
       "target_in_pilot": true
     },
     {
-      "declared_in_setting": "ON_ADV_FIXED_DELAY_CAPACITY",
+      "declared_in_setting": "ON_STO_S",
       "source_pointer": "/relations/0",
       "relation": {
-        "target_setting_id": "ON_ADV_S",
-        "relation": "different_protocol",
-        "notes": "Immediate selected-arm feedback is a different protocol. The delay and the cap on outstanding feedback change which information becomes available."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_OCO_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "ON_REL_OCO_PZERO",
-        "source_ref": "ON_OCO_S",
-        "target_ref": "ON_DYN_S",
-        "relation_kind": "exact_specialization",
+        "id": "ON_REL_STO_VZERO",
+        "source_ref": "ON_STO_S",
+        "target_ref": "ON_NS_S",
+        "relation_kind": "exact_subclass",
         "conditions": [
-          "Set P=0, preserving L, R, d, T, and the gradient interface."
+          "Require V = 0 and time-invariant reward distributions. Constant means alone would permit a larger distribution class."
         ],
-        "instance_map": "same loss sequence",
-        "output_map": "same trajectory",
-        "error_map": "dynamic comparator must be constant; regret exactly equals static",
-        "oracle_simulation": "identity",
+        "instance_map": "constant law at every t",
+        "output_map": "identity",
+        "error_map": "dynamic mean benchmark equals fixed best mean",
+        "oracle_simulation": "identity selected-arm iid samples",
         "cost_map": {
-          "expression": "T gradients and projections unchanged",
+          "expression": "T pulls unchanged",
           "components": {}
         },
         "evidence_refs": [
-          "ON_OCO_S__main__e2"
+          "ON_STO_S__main__e2"
         ]
       },
       "target_in_pilot": true
     },
     {
-      "declared_in_setting": "ON_OCO_S",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "id": "ON_REL_GRAD_REGRET_TO_SADDLE",
-        "source_ref": "ON_OCO_S",
-        "target_ref": "external:convex_concave_saddle_point_no_regret_averaging",
-        "relation_kind": "conditional_reduction",
-        "conditions": [
-          "The payoff $\\Phi$ is convex-concave. The two online learners have compatible interfaces and receive the corresponding partial gradients. Their feasible domains are preserved."
-        ],
-        "instance_map": "x-loss Φ(·,y_t), y-loss −Φ(x_t,·)",
-        "output_map": "average iterates (xbar,ybar)",
-        "error_map": "weak primal-dual gap≤(R_x+R_y)/T by convexity/concavity",
-        "oracle_simulation": "Need both partial-gradient interfaces per round. Does not follow from arbitrary one-sided bandit oracle.",
-        "cost_map": {
-          "expression": "T x-gradients +T y-gradients, plus both update/projection costs",
-          "components": {}
-        },
-        "evidence_refs": []
-      },
-      "target_in_pilot": false
-    },
-    {
-      "declared_in_setting": "ONX_BCO1_SMOOTH_STRONG_PROPER",
+      "declared_in_setting": "CV_S_VI_RESIDUAL_DET",
       "source_pointer": "/relations/0",
       "relation": {
-        "target_setting_id": "ON_BCO1_ADV_S",
-        "relation_kind": "related",
-        "description": "Both use exact one-point adversarial values, but this class includes smoothness, strong convexity, and a conditioned family of known convex bodies."
+        "id": "CV_REL_RESOLVENT_FROM_VALUES_COST",
+        "source_ref": "CV_S_EXACT_RESOLVENT",
+        "target_ref": "CV_S_VI_RESIDUAL_DET",
+        "relation_kind": "related_only",
+        "conditions": [
+          "a value oracle does not provide a full unknown resolvent for unit cost"
+        ],
+        "instance_map": "A=F+N_K when defined",
+        "output_map": "resolvent output includes v=(u−z)/eta",
+        "error_map": "one exact resolvent solves a regularized VI; simulating it has its own tolerance and complexity",
+        "oracle_simulation": "no constant-cost value-oracle simulation asserted",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "primitive_cost": "must be separately expanded"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_VI_RESIDUAL_DET__main__e1"
+        ]
       },
       "target_in_pilot": true
     },
     {
-      "declared_in_setting": "CV_S_FINITE_VI_SPAN_ROOT",
+      "declared_in_setting": "CV_S_FINITE_VI_GENERAL_INCLUSION",
       "source_pointer": "/relations/0",
       "relation": {
         "id": "CV_REL_FINITE_SPAN_TO_GENERAL",
@@ -112,286 +141,33 @@
           }
         },
         "evidence_refs": [
-          "CV_S_FINITE_VI_SPAN_ROOT__main__e1"
+          "CV_S_FINITE_VI_GENERAL_INCLUSION__main__e1"
         ]
       },
       "target_in_pilot": true
     },
     {
-      "declared_in_setting": "ON_FB_GAUSS_S",
+      "declared_in_setting": "ON_LINADV_S",
       "source_pointer": "/relations/0",
       "relation": {
-        "id": "ON_REL_FC_NOT_FB",
-        "source_ref": "ON_FC_S",
-        "target_ref": "ON_FB_GAUSS_S",
-        "relation_kind": "related_not_equivalent",
+        "id": "ON_REL_STOLIN_NOT_BLO",
+        "source_ref": "ON_LINSTO_S",
+        "target_ref": "ON_LINADV_S",
+        "relation_kind": "distinct_feedback_models",
         "conditions": [
-          "The stopping-time and fixed-budget protocols differ in their quantifier order and in the KL direction of the static-oracle benchmark."
+          "One interface adds observation noise to an inner product; the other returns the exact projection of a bounded random vector or a vector fixed in advance."
         ],
-        "instance_map": "No automatic map.",
-        "output_map": "No validated output map.",
-        "error_map": "No bound transfer. A random τ expectation does not supply a deterministic-budget error exponent.",
-        "oracle_simulation": "No approved simulation.",
+        "instance_map": "No class inclusion for arbitrary x; action-norm dependence of conditional variance differs.",
+        "output_map": "No transfer asserted.",
+        "error_map": "d sqrtT versus sqrt(dT) can coexist.",
+        "oracle_simulation": "Cannot rescale one observation law into the other without changing information.",
         "cost_map": {
           "expression": "Not asserted",
           "components": {}
         },
         "evidence_refs": [
-          "ON_FB_GAUSS_S__main__e1"
+          "ON_LINADV_S__main__e1"
         ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "SO_ZO_N10_schatten_hessian_gaussian",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "SO_ZO_N05_main",
-        "relation_kind": "related_endpoint",
-        "description": "The p=infinity, order-three norm agrees with the operator endpoint, while the present class omits a global gradient-smoothness upper bound and fixes Gaussian noise."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "SO_ZO_N10_schatten_hessian_gaussian",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "target_setting_id": "SO_ZO_N06_main",
-        "relation_kind": "related_endpoint",
-        "description": "The p=2, order-three norm agrees with the Hilbert-Schmidt endpoint, while the present class omits a global gradient-smoothness upper bound and fixes Gaussian noise."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_FS_NCSC_AS",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "CV_S_FS_NCSC_IS",
-        "relation_kind": "contains_instance_class",
-        "description": "Individual component smoothness implies mean-square averaged smoothness with the same numerical beta; individual dual concavity is not imposed in either class."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "MX_S_AXB_RIGHT_RESIDUAL",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "MX_S_spd",
-        "relation": "different_model_and_error",
-        "notes": "The SPD energy-error setting restricts the matrix and uses a different criterion."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "MX_S_AXB_RIGHT_RESIDUAL",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "target_setting_id": "MX_S_least_squares",
-        "relation": "different_task_and_access",
-        "notes": "The least-squares setting includes inconsistent rectangular systems, has transpose access, and uses normalized squared prediction error."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "MX_S_lanczos_factor",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "MX_REL_lanczos_function",
-        "source_ref": "MX_S_lanczos_factor",
-        "target_ref": "MX_S_function_action",
-        "relation_kind": "algorithm_restriction_and_metric_change",
-        "conditions": [
-          "Fixed Lanczos algorithm with h in an extended Stieltjes class; not a general-function minimax result"
-        ],
-        "instance_map": "Preserve $A,h,b$ and impose the source task's additional function-class and spectral assumptions.",
-        "output_map": "The output vector is unchanged.",
-        "error_map": "Best-in-subspace approximation error is the denominator of the ratio. A conversion to an epsilon ||b|| target requires a separate bound on that best error.",
-        "oracle_simulation": "The same matrix-product interface is used, but the fixed algorithm restricts the query sequence.",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "N_right": "A fixed t steps"
-          }
-        },
-        "evidence_refs": [
-          "MX_S_lanczos_factor__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_HIGH_SADDLE_gap",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "CV_REL_TANGENT_TO_GAP",
-        "source_ref": "CV_S_HIGH_SADDLE_tan",
-        "target_ref": "CV_S_HIGH_SADDLE_gap",
-        "relation_kind": "one_way_error_reduction",
-        "conditions": [
-          "Differentiable payoff, convex in the primal variable and concave in the dual variable",
-          "The known compact convex product domain $K=X\\times Y$ satisfies $\\operatorname{diam}(K)\\le D_K$"
-        ],
-        "instance_map": "Uses the same payoff function and the same product domain.",
-        "output_map": "Retain the same feasible primal–dual point.",
-        "error_map": "$\\operatorname{Gap}_f(z)\\le D_K\\operatorname{dist}(0,F_f(z)+N_K(z))$. To attain gap tolerance $\\varepsilon$, use tangent-residual tolerance $\\varepsilon/D_K$.",
-        "oracle_simulation": "No additional hidden-information calls are needed.",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "extra_calls": "0"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_HIGH_SADDLE_gap__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "SO_FO_P01_fixed_non_euclidean",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "CV_S_EXACT_RESOLVENT",
-        "relation_kind": "different_oracle",
-        "description": "The resolvent setting permits an arbitrary positive Euclidean step size and measures an operator residual; the present coefficient and non-Euclidean power are fixed and the target is objective error."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "BL_SPEC_finite_primitive",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "BL_REL_finite_affine_amplification",
-        "source_ref": "external:finite_sum/smooth_nonconvex_component_gradient",
-        "target_ref": "BL_SPEC_finite_primitive",
-        "relation_kind": "lower_bound_reduction",
-        "conditions": [
-          "Bounded average gradient chain and unit component smoothness",
-          "κ≥2"
-        ],
-        "instance_map": "f_i(x,y)=F_i(y), g_j(x,y)=||y||²/(2κ)−(1−1/κ)<x,y>; y*=(κ−1)x.",
-        "output_map": "Return y_hat=(κ−1)x_hat.",
-        "error_map": "||∇Φ(x)||=(κ−1)||∇F((κ−1)x)||.",
-        "oracle_simulation": "Each upper query is one F_i gradient; known quadratic lower answers use no hidden F query.",
-        "cost_map": {
-          "expression": "At most one source component query per upper gradient call; lower queries reveal nothing about F.",
-          "components": {}
-        },
-        "evidence_refs": [
-          "BL_SPEC_finite_primitive__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "MX_S_HSS_MATVEC",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "MX_S_hodlr",
-        "relation": "different_output_class",
-        "notes": "HSS requires nested row and column bases; independent HODLR off-diagonal blocks use a different approximation benchmark."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_CTX_TAB_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "ON_REL_TAB_DIRECTSUM",
-        "source_ref": "ON_ADV_S",
-        "target_ref": "ON_CTX_TAB_S",
-        "relation_kind": "direct_sum",
-        "conditions": [
-          "Balanced S contexts, T/S≥K."
-        ],
-        "instance_map": "S independent K-arm environments",
-        "output_map": "run/collect one learner per context",
-        "error_map": "regret is sum of S component regrets",
-        "oracle_simulation": "one current-context arm feedback per global round",
-        "cost_map": {
-          "expression": "S runs of n=T/S rounds → T total pulls",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_CTX_TAB_S__main__e2",
-          "ON_CTX_TAB_S__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_STRICT_MATRIX_SADDLE_COMPARE",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "CV_S_SIMPLEX_MATRIX_GAME",
-        "relation": "different_protocol",
-        "notes": "The neighboring setting outputs approximate mixed strategies under two-sided matrix-vector products."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_HIGH_VI",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "CV_REL_SCALAR_JET_TO_OPERATOR",
-        "source_ref": "CV_S_HIGH_SADDLE_tan",
-        "target_ref": "CV_S_HIGH_VI",
-        "relation_kind": "oracle_simulation",
-        "conditions": [
-          "f C^p convex-concave on known compact product",
-          "same fixed p≥2, same Euclidean norms and feasible queries"
-        ],
-        "instance_map": "F=diag(I,−I)∇f; Lip(D^{p−1}F)≤Lp; product diameter unchanged",
-        "output_map": "keep primal-dual point and lift normal to affine hull if necessary",
-        "error_map": "tangent residual identical",
-        "oracle_simulation": "scalar p-jet gives operator(p−1)-jet by signed tensor contraction",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "N_scalar_jet_per_operator_jet": "1",
-            "extra_unknown_oracle_calls": "0"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_HIGH_VI__main__e2"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_HIGH_VI",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "id": "CV_REL_HIGH_VI_NOT_FULL_HESSIAN",
-        "source_ref": "CV_S_HIGH_VI",
-        "target_ref": "CV_S_HESSIAN_NCSC",
-        "relation_kind": "related_only",
-        "conditions": [
-          "different task/model and returned information"
-        ],
-        "instance_map": "no general instance reduction asserted",
-        "output_map": "none",
-        "error_map": "no complexity bound transfer",
-        "oracle_simulation": "operator derivative orderp−1 is not automatically scalar payoff orderp or a Hessian-vector interface",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "transfer": "none"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_HIGH_VI__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ONX_LEX_LIPSCHITZ_UNKNOWN",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "ONX_LEX_LIPSCHITZ_KNOWN",
-        "relation_kind": "less_information",
-        "description": "The unknown-envelope class removes public tradeoff information; its anchor-plus-tie regimes retain the same Lipschitz reward structure."
       },
       "target_in_pilot": true
     },
@@ -444,412 +220,6 @@
           }
         },
         "evidence_refs": []
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_DYN_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "ON_REL_OCO_PZERO",
-        "source_ref": "ON_OCO_S",
-        "target_ref": "ON_DYN_S",
-        "relation_kind": "exact_specialization",
-        "conditions": [
-          "Set P=0, preserving L, R, d, T, and the gradient interface."
-        ],
-        "instance_map": "same loss sequence",
-        "output_map": "same trajectory",
-        "error_map": "dynamic comparator must be constant; regret exactly equals static",
-        "oracle_simulation": "identity",
-        "cost_map": {
-          "expression": "T gradients and projections unchanged",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_DYN_S__main__e2"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_FS_NCSC_IS",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "CV_S_FS_NCSC_AS",
-        "relation_kind": "instance_subclass",
-        "description": "Individual component smoothness implies mean-square averaged smoothness with the same numerical beta; individual dual concavity is not imposed in either class."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ONX_LEX_FINITE_UNKNOWN",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "ONX_LEX_FINITE_KNOWN",
-        "relation_kind": "less_information",
-        "description": "The reward and objective structure coincide at two objectives, but no upper bound for the local tradeoff is supplied."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_SIMPLEX_MATRIX_GAME",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "conditions": [
-          "different domain geometry, native feedback and norms",
-          "entry bound is not dimension-free spectral bound"
-        ],
-        "cost_map": {
-          "components": {
-            "transfer": "none without a full geometry/oracle map"
-          },
-          "expression": null
-        },
-        "error_map": "fixed-budget risk and target-accuracy value cost are not identified",
-        "evidence_refs": [
-          "CV_S_SIMPLEX_MATRIX_GAME__deterministic_risk__e2"
-        ],
-        "id": "CV_REL_SIMPLEX_VS_EUCLIDEAN",
-        "instance_map": "both use bilinear matrices, but ||A||₂ may be sqrt(nm) under entry bound1",
-        "oracle_simulation": "two-sided matvec is stronger than a scalar bilinear value without dimension-dependent simulation",
-        "output_map": "not a declared complexity reduction",
-        "relation_kind": "related_only",
-        "source_ref": "CV_S_SIMPLEX_MATRIX_GAME",
-        "target_ref": "CV_S_ZO_BILINEAR"
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "SO_HO_HOI10_S_weighted_jet_L1L2",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "SO_HO_HOI08_S_joint",
-        "relation_kind": "different_model_and_resource",
-        "description": "The information packets agree, but this model adds a gradient-Lipschitz bound and a public weighted cost."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "SO_HO_HOI10_S_weighted_jet_L1L2",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "target_setting_id": "SO_HO_HOI09_S_joint_L1L2",
-        "relation_kind": "different_oracle_and_resource",
-        "description": "The neighboring strict-cap derivative-only problem does not bundle gradients with Hessians."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_BCO2_STO_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "ON_REL_TWOTOOPT",
-        "source_ref": "ON_BCO2_STO_S",
-        "target_ref": "external:stochastic_convex_optimization_same_sample_two_point",
-        "relation_kind": "online_to_batch",
-        "conditions": [
-          "The population objective $f$ is convex, samples are IID, and the output is an average of admissible centers."
-        ],
-        "instance_map": "same F and law P",
-        "output_map": "xbar=(1/T)Σx_t",
-        "error_map": "E[f(xbar)−f*]≤R_T/T",
-        "oracle_simulation": "same 2 evaluations of each fresh sample; no new query",
-        "cost_map": {
-          "expression": "T samples,2T value evaluations",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_BCO2_STO_S__main__e1",
-          "ON_BCO2_STO_S__main__e2"
-        ]
-      },
-      "target_in_pilot": false
-    },
-    {
-      "declared_in_setting": "ON_BCO2_STO_S",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "id": "ON_REL_TWO_RMS_NOT_AS",
-        "source_ref": "ON_BCO2_STO_S",
-        "target_ref": "ON_BCO2_ADV_S",
-        "relation_kind": "distinct_model_constraints",
-        "conditions": [
-          "A second-moment bound on sample Lipschitz constants differs from an almost-sure per-round bound. A population-optimal comparator also differs from the best comparator for the realized sequence."
-        ],
-        "instance_map": "Gaussian sample linear family is not uniformly L-Lipschitz a.s.",
-        "output_map": "No direct lower transfer.",
-        "error_map": "Only the explicitly derived dimension-free common lower is used in adversarial spec.",
-        "oracle_simulation": "Both pairs share sample, but distributions and goals differ.",
-        "cost_map": {
-          "expression": "2 values/sample does not erase model mismatch.",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_BCO2_STO_S__main__e1",
-          "ON_BCO2_STO_S__main__e2"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "SO_FO_S03_unknown_alpha_known_scales",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "SO_FO_S03_unknown_alpha",
-        "relation_kind": "different_public_information",
-        "description": "The neighboring profile also hides smoothness and gap budgets. Here L and Delta are public, while p and sigma remain hidden."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_HIGH_SADDLE_tan",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "CV_REL_SCALAR_JET_TO_OPERATOR",
-        "source_ref": "CV_S_HIGH_SADDLE_tan",
-        "target_ref": "CV_S_HIGH_VI",
-        "relation_kind": "oracle_simulation",
-        "conditions": [
-          "A $C^p$ convex-concave payoff on a known compact convex product domain, with fixed integer $p\\ge2$.",
-          "Both tasks use the same Euclidean norm and the same feasible query domain."
-        ],
-        "instance_map": "For $F_f=(\\nabla_xf,-\\nabla_yf)$, the derivative of order $p-1$ has Lipschitz constant at most $L_p$. The product-domain diameter is unchanged.",
-        "output_map": "Retain feasible primal–dual points. Computations in an affine hull must embed the normal-cone certificate back into the joint space.",
-        "error_map": "The tangent residuals of the two representations coincide.",
-        "oracle_simulation": "A complete scalar derivative jet through order $p$ gives the complete operator jet through order $p-1$ by negating the dual block.",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "N_scalar_jet_per_operator_jet": "1",
-            "extra_unknown_oracle_calls": "0"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_HIGH_SADDLE_tan__main__e1",
-          "CV_S_HIGH_SADDLE_tan__main__e2"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_HIGH_SADDLE_tan",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "id": "CV_REL_TANGENT_TO_GAP",
-        "source_ref": "CV_S_HIGH_SADDLE_tan",
-        "target_ref": "CV_S_HIGH_SADDLE_gap",
-        "relation_kind": "one_way_error_reduction",
-        "conditions": [
-          "Differentiable payoff, convex in the primal variable and concave in the dual variable",
-          "The known compact convex product domain $K=X\\times Y$ satisfies $\\operatorname{diam}(K)\\le D_K$"
-        ],
-        "instance_map": "Uses the same payoff function and the same product domain.",
-        "output_map": "Retain the same feasible primal–dual point.",
-        "error_map": "$\\operatorname{Gap}_f(z)\\le D_K\\operatorname{dist}(0,F_f(z)+N_K(z))$. To attain gap tolerance $\\varepsilon$, use tangent-residual tolerance $\\varepsilon/D_K$.",
-        "oracle_simulation": "No additional hidden-information calls are needed.",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "extra_calls": "0"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_HIGH_SADDLE_tan__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "SO_FO_C05_radius_lp_FG",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "SO_FO_C05_radius_FG",
-        "relation_kind": "different_regularity",
-        "description": "The existing two-radius profile assumes Euclidean gradient smoothness. This profile imposes ell-p-to-dual-ell-p smoothness and retains the two independent radii of one common minimizer."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_VI_RESIDUAL_DET",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "CV_REL_RESOLVENT_FROM_VALUES_COST",
-        "source_ref": "CV_S_EXACT_RESOLVENT",
-        "target_ref": "CV_S_VI_RESIDUAL_DET",
-        "relation_kind": "related_only",
-        "conditions": [
-          "a value oracle does not provide a full unknown resolvent for unit cost"
-        ],
-        "instance_map": "A=F+N_K when defined",
-        "output_map": "resolvent output includes v=(u−z)/eta",
-        "error_map": "one exact resolvent solves a regularized VI; simulating it has its own tolerance and complexity",
-        "oracle_simulation": "no constant-cost value-oracle simulation asserted",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "primitive_cost": "must be separately expanded"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_VI_RESIDUAL_DET__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_ADV_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "ON_REL_FULL_TO_BANDIT",
-        "source_ref": "ON_EXP_S",
-        "target_ref": "ON_ADV_S",
-        "relation_kind": "oracle_dominance",
-        "conditions": [
-          "The loss sequence and comparison objective are unchanged."
-        ],
-        "instance_map": "identity",
-        "output_map": "identity action trajectory",
-        "error_map": "identical regret",
-        "oracle_simulation": "Discard all coordinates except chosen arm; full information simulates bandit.",
-        "cost_map": {
-          "expression": "T vector reveals → T arm replies, but KT revealed coordinates consumed.",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_ADV_S__main__e2"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_ADV_S",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "id": "ON_REL_TAB_DIRECTSUM",
-        "source_ref": "ON_ADV_S",
-        "target_ref": "ON_CTX_TAB_S",
-        "relation_kind": "direct_sum",
-        "conditions": [
-          "Balanced S contexts, T/S≥K."
-        ],
-        "instance_map": "S independent K-arm environments",
-        "output_map": "run/collect one learner per context",
-        "error_map": "regret is sum of S component regrets",
-        "oracle_simulation": "one current-context arm feedback per global round",
-        "cost_map": {
-          "expression": "S runs of n=T/S rounds → T total pulls",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_ADV_S__main__e2",
-          "ON_ADV_S__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_ADV_S",
-      "source_pointer": "/relations/2",
-      "relation": {
-        "id": "ON_REL_COMB_DIRECTSUM",
-        "source_ref": "ON_ADV_S",
-        "target_ref": "ON_COMB_S",
-        "relation_kind": "direct_sum_lower_bound",
-        "conditions": [
-          "$m$ divides $d$, the action space is the public product set, and $T\\ge d/m$."
-        ],
-        "instance_map": "m independent d/m-arm bandits",
-        "output_map": "combine m arm indices into m-hot action",
-        "error_map": "sum regrets; m sqrt((d/m)T)=sqrt(mdT)",
-        "oracle_simulation": "one selected sample per group in same round",
-        "cost_map": {
-          "expression": "T rounds; mT coordinate observations",
-          "components": {}
-        },
-        "evidence_refs": []
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_ZO_BILINEAR",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "CV_REL_BILINEAR_GAP_EQUALITY",
-        "source_ref": "CV_S_ZO_BILINEAR",
-        "target_ref": "external:monotone_vi/bilinear_affine_operator",
-        "relation_kind": "conditional_equivalence",
-        "conditions": [
-          "f(x,y)=y^TAx−b^Ty",
-          "known compact product sets"
-        ],
-        "instance_map": "F=(A^Ty,−Ax+b); its linear part is skew symmetric",
-        "output_map": "same feasible pair",
-        "error_map": "G_M=G_S=Gap_f; all three are Ry||Ax−b||+Rx||A^Ty||+b^Ty for balls",
-        "oracle_simulation": "exact scalar coordinate differences simulate joint gradient",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "N_value_per_joint_gradient": "dx+dy+1 using one common base value; global nonzero finite-difference step",
-            "arithmetic": "exact and uncharged"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_ZO_BILINEAR__main__e1"
-        ]
-      },
-      "target_in_pilot": false
-    },
-    {
-      "declared_in_setting": "CV_S_ZO_BILINEAR",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "id": "CV_REL_SIMPLEX_VS_EUCLIDEAN",
-        "source_ref": "CV_S_SIMPLEX_GAME",
-        "target_ref": "CV_S_ZO_BILINEAR",
-        "relation_kind": "related_only",
-        "conditions": [
-          "different domain geometry, native feedback and norms",
-          "entry bound is not dimension-free spectral bound"
-        ],
-        "instance_map": "both use bilinear matrices, but ||A||₂ may be sqrt(nm) under entry bound1",
-        "output_map": "not a declared complexity reduction",
-        "error_map": "fixed-budget risk and target-accuracy value cost are not identified",
-        "oracle_simulation": "two-sided matvec is stronger than a scalar bilinear value without dimension-dependent simulation",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "transfer": "none without a full geometry/oracle map"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_ZO_BILINEAR__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_FC_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "conditions": [
-          "The stopping-time and fixed-budget protocols differ in their quantifier order and in the KL direction of the static-oracle benchmark."
-        ],
-        "cost_map": {
-          "components": {},
-          "expression": "Not asserted"
-        },
-        "error_map": "No bound transfer. A random τ expectation does not supply a deterministic-budget error exponent.",
-        "evidence_refs": [
-          "ON_FC_S__main__e1"
-        ],
-        "id": "ON_REL_FC_NOT_FB",
-        "instance_map": "No automatic map.",
-        "oracle_simulation": "No approved simulation.",
-        "output_map": "No validated output map.",
-        "relation_kind": "related_not_equivalent",
-        "source_ref": "ON_FC_S",
-        "target_ref": "ON_FB_GAUSS_S"
       },
       "target_in_pilot": true
     },
@@ -907,509 +277,12 @@
       "target_in_pilot": true
     },
     {
-      "declared_in_setting": "MX_S_logdet",
+      "declared_in_setting": "ONX_LEX_LIPSCHITZ_UNKNOWN",
       "source_pointer": "/relations/0",
       "relation": {
-        "id": "MX_REL_logdet_trace",
-        "source_ref": "MX_S_logdet",
-        "target_ref": "MX_S_trace_general",
-        "relation_kind": "one_way_simulation_template",
-        "conditions": [
-          "B=log A may be indefinite. A Bv call is not automatically free, and the error and target normalization must be checked again."
-        ],
-        "instance_map": "A->B=logA",
-        "output_map": "trace scalar equals logdetA",
-        "error_map": "The original trace error is $\\epsilon\\|\\log A\\|_{S_p}$. To make it at most $\\eta$, use a known valid norm bound and a budget for simulation error.",
-        "oracle_simulation": "The action $Bv$ may be approximated by polynomials or Lanczos; it is not one exact $Av$ call. The included argument covers the SLQ quadratic-form route only.",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "cost": "Each simulation costs the approximation degree for h = log. Trace upper and lower bounds do not transfer one for one."
-          }
-        },
-        "evidence_refs": [
-          "MX_S_logdet__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_NS_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "ON_REL_STO_VZERO",
-        "source_ref": "ON_STO_S",
-        "target_ref": "ON_NS_S",
-        "relation_kind": "exact_subclass",
-        "conditions": [
-          "Require V = 0 and time-invariant reward distributions. Constant means alone would permit a larger distribution class."
-        ],
-        "instance_map": "constant law at every t",
-        "output_map": "identity",
-        "error_map": "dynamic mean benchmark equals fixed best mean",
-        "oracle_simulation": "identity selected-arm iid samples",
-        "cost_map": {
-          "expression": "T pulls unchanged",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_NS_S__main__e2"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "BL_SPEC_quadratic_hvp",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "BL_REL_quadratic_hvp_simulation",
-        "source_ref": "BL_SPEC_quadratic_fo",
-        "target_ref": "BL_SPEC_quadratic_hvp",
-        "relation_kind": "exact_oracle_simulation",
-        "conditions": [
-          "g quadratic as specified"
-        ],
-        "instance_map": "Identity on the instance",
-        "output_map": "Identity on x",
-        "error_map": "No approximation error.",
-        "oracle_simulation": "g_{yy} v=∇_y g(x,y+v)−∇_y g(x,y); g_{xy} v=∇_x g(x,y+v)−∇_x g(x,y).",
-        "cost_map": {
-          "expression": "At most 3 source first-order bundles simulate one HVP-extended bundle (source Proposition3.2 convention).",
-          "components": {}
-        },
-        "evidence_refs": [],
-        "review_note": "The original citation supports only a candidate result whose applicability has not been fully checked. It is excluded from formal evidence and is not used for automatic complexity transfer."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_BCO2_ADV_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "ON_REL_TWO_RMS_NOT_AS",
-        "source_ref": "ON_BCO2_STO_S",
-        "target_ref": "ON_BCO2_ADV_S",
-        "relation_kind": "distinct_model_constraints",
-        "conditions": [
-          "A second-moment bound on sample Lipschitz constants differs from an almost-sure per-round bound. A population-optimal comparator also differs from the best comparator for the realized sequence."
-        ],
-        "instance_map": "Gaussian sample linear family is not uniformly L-Lipschitz a.s.",
-        "output_map": "No direct lower transfer.",
-        "error_map": "Only the explicitly derived dimension-free common lower is used in adversarial spec.",
-        "oracle_simulation": "Both pairs share sample, but distributions and goals differ.",
-        "cost_map": {
-          "expression": "2 values/sample does not erase model mismatch.",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_BCO2_ADV_S__main__e2"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ONX_CONTROL_UNKNOWN_DRC_VARIATION",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "ONX_CONTROL_UNKNOWN_STABLE",
-        "relation_kind": "related",
-        "description": "Both study unknown nonstochastic linear control, but the disturbance-response comparator and Markov-tail model differ from known-stabilizer, strongly controllable fixed-feedback contracts."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_EXACT_RESOLVENT",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "CV_REL_RESOLVENT_FROM_VALUES_COST",
-        "source_ref": "CV_S_EXACT_RESOLVENT",
-        "target_ref": "CV_S_VI_RESIDUAL_DET",
-        "relation_kind": "related_only",
-        "conditions": [
-          "a value oracle does not provide a full unknown resolvent for unit cost"
-        ],
-        "instance_map": "A=F+N_K when defined",
-        "output_map": "resolvent output includes v=(u−z)/eta",
-        "error_map": "one exact resolvent solves a regularized VI; simulating it has its own tolerance and complexity",
-        "oracle_simulation": "no constant-cost value-oracle simulation asserted",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "primitive_cost": "must be separately expanded"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_EXACT_RESOLVENT__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_HESSIAN_NCSC",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "CV_REL_HIGH_VI_NOT_FULL_HESSIAN",
-        "source_ref": "CV_S_HIGH_VI",
-        "target_ref": "CV_S_HESSIAN_NCSC",
-        "relation_kind": "related_only",
-        "conditions": [
-          "different task/model and returned information"
-        ],
-        "instance_map": "no general instance reduction asserted",
-        "output_map": "none",
-        "error_map": "no complexity bound transfer",
-        "oracle_simulation": "operator derivative orderp−1 is not automatically scalar payoff orderp or a Hessian-vector interface",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "transfer": "none"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_HESSIAN_NCSC__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "BL_SPEC_fresh_lower_p",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "BL_REL_fresh_metrics",
-        "source_ref": "BL_SPEC_fresh_lower_p",
-        "target_ref": "BL_SPEC_fresh_fixed_p",
-        "relation_kind": "related_not_equivalent",
-        "conditions": [
-          "Different higher-derivative object assumptions must first be reconciled."
-        ],
-        "instance_map": "No automatic same-instance class map certified.",
-        "output_map": "same x only if both classes hold",
-        "error_map": "E||∇Φ||²≤ε² implies E||∇Φ||≤ε by Jensen; converse fails in general.",
-        "oracle_simulation": "Pan joint call and Wu individual fresh calls have different within-call coupling; no automatic exact simulation in either direction.",
-        "cost_map": {
-          "expression": "Do not transfer minimax lower or uniform-p constants.",
-          "components": {}
-        },
-        "evidence_refs": [
-          "BL_SPEC_fresh_lower_p__main__e2",
-          "BL_EV_wu_finite"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "MX_S_TRACE_PSD",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "conditions": [
-          "Set p=1 and restrict inputs to positive semidefinite matrices, preserving adaptivity, randomization, delta, dimension, and output."
-        ],
-        "cost_map": {
-          "components": {
-            "N_right": "Unchanged"
-          },
-          "expression": null
-        },
-        "error_map": "For PSD matrices, $\\|A\\|_{S_1}=\\operatorname{tr}(A)$, so relative trace error equals additive error normalized by the Schatten-one norm.",
-        "evidence_refs": [
-          "MX_S_TRACE_PSD__randomized_adaptive__e4"
-        ],
-        "id": "MX_REL_psd_trace_general",
-        "instance_map": "The input is unchanged.",
-        "oracle_simulation": "The same matrix-vector product interface",
-        "output_map": "Retain the same scalar estimate",
-        "relation_kind": "model_restriction",
-        "source_ref": "MX_S_TRACE_PSD",
-        "target_ref": "MX_S_trace_general"
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_LINSTO_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "ON_REL_LIN_TO_BCO",
-        "source_ref": "ON_LINSTO_S",
-        "target_ref": "ON_BCO1_STO_S",
-        "relation_kind": "subclass_lower_bound",
-        "conditions": [
-          "Actions lie in the unit ball. Negate rewards to obtain losses, with additive scalar Gaussian noise of variance one."
-        ],
-        "instance_map": "f(x)=−<θ,x>",
-        "output_map": "same actions",
-        "error_map": "identical pseudo-regret",
-        "oracle_simulation": "negate observations; Gaussian noise symmetric",
-        "cost_map": {
-          "expression": "one scalar observation per round unchanged",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_LINSTO_S__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_LINSTO_S",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "id": "ON_REL_STOLIN_NOT_BLO",
-        "source_ref": "ON_LINSTO_S",
-        "target_ref": "ON_LINADV_S",
-        "relation_kind": "distinct_feedback_models",
-        "conditions": [
-          "One interface adds observation noise to an inner product; the other returns the exact projection of a bounded random vector or a vector fixed in advance."
-        ],
-        "instance_map": "No class inclusion for arbitrary x; action-norm dependence of conditional variance differs.",
-        "output_map": "No transfer asserted.",
-        "error_map": "d sqrtT versus sqrt(dT) can coexist.",
-        "oracle_simulation": "Cannot rescale one observation law into the other without changing information.",
-        "cost_map": {
-          "expression": "Not asserted",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_LINSTO_S__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_CC_FIRST_DET",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "CV_REL_SADDLE_GAP_WEAK_ORDER",
-        "source_ref": "CV_S_CC_FIRST_DET",
-        "target_ref": "external:monotone_vi/weak_and_strong_gap",
-        "relation_kind": "conditional_metric_relation",
-        "conditions": [
-          "convex-concave f and F_f=(fx,−fy)",
-          "compact product domain"
-        ],
-        "instance_map": "associate saddle operatorF_f",
-        "output_map": "same z=(x,y)",
-        "error_map": "G_M(z)≤Gap_f(z)≤G_S(z)≤D r_tan(z). A small G_M alone does not certify a small saddle gap.",
-        "oracle_simulation": "one joint gradient produces F_f",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "operator_value_per_joint_gradient": "1"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_CC_FIRST_DET__main__e2"
-        ]
-      },
-      "target_in_pilot": false
-    },
-    {
-      "declared_in_setting": "MX_S_function_action",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "MX_REL_function_spd",
-        "source_ref": "MX_S_function_action",
-        "target_ref": "MX_S_spd",
-        "relation_kind": "model_and_goal_specialization",
-        "conditions": [
-          "Here h(z) = 1/z on a positive spectrum. Converting Euclidean and A-norm targets requires μ and β."
-        ],
-        "instance_map": "h=1/z",
-        "output_map": "The output vector is unchanged.",
-        "error_map": "The inequalities μ‖e‖² ≤ ‖e‖_A² ≤ β‖e‖² apply. The original initial-error normalization must still be matched.",
-        "oracle_simulation": "The same $Av$ interface",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "N_right": "Unchanged for the same input."
-          }
-        },
-        "evidence_refs": [
-          "MX_S_function_action__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "MX_S_function_action",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "id": "MX_REL_lanczos_function",
-        "source_ref": "MX_S_lanczos_factor",
-        "target_ref": "MX_S_function_action",
-        "relation_kind": "algorithm_restriction_and_metric_change",
-        "conditions": [
-          "Fixed Lanczos algorithm with h in an extended Stieltjes class; not a general-function minimax result"
-        ],
-        "instance_map": "Preserve $A,h,b$ and impose the source task's additional function-class and spectral assumptions.",
-        "output_map": "The output vector is unchanged.",
-        "error_map": "Best-in-subspace approximation error is the denominator of the ratio. A conversion to an epsilon ||b|| target requires a separate bound on that best error.",
-        "oracle_simulation": "The same matrix-product interface is used, but the fixed algorithm restricts the query sequence.",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "N_right": "A fixed t steps"
-          }
-        },
-        "evidence_refs": []
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "MX_S_linear_reconstruction_precision",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "MX_S_linear_family",
-        "relation_kind": "different_oracle_and_metric",
-        "description": "Public linear-matrix-family approximation uses exact two-sided matvec queries and Frobenius error; the present task uses tolerance-priced scalar measurements and uniform function reconstruction."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "SO_FO_O03_relaxed_unrestricted_expected_cost",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "SO_FO_O03_relaxed_spectral_pair",
-        "relation_kind": "related",
-        "description": "The local function assumptions and known-spectrum communication are related, but the present class allows unrestricted local work and stopping-time expected sample cost rather than a fixed joint budget under the historical-vector protocol."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_COMB_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "ON_REL_COMB_DIRECTSUM",
-        "source_ref": "ON_ADV_S",
-        "target_ref": "ON_COMB_S",
-        "relation_kind": "direct_sum_lower_bound",
-        "conditions": [
-          "$m$ divides $d$, the action space is the public product set, and $T\\ge d/m$."
-        ],
-        "instance_map": "m independent d/m-arm bandits",
-        "output_map": "combine m arm indices into m-hot action",
-        "error_map": "sum regrets; m sqrt((d/m)T)=sqrt(mdT)",
-        "oracle_simulation": "one selected sample per group in same round",
-        "cost_map": {
-          "expression": "T rounds; mT coordinate observations",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_COMB_S__main__e2"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ONX_OCO_SEPARATION_PER_ROUND",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "ON_OCO_S",
-        "relation_kind": "different_oracle",
-        "description": "Action-point gradient feedback is shared, but the feasible set here is hidden behind charged separation queries rather than a known ball with free projection."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "MX_S_hodlr",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "MX_REL_hodlr_lowrank",
-        "source_ref": "MX_S_hodlr",
-        "target_ref": "MX_S_lowrank",
-        "relation_kind": "related_compositional_task",
-        "conditions": [
-          "Each off-diagonal target block has rank at most k. The global target is HODLR, not a globally rank-k matrix."
-        ],
-        "instance_map": "Restricted separately to the matrix blocks associated with tree nodes",
-        "output_map": "Assemble block approximations along the specified tree",
-        "error_map": "Aggregate Frobenius block errors over disjoint positions and tree levels. The levelwise algorithm must control error propagation.",
-        "oracle_simulation": "Zero padding outside a block and restricting the returned coordinates simulates one subblock multiplication.",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "one_block_query": "1 full-matrix matvec; simultaneous-block interference requires source algorithm"
-          }
-        },
-        "evidence_refs": [
-          "MX_S_hodlr__main__e2"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_BCO1_STO_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "ON_REL_LIN_TO_BCO",
-        "source_ref": "ON_LINSTO_S",
-        "target_ref": "ON_BCO1_STO_S",
-        "relation_kind": "subclass_lower_bound",
-        "conditions": [
-          "Actions lie in the unit ball. Negate rewards to obtain losses, with additive scalar Gaussian noise of variance one."
-        ],
-        "instance_map": "f(x)=−<θ,x>",
-        "output_map": "same actions",
-        "error_map": "identical pseudo-regret",
-        "oracle_simulation": "negate observations; Gaussian noise symmetric",
-        "cost_map": {
-          "expression": "one scalar observation per round unchanged",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_BCO1_STO_S__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "BL_SPEC_direct_reduced",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "BL_REL_direct_to_stationarity",
-        "source_ref": "BL_SPEC_direct_reduced",
-        "target_ref": "external:optimization/smooth_nonconvex_exact_gradient",
-        "relation_kind": "exact_task_identity",
-        "conditions": [
-          "Direct ∇Φ oracle available",
-          "Φ L_Φ-smooth and initial gap bounded"
-        ],
-        "instance_map": "Objective is h=Φ.",
-        "output_map": "Identity on x",
-        "error_map": "Identical norm/squared-norm error.",
-        "oracle_simulation": "One direct reduced-gradient call equals one h-gradient call.",
-        "cost_map": {
-          "expression": "No primitive f,g cost relation is asserted.",
-          "components": {}
-        },
-        "evidence_refs": [
-          "BL_EV_aid_vector"
-        ]
-      },
-      "target_in_pilot": false
-    },
-    {
-      "declared_in_setting": "BL_SPEC_fresh_fixed_p",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "BL_REL_fresh_metrics",
-        "source_ref": "BL_SPEC_fresh_lower_p",
-        "target_ref": "BL_SPEC_fresh_fixed_p",
-        "relation_kind": "related_not_equivalent",
-        "conditions": [
-          "Different higher-derivative object assumptions must first be reconciled."
-        ],
-        "instance_map": "No automatic same-instance class map certified.",
-        "output_map": "same x only if both classes hold",
-        "error_map": "E||∇Φ||²≤ε² implies E||∇Φ||≤ε by Jensen; converse fails in general.",
-        "oracle_simulation": "Pan joint call and Wu individual fresh calls have different within-call coupling; no automatic exact simulation in either direction.",
-        "cost_map": {
-          "expression": "Do not transfer minimax lower or uniform-p constants.",
-          "components": {}
-        },
-        "evidence_refs": [
-          "BL_EV_pan_upper",
-          "BL_SPEC_fresh_fixed_p__main__e1"
-        ]
+        "target_setting_id": "ONX_LEX_LIPSCHITZ_KNOWN",
+        "relation_kind": "less_information",
+        "description": "The unknown-envelope class removes public tradeoff information; its anchor-plus-tie regimes retain the same Lipschitz reward structure."
       },
       "target_in_pilot": true
     },
@@ -1439,199 +312,50 @@
       "target_in_pilot": true
     },
     {
-      "declared_in_setting": "SO_ZO_E09c_ball",
+      "declared_in_setting": "ON_ADV_FIXED_DELAY_CAPACITY",
       "source_pointer": "/relations/0",
       "relation": {
-        "target_setting_id": "SO_ZO_E09c",
-        "relation_kind": "different_query_domain",
-        "description": "The existing profile requires globally convex Lipschitz components and allows full-space queries. This contract requires only ball-domain functions and permits only ball-domain queries."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "SO_FO_CS01_product_radius_csg",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "SO_FO_CS01_csg",
-        "relation_kind": "different_geometry",
-        "description": "The fixed narrow-cube profile ties the feasible circumradius to R. Here the product domain and the nearby-optimizer radius are independent, and the complexity takes a worst case over public product geometries."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_FINITE_VI_GENERAL_INCLUSION",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "CV_REL_FINITE_SPAN_TO_GENERAL",
-        "source_ref": "CV_S_FINITE_VI_SPAN_ROOT",
-        "target_ref": "CV_S_FINITE_VI_GENERAL_INCLUSION",
-        "relation_kind": "special_case",
-        "conditions": [
-          "Set $G(z)=\\{0\\}$.",
-          "A linear-span restriction constrains algorithms, not the hidden operator model."
-        ],
-        "instance_map": "Retain all component operators $F_i$ and set the set-valued operator $G$ identically to zero.",
-        "output_map": "The output graph element is fixed to $\\widehat g=0$.",
-        "error_map": "The two residuals coincide in this special case. An upper bound from a specific algorithm remains valid for a broader algorithm class; a linear-span-restricted lower bound does not thereby extend to arbitrary algorithms.",
-        "oracle_simulation": "One component query simulates the same component query.",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "component_calls": "1"
-          }
-        },
-        "evidence_refs": [
-          "CV_S_FINITE_VI_GENERAL_INCLUSION__main__e1"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "MX_S_matmul_square",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "MX_REL_matmul_matvec",
-        "source_ref": "MX_S_matmul_square",
-        "target_ref": "external:explicit_matrix_vector_multiplication",
-        "relation_kind": "related_resource_conversion",
-        "conditions": [
-          "A is explicit; return Av."
-        ],
-        "instance_map": "Restrict the second input to a single column vector",
-        "output_map": "Return the product vector.",
-        "error_map": "Exact equality",
-        "oracle_simulation": "A direct dense Av product uses O(n²) arithmetic operations. Charging one black-box Av query specifies information access; it does not assert this arithmetic running time.",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "one_dense_matvec_arithmetic": "O(n²)"
-          }
-        },
-        "evidence_refs": [
-          "MX_S_matmul_square__main__e2"
-        ]
-      },
-      "target_in_pilot": false
-    },
-    {
-      "declared_in_setting": "CV_S_STRONG_HIGH_VI_TANGENT",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "CV_S_HIGH_VI",
-        "relation_kind": "instance_subclass",
-        "description": "This compact-domain tangent-residual model adds a public positive strong-monotonicity modulus."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_STRONG_HIGH_VI_TANGENT",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "target_setting_id": "CV_S_STRONG_HIGH_VI_ROOT",
-        "relation_kind": "different_domain_and_metric",
-        "description": "The root-finding profile uses the full space and ||F||; a constrained VI solution may have nonzero F."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "target_setting_id": "CV_S_SIMPLEX_MATRIX_GAME",
+        "target_setting_id": "ON_ADV_S",
         "relation": "different_protocol",
-        "notes": "The neighboring setting outputs approximate mixed strategies under two-sided matrix-vector products."
+        "notes": "Immediate selected-arm feedback is a different protocol. The delay and the cap on outstanding feedback change which information becomes available."
       },
       "target_in_pilot": true
     },
     {
-      "declared_in_setting": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "target_setting_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE",
-        "relation": "different_solution_requirement",
-        "notes": "The strict output requires strict row and column inequalities. Here ties may qualify, and the admissible output set can contain several indices."
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "MX_S_least_squares",
+      "declared_in_setting": "MX_S_stream_real",
       "source_pointer": "/relations/0",
       "relation": {
-        "id": "MX_REL_ls_normal",
-        "source_ref": "MX_S_least_squares",
-        "target_ref": "MX_S_spd",
-        "relation_kind": "one_way_reduction",
+        "id": "MX_REL_stream_lowrank",
+        "source_ref": "MX_S_stream_real",
+        "target_ref": "MX_S_lowrank",
+        "relation_kind": "related_task_different_interface",
         "conditions": [
-          "A has full column rank. The target positive definite matrix is B=A^T A, with kappa(B)=kappa(A)²."
+          "p=2 with squared error; offline matrix–vector access, one-pass streams, and memory resources are distinct specifications."
         ],
-        "instance_map": "B=A^TA,c=A^Tb",
-        "output_map": "Keep the output vector x unchanged",
-        "error_map": "Least-squares excess is $\\|A(x-x^*)\\|^2=\\|x-x^*\\|_B^2$. Since $\\|B\\|\\|e_0\\|^2\\le\\kappa(A)^2\\|Ae_0\\|^2$, normalized SPD tolerance $\\varepsilon_{\\rm SPD}=\\varepsilon_{\\rm LS}/\\kappa^2$ ensures the required least-squares tolerance. Both criteria require exactness when initial error is zero.",
-        "oracle_simulation": "One Bv uses one Av and one A^T u; setting up c uses one A^T b.",
+        "instance_map": "Retain the underlying input matrix A.",
+        "output_map": "Retain the same rank-k right projection.",
+        "error_map": "squared factor1+ε corresponds norm factor√(1+ε)",
+        "oracle_simulation": "Storing all of $A$ permits matrix-vector simulation but uses $mn$ real registers. This is not a constant-memory equivalence with the oracle model.",
         "cost_map": {
           "expression": null,
           "components": {
-            "N_right": "t",
-            "N_left": "t+1"
+            "storage_to_simulate_matvec": "mn real registers",
+            "pass": "1"
           }
         },
         "evidence_refs": [
-          "MX_S_least_squares__main__e2"
+          "MX_S_stream_real__main__e1"
         ]
       },
       "target_in_pilot": true
     },
     {
-      "declared_in_setting": "MX_S_least_squares",
-      "source_pointer": "/relations/1",
-      "relation": {
-        "id": "MX_REL_ls_saddle",
-        "source_ref": "MX_S_least_squares",
-        "target_ref": "external:bilinear_quadratic_saddle_least_squares",
-        "relation_kind": "algebraic_relation_only",
-        "conditions": [
-          "The variable y is unconstrained; a bounded-domain saddle gap cannot unconditionally replace least-squares excess."
-        ],
-        "instance_map": "Φ(x,y)=y^T(Ax−b)−1/2||y||²; max_yΦ=1/2||Ax−b||²",
-        "output_map": "x component; y*=Ax−b",
-        "error_map": "Primal excess is one-half ||A(x-x*)||²; no equivalence with a bounded-domain saddle gap is supplied.",
-        "oracle_simulation": "(∇xΦ,∇yΦ)=(A^Ty,Ax−b−y)",
-        "cost_map": {
-          "expression": null,
-          "components": {
-            "N_right": "1",
-            "N_left": "1",
-            "per_full_gradient": "Yes"
-          }
-        },
-        "evidence_refs": [
-          "MX_S_least_squares__main__e2"
-        ]
-      },
-      "target_in_pilot": false
-    },
-    {
-      "declared_in_setting": "ON_LINADV_S",
+      "declared_in_setting": "SO_FO_P01_fixed_non_euclidean",
       "source_pointer": "/relations/0",
       "relation": {
-        "id": "ON_REL_STOLIN_NOT_BLO",
-        "source_ref": "ON_LINSTO_S",
-        "target_ref": "ON_LINADV_S",
-        "relation_kind": "distinct_feedback_models",
-        "conditions": [
-          "One interface adds observation noise to an inner product; the other returns the exact projection of a bounded random vector or a vector fixed in advance."
-        ],
-        "instance_map": "No class inclusion for arbitrary x; action-norm dependence of conditional variance differs.",
-        "output_map": "No transfer asserted.",
-        "error_map": "d sqrtT versus sqrt(dT) can coexist.",
-        "oracle_simulation": "Cannot rescale one observation law into the other without changing information.",
-        "cost_map": {
-          "expression": "Not asserted",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_LINADV_S__main__e1"
-        ]
+        "target_setting_id": "CV_S_EXACT_RESOLVENT",
+        "relation_kind": "different_oracle",
+        "description": "The resolvent setting permits an arbitrary positive Euclidean step size and measures an operator residual; the present coefficient and non-Euclidean power are fixed and the target is objective error."
       },
       "target_in_pilot": true
     },
@@ -1714,6 +438,31 @@
       "target_in_pilot": true
     },
     {
+      "declared_in_setting": "BL_SPEC_uniform_penalty_pl",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "BL_REL_pl_not_unique",
+        "source_ref": "BL_SPEC_det_primitive",
+        "target_ref": "BL_SPEC_uniform_penalty_pl",
+        "relation_kind": "conditional_class_inclusion",
+        "conditions": [
+          "For sufficiently small t, g+t f remains strongly convex when g has curvature μ and f has bounded y-Hessian; use reduced PL constant μ/2 and t≤μ/(2Lf)."
+        ],
+        "instance_map": "Identity on f,g with tbar≤μ/(2Lf).",
+        "output_map": "same outer x",
+        "error_map": "same gradient because unique inner minimizer gives same optimistic value",
+        "oracle_simulation": "Same deterministic primitive gradient operations.",
+        "cost_map": {
+          "expression": "One-to-one primitive calls; constants and PL modulus change as stated.",
+          "components": {}
+        },
+        "evidence_refs": [
+          "BL_SPEC_uniform_penalty_pl__main__e2"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
       "declared_in_setting": "BL_SPEC_quadratic_fo",
       "source_pointer": "/relations/0",
       "relation": {
@@ -1738,54 +487,516 @@
       "target_in_pilot": true
     },
     {
-      "declared_in_setting": "MX_S_stream_real",
+      "declared_in_setting": "ONX_BCO1_SMOOTH_STRONG_PROPER",
       "source_pointer": "/relations/0",
       "relation": {
-        "id": "MX_REL_stream_lowrank",
-        "source_ref": "MX_S_stream_real",
-        "target_ref": "MX_S_lowrank",
-        "relation_kind": "related_task_different_interface",
+        "target_setting_id": "ON_BCO1_ADV_S",
+        "relation_kind": "related",
+        "description": "Both use exact one-point adversarial values, but this class includes smoothness, strong convexity, and a conditioned family of known convex bodies."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_OCO_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "ON_REL_OCO_PZERO",
+        "source_ref": "ON_OCO_S",
+        "target_ref": "ON_DYN_S",
+        "relation_kind": "exact_specialization",
         "conditions": [
-          "p=2 with squared error; offline matrix–vector access, one-pass streams, and memory resources are distinct specifications."
+          "Set P=0, preserving L, R, d, T, and the gradient interface."
         ],
-        "instance_map": "Retain the underlying input matrix A.",
-        "output_map": "Retain the same rank-k right projection.",
-        "error_map": "squared factor1+ε corresponds norm factor√(1+ε)",
-        "oracle_simulation": "Storing all of $A$ permits matrix-vector simulation but uses $mn$ real registers. This is not a constant-memory equivalence with the oracle model.",
+        "instance_map": "same loss sequence",
+        "output_map": "same trajectory",
+        "error_map": "dynamic comparator must be constant; regret exactly equals static",
+        "oracle_simulation": "identity",
         "cost_map": {
-          "expression": null,
-          "components": {
-            "storage_to_simulate_matvec": "mn real registers",
-            "pass": "1"
-          }
+          "expression": "T gradients and projections unchanged",
+          "components": {}
         },
         "evidence_refs": [
-          "MX_S_stream_real__main__e1"
+          "ON_OCO_S__main__e2"
         ]
       },
       "target_in_pilot": true
     },
     {
-      "declared_in_setting": "BL_SPEC_uniform_penalty_pl",
+      "declared_in_setting": "ON_OCO_S",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "id": "ON_REL_GRAD_REGRET_TO_SADDLE",
+        "source_ref": "ON_OCO_S",
+        "target_ref": "external:convex_concave_saddle_point_no_regret_averaging",
+        "relation_kind": "conditional_reduction",
+        "conditions": [
+          "The payoff $\\Phi$ is convex-concave. The two online learners have compatible interfaces and receive the corresponding partial gradients. Their feasible domains are preserved."
+        ],
+        "instance_map": "x-loss Φ(·,y_t), y-loss −Φ(x_t,·)",
+        "output_map": "average iterates (xbar,ybar)",
+        "error_map": "weak primal-dual gap≤(R_x+R_y)/T by convexity/concavity",
+        "oracle_simulation": "Need both partial-gradient interfaces per round. Does not follow from arbitrary one-sided bandit oracle.",
+        "cost_map": {
+          "expression": "T x-gradients +T y-gradients, plus both update/projection costs",
+          "components": {}
+        },
+        "evidence_refs": []
+      },
+      "target_in_pilot": false
+    },
+    {
+      "declared_in_setting": "CV_S_HIGH_SADDLE_gap",
       "source_pointer": "/relations/0",
       "relation": {
-        "id": "BL_REL_pl_not_unique",
-        "source_ref": "BL_SPEC_det_primitive",
-        "target_ref": "BL_SPEC_uniform_penalty_pl",
-        "relation_kind": "conditional_class_inclusion",
+        "id": "CV_REL_TANGENT_TO_GAP",
+        "source_ref": "CV_S_HIGH_SADDLE_tan",
+        "target_ref": "CV_S_HIGH_SADDLE_gap",
+        "relation_kind": "one_way_error_reduction",
         "conditions": [
-          "For sufficiently small t, g+t f remains strongly convex when g has curvature μ and f has bounded y-Hessian; use reduced PL constant μ/2 and t≤μ/(2Lf)."
+          "Differentiable payoff, convex in the primal variable and concave in the dual variable",
+          "The known compact convex product domain $K=X\\times Y$ satisfies $\\operatorname{diam}(K)\\le D_K$"
         ],
-        "instance_map": "Identity on f,g with tbar≤μ/(2Lf).",
-        "output_map": "same outer x",
-        "error_map": "same gradient because unique inner minimizer gives same optimistic value",
-        "oracle_simulation": "Same deterministic primitive gradient operations.",
+        "instance_map": "Uses the same payoff function and the same product domain.",
+        "output_map": "Retain the same feasible primal–dual point.",
+        "error_map": "$\\operatorname{Gap}_f(z)\\le D_K\\operatorname{dist}(0,F_f(z)+N_K(z))$. To attain gap tolerance $\\varepsilon$, use tangent-residual tolerance $\\varepsilon/D_K$.",
+        "oracle_simulation": "No additional hidden-information calls are needed.",
         "cost_map": {
-          "expression": "One-to-one primitive calls; constants and PL modulus change as stated.",
+          "expression": null,
+          "components": {
+            "extra_calls": "0"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_HIGH_SADDLE_gap__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_STRONG_HIGH_VI_TANGENT",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "CV_S_HIGH_VI",
+        "relation_kind": "instance_subclass",
+        "description": "This compact-domain tangent-residual model adds a public positive strong-monotonicity modulus."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_STRONG_HIGH_VI_TANGENT",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "target_setting_id": "CV_S_STRONG_HIGH_VI_ROOT",
+        "relation_kind": "different_domain_and_metric",
+        "description": "The root-finding profile uses the full space and ||F||; a constrained VI solution may have nonzero F."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_LINSTO_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "ON_REL_LIN_TO_BCO",
+        "source_ref": "ON_LINSTO_S",
+        "target_ref": "ON_BCO1_STO_S",
+        "relation_kind": "subclass_lower_bound",
+        "conditions": [
+          "Actions lie in the unit ball. Negate rewards to obtain losses, with additive scalar Gaussian noise of variance one."
+        ],
+        "instance_map": "f(x)=−<θ,x>",
+        "output_map": "same actions",
+        "error_map": "identical pseudo-regret",
+        "oracle_simulation": "negate observations; Gaussian noise symmetric",
+        "cost_map": {
+          "expression": "one scalar observation per round unchanged",
           "components": {}
         },
         "evidence_refs": [
-          "BL_SPEC_uniform_penalty_pl__main__e2"
+          "ON_LINSTO_S__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_LINSTO_S",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "id": "ON_REL_STOLIN_NOT_BLO",
+        "source_ref": "ON_LINSTO_S",
+        "target_ref": "ON_LINADV_S",
+        "relation_kind": "distinct_feedback_models",
+        "conditions": [
+          "One interface adds observation noise to an inner product; the other returns the exact projection of a bounded random vector or a vector fixed in advance."
+        ],
+        "instance_map": "No class inclusion for arbitrary x; action-norm dependence of conditional variance differs.",
+        "output_map": "No transfer asserted.",
+        "error_map": "d sqrtT versus sqrt(dT) can coexist.",
+        "oracle_simulation": "Cannot rescale one observation law into the other without changing information.",
+        "cost_map": {
+          "expression": "Not asserted",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_LINSTO_S__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_HSS_MATVEC",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "MX_S_hodlr",
+        "relation": "different_output_class",
+        "notes": "HSS requires nested row and column bases; independent HODLR off-diagonal blocks use a different approximation benchmark."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "BL_SPEC_quadratic_hvp",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "BL_REL_quadratic_hvp_simulation",
+        "source_ref": "BL_SPEC_quadratic_fo",
+        "target_ref": "BL_SPEC_quadratic_hvp",
+        "relation_kind": "exact_oracle_simulation",
+        "conditions": [
+          "g quadratic as specified"
+        ],
+        "instance_map": "Identity on the instance",
+        "output_map": "Identity on x",
+        "error_map": "No approximation error.",
+        "oracle_simulation": "g_{yy} v=∇_y g(x,y+v)−∇_y g(x,y); g_{xy} v=∇_x g(x,y+v)−∇_x g(x,y).",
+        "cost_map": {
+          "expression": "At most 3 source first-order bundles simulate one HVP-extended bundle (source Proposition3.2 convention).",
+          "components": {}
+        },
+        "evidence_refs": [],
+        "review_note": "The original citation supports only a candidate result whose applicability has not been fully checked. It is excluded from formal evidence and is not used for automatic complexity transfer."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "BL_SPEC_finite_primitive",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "BL_REL_finite_affine_amplification",
+        "source_ref": "external:finite_sum/smooth_nonconvex_component_gradient",
+        "target_ref": "BL_SPEC_finite_primitive",
+        "relation_kind": "lower_bound_reduction",
+        "conditions": [
+          "Bounded average gradient chain and unit component smoothness",
+          "κ≥2"
+        ],
+        "instance_map": "f_i(x,y)=F_i(y), g_j(x,y)=||y||²/(2κ)−(1−1/κ)<x,y>; y*=(κ−1)x.",
+        "output_map": "Return y_hat=(κ−1)x_hat.",
+        "error_map": "||∇Φ(x)||=(κ−1)||∇F((κ−1)x)||.",
+        "oracle_simulation": "Each upper query is one F_i gradient; known quadratic lower answers use no hidden F query.",
+        "cost_map": {
+          "expression": "At most one source component query per upper gradient call; lower queries reveal nothing about F.",
+          "components": {}
+        },
+        "evidence_refs": [
+          "BL_SPEC_finite_primitive__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ONX_CONTROL_UNKNOWN_DRC_VARIATION",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "ONX_CONTROL_UNKNOWN_STABLE",
+        "relation_kind": "related",
+        "description": "Both study unknown nonstochastic linear control, but the disturbance-response comparator and Markov-tail model differ from known-stabilizer, strongly controllable fixed-feedback contracts."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_ZO_BILINEAR",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "CV_REL_BILINEAR_GAP_EQUALITY",
+        "source_ref": "CV_S_ZO_BILINEAR",
+        "target_ref": "external:monotone_vi/bilinear_affine_operator",
+        "relation_kind": "conditional_equivalence",
+        "conditions": [
+          "f(x,y)=y^TAx−b^Ty",
+          "known compact product sets"
+        ],
+        "instance_map": "F=(A^Ty,−Ax+b); its linear part is skew symmetric",
+        "output_map": "same feasible pair",
+        "error_map": "G_M=G_S=Gap_f; all three are Ry||Ax−b||+Rx||A^Ty||+b^Ty for balls",
+        "oracle_simulation": "exact scalar coordinate differences simulate joint gradient",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "N_value_per_joint_gradient": "dx+dy+1 using one common base value; global nonzero finite-difference step",
+            "arithmetic": "exact and uncharged"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_ZO_BILINEAR__main__e1"
+        ]
+      },
+      "target_in_pilot": false
+    },
+    {
+      "declared_in_setting": "CV_S_ZO_BILINEAR",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "id": "CV_REL_SIMPLEX_VS_EUCLIDEAN",
+        "source_ref": "CV_S_SIMPLEX_GAME",
+        "target_ref": "CV_S_ZO_BILINEAR",
+        "relation_kind": "related_only",
+        "conditions": [
+          "different domain geometry, native feedback and norms",
+          "entry bound is not dimension-free spectral bound"
+        ],
+        "instance_map": "both use bilinear matrices, but ||A||₂ may be sqrt(nm) under entry bound1",
+        "output_map": "not a declared complexity reduction",
+        "error_map": "fixed-budget risk and target-accuracy value cost are not identified",
+        "oracle_simulation": "two-sided matvec is stronger than a scalar bilinear value without dimension-dependent simulation",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "transfer": "none without a full geometry/oracle map"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_ZO_BILINEAR__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_HIGH_SADDLE_tan",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "CV_REL_SCALAR_JET_TO_OPERATOR",
+        "source_ref": "CV_S_HIGH_SADDLE_tan",
+        "target_ref": "CV_S_HIGH_VI",
+        "relation_kind": "oracle_simulation",
+        "conditions": [
+          "A $C^p$ convex-concave payoff on a known compact convex product domain, with fixed integer $p\\ge2$.",
+          "Both tasks use the same Euclidean norm and the same feasible query domain."
+        ],
+        "instance_map": "For $F_f=(\\nabla_xf,-\\nabla_yf)$, the derivative of order $p-1$ has Lipschitz constant at most $L_p$. The product-domain diameter is unchanged.",
+        "output_map": "Retain feasible primal–dual points. Computations in an affine hull must embed the normal-cone certificate back into the joint space.",
+        "error_map": "The tangent residuals of the two representations coincide.",
+        "oracle_simulation": "A complete scalar derivative jet through order $p$ gives the complete operator jet through order $p-1$ by negating the dual block.",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "N_scalar_jet_per_operator_jet": "1",
+            "extra_unknown_oracle_calls": "0"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_HIGH_SADDLE_tan__main__e1",
+          "CV_S_HIGH_SADDLE_tan__main__e2"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_HIGH_SADDLE_tan",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "id": "CV_REL_TANGENT_TO_GAP",
+        "source_ref": "CV_S_HIGH_SADDLE_tan",
+        "target_ref": "CV_S_HIGH_SADDLE_gap",
+        "relation_kind": "one_way_error_reduction",
+        "conditions": [
+          "Differentiable payoff, convex in the primal variable and concave in the dual variable",
+          "The known compact convex product domain $K=X\\times Y$ satisfies $\\operatorname{diam}(K)\\le D_K$"
+        ],
+        "instance_map": "Uses the same payoff function and the same product domain.",
+        "output_map": "Retain the same feasible primal–dual point.",
+        "error_map": "$\\operatorname{Gap}_f(z)\\le D_K\\operatorname{dist}(0,F_f(z)+N_K(z))$. To attain gap tolerance $\\varepsilon$, use tangent-residual tolerance $\\varepsilon/D_K$.",
+        "oracle_simulation": "No additional hidden-information calls are needed.",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "extra_calls": "0"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_HIGH_SADDLE_tan__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "SO_FO_O03_relaxed_unrestricted_expected_cost",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "SO_FO_O03_relaxed_spectral_pair",
+        "relation_kind": "related",
+        "description": "The local function assumptions and known-spectrum communication are related, but the present class allows unrestricted local work and stopping-time expected sample cost rather than a fixed joint budget under the historical-vector protocol."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ONX_OCO_SEPARATION_PER_ROUND",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "ON_OCO_S",
+        "relation_kind": "different_oracle",
+        "description": "Action-point gradient feedback is shared, but the feasible set here is hidden behind charged separation queries rather than a known ball with free projection."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_least_squares",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "MX_REL_ls_normal",
+        "source_ref": "MX_S_least_squares",
+        "target_ref": "MX_S_spd",
+        "relation_kind": "one_way_reduction",
+        "conditions": [
+          "A has full column rank. The target positive definite matrix is B=A^T A, with kappa(B)=kappa(A)²."
+        ],
+        "instance_map": "B=A^TA,c=A^Tb",
+        "output_map": "Keep the output vector x unchanged",
+        "error_map": "Least-squares excess is $\\|A(x-x^*)\\|^2=\\|x-x^*\\|_B^2$. Since $\\|B\\|\\|e_0\\|^2\\le\\kappa(A)^2\\|Ae_0\\|^2$, normalized SPD tolerance $\\varepsilon_{\\rm SPD}=\\varepsilon_{\\rm LS}/\\kappa^2$ ensures the required least-squares tolerance. Both criteria require exactness when initial error is zero.",
+        "oracle_simulation": "One Bv uses one Av and one A^T u; setting up c uses one A^T b.",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "N_right": "t",
+            "N_left": "t+1"
+          }
+        },
+        "evidence_refs": [
+          "MX_S_least_squares__main__e2"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_least_squares",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "id": "MX_REL_ls_saddle",
+        "source_ref": "MX_S_least_squares",
+        "target_ref": "external:bilinear_quadratic_saddle_least_squares",
+        "relation_kind": "algebraic_relation_only",
+        "conditions": [
+          "The variable y is unconstrained; a bounded-domain saddle gap cannot unconditionally replace least-squares excess."
+        ],
+        "instance_map": "Φ(x,y)=y^T(Ax−b)−1/2||y||²; max_yΦ=1/2||Ax−b||²",
+        "output_map": "x component; y*=Ax−b",
+        "error_map": "Primal excess is one-half ||A(x-x*)||²; no equivalence with a bounded-domain saddle gap is supplied.",
+        "oracle_simulation": "(∇xΦ,∇yΦ)=(A^Ty,Ax−b−y)",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "N_right": "1",
+            "N_left": "1",
+            "per_full_gradient": "Yes"
+          }
+        },
+        "evidence_refs": [
+          "MX_S_least_squares__main__e2"
+        ]
+      },
+      "target_in_pilot": false
+    },
+    {
+      "declared_in_setting": "SO_ZO_N10_schatten_hessian_gaussian",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "SO_ZO_N05_main",
+        "relation_kind": "related_endpoint",
+        "description": "The p=infinity, order-three norm agrees with the operator endpoint, while the present class omits a global gradient-smoothness upper bound and fixes Gaussian noise."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "SO_ZO_N10_schatten_hessian_gaussian",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "target_setting_id": "SO_ZO_N06_main",
+        "relation_kind": "related_endpoint",
+        "description": "The p=2, order-three norm agrees with the Hilbert-Schmidt endpoint, while the present class omits a global gradient-smoothness upper bound and fixes Gaussian noise."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_BCO2_ADV_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "ON_REL_TWO_RMS_NOT_AS",
+        "source_ref": "ON_BCO2_STO_S",
+        "target_ref": "ON_BCO2_ADV_S",
+        "relation_kind": "distinct_model_constraints",
+        "conditions": [
+          "A second-moment bound on sample Lipschitz constants differs from an almost-sure per-round bound. A population-optimal comparator also differs from the best comparator for the realized sequence."
+        ],
+        "instance_map": "Gaussian sample linear family is not uniformly L-Lipschitz a.s.",
+        "output_map": "No direct lower transfer.",
+        "error_map": "Only the explicitly derived dimension-free common lower is used in adversarial spec.",
+        "oracle_simulation": "Both pairs share sample, but distributions and goals differ.",
+        "cost_map": {
+          "expression": "2 values/sample does not erase model mismatch.",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_BCO2_ADV_S__main__e2"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "BL_SPEC_fresh_lower_p",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "BL_REL_fresh_metrics",
+        "source_ref": "BL_SPEC_fresh_lower_p",
+        "target_ref": "BL_SPEC_fresh_fixed_p",
+        "relation_kind": "related_not_equivalent",
+        "conditions": [
+          "Different higher-derivative object assumptions must first be reconciled."
+        ],
+        "instance_map": "No automatic same-instance class map certified.",
+        "output_map": "same x only if both classes hold",
+        "error_map": "E||∇Φ||²≤ε² implies E||∇Φ||≤ε by Jensen; converse fails in general.",
+        "oracle_simulation": "Pan joint call and Wu individual fresh calls have different within-call coupling; no automatic exact simulation in either direction.",
+        "cost_map": {
+          "expression": "Do not transfer minimax lower or uniform-p constants.",
+          "components": {}
+        },
+        "evidence_refs": [
+          "BL_SPEC_fresh_lower_p__main__e2",
+          "BL_EV_wu_finite"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_CTX_TAB_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "ON_REL_TAB_DIRECTSUM",
+        "source_ref": "ON_ADV_S",
+        "target_ref": "ON_CTX_TAB_S",
+        "relation_kind": "direct_sum",
+        "conditions": [
+          "Balanced S contexts, T/S≥K."
+        ],
+        "instance_map": "S independent K-arm environments",
+        "output_map": "run/collect one learner per context",
+        "error_map": "regret is sum of S component regrets",
+        "oracle_simulation": "one current-context arm feedback per global round",
+        "cost_map": {
+          "expression": "S runs of n=T/S rounds → T total pulls",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_CTX_TAB_S__main__e2",
+          "ON_CTX_TAB_S__main__e1"
         ]
       },
       "target_in_pilot": true
@@ -1818,6 +1029,820 @@
         ]
       },
       "target_in_pilot": false
+    },
+    {
+      "declared_in_setting": "CV_S_HESSIAN_NCSC",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "CV_REL_HIGH_VI_NOT_FULL_HESSIAN",
+        "source_ref": "CV_S_HIGH_VI",
+        "target_ref": "CV_S_HESSIAN_NCSC",
+        "relation_kind": "related_only",
+        "conditions": [
+          "different task/model and returned information"
+        ],
+        "instance_map": "no general instance reduction asserted",
+        "output_map": "none",
+        "error_map": "no complexity bound transfer",
+        "oracle_simulation": "operator derivative orderp−1 is not automatically scalar payoff orderp or a Hessian-vector interface",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "transfer": "none"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_HESSIAN_NCSC__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_STRICT_MATRIX_SADDLE_COMPARE",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "CV_S_SIMPLEX_MATRIX_GAME",
+        "relation": "different_protocol",
+        "notes": "The neighboring setting outputs approximate mixed strategies under two-sided matrix-vector products."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_TRACE_PSD",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "conditions": [
+          "Set p=1 and restrict inputs to positive semidefinite matrices, preserving adaptivity, randomization, delta, dimension, and output."
+        ],
+        "cost_map": {
+          "components": {
+            "N_right": "Unchanged"
+          },
+          "expression": null
+        },
+        "error_map": "For PSD matrices, $\\|A\\|_{S_1}=\\operatorname{tr}(A)$, so relative trace error equals additive error normalized by the Schatten-one norm.",
+        "evidence_refs": [
+          "MX_S_TRACE_PSD__randomized_adaptive__e4"
+        ],
+        "id": "MX_REL_psd_trace_general",
+        "instance_map": "The input is unchanged.",
+        "oracle_simulation": "The same matrix-vector product interface",
+        "output_map": "Retain the same scalar estimate",
+        "relation_kind": "model_restriction",
+        "source_ref": "MX_S_TRACE_PSD",
+        "target_ref": "MX_S_trace_general"
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_FINITE_VI_SPAN_ROOT",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "CV_REL_FINITE_SPAN_TO_GENERAL",
+        "source_ref": "CV_S_FINITE_VI_SPAN_ROOT",
+        "target_ref": "CV_S_FINITE_VI_GENERAL_INCLUSION",
+        "relation_kind": "special_case",
+        "conditions": [
+          "Set $G(z)=\\{0\\}$.",
+          "A linear-span restriction constrains algorithms, not the hidden operator model."
+        ],
+        "instance_map": "Retain all component operators $F_i$ and set the set-valued operator $G$ identically to zero.",
+        "output_map": "The output graph element is fixed to $\\widehat g=0$.",
+        "error_map": "The two residuals coincide in this special case. An upper bound from a specific algorithm remains valid for a broader algorithm class; a linear-span-restricted lower bound does not thereby extend to arbitrary algorithms.",
+        "oracle_simulation": "One component query simulates the same component query.",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "component_calls": "1"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_FINITE_VI_SPAN_ROOT__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_SIMPLEX_MATRIX_GAME",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "conditions": [
+          "different domain geometry, native feedback and norms",
+          "entry bound is not dimension-free spectral bound"
+        ],
+        "cost_map": {
+          "components": {
+            "transfer": "none without a full geometry/oracle map"
+          },
+          "expression": null
+        },
+        "error_map": "fixed-budget risk and target-accuracy value cost are not identified",
+        "evidence_refs": [
+          "CV_S_SIMPLEX_MATRIX_GAME__deterministic_risk__e2"
+        ],
+        "id": "CV_REL_SIMPLEX_VS_EUCLIDEAN",
+        "instance_map": "both use bilinear matrices, but ||A||₂ may be sqrt(nm) under entry bound1",
+        "oracle_simulation": "two-sided matvec is stronger than a scalar bilinear value without dimension-dependent simulation",
+        "output_map": "not a declared complexity reduction",
+        "relation_kind": "related_only",
+        "source_ref": "CV_S_SIMPLEX_MATRIX_GAME",
+        "target_ref": "CV_S_ZO_BILINEAR"
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_DYN_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "ON_REL_OCO_PZERO",
+        "source_ref": "ON_OCO_S",
+        "target_ref": "ON_DYN_S",
+        "relation_kind": "exact_specialization",
+        "conditions": [
+          "Set P=0, preserving L, R, d, T, and the gradient interface."
+        ],
+        "instance_map": "same loss sequence",
+        "output_map": "same trajectory",
+        "error_map": "dynamic comparator must be constant; regret exactly equals static",
+        "oracle_simulation": "identity",
+        "cost_map": {
+          "expression": "T gradients and projections unchanged",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_DYN_S__main__e2"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "SO_FO_S03_unknown_alpha_known_scales",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "SO_FO_S03_unknown_alpha",
+        "relation_kind": "different_public_information",
+        "description": "The neighboring profile also hides smoothness and gap budgets. Here L and Delta are public, while p and sigma remain hidden."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "SO_HO_HOI10_S_weighted_jet_L1L2",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "SO_HO_HOI08_S_joint",
+        "relation_kind": "different_model_and_resource",
+        "description": "The information packets agree, but this model adds a gradient-Lipschitz bound and a public weighted cost."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "SO_HO_HOI10_S_weighted_jet_L1L2",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "target_setting_id": "SO_HO_HOI09_S_joint_L1L2",
+        "relation_kind": "different_oracle_and_resource",
+        "description": "The neighboring strict-cap derivative-only problem does not bundle gradients with Hessians."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_EXACT_RESOLVENT",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "CV_REL_RESOLVENT_FROM_VALUES_COST",
+        "source_ref": "CV_S_EXACT_RESOLVENT",
+        "target_ref": "CV_S_VI_RESIDUAL_DET",
+        "relation_kind": "related_only",
+        "conditions": [
+          "a value oracle does not provide a full unknown resolvent for unit cost"
+        ],
+        "instance_map": "A=F+N_K when defined",
+        "output_map": "resolvent output includes v=(u−z)/eta",
+        "error_map": "one exact resolvent solves a regularized VI; simulating it has its own tolerance and complexity",
+        "oracle_simulation": "no constant-cost value-oracle simulation asserted",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "primitive_cost": "must be separately expanded"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_EXACT_RESOLVENT__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "SO_FO_C05_radius_lp_FG",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "SO_FO_C05_radius_FG",
+        "relation_kind": "different_regularity",
+        "description": "The existing two-radius profile assumes Euclidean gradient smoothness. This profile imposes ell-p-to-dual-ell-p smoothness and retains the two independent radii of one common minimizer."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "BL_SPEC_direct_reduced",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "BL_REL_direct_to_stationarity",
+        "source_ref": "BL_SPEC_direct_reduced",
+        "target_ref": "external:optimization/smooth_nonconvex_exact_gradient",
+        "relation_kind": "exact_task_identity",
+        "conditions": [
+          "Direct ∇Φ oracle available",
+          "Φ L_Φ-smooth and initial gap bounded"
+        ],
+        "instance_map": "Objective is h=Φ.",
+        "output_map": "Identity on x",
+        "error_map": "Identical norm/squared-norm error.",
+        "oracle_simulation": "One direct reduced-gradient call equals one h-gradient call.",
+        "cost_map": {
+          "expression": "No primitive f,g cost relation is asserted.",
+          "components": {}
+        },
+        "evidence_refs": [
+          "BL_EV_aid_vector"
+        ]
+      },
+      "target_in_pilot": false
+    },
+    {
+      "declared_in_setting": "CV_S_HIGH_VI",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "CV_REL_SCALAR_JET_TO_OPERATOR",
+        "source_ref": "CV_S_HIGH_SADDLE_tan",
+        "target_ref": "CV_S_HIGH_VI",
+        "relation_kind": "oracle_simulation",
+        "conditions": [
+          "f C^p convex-concave on known compact product",
+          "same fixed p≥2, same Euclidean norms and feasible queries"
+        ],
+        "instance_map": "F=diag(I,−I)∇f; Lip(D^{p−1}F)≤Lp; product diameter unchanged",
+        "output_map": "keep primal-dual point and lift normal to affine hull if necessary",
+        "error_map": "tangent residual identical",
+        "oracle_simulation": "scalar p-jet gives operator(p−1)-jet by signed tensor contraction",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "N_scalar_jet_per_operator_jet": "1",
+            "extra_unknown_oracle_calls": "0"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_HIGH_VI__main__e2"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_HIGH_VI",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "id": "CV_REL_HIGH_VI_NOT_FULL_HESSIAN",
+        "source_ref": "CV_S_HIGH_VI",
+        "target_ref": "CV_S_HESSIAN_NCSC",
+        "relation_kind": "related_only",
+        "conditions": [
+          "different task/model and returned information"
+        ],
+        "instance_map": "no general instance reduction asserted",
+        "output_map": "none",
+        "error_map": "no complexity bound transfer",
+        "oracle_simulation": "operator derivative orderp−1 is not automatically scalar payoff orderp or a Hessian-vector interface",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "transfer": "none"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_HIGH_VI__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_AXB_RIGHT_RESIDUAL",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "MX_S_spd",
+        "relation": "different_model_and_error",
+        "notes": "The SPD energy-error setting restricts the matrix and uses a different criterion."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_AXB_RIGHT_RESIDUAL",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "target_setting_id": "MX_S_least_squares",
+        "relation": "different_task_and_access",
+        "notes": "The least-squares setting includes inconsistent rectangular systems, has transpose access, and uses normalized squared prediction error."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_ADV_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "ON_REL_FULL_TO_BANDIT",
+        "source_ref": "ON_EXP_S",
+        "target_ref": "ON_ADV_S",
+        "relation_kind": "oracle_dominance",
+        "conditions": [
+          "The loss sequence and comparison objective are unchanged."
+        ],
+        "instance_map": "identity",
+        "output_map": "identity action trajectory",
+        "error_map": "identical regret",
+        "oracle_simulation": "Discard all coordinates except chosen arm; full information simulates bandit.",
+        "cost_map": {
+          "expression": "T vector reveals → T arm replies, but KT revealed coordinates consumed.",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_ADV_S__main__e2"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_ADV_S",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "id": "ON_REL_TAB_DIRECTSUM",
+        "source_ref": "ON_ADV_S",
+        "target_ref": "ON_CTX_TAB_S",
+        "relation_kind": "direct_sum",
+        "conditions": [
+          "Balanced S contexts, T/S≥K."
+        ],
+        "instance_map": "S independent K-arm environments",
+        "output_map": "run/collect one learner per context",
+        "error_map": "regret is sum of S component regrets",
+        "oracle_simulation": "one current-context arm feedback per global round",
+        "cost_map": {
+          "expression": "S runs of n=T/S rounds → T total pulls",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_ADV_S__main__e2",
+          "ON_ADV_S__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_ADV_S",
+      "source_pointer": "/relations/2",
+      "relation": {
+        "id": "ON_REL_COMB_DIRECTSUM",
+        "source_ref": "ON_ADV_S",
+        "target_ref": "ON_COMB_S",
+        "relation_kind": "direct_sum_lower_bound",
+        "conditions": [
+          "$m$ divides $d$, the action space is the public product set, and $T\\ge d/m$."
+        ],
+        "instance_map": "m independent d/m-arm bandits",
+        "output_map": "combine m arm indices into m-hot action",
+        "error_map": "sum regrets; m sqrt((d/m)T)=sqrt(mdT)",
+        "oracle_simulation": "one selected sample per group in same round",
+        "cost_map": {
+          "expression": "T rounds; mT coordinate observations",
+          "components": {}
+        },
+        "evidence_refs": []
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "CV_S_SIMPLEX_MATRIX_GAME",
+        "relation": "different_protocol",
+        "notes": "The neighboring setting outputs approximate mixed strategies under two-sided matrix-vector products."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "target_setting_id": "CV_S_STRICT_MATRIX_SADDLE_COMPARE",
+        "relation": "different_solution_requirement",
+        "notes": "The strict output requires strict row and column inequalities. Here ties may qualify, and the admissible output set can contain several indices."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_COMB_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "ON_REL_COMB_DIRECTSUM",
+        "source_ref": "ON_ADV_S",
+        "target_ref": "ON_COMB_S",
+        "relation_kind": "direct_sum_lower_bound",
+        "conditions": [
+          "$m$ divides $d$, the action space is the public product set, and $T\\ge d/m$."
+        ],
+        "instance_map": "m independent d/m-arm bandits",
+        "output_map": "combine m arm indices into m-hot action",
+        "error_map": "sum regrets; m sqrt((d/m)T)=sqrt(mdT)",
+        "oracle_simulation": "one selected sample per group in same round",
+        "cost_map": {
+          "expression": "T rounds; mT coordinate observations",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_COMB_S__main__e2"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "SO_FO_CS01_product_radius_csg",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "SO_FO_CS01_csg",
+        "relation_kind": "different_geometry",
+        "description": "The fixed narrow-cube profile ties the feasible circumradius to R. Here the product domain and the nearby-optimizer radius are independent, and the complexity takes a worst case over public product geometries."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_FS_NCSC_IS",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "CV_S_FS_NCSC_AS",
+        "relation_kind": "instance_subclass",
+        "description": "Individual component smoothness implies mean-square averaged smoothness with the same numerical beta; individual dual concavity is not imposed in either class."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "CV_S_CC_FIRST_DET",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "CV_REL_SADDLE_GAP_WEAK_ORDER",
+        "source_ref": "CV_S_CC_FIRST_DET",
+        "target_ref": "external:monotone_vi/weak_and_strong_gap",
+        "relation_kind": "conditional_metric_relation",
+        "conditions": [
+          "convex-concave f and F_f=(fx,−fy)",
+          "compact product domain"
+        ],
+        "instance_map": "associate saddle operatorF_f",
+        "output_map": "same z=(x,y)",
+        "error_map": "G_M(z)≤Gap_f(z)≤G_S(z)≤D r_tan(z). A small G_M alone does not certify a small saddle gap.",
+        "oracle_simulation": "one joint gradient produces F_f",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "operator_value_per_joint_gradient": "1"
+          }
+        },
+        "evidence_refs": [
+          "CV_S_CC_FIRST_DET__main__e2"
+        ]
+      },
+      "target_in_pilot": false
+    },
+    {
+      "declared_in_setting": "MX_S_hodlr",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "MX_REL_hodlr_lowrank",
+        "source_ref": "MX_S_hodlr",
+        "target_ref": "MX_S_lowrank",
+        "relation_kind": "related_compositional_task",
+        "conditions": [
+          "Each off-diagonal target block has rank at most k. The global target is HODLR, not a globally rank-k matrix."
+        ],
+        "instance_map": "Restricted separately to the matrix blocks associated with tree nodes",
+        "output_map": "Assemble block approximations along the specified tree",
+        "error_map": "Aggregate Frobenius block errors over disjoint positions and tree levels. The levelwise algorithm must control error propagation.",
+        "oracle_simulation": "Zero padding outside a block and restricting the returned coordinates simulates one subblock multiplication.",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "one_block_query": "1 full-matrix matvec; simultaneous-block interference requires source algorithm"
+          }
+        },
+        "evidence_refs": [
+          "MX_S_hodlr__main__e2"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_FC_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "conditions": [
+          "The stopping-time and fixed-budget protocols differ in their quantifier order and in the KL direction of the static-oracle benchmark."
+        ],
+        "cost_map": {
+          "components": {},
+          "expression": "Not asserted"
+        },
+        "error_map": "No bound transfer. A random τ expectation does not supply a deterministic-budget error exponent.",
+        "evidence_refs": [
+          "ON_FC_S__main__e1"
+        ],
+        "id": "ON_REL_FC_NOT_FB",
+        "instance_map": "No automatic map.",
+        "oracle_simulation": "No approved simulation.",
+        "output_map": "No validated output map.",
+        "relation_kind": "related_not_equivalent",
+        "source_ref": "ON_FC_S",
+        "target_ref": "ON_FB_GAUSS_S"
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_BCO2_STO_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "ON_REL_TWOTOOPT",
+        "source_ref": "ON_BCO2_STO_S",
+        "target_ref": "external:stochastic_convex_optimization_same_sample_two_point",
+        "relation_kind": "online_to_batch",
+        "conditions": [
+          "The population objective $f$ is convex, samples are IID, and the output is an average of admissible centers."
+        ],
+        "instance_map": "same F and law P",
+        "output_map": "xbar=(1/T)Σx_t",
+        "error_map": "E[f(xbar)−f*]≤R_T/T",
+        "oracle_simulation": "same 2 evaluations of each fresh sample; no new query",
+        "cost_map": {
+          "expression": "T samples,2T value evaluations",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_BCO2_STO_S__main__e1",
+          "ON_BCO2_STO_S__main__e2"
+        ]
+      },
+      "target_in_pilot": false
+    },
+    {
+      "declared_in_setting": "ON_BCO2_STO_S",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "id": "ON_REL_TWO_RMS_NOT_AS",
+        "source_ref": "ON_BCO2_STO_S",
+        "target_ref": "ON_BCO2_ADV_S",
+        "relation_kind": "distinct_model_constraints",
+        "conditions": [
+          "A second-moment bound on sample Lipschitz constants differs from an almost-sure per-round bound. A population-optimal comparator also differs from the best comparator for the realized sequence."
+        ],
+        "instance_map": "Gaussian sample linear family is not uniformly L-Lipschitz a.s.",
+        "output_map": "No direct lower transfer.",
+        "error_map": "Only the explicitly derived dimension-free common lower is used in adversarial spec.",
+        "oracle_simulation": "Both pairs share sample, but distributions and goals differ.",
+        "cost_map": {
+          "expression": "2 values/sample does not erase model mismatch.",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_BCO2_STO_S__main__e1",
+          "ON_BCO2_STO_S__main__e2"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_logdet",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "MX_REL_logdet_trace",
+        "source_ref": "MX_S_logdet",
+        "target_ref": "MX_S_trace_general",
+        "relation_kind": "one_way_simulation_template",
+        "conditions": [
+          "B=log A may be indefinite. A Bv call is not automatically free, and the error and target normalization must be checked again."
+        ],
+        "instance_map": "A->B=logA",
+        "output_map": "trace scalar equals logdetA",
+        "error_map": "The original trace error is $\\epsilon\\|\\log A\\|_{S_p}$. To make it at most $\\eta$, use a known valid norm bound and a budget for simulation error.",
+        "oracle_simulation": "The action $Bv$ may be approximated by polynomials or Lanczos; it is not one exact $Av$ call. The included argument covers the SLQ quadratic-form route only.",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "cost": "Each simulation costs the approximation degree for h = log. Trace upper and lower bounds do not transfer one for one."
+          }
+        },
+        "evidence_refs": [
+          "MX_S_logdet__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_function_action",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "MX_REL_function_spd",
+        "source_ref": "MX_S_function_action",
+        "target_ref": "MX_S_spd",
+        "relation_kind": "model_and_goal_specialization",
+        "conditions": [
+          "Here h(z) = 1/z on a positive spectrum. Converting Euclidean and A-norm targets requires μ and β."
+        ],
+        "instance_map": "h=1/z",
+        "output_map": "The output vector is unchanged.",
+        "error_map": "The inequalities μ‖e‖² ≤ ‖e‖_A² ≤ β‖e‖² apply. The original initial-error normalization must still be matched.",
+        "oracle_simulation": "The same $Av$ interface",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "N_right": "Unchanged for the same input."
+          }
+        },
+        "evidence_refs": [
+          "MX_S_function_action__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_function_action",
+      "source_pointer": "/relations/1",
+      "relation": {
+        "id": "MX_REL_lanczos_function",
+        "source_ref": "MX_S_lanczos_factor",
+        "target_ref": "MX_S_function_action",
+        "relation_kind": "algorithm_restriction_and_metric_change",
+        "conditions": [
+          "Fixed Lanczos algorithm with h in an extended Stieltjes class; not a general-function minimax result"
+        ],
+        "instance_map": "Preserve $A,h,b$ and impose the source task's additional function-class and spectral assumptions.",
+        "output_map": "The output vector is unchanged.",
+        "error_map": "Best-in-subspace approximation error is the denominator of the ratio. A conversion to an epsilon ||b|| target requires a separate bound on that best error.",
+        "oracle_simulation": "The same matrix-product interface is used, but the fixed algorithm restricts the query sequence.",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "N_right": "A fixed t steps"
+          }
+        },
+        "evidence_refs": []
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_lanczos_factor",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "MX_REL_lanczos_function",
+        "source_ref": "MX_S_lanczos_factor",
+        "target_ref": "MX_S_function_action",
+        "relation_kind": "algorithm_restriction_and_metric_change",
+        "conditions": [
+          "Fixed Lanczos algorithm with h in an extended Stieltjes class; not a general-function minimax result"
+        ],
+        "instance_map": "Preserve $A,h,b$ and impose the source task's additional function-class and spectral assumptions.",
+        "output_map": "The output vector is unchanged.",
+        "error_map": "Best-in-subspace approximation error is the denominator of the ratio. A conversion to an epsilon ||b|| target requires a separate bound on that best error.",
+        "oracle_simulation": "The same matrix-product interface is used, but the fixed algorithm restricts the query sequence.",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "N_right": "A fixed t steps"
+          }
+        },
+        "evidence_refs": [
+          "MX_S_lanczos_factor__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "BL_SPEC_fresh_fixed_p",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "BL_REL_fresh_metrics",
+        "source_ref": "BL_SPEC_fresh_lower_p",
+        "target_ref": "BL_SPEC_fresh_fixed_p",
+        "relation_kind": "related_not_equivalent",
+        "conditions": [
+          "Different higher-derivative object assumptions must first be reconciled."
+        ],
+        "instance_map": "No automatic same-instance class map certified.",
+        "output_map": "same x only if both classes hold",
+        "error_map": "E||∇Φ||²≤ε² implies E||∇Φ||≤ε by Jensen; converse fails in general.",
+        "oracle_simulation": "Pan joint call and Wu individual fresh calls have different within-call coupling; no automatic exact simulation in either direction.",
+        "cost_map": {
+          "expression": "Do not transfer minimax lower or uniform-p constants.",
+          "components": {}
+        },
+        "evidence_refs": [
+          "BL_EV_pan_upper",
+          "BL_SPEC_fresh_fixed_p__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_FB_GAUSS_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "ON_REL_FC_NOT_FB",
+        "source_ref": "ON_FC_S",
+        "target_ref": "ON_FB_GAUSS_S",
+        "relation_kind": "related_not_equivalent",
+        "conditions": [
+          "The stopping-time and fixed-budget protocols differ in their quantifier order and in the KL direction of the static-oracle benchmark."
+        ],
+        "instance_map": "No automatic map.",
+        "output_map": "No validated output map.",
+        "error_map": "No bound transfer. A random τ expectation does not supply a deterministic-budget error exponent.",
+        "oracle_simulation": "No approved simulation.",
+        "cost_map": {
+          "expression": "Not asserted",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_FB_GAUSS_S__main__e1"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "ON_NS_S",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "ON_REL_STO_VZERO",
+        "source_ref": "ON_STO_S",
+        "target_ref": "ON_NS_S",
+        "relation_kind": "exact_subclass",
+        "conditions": [
+          "Require V = 0 and time-invariant reward distributions. Constant means alone would permit a larger distribution class."
+        ],
+        "instance_map": "constant law at every t",
+        "output_map": "identity",
+        "error_map": "dynamic mean benchmark equals fixed best mean",
+        "oracle_simulation": "identity selected-arm iid samples",
+        "cost_map": {
+          "expression": "T pulls unchanged",
+          "components": {}
+        },
+        "evidence_refs": [
+          "ON_NS_S__main__e2"
+        ]
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_linear_reconstruction_precision",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "MX_S_linear_family",
+        "relation_kind": "different_oracle_and_metric",
+        "description": "Public linear-matrix-family approximation uses exact two-sided matvec queries and Frobenius error; the present task uses tolerance-priced scalar measurements and uniform function reconstruction."
+      },
+      "target_in_pilot": true
+    },
+    {
+      "declared_in_setting": "MX_S_matmul_square",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "id": "MX_REL_matmul_matvec",
+        "source_ref": "MX_S_matmul_square",
+        "target_ref": "external:explicit_matrix_vector_multiplication",
+        "relation_kind": "related_resource_conversion",
+        "conditions": [
+          "A is explicit; return Av."
+        ],
+        "instance_map": "Restrict the second input to a single column vector",
+        "output_map": "Return the product vector.",
+        "error_map": "Exact equality",
+        "oracle_simulation": "A direct dense Av product uses O(n²) arithmetic operations. Charging one black-box Av query specifies information access; it does not assert this arithmetic running time.",
+        "cost_map": {
+          "expression": null,
+          "components": {
+            "one_dense_matvec_arithmetic": "O(n²)"
+          }
+        },
+        "evidence_refs": [
+          "MX_S_matmul_square__main__e2"
+        ]
+      },
+      "target_in_pilot": false
+    },
+    {
+      "declared_in_setting": "ONX_LEX_FINITE_UNKNOWN",
+      "source_pointer": "/relations/0",
+      "relation": {
+        "target_setting_id": "ONX_LEX_FINITE_KNOWN",
+        "relation_kind": "less_information",
+        "description": "The reward and objective structure coincide at two objectives, but no upper bound for the local tradeoff is supplied."
+      },
+      "target_in_pilot": true
     },
     {
       "declared_in_setting": "BL_SPEC_det_primitive",
@@ -1890,31 +1915,6 @@
         },
         "evidence_refs": [
           "BL_EV_pl_upper"
-        ]
-      },
-      "target_in_pilot": true
-    },
-    {
-      "declared_in_setting": "ON_STO_S",
-      "source_pointer": "/relations/0",
-      "relation": {
-        "id": "ON_REL_STO_VZERO",
-        "source_ref": "ON_STO_S",
-        "target_ref": "ON_NS_S",
-        "relation_kind": "exact_subclass",
-        "conditions": [
-          "Require V = 0 and time-invariant reward distributions. Constant means alone would permit a larger distribution class."
-        ],
-        "instance_map": "constant law at every t",
-        "output_map": "identity",
-        "error_map": "dynamic mean benchmark equals fixed best mean",
-        "oracle_simulation": "identity selected-arm iid samples",
-        "cost_map": {
-          "expression": "T pulls unchanged",
-          "components": {}
-        },
-        "evidence_refs": [
-          "ON_STO_S__main__e2"
         ]
       },
       "target_in_pilot": true

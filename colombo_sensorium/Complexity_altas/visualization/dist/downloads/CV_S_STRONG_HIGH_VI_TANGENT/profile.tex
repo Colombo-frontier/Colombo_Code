@@ -38,7 +38,7 @@ Variational inequalities
 
 
 
-Complete feasible operator jets determine the optimal polynomial condition exponent for constrained strongly monotone VIs; root finding and solution-distance tasks remain separate.
+Certified restart of a monotone full-jet solver and strong-monotonicity calibration of a random-frame family give scoped bounds for constrained tangent residuals. Constants depend on the fixed derivative order.
 
 
 
@@ -62,7 +62,15 @@ Complete feasible operator jets determine the optimal polynomial condition expon
 
 
 
-\textbf{GUARANTEE tags.} mode: Probability; quantifier: Algorithm before instance
+\textbf{OUTPUT tags.} certificate: No additional output certificate required
+
+
+
+\textbf{METRIC tags.} criterion: Tangential residual
+
+
+
+\textbf{GUARANTEE tags.} aggregation: Per instance; mode: Probability; quantifier: Algorithm before instance
 
 
 
@@ -76,67 +84,65 @@ Complete feasible operator jets determine the optimal polynomial condition expon
 \needspace{4\baselineskip}\subsection{Task}
 
 
-Solve the variational inequality \AtlasInlineMath{0\in F(x)+N_X(x)} on a known compact convex set by returning a feasible point with small tangent residual.
+Solve \AtlasInlineMath{0\in F(x)+N_X(x)} on a known compact convex set, measured by the original-domain tangent residual.
 
 
 
 \needspace{4\baselineskip}\subsection{Admissible model}
 
 
-Fix an integer \AtlasInlineMath{p\ge2}. The public set \AtlasInlineMath{X\subseteq\mathbb R^d} is nonempty compact convex with diameter at most D, and a feasible start x\_0 is supplied. The operator is \AtlasInlineMath{C^{p-1}} on an open neighborhood of X and satisfies \AtlasInlineMath{\langle F(x)-F(y),x-y\rangle\ge\mu\|x-y\|_2^2} and \AtlasInlineMath{\|D^{p-1}F(x)-D^{p-1}F(y)\|_{\rm op}\le L_p\|x-y\|_2} on X.
+Fix an integer \AtlasInlineMath{p\ge2}. Public inputs are \AtlasInlineMath{d\ge1}, a nonempty compact convex \AtlasInlineMath{X\subseteq\mathbb R^d} with \AtlasInlineMath{\operatorname{diam}(X)\le D}, a feasible \AtlasInlineMath{x_0}, and \AtlasInlineMath{L_p,\mu,D,\varepsilon>0}.
 
 
 
-The positive mu and L\_p are lower and upper promises, not necessarily sharp moduli. No scalar potential or bound on lower derivatives is imposed. The unique VI solution need not be a zero of F, especially at the boundary. All norms are Euclidean induced multilinear operator norms.
+The hidden operator is \AtlasInlineMath{C^{p-1}} on an open neighborhood of \AtlasInlineMath{X}. On \AtlasInlineMath{X}, \AtlasInlineMath{\langle F(x)-F(y),x-y\rangle\ge\mu\|x-y\|_2^2} and \AtlasInlineMath{\|D^{p-1}F(x)-D^{p-1}F(y)\|_{\rm op}\le L_p\|x-y\|_2}. The declared moduli are promises: actual strong monotonicity may exceed \AtlasInlineMath{\mu} and actual derivative Lipschitz modulus may be smaller than \AtlasInlineMath{L_p}.
+
+
+
+No bounds on lower derivatives, \AtlasInlineMath{\|F\|}, or a scalar potential are imposed. Compactness and continuity give a VI solution; strong monotonicity makes it unique. The solution can be a boundary point with nonzero \AtlasInlineMath{F}.
 
 
 
 \needspace{4\baselineskip}\subsection{Oracle interface}
 
 
-At a feasible point return the exact complete operator jet \AtlasInlineMath{(F,DF,\ldots,D^{p-1}F)}. Count every call, including calls inside regularized subproblems, unsuccessful radius guesses, restarts and a final certificate check. Projections onto the known domain and exact solves of models formed only from returned jets are uncharged internal operations. An unknown-operator resolvent is not supplied for free.
+At any feasible \AtlasInlineMath{x\in X}, receive the exact complete operator jet \AtlasInlineMath{(F(x),DF(x),\ldots,D^{p-1}F(x))}. No values outside \AtlasInlineMath{X} and no free resolvent of the unknown operator are available.
+
+
+
+Projection onto the known \AtlasInlineMath{X} and exact solves of models formed only from public geometry and returned Taylor coefficients are free internal operations. Adding a known affine regularization to a returned jet requires no extra information.
 
 
 
 \needspace{4\baselineskip}\subsection{Output}
 
 
-Return any measurable feasible point \AtlasInlineMath{\widehat x\in X}, possibly unqueried. The upper witness additionally returns an evaluated certificate \AtlasInlineMath{(\widehat x,n,F(\widehat x))} with \AtlasInlineMath{n\in N_X(\widehat x)} and a charged evaluation of F at the output.
+Return a feasible point \AtlasInlineMath{\widehat x\in X}, possibly unqueried. The upper witness additionally returns \AtlasInlineMath{n\in N_X(\widehat x)} and an evaluated \AtlasInlineMath{F(\widehat x)}; this stronger certificate is not required of lower-bound algorithms.
 
 
 
 \needspace{4\baselineskip}\subsection{Loss or accuracy criterion}
 
 
-The error is \AtlasInlineMath{r_{\rm tan}(x)=\operatorname{dist}(0,F(x)+N_X(x))}. Here \AtlasInlineMath{N_X(x)=\{n:\langle n,u-x\rangle\le0\text{ for all }u\in X\}}. The probability guarantee concerns this residual itself, not the root residual or distance to the solution.
+\AtlasInlineMath{r_{\rm tan}(x)=\operatorname{dist}(0,F(x)+N_X(x))}, with \AtlasInlineMath{N_X(x)=\{n:\langle n,z-x\rangle\le0\ \forall z\in X\}}. This is neither the weak Minty gap nor distance to the solution.
 
 
 
 \needspace{4\baselineskip}\subsection{Resource accounting}
 
 
-One complete jet costs one query. A deterministic cap holds on every path for arbitrary measurable adaptive policies, and queries and outputs must stay feasible. The dimension-uniform comparison takes the worst case over all finite d, all legal public domains and starts, and all compatible operators.
+Count one unit for each complete jet query, including nested subproblem work, repeated points, restarts and the final certificate evaluation. The budget is a fixed cap on every execution, not expected work. The main minimax quantity takes the worst case over all finite dimensions and legal public sets and starts; dimension is supplied to the algorithm.
 
 
 
 \needspace{4\baselineskip}\subsection{Algorithm views and success guarantees}
 
 
-Queries, stopping decisions and outputs are arbitrary measurable functions of the observed history and public inputs. No linear-span or zero-respecting restriction is imposed. Internal exact-real computation and storage are uncharged.
+Arbitrary measurable adaptive policies and outputs are allowed, with an independent private random seed and no span, zero-respecting or tensor-update restriction. All queried points must be feasible. Exact arithmetic and storage are uncharged.
 
 
 
-A private random seed independent of the fixed instance is permitted.
-
-
-
-
-\AtlasMath{\forall I:\ \Pr(r_{\rm tan}(\widehat x)\le\varepsilon)\ge2/3}
-
-
-
-
-The objective operator and domain are fixed before the independent private seed; feasibility and the query cap hold on every path.
+For every fixed admissible instance, \AtlasInlineMath{\Pr(r_{\rm tan}(\widehat x)\le\varepsilon)\ge2/3}. Only the algorithm seed is random. The deterministic upper witness succeeds on every instance.
 
 
 
@@ -208,14 +214,18 @@ The objective operator and domain are fixed before the independent private seed;
 \needspace{4\baselineskip}\subsubsection{Q1 - minimax metric resource quantity}
 
 
-\AtlasMath{T^\star_{{\rm rand},\infty}(\varepsilon;L_p,\mu,D)}
+\AtlasMath{T^\star_{{\rm rand},\infty}(\varepsilon;L_p,\mu,D)=\inf\{N:\exists\mathcal A\ \forall d,X,x_0,F,\ N_{\mathcal A}\le N\ \text{on every run},\ \Pr(r_{\rm tan}(\widehat x)\le\varepsilon)\ge2/3\}}
 
 
-\textbf{Scope.} The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
+\textbf{Scope.} Worst case over finite dimensions and all admissible public compact domains and starts. The dimension is an algorithm input. Upper bounds hold for each finite dimension; a lower bound uses only its explicitly sufficient high-dimensional ball construction.
 
 
 
 \textbf{Optimization direction.} minimize
+
+
+
+This is a dimension-envelope, fixed-path-budget complexity. No averaging over instances, expected-work interpretation, or optimality in each fixed small dimension is implicit.
 
 
 
@@ -226,7 +236,7 @@ The objective operator and domain are fixed before the independent private seed;
 \needspace{4\baselineskip}\subsection{R1 - All-parameter upper bound outside the matching lower window}
 
 
-\textbf{Region.} \AtlasInlineMath{p\ge2} fixed; \AtlasInlineMath{L_p,\mu,D,\varepsilon>0}; either \AtlasInlineMath{\kappa_D<\kappa_{0,p}} or \AtlasInlineMath{\theta>1/16}. All finite dimensions.
+\textbf{Region.} \AtlasInlineMath{p\ge2} fixed and \AtlasInlineMath{L_p,\mu,D,\varepsilon>0}; either \AtlasInlineMath{\kappa_D<\kappa_{0,p}} or \AtlasInlineMath{\theta>1/16}. All finite dimensions.
 
 
 
@@ -250,17 +260,17 @@ The objective operator and domain are fixed before the independent private seed;
 
 
 
-\AtlasMath{O_p\!\left(1+\kappa_D^{2/(3p-1)}+\log_+(1/\theta)\right)}
+\AtlasMath{O_p\!\left(1+\kappa_D^{\alpha_p}+\log_+(1/\theta)\right)}
 
 
-\textbf{Gap or comparison.} The source does not give its condition-dependent lower bound outside this window.
+\textbf{Gap or comparison.} No parameter-dependent lower bound is recorded outside the calibrated chain window; the upper bound remains valid.
 
 
 
 \needspace{4\baselineskip}\subsection{R2 - Condition-dominated relative-accuracy window}
 
 
-\textbf{Region.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)\le\kappa_D^{2/(3p-1)}}. This includes each fixed relative accuracy as kappa\_D tends to infinity. The upper bound is valid in every finite dimension. For the lower bound the public domain can be \AtlasInlineMath{B_2^d(D/2)} with start zero. Let \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{2/(3p-1)}\rfloor}, with \AtlasInlineMath{c_p^{\rm sc}} from equation lower-constants. Any \AtlasInlineMath{d\ge m+\lceil2048m^3\ln(8(m^2+1))\rceil} suffices. The explicit source threshold is \AtlasInlineMath{\kappa_{0,p}=2^{(3p-1)/2}/c_p^{\rm sc}}. This is a sufficient high-dimensional construction, not a claim for every fixed small d.
+\textbf{Region.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)\le\kappa_D^{\alpha_p}}. For fixed \AtlasInlineMath{p}, take \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{\alpha_p}\rfloor\ge2}. The lower bound holds on \AtlasInlineMath{X=B_2^d(D/2)} with start zero whenever \AtlasInlineMath{d\ge m+\lceil2048m^3\log(8(m^2+1))\rceil}. Here \AtlasInlineMath{B_p=\max\{1,\|\rho^{(p-1)}\|_\infty\}} for the fixed gate of 2609.13462v2, \AtlasInlineMath{c_p^{\rm sc}=1/(2^pB_p16^{p-1})}, and \AtlasInlineMath{\kappa_{0,p}=2^{(3p-1)/2}/c_p^{\rm sc}}. Upper bounds hold in every finite dimension. The comparison quantity takes a worst case over finite dimensions.
 
 
 
@@ -280,24 +290,24 @@ The objective operator and domain are fixed before the independent private seed;
 
 
 
-\AtlasMath{\Omega_p(\kappa_D^{2/(3p-1)})}
+\AtlasMath{\Omega_p(\kappa_D^{\alpha_p})}
 
 
 \textbf{Upper bound.} B2
 
 
 
-\AtlasMath{O_p\!\left(1+\kappa_D^{2/(3p-1)}+\log_+(1/\theta)\right)}
+\AtlasMath{O_p\!\left(1+\kappa_D^{\alpha_p}+\log_+(1/\theta)\right)}
 
 
-\textbf{Gap or comparison.} The explicit logarithmic accuracy term is dominated by the condition term, so the upper/lower ratio is O\_p(1).
+\textbf{Gap or comparison.} \AtlasInlineMath{O_p(1)}: the explicit accuracy logarithm is at most the condition term and \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}.
 
 
 
 \needspace{4\baselineskip}\subsection{R3 - Smaller relative accuracy with a remaining logarithmic factor}
 
 
-\textbf{Region.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)>\kappa_D^{2/(3p-1)}}. The upper bound is valid in every finite dimension. For the lower bound the public domain can be \AtlasInlineMath{B_2^d(D/2)} with start zero. Let \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{2/(3p-1)}\rfloor}, with \AtlasInlineMath{c_p^{\rm sc}} from equation lower-constants. Any \AtlasInlineMath{d\ge m+\lceil2048m^3\ln(8(m^2+1))\rceil} suffices. The explicit source threshold is \AtlasInlineMath{\kappa_{0,p}=2^{(3p-1)/2}/c_p^{\rm sc}}. This is a sufficient high-dimensional construction, not a claim for every fixed small d.
+\textbf{Region.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)>\kappa_D^{\alpha_p}}. For fixed \AtlasInlineMath{p}, take \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{\alpha_p}\rfloor\ge2}. The lower bound holds on \AtlasInlineMath{X=B_2^d(D/2)} with start zero whenever \AtlasInlineMath{d\ge m+\lceil2048m^3\log(8(m^2+1))\rceil}. Here \AtlasInlineMath{B_p=\max\{1,\|\rho^{(p-1)}\|_\infty\}} for the fixed gate of 2609.13462v2, \AtlasInlineMath{c_p^{\rm sc}=1/(2^pB_p16^{p-1})}, and \AtlasInlineMath{\kappa_{0,p}=2^{(3p-1)/2}/c_p^{\rm sc}}. Upper bounds hold in every finite dimension. The comparison quantity takes a worst case over finite dimensions.
 
 
 
@@ -317,24 +327,36 @@ The objective operator and domain are fixed before the independent private seed;
 
 
 
-\AtlasMath{\Omega_p(\kappa_D^{2/(3p-1)})}
+\AtlasMath{\Omega_p(\kappa_D^{\alpha_p})}
 
 
 \textbf{Upper bound.} B4
 
 
 
-\AtlasMath{O_p\!\left(1+\kappa_D^{2/(3p-1)}+\log_+(1/\theta)\right)}
+\AtlasMath{O_p\!\left(1+\kappa_D^{\alpha_p}+\log_+(1/\theta)\right)}
 
 
-\textbf{Gap or comparison.} Upper/lower ratio is at most \AtlasInlineMath{O_p(1+\log_+(1/\theta)/\kappa_D^{2/(3p-1)})}. No matching lower bound for the additive accuracy logarithm is asserted.
+\textbf{Gap or comparison.} \AtlasInlineMath{O_p(1+\log_+(1/\theta)/\kappa_D^{\alpha_p})}. No matching lower bound for the additive accuracy logarithm is asserted.
 
 
 
 \needspace{7\baselineskip}\section{4. Bounds and supporting evidence}
 
 
-\needspace{4\baselineskip}\subsection{B1 - Certified restart of the log-free monotone full-jet solver}
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+
+
+\textbf{Oracle mapping.} Only feasible complete operator jets are queried; all nested calls and final evaluations are charged.
+
+
+
+\textbf{Output mapping.} The target is the tangent residual for the original X. The upper witness returns an actual original-domain normal certificate; the lower bound permits arbitrary feasible outputs.
+
+
+
+\needspace{4\baselineskip}\subsection{B1 - Certified restart on the original compact domain}
 
 
 \textbf{Admission.} Included in the bracket
@@ -349,42 +371,58 @@ The objective operator and domain are fixed before the independent private seed;
 
 
 
-\AtlasMath{O_p\!\left(1+\kappa_D^{2/(3p-1)}+\log_+(1/\theta)\right)}
+\AtlasMath{O_p\!\left(1+\kappa_D^{\alpha_p}+\log_+(1/\theta)\right)}
 
 
-\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U11/manuscript.pdf}{[1]}
-
-
-
-\textbf{Conditions.} \AtlasInlineMath{p\ge2} fixed; \AtlasInlineMath{L_p,\mu,D,\varepsilon>0}; either \AtlasInlineMath{\kappa_D<\kappa_{0,p}} or \AtlasInlineMath{\theta>1/16}.; The source imports Theorem 5.1 of Zhang-Chen-Pan-Liu-Yang-Zhang (2026) and preserves feasibility, original-domain normal cones, and all final evaluations.
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.23557v1}{[1]}
 
 
 
-\textbf{Dimension conditions.} All finite dimensions.
+\textbf{Conditions.} \AtlasInlineMath{p\ge2} fixed and \AtlasInlineMath{L_p,\mu,D,\varepsilon>0}; either \AtlasInlineMath{\kappa_D<\kappa_{0,p}} or \AtlasInlineMath{\theta>1/16}.; All eight-axis contracts of this profile hold. The upper witness is deterministic; the lower class is unrestricted randomized with fixed success probability 2/3 and fixed pathwise query cap.
 
 
 
-\textbf{Constants.} Constants depend only on p.
+\textbf{Dimension conditions.} Every finite dimension.
 
 
 
-\textbf{Logarithmic factors.} The additive logarithm is explicit.
+\textbf{Constants.} Constants depend only on the fixed integer p and the once-fixed smooth gate. The threshold and sufficient dimension are explicit; no uniform claim as p grows is made.
 
 
 
-\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U11/manuscript.pdf}{[1]} Proposition literature-restart, equation sharper-upper; Corollary frontier; verified labels: prop:literature-restart (line 539), eq:sharper-upper (line 543), cor:frontier (line 597)
+\textbf{Derivation.} Theorem 5.1 of 2609.23557v1, with Assumptions 2.1--2.4, Algorithm 1 and Lemma 2.1, returns a feasible \AtlasInlineMath{u} and an evaluated vector \AtlasInlineMath{v=F(u)+n}, \AtlasInlineMath{n\in N_X(u)}, with \AtlasInlineMath{\|v\|\le\eta} in at most \AtlasInlineMath{C_p[1+(L_pR^p/\eta)^{\alpha_p}]} complete-jet calls whenever \AtlasInlineMath{\|z-x^\star\|\le R}, where \AtlasInlineMath{\alpha_p=2/(3p-1)}. The constant \AtlasInlineMath{C_p} depends only on fixed \AtlasInlineMath{p}.
+
+The source writes its scale as the exact initial distance. A supplied upper bound \AtlasInlineMath{R} is sufficient: choose its equation (8) with \AtlasInlineMath{\eta_0=(L_pR^{p-1})^{-1}} and its inner tolerance with \AtlasInlineMath{R}. In the proof of Theorem 4.1, equations (11)--(13) use the initial distance only through the upper estimates \AtlasInlineMath{\|z-x^\star\|\le R}, \AtlasInlineMath{\sum_t\|e_t\|\le R}, \AtlasInlineMath{\|u_t-x^\star\|\le2R} and \AtlasInlineMath{P_0\le6R^2/\eta_0}. The distance-energy and query-sum bounds in Lemma 5.1 and Theorem 5.1 then keep the same scale. Thus the subroutine requires no knowledge of the exact distance.
+
+For the unique VI solution choose \AtlasInlineMath{n^\star=-F(x^\star)\in N_X(x^\star)}. Monotonicity of the normal cone and \AtlasInlineMath{\mu}-strong monotonicity give \AtlasInlineMath{\mu\|u-x^\star\|^2\le\langle F(u)+n,u-x^\star\rangle\le\|v\|\|u-x^\star\|}, hence \AtlasInlineMath{\|u-x^\star\|\le\|v\|/\mu}.
+
+Set \AtlasInlineMath{R_j=D2^{-j}}, \AtlasInlineMath{z_0=x_0}, and \AtlasInlineMath{S=\max\{1,\lceil\log_2(\mu D/\varepsilon)\rceil\}}. At each \AtlasInlineMath{j=0,\ldots,S-1}, run the certified monotone solver on the same original set \AtlasInlineMath{X}, starting from \AtlasInlineMath{z_j}, with residual tolerance \AtlasInlineMath{\eta_j=\mu R_j/2}. Set \AtlasInlineMath{z_{j+1}=u_j}. The preceding inequality inductively proves \AtlasInlineMath{\|z_{j+1}-x^\star\|\le R_{j+1}}.
+
+The last actual certificate obeys \AtlasInlineMath{\|v_{S-1}\|\le\mu D2^{-S}\le\varepsilon}. The final conclusion is therefore a tangent-residual certificate, not merely distance contraction. The normal cone remains \AtlasInlineMath{N_X} throughout: there is no restriction to an intersected ball and no normal-cone transfer.
+
+Every stage costs at most \AtlasInlineMath{C_p[1+2^{\alpha_p}\kappa_D^{\alpha_p}2^{-j\alpha_p(p-1)}]}, where \AtlasInlineMath{\kappa_D=L_pD^{p-1}/\mu}. Summing gives \AtlasInlineMath{C_p[S+2^{\alpha_p}\kappa_D^{\alpha_p}/(1-2^{-\alpha_p(p-1)})]}. For fixed \AtlasInlineMath{p\ge2} this is \AtlasInlineMath{O_p(1+\kappa_D^{\alpha_p}+\log_+(1/\theta))}, where \AtlasInlineMath{\theta=\varepsilon/(\mu D)} and \AtlasInlineMath{\log_+(t)=\max\{0,\log t\}}. The cost includes all inner jet evaluations and all returned certificates.
+
+All queried centers and model solutions in source Algorithms 1--3 are in \AtlasInlineMath{X}, with projection onto the known \AtlasInlineMath{X}. A regularized operator \AtlasInlineMath{F+\eta^{-1}(\cdot-z)} uses one original jet per query and has the same Lipschitz bound on \AtlasInlineMath{D^{p-1}} for \AtlasInlineMath{p\ge2}. Source Assumptions 2.3--2.4 impose their inequalities on \AtlasInlineMath{X}; the neighborhood regularity used here supplies the same Taylor data. The bound is dimension-independent; constants are not asserted uniform when \AtlasInlineMath{p} grows.
 
 
 
-Certified restart of the log-free monotone full-jet solver. Deterministic feasible algorithms returning an evaluated tangent certificate.
+\textbf{Local argument.} CV\_S\_STRONG\_HIGH\_VI\_TANG\allowbreak{}ENT\_\_restart\_from\_monoto\allowbreak{}ne\_solver\_20261124
 
 
 
-The source imports Theorem 5.1 of Zhang-Chen-Pan-Liu-Yang-Zhang (2026) and preserves feasibility, original-domain normal cones, and all final evaluations.
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.23557v1}{[1]} Assumptions 2.1--2.4; Definition 2.1; Lemma 2.1; Algorithm 1; equation (8); Theorems 4.1 and 5.1; equations (11)--(13), (22)--(23).
 
 
 
-\needspace{4\baselineskip}\subsection{B2 - Certified restart of the log-free monotone full-jet solver}
+\AtlasInlineMath{T^\star_{{\rm rand},\infty}\le O_p(1+\kappa_D^{\alpha_p}+\log_+(1/\theta))} for all positive model parameters and fixed \AtlasInlineMath{p\ge2}; a deterministic feasible witness supplies an actual tangent certificate.
+
+
+
+The local argument specifies the original-domain tangent certificate, fixed query budget, public parameter mapping, fixed-order constants and dimension scope.
+
+
+
+\needspace{4\baselineskip}\subsection{B2 - Certified restart on the original compact domain}
 
 
 \textbf{Admission.} Included in the bracket
@@ -399,42 +437,58 @@ The source imports Theorem 5.1 of Zhang-Chen-Pan-Liu-Yang-Zhang (2026) and prese
 
 
 
-\AtlasMath{O_p\!\left(1+\kappa_D^{2/(3p-1)}+\log_+(1/\theta)\right)}
+\AtlasMath{O_p\!\left(1+\kappa_D^{\alpha_p}+\log_+(1/\theta)\right)}
 
 
-\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U11/manuscript.pdf}{[1]}
-
-
-
-\textbf{Conditions.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)\le\kappa_D^{2/(3p-1)}}. This includes each fixed relative accuracy as kappa\_D tends to infinity.; The source imports Theorem 5.1 of Zhang-Chen-Pan-Liu-Yang-Zhang (2026) and preserves feasibility, original-domain normal cones, and all final evaluations.
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.23557v1}{[1]}
 
 
 
-\textbf{Dimension conditions.} The upper bound is valid in every finite dimension. For the lower bound the public domain can be \AtlasInlineMath{B_2^d(D/2)} with start zero. Let \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{2/(3p-1)}\rfloor}, with \AtlasInlineMath{c_p^{\rm sc}} from equation lower-constants. Any \AtlasInlineMath{d\ge m+\lceil2048m^3\ln(8(m^2+1))\rceil} suffices. The explicit source threshold is \AtlasInlineMath{\kappa_{0,p}=2^{(3p-1)/2}/c_p^{\rm sc}}. This is a sufficient high-dimensional construction, not a claim for every fixed small d.
+\textbf{Conditions.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)\le\kappa_D^{\alpha_p}}.; All eight-axis contracts of this profile hold. The upper witness is deterministic; the lower class is unrestricted randomized with fixed success probability 2/3 and fixed pathwise query cap.
 
 
 
-\textbf{Constants.} Constants depend only on p.
+\textbf{Dimension conditions.} Every finite dimension.
 
 
 
-\textbf{Logarithmic factors.} No hidden logarithms in the imported-solver upper bound.
+\textbf{Constants.} Constants depend only on the fixed integer p and the once-fixed smooth gate. The threshold and sufficient dimension are explicit; no uniform claim as p grows is made.
 
 
 
-\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U11/manuscript.pdf}{[1]} Proposition literature-restart, equation sharper-upper; Corollary frontier; verified labels: prop:literature-restart (line 539), eq:sharper-upper (line 543), cor:frontier (line 597)
+\textbf{Derivation.} Theorem 5.1 of 2609.23557v1, with Assumptions 2.1--2.4, Algorithm 1 and Lemma 2.1, returns a feasible \AtlasInlineMath{u} and an evaluated vector \AtlasInlineMath{v=F(u)+n}, \AtlasInlineMath{n\in N_X(u)}, with \AtlasInlineMath{\|v\|\le\eta} in at most \AtlasInlineMath{C_p[1+(L_pR^p/\eta)^{\alpha_p}]} complete-jet calls whenever \AtlasInlineMath{\|z-x^\star\|\le R}, where \AtlasInlineMath{\alpha_p=2/(3p-1)}. The constant \AtlasInlineMath{C_p} depends only on fixed \AtlasInlineMath{p}.
+
+The source writes its scale as the exact initial distance. A supplied upper bound \AtlasInlineMath{R} is sufficient: choose its equation (8) with \AtlasInlineMath{\eta_0=(L_pR^{p-1})^{-1}} and its inner tolerance with \AtlasInlineMath{R}. In the proof of Theorem 4.1, equations (11)--(13) use the initial distance only through the upper estimates \AtlasInlineMath{\|z-x^\star\|\le R}, \AtlasInlineMath{\sum_t\|e_t\|\le R}, \AtlasInlineMath{\|u_t-x^\star\|\le2R} and \AtlasInlineMath{P_0\le6R^2/\eta_0}. The distance-energy and query-sum bounds in Lemma 5.1 and Theorem 5.1 then keep the same scale. Thus the subroutine requires no knowledge of the exact distance.
+
+For the unique VI solution choose \AtlasInlineMath{n^\star=-F(x^\star)\in N_X(x^\star)}. Monotonicity of the normal cone and \AtlasInlineMath{\mu}-strong monotonicity give \AtlasInlineMath{\mu\|u-x^\star\|^2\le\langle F(u)+n,u-x^\star\rangle\le\|v\|\|u-x^\star\|}, hence \AtlasInlineMath{\|u-x^\star\|\le\|v\|/\mu}.
+
+Set \AtlasInlineMath{R_j=D2^{-j}}, \AtlasInlineMath{z_0=x_0}, and \AtlasInlineMath{S=\max\{1,\lceil\log_2(\mu D/\varepsilon)\rceil\}}. At each \AtlasInlineMath{j=0,\ldots,S-1}, run the certified monotone solver on the same original set \AtlasInlineMath{X}, starting from \AtlasInlineMath{z_j}, with residual tolerance \AtlasInlineMath{\eta_j=\mu R_j/2}. Set \AtlasInlineMath{z_{j+1}=u_j}. The preceding inequality inductively proves \AtlasInlineMath{\|z_{j+1}-x^\star\|\le R_{j+1}}.
+
+The last actual certificate obeys \AtlasInlineMath{\|v_{S-1}\|\le\mu D2^{-S}\le\varepsilon}. The final conclusion is therefore a tangent-residual certificate, not merely distance contraction. The normal cone remains \AtlasInlineMath{N_X} throughout: there is no restriction to an intersected ball and no normal-cone transfer.
+
+Every stage costs at most \AtlasInlineMath{C_p[1+2^{\alpha_p}\kappa_D^{\alpha_p}2^{-j\alpha_p(p-1)}]}, where \AtlasInlineMath{\kappa_D=L_pD^{p-1}/\mu}. Summing gives \AtlasInlineMath{C_p[S+2^{\alpha_p}\kappa_D^{\alpha_p}/(1-2^{-\alpha_p(p-1)})]}. For fixed \AtlasInlineMath{p\ge2} this is \AtlasInlineMath{O_p(1+\kappa_D^{\alpha_p}+\log_+(1/\theta))}, where \AtlasInlineMath{\theta=\varepsilon/(\mu D)} and \AtlasInlineMath{\log_+(t)=\max\{0,\log t\}}. The cost includes all inner jet evaluations and all returned certificates.
+
+All queried centers and model solutions in source Algorithms 1--3 are in \AtlasInlineMath{X}, with projection onto the known \AtlasInlineMath{X}. A regularized operator \AtlasInlineMath{F+\eta^{-1}(\cdot-z)} uses one original jet per query and has the same Lipschitz bound on \AtlasInlineMath{D^{p-1}} for \AtlasInlineMath{p\ge2}. Source Assumptions 2.3--2.4 impose their inequalities on \AtlasInlineMath{X}; the neighborhood regularity used here supplies the same Taylor data. The bound is dimension-independent; constants are not asserted uniform when \AtlasInlineMath{p} grows.
 
 
 
-Certified restart of the log-free monotone full-jet solver. Deterministic feasible algorithms returning an evaluated tangent certificate.
+\textbf{Local argument.} CV\_S\_STRONG\_HIGH\_VI\_TANG\allowbreak{}ENT\_\_restart\_from\_monoto\allowbreak{}ne\_solver\_20261124
 
 
 
-The source imports Theorem 5.1 of Zhang-Chen-Pan-Liu-Yang-Zhang (2026) and preserves feasibility, original-domain normal cones, and all final evaluations.
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.23557v1}{[1]} Assumptions 2.1--2.4; Definition 2.1; Lemma 2.1; Algorithm 1; equation (8); Theorems 4.1 and 5.1; equations (11)--(13), (22)--(23).
 
 
 
-\needspace{4\baselineskip}\subsection{B3 - Flat-gated strongly monotone operator chain with calibrated monotonicity modulus}
+\AtlasInlineMath{T^\star_{{\rm rand},\infty}\le O_p(1+\kappa_D^{\alpha_p}+\log_+(1/\theta))} for all positive model parameters and fixed \AtlasInlineMath{p\ge2}; a deterministic feasible witness supplies an actual tangent certificate.
+
+
+
+The local argument specifies the original-domain tangent certificate, fixed query budget, public parameter mapping, fixed-order constants and dimension scope.
+
+
+
+\needspace{4\baselineskip}\subsection{B3 - Strong-monotonicity calibration of an existing random-frame family}
 
 
 \textbf{Admission.} Included in the bracket
@@ -449,42 +503,58 @@ The source imports Theorem 5.1 of Zhang-Chen-Pan-Liu-Yang-Zhang (2026) and prese
 
 
 
-\AtlasMath{\Omega_p(\kappa_D^{2/(3p-1)})}
+\AtlasMath{\Omega_p(\kappa_D^{\alpha_p})}
 
 
-\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U11/manuscript.pdf}{[1]}
-
-
-
-\textbf{Conditions.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)\le\kappa_D^{2/(3p-1)}}. This includes each fixed relative accuracy as kappa\_D tends to infinity.; The fixed hard operator is independent of the private seed. The lower bound applies when kappa\_D>=kappa\_0,p and theta<=1/16.
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.13462v2}{[2]}
 
 
 
-\textbf{Dimension conditions.} The upper bound is valid in every finite dimension. For the lower bound the public domain can be \AtlasInlineMath{B_2^d(D/2)} with start zero. Let \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{2/(3p-1)}\rfloor}, with \AtlasInlineMath{c_p^{\rm sc}} from equation lower-constants. Any \AtlasInlineMath{d\ge m+\lceil2048m^3\ln(8(m^2+1))\rceil} suffices. The explicit source threshold is \AtlasInlineMath{\kappa_{0,p}=2^{(3p-1)/2}/c_p^{\rm sc}}. This is a sufficient high-dimensional construction, not a claim for every fixed small d.
+\textbf{Conditions.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)\le\kappa_D^{\alpha_p}}.; All eight-axis contracts of this profile hold. The upper witness is deterministic; the lower class is unrestricted randomized with fixed success probability 2/3 and fixed pathwise query cap.; The stronger explicit statement is \AtlasInlineMath{T^\star_{{\rm rand},\infty}\ge m\ge\frac12(c_p^{\rm sc}\kappa_D)^{\alpha_p}}.
 
 
 
-\textbf{Constants.} Constants depend only on p.
+\textbf{Dimension conditions.} For fixed \AtlasInlineMath{p}, take \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{\alpha_p}\rfloor\ge2}. The lower bound holds on \AtlasInlineMath{X=B_2^d(D/2)} with start zero whenever \AtlasInlineMath{d\ge m+\lceil2048m^3\log(8(m^2+1))\rceil}. Here \AtlasInlineMath{B_p=\max\{1,\|\rho^{(p-1)}\|_\infty\}} for the fixed gate of 2609.13462v2, \AtlasInlineMath{c_p^{\rm sc}=1/(2^pB_p16^{p-1})}, and \AtlasInlineMath{\kappa_{0,p}=2^{(3p-1)/2}/c_p^{\rm sc}}. Upper bounds hold in every finite dimension. The comparison quantity takes a worst case over finite dimensions.
 
 
 
-\textbf{Logarithmic factors.} No hidden logarithms in the imported-solver upper bound.
+\textbf{Constants.} Constants depend only on the fixed integer p and the once-fixed smooth gate. The threshold and sufficient dimension are explicit; no uniform claim as p grows is made.
 
 
 
-\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U11/manuscript.pdf}{[1]} Theorem lower; equation randomized-lower and lower-dimension; verified labels: thm:lower (line 502), eq:randomized-lower (line 510), sec:lower (line 1256), eq:lower-dimension (line 1457)
+\textbf{Derivation.} Use only the family in 2609.13462v2, Section 10. Fix its smooth even gate \AtlasInlineMath{\rho} and \AtlasInlineMath{B_p=\max\{1,\|\rho^{(p-1)}\|_\infty\}}. For integer \AtlasInlineMath{m\ge2}, set \AtlasInlineMath{R=D/2}, \AtlasInlineMath{q=1-1/(2m)}, \AtlasInlineMath{c=R/(2\sqrt m)}, \AtlasInlineMath{\tau=R/(16m^{3/2})} and \AtlasInlineMath{\lambda=L_p\tau^{p-1}/B_p}, exactly as equation (10.4).
+
+For a hidden orthonormal frame \AtlasInlineMath{V=(v_1,\ldots,v_m)} define \AtlasInlineMath{T_V(x)=cv_1+q\sum_{i=1}^{m-1}h_\tau(\langle v_i,x\rangle)v_{i+1}} and \AtlasInlineMath{F_V=\lambda(\operatorname{Id}-T_V)} on the public ball \AtlasInlineMath{X=B_2^d(R)}, with public start \AtlasInlineMath{0}. Lemma 10.2 gives global strong monotonicity \AtlasInlineMath{\mu_m=\lambda/(2m)}, Lipschitz \AtlasInlineMath{(p-1)}st derivative at most \AtlasInlineMath{L_p}, a unique interior zero and \AtlasInlineMath{r_{\rm tan}(x)=\|F_V(x)\|} even at the boundary. No change of target metric is required.
+
+Writing \AtlasInlineMath{a_p=(3p-1)/2} and \AtlasInlineMath{c_p^{\rm sc}=1/(2^pB_p16^{p-1})}, direct substitution gives \AtlasInlineMath{\mu_m=c_p^{\rm sc}L_pD^{p-1}/m^{a_p}}. The residual barrier in equation (11.3) is \AtlasInlineMath{L_pR^p/[8B_p16^{p-1}m^{a_p}]=\mu_mD/8}.
+
+Assume \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}:=2^{a_p}/c_p^{\rm sc}} and set \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{1/a_p}\rfloor\ge2}. Then \AtlasInlineMath{m^{a_p}\le c_p^{\rm sc}\kappa_D}, so \AtlasInlineMath{\mu_m\ge\mu}. The hard family is therefore inside the promised \AtlasInlineMath{\mu}-strongly monotone class; the modulus is an available lower bound, not an equality requirement.
+
+Apply Theorem 11.3 with the fixed cap \AtlasInlineMath{N=m-1} and source failure parameter \AtlasInlineMath{\delta=1/4}. It requires \AtlasInlineMath{d\ge m+\lceil2048m^3\log(8(m^2+1))\rceil}. For every adaptive randomized algorithm with this cap and any feasible measurable output, some fixed frame has probability at least \AtlasInlineMath{3/4} of residual at least \AtlasInlineMath{\mu_mD/8}.
+
+If \AtlasInlineMath{0<\theta\le1/16}, this barrier is at least \AtlasInlineMath{\mu D/8\ge2\varepsilon}. A per-instance success guarantee of \AtlasInlineMath{2/3} is therefore impossible with \AtlasInlineMath{m-1} queries. Consequently \AtlasInlineMath{T^\star_{{\rm rand},\infty}\ge m\ge\frac12(c_p^{\rm sc}\kappa_D)^{\alpha_p}=\Omega_p(\kappa_D^{\alpha_p})}. The same fixed-dimensional statement holds for every \AtlasInlineMath{d} satisfying the displayed sufficient threshold, on the public ball family.
+
+The source discloses all scalar parameters and even the template, while only the frame is hidden. Declaring \AtlasInlineMath{\mu} and calibrating \AtlasInlineMath{m} from public parameters does not invalidate its information argument. The bound is for arbitrary randomized complete-jet queries, not a span-restricted algorithm class. For fixed \AtlasInlineMath{p}, the sufficient dimension is \AtlasInlineMath{O_p(\kappa_D^{6/(3p-1)}\log(2+\kappa_D))}; the explicit threshold above is authoritative. No lower bound of this order is asserted in every fixed small dimension, or for the additive accuracy logarithm.
 
 
 
-Flat-gated strongly monotone operator chain with calibrated monotonicity modulus. Arbitrary randomized adaptive feasible full-jet queries and outputs.
+\textbf{Local argument.} CV\_S\_STRONG\_HIGH\_VI\_TANG\allowbreak{}ENT\_\_strong\_parameteriza\allowbreak{}tion\_of\_chain\_20261124
 
 
 
-The fixed hard operator is independent of the private seed. The lower bound applies when kappa\_D>=kappa\_0,p and theta<=1/16.
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.13462v2}{[2]} Definition 3.1; equation (10.1); equations (10.4)--(10.6); Lemma 10.2; Lemma 10.4; Theorem 11.3, equations (11.2)--(11.3).
 
 
 
-\needspace{4\baselineskip}\subsection{B4 - Certified restart of the log-free monotone full-jet solver}
+\AtlasInlineMath{T^\star_{{\rm rand},\infty}\ge\lfloor(c_p^{\rm sc}\kappa_D)^{\alpha_p}\rfloor=\Omega_p(\kappa_D^{\alpha_p})} for \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}} and \AtlasInlineMath{0<\theta\le1/16}, with the stated sufficient dimension.
+
+
+
+The local argument specifies the original-domain tangent certificate, fixed query budget, public parameter mapping, fixed-order constants and dimension scope.
+
+
+
+\needspace{4\baselineskip}\subsection{B4 - Certified restart on the original compact domain}
 
 
 \textbf{Admission.} Included in the bracket
@@ -499,42 +569,58 @@ The fixed hard operator is independent of the private seed. The lower bound appl
 
 
 
-\AtlasMath{O_p\!\left(1+\kappa_D^{2/(3p-1)}+\log_+(1/\theta)\right)}
+\AtlasMath{O_p\!\left(1+\kappa_D^{\alpha_p}+\log_+(1/\theta)\right)}
 
 
-\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U11/manuscript.pdf}{[1]}
-
-
-
-\textbf{Conditions.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)>\kappa_D^{2/(3p-1)}}.; The source imports Theorem 5.1 of Zhang-Chen-Pan-Liu-Yang-Zhang (2026) and preserves feasibility, original-domain normal cones, and all final evaluations.
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.23557v1}{[1]}
 
 
 
-\textbf{Dimension conditions.} The upper bound is valid in every finite dimension. For the lower bound the public domain can be \AtlasInlineMath{B_2^d(D/2)} with start zero. Let \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{2/(3p-1)}\rfloor}, with \AtlasInlineMath{c_p^{\rm sc}} from equation lower-constants. Any \AtlasInlineMath{d\ge m+\lceil2048m^3\ln(8(m^2+1))\rceil} suffices. The explicit source threshold is \AtlasInlineMath{\kappa_{0,p}=2^{(3p-1)/2}/c_p^{\rm sc}}. This is a sufficient high-dimensional construction, not a claim for every fixed small d.
+\textbf{Conditions.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)>\kappa_D^{\alpha_p}}.; All eight-axis contracts of this profile hold. The upper witness is deterministic; the lower class is unrestricted randomized with fixed success probability 2/3 and fixed pathwise query cap.
 
 
 
-\textbf{Constants.} Constants depend only on p.
+\textbf{Dimension conditions.} Every finite dimension.
 
 
 
-\textbf{Logarithmic factors.} The remaining multiplicative discrepancy is at most logarithmic in inverse relative accuracy.
+\textbf{Constants.} Constants depend only on the fixed integer p and the once-fixed smooth gate. The threshold and sufficient dimension are explicit; no uniform claim as p grows is made.
 
 
 
-\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U11/manuscript.pdf}{[1]} Proposition literature-restart, equation sharper-upper; Corollary frontier; verified labels: prop:literature-restart (line 539), eq:sharper-upper (line 543), cor:frontier (line 597)
+\textbf{Derivation.} Theorem 5.1 of 2609.23557v1, with Assumptions 2.1--2.4, Algorithm 1 and Lemma 2.1, returns a feasible \AtlasInlineMath{u} and an evaluated vector \AtlasInlineMath{v=F(u)+n}, \AtlasInlineMath{n\in N_X(u)}, with \AtlasInlineMath{\|v\|\le\eta} in at most \AtlasInlineMath{C_p[1+(L_pR^p/\eta)^{\alpha_p}]} complete-jet calls whenever \AtlasInlineMath{\|z-x^\star\|\le R}, where \AtlasInlineMath{\alpha_p=2/(3p-1)}. The constant \AtlasInlineMath{C_p} depends only on fixed \AtlasInlineMath{p}.
+
+The source writes its scale as the exact initial distance. A supplied upper bound \AtlasInlineMath{R} is sufficient: choose its equation (8) with \AtlasInlineMath{\eta_0=(L_pR^{p-1})^{-1}} and its inner tolerance with \AtlasInlineMath{R}. In the proof of Theorem 4.1, equations (11)--(13) use the initial distance only through the upper estimates \AtlasInlineMath{\|z-x^\star\|\le R}, \AtlasInlineMath{\sum_t\|e_t\|\le R}, \AtlasInlineMath{\|u_t-x^\star\|\le2R} and \AtlasInlineMath{P_0\le6R^2/\eta_0}. The distance-energy and query-sum bounds in Lemma 5.1 and Theorem 5.1 then keep the same scale. Thus the subroutine requires no knowledge of the exact distance.
+
+For the unique VI solution choose \AtlasInlineMath{n^\star=-F(x^\star)\in N_X(x^\star)}. Monotonicity of the normal cone and \AtlasInlineMath{\mu}-strong monotonicity give \AtlasInlineMath{\mu\|u-x^\star\|^2\le\langle F(u)+n,u-x^\star\rangle\le\|v\|\|u-x^\star\|}, hence \AtlasInlineMath{\|u-x^\star\|\le\|v\|/\mu}.
+
+Set \AtlasInlineMath{R_j=D2^{-j}}, \AtlasInlineMath{z_0=x_0}, and \AtlasInlineMath{S=\max\{1,\lceil\log_2(\mu D/\varepsilon)\rceil\}}. At each \AtlasInlineMath{j=0,\ldots,S-1}, run the certified monotone solver on the same original set \AtlasInlineMath{X}, starting from \AtlasInlineMath{z_j}, with residual tolerance \AtlasInlineMath{\eta_j=\mu R_j/2}. Set \AtlasInlineMath{z_{j+1}=u_j}. The preceding inequality inductively proves \AtlasInlineMath{\|z_{j+1}-x^\star\|\le R_{j+1}}.
+
+The last actual certificate obeys \AtlasInlineMath{\|v_{S-1}\|\le\mu D2^{-S}\le\varepsilon}. The final conclusion is therefore a tangent-residual certificate, not merely distance contraction. The normal cone remains \AtlasInlineMath{N_X} throughout: there is no restriction to an intersected ball and no normal-cone transfer.
+
+Every stage costs at most \AtlasInlineMath{C_p[1+2^{\alpha_p}\kappa_D^{\alpha_p}2^{-j\alpha_p(p-1)}]}, where \AtlasInlineMath{\kappa_D=L_pD^{p-1}/\mu}. Summing gives \AtlasInlineMath{C_p[S+2^{\alpha_p}\kappa_D^{\alpha_p}/(1-2^{-\alpha_p(p-1)})]}. For fixed \AtlasInlineMath{p\ge2} this is \AtlasInlineMath{O_p(1+\kappa_D^{\alpha_p}+\log_+(1/\theta))}, where \AtlasInlineMath{\theta=\varepsilon/(\mu D)} and \AtlasInlineMath{\log_+(t)=\max\{0,\log t\}}. The cost includes all inner jet evaluations and all returned certificates.
+
+All queried centers and model solutions in source Algorithms 1--3 are in \AtlasInlineMath{X}, with projection onto the known \AtlasInlineMath{X}. A regularized operator \AtlasInlineMath{F+\eta^{-1}(\cdot-z)} uses one original jet per query and has the same Lipschitz bound on \AtlasInlineMath{D^{p-1}} for \AtlasInlineMath{p\ge2}. Source Assumptions 2.3--2.4 impose their inequalities on \AtlasInlineMath{X}; the neighborhood regularity used here supplies the same Taylor data. The bound is dimension-independent; constants are not asserted uniform when \AtlasInlineMath{p} grows.
 
 
 
-Certified restart of the log-free monotone full-jet solver. Deterministic feasible algorithms returning an evaluated tangent certificate.
+\textbf{Local argument.} CV\_S\_STRONG\_HIGH\_VI\_TANG\allowbreak{}ENT\_\_restart\_from\_monoto\allowbreak{}ne\_solver\_20261124
 
 
 
-The source imports Theorem 5.1 of Zhang-Chen-Pan-Liu-Yang-Zhang (2026) and preserves feasibility, original-domain normal cones, and all final evaluations.
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.23557v1}{[1]} Assumptions 2.1--2.4; Definition 2.1; Lemma 2.1; Algorithm 1; equation (8); Theorems 4.1 and 5.1; equations (11)--(13), (22)--(23).
 
 
 
-\needspace{4\baselineskip}\subsection{B5 - Flat-gated strongly monotone operator chain with calibrated monotonicity modulus}
+\AtlasInlineMath{T^\star_{{\rm rand},\infty}\le O_p(1+\kappa_D^{\alpha_p}+\log_+(1/\theta))} for all positive model parameters and fixed \AtlasInlineMath{p\ge2}; a deterministic feasible witness supplies an actual tangent certificate.
+
+
+
+The local argument specifies the original-domain tangent certificate, fixed query budget, public parameter mapping, fixed-order constants and dimension scope.
+
+
+
+\needspace{4\baselineskip}\subsection{B5 - Strong-monotonicity calibration of an existing random-frame family}
 
 
 \textbf{Admission.} Included in the bracket
@@ -549,38 +635,54 @@ The source imports Theorem 5.1 of Zhang-Chen-Pan-Liu-Yang-Zhang (2026) and prese
 
 
 
-\AtlasMath{\Omega_p(\kappa_D^{2/(3p-1)})}
+\AtlasMath{\Omega_p(\kappa_D^{\alpha_p})}
 
 
-\textbf{Sources.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U11/manuscript.pdf}{[1]}
-
-
-
-\textbf{Conditions.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)>\kappa_D^{2/(3p-1)}}.; The fixed hard operator is independent of the private seed. The lower bound applies when kappa\_D>=kappa\_0,p and theta<=1/16.
+\textbf{Sources.} \href{https://arxiv.org/pdf/2609.13462v2}{[2]}
 
 
 
-\textbf{Dimension conditions.} The upper bound is valid in every finite dimension. For the lower bound the public domain can be \AtlasInlineMath{B_2^d(D/2)} with start zero. Let \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{2/(3p-1)}\rfloor}, with \AtlasInlineMath{c_p^{\rm sc}} from equation lower-constants. Any \AtlasInlineMath{d\ge m+\lceil2048m^3\ln(8(m^2+1))\rceil} suffices. The explicit source threshold is \AtlasInlineMath{\kappa_{0,p}=2^{(3p-1)/2}/c_p^{\rm sc}}. This is a sufficient high-dimensional construction, not a claim for every fixed small d.
+\textbf{Conditions.} \AtlasInlineMath{p\ge2} fixed, \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}}, \AtlasInlineMath{0<\theta\le1/16}, and \AtlasInlineMath{\log_+(1/\theta)>\kappa_D^{\alpha_p}}.; All eight-axis contracts of this profile hold. The upper witness is deterministic; the lower class is unrestricted randomized with fixed success probability 2/3 and fixed pathwise query cap.; The stronger explicit statement is \AtlasInlineMath{T^\star_{{\rm rand},\infty}\ge m\ge\frac12(c_p^{\rm sc}\kappa_D)^{\alpha_p}}.
 
 
 
-\textbf{Constants.} Constants depend only on p.
+\textbf{Dimension conditions.} For fixed \AtlasInlineMath{p}, take \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{\alpha_p}\rfloor\ge2}. The lower bound holds on \AtlasInlineMath{X=B_2^d(D/2)} with start zero whenever \AtlasInlineMath{d\ge m+\lceil2048m^3\log(8(m^2+1))\rceil}. Here \AtlasInlineMath{B_p=\max\{1,\|\rho^{(p-1)}\|_\infty\}} for the fixed gate of 2609.13462v2, \AtlasInlineMath{c_p^{\rm sc}=1/(2^pB_p16^{p-1})}, and \AtlasInlineMath{\kappa_{0,p}=2^{(3p-1)/2}/c_p^{\rm sc}}. Upper bounds hold in every finite dimension. The comparison quantity takes a worst case over finite dimensions.
 
 
 
-\textbf{Logarithmic factors.} The remaining multiplicative discrepancy is at most logarithmic in inverse relative accuracy.
+\textbf{Constants.} Constants depend only on the fixed integer p and the once-fixed smooth gate. The threshold and sufficient dimension are explicit; no uniform claim as p grows is made.
 
 
 
-\textbf{Source location.} \href{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U11/manuscript.pdf}{[1]} Theorem lower; equation randomized-lower and lower-dimension; verified labels: thm:lower (line 502), eq:randomized-lower (line 510), sec:lower (line 1256), eq:lower-dimension (line 1457)
+\textbf{Derivation.} Use only the family in 2609.13462v2, Section 10. Fix its smooth even gate \AtlasInlineMath{\rho} and \AtlasInlineMath{B_p=\max\{1,\|\rho^{(p-1)}\|_\infty\}}. For integer \AtlasInlineMath{m\ge2}, set \AtlasInlineMath{R=D/2}, \AtlasInlineMath{q=1-1/(2m)}, \AtlasInlineMath{c=R/(2\sqrt m)}, \AtlasInlineMath{\tau=R/(16m^{3/2})} and \AtlasInlineMath{\lambda=L_p\tau^{p-1}/B_p}, exactly as equation (10.4).
+
+For a hidden orthonormal frame \AtlasInlineMath{V=(v_1,\ldots,v_m)} define \AtlasInlineMath{T_V(x)=cv_1+q\sum_{i=1}^{m-1}h_\tau(\langle v_i,x\rangle)v_{i+1}} and \AtlasInlineMath{F_V=\lambda(\operatorname{Id}-T_V)} on the public ball \AtlasInlineMath{X=B_2^d(R)}, with public start \AtlasInlineMath{0}. Lemma 10.2 gives global strong monotonicity \AtlasInlineMath{\mu_m=\lambda/(2m)}, Lipschitz \AtlasInlineMath{(p-1)}st derivative at most \AtlasInlineMath{L_p}, a unique interior zero and \AtlasInlineMath{r_{\rm tan}(x)=\|F_V(x)\|} even at the boundary. No change of target metric is required.
+
+Writing \AtlasInlineMath{a_p=(3p-1)/2} and \AtlasInlineMath{c_p^{\rm sc}=1/(2^pB_p16^{p-1})}, direct substitution gives \AtlasInlineMath{\mu_m=c_p^{\rm sc}L_pD^{p-1}/m^{a_p}}. The residual barrier in equation (11.3) is \AtlasInlineMath{L_pR^p/[8B_p16^{p-1}m^{a_p}]=\mu_mD/8}.
+
+Assume \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}:=2^{a_p}/c_p^{\rm sc}} and set \AtlasInlineMath{m=\lfloor(c_p^{\rm sc}\kappa_D)^{1/a_p}\rfloor\ge2}. Then \AtlasInlineMath{m^{a_p}\le c_p^{\rm sc}\kappa_D}, so \AtlasInlineMath{\mu_m\ge\mu}. The hard family is therefore inside the promised \AtlasInlineMath{\mu}-strongly monotone class; the modulus is an available lower bound, not an equality requirement.
+
+Apply Theorem 11.3 with the fixed cap \AtlasInlineMath{N=m-1} and source failure parameter \AtlasInlineMath{\delta=1/4}. It requires \AtlasInlineMath{d\ge m+\lceil2048m^3\log(8(m^2+1))\rceil}. For every adaptive randomized algorithm with this cap and any feasible measurable output, some fixed frame has probability at least \AtlasInlineMath{3/4} of residual at least \AtlasInlineMath{\mu_mD/8}.
+
+If \AtlasInlineMath{0<\theta\le1/16}, this barrier is at least \AtlasInlineMath{\mu D/8\ge2\varepsilon}. A per-instance success guarantee of \AtlasInlineMath{2/3} is therefore impossible with \AtlasInlineMath{m-1} queries. Consequently \AtlasInlineMath{T^\star_{{\rm rand},\infty}\ge m\ge\frac12(c_p^{\rm sc}\kappa_D)^{\alpha_p}=\Omega_p(\kappa_D^{\alpha_p})}. The same fixed-dimensional statement holds for every \AtlasInlineMath{d} satisfying the displayed sufficient threshold, on the public ball family.
+
+The source discloses all scalar parameters and even the template, while only the frame is hidden. Declaring \AtlasInlineMath{\mu} and calibrating \AtlasInlineMath{m} from public parameters does not invalidate its information argument. The bound is for arbitrary randomized complete-jet queries, not a span-restricted algorithm class. For fixed \AtlasInlineMath{p}, the sufficient dimension is \AtlasInlineMath{O_p(\kappa_D^{6/(3p-1)}\log(2+\kappa_D))}; the explicit threshold above is authoritative. No lower bound of this order is asserted in every fixed small dimension, or for the additive accuracy logarithm.
 
 
 
-Flat-gated strongly monotone operator chain with calibrated monotonicity modulus. Arbitrary randomized adaptive feasible full-jet queries and outputs.
+\textbf{Local argument.} CV\_S\_STRONG\_HIGH\_VI\_TANG\allowbreak{}ENT\_\_strong\_parameteriza\allowbreak{}tion\_of\_chain\_20261124
 
 
 
-The fixed hard operator is independent of the private seed. The lower bound applies when kappa\_D>=kappa\_0,p and theta<=1/16.
+\textbf{Source location.} \href{https://arxiv.org/pdf/2609.13462v2}{[2]} Definition 3.1; equation (10.1); equations (10.4)--(10.6); Lemma 10.2; Lemma 10.4; Theorem 11.3, equations (11.2)--(11.3).
+
+
+
+\AtlasInlineMath{T^\star_{{\rm rand},\infty}\ge\lfloor(c_p^{\rm sc}\kappa_D)^{\alpha_p}\rfloor=\Omega_p(\kappa_D^{\alpha_p})} for \AtlasInlineMath{\kappa_D\ge\kappa_{0,p}} and \AtlasInlineMath{0<\theta\le1/16}, with the stated sufficient dimension.
+
+
+
+The local argument specifies the original-domain tangent certificate, fixed query budget, public parameter mapping, fixed-order constants and dimension scope.
 
 
 
@@ -591,29 +693,329 @@ Read-only presentation of the stored native record. Integrity hashes identify so
 
 
 
-Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f\allowbreak{}9a3ecbe5ed12ab4d8e11ba87\allowbreak{}3c2f11161202b945
+Native pointer: /proofs; canonical SHA-256: 784e60fe7f22297c0209265b\allowbreak{}e9f8e949bcc1ac0cb8268e2b\allowbreak{}6abd81c7c5af0298
 
 
 
-Native value (empty\_array): []
+\needspace{4\baselineskip}\subsection{Native proof: CV\_S\_STRONG\_HIGH\_VI\_TANG\allowbreak{}ENT\_\_restart\_from\_monoto\allowbreak{}ne\_solver\_20261124}
 
+
+Native pointer: /proofs/0; canonical SHA-256: ace24da56b4f69ce86337cee\allowbreak{}e93661fbfa5287a4505ab9c1\allowbreak{}e4357a81f9a73a0e
+
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: kind}
+
+
+Native pointer: /proofs/0/kind; canonical SHA-256: cfa542c409fb3d47432f3fbd\allowbreak{}509c4920e1f04ad8c0dc55e0\allowbreak{}c4abfec8293a7d89
+
+
+local\_mathematical\_derivation
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: title}
+
+
+Native pointer: /proofs/0/title; canonical SHA-256: 36e20d7a9a67f5b2d05f2c0a\allowbreak{}c9221597c7ea99530afed5fc\allowbreak{}dd42e35e77a922b3
+
+
+Certified restart on the original compact domain
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: source\_refs}
+
+
+Native pointer: /proofs/0/source\_refs; canonical SHA-256: 7fd82bbde22376e5d886b0e7\allowbreak{}b4838c7cd74109ac46f3c2cd\allowbreak{}e19ddd255c8482d5
+
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+
+
+Native pointer: /proofs/0/source\_refs/0; canonical SHA-256: 24369682e51b4d5eb2472abf\allowbreak{}9b1016c795d02a570c3bd525\allowbreak{}51d774bea6eae373
+
+
+CV\_SRC\_mvi\_optimal\_2609\_23557
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: premises}
+
+
+Native pointer: /proofs/0/premises; canonical SHA-256: 1d4f5abc8df3ca579392d357\allowbreak{}f6d19b1cb20deab2fd8db3ac\allowbreak{}f40af41cc4758631
+
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+
+
+Native pointer: /proofs/0/premises/0; canonical SHA-256: f5e8638f58226ff985bfb37c\allowbreak{}f53eda66f1b7f46b552effd5\allowbreak{}1cbb98b5ebb6a689
+
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: source\_ref}
+
+
+Native pointer: /proofs/0/premises/0/source\_ref; canonical SHA-256: 24369682e51b4d5eb2472abf\allowbreak{}9b1016c795d02a570c3bd525\allowbreak{}51d774bea6eae373
+
+
+CV\_SRC\_mvi\_optimal\_2609\_23557
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: locator}
+
+
+Native pointer: /proofs/0/premises/0/locator; canonical SHA-256: 3d7058a038f9a08d54910e44\allowbreak{}172772b97892a86bcec41e7b\allowbreak{}160956dff6ae02ce
+
+
+Assumptions 2.1\char45{}\char45{}2.4; Definition 2.1; Lemma 2.1; Algorithm 1; equation (8); Theorems 4.1 and 5.1; equations (11)\char45{}\char45{}(13), (22)\char45{}\char45{}(23).
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: statement}
+
+
+Native pointer: /proofs/0/statement; canonical SHA-256: 23ea1d48f9524ce8e56eeffe\allowbreak{}e52fcef1bf5e79c2bc95ba69\allowbreak{}a9f16ddb813c33fc
+
+
+\$T\textasciicircum{}\textbackslash{}star\_\{\{\textbackslash{}rm rand\},\textbackslash{}infty\}\textbackslash{}le O\_p(1+\textbackslash{}kappa\_D\textasciicircum{}\{\textbackslash{}alpha\_p\allowbreak{}\}+\textbackslash{}log\_+(1/\textbackslash{}theta))\$ for all positive model parameters and fixed \$p\textbackslash{}ge2\$; a deterministic feasible witness supplies an actual tangent certificate.
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: derivation\_paragraphs}
+
+
+Native pointer: /proofs/0/derivation\_paragraphs; canonical SHA-256: a63987df80d21cd3ea472dd2\allowbreak{}a43095846e64f6973e8bb5a2\allowbreak{}6eeefa816cec7bbe
+
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+
+
+Native pointer: /proofs/0/derivation\_paragraphs/0; canonical SHA-256: d01be054b2d3d0093161b79b\allowbreak{}479966d3c3f5e3849bd876dc\allowbreak{}9f55ce2779ecf095
+
+
+Theorem 5.1 of 2609.23557v1, with Assumptions 2.1\char45{}\char45{}2.4, Algorithm 1 and Lemma 2.1, returns a feasible \$u\$ and an evaluated vector \$v=F(u)+n\$, \$n\textbackslash{}in N\_X(u)\$, with \$\textbackslash{}|v\textbackslash{}|\textbackslash{}le\textbackslash{}eta\$ in at most \$C\_p[1+(L\_pR\textasciicircum{}p/\textbackslash{}eta)\textasciicircum{}\{\textbackslash{}alpha\_p\}]\$ complete\char45{}jet calls whenever \$\textbackslash{}|z\char45{}x\textasciicircum{}\textbackslash{}star\textbackslash{}|\textbackslash{}le R\$, where \$\textbackslash{}alpha\_p=2/(3p\char45{}1)\$. The constant \$C\_p\$ depends only on fixed \$p\$.
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+
+
+Native pointer: /proofs/0/derivation\_paragraphs/1; canonical SHA-256: a1a547f6c4bb9b9203fd9f94\allowbreak{}baf7f169d6a53642c190bf2a\allowbreak{}311c9180bce031c8
+
+
+The source writes its scale as the exact initial distance. A supplied upper bound \$R\$ is sufficient: choose its equation (8) with \$\textbackslash{}eta\_0=(L\_pR\textasciicircum{}\{p\char45{}1\})\textasciicircum{}\{\char45{}1\}\$ and its inner tolerance with \$R\$. In the proof of Theorem 4.1, equations (11)\char45{}\char45{}(13) use the initial distance only through the upper estimates \$\textbackslash{}|z\char45{}x\textasciicircum{}\textbackslash{}star\textbackslash{}|\textbackslash{}le R\$, \$\textbackslash{}sum\_t\textbackslash{}|e\_t\textbackslash{}|\textbackslash{}le R\$, \$\textbackslash{}|u\_t\char45{}x\textasciicircum{}\textbackslash{}star\textbackslash{}|\textbackslash{}le2R\$ and \$P\_0\textbackslash{}le6R\textasciicircum{}2/\textbackslash{}eta\_0\$. The distance\char45{}energy and query\char45{}sum bounds in Lemma 5.1 and Theorem 5.1 then keep the same scale. Thus the subroutine requires no knowledge of the exact distance.
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 3}
+
+
+Native pointer: /proofs/0/derivation\_paragraphs/2; canonical SHA-256: b6c59b73bdf25dff58f22d74\allowbreak{}9c1c0e9c14ba1967e786756c\allowbreak{}0219b77de7a4f514
+
+
+For the unique VI solution choose \$n\textasciicircum{}\textbackslash{}star=\char45{}F(x\textasciicircum{}\textbackslash{}star)\textbackslash{}in N\_X(x\textasciicircum{}\textbackslash{}star)\$. Monotonicity of the normal cone and \$\textbackslash{}mu\$\char45{}strong monotonicity give \$\textbackslash{}mu\textbackslash{}|u\char45{}x\textasciicircum{}\textbackslash{}star\textbackslash{}|\textasciicircum{}2\textbackslash{}le\textbackslash{}langle F(u)+n,u\char45{}x\textasciicircum{}\textbackslash{}star\textbackslash{}rangle\textbackslash{}\allowbreak{}le\textbackslash{}|v\textbackslash{}|\textbackslash{}|u\char45{}x\textasciicircum{}\textbackslash{}star\textbackslash{}|\$, hence \$\textbackslash{}|u\char45{}x\textasciicircum{}\textbackslash{}star\textbackslash{}|\textbackslash{}le\textbackslash{}|v\textbackslash{}|/\textbackslash{}mu\$.
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 4}
+
+
+Native pointer: /proofs/0/derivation\_paragraphs/3; canonical SHA-256: 795a7b3c72863223680b92ce\allowbreak{}8f1cceb8a314e180139d4dcf\allowbreak{}ed1ce030c44e7498
+
+
+Set \$R\_j=D2\textasciicircum{}\{\char45{}j\}\$, \$z\_0=x\_0\$, and \$S=\textbackslash{}max\textbackslash{}\{1,\textbackslash{}lceil\textbackslash{}log\_2(\textbackslash{}mu D/\textbackslash{}varepsilon)\textbackslash{}rceil\textbackslash{}\}\$. At each \$j=0,\textbackslash{}ldots,S\char45{}1\$, run the certified monotone solver on the same original set \$X\$, starting from \$z\_j\$, with residual tolerance \$\textbackslash{}eta\_j=\textbackslash{}mu R\_j/2\$. Set \$z\_\{j+1\}=u\_j\$. The preceding inequality inductively proves \$\textbackslash{}|z\_\{j+1\}\char45{}x\textasciicircum{}\textbackslash{}star\textbackslash{}|\textbackslash{}le R\_\{j+1\}\$.
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 5}
+
+
+Native pointer: /proofs/0/derivation\_paragraphs/4; canonical SHA-256: 9ce8d4eb069f3784a83b380d\allowbreak{}1c3b971b1b0f3821ffa86f1c\allowbreak{}d8e2d7c539823088
+
+
+The last actual certificate obeys \$\textbackslash{}|v\_\{S\char45{}1\}\textbackslash{}|\textbackslash{}le\textbackslash{}mu D2\textasciicircum{}\{\char45{}S\}\textbackslash{}le\textbackslash{}varepsilon\$. The final conclusion is therefore a tangent\char45{}residual certificate, not merely distance contraction. The normal cone remains \$N\_X\$ throughout: there is no restriction to an intersected ball and no normal\char45{}cone transfer.
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 6}
+
+
+Native pointer: /proofs/0/derivation\_paragraphs/5; canonical SHA-256: a6ef7219028eac2afa94f71d\allowbreak{}abccac1b64cf7ef76966c576\allowbreak{}3e29265161ffe819
+
+
+Every stage costs at most \$C\_p[1+2\textasciicircum{}\{\textbackslash{}alpha\_p\}\textbackslash{}kapp\allowbreak{}a\_D\textasciicircum{}\{\textbackslash{}alpha\_p\}2\textasciicircum{}\{\char45{}j\textbackslash{}alph\allowbreak{}a\_p(p\char45{}1)\}]\$, where \$\textbackslash{}kappa\_D=L\_pD\textasciicircum{}\{p\char45{}1\}/\textbackslash{}mu\$. Summing gives \$C\_p[S+2\textasciicircum{}\{\textbackslash{}alpha\_p\}\textbackslash{}kapp\allowbreak{}a\_D\textasciicircum{}\{\textbackslash{}alpha\_p\}/(1\char45{}2\textasciicircum{}\{\char45{}\textbackslash{}a\allowbreak{}lpha\_p(p\char45{}1)\})]\$. For fixed \$p\textbackslash{}ge2\$ this is \$O\_p(1+\textbackslash{}kappa\_D\textasciicircum{}\{\textbackslash{}alpha\_\allowbreak{}p\}+\textbackslash{}log\_+(1/\textbackslash{}theta))\$, where \$\textbackslash{}theta=\textbackslash{}varepsilon/(\textbackslash{}mu D)\$ and \$\textbackslash{}log\_+(t)=\textbackslash{}max\textbackslash{}\{0,\textbackslash{}log t\textbackslash{}\}\$. The cost includes all inner jet evaluations and all returned certificates.
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 7}
+
+
+Native pointer: /proofs/0/derivation\_paragraphs/6; canonical SHA-256: bf7944a7cebe28ea52b90ca2\allowbreak{}3450187ff086482df6e091f3\allowbreak{}1c1a51ca0e7493b8
+
+
+All queried centers and model solutions in source Algorithms 1\char45{}\char45{}3 are in \$X\$, with projection onto the known \$X\$. A regularized operator \$F+\textbackslash{}eta\textasciicircum{}\{\char45{}1\}(\textbackslash{}cdot\char45{}z)\$ uses one original jet per query and has the same Lipschitz bound on \$D\textasciicircum{}\{p\char45{}1\}\$ for \$p\textbackslash{}ge2\$. Source Assumptions 2.3\char45{}\char45{}2.4 impose their inequalities on \$X\$; the neighborhood regularity used here supplies the same Taylor data. The bound is dimension\char45{}independent; constants are not asserted uniform when \$p\$ grows.
+
+
+\needspace{4\baselineskip}\subsection{Native proof: CV\_S\_STRONG\_HIGH\_VI\_TANG\allowbreak{}ENT\_\_strong\_parameteriza\allowbreak{}tion\_of\_chain\_20261124}
+
+
+Native pointer: /proofs/1; canonical SHA-256: 83154e85462feca1bb7d45ce\allowbreak{}5529acfa360084a031747371\allowbreak{}62061c36a43200e1
+
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: kind}
+
+
+Native pointer: /proofs/1/kind; canonical SHA-256: cfa542c409fb3d47432f3fbd\allowbreak{}509c4920e1f04ad8c0dc55e0\allowbreak{}c4abfec8293a7d89
+
+
+local\_mathematical\_derivation
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: title}
+
+
+Native pointer: /proofs/1/title; canonical SHA-256: 2a3abab2419709af69392154\allowbreak{}22050f9926e1a3d9a42c5584\allowbreak{}dd93718c5833b0c4
+
+
+Strong\char45{}monotonicity calibration of an existing random\char45{}frame family
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: source\_refs}
+
+
+Native pointer: /proofs/1/source\_refs; canonical SHA-256: 9f8c9cab29d4ea94ca4fa573\allowbreak{}5db7f4bdad01cba2cb8df2cc\allowbreak{}e3e56c9b4d58d40a
+
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+
+
+Native pointer: /proofs/1/source\_refs/0; canonical SHA-256: b70e46d42424a8870809d331\allowbreak{}d34d1680a1453ac27a9751da\allowbreak{}325a70da76632683
+
+
+CV\_SRC\_mvi\_higher\_2609\_13462
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: premises}
+
+
+Native pointer: /proofs/1/premises; canonical SHA-256: f8229b708c1181211de344dd\allowbreak{}16a5bf785c6fbe7a55617354\allowbreak{}caf954ecb7b6c4ac
+
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+
+
+Native pointer: /proofs/1/premises/0; canonical SHA-256: 5af2a10e3e17d2c8d99a0947\allowbreak{}5b048bc7da10875abcdd150b\allowbreak{}f40b02e5f1803878
+
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: source\_ref}
+
+
+Native pointer: /proofs/1/premises/0/source\_ref; canonical SHA-256: b70e46d42424a8870809d331\allowbreak{}d34d1680a1453ac27a9751da\allowbreak{}325a70da76632683
+
+
+CV\_SRC\_mvi\_higher\_2609\_13462
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: locator}
+
+
+Native pointer: /proofs/1/premises/0/locator; canonical SHA-256: ad6a05ec0a971d3d2e885367\allowbreak{}cff490da45cf1c60c2a5aa96\allowbreak{}79b72c1a09cde3d5
+
+
+Definition 3.1; equation (10.1); equations (10.4)\char45{}\char45{}(10.6); Lemma 10.2; Lemma 10.4; Theorem 11.3, equations (11.2)\char45{}\char45{}(11.3).
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: statement}
+
+
+Native pointer: /proofs/1/statement; canonical SHA-256: c84557db90cc64793e2a47aa\allowbreak{}388d41ac9d6a2b88b4105b06\allowbreak{}54813feea4f77bbe
+
+
+\$T\textasciicircum{}\textbackslash{}star\_\{\{\textbackslash{}rm rand\},\textbackslash{}infty\}\textbackslash{}ge\textbackslash{}lfloor(c\_p\textasciicircum{}\{\textbackslash{}rm sc\}\textbackslash{}kappa\_D)\textasciicircum{}\{\textbackslash{}alpha\_p\}\textbackslash{}\allowbreak{}rfloor=\textbackslash{}Omega\_p(\textbackslash{}kappa\_D\allowbreak{}\textasciicircum{}\{\textbackslash{}alpha\_p\})\$ for \$\textbackslash{}kappa\_D\textbackslash{}ge\textbackslash{}kappa\_\{0,p\}\$ and \$0<\textbackslash{}theta\textbackslash{}le1/16\$, with the stated sufficient dimension.
+
+
+\needspace{4\baselineskip}\subsubsection{Native field: derivation\_paragraphs}
+
+
+Native pointer: /proofs/1/derivation\_paragraphs; canonical SHA-256: 8945705b0e2f5f367a0e91ee\allowbreak{}ee6ea5ce58604ae568a481a3\allowbreak{}91061e21f773516e
+
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 1}
+
+
+Native pointer: /proofs/1/derivation\_paragraphs/0; canonical SHA-256: 8669e9811ac8825628e262ca\allowbreak{}0c6a4a3cb6dbf311e3f2435f\allowbreak{}6c0c28812151aae5
+
+
+Use only the family in 2609.13462v2, Section 10. Fix its smooth even gate \$\textbackslash{}rho\$ and \$B\_p=\textbackslash{}max\textbackslash{}\{1,\textbackslash{}|\textbackslash{}rho\textasciicircum{}\{(p\char45{}\allowbreak{}1)\}\textbackslash{}|\_\textbackslash{}infty\textbackslash{}\}\$. For integer \$m\textbackslash{}ge2\$, set \$R=D/2\$, \$q=1\char45{}1/(2m)\$, \$c=R/(2\textbackslash{}sqrt m)\$, \$\textbackslash{}tau=R/(16m\textasciicircum{}\{3/2\})\$ and \$\textbackslash{}lambda=L\_p\textbackslash{}tau\textasciicircum{}\{p\char45{}1\}/B\_p\$, exactly as equation (10.4).
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 2}
+
+
+Native pointer: /proofs/1/derivation\_paragraphs/1; canonical SHA-256: 93c257e06cd187130de1d05a\allowbreak{}a810e614a64c92b6dc30421b\allowbreak{}061acf44a13d733e
+
+
+For a hidden orthonormal frame \$V=(v\_1,\textbackslash{}ldots,v\_m)\$ define \$T\_V(x)=cv\_1+q\textbackslash{}sum\_\{i=1\}\allowbreak{}\textasciicircum{}\{m\char45{}1\}h\_\textbackslash{}tau(\textbackslash{}langle v\_i,x\textbackslash{}rangle)v\_\{i+1\}\$ and \$F\_V=\textbackslash{}lambda(\textbackslash{}operatorname\{Id\}\char45{}T\_V)\$ on the public ball \$X=B\_2\textasciicircum{}d(R)\$, with public start \$0\$. Lemma 10.2 gives global strong monotonicity \$\textbackslash{}mu\_m=\textbackslash{}lambda/(2m)\$, Lipschitz \$(p\char45{}1)\$st derivative at most \$L\_p\$, a unique interior zero and \$r\_\{\textbackslash{}rm tan\}(x)=\textbackslash{}|F\_V(x)\textbackslash{}|\$ even at the boundary. No change of target metric is required.
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 3}
+
+
+Native pointer: /proofs/1/derivation\_paragraphs/2; canonical SHA-256: a527cfdd780120de9739fe5b\allowbreak{}64f2ddee38d14b53adff8a06\allowbreak{}d6c0943471b341b6
+
+
+Writing \$a\_p=(3p\char45{}1)/2\$ and \$c\_p\textasciicircum{}\{\textbackslash{}rm sc\}=1/(2\textasciicircum{}pB\_p16\textasciicircum{}\{p\char45{}1\})\$, direct substitution gives \$\textbackslash{}mu\_m=c\_p\textasciicircum{}\{\textbackslash{}rm sc\}L\_pD\textasciicircum{}\{p\char45{}1\}/m\textasciicircum{}\{a\_p\}\$. The residual barrier in equation (11.3) is \$L\_pR\textasciicircum{}p/[8B\_p16\textasciicircum{}\{p\char45{}1\}m\textasciicircum{}\{\allowbreak{}a\_p\}]=\textbackslash{}mu\_mD/8\$.
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 4}
+
+
+Native pointer: /proofs/1/derivation\_paragraphs/3; canonical SHA-256: 28763e886855a2cd616c824d\allowbreak{}32536a4e8780824c72e5577b\allowbreak{}10ca9be8669af44c
+
+
+Assume \$\textbackslash{}kappa\_D\textbackslash{}ge\textbackslash{}kappa\_\{0,p\}\allowbreak{}:=2\textasciicircum{}\{a\_p\}/c\_p\textasciicircum{}\{\textbackslash{}rm sc\}\$ and set \$m=\textbackslash{}lfloor(c\_p\textasciicircum{}\{\textbackslash{}rm sc\}\textbackslash{}kappa\_D)\textasciicircum{}\{1/a\_p\}\textbackslash{}rfloor\textbackslash{}ge2\$. Then \$m\textasciicircum{}\{a\_p\}\textbackslash{}le c\_p\textasciicircum{}\{\textbackslash{}rm sc\}\textbackslash{}kappa\_D\$, so \$\textbackslash{}mu\_m\textbackslash{}ge\textbackslash{}mu\$. The hard family is therefore inside the promised \$\textbackslash{}mu\$\char45{}strongly monotone class; the modulus is an available lower bound, not an equality requirement.
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 5}
+
+
+Native pointer: /proofs/1/derivation\_paragraphs/4; canonical SHA-256: 3bb93c52169d9f749167776b\allowbreak{}157ab7191ece5ba62dc668c8\allowbreak{}e0cd6585d47cc261
+
+
+Apply Theorem 11.3 with the fixed cap \$N=m\char45{}1\$ and source failure parameter \$\textbackslash{}delta=1/4\$. It requires \$d\textbackslash{}ge m+\textbackslash{}lceil2048m\textasciicircum{}3\textbackslash{}log(8(m\textasciicircum{}2+1))\textbackslash{}rceil\$. For every adaptive randomized algorithm with this cap and any feasible measurable output, some fixed frame has probability at least \$3/4\$ of residual at least \$\textbackslash{}mu\_mD/8\$.
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 6}
+
+
+Native pointer: /proofs/1/derivation\_paragraphs/5; canonical SHA-256: 61c1acdd53a5bf5163d627c2\allowbreak{}1c144125f62c77814dfaa02b\allowbreak{}90029fd3dedfa76e
+
+
+If \$0<\textbackslash{}theta\textbackslash{}le1/16\$, this barrier is at least \$\textbackslash{}mu D/8\textbackslash{}ge2\textbackslash{}varepsilon\$. A per\char45{}instance success guarantee of \$2/3\$ is therefore impossible with \$m\char45{}1\$ queries. Consequently \$T\textasciicircum{}\textbackslash{}star\_\{\{\textbackslash{}rm rand\},\textbackslash{}infty\}\textbackslash{}ge m\textbackslash{}ge\textbackslash{}frac12(c\_p\textasciicircum{}\{\textbackslash{}rm sc\}\textbackslash{}kappa\_D)\textasciicircum{}\{\textbackslash{}alpha\_p\}=\allowbreak{}\textbackslash{}Omega\_p(\textbackslash{}kappa\_D\textasciicircum{}\{\textbackslash{}alph\allowbreak{}a\_p\})\$. The same fixed\char45{}dimensional statement holds for every \$d\$ satisfying the displayed sufficient threshold, on the public ball family.
+
+
+\needspace{4\baselineskip}\subsubsection{Native item 7}
+
+
+Native pointer: /proofs/1/derivation\_paragraphs/6; canonical SHA-256: 61c8242da362a9fd1121689e\allowbreak{}0e309581a91db8058e45ac9f\allowbreak{}0f8a5cb4009180f2
+
+
+The source discloses all scalar parameters and even the template, while only the frame is hidden. Declaring \$\textbackslash{}mu\$ and calibrating \$m\$ from public parameters does not invalidate its information argument. The bound is for arbitrary randomized complete\char45{}jet queries, not a span\char45{}restricted algorithm class. For fixed \$p\$, the sufficient dimension is \$O\_p(\textbackslash{}kappa\_D\textasciicircum{}\{6/(3p\char45{}1)\}\allowbreak{}\textbackslash{}log(2+\textbackslash{}kappa\_D))\$; the explicit threshold above is authoritative. No lower bound of this order is asserted in every fixed small dimension, or for the additive accuracy logarithm.
 
 
 \needspace{7\baselineskip}\section{References}
 
 
-[1] Colombo\_U11. Higher-Order Oracle Complexity of Strongly Monotone Variational Inequalities. strongly\_monotone\_vi.tex.
+[1] Xinliang Zhang; Lesi Chen; Linxuan Pan; Chengchang Liu; Junchi Yang; Jingzhao Zhang. Optimal High-Order Methods for Solving Monotone Variational Inequalities. 2026. arXiv:2609.23557v1.
 
 
 
-\url{https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U11/manuscript.pdf}
+\url{https://arxiv.org/pdf/2609.23557v1}
 
 
 
-[2] Xinliang Zhang; Lesi Chen; Linxuan Pan; Chengchang Liu; Junchi Yang; Jingzhao Zhang. Optimal High-Order Methods for Solving Monotone Variational Inequalities. 2026. arXiv:2609.23557v1; Theorem 5.1 as used in Proposition literature-restart.
+[2] Haihan Zhang; Wendao Wu; Chenheng Zhang; Cong Fang; Haoxuan Li; Zhouchen Lin. Matching Higher-Order Oracle Complexity for Smooth Monotone Variational Inequalities. 2026. arXiv:2609.13462v2.
 
 
 
-\url{https://arxiv.org/abs/2609.23557}
+\url{https://arxiv.org/pdf/2609.13462v2}
 
 \end{document}

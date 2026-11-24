@@ -6,7 +6,7 @@ Single-objective optimization
 
 Find an approximate first-order stationary point of the population objective $f$: an output point with sufficiently small gradient norm. The mathematical object is $\nabla f$, and information is acquired through the zeroth-order interface specified below.
 
-**Status.** Other quantified gap
+**Status.** Fully optimal
 
 **TASK tags.** formulation: First order stationarity; solution concept: First order stationarity; task family: Single objective
 
@@ -172,10 +172,6 @@ $x_0$: Public initial point **Domain:** $x_0\in\mathbb{R}^d$.
 
 Belongs to the feasible domain required by the model.
 
-$a$: Normalized initial-gap scale **Domain:** $a>=0$.
-
-$a=\beta\Delta/\varepsilon^2$
-
 ## 3. Complexity bracket
 
 ### Compared quantities
@@ -212,207 +208,43 @@ $$
 
 Here v is the selected algorithm view, G_v its complete success guarantee, I an admissible fixed instance, theta the remaining parameters, and C_pi the declared resource projection. C_pi uses the view's fixed-path or expected-work budget convention, including initialization. No change of guarantee or scalarization is implicit.
 
-#### Q3 - minimax metric resource quantity
-
-**View.** Deterministic
-
-$$
-N_{\varepsilon,\mathrm{det}}^{\mathrm{val}}(d,\beta,\Delta)
-$$
-
-**Scope.** The union of the explicit parameter and dimension domains of the linked comparison regimes; each bound retains its own applicability conditions.
-
-**Optimization direction.** minimize
-
-**Resource contract.** expression: $N_{\mathrm{exact\ scalar\ value}}$; description: All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
-
 ### R1 - Parameter regime C01.R0
 
 **Region.** Gradient-smoothness-only specification; $\varepsilon^2\le c\beta\Delta$ and $d\ge C(\beta\Delta/\varepsilon^2)\log(2+\beta\Delta/\varepsilon^2)$.
 
-**Views.** Deterministic
+**Views.** Deterministic; Randomized
 
-**Quantity.** Q1
+**Quantity.** Q1; Q2
 
 **Resource.** One scalar function value or observation
 
 **Status.** Optimal
 
-**Lower bound.** B2
+**Lower bound.** B2, B5
 
 $$
 \Omega(d\beta\Delta/\varepsilon^2)
 $$
 
-**Upper bound.** B1
+**Upper bound.** B1, B3, B4
 
 $$
 O(d\beta\Delta/\varepsilon^2)
 $$
 
 **Gap or comparison.** $O(1)$
-
-### R2 - Parameter regime C01.R0
-
-**Region.** Gradient-smoothness-only specification; $\varepsilon^2\le c\beta\Delta$ and $d\ge C(\beta\Delta/\varepsilon^2)\log(2+\beta\Delta/\varepsilon^2)$.
-
-**Views.** Randomized
-
-**Quantity.** Q2
-
-**Resource.** One scalar function value or observation
-
-**Status.** Optimal
-
-**Lower bound.** B5
-
-$$
-\Omega(d\beta\Delta/\varepsilon^2)
-$$
-
-**Upper bound.** B3, B4
-
-$$
-O(d\beta\Delta/\varepsilon^2)
-$$
-
-**Gap or comparison.** $O(1)$
-
-### R3 - Exact zero-query threshold
-
-**Region.** $d\ge1$ and $0\le a\le1/2$; $\beta,\varepsilon>0$, $\Delta\ge0$. The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement. Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality. The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Views.** Deterministic
-
-**Quantity.** Q3
-
-**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
-
-**Status.** Optimal
-
-**Lower bound.** B7
-
-$$
-0
-$$
-
-**Upper bound.** B6
-
-$$
-0
-$$
-
-**Gap or comparison.** Exact zero calls.
-
-### R4 - Coarse positive-query complexity
-
-**Region.** $d\ge1$ and $1/2<a\le1$; $\beta,\varepsilon>0$, $\Delta\ge0$. The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement. Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality. The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Views.** Deterministic
-
-**Quantity.** Q3
-
-**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
-
-**Status.** Optimal
-
-**Lower bound.** B9
-
-$$
-d+1
-$$
-
-**Upper bound.** B8
-
-$$
-(d+1)\lceil4a\rceil
-$$
-
-**Gap or comparison.** O(1)
-
-### R5 - Dimension-accuracy matching window
-
-**Region.** $d\ge8$ and $1<a\le d/\log(ed)$; $\beta,\varepsilon>0$, $\Delta\ge0$. The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement. Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality. The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Views.** Deterministic
-
-**Quantity.** Q3
-
-**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
-
-**Status.** Optimal
-
-**Lower bound.** B11
-
-$$
-cda
-$$
-
-**Upper bound.** B10
-
-$$
-(d+1)\lceil4a\rceil
-$$
-
-**Gap or comparison.** O(1)
-
-### R6 - Remaining high-accuracy window
-
-**Region.** $d\ge8$ and $a>d/\log(ed)$; $\beta,\varepsilon>0$, $\Delta\ge0$. The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement. Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality. The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Views.** Deterministic
-
-**Quantity.** Q3
-
-**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
-
-**Status.** Other quantified gap
-
-**Lower bound.** B13
-
-$$
-\max\{d+1,cd^2/\log(ed)\}
-$$
-
-**Upper bound.** B12
-
-$$
-(d+1)\lceil4a\rceil
-$$
-
-**Gap or comparison.**
-
-$$
-O(a\log(ed)/d)
-$$
-
-### R7 - Small dimensions beyond coarse accuracy
-
-**Region.** $1\le d<8$ and $a>1$; $\beta,\varepsilon>0$, $\Delta\ge0$. The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement. Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality. The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Views.** Deterministic
-
-**Quantity.** Q3
-
-**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
-
-**Status.** Other quantified gap
-
-**Lower bound.** B15
-
-$$
-d+1
-$$
-
-**Upper bound.** B14
-
-$$
-(d+1)\lceil4a\rceil
-$$
-
-**Gap or comparison.** O(a)
 
 ## 4. Bounds and supporting evidence
+
+The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
+
+**Oracle mapping.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
+
+**Guarantee mapping.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
+
+**Output mapping.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
+
+**Resource mapping.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
 
 ### B1 - Finite-difference gradient descent
 
@@ -431,14 +263,6 @@ $$
 **Sources.** [2](https://arxiv.org/pdf/1309.5549)
 
 **Conditions.** $\beta ,\Delta ,\varepsilon >0$; exact function values throughout the ambient space; $d\ge 1$.
-
-**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
-
-**Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
-
-**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
-
-**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
 
 **Local argument.** ZO_PROOF_NONCONVEX_FINITE_DIFF
 
@@ -459,14 +283,6 @@ $$
 **Sources.** [1](https://arxiv.org/html/2610.19652v1) [3](https://arxiv.org/html/2609.00045v3) [4](https://arxiv.org/pdf/2610.00245v2) [5](https://arxiv.org/html/2610.17074v1)
 
 **Conditions.** $\varepsilon ^2\le c\beta \Delta$ , $d\ge C(\beta \Delta /\varepsilon ^2)\log(2+\beta \Delta /\varepsilon ^2)$; $smooth_only$.
-
-**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
-
-**Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
-
-**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
-
-**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
 
 **Local argument.** ZO_PROOF_NONCONVEX_LOWER_TRANSFER
 
@@ -490,14 +306,6 @@ $$
 
 **Conditions.** The population gradient is $\beta$-Lipschitz, and the initial objective gap is at most $\Delta$. Random-direction smoothing is used; with exact values, the finite-difference step may be any sufficiently small finite positive number.
 
-**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
-
-**Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
-
-**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
-
-**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
-
 **Local argument.** ZO_PROOF_NONCONVEX_FINITE_DIFF
 
 **Source location.** [2](https://arxiv.org/pdf/1309.5549) theorem: Exact-oracle specialization of Section 3; direct coordinate-difference descent construction
@@ -520,14 +328,6 @@ $$
 
 **Conditions.** $\beta ,\Delta ,\varepsilon >0$; exact function values throughout the ambient space; $d\ge 1$.
 
-**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
-
-**Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
-
-**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
-
-**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
-
 **Local argument.** ZO_PROOF_NONCONVEX_FINITE_DIFF
 
 ### B5 - Randomly rotated chain and scalar-concealment hard family
@@ -548,277 +348,9 @@ $$
 
 **Conditions.** $\varepsilon ^2\le c\beta \Delta$ , $d\ge C(\beta \Delta /\varepsilon ^2)\log(2+\beta \Delta /\varepsilon ^2)$; $smooth_only$.
 
-**Oracle correspondence.** Exact scalar function values; every location required by a finite difference must belong to this setting's query domain.
-
-**Guarantee conversion.** Error uses this profile's accuracy scale and aggregation order. The source theorem's expectation, probability, and asymptotic quantifiers are retained separately.
-
-**Output rule.** The output need only lie in this setting's prescribed space. Permitted averages and unqueried outputs must still satisfy its feasibility conditions.
-
-**Resource conversion.** Atomic calls under a fixed cap on every execution path. All feedback obtained during initialization, differencing and inner iterations is charged.
-
 **Local argument.** ZO_PROOF_NONCONVEX_LOWER_TRANSFER
 
 **Source location.** [1](https://arxiv.org/html/2610.19652v1) theorem: Smooth exact-value lower bound in XY26, restricted to the hard subclass with $L^2=\beta\Delta$
-
-### B6 - Output x0 in the zero-query range; otherwise coordinate finite differences and smooth descent
-
-**Admission.** Included in the bracket
-
-**Direction.** upper
-
-**View.** Deterministic
-
-**Witness or lower-bound scope.** Deterministic witness
-
-$$
-0
-$$
-
-**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf)
-
-**Conditions.** $d\ge1$ and $0\le a\le1/2$; $\beta,\varepsilon>0$, $\Delta\ge0$.; Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality.; The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Dimension conditions.** The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement.
-
-**Constants.** The lower constant c is universal. All explicit dimension and accuracy factors remain visible.
-
-**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf) Theorem thm:main, eq:threshold / eq:basic-bounds / eq:matching; Remark rem:gap-upper
-
-Output x0 in the zero-query range; otherwise coordinate finite differences and smooth descent. All deterministic unrestricted-query algorithms
-
-### B7 - Nonnegative call count and the sharp zero-query threshold
-
-**Admission.** Included in the bracket
-
-**Direction.** lower
-
-**View.** Deterministic
-
-**Witness or lower-bound scope.** elementary
-
-$$
-0
-$$
-
-**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf)
-
-**Conditions.** $d\ge1$ and $0\le a\le1/2$; $\beta,\varepsilon>0$, $\Delta\ge0$.; Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality.; The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Dimension conditions.** The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement.
-
-**Constants.** The lower constant c is universal. All explicit dimension and accuracy factors remain visible.
-
-**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf) Theorem thm:main; eq:main-lower; Table tab:regimes; Remark rem:gap-upper
-
-Nonnegative call count and the sharp zero-query threshold. All deterministic algorithms with arbitrary full-space queries and arbitrary measurable outputs
-
-### B8 - Output x0 in the zero-query range; otherwise coordinate finite differences and smooth descent
-
-**Admission.** Included in the bracket
-
-**Direction.** upper
-
-**View.** Deterministic
-
-**Witness or lower-bound scope.** Deterministic witness
-
-$$
-(d+1)\lceil4a\rceil
-$$
-
-**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf)
-
-**Conditions.** $d\ge1$ and $1/2<a\le1$; $\beta,\varepsilon>0$, $\Delta\ge0$.; Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality.; The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Dimension conditions.** The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement.
-
-**Constants.** The lower constant c is universal. All explicit dimension and accuracy factors remain visible.
-
-**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf) Theorem thm:main, eq:threshold / eq:basic-bounds / eq:matching; Remark rem:gap-upper
-
-Output x0 in the zero-query range; otherwise coordinate finite differences and smooth descent. All deterministic unrestricted-query algorithms
-
-### B9 - Smooth nonconvex chains with delayed directions and exact transcript completion, plus the two-quadratic dimension obstruction
-
-**Admission.** Included in the bracket
-
-**Direction.** lower
-
-**View.** Deterministic
-
-**Witness or lower-bound scope.** deterministic_hard_family
-
-$$
-d+1
-$$
-
-**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf)
-
-**Conditions.** $d\ge1$ and $1/2<a\le1$; $\beta,\varepsilon>0$, $\Delta\ge0$.; Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality.; The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Dimension conditions.** The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement.
-
-**Constants.** The lower constant c is universal. All explicit dimension and accuracy factors remain visible.
-
-**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf) Theorem thm:main; eq:main-lower; Table tab:regimes; Remark rem:gap-upper
-
-Smooth nonconvex chains with delayed directions and exact transcript completion, plus the two-quadratic dimension obstruction. All deterministic algorithms with arbitrary full-space queries and arbitrary measurable outputs
-
-### B10 - Output x0 in the zero-query range; otherwise coordinate finite differences and smooth descent
-
-**Admission.** Included in the bracket
-
-**Direction.** upper
-
-**View.** Deterministic
-
-**Witness or lower-bound scope.** Deterministic witness
-
-$$
-(d+1)\lceil4a\rceil
-$$
-
-**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf)
-
-**Conditions.** $d\ge8$ and $1<a\le d/\log(ed)$; $\beta,\varepsilon>0$, $\Delta\ge0$.; Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality.; The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Dimension conditions.** The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement.
-
-**Constants.** The lower constant c is universal. All explicit dimension and accuracy factors remain visible.
-
-**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf) Theorem thm:main, eq:threshold / eq:basic-bounds / eq:matching; Remark rem:gap-upper
-
-Output x0 in the zero-query range; otherwise coordinate finite differences and smooth descent. All deterministic unrestricted-query algorithms
-
-### B11 - Smooth nonconvex chains with delayed directions and exact transcript completion, plus the two-quadratic dimension obstruction
-
-**Admission.** Included in the bracket
-
-**Direction.** lower
-
-**View.** Deterministic
-
-**Witness or lower-bound scope.** deterministic_hard_family
-
-$$
-cda
-$$
-
-**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf)
-
-**Conditions.** $d\ge8$ and $1<a\le d/\log(ed)$; $\beta,\varepsilon>0$, $\Delta\ge0$.; Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality.; The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Dimension conditions.** The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement.
-
-**Constants.** The lower constant c is universal. All explicit dimension and accuracy factors remain visible.
-
-**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf) Theorem thm:main; eq:main-lower; Table tab:regimes; Remark rem:gap-upper
-
-Smooth nonconvex chains with delayed directions and exact transcript completion, plus the two-quadratic dimension obstruction. All deterministic algorithms with arbitrary full-space queries and arbitrary measurable outputs
-
-### B12 - Output x0 in the zero-query range; otherwise coordinate finite differences and smooth descent
-
-**Admission.** Included in the bracket
-
-**Direction.** upper
-
-**View.** Deterministic
-
-**Witness or lower-bound scope.** Deterministic witness
-
-$$
-(d+1)\lceil4a\rceil
-$$
-
-**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf)
-
-**Conditions.** $d\ge8$ and $a>d/\log(ed)$; $\beta,\varepsilon>0$, $\Delta\ge0$.; Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality.; The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Dimension conditions.** The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement.
-
-**Constants.** The lower constant c is universal. All explicit dimension and accuracy factors remain visible.
-
-**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf) Theorem thm:main, eq:threshold / eq:basic-bounds / eq:matching; Remark rem:gap-upper
-
-Output x0 in the zero-query range; otherwise coordinate finite differences and smooth descent. All deterministic unrestricted-query algorithms
-
-### B13 - Smooth nonconvex chains with delayed directions and exact transcript completion, plus the two-quadratic dimension obstruction
-
-**Admission.** Included in the bracket
-
-**Direction.** lower
-
-**View.** Deterministic
-
-**Witness or lower-bound scope.** deterministic_hard_family
-
-$$
-\max\{d+1,cd^2/\log(ed)\}
-$$
-
-**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf)
-
-**Conditions.** $d\ge8$ and $a>d/\log(ed)$; $\beta,\varepsilon>0$, $\Delta\ge0$.; Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality.; The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Dimension conditions.** The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement.
-
-**Constants.** The lower constant c is universal. All explicit dimension and accuracy factors remain visible.
-
-**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf) Theorem thm:main; eq:main-lower; Table tab:regimes; Remark rem:gap-upper
-
-Smooth nonconvex chains with delayed directions and exact transcript completion, plus the two-quadratic dimension obstruction. All deterministic algorithms with arbitrary full-space queries and arbitrary measurable outputs
-
-### B14 - Output x0 in the zero-query range; otherwise coordinate finite differences and smooth descent
-
-**Admission.** Included in the bracket
-
-**Direction.** upper
-
-**View.** Deterministic
-
-**Witness or lower-bound scope.** Deterministic witness
-
-$$
-(d+1)\lceil4a\rceil
-$$
-
-**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf)
-
-**Conditions.** $1\le d<8$ and $a>1$; $\beta,\varepsilon>0$, $\Delta\ge0$.; Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality.; The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Dimension conditions.** The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement.
-
-**Constants.** The lower constant c is universal. All explicit dimension and accuracy factors remain visible.
-
-**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf) Theorem thm:main, eq:threshold / eq:basic-bounds / eq:matching; Remark rem:gap-upper
-
-Output x0 in the zero-query range; otherwise coordinate finite differences and smooth descent. All deterministic unrestricted-query algorithms
-
-### B15 - Smooth nonconvex chains with delayed directions and exact transcript completion, plus the two-quadratic dimension obstruction
-
-**Admission.** Included in the bracket
-
-**Direction.** lower
-
-**View.** Deterministic
-
-**Witness or lower-bound scope.** deterministic_hard_family
-
-$$
-d+1
-$$
-
-**Sources.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf)
-
-**Conditions.** $1\le d<8$ and $a>1$; $\beta,\varepsilon>0$, $\Delta\ge0$.; Although the main class is initially written with $f(x_0)-\inf f=\Delta$, Remark rem:gap-upper states that every bound holds for $f(x_0)-\inf f\le\Delta$. The lower witnesses satisfy equality.; The first value at the initial point is charged. The lower bound for large a is a proved obstruction, not an assertion that the true complexity saturates.
-
-**Dimension conditions.** The exact finite-dimensional condition is contained in the regime; no additional hidden dimensional requirement.
-
-**Constants.** The lower constant c is universal. All explicit dimension and accuracy factors remain visible.
-
-**Source location.** [6](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf) Theorem thm:main; eq:main-lower; Table tab:regimes; Remark rem:gap-upper
-
-Smooth nonconvex chains with delayed directions and exact transcript completion, plus the two-quadratic dimension obstruction. All deterministic algorithms with arbitrary full-space queries and arbitrary measurable outputs
 
 ## Maintenance appendix: Native proof extensions
 
@@ -961,7 +493,3 @@ https://arxiv.org/pdf/2610.00245v2
 [5] Zhang et al.. Matching Randomized First-Order Bounds for Higher-Order Smooth Nonconvex Optimization. arXiv:2610.17074v1, 2026.
 
 https://arxiv.org/html/2610.17074v1
-
-[6] Colombo_U04. Dimension-Dependent Lower Bounds for Deterministic Zeroth-Order Stationarity. deterministic_zeroth_order_stationarity.tex.
-
-https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U04/manuscript.pdf

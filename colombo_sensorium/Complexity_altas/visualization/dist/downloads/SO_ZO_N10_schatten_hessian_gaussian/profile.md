@@ -4,9 +4,11 @@
 
 Single-objective optimization
 
-The full Schatten range p from two to infinity parameterizes Hessian regularity under independent Gaussian scalar values. The risk comparison separates large-budget asymptotics from all-budget lower bounds.
+Schatten-Lipschitz Hessians under independent Gaussian scalar observations, with no upper curvature bound. Frobenius and scalar asymptotics are matched; general Schatten regimes retain explicit dimension gaps. An independent normalized operator hard subclass closes its own eventual window and supplies a finite-budget lower bound.
 
 **Status.** Bounds missing
+
+The regional bracket below specifies the quantified gaps and their parameter dependence.
 
 **TASK tags.** solution concept: Strongly convex minimization; task family: Single objective
 
@@ -80,9 +82,13 @@ $T$: Pathwise scalar-evaluation horizon **Domain:** $T\in\mathbb N_{\ge1}$.
 
 $\varepsilon$: Expected objective-error target **Domain:** $\varepsilon>0$.
 
-$T_0$: Unquantified sufficient threshold for the eventual two-sided risk bound **Domain:** $T_0=T_0(d,p,\mu,\rho,R)\in\mathbb N_{\ge1}$.
+$T_0$: Unquantified sufficient threshold for the independently sourced eventual risk bracket **Domain:** $T_0=T_0(d,p,\mu,\rho,R)\in\mathbb N$, $T_0\ge d^2$.
 
-Any sufficiently large threshold supplied by Theorem thm:schatten after universal multiplicative constants are fixed. No explicit dimension dependence is asserted.
+An integer $T_0(d,p,\mu,\rho,R)\ge d^2$ large enough for the upper transfer from Yu et al. (2024), Theorem 3.1, with Frobenius modulus $\rho_F=\rho d^{1/2-1/p}$, and the lower transfer from Theorem 3.2 with modulus $\rho$. No explicit parameter or dimension dependence is asserted. This is a sufficient threshold for a bracket, which need not be matching.
+
+$\rho_F$: Frobenius modulus implied by the Schatten-p modulus **Domain:** $\rho_F>0$.
+
+$\rho_F=\rho d^{1/2-1/p}$
 
 ## 3. Complexity bracket
 
@@ -112,9 +118,9 @@ $$
 
 **Resource contract.** expression: $N_{\mathrm{scalar\ value}}$; description: All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
 
-### R1 - Frobenius endpoint: large-budget minimax risk
+### R1 - Frobenius endpoint: independent matching asymptotic risk
 
-**Region.** $p=2$; fix integer $d\ge1$ and $\mu,\rho,R>0$, and restrict to $T\ge T_0(d,p,\mu,\rho,R)$ in the eventual large-budget window. Every fixed integer d>=1. The sufficiently large threshold T0 may depend on d,p,mu,rho,R; no dimension-uniform startup threshold is asserted. This is an asymptotic risk comparison, not an all-budget equality. The model has no global curvature upper bound.
+**Region.** $p=2$, fixed integer $d\ge1$, and fixed $\mu,\rho,R>0$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers. Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
 
 **Quantity.** Q1
 
@@ -136,20 +142,20 @@ $$
 
 **Gap or comparison.** O(1)
 
-### R2 - Intermediate Schatten norms: large-budget minimax risk
+### R2 - Intermediate Schatten norms: explicit dimension gap
 
-**Region.** Fixed $2<p<\infty$; fix integer $d\ge1$ and $\mu,\rho,R>0$, and restrict to $T\ge T_0(d,p,\mu,\rho,R)$ in the eventual large-budget window. Every fixed integer d>=1. The sufficiently large threshold T0 may depend on d,p,mu,rho,R; no dimension-uniform startup threshold is asserted. This is an asymptotic risk comparison, not an all-budget equality. The model has no global curvature upper bound.
+**Region.** Fixed $2<p<\infty$, integer $d\ge2$, and $\mu,\rho,R>0$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers. Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
 
 **Quantity.** Q1
 
 **Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
 
-**Status.** Optimal
+**Status.** Polynomial gap
 
 **Lower bound.** B4
 
 $$
-\Omega(\rho^{2/3}d^{4/3-2/(3p)}/(\mu T^{2/3}))
+\Omega(\rho^{2/3}d/(\mu T^{2/3}))
 $$
 
 **Upper bound.** B3
@@ -158,22 +164,26 @@ $$
 O(\rho^{2/3}d^{4/3-2/(3p)}/(\mu T^{2/3}))
 $$
 
-**Gap or comparison.** O(1)
+**Gap or comparison.**
 
-### R3 - Operator endpoint: large-budget minimax risk
+$$
+O(d^{1/3-2/(3p)})
+$$
 
-**Region.** $p=\infty$; fix integer $d\ge1$ and $\mu,\rho,R>0$, and restrict to $T\ge T_0(d,p,\mu,\rho,R)$ in the eventual large-budget window. Every fixed integer d>=1. The sufficiently large threshold T0 may depend on d,p,mu,rho,R; no dimension-uniform startup threshold is asserted. This is an asymptotic risk comparison, not an all-budget equality. The model has no global curvature upper bound.
+### R3 - Operator norm away from the normalized closure: explicit dimension gap
+
+**Region.** $p=\infty$, fixed integer $d\ge2$, and fixed $\mu,\rho,R>0$ with $(\mu,\rho,R)\ne(1,1,1)$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers. Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold. The normalized operator closure has its own regime and is excluded from this comparison.
 
 **Quantity.** Q1
 
 **Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
 
-**Status.** Optimal
+**Status.** Polynomial gap
 
 **Lower bound.** B6
 
 $$
-\Omega(\rho^{2/3}d^{4/3}/(\mu T^{2/3}))
+\Omega(\rho^{2/3}d/(\mu T^{2/3}))
 $$
 
 **Upper bound.** B5
@@ -182,13 +192,17 @@ $$
 O(\rho^{2/3}d^{4/3}/(\mu T^{2/3}))
 $$
 
-**Gap or comparison.** O(1)
+**Gap or comparison.**
 
-### R4 - High-precision scalar-query complexity
+$$
+O(d^{1/3})
+$$
 
-**Region.** Fix $2\le p\le\infty$, integer $d\ge1$, and $\mu,\rho,R>0$; take $\varepsilon\downarrow0$. Every fixed d>=1; the sufficiently small accuracy threshold may depend on the fixed parameters. Integer rounding is absorbed only in the stated high-precision asymptotic window.
+### R4 - One dimension: all Schatten norms coincide
 
-**Quantity.** Q2
+**Region.** $d=1$, fixed $2<p\le\infty$, and fixed $\mu,\rho,R>0$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers. Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
+
+**Quantity.** Q1
 
 **Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
 
@@ -197,20 +211,120 @@ $$
 **Lower bound.** B8
 
 $$
-\Omega\!\left(\frac{\rho d^{2-1/p}}{\mu^{3/2}\varepsilon^{3/2}}\right)
+\Omega(\rho^{2/3}/(\mu T^{2/3}))
 $$
 
 **Upper bound.** B7
 
 $$
-O\!\left(\frac{\rho d^{2-1/p}}{\mu^{3/2}\varepsilon^{3/2}}\right)
+O(\rho^{2/3}/(\mu T^{2/3}))
 $$
 
 **Gap or comparison.** O(1)
 
-### R5 - Startup budgets: a finite-budget lower obstruction
+### R5 - Normalized operator class: matching eventual risk
 
-**Region.** $d\ge1$ and $1\le T<T_0(d,p,\mu,\rho,R)$ are integers, $2\le p\le\infty$, and $\mu,\rho,R>0$. Every integer d>=1. The three branches are lower-bound scales and are not asserted to be upper bounds for the unbounded-curvature class. The stated lower inequality itself holds for all budgets. The eventual two-sided risk bound holds after $T_0$; no explicit polynomial dependence of this sufficient threshold on the parameters is asserted.
+**Region.** $p=\infty$, $\mu=\rho=R=1$, fixed integer $d\ge2$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers. Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold. The common model has no Hessian upper bound. Only the lower-bound witness belongs to $I\preceq\nabla^2 f\preceq3I$. The comparison is eventual; it does not assert the normalized all-budget upper bound for the larger class.
+
+**Quantity.** Q1
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Optimal
+
+**Lower bound.** B10
+
+$$
+\Omega(d^{4/3}/T^{2/3})
+$$
+
+**Upper bound.** B9
+
+$$
+O(d^{4/3}/T^{2/3})
+$$
+
+**Gap or comparison.** O(1)
+
+### R6 - Frobenius or scalar case: high-precision scalar-query complexity
+
+**Region.** Either $p=2$ with fixed $d\ge1$, or $d=1$ with fixed $2<p\le\infty$; fix $\mu,\rho,R>0$ and take $\varepsilon\downarrow0$. Fix d,p,mu,rho,R before taking epsilon to zero. The sufficiently small epsilon threshold may depend on these fixed parameters.
+
+**Quantity.** Q2
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Optimal
+
+**Lower bound.** B12
+
+$$
+\Omega(\rho d^{3/2}/(\mu^{3/2}\varepsilon^{3/2}))
+$$
+
+**Upper bound.** B11
+
+$$
+O(\rho d^{3/2}/(\mu^{3/2}\varepsilon^{3/2}))
+$$
+
+**Gap or comparison.** O(1)
+
+### R7 - General Schatten class: high-precision query bracket
+
+**Region.** Fixed $2<p\le\infty$, integer $d\ge2$, and $\mu,\rho,R>0$; exclude $(p,\mu,\rho,R)=(\infty,1,1,1)$; take $\varepsilon\downarrow0$. Fix d,p,mu,rho,R before taking epsilon to zero. The sufficiently small epsilon threshold may depend on these fixed parameters.
+
+**Quantity.** Q2
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Polynomial gap
+
+**Lower bound.** B14
+
+$$
+\Omega(\rho d^{3/2}/(\mu^{3/2}\varepsilon^{3/2}))
+$$
+
+**Upper bound.** B13
+
+$$
+O(\rho d^{2-1/p}/(\mu^{3/2}\varepsilon^{3/2}))
+$$
+
+**Gap or comparison.**
+
+$$
+O(d^{1/2-1/p})
+$$
+
+### R8 - Normalized operator class: matching high-precision complexity
+
+**Region.** $p=\infty$, $\mu=\rho=R=1$, fixed integer $d\ge2$; take $\varepsilon\downarrow0$. Fix d,p,mu,rho,R before taking epsilon to zero. The sufficiently small epsilon threshold may depend on these fixed parameters.
+
+**Quantity.** Q2
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Optimal
+
+**Lower bound.** B16
+
+$$
+\Omega(d^2\varepsilon^{-3/2})
+$$
+
+**Upper bound.** B15
+
+$$
+O(d^2\varepsilon^{-3/2})
+$$
+
+**Gap or comparison.** O(1)
+
+### R9 - Normalized operator class: finite-budget lower bound below the eventual window
+
+**Region.** $p=\infty$, $\mu=\rho=R=1$, integer $d\ge1$, and $1\le T<T_0(d,\infty,1,1,1)$. The cited lower inequality holds for every integer d,T>=1. This row is restricted to the complement of the eventual comparison window. A bounded-Hessian-subclass upper bound does not bound the full unbounded-curvature model. No all-budget constant-risk upper bound is asserted.
 
 **Quantity.** Q1
 
@@ -218,19 +332,35 @@ $$
 
 **Status.** Upper bound missing
 
-**Lower bound.** B9
+**Lower bound.** B17
 
 $$
-\frac{3}{64\cdot5120^2}\min\left\{\frac{\mu^3d^{2/p}}{\rho^2},\mu R^2,\frac{\rho^{2/3}d^{4/3-2/(3p)}}{\mu T^{2/3}}\right\}
+\Omega(\min\{1,(d^2/T)^{2/3}\})
 $$
 
 **Upper bound.** No admitted bound for this comparison
 
-**Gap or comparison.** Only a lower direction is stated in the unquantified startup window.
+**Gap or comparison.** No independently adopted upper bound in this startup region.
+
+### R10 - General Schatten class: finite-budget bracket not established throughout the startup region
+
+**Region.** Fixed $2\le p\le\infty$, integer $d\ge1$, and $\mu,\rho,R>0$; $1\le T<T_0(d,p,\mu,\rho,R)$; exclude $(p,\mu,\rho,R)=(\infty,1,1,1)$. All integer d>=1 in the displayed startup domain. T0 is only a sufficient threshold for the eventual asymptotic bracket. The independently cited results recorded here do not supply a finite-budget bracket throughout this full parameter domain. The eventual risk results do not assert startup guarantees. The normalized operator startup region has its own comparison and is excluded here.
+
+**Quantity.** Q1
+
+**Resource.** All charged oracle operations are counted, including initialization and verification. The budget is a worst-case cap unless the resource expression explicitly specifies another cost.
+
+**Status.** Both bounds missing
+
+**Lower bound.** No admitted bound for this comparison
+
+**Upper bound.** No admitted bound for this comparison
+
+**Gap or comparison.** No independent finite-budget bracket is recorded throughout this parameter region.
 
 ## 4. Bounds and supporting evidence
 
-### B1 - Localization in an estimated metric, orthogonal finite differences, and robust Newton correction
+### B1 - Frobenius bootstrap and curvature-adapted estimator after Schatten norm conversion
 
 **Admission.** Included in the bracket
 
@@ -242,21 +372,21 @@ $$
 O(\rho^{2/3}d/(\mu T^{2/3}))
 $$
 
-**Sources.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf)
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
 
-**Conditions.** $p=2$; fix integer $d\ge1$ and $\mu,\rho,R>0$, and restrict to $T\ge T_0(d,p,\mu,\rho,R)$ in the eventual large-budget window.; The upper bound is uniform over the whole objective class before taking the large-T limit.; This is an asymptotic risk comparison, not an all-budget equality. The model has no global curvature upper bound.
+**Conditions.** $p=2$, fixed integer $d\ge1$, and fixed $\mu,\rho,R>0$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers.; The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.
 
-**Dimension conditions.** Every fixed integer d>=1. The sufficiently large threshold T0 may depend on d,p,mu,rho,R; no dimension-uniform startup threshold is asserted.
+**Dimension conditions.** Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
 
-**Constants.** Universal positive multiplicative constants independent of all displayed parameters. Only the asymptotic threshold may depend on the fixed parameters.
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
 
-**Source location.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf) Theorem thm:schatten; Corollary cor:operator; Appendix app:upper
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.1; Section 2, assumptions A1–A3; Algorithm 4; Appendix E
 
-Localization in an estimated metric, orthogonal finite differences, and robust Newton correction. Unrestricted randomized adaptive algorithms
+Frobenius bootstrap and curvature-adapted estimator after Schatten norm conversion
 
-The upper bound is uniform over the whole objective class before taking the large-T limit.
+The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.
 
-### B2 - Shared radial cutoff, adaptive total-information testing, and Schatten norm conversion
+### B2 - Gaussian Frobenius hard subclass and inclusion into the Schatten class
 
 **Admission.** Included in the bracket
 
@@ -268,19 +398,21 @@ $$
 \Omega(\rho^{2/3}d/(\mu T^{2/3}))
 $$
 
-**Sources.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf)
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
 
-**Conditions.** $p=2$; fix integer $d\ge1$ and $\mu,\rho,R>0$, and restrict to $T\ge T_0(d,p,\mu,\rho,R)$ in the eventual large-budget window.; This is an asymptotic risk comparison, not an all-budget equality. The model has no global curvature upper bound.
+**Conditions.** $p=2$, fixed integer $d\ge1$, and fixed $\mu,\rho,R>0$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers.; The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound.
 
-**Dimension conditions.** Every fixed integer d>=1. The sufficiently large threshold T0 may depend on d,p,mu,rho,R; no dimension-uniform startup threshold is asserted.
+**Dimension conditions.** Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
 
-**Constants.** Universal positive multiplicative constants independent of all displayed parameters. Only the asymptotic threshold may depend on the fixed parameters.
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
 
-**Source location.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf) Theorem thm:schatten; Corollary cor:schatten-finite
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.2; Appendix B, especially B.2
 
-Shared radial cutoff, adaptive total-information testing, and Schatten norm conversion. All unrestricted randomized adaptive algorithms
+Gaussian Frobenius hard subclass and inclusion into the Schatten class
 
-### B3 - Localization in an estimated metric, orthogonal finite differences, and robust Newton correction
+The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound.
+
+### B3 - Frobenius bootstrap and curvature-adapted estimator after Schatten norm conversion
 
 **Admission.** Included in the bracket
 
@@ -292,21 +424,21 @@ $$
 O(\rho^{2/3}d^{4/3-2/(3p)}/(\mu T^{2/3}))
 $$
 
-**Sources.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf)
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
 
-**Conditions.** Fixed $2<p<\infty$; fix integer $d\ge1$ and $\mu,\rho,R>0$, and restrict to $T\ge T_0(d,p,\mu,\rho,R)$ in the eventual large-budget window.; The upper bound is uniform over the whole objective class before taking the large-T limit.; This is an asymptotic risk comparison, not an all-budget equality. The model has no global curvature upper bound.
+**Conditions.** Fixed $2<p<\infty$, integer $d\ge2$, and $\mu,\rho,R>0$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers.; The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.
 
-**Dimension conditions.** Every fixed integer d>=1. The sufficiently large threshold T0 may depend on d,p,mu,rho,R; no dimension-uniform startup threshold is asserted.
+**Dimension conditions.** Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
 
-**Constants.** Universal positive multiplicative constants independent of all displayed parameters. Only the asymptotic threshold may depend on the fixed parameters.
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
 
-**Source location.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf) Theorem thm:schatten; Corollary cor:operator; Appendix app:upper
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.1; Section 2, assumptions A1–A3; Algorithm 4; Appendix E
 
-Localization in an estimated metric, orthogonal finite differences, and robust Newton correction. Unrestricted randomized adaptive algorithms
+Frobenius bootstrap and curvature-adapted estimator after Schatten norm conversion
 
-The upper bound is uniform over the whole objective class before taking the large-T limit.
+The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.
 
-### B4 - Shared radial cutoff, adaptive total-information testing, and Schatten norm conversion
+### B4 - Gaussian Frobenius hard subclass and inclusion into the Schatten class
 
 **Admission.** Included in the bracket
 
@@ -315,22 +447,24 @@ The upper bound is uniform over the whole objective class before taking the larg
 **Witness or lower-bound scope.** randomized_hard_family
 
 $$
-\Omega(\rho^{2/3}d^{4/3-2/(3p)}/(\mu T^{2/3}))
+\Omega(\rho^{2/3}d/(\mu T^{2/3}))
 $$
 
-**Sources.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf)
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
 
-**Conditions.** Fixed $2<p<\infty$; fix integer $d\ge1$ and $\mu,\rho,R>0$, and restrict to $T\ge T_0(d,p,\mu,\rho,R)$ in the eventual large-budget window.; This is an asymptotic risk comparison, not an all-budget equality. The model has no global curvature upper bound.
+**Conditions.** Fixed $2<p<\infty$, integer $d\ge2$, and $\mu,\rho,R>0$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers.; The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound.
 
-**Dimension conditions.** Every fixed integer d>=1. The sufficiently large threshold T0 may depend on d,p,mu,rho,R; no dimension-uniform startup threshold is asserted.
+**Dimension conditions.** Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
 
-**Constants.** Universal positive multiplicative constants independent of all displayed parameters. Only the asymptotic threshold may depend on the fixed parameters.
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
 
-**Source location.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf) Theorem thm:schatten; Corollary cor:schatten-finite
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.2; Appendix B, especially B.2
 
-Shared radial cutoff, adaptive total-information testing, and Schatten norm conversion. All unrestricted randomized adaptive algorithms
+Gaussian Frobenius hard subclass and inclusion into the Schatten class
 
-### B5 - Localization in an estimated metric, orthogonal finite differences, and robust Newton correction
+The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound.
+
+### B5 - Frobenius bootstrap and curvature-adapted estimator after Schatten norm conversion
 
 **Admission.** Included in the bracket
 
@@ -342,21 +476,21 @@ $$
 O(\rho^{2/3}d^{4/3}/(\mu T^{2/3}))
 $$
 
-**Sources.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf)
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
 
-**Conditions.** $p=\infty$; fix integer $d\ge1$ and $\mu,\rho,R>0$, and restrict to $T\ge T_0(d,p,\mu,\rho,R)$ in the eventual large-budget window.; The upper bound is uniform over the whole objective class before taking the large-T limit.; This is an asymptotic risk comparison, not an all-budget equality. The model has no global curvature upper bound.
+**Conditions.** $p=\infty$, fixed integer $d\ge2$, and fixed $\mu,\rho,R>0$ with $(\mu,\rho,R)\ne(1,1,1)$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers.; The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.; The normalized operator closure has its own regime and is excluded from this comparison.
 
-**Dimension conditions.** Every fixed integer d>=1. The sufficiently large threshold T0 may depend on d,p,mu,rho,R; no dimension-uniform startup threshold is asserted.
+**Dimension conditions.** Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
 
-**Constants.** Universal positive multiplicative constants independent of all displayed parameters. Only the asymptotic threshold may depend on the fixed parameters.
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
 
-**Source location.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf) Theorem thm:schatten; Corollary cor:operator; Appendix app:upper
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.1; Section 2, assumptions A1–A3; Algorithm 4; Appendix E
 
-Localization in an estimated metric, orthogonal finite differences, and robust Newton correction. Unrestricted randomized adaptive algorithms
+Frobenius bootstrap and curvature-adapted estimator after Schatten norm conversion
 
-The upper bound is uniform over the whole objective class before taking the large-T limit.
+The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.
 
-### B6 - Shared radial cutoff, adaptive total-information testing, and Schatten norm conversion
+### B6 - Gaussian Frobenius hard subclass and inclusion into the Schatten class
 
 **Admission.** Included in the bracket
 
@@ -365,22 +499,24 @@ The upper bound is uniform over the whole objective class before taking the larg
 **Witness or lower-bound scope.** randomized_hard_family
 
 $$
-\Omega(\rho^{2/3}d^{4/3}/(\mu T^{2/3}))
+\Omega(\rho^{2/3}d/(\mu T^{2/3}))
 $$
 
-**Sources.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf)
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
 
-**Conditions.** $p=\infty$; fix integer $d\ge1$ and $\mu,\rho,R>0$, and restrict to $T\ge T_0(d,p,\mu,\rho,R)$ in the eventual large-budget window.; This is an asymptotic risk comparison, not an all-budget equality. The model has no global curvature upper bound.
+**Conditions.** $p=\infty$, fixed integer $d\ge2$, and fixed $\mu,\rho,R>0$ with $(\mu,\rho,R)\ne(1,1,1)$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers.; The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound.; The normalized operator closure has its own regime and is excluded from this comparison.
 
-**Dimension conditions.** Every fixed integer d>=1. The sufficiently large threshold T0 may depend on d,p,mu,rho,R; no dimension-uniform startup threshold is asserted.
+**Dimension conditions.** Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
 
-**Constants.** Universal positive multiplicative constants independent of all displayed parameters. Only the asymptotic threshold may depend on the fixed parameters.
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
 
-**Source location.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf) Theorem thm:schatten; Corollary cor:schatten-finite
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.2; Appendix B, especially B.2
 
-Shared radial cutoff, adaptive total-information testing, and Schatten norm conversion. All unrestricted randomized adaptive algorithms
+Gaussian Frobenius hard subclass and inclusion into the Schatten class
 
-### B7 - Invert the matching large-budget expected-risk bound
+The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound.
+
+### B7 - Frobenius bootstrap and curvature-adapted estimator after Schatten norm conversion
 
 **Admission.** Included in the bracket
 
@@ -389,22 +525,24 @@ Shared radial cutoff, adaptive total-information testing, and Schatten norm conv
 **Witness or lower-bound scope.** Randomized witness
 
 $$
-O\!\left(\frac{\rho d^{2-1/p}}{\mu^{3/2}\varepsilon^{3/2}}\right)
+O(\rho^{2/3}/(\mu T^{2/3}))
 $$
 
-**Sources.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf)
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
 
-**Conditions.** Fix $2\le p\le\infty$, integer $d\ge1$, and $\mu,\rho,R>0$; take $\varepsilon\downarrow0$.; Integer rounding is absorbed only in the stated high-precision asymptotic window.
+**Conditions.** $d=1$, fixed $2<p\le\infty$, and fixed $\mu,\rho,R>0$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers.; The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.
 
-**Dimension conditions.** Every fixed d>=1; the sufficiently small accuracy threshold may depend on the fixed parameters.
+**Dimension conditions.** Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
 
-**Constants.** Universal multiplicative constants; parameter-dependent precision threshold.
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
 
-**Source location.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf) Corollary cor:sample, eq:sample
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.1; Section 2, assumptions A1–A3; Algorithm 4; Appendix E
 
-Invert the matching large-budget expected-risk bound. Unrestricted randomized algorithms
+Frobenius bootstrap and curvature-adapted estimator after Schatten norm conversion
 
-### B8 - Invert the asymptotic lower bound, using the strictly positive all-budget obstruction
+The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.
+
+### B8 - Gaussian Frobenius hard subclass and inclusion into the Schatten class
 
 **Admission.** Included in the bracket
 
@@ -413,22 +551,50 @@ Invert the matching large-budget expected-risk bound. Unrestricted randomized al
 **Witness or lower-bound scope.** randomized_hard_family
 
 $$
-\Omega\!\left(\frac{\rho d^{2-1/p}}{\mu^{3/2}\varepsilon^{3/2}}\right)
+\Omega(\rho^{2/3}/(\mu T^{2/3}))
 $$
 
-**Sources.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf)
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
 
-**Conditions.** Fix $2\le p\le\infty$, integer $d\ge1$, and $\mu,\rho,R>0$; take $\varepsilon\downarrow0$.; Integer rounding is absorbed only in the stated high-precision asymptotic window.
+**Conditions.** $d=1$, fixed $2<p\le\infty$, and fixed $\mu,\rho,R>0$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers.; The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound.
 
-**Dimension conditions.** Every fixed d>=1; the sufficiently small accuracy threshold may depend on the fixed parameters.
+**Dimension conditions.** Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
 
-**Constants.** Universal multiplicative constants; parameter-dependent precision threshold.
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
 
-**Source location.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf) Corollary cor:sample, eq:sample
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.2; Appendix B, especially B.2
 
-Invert the asymptotic lower bound, using the strictly positive all-budget obstruction. All unrestricted randomized algorithms
+Gaussian Frobenius hard subclass and inclusion into the Schatten class
 
-### B9 - A globally well-conditioned radial-cutoff hard family
+The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound.
+
+### B9 - Frobenius bootstrap and curvature-adapted estimator after Schatten norm conversion
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+O(d^{4/3}/T^{2/3})
+$$
+
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
+
+**Conditions.** $p=\infty$, $\mu=\rho=R=1$, fixed integer $d\ge2$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers.; The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.; The common model has no Hessian upper bound. Only the lower-bound witness belongs to $I\preceq\nabla^2 f\preceq3I$. The comparison is eventual; it does not assert the normalized all-budget upper bound for the larger class.
+
+**Dimension conditions.** Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
+
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
+
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.1; Section 2, assumptions A1–A3; Algorithm 4; Appendix E
+
+Frobenius bootstrap and curvature-adapted estimator after Schatten norm conversion
+
+The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.
+
+### B10 - Normalized operator hard subclass with unrestricted adaptive Gaussian queries
 
 **Admission.** Included in the bracket
 
@@ -437,20 +603,204 @@ Invert the asymptotic lower bound, using the strictly positive all-budget obstru
 **Witness or lower-bound scope.** randomized_hard_family
 
 $$
-\frac{3}{64\cdot5120^2}\min\left\{\frac{\mu^3d^{2/p}}{\rho^2},\mu R^2,\frac{\rho^{2/3}d^{4/3-2/(3p)}}{\mu T^{2/3}}\right\}
+\Omega(d^{4/3}/T^{2/3})
 $$
 
-**Sources.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf)
+**Sources.** [2](https://arxiv.org/html/2610.00276v2)
 
-**Conditions.** $d\ge1$ and $1\le T<T_0(d,p,\mu,\rho,R)$ are integers, $2\le p\le\infty$, and $\mu,\rho,R>0$.; The three branches are lower-bound scales and are not asserted to be upper bounds for the unbounded-curvature class.; The stated lower inequality itself holds for all budgets. The eventual two-sided risk bound holds after $T_0$; no explicit polynomial dependence of this sufficient threshold on the parameters is asserted.
+**Conditions.** $p=\infty$, $\mu=\rho=R=1$, fixed integer $d\ge2$; $T\ge T_0(d,p,\mu,\rho,R)$, where $T_0\ge d^2$ is sufficiently large for both cited Frobenius transfers.; At smoothness order $\beta=3$, Definition 3.1 and Theorem 3.2 of Zhang et al. give a lower bound on the subclass $I\preceq\nabla^2 f\preceq3I$, operator Hessian Lipschitz constant one, and $\|x_*\|_2\le1$. This is a subclass of the present $p=\infty,\mu=\rho=R=1$ model. The lower bound is therefore valid for the larger class with no Hessian upper bound. The theorem permits arbitrary randomized adaptive algorithms, unrestricted query points and arbitrary transcript-measurable outputs. The bounded-Hessian upper bound from that theorem is not transferred to the larger class.; The common model has no Hessian upper bound. Only the lower-bound witness belongs to $I\preceq\nabla^2 f\preceq3I$. The comparison is eventual; it does not assert the normalized all-budget upper bound for the larger class.
 
-**Dimension conditions.** Every integer d>=1.
+**Dimension conditions.** Fix d,p,mu,rho,R before taking T to infinity. T0 is a sufficient threshold, not an explicit or dimension-uniform threshold.
 
-**Constants.** The displayed lower constant is explicit and universal.
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
 
-**Source location.** [1](https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf) Corollary cor:schatten-finite, eq:schatten-finite; Theorem thm:finite
+**Source location.** [2](https://arxiv.org/html/2610.00276v2) Definition 3.1; Theorem 3.2, equation (10), beta=3; Appendix C
 
-A globally well-conditioned radial-cutoff hard family. All adaptive randomized algorithms
+Normalized operator hard subclass with unrestricted adaptive Gaussian queries
+
+At smoothness order $\beta=3$, Definition 3.1 and Theorem 3.2 of Zhang et al. give a lower bound on the subclass $I\preceq\nabla^2 f\preceq3I$, operator Hessian Lipschitz constant one, and $\|x_*\|_2\le1$. This is a subclass of the present $p=\infty,\mu=\rho=R=1$ model. The lower bound is therefore valid for the larger class with no Hessian upper bound. The theorem permits arbitrary randomized adaptive algorithms, unrestricted query points and arbitrary transcript-measurable outputs. The bounded-Hessian upper bound from that theorem is not transferred to the larger class.
+
+### B11 - Monotone inversion of the cited expected-risk bound
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+O(\rho d^{3/2}/(\mu^{3/2}\varepsilon^{3/2}))
+$$
+
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
+
+**Conditions.** Either $p=2$ with fixed $d\ge1$, or $d=1$ with fixed $2<p\le\infty$; fix $\mu,\rho,R>0$ and take $\varepsilon\downarrow0$.; The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.; This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+**Dimension conditions.** Fix d,p,mu,rho,R before taking epsilon to zero. The sufficiently small epsilon threshold may depend on these fixed parameters.
+
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
+
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.1; Section 2, assumptions A1–A3; Algorithm 4; Appendix E
+
+Monotone inversion of the cited expected-risk bound
+
+The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound. This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+### B12 - Monotone inversion of the cited expected-risk bound
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega(\rho d^{3/2}/(\mu^{3/2}\varepsilon^{3/2}))
+$$
+
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
+
+**Conditions.** Either $p=2$ with fixed $d\ge1$, or $d=1$ with fixed $2<p\le\infty$; fix $\mu,\rho,R>0$ and take $\varepsilon\downarrow0$.; The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound.; This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+**Dimension conditions.** Fix d,p,mu,rho,R before taking epsilon to zero. The sufficiently small epsilon threshold may depend on these fixed parameters.
+
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
+
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.2; Appendix B, especially B.2
+
+Monotone inversion of the cited expected-risk bound
+
+The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound. This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+### B13 - Monotone inversion of the cited expected-risk bound
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+O(\rho d^{2-1/p}/(\mu^{3/2}\varepsilon^{3/2}))
+$$
+
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
+
+**Conditions.** Fixed $2<p\le\infty$, integer $d\ge2$, and $\mu,\rho,R>0$; exclude $(p,\mu,\rho,R)=(\infty,1,1,1)$; take $\varepsilon\downarrow0$.; The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.; This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+**Dimension conditions.** Fix d,p,mu,rho,R before taking epsilon to zero. The sufficiently small epsilon threshold may depend on these fixed parameters.
+
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
+
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.1; Section 2, assumptions A1–A3; Algorithm 4; Appendix E
+
+Monotone inversion of the cited expected-risk bound
+
+The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound. This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+### B14 - Monotone inversion of the cited expected-risk bound
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega(\rho d^{3/2}/(\mu^{3/2}\varepsilon^{3/2}))
+$$
+
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
+
+**Conditions.** Fixed $2<p\le\infty$, integer $d\ge2$, and $\mu,\rho,R>0$; exclude $(p,\mu,\rho,R)=(\infty,1,1,1)$; take $\varepsilon\downarrow0$.; The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound.; This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+**Dimension conditions.** Fix d,p,mu,rho,R before taking epsilon to zero. The sufficiently small epsilon threshold may depend on these fixed parameters.
+
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
+
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.2; Appendix B, especially B.2
+
+Monotone inversion of the cited expected-risk bound
+
+The inequality $\|A\|_{S_p}\le\|A\|_F$ gives $\mathcal F_2(\rho,\mu,R)\subseteq\mathcal F_p(\rho,\mu,R)$. Apply the standard-Gaussian lower bound of Yu et al., Theorem 3.2. Its strict strong-convexity subclass is contained in the target class. If the source terminal point is interpreted as a queried point, append one query at an arbitrary measurable output; replacing T by T+1 does not change the eventual rate. This inclusion retains the dimension factor d, not the stronger Schatten dimension factor in the upper bound. This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+### B15 - Monotone inversion of the cited expected-risk bound
+
+**Admission.** Included in the bracket
+
+**Direction.** upper
+
+**Witness or lower-bound scope.** Randomized witness
+
+$$
+O(d^2\varepsilon^{-3/2})
+$$
+
+**Sources.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf)
+
+**Conditions.** $p=\infty$, $\mu=\rho=R=1$, fixed integer $d\ge2$; take $\varepsilon\downarrow0$.; The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound.; This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+**Dimension conditions.** Fix d,p,mu,rho,R before taking epsilon to zero. The sufficiently small epsilon threshold may depend on these fixed parameters.
+
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
+
+**Source location.** [1](https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf) Theorem 3.1; Section 2, assumptions A1–A3; Algorithm 4; Appendix E
+
+Monotone inversion of the cited expected-risk bound
+
+The singular-value inequality $\|A\|_F\le d^{1/2-1/p}\|A\|_{S_p}$ embeds the target class into the Frobenius class with $\rho_F=\rho d^{1/2-1/p}$. Apply Yu et al., Theorem 3.1. If its strict curvature convention is read literally, use a lower bound $\mu/2$. For the displayed sub-Gaussian tail convention, divide every observation and objective by $\sqrt2$; the Gaussian noise then has variance $1/2$. These are constant-factor changes and preserve the number of scalar queries. The source does not assume an upper Hessian bound. This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+### B16 - Monotone inversion of the cited expected-risk bound
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega(d^2\varepsilon^{-3/2})
+$$
+
+**Sources.** [2](https://arxiv.org/html/2610.00276v2)
+
+**Conditions.** $p=\infty$, $\mu=\rho=R=1$, fixed integer $d\ge2$; take $\varepsilon\downarrow0$.; At smoothness order $\beta=3$, Definition 3.1 and Theorem 3.2 of Zhang et al. give a lower bound on the subclass $I\preceq\nabla^2 f\preceq3I$, operator Hessian Lipschitz constant one, and $\|x_*\|_2\le1$. This is a subclass of the present $p=\infty,\mu=\rho=R=1$ model. The lower bound is therefore valid for the larger class with no Hessian upper bound. The theorem permits arbitrary randomized adaptive algorithms, unrestricted query points and arbitrary transcript-measurable outputs. The bounded-Hessian upper bound from that theorem is not transferred to the larger class.; This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+**Dimension conditions.** Fix d,p,mu,rho,R before taking epsilon to zero. The sufficiently small epsilon threshold may depend on these fixed parameters.
+
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
+
+**Source location.** [2](https://arxiv.org/html/2610.00276v2) Definition 3.1; Theorem 3.2, equation (10), beta=3; Appendix C
+
+Monotone inversion of the cited expected-risk bound
+
+At smoothness order $\beta=3$, Definition 3.1 and Theorem 3.2 of Zhang et al. give a lower bound on the subclass $I\preceq\nabla^2 f\preceq3I$, operator Hessian Lipschitz constant one, and $\|x_*\|_2\le1$. This is a subclass of the present $p=\infty,\mu=\rho=R=1$ model. The lower bound is therefore valid for the larger class with no Hessian upper bound. The theorem permits arbitrary randomized adaptive algorithms, unrestricted query points and arbitrary transcript-measurable outputs. The bounded-Hessian upper bound from that theorem is not transferred to the larger class. This query-complexity statement is a derived inversion of the indicated eventual risk bracket, with all structural parameters and d fixed as $\varepsilon\downarrow0$. Risk is nonincreasing in the query budget. Its positive eventual lower bound implies positivity at every finite budget, so the required budget diverges as accuracy tends to zero. Integer rounding and an optional terminal query affect only universal constants. No joint uniform startup threshold in dimension and accuracy is asserted.
+
+### B17 - Normalized operator hard subclass with unrestricted adaptive Gaussian queries
+
+**Admission.** Included in the bracket
+
+**Direction.** lower
+
+**Witness or lower-bound scope.** randomized_hard_family
+
+$$
+\Omega(\min\{1,(d^2/T)^{2/3}\})
+$$
+
+**Sources.** [2](https://arxiv.org/html/2610.00276v2)
+
+**Conditions.** $p=\infty$, $\mu=\rho=R=1$, integer $d\ge1$, and $1\le T<T_0(d,\infty,1,1,1)$.; At smoothness order $\beta=3$, Definition 3.1 and Theorem 3.2 of Zhang et al. give a lower bound on the subclass $I\preceq\nabla^2 f\preceq3I$, operator Hessian Lipschitz constant one, and $\|x_*\|_2\le1$. This is a subclass of the present $p=\infty,\mu=\rho=R=1$ model. The lower bound is therefore valid for the larger class with no Hessian upper bound. The theorem permits arbitrary randomized adaptive algorithms, unrestricted query points and arbitrary transcript-measurable outputs. The bounded-Hessian upper bound from that theorem is not transferred to the larger class.; A bounded-Hessian-subclass upper bound does not bound the full unbounded-curvature model. No all-budget constant-risk upper bound is asserted.
+
+**Dimension conditions.** The cited lower inequality holds for every integer d,T>=1. This row is restricted to the complement of the eventual comparison window.
+
+**Constants.** Universal positive constants. Sufficient asymptotic thresholds may depend on the fixed structural parameters and dimension.
+
+**Source location.** [2](https://arxiv.org/html/2610.00276v2) Definition 3.1; Theorem 3.2, equation (10), beta=3; Appendix C
+
+Normalized operator hard subclass with unrestricted adaptive Gaussian queries
+
+At smoothness order $\beta=3$, Definition 3.1 and Theorem 3.2 of Zhang et al. give a lower bound on the subclass $I\preceq\nabla^2 f\preceq3I$, operator Hessian Lipschitz constant one, and $\|x_*\|_2\le1$. This is a subclass of the present $p=\infty,\mu=\rho=R=1$ model. The lower bound is therefore valid for the larger class with no Hessian upper bound. The theorem permits arbitrary randomized adaptive algorithms, unrestricted query points and arbitrary transcript-measurable outputs. The bounded-Hessian upper bound from that theorem is not transferred to the larger class.
 
 ## Maintenance appendix: Native proof extensions
 
@@ -462,6 +812,10 @@ Native value (empty_array): []
 
 ## References
 
-[1] Colombo_H17. Hessian Norms and Minimax Rates in Noisy Zeroth-Order Optimization. H17_Hessian_Norms_Colombo_Team.tex.
+[1] Qian Yu; Yining Wang; Baihe Huang; Qi Lei; Jason D. Lee. Stochastic Zeroth-Order Optimization under Strongly Convexity and Lipschitz Hessian: Minimax Sample Complexity. 2024. NeurIPS 2024, volume 37; arXiv:2406.19617v1.
 
-https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/H17/manuscript.pdf
+https://papers.nips.cc/paper_files/paper/2024/file/b444ad72520a5f5c467343be88e352ed-Paper-Conference.pdf
+
+[2] Haihan Zhang; Wendao Wu; Chenheng Zhang; Yanyi Li; Chunyuan Zheng; Cong Fang; Haoxuan Li; Zhouchen Lin. Sharp Minimax Rates for Highly Smooth Strongly Convex Zeroth-Order Optimization. 2026. arXiv:2610.00276v2.
+
+https://arxiv.org/html/2610.00276v2
