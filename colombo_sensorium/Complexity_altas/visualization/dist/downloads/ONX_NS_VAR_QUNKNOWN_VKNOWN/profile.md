@@ -201,7 +201,7 @@ $$
 **Upper bound.** B1
 
 $$
-\widetilde{O}(\min\{T,\sqrt{KT}+(KB)^{1/3}T^{2/3}\})
+\widetilde{O}(\min\{T,\sqrt{KT}+(KV)^{1/3}T^{2/3}\})
 $$
 
 **Gap or comparison.** $\widetilde O\!\left(\frac{\min\{T,\sqrt{KT}+(KV)^{1/3}T^{2/3}\}}{\Xi(K,T;Q,V)}\right)$, on the same budget slice $V_\mu\le V, Q_{\mathrm{env}}\le Q$. Only the polylogarithmic factors in the source upper bound are suppressed.
@@ -285,6 +285,14 @@ $$
 **Source location.** [2](https://arxiv.org/pdf/2610.26116) theorem: Theorem 4.1; Theorem 3.1; pdf pages: 5; 7; printed pages: 4; 6
 
 The source statements and budget conventions have been checked. This profile uses only the explicitly compatible portions of the linked atomic bounds. Lower bounds may transfer by restricting public information; upper bounds with two known budgets do not transfer automatically when less information is available. Full proofs have not been independently reconstructed line by line; this does not alter the recorded status of the source theorems.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 

@@ -12,7 +12,11 @@ class Delivery(HTMLParser):
     def __init__(self, path):
         super().__init__()
         self.rows, self.regimes, self.badges, self.panels = {}, {}, [], 0
+        self.text = []
         self.feed(path.read_text())
+
+    def handle_data(self, text):
+        self.text.append(text)
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
@@ -31,7 +35,8 @@ class Delivery(HTMLParser):
 class ColomboDeliveryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.registry = json.loads((ROOT/'data/editorial/colombo_results.json').read_text())
+        cls.editorial = json.loads((ROOT/'data/editorial/colombo_results.json').read_text())
+        cls.registry = json.loads((ROOT/'data/derived/colombo_contributions.json').read_text())
         cls.overview = json.loads((ROOT/'data/derived/atlas_overview.json').read_text())
         cls.points = {p['id']: p for p in cls.overview['points']}
         cls.home = Delivery(ROOT/'visualization/dist/index.html')
@@ -44,11 +49,11 @@ class ColomboDeliveryTests(unittest.TestCase):
             p = json.loads(path.read_text())
             self.assertEqual(self.points[p['setting_id']]['comparisons'], p['summary_status']['status_counts'])
 
-    def test_card_and_point_labels_agree_with_reviewed_registry_only(self):
+    def test_card_and_point_labels_agree_with_adopted_contributions(self):
         for sid, point in self.points.items():
             entry = self.registry['settings'].get(sid)
             classes = self.home.rows[sid]
-            if not entry or not entry.get('highlight'):
+            if not entry or entry['state'] != 'adopted':
                 self.assertNotIn('colombo', point)
                 self.assertNotIn('is-colombo', classes)
                 self.assertNotIn('is-colombo-pending', classes)
@@ -56,13 +61,13 @@ class ColomboDeliveryTests(unittest.TestCase):
             state = entry['state']
             self.assertEqual(point['colombo']['state'], state)
             self.assertIn('is-colombo' if state == 'adopted' else 'is-colombo-pending', classes)
-            expected = set(entry['highlight']['comparison_ids'])
+            expected = set(entry['comparison_ids'])
             self.assertEqual(set(point['colombo']['comparison_ids']), expected)
 
     def test_profile_row_marks_cover_exactly_the_reviewed_comparisons(self):
         for sid, entry in self.registry['settings'].items():
             page = Delivery(ROOT/'visualization/dist/settings'/f'{sid}.html')
-            expected = set(entry.get('highlight', {}).get('comparison_ids', []))
+            expected = set(entry['comparison_ids']) if entry['state'] == 'adopted' else set()
             actual = set().union(*page.regimes.values())
             self.assertEqual(actual, expected, sid)
             self.assertEqual(page.panels, 0, sid)
@@ -82,8 +87,8 @@ class ColomboDeliveryTests(unittest.TestCase):
             self.assertEqual(self.registry['settings'][sid]['state'], 'pending')
 
     def test_heavy_tail_paper_uses_the_existing_profile(self):
-        self.assertEqual(len(self.registry['papers']), 22)
-        ids = {p['id'] for p in self.registry['papers']}
+        self.assertEqual(len(self.editorial['papers']), 22)
+        ids = {p['id'] for p in self.editorial['papers']}
         self.assertEqual(ids, {
             '2610.22208', '2610.20187', '2610.17074', '2610.16991', '2610.16832',
             '2610.16771', '2610.12184', '2610.03638', '2610.03633', '2610.02095',
@@ -94,11 +99,11 @@ class ColomboDeliveryTests(unittest.TestCase):
                   if any(c['paper_id'] == '2610.00260' for c in e['contributions'])}
         self.assertEqual(mapped, {'SO_FO_S01_direction_HP'})
 
-    def test_only_reviewed_nontrivial_near_optimal_regions_are_highlighted(self):
+    def test_historical_near_optimal_subset_keeps_its_exact_scope(self):
         selected = {sid: e['highlight'] for sid, e in self.registry['settings'].items() if e.get('highlight')}
         self.assertEqual(len(selected), 39)
         self.assertEqual(sum(len(e['comparison_ids']) for e in selected.values()), 66)
-        self.assertEqual(Counter(e['state'] for e in self.registry['settings'].values()),
+        self.assertEqual(Counter(e['state'] for e in self.editorial['settings'].values()),
                          {'adopted': 49, 'pending': 2})
         statuses, paper_ids = Counter(), set()
         for sid, entry in selected.items():
@@ -168,6 +173,33 @@ class ColomboDeliveryTests(unittest.TestCase):
                      'Colombo_settings_summary_20261122.json', 'START_HERE.txt',
                      'PACKAGE_MANIFEST.json'):
             self.assertFalse((ROOT/name).exists(), name)
+
+    def test_local_source_inventory_matches_catalog_and_native_references(self):
+        sources = json.loads((ROOT/'data/sources/colombo/catalog.json').read_text())
+        registered = {row['id'] for row in sources}
+        self.assertEqual(registered, {row['id'] for row in self.registry['papers']
+                                      if row['id'].startswith('COLOMBO_')})
+        for path in (ROOT/'data/settings').glob('*/profile.json'):
+            profile = json.loads(path.read_text())
+            local_refs = {ref['id'] for ref in profile['references']
+                          if ref['id'].startswith('COLOMBO_')}
+            self.assertTrue(local_refs <= registered, path.parent.name)
+
+    def test_retained_manuscripts_show_explicit_contribution_scope(self):
+        sources = {row['id']: row for row in json.loads(
+            (ROOT/'data/sources/colombo/catalog.json').read_text())}
+        expected = {'COLOMBO_N01': 'SO_FO_N05_FSD',
+                    'COLOMBO_A4': 'SO_HO_HOI10_S_weighted_jet_L1L2',
+                    'COLOMBO_U10': 'SO_ZO_E02'}
+        for pid, sid in expected.items():
+            source = sources[pid]
+            entry = self.registry['settings'][sid]
+            self.assertEqual(entry['state'], 'adopted')
+            self.assertIn(pid, entry['paper_ids'])
+            page = Delivery(ROOT/'visualization/dist/settings'/f'{sid}.html')
+            text = ' '.join(page.text)
+            self.assertIn(source['contribution_label_en'], text)
+            self.assertIn(source['contribution_note_en'], text)
 
 
 if __name__ == '__main__':

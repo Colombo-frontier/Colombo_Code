@@ -8,6 +8,7 @@ import tomllib
 
 from colombo.downstream.handoff import digest, from_brain_run, validate_package
 from colombo.downstream.model import NativeModel
+from colombo.lean_agent.evidence import validate_lean_result
 from colombo.shared.file_io import atomic_write, json_bytes
 
 PROJECT = Path(__file__).resolve().parents[3]
@@ -64,12 +65,19 @@ def run(package, output_dir, config, *, lean_model=None, writing_model=None, sta
             lean_result = run_lean(package,output/'lean',config['lean'],lean_model or NativeModel(PROJECT,'lean',config['model']))
         elif not isinstance(lean_result,dict):
             raise ValueError('Writing-only invocation requires a Lean result')
+        if lean_result.get('status') == 'passed':
+            validate_lean_result(package, lean_result)
+        origin = 'imported' if stage == 'writing' else 'local_agent'
         summary = {'status':lean_result['status'],'proof_sha256':package['proof_sha256'],
-            'lean_status':lean_result['status'],'writing_status':'skipped'}
+            'lean_status':lean_result['status'],'writing_status':'skipped',
+            'lean_evidence_origin':origin,
+            'lean_evidence_validation': ('embedded_structure_and_bindings'
+                                         if lean_result['status'] == 'passed' else 'not_passed')}
         if lean_result['status'] == 'passed' and config['writing_enabled'] and stage != 'lean':
             from colombo.writing_agent.agent import run as run_writing
             result = run_writing(package,lean_result,output/'writing',config['writing'],
-                                 writing_model or NativeModel(PROJECT,'writing',config['model']))
+                                 writing_model or NativeModel(PROJECT,'writing',config['model']),
+                                 evidence_origin=origin)
             summary.update(status='completed',writing_status=result['status'])
         atomic_write(output/'pipeline.json',json_bytes(summary))
         return summary

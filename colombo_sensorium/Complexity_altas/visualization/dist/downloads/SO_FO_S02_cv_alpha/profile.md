@@ -923,19 +923,19 @@ Read-only presentation of the stored native record. Integrity hashes identify so
 
 ### Native joint analysis
 
-Native pointer: /joint_analysis; canonical SHA-256: cd797b0c20de8c8b773ebd19a77a4d8dce8f627cda4d995d4ec269b4f32edd01
+Native pointer: /joint_analysis; canonical SHA-256: 89c6caf3d1c38f75bc222fa9f2e3c13ef8922b3e1c423136ba569c4aa13bc10d
 
 #### Native field: comparisons
 
-Native pointer: /joint_analysis/comparisons; canonical SHA-256: 50d4451e43f0d78abf74f3e9e5306d4c4ec820ff81aed9e4f744f4993d158825
+Native pointer: /joint_analysis/comparisons; canonical SHA-256: 6302b773c6e26701366f1ee9e165cd80d0ffd1ccb3e1888f5bb8900899e7d2b4
 
 #### Native item 1
 
-Native pointer: /joint_analysis/comparisons/0; canonical SHA-256: bb807494459b33105a9584dc1a6faab0596e4a06825f5314046d53b49e782464
+Native pointer: /joint_analysis/comparisons/0; canonical SHA-256: 2c561f447c1346e6a897ea153b8890c1ab7fefe45d70bf2d0614bdf497c8299b
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses; canonical SHA-256: a060ce91c71a971df3d137da22b2c03b0b4dcb002bafdc9c694322eea0ad2524
+Native pointer: /joint_analysis/comparisons/0/bound_uses; canonical SHA-256: 623a5a688e8b5088d13d2f28e084e4f3385d5bdb587e86bce960200c2f57da4e
 
 #### Native item 1
 
@@ -1029,7 +1029,7 @@ D
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/2; canonical SHA-256: 9a3ad19ba7e713e182fdce6dfd034c21416e1bb01956990e01b51182b226e1b8
+Native pointer: /joint_analysis/comparisons/0/bound_uses/2; canonical SHA-256: bebe1c82cb584c76e571eded0088cdf8c110c54cf5d1761b95a80fb9550ee32c
 
 #### Native field: adopted_region
 
@@ -1061,15 +1061,15 @@ CV_ALPHA_DIMENSION_TRANSFER
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/2/reason; canonical SHA-256: 7ce2ffc403011be78611456b754038629d72d908485e53c91080d7225ee69ce6
+Native pointer: /joint_analysis/comparisons/0/bound_uses/2/reason; canonical SHA-256: 6e7e0ef0f61a43801905494bf2e77b4e55824537af20d689fe082a9ac80124ea
 
-Inactive source-support quarantine: n=O(T^2) does not yield an all-dimensional logarithm. Historical claim preserved.
+Historical claim excluded from the current envelope. The adopted source transfer retains its dimension condition n=O(T^2).
 
 #### Native field: validity_region
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/2/validity_region; canonical SHA-256: 77e5df2486c30fe83e44f88e0897621c7b9c1337e0aa680640c22c4b61ebcf54
+Native pointer: /joint_analysis/comparisons/0/bound_uses/2/validity_region; canonical SHA-256: cd28723c0dd4ad2ced686f08e17013568e4d5742ac7b667c79fb7c62bc5c35a2
 
-Full old package unsupported by cited dimension-dependent theorem.
+Not adopted in the current envelope; use the separately stated dimension-sensitive transfer region.
 
 #### Native item 4
 
@@ -1245,11 +1245,11 @@ O_alpha(sqrt(q)+s)
 
 #### Native item 2
 
-Native pointer: /joint_analysis/comparisons/1; canonical SHA-256: 42dac5b5fb339572ff59674d2a3766c43840714940485e1ed281bb133199f42a
+Native pointer: /joint_analysis/comparisons/1; canonical SHA-256: 77650ab527f7a0ac3db354ed6f9c30ad53c6f7971c68c1b7f08f728564928d8d
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses; canonical SHA-256: cdc3ffb9d15dd339b1825dfc2973643ac3c39df3248299a27f5a712f3de8bf34
+Native pointer: /joint_analysis/comparisons/1/bound_uses; canonical SHA-256: 992b27afc801e251095960278b0329249028e103bd8731cc4131a2e173b770ce
 
 #### Native item 1
 
@@ -1343,7 +1343,7 @@ D
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses/2; canonical SHA-256: 9a3ad19ba7e713e182fdce6dfd034c21416e1bb01956990e01b51182b226e1b8
+Native pointer: /joint_analysis/comparisons/1/bound_uses/2; canonical SHA-256: bebe1c82cb584c76e571eded0088cdf8c110c54cf5d1761b95a80fb9550ee32c
 
 #### Native field: adopted_region
 
@@ -1375,15 +1375,15 @@ CV_ALPHA_DIMENSION_TRANSFER
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses/2/reason; canonical SHA-256: 7ce2ffc403011be78611456b754038629d72d908485e53c91080d7225ee69ce6
+Native pointer: /joint_analysis/comparisons/1/bound_uses/2/reason; canonical SHA-256: 6e7e0ef0f61a43801905494bf2e77b4e55824537af20d689fe082a9ac80124ea
 
-Inactive source-support quarantine: n=O(T^2) does not yield an all-dimensional logarithm. Historical claim preserved.
+Historical claim excluded from the current envelope. The adopted source transfer retains its dimension condition n=O(T^2).
 
 #### Native field: validity_region
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses/2/validity_region; canonical SHA-256: 77e5df2486c30fe83e44f88e0897621c7b9c1337e0aa680640c22c4b61ebcf54
+Native pointer: /joint_analysis/comparisons/1/bound_uses/2/validity_region; canonical SHA-256: cd28723c0dd4ad2ced686f08e17013568e4d5742ac7b667c79fb7c62bc5c35a2
 
-Full old package unsupported by cited dimension-dependent theorem.
+Not adopted in the current envelope; use the separately stated dimension-sensitive transfer region.
 
 #### Native item 4
 
@@ -1559,11 +1559,11 @@ O_alpha(s)
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/2; canonical SHA-256: 37e74cf25e41d38aade3e3b90ae4e55cbec95295964987f0c279742a8e0158e3
+Native pointer: /joint_analysis/comparisons/2; canonical SHA-256: 4c71a5129b89707b5fa38461f4f9670b0d3db88b6df1ae0e747508c4f8c60240
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses; canonical SHA-256: a0b572ceaef9cdbe5fcdb0e0fd6eeab21dd7732837893101d3c9c962d6d77cf4
+Native pointer: /joint_analysis/comparisons/2/bound_uses; canonical SHA-256: 29bb596b1b81b75a167a947f737fb951a0e3a2061887b1884d017baff5a1f5b0
 
 #### Native item 1
 
@@ -1657,7 +1657,7 @@ D
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/2; canonical SHA-256: 9a3ad19ba7e713e182fdce6dfd034c21416e1bb01956990e01b51182b226e1b8
+Native pointer: /joint_analysis/comparisons/2/bound_uses/2; canonical SHA-256: bebe1c82cb584c76e571eded0088cdf8c110c54cf5d1761b95a80fb9550ee32c
 
 #### Native field: adopted_region
 
@@ -1689,15 +1689,15 @@ CV_ALPHA_DIMENSION_TRANSFER
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/2/reason; canonical SHA-256: 7ce2ffc403011be78611456b754038629d72d908485e53c91080d7225ee69ce6
+Native pointer: /joint_analysis/comparisons/2/bound_uses/2/reason; canonical SHA-256: 6e7e0ef0f61a43801905494bf2e77b4e55824537af20d689fe082a9ac80124ea
 
-Inactive source-support quarantine: n=O(T^2) does not yield an all-dimensional logarithm. Historical claim preserved.
+Historical claim excluded from the current envelope. The adopted source transfer retains its dimension condition n=O(T^2).
 
 #### Native field: validity_region
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/2/validity_region; canonical SHA-256: 77e5df2486c30fe83e44f88e0897621c7b9c1337e0aa680640c22c4b61ebcf54
+Native pointer: /joint_analysis/comparisons/2/bound_uses/2/validity_region; canonical SHA-256: cd28723c0dd4ad2ced686f08e17013568e4d5742ac7b667c79fb7c62bc5c35a2
 
-Full old package unsupported by cited dimension-dependent theorem.
+Not adopted in the current envelope; use the separately stated dimension-sensitive transfer region.
 
 #### Native item 4
 
@@ -1873,11 +1873,11 @@ On E: min(C_alpha*sqrt(q),K(q)); otherwise C_alpha*(sqrt(q)+s). K(q)=2+max(0,cei
 
 #### Native item 4
 
-Native pointer: /joint_analysis/comparisons/3; canonical SHA-256: 4c73969036b2584e7a472c8cdc5db66a6054886494262d64e1d6836e3b287d19
+Native pointer: /joint_analysis/comparisons/3; canonical SHA-256: ccae11e0beb30250b5d7efd0eac741db66eeeb2339ac53a37c8486f2f583b042
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses; canonical SHA-256: 04b3c3ee5315c5bd450335d1bff31e66caeb463abeef483e051e79f757bb3336
+Native pointer: /joint_analysis/comparisons/3/bound_uses; canonical SHA-256: def2540c349f3f3c4eb8ec527219b7dea9aca3650ae8ec538cf2a2db3cfc1981
 
 #### Native item 1
 
@@ -1971,7 +1971,7 @@ D
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses/2; canonical SHA-256: 84aa8b145f559bbebefb524521bc63422620448be96a2f52cfc1a584864efe90
+Native pointer: /joint_analysis/comparisons/3/bound_uses/2; canonical SHA-256: 14c31383ea0c1914bc415a4880be9898428d6fec4f5b227e93b561fe6f02c212
 
 #### Native field: adopted_region
 
@@ -2003,15 +2003,15 @@ CV_ALPHA_DIMENSION_TRANSFER
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses/2/reason; canonical SHA-256: 7ce2ffc403011be78611456b754038629d72d908485e53c91080d7225ee69ce6
+Native pointer: /joint_analysis/comparisons/3/bound_uses/2/reason; canonical SHA-256: 6e7e0ef0f61a43801905494bf2e77b4e55824537af20d689fe082a9ac80124ea
 
-Inactive source-support quarantine: n=O(T^2) does not yield an all-dimensional logarithm. Historical claim preserved.
+Historical claim excluded from the current envelope. The adopted source transfer retains its dimension condition n=O(T^2).
 
 #### Native field: validity_region
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses/2/validity_region; canonical SHA-256: 77e5df2486c30fe83e44f88e0897621c7b9c1337e0aa680640c22c4b61ebcf54
+Native pointer: /joint_analysis/comparisons/3/bound_uses/2/validity_region; canonical SHA-256: cd28723c0dd4ad2ced686f08e17013568e4d5742ac7b667c79fb7c62bc5c35a2
 
-Full old package unsupported by cited dimension-dependent theorem.
+Not adopted in the current envelope; use the separately stated dimension-sensitive transfer region.
 
 #### Native item 4
 
@@ -2187,11 +2187,11 @@ O_alpha(sqrt(q)+s)
 
 #### Native item 5
 
-Native pointer: /joint_analysis/comparisons/4; canonical SHA-256: 6daaee7e942c1382d02b0f6318e7b0dc99d216c4992334c4366e1d69828b01bd
+Native pointer: /joint_analysis/comparisons/4; canonical SHA-256: 06749279a7830677ca3b11cdfc8546f05b02b8af2693575d710caf5801759027
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/4/bound_uses; canonical SHA-256: 3f2cd7e1634bc539526e21d458959aaf5123f1d97420eee2f52d74f42c6ece9d
+Native pointer: /joint_analysis/comparisons/4/bound_uses; canonical SHA-256: 14aadec4ded73914a34db4ef7f8f86e6b9121de3f1efb103440fa7ca5fd68399
 
 #### Native item 1
 
@@ -2285,7 +2285,7 @@ D
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/4/bound_uses/2; canonical SHA-256: 84aa8b145f559bbebefb524521bc63422620448be96a2f52cfc1a584864efe90
+Native pointer: /joint_analysis/comparisons/4/bound_uses/2; canonical SHA-256: 14c31383ea0c1914bc415a4880be9898428d6fec4f5b227e93b561fe6f02c212
 
 #### Native field: adopted_region
 
@@ -2317,15 +2317,15 @@ CV_ALPHA_DIMENSION_TRANSFER
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/4/bound_uses/2/reason; canonical SHA-256: 7ce2ffc403011be78611456b754038629d72d908485e53c91080d7225ee69ce6
+Native pointer: /joint_analysis/comparisons/4/bound_uses/2/reason; canonical SHA-256: 6e7e0ef0f61a43801905494bf2e77b4e55824537af20d689fe082a9ac80124ea
 
-Inactive source-support quarantine: n=O(T^2) does not yield an all-dimensional logarithm. Historical claim preserved.
+Historical claim excluded from the current envelope. The adopted source transfer retains its dimension condition n=O(T^2).
 
 #### Native field: validity_region
 
-Native pointer: /joint_analysis/comparisons/4/bound_uses/2/validity_region; canonical SHA-256: 77e5df2486c30fe83e44f88e0897621c7b9c1337e0aa680640c22c4b61ebcf54
+Native pointer: /joint_analysis/comparisons/4/bound_uses/2/validity_region; canonical SHA-256: cd28723c0dd4ad2ced686f08e17013568e4d5742ac7b667c79fb7c62bc5c35a2
 
-Full old package unsupported by cited dimension-dependent theorem.
+Not adopted in the current envelope; use the separately stated dimension-sensitive transfer region.
 
 #### Native item 4
 
@@ -2501,11 +2501,11 @@ O_alpha(s)
 
 #### Native item 6
 
-Native pointer: /joint_analysis/comparisons/5; canonical SHA-256: 9d1dc06b4d2b05b81c404268eef1a5c32574432def795d64db8fc3afed0957db
+Native pointer: /joint_analysis/comparisons/5; canonical SHA-256: fee12a7e2a0e9732e25a21a46bc2864b2fc9b2714301cab664d4f56d4df5c98c
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/5/bound_uses; canonical SHA-256: 31b0b4dbf2255e0d4be8c8f30e52aa1811b473c649a4e6ede60e50fe359d2b87
+Native pointer: /joint_analysis/comparisons/5/bound_uses; canonical SHA-256: f9df4a57d7b92aa24c3a63b9a30938d1235da713c07611741475a35f854f2ebf
 
 #### Native item 1
 
@@ -2599,7 +2599,7 @@ D
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/5/bound_uses/2; canonical SHA-256: 84aa8b145f559bbebefb524521bc63422620448be96a2f52cfc1a584864efe90
+Native pointer: /joint_analysis/comparisons/5/bound_uses/2; canonical SHA-256: 14c31383ea0c1914bc415a4880be9898428d6fec4f5b227e93b561fe6f02c212
 
 #### Native field: adopted_region
 
@@ -2631,15 +2631,15 @@ CV_ALPHA_DIMENSION_TRANSFER
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/5/bound_uses/2/reason; canonical SHA-256: 7ce2ffc403011be78611456b754038629d72d908485e53c91080d7225ee69ce6
+Native pointer: /joint_analysis/comparisons/5/bound_uses/2/reason; canonical SHA-256: 6e7e0ef0f61a43801905494bf2e77b4e55824537af20d689fe082a9ac80124ea
 
-Inactive source-support quarantine: n=O(T^2) does not yield an all-dimensional logarithm. Historical claim preserved.
+Historical claim excluded from the current envelope. The adopted source transfer retains its dimension condition n=O(T^2).
 
 #### Native field: validity_region
 
-Native pointer: /joint_analysis/comparisons/5/bound_uses/2/validity_region; canonical SHA-256: 77e5df2486c30fe83e44f88e0897621c7b9c1337e0aa680640c22c4b61ebcf54
+Native pointer: /joint_analysis/comparisons/5/bound_uses/2/validity_region; canonical SHA-256: cd28723c0dd4ad2ced686f08e17013568e4d5742ac7b667c79fb7c62bc5c35a2
 
-Full old package unsupported by cited dimension-dependent theorem.
+Not adopted in the current envelope; use the separately stated dimension-sensitive transfer region.
 
 #### Native item 4
 
@@ -3235,17 +3235,17 @@ accounted
 
 #### Native field: impact
 
-Native pointer: /joint_analysis/impact; canonical SHA-256: 61b65b54e304f52119fdb65c7ebdc56583b987ea3833c92946f93da178c29457
+Native pointer: /joint_analysis/impact; canonical SHA-256: 007ca55f1ccabf9a85e7e5baa578452cfac814e98eff18f921a3eaf4ba73d75e
 
 #### Native item 1
 
-Native pointer: /joint_analysis/impact/0; canonical SHA-256: d9b71b899606655de019e49a64241c5d01af22d860af587b356d7891ce268090
+Native pointer: /joint_analysis/impact/0; canonical SHA-256: 45d41bdc8a1fcdbffafb893785d39e570c3544d524ec26e7656d144717f43b41
 
 #### Native field: argument
 
-Native pointer: /joint_analysis/impact/0/argument; canonical SHA-256: e021a07e697dd12c0d5fe0de83682e9b47a0d8897131e21d9d7ff7cb6a3eca10
+Native pointer: /joint_analysis/impact/0/argument; canonical SHA-256: 969a49623521c57b7fd78cc9b57ed3efebdd4b26b897d3d3efc0110539dcdf0d
 
-The source spends dimension O(T^2). A new explicit ball/expected-loss transfer proves the dimension-sensitive min term, not a fixed-dimensional logarithm. Quarantine preserves history and removes active b3 references. The lower weakens where log(2+q) asymptotically exceeded both surviving terms.
+The adopted ball/expected-loss transfer retains the source dimension condition O(T^2) and gives the separately recorded dimension-sensitive min term. Historical b3 records remain excluded. This entry records the resulting change to the adopted lower envelope.
 
 #### Native field: boundary_type
 
@@ -3331,9 +3331,9 @@ D in each native view.
 
 #### Native field: witness
 
-Native pointer: /joint_analysis/impact/0/witness; canonical SHA-256: 4056840655587dfd3bdfe8d7e621b85cec5c9bba76a8f0c938d63b0362ce398c
+Native pointer: /joint_analysis/impact/0/witness; canonical SHA-256: 163ad0b6e564e2bb11979d8ebe5f7257d11f97cdd8e9fb5f729e67cb92e8c50f
 
-d=1,sigma=0,q tending to infinity: the old unsupported lower grows as log(q), whereas the supported replacement lower is constant.
+For d=1 and sigma=0, the currently adopted dimension-sensitive lower term is constant as q grows.
 
 #### Native item 2
 
@@ -3869,13 +3869,13 @@ Native value (empty_array): []
 
 #### Native field: pending_obligations
 
-Native pointer: /joint_analysis/pending_obligations; canonical SHA-256: 1860af94ca11e9d7fa6a0aa0d83c08d3d8a9d30bd42c9bede727a131a285488e
+Native pointer: /joint_analysis/pending_obligations; canonical SHA-256: cc8f211283b755e089f797ce875aefbd1fed8891f897781b01c0f6e1bd6b56ef
 
 #### Native item 1
 
-Native pointer: /joint_analysis/pending_obligations/0; canonical SHA-256: 2fe529ec8f5489f320bec63b340c49a880b779b01e07e2bd6ffdb9f602cbe7d9
+Native pointer: /joint_analysis/pending_obligations/0; canonical SHA-256: 014379f1538c9b62bd68da46a1ae9c6f6d4f124fc8f5685dcda8409270cd8654
 
-Seek independent support for an all-dimensional logarithmic lower bound on the smooth convex ball; the old source alone does not establish it, so both b3 rows remain inactive pending such evidence.
+An all-dimensional logarithmic lower bound on the smooth convex ball requires a separate applicability record; both historical b3 rows remain excluded pending that record.
 
 #### Native item 2
 
@@ -4389,7 +4389,7 @@ E, same native view/guarantee/quantity/resource.
 
 #### Native field: synthesis_coverage
 
-Native pointer: /joint_analysis/synthesis_coverage; canonical SHA-256: 71ec9d81452ab04fdae78b1ebbc168bd3aadaa733a9728bd2ffc48fce800454b
+Native pointer: /joint_analysis/synthesis_coverage; canonical SHA-256: 452f70aadad93a93723c28741adf89da059b31aa36cba2ba462e1c22ba900afe
 
 #### Native field: comparison_ids
 
@@ -4455,7 +4455,7 @@ not_assessed
 
 #### Native field: obligations
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations; canonical SHA-256: 7bcf61ac99a2385da9a02102fdee4367e4c813c178aa87295839ca6308650c11
+Native pointer: /joint_analysis/synthesis_coverage/obligations; canonical SHA-256: d420c527fb734e2fa6a55ad7859d8189daa4e97fb5206b90098a47c8e4935c36
 
 #### Native item 1
 
@@ -4999,7 +4999,7 @@ resolved
 
 #### Native item 7
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/6; canonical SHA-256: d5952caad7033a653fbc8f33d3b2e5893acbcf8962872d77e22da4e9c1506ed3
+Native pointer: /joint_analysis/synthesis_coverage/obligations/6; canonical SHA-256: fde6329a8982bf20fd7f8db6e88206501d3386aed872184d3379c733db181b9a
 
 #### Native field: affects_gap
 
@@ -5079,9 +5079,9 @@ material_lead
 
 #### Native field: lead
 
-Native pointer: /joint_analysis/synthesis_coverage/obligations/6/lead; canonical SHA-256: 2fe529ec8f5489f320bec63b340c49a880b779b01e07e2bd6ffdb9f602cbe7d9
+Native pointer: /joint_analysis/synthesis_coverage/obligations/6/lead; canonical SHA-256: 014379f1538c9b62bd68da46a1ae9c6f6d4f124fc8f5685dcda8409270cd8654
 
-Seek independent support for an all-dimensional logarithmic lower bound on the smooth convex ball; the old source alone does not establish it, so both b3 rows remain inactive pending such evidence.
+An all-dimensional logarithmic lower bound on the smooth convex ball requires a separate applicability record; both historical b3 rows remain excluded pending that record.
 
 #### Native field: proof_refs
 

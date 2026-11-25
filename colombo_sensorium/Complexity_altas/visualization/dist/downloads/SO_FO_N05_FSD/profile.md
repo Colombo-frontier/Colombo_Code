@@ -1071,3 +1071,7 @@ https://arxiv.org/pdf/2609.20701
 [5] Colombo_N01. A Measurable Random-Rotation Framework for Weakly Convex Optimization. 2026. N01_weakly_convex_randomized_paper.tex.
 
 https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/N01/manuscript.pdf
+
+**Contribution.** Alternative construction and measurable transfer framework
+
+**Contribution scope.** A self-contained random-rotation construction and measurable transfer framework for weakly convex optimization with exact value/full-subdifferential access. The manuscript recovers the known randomized query rate and gives a smaller sufficient embedding dimension for its explicit construction in the common small-gap regime. It makes no priority claim for the randomized main rate.

@@ -31,7 +31,19 @@ python run_pipeline.py --stage lean --input handoff.json --output-dir downstream
 python run_pipeline.py --stage writing --input handoff.json --lean-result downstream_runs/lean_only/lean/result.json --output-dir downstream_runs/writing_only
 ```
 
-Writing validates the passed compiler/correspondence evidence and exact proof binding. Stage selection does not bypass feature switches. Downstream failure saves its own results and stops; no automatic upstream research/repair occurs.
+Writing validates the complete embedded compiler/correspondence evidence and its binding to the exact handoff package. A file containing only `passed` labels is rejected. Stage selection does not bypass feature switches. Downstream failure saves its own results and stops; no automatic upstream research/repair occurs.
+
+## Saved results and imported evidence
+
+The Lean Agent, cache replay, standalone launcher and Writing input use the same evidence validator. A passing result must contain the Lean source, project-file hashes and pinned toolchain, successful version/compile/audit command receipts with embedded output, the compiled-object hash, theorem declarations and permitted axiom dependencies, complete Claim mappings, and a correspondence review bound to that same source, project, compiler report and full handoff package. `proof_sha256` alone identifies a proof version; it does not prove that compilation occurred.
+
+New results use `evidence_version = 1`. The runner stores a result digest in `lean/state.json` and receipts for saved candidate/compiler/review artifacts. Replay rejects missing receipts, changed results, and reviews whose input binding differs. These checks do not re-run the compiler or a model during an unchanged, completed local replay.
+
+Older Lean result/state files without this evidence version and its receipts are not silently upgraded or accepted. Preserve the old run for inspection and run the Lean stage again in a **new output directory**. Do not add version/hash fields by hand to make an old report pass. The Brain/Cell records, handoff schema, model response schemas and scientific-memory identities are unchanged.
+
+`--stage writing --lean-result ...` remains an explicit import of a user-selected local result. Complete new-format results can be imported without their original absolute paths being accessible. Writing checks the evidence embedded in the file; it does **not** execute Lean again or authenticate its producer. The pipeline and Writing records identify `lean_evidence_origin = "imported"` and `lean_evidence_validation = "embedded_structure_and_bindings"`; the Writing result also records `lean_recompiled_for_writing = false`. Results obtained through the local Lean Agent use the origin `local_agent` (which may be a checked replay).
+
+These receipts detect incomplete reports, mismatched evidence and changes relative to the saved local state. They are not cryptographic signatures or protection against someone who can replace both the report and its receipts. Accept imported reports only from a trusted producer; independent verification requires separately running the compiler on the supplied source in a trusted, pinned project. Correspondence to informal mathematics remains a separate review, and the rewritten manuscript still has only the Writing self-check described below.
 
 ## Configuration and execution
 

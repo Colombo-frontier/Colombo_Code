@@ -218,7 +218,7 @@ $$
 
 **Sources.** [1](https://proceedings.nips.cc/paper_files/paper/2025/file/1aa670dafbd4b32ebf483f8372e612c5-Paper-Conference.pdf)
 
-**Conditions.** Require $\sigma\ge1$ and $T\ge2^{24}$. RC–BE uses the fixed exploration parameter $\alpha_R=8/3$.; The quantity $V_\mu$ is actual total mean variation. This fixed-parameter algorithm needs neither $V$ nor advance knowledge of $T$; $T$ appears only in its evaluation.; The notation $\widetilde O$ hides only the source's logarithmic factors. This public source does not establish the unknown-variation $T^{3/5}$ upper bound claimed in catalog entry 263.
+**Conditions.** Require $\sigma\ge1$ and $T\ge2^{24}$. RC–BE uses the fixed exploration parameter $\alpha_R=8/3$.; The quantity $V_\mu$ is actual total mean variation. This fixed-parameter algorithm needs neither $V$ nor advance knowledge of $T$; $T$ appears only in its evaluation.; The notation $\widetilde O$ hides only the source's logarithmic factors. This entry adopts the displayed RC-BE rate for unknown variation. The separate $T^{3/5}$ rate is not adopted from this source.
 
 **Oracle correspondence.** Retain the specified feedback type, sample coupling, public information, and environment permissions.
 

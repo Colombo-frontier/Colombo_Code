@@ -92,10 +92,87 @@ class ColomboResultsTests(unittest.TestCase):
         self.profile['comparisons'][0]['bracket']['lower_refs'] = ['lower']
         self.info['highlight'] = {'comparison_ids': ['c1'], 'scope_note': 'Only the native guarded region.'}
 
-    def test_display_excludes_unclosed_contributions_without_altering_provenance(self):
+    def test_display_includes_unclosed_contributions_without_claiming_optimality(self):
         result = self.load()
-        self.assertIn('example', result['settings'])
-        self.assertEqual(display_registry(result)['settings'], {})
+        shown = display_registry(result)['settings']['example']
+        self.assertEqual(shown['comparison_ids'], ['c1'])
+        self.assertEqual(self.profile['comparisons'][0]['status']['code'], 'missing_lower')
+        self.assertNotIn('highlight', shown)
+
+    def add_manuscript(self):
+        pid = 'COLOMBO_DEMO'
+        local = self.root / 'data/sources/colombo/DEMO/manuscript.pdf'
+        local.parent.mkdir(parents=True, exist_ok=True)
+        local.write_bytes(b'Local source identity fixture')
+        row = {'id': pid, 'source_ref': pid, 'title': 'Local result',
+               'url': 'https://example.org/DEMO/manuscript.pdf',
+               'publication_status': 'unpublished_manuscript',
+               'local_path': str(local.relative_to(self.root)),
+               'source_pdf_sha256': hashlib.sha256(local.read_bytes()).hexdigest()}
+        (self.root / 'data/sources/colombo/catalog.json').write_text(json.dumps([row]))
+        self.profile['references'].append(deepcopy(row))
+        return pid, local
+
+    def test_local_source_is_credited_only_when_a_selected_bound_uses_it(self):
+        pid, _ = self.add_manuscript()
+        result = self.load()
+        self.assertNotIn(pid, result['settings']['example']['paper_ids'])
+        self.profile['bounds'][0]['source_refs'].append(pid)
+        result = self.load()
+        self.assertIn(pid, result['settings']['example']['paper_ids'])
+        self.assertEqual(result['settings']['example']['comparison_ids'], ['c1'])
+        self.assertEqual(self.profile['comparisons'][0]['status']['code'], 'missing_lower')
+
+    def test_changed_local_source_bytes_are_rejected(self):
+        _, local = self.add_manuscript()
+        local.write_bytes(b'Different bytes')
+        with self.assertRaisesRegex(ValueError, 'source hash mismatch'):
+            self.load()
+
+    def test_selected_local_contribution_keeps_its_scope_and_type(self):
+        pid, _ = self.add_manuscript()
+        path = self.root / 'data/sources/colombo/catalog.json'
+        rows = json.loads(path.read_text())
+        note = 'An alternative proof of an existing rate; no first-rate claim.'
+        rows[0].update(contribution_type='alternative_proof',
+                       contribution_label_en='Alternative proof', contribution_note_en=note)
+        path.write_text(json.dumps(rows))
+        self.profile['bounds'][0]['source_refs'].append(pid)
+        result = self.load()['settings']['example']
+        contribution = next(c for c in result['contributions'] if c['paper_id'] == pid)
+        self.assertEqual(contribution['note'], note)
+        self.assertEqual(contribution['contribution_type'], 'alternative_proof')
+        self.assertEqual(contribution['contribution_label'], 'Alternative proof')
+        self.assertIn(note, result['scope_note'])
+        self.assertEqual(self.profile['comparisons'][0]['status']['code'], 'missing_lower')
+
+    def test_incomplete_local_contribution_presentation_is_rejected(self):
+        self.add_manuscript()
+        path = self.root / 'data/sources/colombo/catalog.json'
+        rows = json.loads(path.read_text())
+        rows[0]['contribution_label_en'] = 'Alternative proof'
+        path.write_text(json.dumps(rows))
+        with self.assertRaisesRegex(ValueError, 'incomplete contribution presentation'):
+            self.load()
+
+    def test_local_catalog_requires_a_bundled_pdf_identity(self):
+        self.add_manuscript()
+        path = self.root / 'data/sources/colombo/catalog.json'
+        rows = json.loads(path.read_text())
+        del rows[0]['local_path']
+        path.write_text(json.dumps(rows))
+        with self.assertRaisesRegex(ValueError, 'missing bundled PDF identity'):
+            self.load()
+
+    def test_editorial_copy_cannot_override_the_verified_local_catalog(self):
+        pid, _ = self.add_manuscript()
+        self.profile['bounds'][0]['source_refs'].append(pid)
+        reference = self.profile['references'][-1]
+        reference['local_path'] = 'data/sources/colombo/DEMO/nonexistent.pdf'
+        reference['source_pdf_sha256'] = '0' * 64
+        self.registry['papers'].append(deepcopy(reference))
+        with self.assertRaisesRegex(ValueError, 'editorial source conflicts'):
+            self.load()
 
     def test_display_accepts_reviewed_near_optimal_selection(self):
         self.highlight()

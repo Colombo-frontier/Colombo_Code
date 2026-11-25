@@ -1,0 +1,156 @@
+{
+  "aliases": [
+    "P024",
+    "MSDA"
+  ],
+  "content": {
+    "components": [],
+    "family": "chebyshev_gossip",
+    "limitations": [
+      {
+        "kind": "algorithm_specific",
+        "scope": "selected",
+        "statement": "gamma=1 makes printed c2 undefined; the originally selected nonsingular regime 0<gamma<1 is retained. No limiting implementation asserted.",
+        "support_refs": [
+          "#/source_refs/0"
+        ]
+      },
+      {
+        "kind": "algorithm_specific",
+        "scope": "selected output",
+        "statement": "An explicit additional terminal conjugate-gradient call defines the selected terminal output. It is a local amendment, not a verified author convention; its extra charge and full local argument are included.",
+        "support_refs": [
+          "#/content/terminal_repair_proposal",
+          "#/content/local_convergence_argument"
+        ]
+      },
+      {
+        "kind": "analysis_gap",
+        "scope": "source display only",
+        "statement": "The local argument supplies an explicit spectral calculation associated with Supplement Eq.(12). The final constant spectral bound is proved directly here without external dependencies; neither Chebyshev minimax optimality nor the intermediate exponent comparison is adopted.",
+        "support_refs": [
+          "#/source_refs/1",
+          "#/content/local_convergence_argument/source_display_issue"
+        ]
+      },
+      {
+        "kind": "algorithm_specific",
+        "scope": "selected Oracle and complexity",
+        "statement": "Exact conjugate Oracle only. The bound retains instance-dependent initialization inside log(C/epsilon); no uniform initialization-free rate, primal-gradient-only pricing, unrestricted Oracle Complexity, asynchronous or time-varying graph guarantee is established. Spectral-input acquisition and optional initialization-bound aggregation require separate accounting.",
+        "support_refs": [
+          "#/source_refs/0",
+          "#/content/local_convergence_argument/accuracy_and_cost"
+        ]
+      }
+    ],
+    "local_convergence_argument": {
+      "accuracy_and_cost": "For any epsilon>0 and supplied C>=C_exact, C>0, T=max(1,ceil(s^(-1) max(0,log(C/epsilon)))) ensures e_T<=epsilon because rho^T<=exp(-sT). If C=0, e_T=0 for every T and choose T=1. A common computable bound C may require separate aggregation; this proof does not give an uncharged distributed stopping test. For this choice T<=1+2sqrt(kappa_l) max(0,log(C/epsilon)) and amended time T(1+K tau)+1 <=(1+tau/sqrt(gamma))[1+2sqrt(kappa_l) max(0,log(C/epsilon))]+1 (use zero log term when C=0). Exactly K W multiplications occur per gossip: one at initialization and K-1 in the subloop. The final evaluation adds one exact local call per node, no gossip, and does not alter the prefix. With fixed instance parameters this gives the source's logarithmic-accuracy form and all-node convergence. It asserts no uniform initialization-free bound: C can depend on kappa_l and instance data; log(C/epsilon) and any resulting log(kappa_l) are retained.",
+      "conjugacy": "For every x, f_i(theta)-<x,theta> has a coercive quadratic lower bound from strong convexity, so continuity and strong convexity give a unique minimizer p with grad f_i(p)=x. The strong-convexity lower quadratic bound at p, maximized in the Fenchel supremum, gives f_i*(z)<=f_i*(x)+<p,z-x>+||z-x||^2/(2alpha). The beta-smooth upper quadratic bound at p, evaluated in that supremum at p+(z-x)/beta, gives f_i*(z)>=f_i*(x)+<p,z-x>+||z-x||^2/(2beta). The two inequalities imply differentiability with grad f_i*(x)=p and establish 1/alpha smoothness and 1/beta strong convexity. Summing gives these properties for F*(X)=sum_i f_i*(x_i), without a Hessian assumption.",
+      "dual_transform": "Let H={Z:Z1=0}, A=P^(1/2), and A^dagger its inverse on H (zero on constants). For D in H, a0||D||^2<=||DA||^2<=b0||D||^2. Thus g(Z)=F*(ZA) on H is L=b0/alpha smooth and m=a0/beta strongly convex, with grad g(Z)=grad F*(ZA) A in H. Let theta* be the unique minimizer of fbar, which exists by global strong convexity/coercivity, and X* have columns grad f_i(theta*). Then X*1=0, Z*=X*A^dagger is in H, Z*A=X*, and grad g(Z*)=theta*1^T A=0. It is the unique minimizer. X_t,Y_t remain in H by induction from zero and P1=0. Put Z_t=X_t A^dagger, B_t=Y_t A^dagger, s=sqrt(m/L)=(1-q)/((1+q)sqrt(kappa_l)), rho=1-s. Here 0<s<1. Because PA^dagger=A, the exact recurrence becomes B_{t+1}=Z_t-grad g(Z_t)/L and Z_{t+1}=(1+mu)B_{t+1}-mu B_t, with B_0=Z_0=0. Direct substitution gives eta=1/L and mu=(1-s)/(1+s). A and A^dagger are analysis devices only.",
+      "kind": "local_complete",
+      "output_and_initialization": "Strong monotonicity of grad f_i applied to theta_{i,t}=grad f_i*(x_{i,t}) and theta* gives alpha||theta_{i,t}-theta*||^2<=<x_{i,t}-x_i*,theta_{i,t}-theta*>; Cauchy-Schwarz yields ||theta_{i,t}-theta*||<=||x_{i,t}-x_i*||/alpha. Since fbar is beta-smooth and stationary at theta*, 0<=e_t=max_i[fbar(theta_{i,t})-fbar(theta*)]<=beta||X_t-X*||^2/(2alpha^2)<=C_exact rho^t, with C_exact=beta b0 E_0/(alpha^2 m). The same state bound proves all-node convergence. Let Theta_0 collect grad f_i*(0), and G0^2=||grad g(0)||^2=trace(Theta_0 P Theta_0^T). Minimizing the m-strong-convexity quadratic lower bound at 0 gives g(0)-g(Z*)<=G0^2/(2m); strong monotonicity and grad g(Z*)=0 give ||Z*||<=G0/m. Therefore E_0<=G0^2/m and C_exact<=C_init=beta b0 G0^2/(alpha^2 m^2). Also G0^2<=b0||Theta_0||^2. These are instance-dependent constants derived under the original assumptions, not assumed bounds on the functions.",
+      "polynomial": "Let C_0(z)=1,C_1(z)=z,C_{j+1}(z)=2zC_j(z)-C_{j-1}(z). Induction on the actual scalar and matrix gossip recurrences gives a_j=C_j(c2), Z_j=U C_j(c2(I-c3W)); hence gossip returns UP, P=I-C_K(c2(I-c3W))/C_K(c2). For each positive eigenvalue lambda in [gamma lambda_1,lambda_1], c2(1-c3 lambda) is in [-1,1], by substituting both endpoints. The recurrence gives C_j(cos theta)=cos(j theta), hence |C_K(z)|<=1 on this interval. Set a=(1+u)/(1-u)=c1^(-1). Since c2=(a+a^(-1))/2, the same recurrence gives C_K(c2)=(a^K+a^(-K))/2=(1+q^2)/(2q). Thus P has kernel span(1) and positive eigenvalues in [a0,b0], where r=2q/(1+q^2), a0=1-r>0 and b0=1+r. At lambda=0 the polynomial is zero. For K=floor(1/u), u>1/(K+1), so c1<K/(K+2) and q<(1+2/K)^(-K)<=1/3, the last inequality following from Bernoulli (1+2/K)^K>=3. Therefore sqrt(b0/a0)=(1+q)/(1-q)<2 and K<=1/sqrt(gamma). This proves the required spectral bound without external minimax or Chebyshev theorems.",
+      "potential": "Define V_0=0, Z_t=(B_t+sV_t)/(1+s), V_{t+1}=(1-s)V_t+sZ_t-(s/m)grad g(Z_t). Substitution using s^2=m/L shows these identities reproduce the preceding momentum recurrence for all t (equivalently (B_{t+1}+sV_{t+1})/(1+s)=(1+mu)B_{t+1}-mu B_t). Let E_t=g(B_t)-g(Z*)+(m/2)||V_t-Z*||^2. To prove E_{t+1}<=rho E_t, write h=grad g(Z_t) and U=(1-s)(V_t-Z*)+s(Z_t-Z*). Smoothness gives g(B_{t+1})<=g(Z_t)-||h||^2/(2L). Expanding the potential norm gives (m/2)||U||^2-s<U,h>+s^2||h||^2/(2m); the gradient-square terms cancel. Using the weighted squared-norm identity yields E_{t+1}<=g(Z_t)-g(Z*)+(1-s)(m/2)||V_t-Z*||^2+s(m/2)||Z_t-Z*||^2-s(1-s)(m/2)||V_t-Z_t||^2-s<Z_t-Z*,h>-s(1-s)<V_t-Z_t,h>. Strong convexity at Z_t gives g(Z*)>=g(Z_t)+<h,Z*-Z_t>+(m/2)||Z_t-Z*||^2. Apply it to s times the function gap to obtain E_{t+1}<=(1-s)[(m/2)||V_t-Z*||^2+g(Z_t)-g(Z*)-s<V_t-Z_t,h>-s(m/2)||V_t-Z_t||^2]. Since B_t-Z_t=s(Z_t-V_t), convexity gives g(B_t)>=g(Z_t)-s<V_t-Z_t,h>. Dropping the nonpositive squared term proves contraction. Thus E_t<=rho^t E_0, E_0=g(0)-g(Z*)+(m/2)||Z*||^2. Nonnegativity of the function gap and strong convexity imply both ||B_t-Z*||^2 and ||V_t-Z*||^2 are <=2E_t/m. Their convex combination Z_t obeys the same bound, so ||X_t-X*||^2<=2b0 E_0 rho^t/m. This controls the actual extrapolated query state, not only Y_t.",
+      "provenance": "Curator checked and adopted a self-contained repair inspired by the unreviewed repair note; all argument needed for this candidate is included here. This is local mathematics, not quoted source text, a new Source or a prior acceptance.",
+      "review_obligation": "A new independent Reviewer must read the registered originals and check this entire local argument, quantifiers, exact recurrence equivalence, query-state bound, initialization constants and resource counts; return complete_local_argument_checked if accepting it. No old decision covers this proof.",
+      "source_display_issue": "Supplement p.2 Eq.(12)'s intermediate comparison is not adopted. For W=[[5/12,-1/12,-1/3],[-1/12,5/12,-1/3],[-1/3,-1/3,2/3]], the orthogonal eigenvectors (1,1,1),(1,-1,0),(1,1,-2) have eigenvalues 0,1/2,1. This is valid complete-graph gossip, gamma=1/2, K=1, c1=3-2sqrt(2), and P=(4/3)W. Thus 1/sqrt(gamma(P))=sqrt(2). The displayed intermediate ratio uses c1^(sqrt(2)+1). Since sqrt(2)+1>2 and 0<c1<1, that ratio is less than (1+c1^2)/(1-c1^2)=3/(2sqrt(2))<sqrt(2), so the local bound uses the separate floor-K calculation. The separate floor-K argument above recovers the useful bound <2; neither the Source record nor its printed formula is changed.",
+      "statement": "Define fbar(theta)=(1/n)sum_i f_i(theta), and theta*=argmin fbar. For every finite n>=2, d>=1, every differentiable alpha-strongly convex beta-smooth f_i:R^d->R with 0<alpha<=beta, every fixed graph-supported symmetric PSD W with ker(W)=span(1) and 0<gamma<1, the selected recurrence from X_0=Y_0=0 with its printed tuning has the bounds below for every integer t>=0. With exact local conjugate Oracle and the extra terminal evaluation, every integer T>=1 returns theta_{i,T} satisfying max_i[fbar(theta_{i,T})-fbar(theta*)]<=C_exact rho^T and theta_{i,T}->theta*. There is no randomness, Hessian assumption, bound on translations of f_i or extra assumed convergence premise. tau>=0 is the communication-round charge. All matrix norms and inner products below are Frobenius unless specified."
+    },
+    "original_material": [
+      {
+        "artifact_ref": "urn:colombo:artifact:sha256:3624c8637b36b09fae6d9ee78545d5715d4340a901311f3c4262836d533cb9ad",
+        "content_hash": "3624c8637b36b09fae6d9ee78545d5715d4340a901311f3c4262836d533cb9ad",
+        "format": "PDF",
+        "role": "Original PDF bytes, distinct from derived text and JPEG hashes; matches published Source original_material."
+      },
+      {
+        "artifact_ref": "urn:colombo:artifact:sha256:39c9b1efb5c2e77b0982ae4cd87a6a454730ffa7b1d2e66ed1bf7768739be703",
+        "content_hash": "39c9b1efb5c2e77b0982ae4cd87a6a454730ffa7b1d2e66ed1bf7768739be703",
+        "format": "PDF",
+        "role": "Original PDF bytes, distinct from derived text and JPEG hashes; matches published Source original_material."
+      }
+    ],
+    "performance_links": [],
+    "source_version_check": "Viewed Main and Supplement p.1 identity/footer: matching title Optimal Algorithms for Smooth and Strongly Convex Distributed Optimization in Networks; Kevin Scaman, Francis Bach, Sebastien Bubeck, Yin Tat Lee, Laurent Massoulie; PMLR 70, ICML 2017. Supplement explicitly says SUPPLEMENTARY MATERIAL. Both actual PDF hashes match published src.P024 revision 1, content_hash e7cfb13a3987c0da2af543c6d244c54092b686b5ad0511b29db6305a670b0c5b. Acquisition notes identify publisher PDFs, not an arXiv version. No Source version, revision or scope replaced. Supplement p.2 refers to Alg.(3) while registered Main uses Algorithm 2; the local proof below checks the actual Main recurrence directly and does not silently transfer that numbering or its Eq.(12).",
+    "terminal_repair_proposal": {
+      "amendment": "After the unchanged T-iteration loop, evaluate theta_{i,T}=grad f_i*(x_{i,T}) once at each node and return these vectors. This preserves the declared terminal index and all original assumptions. It does not substitute theta_{i,T-1}.",
+      "full_local_argument": "For every x in R^d, h(theta)=f_i(theta)-<x,theta> is alpha-strongly convex. Its strong-convexity lower bound at 0 is a quadratic with positive leading coefficient, so h is coercive. Continuity yields a minimizer p, strong convexity makes it unique, and differentiability gives grad f_i(p)=x. Thus the selected exact conjugate Oracle returns a finite, unique p=grad f_i*(x); the proposed terminal call is well-defined. It does not alter any x_t or y_t. A run with budget T+1 has exactly the same states through x_T,y_T because budget T only controls loop termination and all tuning parameters are independent of T. Its first operation at t=T is precisely this terminal call. Hence the proposed returned vector equals the t=T primal-recovery vector of the unchanged infinite recurrence. For a quantitative transfer, let theta* minimize fbar and define x_i*=grad f_i(theta*); then sum_i x_i*=0 by first-order optimality. Strong convexity, applied in both directions and added, gives <grad f_i(p)-grad f_i(theta*),p-theta*> >= alpha||p-theta*||^2. Substituting grad f_i(p)=x_{i,T} and applying Cauchy-Schwarz gives ||theta_{i,T}-theta*|| <= ||x_{i,T}-x_i*||/alpha, including the zero-distance case. Since fbar is beta-smooth and grad fbar(theta*)=0, its smoothness upper bound gives 0<=fbar(theta_{i,T})-fbar(theta*) <= beta||x_{i,T}-x_i*||^2/(2 alpha^2). Therefore max_i primal objective error is at most beta||x_T-x*||_F^2/(2 alpha^2). This transfer inequality is completed by the unconditional bound for the actual MSDA query state in #/content/local_convergence_argument; no convergence premise is added to the assumptions.",
+      "separate_cost": "T+1 exact local conjugate-gradient calls per node, KT communication rounds, and parallel phase time T(1+K tau)+1. The final call requires no communication. This is proposed amended cost, not printed loop cost.",
+      "status": "Adopted in this reference candidate as an explicit local amendment, distinct from author text; pending new independent review.",
+      "support_refs": [
+        "#/source_refs/0"
+      ],
+      "unresolved_obligation": "The prior missing convergence premise is supplied by #/content/local_convergence_argument under the unchanged assumptions. A new independent Reviewer must check that full argument at the new prepared hash; the old review does not cover it."
+    },
+    "variants": [
+      {
+        "cost": "Printed loop: T exact local Fenchel-conjugate-gradient calls per node and KT neighbor communication rounds, parallel phase time T(1+K tau). Amended returned output: T+1 calls per node, KT rounds and T(1+K tau)+1 time. Each gossip uses exactly K W multiplications. No terminal communication. Exact conjugate computation is the selected unit-cost Oracle; a primal-gradient-only implementation is not priced. Spectral-parameter acquisition, optional common initialization-bound aggregation and scalar/vector arithmetic are outside this phase count; no claim they are free in an implementation.",
+        "implementation_details_ref": "Main p.6 Algorithm 2 input/output and lines 1–15; conjugate computation discussion; Main Section 2 and Sections 4.1–4.2.",
+        "name": "MSDA with exact local Fenchel-conjugate gradients and explicit local terminal-call amendment",
+        "output": "After the unchanged loop, evaluate theta_{i,T}=grad f_i*(x_{i,T}) once at every node and return it. This is an explicit local amendment: printed Algorithm 2 declares theta_{i,T} but only evaluates t=0,...,T-1. The returned vectors converge at every node to theta*, with bounds in #/content/local_convergence_argument. Finite-time outputs need not agree.",
+        "public_inputs": [
+          "Integer iteration budget T>=1; graph-supported gossip W; known alpha,beta with 0<alpha<=beta; lambda_1(W) and gamma=lambda_{n-1}(W)/lambda_1(W)."
+        ],
+        "query_and_update": "For t=0,...,T-1, compute theta_{i,t}=grad f_i*(x_{i,t}) at every node and assemble Theta_t. Set y_{t+1}=x_t-eta AcceleratedGossip(Theta_t,W,K), then x_{t+1}=(1+mu)y_{t+1}-mu y_t. For input U, AcceleratedGossip initializes a_0=1,a_1=c2,Z_0=U,Z_1=c2 U(I-c3 W). For k=1,...,K-1 set a_{k+1}=2 c2 a_k-a_{k-1}, Z_{k+1}=2 c2 Z_k(I-c3 W)-Z_{k-1}; return Z_0-Z_K/a_K. Z disambiguates the subroutine state from outer x_t. After the loop make the separately charged terminal conjugate-gradient call specified in output.",
+        "requirements": "Connected undirected graph with n>=2. Each f_i:R^d→R is alpha-strongly convex and beta-smooth in the Euclidean norm. W is symmetric PSD, ker(W)=span(1), and off-diagonal nonzero entries require graph edges. Each node has exact grad f_i*; multiplication of a distributed d×n matrix by W uses one neighbor communication round. Graph and parameters are fixed.",
+        "state_and_initialization": "Matrices x_0=y_0=0 in R^{d×n}; local columns x_{i,t},y_{i,t}. Theta_t collects local primal columns. Restricted to 0<gamma<1; kappa_l=beta/alpha>=1.",
+        "tuning_and_stopping": "Let u=sqrt(gamma), c1=(1-u)/(1+u), c2=(1+gamma)/(1-gamma), c3=2/((1+gamma)lambda_1(W)), K=floor(1/u), q=c1^K, kappa_l=beta/alpha. Use eta=alpha(1+q^2)/(1+q)^2 and mu=((1+q)sqrt(kappa_l)-1+q)/((1+q)sqrt(kappa_l)+1-q). Stop after supplied integer T>=1, then make the terminal call. For epsilon>0 and supplied C>=C_exact defined in the local argument, choose T=max(1,ceil(s^(-1) max(0,log(C/epsilon)))) with s=(1-q)/((1+q)sqrt(kappa_l)); C=0 permits any T>=1. This is a supplied-budget rule, not a distributed adaptive stopping protocol. Acquiring a common valid C can require separately charged aggregation/preprocessing.",
+        "variant_id": "selected"
+      }
+    ],
+    "whole_paper_extracted": false
+  },
+  "evidence": {
+    "basis": "local_argument",
+    "checked_locators": [
+      "Actually viewed Main registered JPEG p.1 identity/footer; p.2 Section 2; p.5 dual formulation, Section 4.2 and Theorem 4; p.6 Algorithm 2, conjugate computation discussion and Eq.(20).",
+      "Actually viewed Supplement registered JPEG p.1 identity/footer only; p.2 Sections 2.1-2.2 Eqs.(9)-(12). Viewed JPEG hashes checked against both registered manifests; original PDF hashes separately verified.",
+      "Curator checked all sections of #/content/local_convergence_argument against the unchanged assigned assumptions and actual Main recurrence. This is not an independent Reviewer decision."
+    ],
+    "readiness": "reference",
+    "statement_complete": true,
+    "unresolved": [],
+    "use_restrictions": [
+      "Reference candidate pending NEW independent review of its new hash; acceptance and publication are not claimed. Full local argument requires complete_local_argument_checked.",
+      "Apply only the selected exact-conjugate algorithm, the explicit terminal-call amendment, 0<gamma<1, and the initialization-dependent bound as written.",
+      "Do not turn the Source's undefined precision normalization into a uniform initialization-free log(1/epsilon) guarantee; retain log(C/epsilon), parameter dependence and separately charged preprocessing.",
+      "No unrestricted Oracle Complexity or lower-bound coverage, external Chebyshev optimality claim, primal-gradient-only implementation cost, gamma=1 branch, inexact-solve or asynchronous/time-varying extension.",
+      "Coverage is limited to the stated anchors; published src.P024 revision 1 is retained unchanged."
+    ]
+  },
+  "id": "alg.P024.msda",
+  "kind": "algorithm",
+  "links": [],
+  "navigation": {
+    "facets": [],
+    "query_aliases": [
+      "multi-step dual accelerated method",
+      "exact Fenchel-conjugate gradient",
+      "Chebyshev gossip"
+    ],
+    "research_use": []
+  },
+  "revision": 1,
+  "schema": "colombo-scientific-memory/2",
+  "source_refs": [
+    {
+      "locator": "Main PDF p.1 identity/footer; p.2 Section 2; p.5 dual formulation and Section 4.2 Eqs.(16)-(18), Theorem 4; p.6 Algorithm 2, conjugate computation discussion and Eq.(20)",
+      "ref_id": "s1",
+      "source_id": "src.P024",
+      "source_revision": 1,
+      "source_version": "ICML 2017 main proceedings"
+    },
+    {
+      "locator": "Accompanying registered Supplement PDF SHA256 39c9b1efb5c2e77b0982ae4cd87a6a454730ffa7b1d2e66ed1bf7768739be703, p.2 Sections 2.1–2.2, Eqs. (9)–(12); separate artifact within Source record",
+      "ref_id": "s2",
+      "source_id": "src.P024",
+      "source_revision": 1,
+      "source_version": "ICML 2017 main proceedings"
+    }
+  ],
+  "summary": "MSDA with unchanged printed recurrence and tuning; explicit terminal-call amendment and complete local convergence argument, with initialization-dependent accuracy and separately charged resources. Reference candidate pending new independent review.",
+  "title": "Multi-step dual acceleration with exact local conjugate gradients",
+  "use_when": [
+    "Study the selected exact-conjugate MSDA communication/computation tradeoff under the stated fixed-graph assumptions; apply only the explicit initialization-dependent bound and amended output."
+  ]
+}

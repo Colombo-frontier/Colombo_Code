@@ -69,6 +69,7 @@ Cell's former runner and prover/mcp business modules have been moved to the file
 | downstream/model.py | Independent native model processes and replay records shared by the two Agents |
 | lean_agent/agent.py | Formalization, repair from compiler feedback, and independent statement correspondence review |
 | lean_agent/compiler.py | Run the actual Lean compiler and check declarations and axioms |
+| lean_agent/evidence.py | Validate complete embedded compiler and correspondence evidence across fresh results, cache replay, and Writing imports |
 | writing_agent/agent.py | Validate the Lean result and generate manuscript sources, a Claim map, and editorial gaps |
 
 Lean/Writing each have their own instruction pack, working directory, and run records; they do not import Brain/Cell modules or call their MCP or Store. The former Brain postprocess hooks, phases, configuration, and Skills have been withdrawn; the reused compiler was moved to `lean_agent/`.

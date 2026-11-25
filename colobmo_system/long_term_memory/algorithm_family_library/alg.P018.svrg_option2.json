@@ -1,1 +1,120 @@
-{"aliases":["P018","svrg_option2"],"content":{"components":[{"component_id":"c1","cost_effect":"Two component evaluations per inner step, or one plus a cached snapshot gradient.","goal":"Control stochastic update noise near a minimizer.","key_estimate":"The p.4 proof gives E[||v_t||^2 | current point, snapshot] <= 4L(P(w_{t-1})-P*+P(wtilde)-P*) under its smooth convex regime.","name":"Paired snapshot control variate","operation":"Subtract the same indexed component gradient at the snapshot and add the exact snapshot full gradient.","requires":"Paired-index access; exact full gradient. The source second-moment proof additionally uses convexity and quadratic smoothness.","support_refs":["#/source_refs/0"],"transfer_checks":["Re-establish unbiasedness and second-moment control when changing sampling, oracle accuracy or component convexity.","Do not replace Option II with Option I using this proof."]}],"family":"snapshot_control_variate","limitations":[{"kind":"analysis_gap","scope":"selected","statement":"The source proof uses Option II averaging and does not establish the same claim for final-iterate Option I.","support_refs":["#/source_refs/0"]},{"kind":"analysis_gap","scope":"performance","statement":"The source Eq. (5) lacks a visible square on the norm. The linked performance assessment explicitly assumes quadratic smoothness as used in the proof; it does not assert equivalence with literal Eq. (5) or an author correction.","support_refs":["#/source_refs/0"]}],"performance_links":[{"scope_note":"Source-linked Option II epoch contraction under convex components satisfying the explicitly stated quadratic L-smoothness inequality, gamma-strong convexity of the average, exact gradients, uniform sampling/output, positive denominator and alpha<1. This is the proof-supported quadratic smoothness interpretation of Theorem 1, with the Eq. (5) discrepancy retained; read the full linked statement and restrictions.","theorem_ref":"#/links/0","variant_id":"selected"}],"variants":[{"cost":"Source charges n+2m component-gradient evaluations per epoch without caching; n+m when all n snapshot component gradients are cached. The full gradient costs n component evaluations. Each inner step also uses O(d) vector arithmetic; this is separate from gradient evaluation cost. Caching n arbitrary d-dimensional gradients costs O(nd) storage. A direct implementation may retain the inner iterates for output selection; the source gives no mandatory output-selection storage implementation or computational lower bound.","implementation_details_ref":"PDF p.4 Figure 1; p.3 Section 2 resource paragraph","name":"SVRG Option II","output":"Random snapshot wtilde_S; each epoch chooses among w_0,...,w_{m-1}, excluding w_m.","public_inputs":["n component gradient functions, initial snapshot wtilde_0, positive learning rate eta, positive integer epoch length m, chosen number of epochs S","For the stated convergence regime: L and gamma with 0 < gamma <= L"],"query_and_update":"For t=1,...,m draw i_t uniformly from {1,...,n}, independently of preceding draws conditional on the current epoch history. Query grad psi_{i_t}(w_{t-1}) and grad psi_{i_t}(wtilde), then set v_t=grad psi_{i_t}(w_{t-1})-grad psi_{i_t}(wtilde)+mu and w_t=w_{t-1}-eta*v_t. After the epoch choose J uniformly from {0,...,m-1}, independently of its trajectory, and set wtilde_s=w_J. Uniform sampling makes explicit the averaging used by the source proof.","requirements":"Exact indexed component gradients and permission to evaluate the same component at current and snapshot points. Linked convergence requires every component to be convex and satisfy psi_i(x)<=psi_i(y)+<grad psi_i(y),x-y>+(L/2)||x-y||_2^2 for all x,y, and the average to be gamma-strongly convex. The quadratic smoothness condition is the explicit interpretation used by the source proof; literal Eq. (5) lacks the square. Additional tuning and randomness conditions are in the linked theorem.","state_and_initialization":"Start from any fixed wtilde_0 in R^d. At epoch s set wtilde=wtilde_{s-1}, compute mu=n^{-1} sum_i grad psi_i(wtilde), and set w_0=wtilde.","tuning_and_stopping":"Run a prescribed finite number S of epochs and return wtilde_S. Figure 1 itself specifies an indefinite outer loop, not a data-dependent stopping certificate. Theorem 1 uses alpha=1/[gamma*eta*(1-2L*eta)*m]+2L*eta/(1-2L*eta)<1 with eta>0 and 1-2L*eta>0. No new accuracy-based stopping theorem is asserted here.","variant_id":"selected"}]},"evidence":{"basis":"source_statement","checked_locators":["PDF p.2 Eqs. (5)-(6)","PDF p.3 Section 2 and Theorem 1","PDF p.4 Figure 1 and proof","PDF p.5 proof completion"],"readiness":"reference","statement_complete":true,"unresolved":[],"use_restrictions":["Linked performance is restricted to the explicit quadratic smoothness interpretation of the source proof. Preserve the Eq. (5) discrepancy; no author correction or equivalence with its literal unsquared display is established.","Selected Algorithm performance is not unrestricted Oracle Complexity.","Reference is a staging assessment. Acceptance of this revised candidate and publication are not claimed."]},"id":"alg.P018.svrg_option2","kind":"algorithm","links":[{"note":"In-batch source-linked performance under explicit quadratic smoothness interpretation; requires independent review and publisher binding before use as published evidence.","relation":"performance","scope_ref":"#/content/variants/0","target_id":"thm.P018.svrg_option2_rate","target_revision":1}],"navigation":{"facets":[],"query_aliases":["SVRG Option II"],"research_use":[]},"revision":1,"schema":"colombo-scientific-memory/2","source_refs":[{"locator":"PDF p.2 Eqs. (5)-(6); p.3 Section 2 and Theorem 1; p.4 Figure 1 and proof; p.5 proof completion","ref_id":"s1","source_id":"src.P018","source_revision":1,"source_version":"NeurIPS 2013 proceedings"}],"summary":"Reproducible snapshot control-variate algorithm with random epoch output; linked contraction is scoped to explicit quadratic smoothness, retaining the source Eq. (5) discrepancy.","title":"SVRG with random inner snapshot (Option II)","use_when":["Implement paired-index variance reduction for an unconstrained finite sum."]}
+{
+  "aliases": [
+    "P018",
+    "svrg_option2"
+  ],
+  "content": {
+    "components": [
+      {
+        "component_id": "c1",
+        "cost_effect": "Two component evaluations per inner step, or one plus a cached snapshot gradient.",
+        "goal": "Control stochastic update noise near a minimizer.",
+        "key_estimate": "The p.4 proof gives E[||v_t||^2 | current point, snapshot] <= 4L(P(w_{t-1})-P*+P(wtilde)-P*) under its smooth convex regime.",
+        "name": "Paired snapshot control variate",
+        "operation": "Subtract the same indexed component gradient at the snapshot and add the exact snapshot full gradient.",
+        "requires": "Paired-index access; exact full gradient. The source second-moment proof additionally uses convexity and quadratic smoothness.",
+        "support_refs": [
+          "#/source_refs/0"
+        ],
+        "transfer_checks": [
+          "Re-establish unbiasedness and second-moment control when changing sampling, oracle accuracy or component convexity.",
+          "Do not replace Option II with Option I using this proof."
+        ]
+      }
+    ],
+    "family": "snapshot_control_variate",
+    "limitations": [
+      {
+        "kind": "analysis_gap",
+        "scope": "selected",
+        "statement": "The source proof uses Option II averaging and does not establish the same claim for final-iterate Option I.",
+        "support_refs": [
+          "#/source_refs/0"
+        ]
+      },
+      {
+        "kind": "analysis_gap",
+        "scope": "performance",
+        "statement": "The source Eq. (5) lacks a visible square on the norm. The linked performance assessment explicitly assumes quadratic smoothness as used in the proof; it does not assert equivalence with literal Eq. (5) or an author correction.",
+        "support_refs": [
+          "#/source_refs/0"
+        ]
+      }
+    ],
+    "performance_links": [
+      {
+        "scope_note": "Source-linked Option II epoch contraction under convex components satisfying the explicitly stated quadratic L-smoothness inequality, gamma-strong convexity of the average, exact gradients, uniform sampling/output, positive denominator and alpha<1. This is the proof-supported quadratic smoothness interpretation of Theorem 1, with the Eq. (5) interpretation stated explicitly; read the full linked statement and restrictions.",
+        "theorem_ref": "#/links/0",
+        "variant_id": "selected"
+      }
+    ],
+    "variants": [
+      {
+        "cost": "Source charges n+2m component-gradient evaluations per epoch without caching; n+m when all n snapshot component gradients are cached. The full gradient costs n component evaluations. Each inner step also uses O(d) vector arithmetic; this is separate from gradient evaluation cost. Caching n arbitrary d-dimensional gradients costs O(nd) storage. A direct implementation may retain the inner iterates for output selection; the source gives no mandatory output-selection storage implementation or computational lower bound.",
+        "implementation_details_ref": "PDF p.4 Figure 1; p.3 Section 2 resource paragraph",
+        "name": "SVRG Option II",
+        "output": "Random snapshot wtilde_S; each epoch chooses among w_0,...,w_{m-1}, excluding w_m.",
+        "public_inputs": [
+          "n component gradient functions, initial snapshot wtilde_0, positive learning rate eta, positive integer epoch length m, chosen number of epochs S",
+          "For the stated convergence regime: L and gamma with 0 < gamma <= L"
+        ],
+        "query_and_update": "For t=1,...,m draw i_t uniformly from {1,...,n}, independently of preceding draws conditional on the current epoch history. Query grad psi_{i_t}(w_{t-1}) and grad psi_{i_t}(wtilde), then set v_t=grad psi_{i_t}(w_{t-1})-grad psi_{i_t}(wtilde)+mu and w_t=w_{t-1}-eta*v_t. After the epoch choose J uniformly from {0,...,m-1}, independently of its trajectory, and set wtilde_s=w_J. Uniform sampling makes explicit the averaging used by the source proof.",
+        "requirements": "Exact indexed component gradients and permission to evaluate the same component at current and snapshot points. Linked convergence requires every component to be convex and satisfy psi_i(x)<=psi_i(y)+<grad psi_i(y),x-y>+(L/2)||x-y||_2^2 for all x,y, and the average to be gamma-strongly convex. The quadratic smoothness condition is the explicit interpretation used by the source proof; literal Eq. (5) lacks the square. Additional tuning and randomness conditions are in the linked theorem.",
+        "state_and_initialization": "Start from any fixed wtilde_0 in R^d. At epoch s set wtilde=wtilde_{s-1}, compute mu=n^{-1} sum_i grad psi_i(wtilde), and set w_0=wtilde.",
+        "tuning_and_stopping": "Run a prescribed finite number S of epochs and return wtilde_S. Figure 1 itself specifies an indefinite outer loop, not a data-dependent stopping certificate. Theorem 1 uses alpha=1/[gamma*eta*(1-2L*eta)*m]+2L*eta/(1-2L*eta)<1 with eta>0 and 1-2L*eta>0. No new accuracy-based stopping theorem is asserted here.",
+        "variant_id": "selected"
+      }
+    ]
+  },
+  "evidence": {
+    "basis": "source_statement",
+    "checked_locators": [
+      "PDF p.2 Eqs. (5)-(6)",
+      "PDF p.3 Section 2 and Theorem 1",
+      "PDF p.4 Figure 1 and proof",
+      "PDF p.5 proof completion"
+    ],
+    "readiness": "reference",
+    "statement_complete": true,
+    "unresolved": [],
+    "use_restrictions": [
+      "Linked performance is restricted to the explicit quadratic smoothness interpretation of the source proof. Preserve the stated interpretation of Eq. (5); no author correction or equivalence with its literal unsquared display is established.",
+      "Selected Algorithm performance is not unrestricted Oracle Complexity.",
+      "Reference is a staging assessment. Acceptance of this revised candidate and publication are not claimed."
+    ]
+  },
+  "id": "alg.P018.svrg_option2",
+  "kind": "algorithm",
+  "links": [
+    {
+      "note": "In-batch source-linked performance under explicit quadratic smoothness interpretation; requires independent review and publisher binding before use as published evidence.",
+      "relation": "performance",
+      "scope_ref": "#/content/variants/0",
+      "target_id": "thm.P018.svrg_option2_rate",
+      "target_revision": 1
+    }
+  ],
+  "navigation": {
+    "facets": [],
+    "query_aliases": [
+      "SVRG Option II"
+    ],
+    "research_use": []
+  },
+  "revision": 1,
+  "schema": "colombo-scientific-memory/2",
+  "source_refs": [
+    {
+      "locator": "PDF p.2 Eqs. (5)-(6); p.3 Section 2 and Theorem 1; p.4 Figure 1 and proof; p.5 proof completion",
+      "ref_id": "s1",
+      "source_id": "src.P018",
+      "source_revision": 1,
+      "source_version": "NeurIPS 2013 proceedings"
+    }
+  ],
+  "summary": "Reproducible snapshot control-variate algorithm with random epoch output; linked contraction is scoped to explicit quadratic smoothness, retaining the explicit interpretation of source Eq. (5).",
+  "title": "SVRG with random inner snapshot (Option II)",
+  "use_when": [
+    "Implement paired-index variance reduction for an unconstrained finite sum."
+  ]
+}

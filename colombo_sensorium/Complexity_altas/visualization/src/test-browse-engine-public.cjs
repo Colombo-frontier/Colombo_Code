@@ -55,10 +55,9 @@ const strong = commonId('MODEL', 'objective_convexity', 'strongly_convex');
 const notAssumed = commonId('MODEL', 'objective_convexity', 'not_assumed');
 const exact = commonId('ORACLE', 'quality', 'exact');
 
-run('colombo_search_covers_highlights_and_attributed_manuscripts_without_expanding_badges', () => {
-  const registry = JSON.parse(read('data/editorial/colombo_results.json')).settings;
-  const highlighted = Object.keys(registry).filter(id => registry[id].highlight).sort();
-  assert.equal(highlighted.length, 39);
+run('colombo_search_and_badges_cover_all_adopted_contributions', () => {
+  const registry = JSON.parse(read('data/derived/colombo_contributions.json')).settings;
+  const highlighted = Object.keys(registry).filter(id => registry[id].state === 'adopted').sort();
   assert.deepEqual(embedded('atlas-overview-data').points.filter(point => point.colombo).map(point => point.id).sort(), highlighted);
   const manuscriptIds = new Set(JSON.parse(read('data/sources/colombo/catalog.json')).map(source => source.id));
   assert.equal(manuscriptIds.size, 30);
@@ -71,13 +70,12 @@ run('colombo_search_covers_highlights_and_attributed_manuscripts_without_expandi
   }).map(record => record.id).sort();
   assert.equal(attributed.length, 36);
   assert.deepEqual([...coveredManuscripts].sort(), [...manuscriptIds].sort());
-  // Free-text source attribution also covers non-closed results. A standalone
-  // star is punctuation, not a near-optimal-status or contribution-badge filter.
+  // Attribution includes non-closed results; rate status is a separate filter.
   const expected = [...new Set([...highlighted, ...attributed])].sort();
-  assert.equal(expected.length, 75);
+  assert.equal(expected.length, 84);
   assert.deepEqual(ids(state([], '★ Colombo')), expected);
   assert.deepEqual(ids(state([], 'Colombo')), expected);
-  return {reviewed_highlights: highlighted.length, attributed_profiles: attributed.length,
+  return {adopted_contributions: highlighted.length, attributed_profiles: attributed.length,
     manuscript_sources: coveredManuscripts.size, matching_settings: expected.length};
 });
 

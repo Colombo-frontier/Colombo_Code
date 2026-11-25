@@ -15,6 +15,8 @@ sys.path.insert(0, str(PROJECT / "src"))
 
 from colombo.downstream.handoff import digest
 from colombo.writing_agent.agent import run
+from colombo.lean_agent.evidence import EVIDENCE_VERSION, review_binding
+from evidence_fixtures import compiler_fixture
 
 
 def material(text):
@@ -39,15 +41,20 @@ def package_fixture():
 
 
 def lean_fixture(package):
-    return {"status": "passed", "proof_sha256": package["proof_sha256"],
+    source = "theorem main_sum : True := True.intro\ntheorem sum_step : True := True.intro\n"
+    result = {"evidence_version": EVIDENCE_VERSION, "package_sha256": digest(package),
+            "status": "passed", "proof_sha256": package["proof_sha256"], "source": source,
+            "diagnostics": [],
             "required_claim_ids": list(package["required_claim_ids"]),
-            "compiler": {"status": "passed", "source_sha256": "a" * 64,
-                         "declarations": ["main_sum", "sum_step"]},
+            "compiler": compiler_fixture(source, ["main_sum", "sum_step"]),
             "mapping": [{"claim_id": claim, "declaration": declaration,
                          "correspondence": "Same real domain, assumptions, and sum inequality."}
                         for claim, declaration in zip(package["required_claim_ids"], ["main_sum", "sum_step"])],
             "semantic_review": {"proof_sha256": package["proof_sha256"], "verdict": "pass",
                                 "checked_claim_ids": list(package["required_claim_ids"]), "findings": []}}
+    result["semantic_review_binding"] = review_binding(package, source, result["mapping"],
+                                                       result["compiler"], result["semantic_review"])
+    return result
 
 
 def manuscript_fixture(package):
@@ -158,6 +165,53 @@ class WritingAgentTests(unittest.TestCase):
                 lean.pop(field)
                 with self.assertRaises(ValueError):
                     self.execute(NoModelCalls(), lean=lean, work=self.root / ("missing-" + field))
+
+    def test_tag_only_import_is_rejected_before_model_or_output_creation(self):
+        # The audited writing-only probe: nested 'passed' labels are not evidence.
+        lean = {"status": "passed", "proof_sha256": self.package["proof_sha256"],
+                "compiler": {"status": "passed"},
+                "semantic_review": copy.deepcopy(self.lean["semantic_review"])}
+        with self.assertRaisesRegex(ValueError, "evidence version"):
+            self.execute(NoModelCalls(), lean=lean)
+        self.assertFalse(self.work.exists())
+        # Adding the new envelope alone still does not supply compiler evidence.
+        lean = {**self.lean, "compiler": {"status": "passed"}}
+        with self.assertRaisesRegex(ValueError, "compiler"):
+            self.execute(NoModelCalls(), lean=lean)
+        self.assertFalse(self.work.exists())
+
+    def test_incomplete_or_mismatched_embedded_evidence_is_rejected(self):
+        variants = []
+        for field in ("source", "mapping", "semantic_review_binding"):
+            lean = copy.deepcopy(self.lean)
+            lean.pop(field)
+            variants.append(lean)
+        for field in ("source_files", "project_sha256", "commands", "axioms", "compiled_sha256"):
+            lean = copy.deepcopy(self.lean)
+            lean["compiler"].pop(field)
+            variants.append(lean)
+        lean = copy.deepcopy(self.lean)
+        lean["compiler"]["commands"][-1]["stdout"] += "changed output"
+        variants.append(lean)
+        lean = copy.deepcopy(self.lean)
+        lean["semantic_review_binding"]["source_sha256"] = "0" * 64
+        variants.append(lean)
+        for index, lean in enumerate(variants):
+            with self.subTest(case=index), self.assertRaises(ValueError):
+                self.execute(NoModelCalls(), lean=lean, work=self.root / f"invalid-evidence-{index}")
+
+    def test_same_proof_in_a_changed_setting_cannot_reuse_evidence(self):
+        package = copy.deepcopy(self.package)
+        package["setting"] = {"domain": "a different domain"}
+        with self.assertRaisesRegex(ValueError, "handoff package"):
+            self.execute(NoModelCalls(), package=package)
+
+    def test_complete_import_is_marked_as_checked_without_recompilation(self):
+        with patch("colombo.lean_agent.compiler.verify_lean", side_effect=AssertionError("no recompile")):
+            result = self.execute()
+        self.assertEqual(result["lean_evidence_origin"], "imported")
+        self.assertEqual(result["lean_evidence_validation"], "embedded_structure_and_bindings")
+        self.assertIs(result["lean_recompiled_for_writing"], False)
 
     def test_failed_or_incomplete_semantic_evidence_is_rejected(self):
         variants = []

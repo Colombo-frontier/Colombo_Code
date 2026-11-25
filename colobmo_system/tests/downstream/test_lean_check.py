@@ -1,4 +1,5 @@
 """Compiler evidence is mandatory, axiom honest, and tied to unchanged source."""
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -13,6 +14,7 @@ PROJECT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT / "src"))
 
 from colombo.lean_agent.compiler import _run, verify_lean
+from colombo.lean_agent.evidence import validate_compiler_evidence
 
 
 class LeanCheckTests(unittest.TestCase):
@@ -37,8 +39,10 @@ class LeanCheckTests(unittest.TestCase):
             (root / ".lake/build/lib/lean/Main.olean").write_bytes(b"compiled")
         if label == "audit" and self.mutate:
             (root / "Main.lean").write_text("theorem changed : True := True.intro", encoding="utf-8")
+        stdout = "Lean (version 4.19.0, release)" if label == "version" else self.audit if label == "audit" else ""
         return {"argv": arguments, "returncode": 1 if label == self.failure else 0,
-                "stdout": "Lean (version 4.19.0, release)" if label == "version" else self.audit if label == "audit" else "",
+                "stdout": stdout, "stdout_sha256": hashlib.sha256(stdout.encode()).hexdigest(),
+                "stderr_sha256": hashlib.sha256(b"").hexdigest(),
                 "stderr": "", "timed_out": label == self.timeout,
                 "process_tree_terminated": label != self.exit_unconfirmed}
 
@@ -55,6 +59,7 @@ class LeanCheckTests(unittest.TestCase):
         self.assertEqual([c[0] for c in self.calls], ["version", "compile", "audit"])
         self.assertIn("#print result", (Path(report["evidence_dir"]) / "Audit.lean").read_text())
         self.assertEqual(json.loads((Path(report["evidence_dir"]) / "report.json").read_text())["status"], "passed")
+        validate_compiler_evidence((self.root / "Main.lean").read_text(), ["result"], report)
 
     def test_standard_axioms_accepted_for_every_declaration(self):
         self.audit += "theorem Other.second : True := True.intro\n'Other.second' depends on axioms: [propext,\n Classical.choice, Quot.sound]\n"
@@ -189,7 +194,7 @@ class LeanCheckTests(unittest.TestCase):
                 raise subprocess.TimeoutExpired("lake", timeout)
 
         def launch(arguments, **kwargs):
-            kwargs["stdout"].write(b"compiler output")
+            kwargs["stdout"].write(b"compiler output\r\n")
             kwargs["stderr"].write(b"compiler diagnostics")
             self.assertIs(kwargs["stdin"], subprocess.DEVNULL)
             self.assertNotIn("shell", kwargs)
@@ -199,7 +204,8 @@ class LeanCheckTests(unittest.TestCase):
                 patch("colombo.lean_agent.compiler.terminate_tree", return_value=True) as terminate:
             report = _run(self.root, self.root, "compile", ["lake", "env", "lean", "Main.lean"], 1)
         self.assertTrue(report["timed_out"])
-        self.assertEqual(report["stdout"], "compiler output")
+        self.assertEqual(report["stdout"], "compiler output\r\n")
+        self.assertEqual(report["stdout_sha256"], hashlib.sha256(report["stdout"].encode()).hexdigest())
         self.assertEqual(report["stderr"], "compiler diagnostics")
         terminate.assert_called_once()
 
@@ -212,6 +218,7 @@ class LeanCheckTests(unittest.TestCase):
         (self.root / "lean-toolchain").write_text("leanprover/lean4:v" + match[1], encoding="utf-8")
         report = verify_lean(self.root, ["result"])
         self.assertEqual(report["status"], "passed", report)
+        validate_compiler_evidence((self.root / "Main.lean").read_text(), ["result"], report)
         (self.root / "Main.lean").write_text("theorem result : False := by trivial", encoding="utf-8")
         self.assertEqual(verify_lean(self.root, ["result"])["status"], "failed")
 

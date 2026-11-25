@@ -218,7 +218,7 @@ $$
 
 The following conditions apply to every bound in this profile, in addition to each bound's stated region and algorithm scope.
 
-**Conditions.** Require $0\le\rho<\eta<1/\beta$. Exact $\operatorname{prox}_r$ is available, but the full resolvent appearing in the performance measure is not an additional oracle.; The source endpoint $\eta\le1/\beta$ is not certified: the inner strong-monotonicity modulus $1-\eta\beta$ must be strictly positive.; Without an explicit conversion, resolvent displacement at an output point cannot be interpreted as its tangent residual.
+**Conditions.** Require $0\le\rho<\eta<1/\beta$. Exact $\operatorname{prox}_r$ is available, but the full resolvent appearing in the performance measure is not an additional oracle.; The adopted range requires the inner strong-monotonicity modulus $1-\eta\beta>0$; the endpoint $\eta=1/\beta$ is excluded.; Without an explicit conversion, resolvent displacement at an output point cannot be interpreted as its tangent residual.
 
 **Dimension conditions.** The upper bound holds in every admissible finite dimension. The lower bound applies only in its separately stated dimension window.
 
@@ -269,6 +269,14 @@ Use the parameters $\alpha=1-\rho/\eta$ from the detailed theorem. The target is
 Theorems 3.1 and C.5 state $\eta\le1/L$, but the estimates in Lemma C.1, Remark C.2, and (C.5) require a positive strong-monotonicity modulus. The admitted range is therefore the strict interior $\rho<\eta<1/\beta$.
 
 For the endpoint counterexample take $d=1$, $r=0$, and $F(x)=\beta\max\{0,\min\{x,2-x\}\}$. It is $\beta$-Lipschitz and satisfies the weak Minty condition with $\rho=0$ relative to $z^\star=0$. At $\eta=1/\beta$, every $x\in[1,2]$ satisfies $(\operatorname{Id}+\eta F)(x)=2$, so $J_{\eta F}(2)=[1,2]$. The endpoint resolvent is not single-valued.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 

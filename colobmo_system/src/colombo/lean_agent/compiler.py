@@ -178,11 +178,33 @@ def _run(root, logs, label, arguments, deadline):
             result["timed_out"] = True
         finally:
             result["process_tree_terminated"] = terminate_tree(process, timeout=5)
-    result["stdout"] = stdout.read_text(encoding="utf-8", errors="replace")
-    result["stderr"] = stderr.read_text(encoding="utf-8", errors="replace")
-    result["stdout_sha256"] = hashlib.sha256(stdout.read_bytes()).hexdigest()
-    result["stderr_sha256"] = hashlib.sha256(stderr.read_bytes()).hexdigest()
+    # Preserve CRLF exactly: the embedded text and the log-file hashes must bind
+    # the same bytes on Windows and Unix. Invalid UTF-8 cannot be reused as a
+    # complete textual compiler receipt and causes the enclosing check to fail.
+    for name, path in (("stdout", stdout), ("stderr", stderr)):
+        raw = path.read_bytes()
+        result[name] = raw.decode("utf-8")
+        result[name + "_sha256"] = hashlib.sha256(raw).hexdigest()
     return result
+
+
+def audit_declarations(printout, declarations):
+    """Parse actual Lean theorem/axiom output; reused when checking saved evidence."""
+    axioms_by_name = {}
+    for name in declarations:
+        if not re.search(r"(?m)^theorem " + re.escape(name) + r"(?:\.\{[^}\n]*\})?(?=[\s:])", printout):
+            raise ValueError("Requested declaration is not a proved theorem: " + name)
+        pattern = (r"'" + re.escape(name) + r"' (?:does not depend on any axioms|"
+                   r"depends on axioms:\s*\[([^\]]*)\])")
+        matches = list(re.finditer(pattern, printout))
+        if len(matches) != 1:
+            raise ValueError("Missing or ambiguous axiom audit for " + name)
+        axioms = [s.strip() for s in (matches[0][1] or "").split(",") if s.strip()]
+        unexpected = set(axioms) - ALLOWED_AXIOMS
+        if unexpected:
+            raise ValueError("Unapproved axioms for " + name + ": " + ", ".join(sorted(unexpected)))
+        axioms_by_name[name] = axioms
+    return axioms_by_name
 
 
 def verify_lean(project_dir, declarations: list[str], *, timeout_seconds=120, lake_bin="lake") -> dict:
@@ -241,6 +263,7 @@ def verify_lean(project_dir, declarations: list[str], *, timeout_seconds=120, la
                     ("audit", [*prefix, "env", "lean", str(audit_path)])]
         for label, arguments in commands:
             result = _run(root, logs, label, arguments, deadline)
+            result["phase"] = label
             report["commands"].append(result)
             if result["timed_out"]:
                 raise ValueError("Lean Check timed out during " + label)
@@ -254,20 +277,7 @@ def verify_lean(project_dir, declarations: list[str], *, timeout_seconds=120, la
                 raise ValueError("Compiler did not produce Main.olean")
         report["compiled_sha256"] = hashlib.sha256(output.read_bytes()).hexdigest()
         report["declaration_printout"] = report["commands"][-1]["stdout"]
-        for name in declarations:
-            if not re.search(r"(?m)^theorem " + re.escape(name) + r"(?:\.\{[^}\n]*\})?(?=[\s:])",
-                             report["declaration_printout"]):
-                raise ValueError("Requested declaration is not a proved theorem: " + name)
-            pattern = (r"'" + re.escape(name) + r"' (?:does not depend on any axioms|"
-                       r"depends on axioms:\s*\[([^\]]*)\])")
-            matches = list(re.finditer(pattern, report["declaration_printout"]))
-            if len(matches) != 1:
-                raise ValueError("Missing or ambiguous axiom audit for " + name)
-            axioms = [s.strip() for s in (matches[0][1] or "").split(",") if s.strip()]
-            report["axioms"][name] = axioms
-            unexpected = set(axioms) - ALLOWED_AXIOMS
-            if unexpected:
-                raise ValueError("Unapproved axioms for " + name + ": " + ", ".join(sorted(unexpected)))
+        report["axioms"] = audit_declarations(report["declaration_printout"], declarations)
         if any((root / name).read_bytes() != data for name, data in contents.items()):
             raise ValueError("Project inputs changed during Lean Check")
         report["status"] = "passed"

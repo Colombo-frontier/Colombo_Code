@@ -1,7 +1,6 @@
 """One-way launcher boundaries using fake models and real Agent orchestration."""
 import contextlib
 import copy
-import hashlib
 import io
 import json
 from pathlib import Path
@@ -16,6 +15,7 @@ sys.path.insert(0, str(PROJECT / "src"))
 from colombo.downstream import launcher
 from colombo.downstream.handoff import digest
 from test_writing_agent import package_fixture, lean_fixture, manuscript_fixture, FakeModel as WritingModel
+from evidence_fixtures import compiler_fixture
 
 
 class LeanModel:
@@ -55,9 +55,7 @@ class LauncherTests(unittest.TestCase):
 
     def compile(self, project, names, **kwargs):
         self.compiler_calls += 1
-        return {"status": "passed", "diagnostics": [], "declarations": names,
-            "source_sha256": hashlib.sha256((project / "Main.lean").read_bytes()).hexdigest(),
-            "axioms": {name: [] for name in names}, "declaration_printout": "simulated compiler theorem evidence"}
+        return compiler_fixture((project / "Main.lean").read_text(encoding="utf-8"), names)
 
     def execute(self):
         with patch("colombo.lean_agent.agent.verify_lean", side_effect=self.compile):
@@ -230,6 +228,28 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("requires --lean-result", error)
         writer.assert_not_called()
+
+    def test_cli_writing_rejects_tag_only_import_before_writer(self):
+        path = self.input_file()
+        imported = self.root / "tag-only.json"
+        imported.write_text(json.dumps({"status": "passed",
+            "proof_sha256": self.package["proof_sha256"], "compiler": {"status": "passed"},
+            "semantic_review": lean_fixture(self.package)["semantic_review"]}), encoding="utf-8")
+        with patch("colombo.writing_agent.agent.run") as writer:
+            code, _, error = self.main(["--input", str(path), "--output-dir", str(self.output),
+                "--stage", "writing", "--lean-result", str(imported)])
+        self.assertEqual(code, 2)
+        self.assertIn("evidence version", error)
+        writer.assert_not_called()
+        self.assertFalse((self.output / "pipeline.json").exists())
+
+    def test_lean_only_cannot_publish_a_tag_only_passed_result(self):
+        with patch("colombo.lean_agent.agent.run", return_value={"status": "passed",
+                "proof_sha256": self.package["proof_sha256"]}):
+            with self.assertRaisesRegex(ValueError, "evidence version"):
+                launcher.run(self.package, self.output, self.config, stage="lean",
+                             lean_model=self.lean_model)
+        self.assertFalse((self.output / "pipeline.json").exists())
 
     def test_brain_passthrough_rejects_conflicting_or_duplicate_run_directories(self):
         brain = self.root / 'brain'

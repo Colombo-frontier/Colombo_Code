@@ -5,7 +5,6 @@ This module has no Brain, Store, Cell, or MCP dependency.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 import re
@@ -16,6 +15,9 @@ import jsonschema
 
 from colombo.downstream.handoff import digest as _digest
 from colombo.lean_agent.compiler import verify_lean
+from colombo.lean_agent.evidence import (
+    EVIDENCE_VERSION, review_binding, validate_compiler_evidence, validate_lean_result,
+)
 from colombo.shared.file_io import Path, atomic_write, json_bytes
 
 
@@ -169,27 +171,50 @@ def _run_package(package, root, settings, model):
         state = _load(state_path)
         if any(state.get(k) != v for k, v in identity.items()):
             raise ValueError("Lean Agent work directory is bound to another package or configuration")
+        if (type(state.get("evidence_version")) is not int or state["evidence_version"] != EVIDENCE_VERSION
+                or not isinstance(state.get("artifact_sha256"), dict)):
+            raise ValueError("Legacy Lean cache has no evidence receipts; rerun Lean in a new output directory")
         if result_path.is_file():
             result = _load(result_path)
-            if result.get("proof_sha256") != package["proof_sha256"]:
-                raise ValueError("Stored Lean result is bound to another ProofDraft")
+            if (not state.get("result_sha256") or _digest(result) != state["result_sha256"]
+                    or result.get("status") != state.get("status")):
+                raise ValueError("Saved Lean result changed or lacks its receipt; use a new output directory")
+            validate_lean_result(package, result, require_passed=False)
             return result
     else:
+        if any(p.name != ".agent.lock" for p in root.iterdir()):
+            raise ValueError("Lean workspace has orphaned artifacts; rerun Lean in a new output directory")
         state = {**identity, "deadline_unix": time.time() + settings["timeout_seconds"],
-                 "attempts_started": 0, "status": "running"}
+                 "attempts_started": 0, "status": "running", "evidence_version": EVIDENCE_VERSION,
+                 "artifact_sha256": {}, "review_inputs": {}}
         _write(root / "package.json", package)
         _write(root / "config.json", settings)
         _write(state_path, state)
-    report = {"status": "incomplete", "proof_sha256": package["proof_sha256"],
+    report = {"status": "incomplete", "evidence_version": EVIDENCE_VERSION,
+        "package_sha256": identity["package_sha256"], "proof_sha256": package["proof_sha256"],
         "required_claim_ids": package["required_claim_ids"], "diagnostics": [],
-        "attempts": [], "mapping": [], "source": "", "compiler": None, "semantic_review": None}
+        "attempts": [], "mapping": [], "source": "", "compiler": None,
+        "semantic_review": None, "semantic_review_binding": None}
+
+    def load_artifact(path):
+        value = _load(path)
+        if state["artifact_sha256"].get(path.relative_to(root).as_posix()) != _digest(value):
+            raise ValueError("Cached Lean artifact changed or lacks its receipt: " + path.name
+                             + "; rerun Lean in a new output directory")
+        return value
+
+    def save_artifact(path, value):
+        _write(path, value)
+        state["artifact_sha256"][path.relative_to(root).as_posix()] = _digest(value)
+        _write(state_path, state)
 
     def finish(status, reason=None):
         report["status"] = status
         if reason:
             report["diagnostics"].append(reason)
+        validate_lean_result(package, report, require_passed=False)
         _write(result_path, report)
-        _write(state_path, {**state, "status": status})
+        _write(state_path, {**state, "status": status, "result_sha256": _digest(report)})
         return report
 
     def remaining():
@@ -211,13 +236,13 @@ def _run_package(package, root, settings, model):
             report["attempts"].append(entry)
             candidate_path = folder / "candidate.json"
             if candidate_path.is_file():
-                candidate = _load(candidate_path)
+                candidate = load_artifact(candidate_path)
             else:
                 ctx = {**package, "attempt": number, "max_compile_attempts": settings["max_compile_attempts"],
                        "lean_project": str(template), "previous_feedback": feedback}
                 candidate = model.invoke("lean-check", folder / "generate", _GENERATE, ctx,
                                          SCHEMAS["lean-check"], remaining())
-                _write(candidate_path, candidate)
+                save_artifact(candidate_path, candidate)
             try:
                 _validate_response("lean-check", candidate, package)
             except (ValueError, jsonschema.ValidationError) as exc:
@@ -230,7 +255,7 @@ def _run_package(package, root, settings, model):
                 return finish("incomplete", "; ".join(candidate["limitations"]))
             compiler_path = folder / "compiler.json"
             if compiler_path.is_file():
-                build = _load(compiler_path)
+                build = load_artifact(compiler_path)
             else:
                 target = folder / "project"
                 if target.exists():
@@ -241,7 +266,7 @@ def _run_package(package, root, settings, model):
                 build = verify_lean(target, [m["declaration"] for m in candidate["mapping"]],
                     timeout_seconds=min(settings["compile_timeout_seconds"], remaining()),
                     lake_bin=settings["lake_bin"])
-                _write(compiler_path, build)
+                save_artifact(compiler_path, build)
             report["compiler"] = build
             entry["compiler_status"] = build.get("status")
             if build.get("status") == "blocked":
@@ -250,17 +275,24 @@ def _run_package(package, root, settings, model):
                 feedback = {"candidate": candidate, "compiler": build}
                 _write(folder / "feedback.json", feedback)
                 continue
-            expected_source = hashlib.sha256(candidate["source"].encode("utf-8")).hexdigest()
-            if build.get("source_sha256") != expected_source:
-                return finish("failed", "Compiler evidence does not bind the submitted source")
+            validate_compiler_evidence(candidate["source"],
+                [m["declaration"] for m in candidate["mapping"]], build)
             review_path = folder / "review.json"
+            review_context = {**package, "candidate": candidate, "compiler": build}
+            review_key = review_path.relative_to(root).as_posix()
+            expected_input = _digest(review_context)
             if review_path.is_file():
-                review = _load(review_path)
+                if state.get("review_inputs", {}).get(review_key) != expected_input:
+                    return finish("failed", "Cached correspondence review belongs to different evidence; "
+                                  "rerun Lean in a new output directory")
+                review = load_artifact(review_path)
             else:
+                state.setdefault("review_inputs", {})[review_key] = expected_input
+                _write(state_path, state)
                 review = model.invoke("lean-review", folder / "semantic-review", _REVIEW,
-                    {**package, "candidate": candidate, "compiler": build},
+                    review_context,
                     SCHEMAS["lean-review"], remaining())
-                _write(review_path, review)
+                save_artifact(review_path, review)
             report["semantic_review"] = review
             try:
                 _validate_response("lean-review", review, package)
@@ -271,6 +303,8 @@ def _run_package(package, root, settings, model):
                 continue
             entry["semantic_verdict"] = review["verdict"]
             if review["verdict"] == "pass":
+                report["semantic_review_binding"] = review_binding(
+                    package, candidate["source"], candidate["mapping"], build, review)
                 remaining()
                 return finish("passed")
             feedback = {"candidate": candidate, "compiler": build, "semantic_review": review}

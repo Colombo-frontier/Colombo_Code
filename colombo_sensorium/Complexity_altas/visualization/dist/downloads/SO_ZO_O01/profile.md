@@ -332,9 +332,9 @@ $$
 
 **Source location.** [2](https://arxiv.org/html/2405.11454v1) pdf pages: 9; printed pages: 9; theorem: Theorems 2--3
 
-**Source location.** [2](https://arxiv.org/html/2405.11454v1) pdf pages: 6; 9; 10; printed pages: 6; 9; 10; theorem: v1 Theorem 3 proof, compared with Theorem 1 hypotheses
+**Source location.** [2](https://arxiv.org/html/2405.11454v1) pdf pages: 6; 9; 10; printed pages: 6; 9; 10; theorem: v1 Theorem 3; historical source locator
 
-Supports quarantine, not adoption, of the historical combined upper claims. PDF SHA256 150ea20d6fd61257782c67fe15fe135ee03ab828d84a3dc26f236b57ef4ac6c3, chars 14000-24000; HTML SHA256 354e38c235a5dcb24fca2e74ae4363767de6e27a0b8480b5240b30802d99a57a, chars 25000-35000. The false gradient prerequisite and lost logarithm are verified in preserved math alttext; see ZO_PROOF_COMPARE_UPPER_AUDIT_20261115.
+Source locator for the historical combined upper claims. Both b1 records remain excluded from the current comparison envelopes. PDF SHA256 150ea20d6fd61257782c67fe15fe135ee03ab828d84a3dc26f236b57ef4ac6c3; HTML SHA256 354e38c235a5dcb24fca2e74ae4363767de6e27a0b8480b5240b30802d99a57a. Active upper support is given separately by the current bound records and their stated proofs.
 
 ### B2 - Reduction of an exact-value lower bound to the comparison interface
 
@@ -438,9 +438,9 @@ $$
 
 **Source location.** [2](https://arxiv.org/html/2405.11454v1) pdf pages: 9; printed pages: 9; theorem: Theorems 2--3
 
-**Source location.** [2](https://arxiv.org/html/2405.11454v1) pdf pages: 6; 9; 10; printed pages: 6; 9; 10; theorem: v1 Theorem 3 proof, compared with Theorem 1 hypotheses
+**Source location.** [2](https://arxiv.org/html/2405.11454v1) pdf pages: 6; 9; 10; printed pages: 6; 9; 10; theorem: v1 Theorem 3; historical source locator
 
-Supports quarantine, not adoption, of the historical combined upper claims. PDF SHA256 150ea20d6fd61257782c67fe15fe135ee03ab828d84a3dc26f236b57ef4ac6c3, chars 14000-24000; HTML SHA256 354e38c235a5dcb24fca2e74ae4363767de6e27a0b8480b5240b30802d99a57a, chars 25000-35000. The false gradient prerequisite and lost logarithm are verified in preserved math alttext; see ZO_PROOF_COMPARE_UPPER_AUDIT_20261115.
+Source locator for the historical combined upper claims. Both b1 records remain excluded from the current comparison envelopes. PDF SHA256 150ea20d6fd61257782c67fe15fe135ee03ab828d84a3dc26f236b57ef4ac6c3; HTML SHA256 354e38c235a5dcb24fca2e74ae4363767de6e27a0b8480b5240b30802d99a57a. Active upper support is given separately by the current bound records and their stated proofs.
 
 ### B5 - Reduction of an exact-value lower bound to the comparison interface
 
@@ -820,7 +820,7 @@ A deterministic full-history algorithm retains all estimated directions, approxi
 
 Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
 
-Native pointer: /proofs; canonical SHA-256: 9dc57e0bce07dee48fb52403445385b44d87004d85de8898875448bed05c7455
+Native pointer: /proofs; canonical SHA-256: aebe76fad6f1c99ab8d9259ad81e6d56775a693bdafb6b46bb525894c45904b5
 
 ### Native proof: ZO_PROOF_COMPARE_TRANSFER
 
@@ -878,25 +878,25 @@ Exact-value lower bounds transferred to comparison feedback
 
 ### Native proof: ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
 
-Native pointer: /proofs/1; canonical SHA-256: c6b3187af45c12c65c3dbc4707b3b0b99b985fc15b2f22dd60267d060197d537
+Native pointer: /proofs/1; canonical SHA-256: 3d0823e89a6954cac3174da6aea948601be44cf704d57fc20e248753c5ec5846
 
 #### Native field: body
 
-Native pointer: /proofs/1/body; canonical SHA-256: 4a3548e45d58d9b6b73488f7030fbfc7365e45f8db4f4bf616cd18096e865841
+Native pointer: /proofs/1/body; canonical SHA-256: be2d73292501cb5e670328d0d9ed7e8651e18ce33589fa189b8a2d9afc5d8953
 
 Primary source read: 2405.11454v1 Lemma 1 (directional preference), Theorem 1 and Theorem 2/Problem 1. PDF SHA256 150ea20d6fd61257782c67fe15fe135ee03ab828d84a3dc26f236b57ef4ac6c3, chars10500-14500 and14000-24000; HTML SHA256 354e38c235a5dcb24fca2e74ae4363767de6e27a0b8480b5240b30802d99a57a, chars25000-35000 verifies Theorems2-3 formulas. Source n=d,L=beta. A native tie0 is mapped to +1, an allowed source tie reply. Finite positive probes and Euclidean projection use only native public inputs; no value or certificate is obtained. The following explicit estimator supplies the needed direction guarantee independently of implementation details in source Algorithm2.
 
 Complete direction-estimation construction: Given delta in(0,1], gamma>0, use tolerance tau=delta gamma/(100d^2). A comparison at (x+(2tau/beta)v,x), for unit v, yields either <grad f(x),v>>=-tau or <grad f(x),v><=tau; this follows immediately from the smoothness Taylor remainder bounded by beta h^2/2, and is source Lemma1. Orient each basis vector v_i=+/-e_i using this test, so a_i=<grad f,v_i>>=-tau. Find a pivot p by a sequential tournament: compare components with direction (v_i-v_j)/sqrt(2); the selected winner is at least the loser minus sqrt(2)tau. If ||grad f||>=gamma, max a_i>=||grad f||/sqrt(d), and the final pivot a_p>=max a_i-sqrt(2)(d-1)tau>=gamma/(2sqrt(d))>0. Moreover each ratio r_i=a_i/a_p lies in[-2,2], because a_i>=-tau and a_i<=a_p+2d tau. For i!=p bisect [-2,2] using the directional test on (z v_p-v_i)/sqrt(1+z^2). Each reply compares z with r_i up to kappa=sqrt(5)tau/a_p<=2sqrt(5)sqrt(d)tau/gamma<=delta/(16sqrt(d)). Keep the indicated half interval; inductively the true r_i stays within distance kappa of it. After K=ceil(log_2(32sqrt(d)/delta)) rounds, its midpoint alpha_i satisfies |alpha_i-r_i|<=2/2^K+kappa<=delta/(8sqrt(d)). Set alpha_p=1. The vector r=(a_i/a_p) has norm>=1; ||alpha-r||<=delta/8. The elementary normalization inequality ||u/||u||-v/||v||||<=2||u-v||/||v|| shows that h=(sum alpha_i v_i)/||alpha|| differs from grad f/||grad f|| by at most delta/4, hence at most delta. For d=1 the ratio loop is empty and the oriented sign is correct under the promise. With or without the promise, the schedule has d+(d-1)+(d-1)K=O(d log(d/delta)) comparisons and returns a unit vector because alpha_p=1. Every probing radius is positive and finite, and no unbounded line search occurs.
 
-Complete uniform optimization derivation: Let Q=beta R^2/epsilon>=32, T=ceil(128Q), delta=1/(16 sqrt(Q)), gamma=epsilon/(2R), eta=R/sqrt(T). Start x_0=0; at each t=0,...,T-1 get unit h_t from the explicit fixed-schedule estimator above and set x_{t+1}=Proj_{B_R}(x_t-eta h_t). Select the minimum-value point among x_0,...,x_{T-1} by T-1 charged comparisons. This never needs a function value or optimality certificate. Suppose every recorded point has gap g_t>epsilon. Convexity gives ||grad f(x_t)||>=g_t/||x_t-x_*||>=epsilon/(2R), so all estimates satisfy their promise. Smoothness and the global infimum give ||grad f(x)||^2<=2 beta (f(x)-f_*): apply the descent inequality to x-grad f(x)/beta. Consequently <h_t,x_t-x_*>>=g_t/||grad f(x_t)||-2R delta>=(1/sqrt(2)-1/8)R/sqrt(Q). The projection inequality telescopes to (1/T)sum_t <h_t,x_t-x_*><=R^2/(2 eta T)+eta/2=R/sqrt(T)<=R/sqrt(128Q), a contradiction. Thus the tournament output has gap <=epsilon. The deterministic worst-case cost is T O(d log(d/delta))+(T-1)=O(dQ log(dQ)), with universal constants, uniform in d,beta,R,epsilon. The same deterministic strategy is admissible for randomized g1, with success probability one; no random selection or amplification is needed. This also avoids the t=0 step-size notation in the printed Algorithm 3.
+Complete uniform optimization derivation: Let Q=beta R^2/epsilon>=32, T=ceil(128Q), delta=1/(16 sqrt(Q)), gamma=epsilon/(2R), eta=R/sqrt(T). Start x_0=0; at each t=0,...,T-1 get unit h_t from the explicit fixed-schedule estimator above and set x_{t+1}=Proj_{B_R}(x_t-eta h_t). Select the minimum-value point among x_0,...,x_{T-1} by T-1 charged comparisons. This never needs a function value or optimality certificate. Suppose every recorded point has gap g_t>epsilon. Convexity gives ||grad f(x_t)||>=g_t/||x_t-x_*||>=epsilon/(2R), so all estimates satisfy their promise. Smoothness and the global infimum give ||grad f(x)||^2<=2 beta (f(x)-f_*): apply the descent inequality to x-grad f(x)/beta. Consequently <h_t,x_t-x_*>>=g_t/||grad f(x_t)||-2R delta>=(1/sqrt(2)-1/8)R/sqrt(Q). The projection inequality telescopes to (1/T)sum_t <h_t,x_t-x_*><=R^2/(2 eta T)+eta/2=R/sqrt(T)<=R/sqrt(128Q), a contradiction. Thus the tournament output has gap <=epsilon. The deterministic worst-case cost is T O(d log(d/delta))+(T-1)=O(dQ log(dQ)), with universal constants, uniform in d,beta,R,epsilon. The same deterministic strategy is admissible for randomized g1, with success probability one; no random selection or amplification is needed.
 
-Cutting-plane audit: v1 Theorem 1 requires a genuine lower bound gamma on the gradient norm. Theorem 3 (printed p9) instead supplies gamma=sqrt(2 beta epsilon); its displayed convexity argument supplies only gap/(2R) (or gap/(3R) for a general point in B_{2R}), which does not imply that gamma. Explicit admissible witness for Q>=32: f(x)=(2epsilon/R^2)||x-R e_1||^2. Its gradient Lipschitz constant 4epsilon/R^2 is <=beta, its minimizer is R e_1, and at x=0 it has gap 2epsilon and gradient norm 4epsilon/R < sqrt(2 beta epsilon). Thus a nonoptimal query need not satisfy the estimator's promise. Also the full epsilon/2-sublevel need not be bounded by B_{2R}; the constant objective is a simple example. A valid localization proof must intersect with a known ball and handle its boundary. Finally, the displayed cost is [C d log(dR/r_K)] times [O(d log(d/delta))] plus a tournament. With r_K=R/sqrt(Q) and delta=1/(16sqrt(Q)), its direct product is O(d^2 log^2(dQ)), not the claimed single logarithm. These are failures of the supplied justification, not a theorem that the true minimax upper rate cannot be smaller. Quarantine the combined b1 claims; do not adopt a repaired cutting-plane rate without a complete new localization/separation proof.
+Scope: the argument above supports the separate projected-descent b4 records. The historical combined b1 claims remain excluded from the current comparison envelopes.
 
 Endpoint checks: R,beta,epsilon are positive and d>=1, so there is no Q=0 endpoint in the contract. Smoothness at x_* gives f(0)-f_*<=beta R^2/2; hence returning 0 uses zero queries when Q<=2. This elementary check is outside all four registered comparison regions and is not added here as a native endpoint bound/comparison. For Q>=32 our fixed schedule applies also at d=1, with no precision-independent saturation assertion. At Q=d^2 the c1/c2 lower formulas both equal Omega(d^2); c1 owns equality.
 
 #### Native field: limitations
 
-Native pointer: /proofs/1/limitations; canonical SHA-256: 6d623c3a3d8a58e3b2ee1d261e3acfed319c50343c701d4d36d706d0cfb4c1d8
+Native pointer: /proofs/1/limitations; canonical SHA-256: cbbd563b514bb9c83f5ba75786033643201836de03dd901364a1c1b4865bbf4d
 
 #### Native item 1
 
@@ -906,9 +906,9 @@ Uses only the source directional-preference lemma and the explicit estimator/des
 
 #### Native item 2
 
-Native pointer: /proofs/1/limitations/1; canonical SHA-256: f5bf61dc821e0b369b3eab494e8411b168387ff0b810a41cea8e778b7e62a374
+Native pointer: /proofs/1/limitations/1; canonical SHA-256: a7e94cae7efab6a5f95c2344a5c52252956f1465e3f3c3e6fd181610dfa83c34
 
-No corrected cutting-plane upper, v3 optimization composition, q2-to-q1 transfer, or sharp one-dimensional rate is adopted.
+This proof supports only the stated projected-descent upper bound; other optimization compositions, quantity transfers and sharp one-dimensional rates require separate records.
 
 #### Native item 3
 
@@ -934,21 +934,21 @@ SO_SRC_25cbefe670f1e510
 
 #### Native field: title
 
-Native pointer: /proofs/1/title; canonical SHA-256: 47778214051d900b4b5d455c9e8c336794faacd25741938bd82eed30b6530293
+Native pointer: /proofs/1/title; canonical SHA-256: 7fe7649926b931b42b17c4e66f47c266ad0c47689e3d70de7a61a4f85d5ca83f
 
-Uniform normalized projected descent and audit of the early cutting-plane branch
+Uniform normalized projected descent with a fixed comparison budget
 
 ### Native proof: ZO_PROOF_COMPARE_CENTROID_20261116
 
-Native pointer: /proofs/2; canonical SHA-256: 8de86ed91099d82a18259e4bda66a21b583ca58bd445777d475f3b936a6a468a
+Native pointer: /proofs/2; canonical SHA-256: fb25dd669078b792883b66e1ab4f63d886bf5bff35e815cdf4a0b4baed0d814f
 
 #### Native field: body
 
-Native pointer: /proofs/2/body; canonical SHA-256: 6b526c69c96b7f3f68ebd9b2f859cdafee6fe1a07c8ac93069a4d7b296a3fe83
+Native pointer: /proofs/2/body; canonical SHA-256: a50609698fb4b364e81c2bf6adc22c7caa9ab8763ab9f1b1daacfda4d0c243b3
 
 # O01: Center-of-gravity cutting upper bound and comparison-tree packing lower bound (guided analyst derivation, pending independent review)
 
-This candidate retains the previously questioned min upper bound in quarantine and does not retroactively endorse 2405.11454v1 Theorem3. Direction estimation uses only the independent fixed-length construction already accepted in previous-baseline/proofs/1: given public γ>0 and 0<δ≤1, if ||∇f(x)||≥γ, it returns a unit vector h with error ≤δ using C_dir(d,δ)=2d−1+(d−1)ceil(log2(32sqrt(d)/δ)) comparisons; even when the promise is not satisfied, it always terminates and returns a unit vector. Native tie0 is mapped to +; all step sizes are finite and positive.
+The historical combined min upper bound remains excluded from current envelopes. This derivation has its own explicit estimator and localization argument. Direction estimation uses only the independent fixed-length construction already accepted in previous-baseline/proofs/1: given public γ>0 and 0<δ≤1, if ||∇f(x)||≥γ, it returns a unit vector h with error ≤δ using C_dir(d,δ)=2d−1+(d−1)ceil(log2(32sqrt(d)/δ)) comparisons; even when the promise is not satisfied, it always terminates and returns a unit vector. Native tie0 is mapped to +; all step sizes are finite and positive.
 
 ## Upper bound under the exact source guard Q≥32
 
@@ -1016,11 +1016,11 @@ Fixed-cap centroid comparison optimizer with a valid gradient promise
 
 ### Native proof: ZO_PROOF_COMPARE_PACKING_20261116
 
-Native pointer: /proofs/3; canonical SHA-256: 307f019bc15730f502d1ef603dbfe9863b5863ed83bf953e6be427ec2c50cc85
+Native pointer: /proofs/3; canonical SHA-256: ff4777c6c0a97df236a9eb4fbf2b24d19e9171795b864876b71e204214ce8011
 
 #### Native field: body
 
-Native pointer: /proofs/3/body; canonical SHA-256: b5f92c8c6b53114b49d04eaa58c1276c73ae0607e1f0d0d664b94e2b8fe0e500
+Native pointer: /proofs/3/body; canonical SHA-256: 24be9f112ea9468cc264bdd50d0bb064582985dfaba5554896a7019aa9302214
 
 ## Direct-comparison packing lower bound under the exact guard Q≥32
 
@@ -1041,7 +1041,7 @@ Combining with the retained projected upper bound and the original b3 lower boun
 \Omega(d\max\{\min(d,\sqrt Q),\log Q\})\le T^*\le O(d\min\{Q,d\log Q\}\log(dQ)).
 \]
 
-J1=32≤Q≤d²: the lower bound remains Ω(dsqrtQ), with ratio≤O(min{sqrtQ,dlogQ/sqrtQ}log(dQ)); J2=Q≥32,Q>d²: sqrtQ>logQ ensures that the upper branch reduces to O(d²logQlog(dQ)), the lower bound is Ω(d max{d,logQ}), and ratio≤O(min{d,logQ}log(dQ)), leaving only a polylog gap. Q=d² belongs to J1, and Q=32 includes equality. These are valid envelope/asymptotic-order relations, and crossings of hidden constants are not treated as exact phase transitions. Q<32, the native zero-query registration, and the sharp one-dimensional slice remain separately listed; the previously questioned upper bound remains quarantined.
+J1=32≤Q≤d²: the lower bound remains Ω(dsqrtQ), with ratio≤O(min{sqrtQ,dlogQ/sqrtQ}log(dQ)); J2=Q≥32,Q>d²: sqrtQ>logQ ensures that the upper branch reduces to O(d²logQlog(dQ)), the lower bound is Ω(d max{d,logQ}), and ratio≤O(min{d,logQ}log(dQ)), leaving only a polylog gap. Q=d² belongs to J1, and Q=32 includes equality. These are valid envelope/asymptotic-order relations, and crossings of hidden constants are not treated as exact phase transitions. Q<32, the native zero-query registration, and the sharp one-dimensional slice remain separately listed; the historical b1 upper bound remains excluded from current envelopes.
 
 
 #### Native field: limitations
@@ -1084,23 +1084,23 @@ Read-only presentation of the stored native record. Integrity hashes identify so
 
 ### Native joint analysis
 
-Native pointer: /joint_analysis; canonical SHA-256: 822c70f598ea11a75455af039077d41d2f717b64b4014ebad2917d71fd7f6b65
+Native pointer: /joint_analysis; canonical SHA-256: 93913abfc308a38380d932077c9b7627271fbebcaa56424282f843a8226814c4
 
 #### Native field: comparisons
 
-Native pointer: /joint_analysis/comparisons; canonical SHA-256: 1c13a14423f47da735d7f3e2565281f824a6f62f3f9632f5d4e71db9112815e1
+Native pointer: /joint_analysis/comparisons; canonical SHA-256: 12c0156775a9bc54ad1a9b5b09f1f573ae5b124db98896e4910b6d7c5081d811
 
 #### Native item 1
 
-Native pointer: /joint_analysis/comparisons/0; canonical SHA-256: bd44aed4a253bec1928815f68f85e3d873f7be20e1df03509277620691c0d74b
+Native pointer: /joint_analysis/comparisons/0; canonical SHA-256: 882b17536f0a85d59e2d33fcbab81d097a4821fc480cd8abf8d028c960c7c5e7
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses; canonical SHA-256: 6c1b1a64905d1ca3b40f1fd1c79cf051881138d73f823beb690ab2c8483de4fa
+Native pointer: /joint_analysis/comparisons/0/bound_uses; canonical SHA-256: 0db1952d7fcc87ae403c61653423e19bcbe465eebd7587a1baa8f6c98f3d3fe4
 
 #### Native item 1
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/0; canonical SHA-256: fb82ffea7fdf4d343028a271422d9df1818c6047aa6325a990da479a54da153c
+Native pointer: /joint_analysis/comparisons/0/bound_uses/0; canonical SHA-256: 4e23b21d4d4b0b764d7e7aff349078d346a8540b6943b40561d78eaa17c97cfa
 
 #### Native field: adopted_region
 
@@ -1132,15 +1132,15 @@ ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/0/reason; canonical SHA-256: 30802ae3857d0fa47b0856fe4a67f56c292315a7448202684a574d4fc253dd8d
+Native pointer: /joint_analysis/comparisons/0/bound_uses/0/reason; canonical SHA-256: c161d6f6fcddb27b81f9797ed3b0ca2dae865f453da459cb258b07ba86dbaf03
 
-Quarantined historical statement; the valid descent branch is represented by a distinct b4. No active reference to b1 remains.
+Historical statement excluded from current envelopes; normalized projected descent is represented by the separate b4 record. The b1 record is not selected.
 
 #### Native field: validity_region
 
-Native pointer: /joint_analysis/comparisons/0/bound_uses/0/validity_region; canonical SHA-256: 03186c8e7c6450d959392a61f1bcb1b2674007039da201dcd2fa9755835619cf
+Native pointer: /joint_analysis/comparisons/0/bound_uses/0/validity_region; canonical SHA-256: ca0175186f91436fba2e6adfd51cbb11e83b8075cd41742c5f799c5000620d6e
 
-Historical combined claim had only a sufficiently-large-Q guard; its cutting-plane justification is suspended by the current audit.
+Historical combined claim with a sufficiently-large-Q source guard; not adopted in the current comparison envelopes.
 
 #### Native item 2
 
@@ -1526,15 +1526,15 @@ O\!\left(\sqrt Q\,[d\log(2dQ)+\log^2(2Q)]\right)
 
 #### Native item 2
 
-Native pointer: /joint_analysis/comparisons/1; canonical SHA-256: 0d83f98d7b8dd0fa930b0ff703fba84daeb1ff30a28b903cfbdb5d3ffb62158f
+Native pointer: /joint_analysis/comparisons/1; canonical SHA-256: 2ff44fb4a3f19500b18ffd1850aced92830a884f1b1acc2eefe54a4b2fce39ba
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses; canonical SHA-256: 2e57ddd0eea5866a85d0c9310fb3e3063ca585dc1980eb2ae5f12431c0177403
+Native pointer: /joint_analysis/comparisons/1/bound_uses; canonical SHA-256: 45c1891799ca65d08d66a9b5cc7ded27d0f9c6cdb3ea42fe50e0b5ea4e1384e5
 
 #### Native item 1
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses/0; canonical SHA-256: fb82ffea7fdf4d343028a271422d9df1818c6047aa6325a990da479a54da153c
+Native pointer: /joint_analysis/comparisons/1/bound_uses/0; canonical SHA-256: 4e23b21d4d4b0b764d7e7aff349078d346a8540b6943b40561d78eaa17c97cfa
 
 #### Native field: adopted_region
 
@@ -1566,15 +1566,15 @@ ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses/0/reason; canonical SHA-256: 30802ae3857d0fa47b0856fe4a67f56c292315a7448202684a574d4fc253dd8d
+Native pointer: /joint_analysis/comparisons/1/bound_uses/0/reason; canonical SHA-256: c161d6f6fcddb27b81f9797ed3b0ca2dae865f453da459cb258b07ba86dbaf03
 
-Quarantined historical statement; the valid descent branch is represented by a distinct b4. No active reference to b1 remains.
+Historical statement excluded from current envelopes; normalized projected descent is represented by the separate b4 record. The b1 record is not selected.
 
 #### Native field: validity_region
 
-Native pointer: /joint_analysis/comparisons/1/bound_uses/0/validity_region; canonical SHA-256: 03186c8e7c6450d959392a61f1bcb1b2674007039da201dcd2fa9755835619cf
+Native pointer: /joint_analysis/comparisons/1/bound_uses/0/validity_region; canonical SHA-256: ca0175186f91436fba2e6adfd51cbb11e83b8075cd41742c5f799c5000620d6e
 
-Historical combined claim had only a sufficiently-large-Q guard; its cutting-plane justification is suspended by the current audit.
+Historical combined claim with a sufficiently-large-Q source guard; not adopted in the current comparison envelopes.
 
 #### Native item 2
 
@@ -1960,15 +1960,15 @@ O\!\left(\min\!\left\{\sqrt Q\,[d\log(2dQ)+\log^2(2Q)],\ d^2\log Q\log(dQ)\right
 
 #### Native item 3
 
-Native pointer: /joint_analysis/comparisons/2; canonical SHA-256: ddd581f290e350faffa470963731e35cef5518e0561f83cfbdf0fcf1eab31ab5
+Native pointer: /joint_analysis/comparisons/2; canonical SHA-256: 871343dab1a4ad03add8d15146f8e762141803be6a721bfd96f7c9defd337a03
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses; canonical SHA-256: 12450b66ef6edd26e5ae6c92cd09cbd1a1db28bef0ba3f3a87cb673fa2cfa367
+Native pointer: /joint_analysis/comparisons/2/bound_uses; canonical SHA-256: 4cafd9cb5d6773033d88515986a115a19826aa307c1abd82b1dc8551c6cc2c46
 
 #### Native item 1
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/0; canonical SHA-256: ecdf02dda2086f6039d089fab93bc60e4d2d8ac32fa2f3de39e5c6d60882c83e
+Native pointer: /joint_analysis/comparisons/2/bound_uses/0; canonical SHA-256: b260a94b3ff3c210ef7785614b434725bbb01b44ed7a8b13c4393914f72d5225
 
 #### Native field: adopted_region
 
@@ -2000,15 +2000,15 @@ ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/0/reason; canonical SHA-256: 30802ae3857d0fa47b0856fe4a67f56c292315a7448202684a574d4fc253dd8d
+Native pointer: /joint_analysis/comparisons/2/bound_uses/0/reason; canonical SHA-256: c161d6f6fcddb27b81f9797ed3b0ca2dae865f453da459cb258b07ba86dbaf03
 
-Quarantined historical statement; the valid descent branch is represented by a distinct b4. No active reference to b1 remains.
+Historical statement excluded from current envelopes; normalized projected descent is represented by the separate b4 record. The b1 record is not selected.
 
 #### Native field: validity_region
 
-Native pointer: /joint_analysis/comparisons/2/bound_uses/0/validity_region; canonical SHA-256: 03186c8e7c6450d959392a61f1bcb1b2674007039da201dcd2fa9755835619cf
+Native pointer: /joint_analysis/comparisons/2/bound_uses/0/validity_region; canonical SHA-256: ca0175186f91436fba2e6adfd51cbb11e83b8075cd41742c5f799c5000620d6e
 
-Historical combined claim had only a sufficiently-large-Q guard; its cutting-plane justification is suspended by the current audit.
+Historical combined claim with a sufficiently-large-Q source guard; not adopted in the current comparison envelopes.
 
 #### Native item 2
 
@@ -2394,15 +2394,15 @@ O\!\left(\sqrt Q\,[d\log(2dQ)+\log^2(2Q)]\right)
 
 #### Native item 4
 
-Native pointer: /joint_analysis/comparisons/3; canonical SHA-256: 321f188dd3aa7eb987b910edebe5d17e1604849df7acf522e7a4887fcf2982a4
+Native pointer: /joint_analysis/comparisons/3; canonical SHA-256: bf1c38e194d4e96425d89b7d1a1015cd34741b6dbf4cc221f2d471f8db0961d4
 
 #### Native field: bound_uses
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses; canonical SHA-256: 9d3f84719471dc2531725e49dfe50dd595978cd12d4244ac2e077edf82af4ec7
+Native pointer: /joint_analysis/comparisons/3/bound_uses; canonical SHA-256: f06464f6d09d5509d0aa0374a97a943729e4f3e228e41b659e61ab70bde0d2ae
 
 #### Native item 1
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses/0; canonical SHA-256: ecdf02dda2086f6039d089fab93bc60e4d2d8ac32fa2f3de39e5c6d60882c83e
+Native pointer: /joint_analysis/comparisons/3/bound_uses/0; canonical SHA-256: b260a94b3ff3c210ef7785614b434725bbb01b44ed7a8b13c4393914f72d5225
 
 #### Native field: adopted_region
 
@@ -2434,15 +2434,15 @@ ZO_PROOF_COMPARE_UPPER_AUDIT_20261115
 
 #### Native field: reason
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses/0/reason; canonical SHA-256: 30802ae3857d0fa47b0856fe4a67f56c292315a7448202684a574d4fc253dd8d
+Native pointer: /joint_analysis/comparisons/3/bound_uses/0/reason; canonical SHA-256: c161d6f6fcddb27b81f9797ed3b0ca2dae865f453da459cb258b07ba86dbaf03
 
-Quarantined historical statement; the valid descent branch is represented by a distinct b4. No active reference to b1 remains.
+Historical statement excluded from current envelopes; normalized projected descent is represented by the separate b4 record. The b1 record is not selected.
 
 #### Native field: validity_region
 
-Native pointer: /joint_analysis/comparisons/3/bound_uses/0/validity_region; canonical SHA-256: 03186c8e7c6450d959392a61f1bcb1b2674007039da201dcd2fa9755835619cf
+Native pointer: /joint_analysis/comparisons/3/bound_uses/0/validity_region; canonical SHA-256: ca0175186f91436fba2e6adfd51cbb11e83b8075cd41742c5f799c5000620d6e
 
-Historical combined claim had only a sufficiently-large-Q guard; its cutting-plane justification is suspended by the current audit.
+Historical combined claim with a sufficiently-large-Q source guard; not adopted in the current comparison envelopes.
 
 #### Native item 2
 
@@ -3048,17 +3048,17 @@ accounted
 
 #### Native field: impact
 
-Native pointer: /joint_analysis/impact; canonical SHA-256: be96e121192d4939cbd8e7db12e071a9d51ccc59ea9dce2f0cf18aaa45ba5278
+Native pointer: /joint_analysis/impact; canonical SHA-256: b9ef0066ac79b0cb1b421c6dc09ffee72e08eb72778f03bdbf6ee9714c573019
 
 #### Native item 1
 
-Native pointer: /joint_analysis/impact/0; canonical SHA-256: 6b8a7d5cdf84f53fea58d99d3394203acba40358343e268a3b909106c34e97f8
+Native pointer: /joint_analysis/impact/0; canonical SHA-256: 4d493ed995c49bca89e1f33a1d7684836de105eecf03fbbaedf3767276cfec1b
 
 #### Native field: argument
 
-Native pointer: /joint_analysis/impact/0/argument; canonical SHA-256: 9f3e83e1f9b2eb80751a29bbf263768ccd06a37f69a679dfe3dcce25c1819cff
+Native pointer: /joint_analysis/impact/0/argument; canonical SHA-256: 71d485159100bd0be5240f28bfa41235a8880fd6a64db3b27ec2858be7739eae
 
-v1 Theorem 3's supplied gamma does not follow from suboptimality; its product query count also fails to justify a single logarithm. The replacement uses the legitimate gamma and a complete uniform descent proof. Where Q/d grows, the recorded upper worsens by Q/d; Q=d marks only equality of rate expressions, not an exact minimax boundary. No claim is made that the true minimax complexity increased.
+The recorded support uses the explicit normalized projected-descent construction and its fixed-cap proof. The historical combined upper claim remains excluded. This entry records a change in the adopted envelope, without asserting a change in the minimax complexity or an exact transition at Q=d.
 
 #### Native field: boundary_type
 
@@ -3108,9 +3108,9 @@ upper_audit_20261115
 
 #### Native field: improvement_region
 
-Native pointer: /joint_analysis/impact/0/improvement_region; canonical SHA-256: 8d39250974c9a23a08849fba826561136af73a38188fec42cfa7c169808588a3
+Native pointer: /joint_analysis/impact/0/improvement_region; canonical SHA-256: 6c06f6e60d1fffafbecf05f5bed196114bd8cbf586c8ca16008dfb25ef214913
 
-empty; this is withdrawal of unsupported upper support, not a tighter complexity rate.
+empty; this entry records a historical change in adopted support rather than a rate improvement.
 
 #### Native field: kind
 
@@ -3138,15 +3138,15 @@ The lower side on all J1,J2; the displayed upper rate where Q<=d.
 
 #### Native field: validity_region
 
-Native pointer: /joint_analysis/impact/0/validity_region; canonical SHA-256: 268ed898368fce37cb0052f775fb4a1a379a932a1388b589d8394f5f14a3cf95
+Native pointer: /joint_analysis/impact/0/validity_region; canonical SHA-256: 9186ae0b09595ffe588d61121f27a99e385c708e1f53c0b8ffef3ff2fca07464
 
-J1 union J2 (all d>=1,Q>=32). The audit witness already applies at Q=32.
+J1 union J2 (all d>=1,Q>=32), including equality at Q=32.
 
 #### Native field: witness
 
-Native pointer: /joint_analysis/impact/0/witness; canonical SHA-256: b17ef76b37f686514cd18d37399a9ba47f2f141f20b272581d7b65a7c5c30da1
+Native pointer: /joint_analysis/impact/0/witness; canonical SHA-256: 03da783879f02334f5329a03fea2aa99279bd675291f01e1ee3d044834edb598
 
-f(x)=(2epsilon/R^2)||x-R e_1||^2 at x=0 has gap 2epsilon and ||grad f(0)||=4epsilon/R<sqrt(2beta epsilon) for Q>=32. At Q=d^2,d->infinity, the recorded upper weakens by a factor d.
+The separate b4 records specify the normalized projected-descent bound and fixed worst-case comparison budget. Historical b1 records remain excluded.
 
 #### Native item 2
 
@@ -3444,13 +3444,13 @@ d=1,Q->infinity improves both the recorded upper and lower; Q=d^2,d->infinity re
 
 #### Native item 5
 
-Native pointer: /joint_analysis/impact/4; canonical SHA-256: b35562ad06a0c98dcc66de69eabc1dea340a123ebe34964bb2e446de6e485dcb
+Native pointer: /joint_analysis/impact/4; canonical SHA-256: f7cadde0f9c0b11db1abbb1d6d99bea302d4346aac831b88731f507994387300
 
 #### Native field: argument
 
-Native pointer: /joint_analysis/impact/4/argument; canonical SHA-256: 61f9d6148eddfe04b8b6af29ed223a071c0eed5eee1ebec54ed6ba35b412207b
+Native pointer: /joint_analysis/impact/4/argument; canonical SHA-256: e17691a07d4ae416aa7129f6054fe500b31ef3ea164ea01f1b2d7e0b64b961ad
 
-Fresh analyst derivations repair the centroid cutting-plane branch using the accepted finite comparison direction estimator and the independently read Grunbaum volume theorem. A direct ternary-decision-tree packing lower bound supplements the retained value-oracle reduction on Q>=32. Recompute min upper/max lower envelopes; the high-precision c2 gap is logarithmic, the quarantined unsupported single-log source upper remains inactive. This revision addresses the preserved actual independent-review issues. Publication and typed projection obligations are explicit; every mathematical formula and adoption guard is verified against the exact native candidate, and historical effects are not reported as new frontier gains.
+Separate analyst derivations give the centroid cutting-plane branch from the finite comparison direction estimator and the cited Grunbaum volume theorem. A direct ternary-decision-tree packing lower bound supplements the value-oracle reduction on Q>=32. The envelopes use the explicitly guarded current bounds; historical b1 records remain excluded. Publication and typed projection obligations remain explicit, and historical changes are not counted as new frontier gains.
 
 #### Native field: boundary_type
 

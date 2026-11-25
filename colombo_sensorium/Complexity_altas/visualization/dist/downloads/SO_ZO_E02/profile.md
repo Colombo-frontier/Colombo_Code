@@ -1995,3 +1995,7 @@ https://jmlr.org/papers/volume18/16-632/16-632.pdf
 [6] Colombo_U10. Exact-Value Complexity of Nonsmooth Strongly Convex Optimization: Uniform Bounds and Boundary Geometry. strongly_convex_exact_value.tex.
 
 https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/U10/manuscript.pdf
+
+**Contribution.** Uniform bounds and boundary geometry
+
+**Contribution scope.** A uniform two-sided formulation of exact-value complexity for nonsmooth strongly convex optimization using the Lipschitz slack Delta = L - mu*R. The manuscript treats the degenerate boundary, localized upper bounds and logarithmic factors, direct regularization transfer, and finite-dimensional endpoints. It explicitly recognizes that the large-dimensional polynomial lower profile agrees with the Euclidean specialization of prior strong-convexity reductions.

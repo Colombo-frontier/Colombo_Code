@@ -347,6 +347,8 @@ def document_nodes(p):
         author=flatten_text(r.get('authors'));title=r.get('title','');year=str(r.get('year') or '')
         para('['+rlabel[r['id']]+'] '+'. '.join(x for x in [author,title,year,r.get('version','')] if x)+'.')
         if r.get('url'):para(r['url'])
+        field('Contribution',r.get('contribution_label'))
+        field('Contribution scope',r.get('contribution_note'))
     return n
 def to_md(nodes):
     out=[]

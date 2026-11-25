@@ -1,0 +1,89 @@
+{
+  "aliases": [
+    "P062",
+    "pg_smd_d1"
+  ],
+  "content": {
+    "components": [],
+    "family": "proximal_guidance",
+    "limitations": [
+      {
+        "kind": "algorithm_specific",
+        "scope": "selected",
+        "statement": "This record explicitly selects a single-output primal recursion and an outer-iterate randomized output. Algorithm 2 line 5 prints a pair assignment although Algorithm 1 returns only the primal average; line 8 prints x^(tau). These displayed conventions are recorded separately from the selected implementation; no author erratum is asserted. Selection is justified by the p.8 explanatory paragraph identifying the returned primal solution as the next outer iterate, by the independent D1 dual reset at each outer iteration, and by the p.9 adjacent Theorem referring to xbar^(tau).",
+        "support_refs": [
+          "#/source_refs/0"
+        ]
+      },
+      {
+        "kind": "analysis_gap",
+        "scope": "selected",
+        "statement": "Appendix A Proof and exact accuracy-dependent T schedule were not read. No selected-Algorithm convergence guarantee, accuracy bound or unrestricted Oracle Complexity claim is submitted. The selected interface is a reproducible definition, not a claim that the printed Theorem has been proved for it.",
+        "support_refs": [
+          "#/source_refs/0"
+        ]
+      }
+    ],
+    "performance_links": [],
+    "variants": [
+      {
+        "cost": "N=sum_{t=0}^{T-2}(J_t-1) paired stochastic-vector queries, comprising N evaluations of g_x and N of g_y; N primal composite minimizations and N dual Bregman minimizations; T-1 d_y reset minimizations as specified, primal averaging and one independent uniform-index sample. A fixed valid reset can instead be computed once and reused as an implementation optimization. Costs of exact minimizations, gradients of d_y and vector arithmetic are additional resources, not equated to one stochastic query. D1 uses no f(x,.) maximization primitive.",
+        "implementation_details_ref": "PDF p.5 Eq.(8); p.6 Assumption 1; p.8 Assumption 2, Algorithm 1 lines 1-7 and explanatory paragraph; p.9 Algorithm 2 lines 2-8 and adjacent Theorem 4.1 output notation. The interface selections are explicitly specified here.",
+        "name": "PG-SMD D1 with explicitly selected primal interface and outer output",
+        "output": "After constructing xbar_0,...,xbar_{T-1}, sample tau independently and uniformly from {0,...,T-1} and return xbar_tau in X. This is the selected output definition, supported by the adjacent Theorem's notation; it is not a literal transcription of Algorithm 2 line 8, which prints x^(tau). No performance guarantee is attached.",
+        "public_inputs": [
+          "Initial xbar_0 in X; integer T>=2; rho>0 and 0<gamma<=1/(2rho); finite positive D_x,D_y,M_x,M_y satisfying the stated bounds",
+          "g,r,d_y and exact minimization primitives for the displayed updates; a stochastic-vector query routine satisfying the stated requirements"
+        ],
+        "query_and_update": "For t=0,...,T-2 set J_t=(t+3)^2, eta_x=D_x/(M_x sqrt(J_t)), eta_y=D_y/(M_y sqrt(J_t)). Initialize the inner sequence as specified below. For j=0,...,J_t-2 obtain the pair g_x^j,g_y^j at the same current point (x^j,y^j), then set x^{j+1}=argmin_{x in R^p} {<x,g_x^j>+||x-x^j||_2^2/(2 eta_x)+g(x)+||x-xbar_t||_2^2/(2 gamma)} and y^{j+1}=argmin_{y in R^q} {-<y,g_y^j>+V_y(y,y^j)/eta_y+r(y)}. The inner subroutine returns only xhat=(1/J_t) sum_{j=0}^{J_t-1} x^j. Define xbar_{t+1}=xhat. No dual average or second return value is defined or consumed. All minimizers must be attained; when the dual argmin is not unique, use a fixed measurable selection lying in Y^o. This replaces the printed pair assignment by the single-output interface explicitly chosen in this record.",
+        "requirements": "f is continuous, rho-weakly convex in x for every y in Y, and concave in y for every x in X; g,r are proper closed convex functions, with mu=0; psi has a finite lower optimum. X=dom(g), Y=dom(r). Q_g=max_X g-min_X g and Q_r=max_Y r-min_Y r are finite. D_x=max_{x,x' in X}||x-x'||_2 is finite and positive; D_y=sqrt(2 max_Y d_y-2 min_Y d_y) is finite and positive. The primal norm is Euclidean; the dual space has norm ||.|| and dual norm ||.||_*. d_y is convex on Y and continuously differentiable and 1-strongly convex on Y^o={y in Y: partial d_y(y) nonempty}; V_y(y,y')=d_y(y)-d_y(y')-<grad d_y(y'),y-y'> for y' in Y^o. For each query, conditional on the current query and past, the selected routine returns a pair satisfying (E[g_x|past],-E[g_y|past]) in partial_x f(x,y) times partial_y[-f(x,y)], with conditional second moments at most M_x^2 and M_y^2 in Euclidean and dual norms respectively. This conditional formulation is an explicit selected Oracle requirement; the source Assumption 2(A)-(B) states the corresponding fixed-point expectations. No independence between the two vectors is required. Exact composite primal minimizers, dual Bregman minimizers and reset minimizers must be computable; the reset and selected dual updates must lie in Y^o so every subsequent Bregman divergence is defined. These are execution requirements, not claims that every distance-generating function supplies such solvers.",
+        "state_and_initialization": "For each outer t reset ybar_t to a selected minimizer of d_y over Y lying in Y^o. Initialize inner x^0=xbar_t and y^0=ybar_t. Store the primal average needed for the single return value. After the inner loop set xbar_{t+1} to that returned average. Discard inner dual state; the next outer iteration independently resets it. Thus the unused second output printed in Algorithm 2 is unnecessary for this selected D1 implementation. Availability of attained minimizers and preservation of Y^o are explicit requirements. Convexity of X ensures the returned primal average lies in X.",
+        "tuning_and_stopping": "Run exactly T-1 outer subproblems with the displayed schedules, each with J_t-1 paired queries and an average of J_t primal iterates including the initialization. T is an input here; no accuracy-dependent T or epsilon complexity is certified. Degenerate D_x=0 or D_y=0 and rho=0 conventions are outside this selected implementation.",
+        "variant_id": "selected"
+      }
+    ],
+    "whole_paper_extracted": false
+  },
+  "evidence": {
+    "basis": "source_statement",
+    "checked_locators": [
+      "PDF p.5 geometry and Eq.(8)",
+      "PDF p.6 Assumption 1",
+      "PDF p.8 Assumption 2(A)-(D1), Algorithm 1 lines 1-7 and explanatory paragraph",
+      "PDF p.9 Algorithm 2 lines 2-8 and adjacent Theorem 4.1 randomized outer-output notation"
+    ],
+    "readiness": "reference",
+    "statement_complete": true,
+    "unresolved": [],
+    "use_restrictions": [
+      "Reference proposal for the explicitly selected executable Algorithm definition only; independent review of this revision remains required.",
+      "Single-output recursion and outer-iterate output are explicit selections justified by the inspected explanatory paragraph, independent D1 dual resets and adjacent Theorem notation; they are not author errata. The original pair assignment and output-symbol conventions remain documented in content.limitations.",
+      "The conditional adaptive Oracle formulation is a selected execution requirement, not an assertion that the source states it verbatim or that its convergence Proof has been checked.",
+      "No convergence guarantee, accuracy-dependent schedule or unrestricted Oracle Complexity is attached. Do not import Theorem 4.1 performance without checking its full assumptions, schedule and Proof for this implementation."
+    ]
+  },
+  "id": "alg.P062.pg_smd_d1",
+  "kind": "algorithm",
+  "links": [],
+  "navigation": {
+    "facets": [],
+    "query_aliases": [],
+    "research_use": []
+  },
+  "revision": 1,
+  "schema": "colombo-scientific-memory/2",
+  "source_refs": [
+    {
+      "locator": "PDF pp.5-9, Eq.(8), Assumptions 1-2, Algorithms 1-2, p.8 explanatory paragraph and p.9 adjacent Theorem output notation",
+      "ref_id": "s1",
+      "source_id": "src.P062",
+      "source_revision": 1,
+      "source_version": "arXiv:1810.02060v4, 11 May 2021"
+    }
+  ],
+  "summary": "Reproducible D1 implementation with explicit single-output primal recursion, outer-iterate randomized output and separate operation accounting; selected source conventions recorded, with no convergence claim.",
+  "title": "PG-SMD bounded-domain D1 branch",
+  "use_when": [
+    "Inspect or implement the explicitly selected bounded-domain proximal-guidance and stochastic mirror-descent procedure, subject to its Oracle and exact-minimization requirements."
+  ]
+}

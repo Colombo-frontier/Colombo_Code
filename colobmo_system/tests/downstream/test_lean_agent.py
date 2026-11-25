@@ -1,6 +1,5 @@
 """Independent Lean orchestration preserves both gates and bounded artifacts."""
 import copy
-import hashlib
 import json
 from pathlib import Path
 import sys
@@ -13,6 +12,7 @@ sys.path.insert(0, str(PROJECT / "src"))
 
 from colombo.lean_agent.agent import SCHEMAS, _validate_response, run
 from colombo.downstream.handoff import digest
+from evidence_fixtures import compiler_fixture
 
 
 class FakeModel:
@@ -51,9 +51,7 @@ class LeanAgentTests(unittest.TestCase):
                        "checked_claim_ids": ["main"], "findings": []}
 
     def compile(self, project, names, **kwargs):
-        return {"status": "passed", "source_sha256": hashlib.sha256((project / "Main.lean").read_bytes()).hexdigest(),
-                "declarations": names, "declaration_printout": "theorem result : True := True.intro",
-                "axioms": {"result": []}, "diagnostics": []}
+        return compiler_fixture((project / "Main.lean").read_text(encoding="utf-8"), names)
 
     def invoke(self, model, compiler=None):
         with patch("colombo.lean_agent.agent.verify_lean", side_effect=compiler or self.compile):
@@ -182,6 +180,43 @@ class LeanAgentTests(unittest.TestCase):
         self.config["max_compile_attempts"] = 4
         with self.assertRaisesRegex(ValueError, "another package or configuration"):
             self.invoke(FakeModel([]))
+
+    def test_changed_cached_status_is_rejected_without_model_or_compiler(self):
+        # The audited cache probe must fail even before Writing can run.
+        self.config["lean_project"] = ""
+        self.assertEqual(self.invoke(FakeModel([]))["status"], "blocked")
+        path = self.work / "result.json"
+        saved = json.loads(path.read_text())
+        saved["status"] = "passed"
+        path.write_text(json.dumps(saved), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Saved Lean result changed"):
+            self.invoke(FakeModel([]))
+
+    def test_missing_result_receipt_and_legacy_state_require_new_directory(self):
+        self.invoke(FakeModel([self.candidate, self.review]))
+        path = self.work / "state.json"
+        state = json.loads(path.read_text())
+        state.pop("result_sha256")
+        path.write_text(json.dumps(state), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "lacks its receipt"):
+            self.invoke(FakeModel([]))
+        state.pop("evidence_version")
+        path.write_text(json.dumps(state), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Legacy Lean cache"):
+            self.invoke(FakeModel([]))
+
+    def test_changed_partial_review_cannot_be_reused(self):
+        self.invoke(FakeModel([self.candidate, self.review]))
+        (self.work / "result.json").unlink()
+        path = self.work / "attempts/A0001/review.json"
+        changed = json.loads(path.read_text())
+        changed["checked_claim_ids"] = []
+        path.write_text(json.dumps(changed), encoding="utf-8")
+        model = FakeModel([])
+        result = self.invoke(model)
+        self.assertEqual(result["status"], "failed")
+        self.assertIn("Cached Lean artifact changed", result["diagnostics"][0])
+        self.assertEqual(model.calls, [])
 
     def test_interrupted_compiler_directory_is_not_reused(self):
         model = FakeModel([self.candidate, self.review])

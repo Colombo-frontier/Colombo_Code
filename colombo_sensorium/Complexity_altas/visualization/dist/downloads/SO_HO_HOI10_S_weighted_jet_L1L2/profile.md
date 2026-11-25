@@ -261,3 +261,7 @@ Native value (empty_array): []
 [1] Colombo_A4. Matching Gradient--Hessian Query Bounds via a Smooth Macro-Block Construction. A4_gradient_hessian_matching_publication.tex.
 
 https://github.com/WU-Wendao/Colombo/blob/main/colombo_sensorium/Complexity_altas/data/sources/colombo/A4/manuscript.pdf
+
+**Contribution.** Alternative smooth macro-block construction
+
+**Contribution scope.** An alternative globally smooth macro-block construction and proof for the matching weighted gradient–Hessian query rate. The manuscript acknowledges that the same weighted rate follows from the existing hierarchical tradeoff construction, and emphasizes its globally C-infinity realization, delayed-disclosure argument, and explicit analytic and oracle accounting. The upper-bound algorithms are drawn from prior work.

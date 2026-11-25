@@ -9,6 +9,12 @@ rebuilt, and the original review identity is kept separate from the projected
 JSON hash. See [public snapshot and review identity](MEMORY_PRIVACY_PUBLICATION.md)
 and `../.long_term_memory_state/PRIVACY_PROJECTION.json`.
 
+The same disclosure records the release's neutral public wording projection.
+It retains mathematical arguments and application restrictions while expressing
+source commentary as explicit formula conventions and evidence scope. Affected
+bytes and pinned references have new disclosed hashes; historical reviews still
+bind their original identities, with no new review or change of publication tier.
+
 ## Ordinary system use
 
 Install system `requirements.txt` in Python 3.11+ and use the original entry points:

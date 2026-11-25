@@ -684,10 +684,24 @@ def colombo_badge(info):
             f'title="{esc(info["scope_note"])}">{esc(info["label"])}</span>')
 
 
-def colombo_legend():
+def colombo_legend(count=None):
+    count_text = '' if count is None else f'{count} settings with adopted contributions. '
     return ('<div class="colombo-legend" aria-label="Colombo result highlights">'
             '<span class="colombo-badge" data-colombo-state="adopted">★ Colombo</span>'
-            '<p>Near-optimal regions</p></div>')
+            f'<p>{count_text}Colombo contributions in marked regions; rate status is shown separately.</p></div>')
+
+
+def colombo_contribution_scope(info):
+    entries = [item for item in (info or {}).get('contributions', [])
+               if item.get('contribution_label')]
+    if not entries:
+        return ''
+    return ('<aside class="contribution-scope" aria-label="Contribution scope">'
+            '<div class="minor-eyebrow">Contribution scope</div>'
+            + ''.join('<div class="contribution-scope-entry" data-contribution-source="'
+                      + esc(item['paper_id']) + '"><h2>' + esc(item['contribution_label'])
+                      + '</h2><p>' + esc(item['note']) + '</p></div>' for item in entries)
+            + '</aside>')
 
 
 def build_profile(p, index, total, previous, following, classification, human_tags, dictionary, normalization_report=None, explanations=None, colombo=None):
@@ -702,6 +716,10 @@ def build_profile(p, index, total, previous, following, classification, human_ta
         heading = '<h1>' + esc(p['title']) + '</h1>'
         out = [part.replace(heading, '<div class="profile-heading">' + heading
                             + colombo_badge(colombo) + '</div>', 1) for part in out]
+        scope = colombo_contribution_scope(colombo)
+        if scope:
+            marker = '<p class="status-scope">Status applies to the documented comparisons and their explicit parameter regions.</p>'
+            out = [part.replace(marker, marker + scope, 1) for part in out]
     out.append(f'<a href="{esc(previous["setting_id"])}.html">← Previous setting</a>' if previous else '<span></span>')
     out.append(f'<a href="{esc(following["setting_id"])}.html">Next setting →</a>' if following else '<a href="../index.html">All settings →</a>')
     out.append(f'</nav></main></div><footer class="footer">Complexity Atlas <span>{total} profiles</span><a href="#">Back to top ↑</a></footer></body></html>')
@@ -759,7 +777,7 @@ def build_index(profiles, catalog, human_tags, dictionary, overview, nebula, col
            '<main class="atlas-main"><section class="atlas-heading"><div><div class="eyebrow">A STRUCTURED VIEW OF ORACLE COMPLEXITY</div>',
            '<h1>Known bounds.<br><em>Precisely scoped.</em></h1></div>',
            f'<div class="batch-panel"><span class="batch-number">{count}</span><div>Settings in this atlas</div><span class="batch-rule"></span><p>Full profiles available<br>as PDF and LaTeX.</p></div></section>',
-           colombo_legend(), nebula_markup(nebula, overview), overview_markup(overview),
+           colombo_legend(len(colombo_marks)), nebula_markup(nebula, overview), overview_markup(overview),
            '<section class="library" id="setting-library" aria-label="Settings library"><div class="library-toolbar"><h2>Explore the atlas</h2>',
            '<label class="search-box"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 4.5 4.5"></path></svg><input id="search" type="search" placeholder="Search concepts, a setting ID, or text…" aria-label="Search concepts or profile text"><kbd>/</kbd></label></div>',
            '<div class="library-layout"><div class="filter-shell" id="filter-shell"><button class="filter-toggle" id="toggle-filters" type="button" aria-expanded="false" aria-controls="filter-panel"><span>Filters <span class="filter-toggle-count" id="filter-toggle-count"></span></span><span class="filter-toggle-action">Common filters <b aria-hidden="true">+</b></span></button>',
@@ -957,7 +975,10 @@ def main():
         profiles.append(normalise_display_profile(profile))
         classifications[sid] = classification
         human_tags[sid] = tags
-    colombo_registry = display_registry(load_colombo_results(root, canonical_profiles))
+    all_contributions = load_colombo_results(root, canonical_profiles)
+    colombo_registry = display_registry(all_contributions)
+    (root / 'data/derived/colombo_contributions.json').write_text(
+        json.dumps(all_contributions, ensure_ascii=False, indent=2) + '\n')
     colombo_marks = colombo_registry['settings']
     dist = root / "visualization/dist"
     (dist / "settings").mkdir(parents=True, exist_ok=True)

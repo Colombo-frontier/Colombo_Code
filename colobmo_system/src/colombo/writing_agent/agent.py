@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 from jsonschema import Draft202012Validator
 from colombo.downstream.handoff import digest, validate_package
+from colombo.lean_agent.evidence import validate_lean_result
 from colombo.shared.file_io import atomic_write, json_bytes
 
 TEXT = {'type': 'string', 'minLength': 1}
@@ -15,29 +16,24 @@ SCHEMA = {'type': 'object', 'additionalProperties': False, 'properties': {
     'required': ['proof_sha256','manuscript_md','manuscript_tex','bibliography_bib','claim_map','editorial_gaps']}
 
 
-def run(package, lean_result, work_dir, config, model):
+def run(package, lean_result, work_dir, config, model, *, evidence_origin="imported"):
     package, lean_result = json.loads(json.dumps([package,lean_result]))
     validate_package(package)
-    if (lean_result.get('status') != 'passed' or lean_result.get('proof_sha256') != package['proof_sha256']):
-        raise ValueError('Writing requires a passing Lean result for this exact ProofDraft')
-    review = lean_result.get('semantic_review') or {}
-    checked = review.get('checked_claim_ids', [])
-    if ((lean_result.get('compiler') or {}).get('status') != 'passed' or review.get('verdict') != 'pass'
-            or review.get('proof_sha256') != package['proof_sha256'] or review.get('findings')
-            or len(checked) != len(set(checked)) or set(checked) != set(package['required_claim_ids'])):
-        raise ValueError('Writing requires compiler evidence and complete semantic review')
+    validate_lean_result(package, lean_result)
+    if evidence_origin not in {"local_agent", "imported"}:
+        raise ValueError("Unknown Lean evidence origin")
     work = Path(work_dir).resolve(); work.mkdir(parents=True, exist_ok=True)
     lock = work/'.agent.lock'
     with lock.open('x') as f:
         f.write('Writing Agent active; inspect previous process before clearing stale lock.\n')
     try:
-        return _run(package,lean_result,work,config,model)
+        return _run(package,lean_result,work,config,model,evidence_origin)
     finally:
         lock.unlink(missing_ok=True)
 
 
-def _run(package,lean_result,work,config,model):
-    context = {**package, 'lean_result': lean_result}
+def _run(package,lean_result,work,config,model,evidence_origin):
+    context = {**package, 'lean_result': lean_result, 'lean_evidence_origin': evidence_origin}
     identity = digest({'input':context,'config':config})
     binding = work/'binding.json'
     if binding.exists():
@@ -68,6 +64,9 @@ def _run(package,lean_result,work,config,model):
         if time.time() >= state['deadline_unix']: raise TimeoutError('Writing Agent time allowance exhausted')
         report = {'status':'draft_with_gaps' if payload.get('editorial_gaps') else 'draft',
             'proof_sha256':package['proof_sha256'], 'manuscript':payload,
+            'lean_evidence_origin': evidence_origin,
+            'lean_evidence_validation': 'embedded_structure_and_bindings',
+            'lean_recompiled_for_writing': False,
             'latex_compilation':'not_run', 'mathematical_review':'writer_self_check_only'}
     Draft202012Validator(SCHEMA).validate(payload)
     if payload['proof_sha256'] != package['proof_sha256']:

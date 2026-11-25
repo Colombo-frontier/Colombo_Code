@@ -38,7 +38,7 @@ $$
 \Theta=[\theta_1,\ldots,\theta_M],\quad \operatorname{rank}(\Theta)=r,\quad \theta_m=Bw_m,\quad B^{\mathsf T}B=I_r,\quad \|\theta_m\|_2=1.
 $$
 
-Each task has action set $\mathcal{A}_m=B_2^d(1)$. The source model does not explicitly impose task diversity; the singular-value normalization issue in its proof remains separately recorded.
+Each task has action set $\mathcal{A}_m=B_2^d(1)$. This profile imposes no task-diversity assumption; applicability of the separately listed representation-based upper bound remains pending.
 
 ### Oracle interface
 
@@ -198,7 +198,7 @@ $$
 
 ## 4. Bounds and supporting evidence
 
-### B1 - Three-stage representation estimation, task exploration, and commitment; applicability is not established.
+### B1 - Three-stage representation estimation, task exploration, and commitment; applicability review pending.
 
 **Admission.** Not admitted to the bracket; retained for traceability
 
@@ -212,7 +212,7 @@ $$
 
 **Sources.** [1](https://arxiv.org/pdf/2203.15664)
 
-**Conditions.** The total exploration phase must fit within the $T$ rounds.; The proof uses the normalization $\sigma_r(\Theta)$. The notation $\sigma_r(\Theta)$ denotes the $r$th largest singular value of the task-parameter matrix. Section 3.2 of the source does not explicitly state the task-diversity condition required by the proof.; The source claim remains pending applicability review and is not promoted to a certified frontier result for this specification.
+**Conditions.** The total exploration phase must fit within the $T$ rounds.; The source-bound mapping involves $\sigma_r(\Theta)$, the $r$th largest singular value of the task-parameter matrix. Its applicability to the model without task diversity remains pending.; The source claim remains pending applicability review and is not promoted to a certified frontier result for this specification.
 
 **Oracle correspondence.** Retain the specified feedback type, sample coupling, public information, and environment permissions.
 
@@ -253,6 +253,14 @@ $$
 **Source location.** [2](https://proceedings.mlr.press/v291/zhang25b.html) theorem: Corollary8, independent application to each task
 
 Each task runs E2TC using only its own past rewards, so actions for all tasks can be submitted simultaneously within a batch. Sum the taskwise expected regrets and retain total sample count $N=MT$. This upper bound does not exploit a shared low-rank representation.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 
