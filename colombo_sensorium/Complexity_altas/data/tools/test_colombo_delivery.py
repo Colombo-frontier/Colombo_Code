@@ -102,7 +102,7 @@ class ColomboDeliveryTests(unittest.TestCase):
     def test_historical_near_optimal_subset_keeps_its_exact_scope(self):
         selected = {sid: e['highlight'] for sid, e in self.registry['settings'].items() if e.get('highlight')}
         self.assertEqual(len(selected), 39)
-        self.assertEqual(sum(len(e['comparison_ids']) for e in selected.values()), 66)
+        self.assertEqual(sum(len(e['comparison_ids']) for e in selected.values()), 68)
         self.assertEqual(Counter(e['state'] for e in self.editorial['settings'].values()),
                          {'adopted': 49, 'pending': 2})
         statuses, paper_ids = Counter(), set()
@@ -116,8 +116,8 @@ class ColomboDeliveryTests(unittest.TestCase):
             for contribution in self.registry['settings'][sid]['contributions']:
                 if set(contribution['comparison_ids']) & set(entry['comparison_ids']):
                     paper_ids.add(contribution['paper_id'])
-        self.assertEqual(statuses, {'optimal': 41, 'logarithmic_gap': 25})
-        self.assertEqual(len(paper_ids), 20)
+        self.assertEqual(statuses, {'optimal': 41, 'logarithmic_gap': 27})
+        self.assertEqual(len(paper_ids), 21)
         hp = 'SO_FO_S01_direction_HP'
         saturation = hp + '__randomized__probability__c_saturation_20261122'
         profile = json.loads((ROOT/'data/settings'/hp/'profile.json').read_text())

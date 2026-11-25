@@ -97,14 +97,14 @@ The current release distinguishes the Atlas inventory, adopted contribution cove
 | Scope | Count | Meaning |
 | --- | ---: | --- |
 | Native problem settings | **445** | All settings in the Atlas, including unresolved and partially documented brackets. |
-| Settings with an adopted Colombo contribution | **84** | The union of **49** settings attributed to public arXiv papers and **36** settings using retained local manuscripts, with **1** setting in both groups: **49 + 36 − 1 = 84**. |
+| Settings with an adopted Colombo contribution | **85** | The union of **49** settings attributed to public arXiv papers and **38** settings using retained local manuscripts, with **2** settings in both groups: **49 + 38 − 2 = 85**. |
 | Pending attribution | **2 settings** | Retained for review and excluded from the adopted contribution count. |
 | Registered public paper entries | **22** | Public arXiv sources in the contribution registry. |
-| Retained local manuscript entries | **30** | Bundled unpublished research manuscripts in the local source catalog, including three Kimi manuscripts. |
+| Retained local manuscript entries | **31** | Bundled unpublished research manuscripts in the local source catalog, including three Kimi manuscripts and the joint stochastic bilevel complexity manuscript. |
 
 **★ Colombo identifies an adopted contribution within its documented comparisons and parameter regions.** Mathematical status remains a separate label: an adopted contribution can improve a bound while leaving a gap. The **39-setting** historical near-optimal selection is retained as a separate subset of the contribution registry.
 
-The **22 public papers and 30 local manuscript entries are source counts**; related versions and multiple settings require work-level deduplication before reporting a total number of distinct research works. The paper's **more than fifty settings / 56 research works** figures in the introduction retain their historical reporting scope. The current **84-setting** count records adopted contribution coverage, without asserting 84 new or near-optimal results.
+The **22 public papers and 31 local manuscript entries are source counts**; related versions and multiple settings require work-level deduplication before reporting a total number of distinct research works. The paper's **more than fifty settings / 56 research works** figures in the introduction retain their historical reporting scope. The current **85-setting** count records adopted contribution coverage, without asserting 85 new or near-optimal results.
 
 The retained local manuscripts **N01, A4 and U10** have explicit contribution scopes in the source catalog, setting pages and profile downloads. N01 presents an alternative random-rotation construction and measurable transfer framework while acknowledging the known randomized main rate. A4 presents an alternative globally smooth macro-block construction and proof while acknowledging the existing matching weighted rate. U10 presents a uniform formulation and boundary geometry while acknowledging the prior Euclidean high-dimensional polynomial lower profile. These descriptions follow the current manuscripts and do not establish new priority dates or a new independent mathematical review.
 

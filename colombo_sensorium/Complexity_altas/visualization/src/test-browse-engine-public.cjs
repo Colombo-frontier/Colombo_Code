@@ -60,7 +60,7 @@ run('colombo_search_and_badges_cover_all_adopted_contributions', () => {
   const highlighted = Object.keys(registry).filter(id => registry[id].state === 'adopted').sort();
   assert.deepEqual(embedded('atlas-overview-data').points.filter(point => point.colombo).map(point => point.id).sort(), highlighted);
   const manuscriptIds = new Set(JSON.parse(read('data/sources/colombo/catalog.json')).map(source => source.id));
-  assert.equal(manuscriptIds.size, 30);
+  assert.equal(manuscriptIds.size, 31);
   const coveredManuscripts = new Set();
   const attributed = records.filter(record => {
     const profile = JSON.parse(read(`data/settings/${record.id}/profile.json`));
@@ -68,11 +68,11 @@ run('colombo_search_and_badges_cover_all_adopted_contributions', () => {
     refs.forEach(reference => coveredManuscripts.add(reference.id));
     return refs.length > 0;
   }).map(record => record.id).sort();
-  assert.equal(attributed.length, 36);
+  assert.equal(attributed.length, 38);
   assert.deepEqual([...coveredManuscripts].sort(), [...manuscriptIds].sort());
   // Attribution includes non-closed results; rate status is a separate filter.
   const expected = [...new Set([...highlighted, ...attributed])].sort();
-  assert.equal(expected.length, 84);
+  assert.equal(expected.length, 85);
   assert.deepEqual(ids(state([], '★ Colombo')), expected);
   assert.deepEqual(ids(state([], 'Colombo')), expected);
   return {adopted_contributions: highlighted.length, attributed_profiles: attributed.length,
