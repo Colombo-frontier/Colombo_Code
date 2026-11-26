@@ -160,8 +160,6 @@ The current release distinguishes the Atlas inventory, adopted contribution cove
 
 The **22 public papers and 31 local manuscript entries are source counts**; related versions and multiple settings require work-level deduplication before reporting a total number of distinct research works. The paper's **more than fifty settings / 56 research works** figures in the introduction retain their historical reporting scope. The current **85-setting** count records adopted contribution coverage, without asserting 85 new or near-optimal results.
 
-The retained local manuscripts **N01, A4 and U10** have explicit contribution scopes in the source catalog, setting pages and profile downloads. N01 presents an alternative random-rotation construction and measurable transfer framework while acknowledging the known randomized main rate. A4 presents an alternative globally smooth macro-block construction and proof while acknowledging the existing matching weighted rate. U10 presents a uniform formulation and boundary geometry while acknowledging the prior Euclidean high-dimensional polynomial lower profile. These descriptions follow the current manuscripts and do not establish new priority dates or a new independent mathematical review.
-
 ## Repository layout
 
 ```text
