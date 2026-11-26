@@ -5,25 +5,26 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-4c1" alt="Apache 2.0 license"></a>
 </p>
 
-## Citation
-
-If Colombo informs your research, please cite the [paper](https://arxiv.org/abs/2611.23080):
-
-```bibtex
-@misc{zhang2026colombo,
-  title         = {Colombo: A Frontier-to-Frontier Autoresearch System for Oracle-Based Optimization},
-  author        = {Haihan Zhang and Wendao Wu and Chenheng Zhang and
-                   Chunyuan Zheng and Yanyi Li and Cong Fang and
-                   Haoxuan Li and Zhouchen Lin},
-  year          = {2026},
-  eprint        = {2611.23080},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.AI},
-  url           = {https://arxiv.org/abs/2611.23080}
-}
-```
-
-For authors of papers that use the Colombo system: Although optional, it is highly appreciated if you could send an email to [colombo.2026@outlook.com](mailto:colombo.2026@outlook.com) telling us your identity (name, position and affiliation) or the results obtained via Colombo (best with the link to the paper).
+> [!NOTE]
+> ## Citation
+>
+> If Colombo informs your research, please cite the [paper](https://arxiv.org/abs/2611.23080):
+>
+> ```bibtex
+> @misc{zhang2026colombo,
+>   title         = {Colombo: A Frontier-to-Frontier Autoresearch System for Oracle-Based Optimization},
+>   author        = {Haihan Zhang and Wendao Wu and Chenheng Zhang and
+>                    Chunyuan Zheng and Yanyi Li and Cong Fang and
+>                    Haoxuan Li and Zhouchen Lin},
+>   year          = {2026},
+>   eprint        = {2611.23080},
+>   archivePrefix = {arXiv},
+>   primaryClass  = {cs.AI},
+>   url           = {https://arxiv.org/abs/2611.23080}
+> }
+> ```
+>
+> For authors of papers that use the Colombo system: Although optional, it is highly appreciated if you could send an email to [colombo.2026@outlook.com](mailto:colombo.2026@outlook.com) telling us your identity (name, position and affiliation) or the results obtained via Colombo (best with the link to the paper).
 
 **Formulate problems, investigate complexity gaps, verify findings, and preserve knowledge for further discovery.**
 
@@ -131,9 +132,9 @@ These are reported research outcomes, rather than a guarantee that a new run wil
 
 Explore **445 problem settings** through an interactive 3D map, a 2D overview, and a searchable setting library.
 
-[![Animated Complexity Atlas: a rotating view of seven Task constellations, colored by complexity-bracket status](assets/complexity-atlas.gif)](#browse-without-running-agents)
+[![Animated Complexity Atlas: 445 settings in seven Task constellations, with green optimal or near-optimal points, orange gap or other regimes, and red rings for Colombo output](assets/complexity-atlas.gif)](#browse-without-running-agents)
 
-*Each point represents a problem setting. The seven constellations group settings by Task; point colors summarize their recorded Complexity Bracket status, from optimal or near-optimal bounds to unresolved gaps and missing bounds. The full legend appears below the map.*
+*Each point represents a problem setting, grouped into seven Task constellations. Green marks optimal or near-optimal settings; orange marks gap or other regimes. Red rings mark settings with Colombo output.*
 
 Select a setting in the interactive Atlas to inspect its bounds, assumptions, and sources. Distances are illustrative, and connections indicate shared classifications rather than mathematical equivalence or reductions.
 
