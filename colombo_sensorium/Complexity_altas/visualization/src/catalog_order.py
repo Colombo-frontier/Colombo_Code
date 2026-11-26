@@ -7,10 +7,17 @@ from tempfile import NamedTemporaryFile
 
 
 def order_catalog(catalog):
-    profiles = sorted(catalog["profiles"], key=lambda entry: entry["domain"] != "single_objective")
+    # Catalog domains are the same primary-task families used by both maps.
+    # Preserve the existing family order and each family's internal order so
+    # regrouping changes display ordinals without changing research identities.
+    families = dict.fromkeys(entry["domain"] for entry in catalog["profiles"])
+    family_order = {"single_objective": 0}
+    family_order.update((family, index) for index, family in enumerate(
+        (family for family in families if family != "single_objective"), 1))
+    profiles = sorted(catalog["profiles"], key=lambda entry: family_order[entry["domain"]])
     return {
         **catalog,
-        "selection": "All active profiles, with single-objective profiles first and relative order preserved within both groups.",
+        "selection": "All active profiles grouped into contiguous primary-task families, with single-objective profiles first. Other families retain their first-appearance order; relative order is preserved within each family.",
         "profiles": [dict(entry, order=number) for number, entry in enumerate(profiles, 1)],
     }
 

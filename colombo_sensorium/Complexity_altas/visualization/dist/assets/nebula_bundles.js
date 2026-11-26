@@ -1,11 +1,10 @@
-/* Represent every recorded membership once, grouped by label and primary task. */
+/* Represent Oracle and Model memberships, grouped by label and primary task. */
 (() => {
   'use strict';
   const key = (label, task) => label + '|' + (task || '');
-  // Offset rails run in three perpendicular world directions. The offsets
+  // Offset rails run in two perpendicular world directions. The offsets
   // keep label nodes outside the main cloud in the initial camera view.
   const rails = {
-    TASK: {from: [-2.66, -1.25, -.22], to: [-2.66, 1.34, -.22], inward: [1, 0, .14]},
     ORACLE: {from: [2.63, .17, -2.32], to: [2.63, .17, 2.12], inward: [-1, -.08, 0]},
     MODEL: {from: [-2.46, -1.54, .84], to: [2.19, -1.54, .84], inward: [0, 1, -.12]},
   };
@@ -17,7 +16,7 @@
   });
   const opacityAt = depth => Math.max(.58, Math.min(1.16, .87 + .14 * depth));
   function create(overview, points, traces) {
-    const all = new Map(Object.values(overview.concepts).map(c => [c.id, {
+    const all = new Map(Object.values(overview.concepts).filter(c => c.group.split(':')[0] in rails).map(c => [c.id, {
       id: c.id, label: c.label, axis: c.group.split(':')[0], tasks: new Map(), members: [],
     }]));
     for (const p of points) {
@@ -89,7 +88,7 @@
       const hubs = [], routes = [], railLines = [];
       ctx.save();
       ctx.lineCap = 'round';
-      for (const axis of axes) {
+      for (const axis of axes.filter(axis => axis in rails)) {
         const labels = visibleLabels([axis]);
         const rail = rails[axis], {color} = traces[axis];
         const a = project(rail.from), b = project(rail.to);

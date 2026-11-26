@@ -15,7 +15,6 @@
   const style = getComputedStyle($('atlas-nebula'));
   const colors = new Map(overview.status_legend.map(s => [s.id, style.getPropertyValue('--star-' + s.id).trim() || s.color]));
   const traces = {
-    TASK: {color: style.getPropertyValue('--trace-task').trim(), dash: []},
     ORACLE: {color: style.getPropertyValue('--trace-oracle').trim(), dash: [5, 3]},
     MODEL: {color: style.getPropertyValue('--trace-model').trim(), dash: [2, 3]},
   };
@@ -55,7 +54,7 @@
   };
   canvas.dataset.colomboMarked = String(points.filter(p => colomboMark(p)).length);
 
-  for (const [axis, name] of [['TASK', 'Task'], ['ORACLE', 'Oracle'], ['MODEL', 'Model']]) {
+  for (const [axis, name] of [['ORACLE', 'Oracle'], ['MODEL', 'Model']]) {
     const group = make('optgroup'); group.label = name; group.dataset.axis = axis;
     for (const label of bundles.visibleLabels([axis])) {
       const option = make('option', label.label + ' · ' + label.members.length); option.value = label.id; group.append(option);

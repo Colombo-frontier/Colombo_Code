@@ -89,7 +89,7 @@ def build_nebula(overview, root):
     audit = {'passed': True, 'settings': len(points), 'unique_positions': len(positions),
              'task_clusters': dict(counts), 'distinct_membership_signatures': len(by_signature),
              'largest_signature_group': max(map(len, by_signature.values())),
-             'semantics': 'Position is illustrative. Connections are only drawn from recorded shared labels.',
+             'semantics': 'Position is illustrative. Connections use recorded shared Oracle and Model labels; task labels define clouds only.',
              'sha256': hashlib.sha256(target.read_bytes()).hexdigest()}
     return data
 
@@ -113,7 +113,6 @@ def nebula_markup(data, overview):
         <button type="button" data-nebula-mode="all" aria-pressed="false">All connections</button>
       </div>
       <fieldset id="nebula-links" class="nebula-links" hidden><legend class="nebula-sr">Shared labels by axis</legend>
-      <label class="nebula-task"><input type="checkbox" value="TASK" checked><i aria-hidden="true"></i> Task <span data-nebula-count="TASK"></span></label>
       <label class="nebula-oracle"><input type="checkbox" value="ORACLE" checked><i aria-hidden="true"></i> Oracle <span data-nebula-count="ORACLE"></span></label>
       <label class="nebula-model"><input type="checkbox" value="MODEL" checked><i aria-hidden="true"></i> Model <span data-nebula-count="MODEL"></span></label>
       </fieldset>
@@ -152,5 +151,5 @@ def nebula_markup(data, overview):
     <button type="button" id="nebula-clear" class="nebula-clear">Clear selection</button>
   </div>
   <ul class="nebula-legend" aria-label="Setting status colors">{colors}</ul>
-  <p class="nebula-note">Task defines the main clouds. Oracle and Model labels shape their interiors. Distances are illustrative; links show shared labels.</p>
+  <p class="nebula-note">Task defines the main clouds. Oracle and Model labels shape their interiors. Distances are illustrative; links show shared Oracle and Model labels.</p>
 </section><script id="atlas-nebula-data" type="application/json">{payload}</script>"""

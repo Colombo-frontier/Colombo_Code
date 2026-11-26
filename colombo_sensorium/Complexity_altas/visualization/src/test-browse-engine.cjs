@@ -105,10 +105,12 @@ run('graph_entry_points_from_index_and_profile', () => {
   assert(read('visualization/dist/settings/SO_ZO_E01.html').includes('href="../graph.html?setting=SO_ZO_E01"'));
   assert(fs.existsSync(path.join(root, 'visualization/dist/graph.html')));
 });
-run('single_objective_ordinals_agree_across_atlas_views', () => {
+run('task_groups_and_ordinals_agree_across_atlas_views', () => {
   const catalog = JSON.parse(read('data/derived/catalog.json')).profiles;
   const settingIds = catalog.map(entry => entry.id);
   const singleCount = catalog.filter(entry => entry.domain === 'single_objective').length;
+  const taskRanges = {}, seenTasks = new Set();
+  let previousTask = null;
   assert.deepEqual(records.map(record => record.id), settingIds);
   assert.deepEqual(embedded('atlas-overview-data').points.map(point => point.id), settingIds);
   assert.deepEqual(Object.keys(embedded('atlas-nebula-data').positions), settingIds);
@@ -120,6 +122,14 @@ run('single_objective_ordinals_agree_across_atlas_views', () => {
     const number = String(index + 1).padStart(2, '0');
     assert.equal(entry.order, index + 1, entry.id);
     assert.equal(entry.domain === 'single_objective', index < singleCount, entry.id);
+    if (entry.domain !== previousTask) {
+      assert(!seenTasks.has(entry.domain), `Task group is split: ${entry.domain}`);
+      seenTasks.add(entry.domain);
+      taskRanges[entry.domain] = {first: index + 1, last: index + 1};
+      previousTask = entry.domain;
+    }
+    taskRanges[entry.domain].last = index + 1;
+    assert.equal(embedded('atlas-overview-data').points[index].task, entry.domain, entry.id);
     assert.equal(cards[index][2], number, entry.id);
     const profile = read(`visualization/dist/settings/${entry.id}.html`);
     assert(profile.includes(`All settings <span>${number} / ${String(catalog.length).padStart(2, '0')}</span>`), entry.id);
@@ -128,7 +138,7 @@ run('single_objective_ordinals_agree_across_atlas_views', () => {
     const next = index + 1 < catalog.length ? `${settingIds[index + 1]}.html` : '../index.html';
     assert.deepEqual(adjacent, [...previous, next], entry.id);
   }
-  return {single_objective_settings: singleCount, profile_links_checked: catalog.length};
+  return {task_ranges: taskRanges, single_objective_settings: singleCount, profile_links_checked: catalog.length};
 });
 run('homepage_keeps_search_and_count_without_retired_controls', () => {
   const markup = page.split('<script id="atlas-search-data"')[0];
