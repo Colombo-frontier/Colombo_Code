@@ -132,33 +132,26 @@ These are reported research outcomes, rather than a guarantee that a new run wil
 
 Explore **445 problem settings** through an interactive 3D map, a 2D overview, and a searchable setting library.
 
-[![Animated Complexity Atlas: a historical rotating preview of seven Task constellations, colored by complexity-bracket status](assets/complexity-atlas.gif)](#browse-without-running-agents)
+[![Animated Complexity Atlas: a rotating view of seven Task constellations, colored by complexity-bracket status](assets/complexity-atlas.gif)](#browse-without-running-agents)
 
 *Each point represents a problem setting. The seven constellations group settings by Task; point colors summarize their recorded Complexity Bracket status, from optimal or near-optimal bounds to unresolved gaps and missing bounds. The full legend appears below the map.*
 
-Select a setting in the interactive Atlas to inspect its bounds, assumptions, and sources. **Task** labels group settings into constellations; enable connections to explore shared **Oracle** and **Model** labels. Distances are illustrative, and connections indicate shared classifications rather than mathematical equivalence or reductions.
+Select a setting in the interactive Atlas to inspect its bounds, assumptions, and sources. Distances are illustrative, and connections indicate shared classifications rather than mathematical equivalence or reductions.
 
 **[Browse the interactive Atlas locally](#browse-without-running-agents)** · [Static preview](assets/complexity-atlas.jpg) · [Atlas guide](colombo_sensorium/Complexity_altas/README.md)
 
-The animation above previews the Atlas rotation. The bundled animation and static image are historical previews; open the interactive Atlas to browse the current **445 settings**, rotate and zoom the view, explore relationships, and inspect individual settings. The bundled interactive pages run locally without starting research agents or supplying API keys.
-
-Each profile links its model, oracle, algorithm permissions, output, error metric, guarantee and resource budget to regional bounds and evidence. PDF, TeX and Markdown downloads preserve the complete profile.
+The animation above previews the Atlas rotation. Open the interactive version to rotate and zoom the view, explore relationships, and inspect individual settings. The bundled interactive pages run locally without starting research agents or supplying API keys.
 
 ### Current contribution coverage
 
-The current release distinguishes the Atlas inventory, adopted contribution coverage, and source entries:
-
-| Scope | Count | Meaning |
-| --- | ---: | --- |
-| Native problem settings | **445** | All settings in the Atlas, including unresolved and partially documented brackets. |
-| Settings with an adopted Colombo contribution | **85** | The union of **49** settings attributed to public arXiv papers and **38** settings using retained local manuscripts, with **2** settings in both groups: **49 + 38 − 2 = 85**. |
-| Pending attribution | **2 settings** | Retained for review and excluded from the adopted contribution count. |
-| Registered public paper entries | **22** | Public arXiv sources in the contribution registry. |
-| Retained local manuscript entries | **31** | Bundled unpublished research manuscripts in the local source catalog, including three Kimi manuscripts and the joint stochastic bilevel complexity manuscript. |
-
-**★ Colombo identifies an adopted contribution within its documented comparisons and parameter regions.** Mathematical status remains a separate label: an adopted contribution can improve a bound while leaving a gap. The **39-setting** historical near-optimal selection is retained as a separate subset of the contribution registry.
-
-The **22 public papers and 31 local manuscript entries are source counts**; related versions and multiple settings require work-level deduplication before reporting a total number of distinct research works. The paper's **more than fifty settings / 56 research works** figures in the introduction retain their historical reporting scope. The current **85-setting** count records adopted contribution coverage, without asserting 85 new or near-optimal results.
+| Scope | Count |
+| --- | ---: |
+| Native problem settings | **445** |
+| Settings with an adopted Colombo contribution | **85** (**49 + 38 − 2**) |
+| Pending attribution | **2 settings** |
+| Registered public paper entries | **22** |
+| Retained local manuscript entries | **31** |
+| Historical near-optimal selection | **39 settings** |
 
 ## Repository layout
 
@@ -189,8 +182,6 @@ Colombo/
 ```
 
 Use the existing directory spellings **`colobmo_system`** and **`Complexity_altas`** in commands. Unless otherwise stated, the working directory below is **`Colombo/colobmo_system/`**.
-
-Current configuration files describe runnable defaults; they do not identify the configuration of every historical research run.
 
 ## Installation
 
@@ -641,10 +632,6 @@ The launcher supplies the matching Brain `--run-dir`. Arguments after `--` are B
 | `writing/claim-map.json` | Mapping between manuscript claims and checked material. |
 | `pipeline.json` | Downstream status, separate from Brain completion. |
 
-Lean and Writing are independent downstream stages. The shared evidence validator checks source and project hashes, compiler and declaration/axiom audit output, complete Claim mappings, correspondence review and cached-artifact receipts against the same handoff.
-
-Writing records whether evidence comes from a local Lean Agent or an imported report. Imported reports receive embedded structure and binding checks; Writing does not recompile them or authenticate their producer. Formalization covers the listed declarations and claims. The [downstream guide](colobmo_system/docs/DOWNSTREAM.md) describes these stages and their evidence boundaries.
-
 Writing performs its own self-check; it does not add an independent mathematical review, compile LaTeX, or render a PDF. Downstream failure retains its evidence and does not automatically send a repair task to Brain. See [requirements and standalone stages](colobmo_system/docs/DOWNSTREAM.md).
 
 ## Scientific Memory
@@ -654,8 +641,6 @@ The release includes four scientific libraries: **sources, theorems, algorithm f
 Keep **`long_term_memory/` and `.long_term_memory_state/` together**. The hidden directory contains required indexes, pinned scientific objects, and review/publication state. Verifier, Recovery, and Experiment have no live Memory reader.
 
 The independent [`colombo_memory_agent/`](colobmo_system/colombo_memory_agent/README.md) performs extraction, curation, independent review, and publication against the parent system's Store. It is not launched by the proof scheduler. Its `stage_only` jobs can extract and review without publishing; publication is an explicit operation governed by the component's review and authorization checks.
-
-The public wording projection is recorded separately from the original scientific reviews.
 
 See [Memory usage](colobmo_system/docs/MEMORY.md) for reading behavior and [review identity and privacy](colobmo_system/docs/MEMORY_PRIVACY_PUBLICATION.md) for the bundled publication projection.
 
