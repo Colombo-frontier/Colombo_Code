@@ -24,7 +24,7 @@
 > }
 > ```
 >
-> For authors of papers that use the Colombo system: Although optional, it is highly appreciated if you could send an email to [colombo.2026@outlook.com](mailto:colombo.2026@outlook.com) telling us your identity (name, position and affiliation) or the results obtained via Colombo (best with the link to the paper).
+> For authors of papers that use the Colombo system: **Although optional, it is highly appreciated if you could send an email to [colombo.2026@outlook.com](mailto:colombo.2026@outlook.com) telling us your identity (name, position and affiliation) or the results obtained via Colombo (best with the link to the paper).**
 
 **Formulate problems, investigate complexity gaps, verify findings, and preserve knowledge for further discovery.**
 
