@@ -45,7 +45,6 @@ The [accompanying paper](https://arxiv.org/abs/2611.23080) reports optimal or ne
 - [How Colombo works](#how-colombo-works)
 - [Research highlights](#research-highlights)
 - [Explore the Complexity Atlas](#explore-the-complexity-atlas)
-  - [Current contribution coverage](#current-contribution-coverage)
 - [Repository layout](#repository-layout)
 - [Installation](#installation)
 - [Authentication and API keys](#authentication-and-api-keys)
@@ -141,17 +140,6 @@ Select a setting in the interactive Atlas to inspect its bounds, assumptions, an
 **[Browse the interactive Atlas locally](#browse-without-running-agents)** · [Static preview](assets/complexity-atlas.jpg) · [Atlas guide](colombo_sensorium/Complexity_altas/README.md)
 
 The animation above previews the Atlas rotation. Open the interactive version to rotate and zoom the view, explore relationships, and inspect individual settings. The bundled interactive pages run locally without starting research agents or supplying API keys.
-
-### Current contribution coverage
-
-| Scope | Count |
-| --- | ---: |
-| Native problem settings | **445** |
-| Settings with an adopted Colombo contribution | **85** (**49 + 38 − 2**) |
-| Pending attribution | **2 settings** |
-| Registered public paper entries | **22** |
-| Retained local manuscript entries | **31** |
-| Historical near-optimal selection | **39 settings** |
 
 ## Repository layout
 

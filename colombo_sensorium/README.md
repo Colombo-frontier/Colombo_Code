@@ -17,7 +17,7 @@ The **445 settings** form the full Atlas inventory. Adopted Colombo contribution
 
 The **★ Colombo** badge identifies an adopted contribution in the stated comparison scope, independently of the mathematical status label. It can accompany a partial improvement with an unresolved gap. The former **39-setting near-optimal highlight subset** is narrower than this contribution view.
 
-The source registries contain **22 public arXiv paper entries and 31 local manuscript entries**. These counts require work-level deduplication before they can describe distinct research works. N01, A4 and U10 are retained with manuscript-specific contribution scopes on their setting pages and profile downloads. The accompanying paper's historical **more than fifty settings / 56 research works** statement remains separate from the current coverage count; see the [repository overview](../README.md#current-contribution-coverage).
+The source registries contain **22 public arXiv paper entries and 31 local manuscript entries**. These counts require work-level deduplication before they can describe distinct research works. N01, A4 and U10 are retained with manuscript-specific contribution scopes on their setting pages and profile downloads. The accompanying paper's historical **more than fifty settings / 56 research works** statement remains separate from the current coverage count; see the [repository overview](../README.md#explore-the-complexity-atlas).
 
 
 The [Atlas](Complexity_altas/README.md) includes native records, a local static browser, source provenance and complete profile exports. The other components retain separate research, review and publication workflows described in their component guides.
