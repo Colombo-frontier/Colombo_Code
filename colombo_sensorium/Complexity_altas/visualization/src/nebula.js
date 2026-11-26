@@ -68,9 +68,10 @@
     $('nebula-bundle-tools').hidden = !all;
     for (const input of traceInputs) {
       const axis = input.value;
-      const count = all ? bundles.summary([axis]).bundles : (edges.get(axis)?.length || 0);
+      const count = all ? (selected ? byId.get(selected).labels.filter(id => bundles.get(id)?.axis === axis).length : bundles.summary([axis]).bundles) : (edges.get(axis)?.length || 0);
+      const unit = all ? (selected ? 'label' : 'bundle') : 'neighbor';
       $('nebula-links').querySelector('[data-nebula-count="' + axis + '"]').textContent =
-        count + (all ? (count === 1 ? ' bundle' : ' bundles') : (count === 1 ? ' neighbor' : ' neighbors'));
+        count + ' ' + unit + (count === 1 ? '' : 's');
     }
     if (!all) return;
     for (const group of labelSelect.querySelectorAll('optgroup')) group.disabled = !axes.includes(group.dataset.axis);
@@ -78,7 +79,7 @@
     const label = bundleFocus && bundles.get(bundleFocus.id);
     labelSelect.value = label ? label.id : '';
     $('nebula-bundle-task-label').hidden = !label || label.tasks.size < 2;
-    $('nebula-bundle-clear').hidden = !label;
+    $('nebula-bundle-clear').hidden = !label && !selected;
     if (taskSelect.dataset.label !== (label?.id || '')) {
       taskSelect.replaceChildren();
       const option = make('option', 'All task clusters'); option.value = ''; taskSelect.append(option);
@@ -88,7 +89,10 @@
       taskSelect.dataset.label = label?.id || '';
     }
     taskSelect.value = bundleFocus?.task || '';
-    if (label) {
+    if (selected) {
+      const count = byId.get(selected).labels.filter(id => axes.includes(bundles.get(id)?.axis)).length;
+      $('nebula-bundle-status').textContent = count + ' label connection' + (count === 1 ? '' : 's') + ' highlighted for the selected star';
+    } else if (label) {
       const ids = bundles.members(label.id, bundleFocus.task);
       const name = label.label + (bundleFocus.task ? ' · ' + overview.tasks[bundleFocus.task] : '');
       $('nebula-bundle-status').textContent = name + ' · ' + ids.length + (ids.length === 1 ? ' setting' : ' settings') +
@@ -99,12 +103,14 @@
     }
   }
   function setBundle(id, task = null) {
+    if (selected) { setSelection(null); lookup.value = ''; }
     const label = bundles.get(id);
     bundleFocus = label && enabled().includes(label.axis) ? {id, task: label.tasks.has(task) ? task : null} : null;
     hideTip(); setSpin(false); updateRelations();
   }
   function setMode(next) {
     mode = next; hideTip();
+    if (mode === 'star') { bundleFocus = null; bundleHover = null; }
     modeButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.nebulaMode === mode)));
     updateRelations(); request();
   }
@@ -197,7 +203,7 @@
     const linked = new Set(all && bundleFocus ? bundles.members(bundleFocus.id, bundleFocus.task) : []);
     let axisLabelBoxes = [];
     if (all) {
-      axisLabelBoxes = bundles.paint(ctx, {w, h, project, projected: projectedById, axes: enabled(), focus: bundleFocus, hover: bundleHover, matching});
+      axisLabelBoxes = bundles.paint(ctx, {w, h, project, projected: projectedById, axes: enabled(), focus: bundleFocus, hover: bundleHover, matching, selected});
     } else if (root) {
       const activeAxes = enabled();
       const lanes = new Map();
@@ -238,7 +244,7 @@
     for (const item of renderOrder) {
       const id = item.p.id, active = id === selected || id === hovered;
       const filtered = matching && !matching.has(id) && id !== selected;
-      const distant = (all ? bundleFocus : root) && !linked.has(id) && id !== selected;
+      const distant = (all ? bundleFocus || root : root) && !linked.has(id) && id !== selected;
       const color = colors.get(item.p.status), r = item.radius;
       const opacity = active ? 1 : clamp(.68 + item.z * .12, .43, .94) * (filtered ? .23 : distant ? .52 : 1);
       ctx.globalAlpha = opacity * (active ? .29 : .12);
@@ -344,6 +350,7 @@
   }
   function setSelection(id) {
     selected = id; hideTip();
+    bundleFocus = null; bundleHover = null;
     edges = new Map(Object.keys(traces).map(axis => [axis, []]));
     inspector.hidden = !id;
     const summary = $('nebula-selected');

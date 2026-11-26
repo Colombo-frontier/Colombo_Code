@@ -46,6 +46,70 @@ const boxes = bundles.paint(ctx, {w: 800, h: 500, project, projected,
 assert.deepEqual(labels.sort(), ['Model', 'Oracle']);
 assert.equal(boxes.length, 2);
 
+// Record the actual painter's paths so star selection must illuminate the
+// selected star's memberships, rather than only changing an information panel.
+function renderSelection(options = {}) {
+  const strokes = [], stack = [];
+  let current = [];
+  const state = {globalAlpha: 1, strokeStyle: '', lineWidth: 1};
+  const recording = new Proxy({
+    save() { stack.push({...state}); },
+    restore() { Object.assign(state, stack.pop()); },
+    beginPath() { current = []; },
+    moveTo(...xy) { current.push(['moveTo', ...xy]); },
+    lineTo(...xy) { current.push(['lineTo', ...xy]); },
+    quadraticCurveTo(...xy) { current.push(['quadraticCurveTo', ...xy]); },
+    bezierCurveTo(...xy) { current.push(['bezierCurveTo', ...xy]); },
+    arc(...args) { current.push(['arc', ...args]); },
+    closePath() { current.push(['closePath']); },
+    stroke() { strokes.push({...state, path: current.map(command => [...command])}); },
+    measureText(text) { return {width: text.length * 6}; },
+  }, {
+    get(target, key) { return key in state ? state[key] : target[key] || (() => {}); },
+    set(target, key, value) { if (key in state) state[key] = value; else target[key] = value; return true; },
+  });
+  bundles.paint(recording, {w: 800, h: 500, project, projected,
+    axes: ['ORACLE', 'MODEL'], focus: null, hover: null, matching: null, ...options});
+  return strokes;
+}
+const traceColors = Object.values(traces).map(trace => trace.color);
+const endpoints = stroke => stroke.path.filter(command =>
+  ['lineTo', 'quadraticCurveTo', 'bezierCurveTo'].includes(command[0])).map(command => command.slice(-2));
+const reaches = (stroke, id) => endpoints(stroke).some(([x, y]) =>
+  x === projected.get(id).x && y === projected.get(id).y);
+const selectedEdges = (strokes, id) => strokes.filter(stroke => traceColors.includes(stroke.strokeStyle)
+  && stroke.globalAlpha >= .8 && reaches(stroke, id));
+const edgeColors = (strokes, id) => [...new Set(selectedEdges(strokes, id).map(stroke => stroke.strokeStyle))].sort();
+const baselinePaint = renderSelection();
+const selectedA = renderSelection({selected: 'a'});
+assert.deepEqual(edgeColors(selectedA, 'a'), traceColors.slice().sort(),
+  'A selected star must illuminate its Oracle and Model membership edges.');
+const selectedB = renderSelection({selected: 'b'});
+assert.deepEqual(edgeColors(selectedB, 'b'), [traces.ORACLE.color],
+  'Changing the star must remove the preceding star\'s Model highlight.');
+assert.deepEqual(edgeColors(renderSelection({selected: 'd'}), 'd'), [],
+  'Sharing Task alone must not produce a selected membership edge.');
+assert.deepEqual(edgeColors(renderSelection({selected: 'a', axes: ['ORACLE']}), 'a'), [traces.ORACLE.color],
+  'A disabled axis must not illuminate its membership edge.');
+assert.deepEqual(edgeColors(renderSelection({selected: 'a', axes: []}), 'a'), [],
+  'No enabled axes means no selected membership edges.');
+assert.deepEqual(edgeColors(renderSelection({selected: 'a', matching: new Set(['b'])}), 'a'), traceColors.slice().sort(),
+  'Search filtering must not suppress an explicitly selected star\'s edges.');
+const bundleRoutes = strokes => strokes.filter(stroke => traceColors.includes(stroke.strokeStyle)
+  && stroke.globalAlpha < .8 && endpoints(stroke).length >= 18);
+assert(bundleRoutes(baselinePaint).length > 0);
+assert(bundleRoutes(selectedA).every(stroke => stroke.globalAlpha <
+  Math.min(...bundleRoutes(baselinePaint).map(route => route.globalAlpha))),
+  'Unrelated aggregate bundles must dim when a star is selected.');
+assert.deepEqual(renderSelection({selected: null}), baselinePaint,
+  'Clearing the star must restore the complete bundle overview.');
+const focusedOracle = renderSelection({focus: {id: 'oracle', task: null}});
+for (const id of bundles.members('oracle')) {
+  assert(focusedOracle.some(stroke => stroke.strokeStyle === traces.ORACLE.color
+    && stroke.globalAlpha >= .5 && reaches(stroke, id)),
+  'Legacy label focus must retain its expanded member edge: ' + id);
+}
+
 // Every retained real-data membership is still represented exactly once.
 const root = path.resolve(__dirname, '../..');
 const overview = JSON.parse(fs.readFileSync(path.join(root, 'data/derived/atlas_overview.json'), 'utf8'));
@@ -77,4 +141,4 @@ assert.equal(real.summary(['TASK', 'ORACLE', 'MODEL']).memberships, memberships)
 assert.equal(real.summary(['ORACLE', 'MODEL']).bundles, expectedBundles);
 assert(sameTaskGroups > 0, 'The real Atlas must exercise retained same-task Oracle/Model groups.');
 console.log(JSON.stringify({passed: true, connected_axes: ['ORACLE', 'MODEL'], retained_memberships: memberships,
-  task_grouped_bundles: expectedBundles, same_task_connected_groups: sameTaskGroups}));
+  task_grouped_bundles: expectedBundles, same_task_connected_groups: sameTaskGroups, selected_star_focus_checks: 9}));

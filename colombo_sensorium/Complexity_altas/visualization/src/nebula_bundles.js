@@ -83,8 +83,11 @@
       }
       return boxes;
     }
-    function paint(ctx, {w, h, project, projected, axes, focus, hover, matching}) {
+    function paint(ctx, {w, h, project, projected, axes, focus, hover, matching, selected = null}) {
       hits = [];
+      const star = projected.get(selected);
+      const selectedLabels = new Set(star ? visibleLabels(axes).filter(label => label.members.includes(selected)).map(label => label.id) : []);
+      if (star) { focus = null; hover = null; }
       const hubs = [], routes = [], railLines = [];
       ctx.save();
       ctx.lineCap = 'round';
@@ -99,7 +102,8 @@
           const activeLabel = focus?.id === label.id;
           const hoverLabel = hover?.id === label.id;
           const radius = (2.1 + Math.min(2.4, Math.sqrt(label.members.length) * .14)) * Math.sqrt(at.depth);
-          hubs.push({id: label.id, at, radius, color, bright: activeLabel || hoverLabel, muted: !!focus && !activeLabel});
+          hubs.push({id: label.id, at, radius, color, bright: selectedLabels.has(label.id) || activeLabel || hoverLabel,
+            muted: star ? !selectedLabels.has(label.id) : !!focus && !activeLabel});
           hits.push({id: label.id, point: at, count: label.members.length, radius, hub: true});
           for (const b of label.tasks.values()) {
             const expands = activeLabel && (!focus.task || b.task === focus.task);
@@ -109,7 +113,7 @@
             const depth = path[Math.floor(path.length / 2)].z;
             const width = (.58 + Math.min(3.9, Math.sqrt(count) * .28)) * Math.sqrt(path[Math.floor(path.length / 2)].depth);
             const highlight = hoverLabel && (!hover.task || b.task === hover.task);
-            const filtered = matching && !focus ? b.members.filter(id => matching.has(id)).length : 0;
+            const filtered = matching && !focus && !star ? b.members.filter(id => matching.has(id)).length : 0;
             routes.push({axis, path, depth, width, highlight, filtered, count});
             hits.push({id: label.id, task: b.task, count, path, width, bounds: bounds(path), depth});
           }
@@ -119,7 +123,7 @@
         const {color, dash} = traces[route.axis];
         const depthOpacity = opacityAt(route.depth);
         ctx.strokeStyle = color; ctx.setLineDash(dash); ctx.lineWidth = route.width;
-        ctx.globalAlpha = (focus ? .07 : route.highlight ? .66 : matching ? .075 : .29) * depthOpacity;
+        ctx.globalAlpha = (focus || star ? .07 : route.highlight ? .66 : matching ? .075 : .29) * depthOpacity;
         tracePath(ctx, route.path); ctx.stroke();
         if (route.filtered) {
           ctx.globalAlpha = route.highlight ? .76 : .42;
@@ -147,6 +151,13 @@
             }
             ctx.stroke();
           }
+        }
+      }
+      if (star) {
+        for (const hub of hubs.filter(hub => selectedLabels.has(hub.id))) {
+          const {dash} = traces[all.get(hub.id).axis];
+          ctx.strokeStyle = hub.color; ctx.lineWidth = 1.8; ctx.globalAlpha = .94; ctx.setLineDash(dash);
+          ctx.beginPath(); ctx.moveTo(hub.at.x, hub.at.y); ctx.lineTo(star.x, star.y); ctx.stroke();
         }
       }
       ctx.setLineDash([]);

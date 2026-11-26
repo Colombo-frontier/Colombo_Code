@@ -143,7 +143,7 @@ def nebula_markup(data, overview):
         <button type="button" id="nebula-bundle-clear" hidden>Back to all bundles</button>
       </div>
       <p id="nebula-bundle-status" role="status"></p>
-      <p>Each bundle connects a label to a task cluster. Thicker lines contain more settings. Select a bundle or label to see its member stars.</p>
+      <p>Select a star to highlight its Oracle and Model connections. Select a label or bundle to inspect its member stars.</p>
     </div>
   </div>
   <div id="nebula-inspector" class="nebula-inspector" hidden>
