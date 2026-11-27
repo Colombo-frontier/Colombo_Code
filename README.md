@@ -7,6 +7,20 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-4c1" alt="Apache 2.0 license"></a>
 </p>
 
+**Formulate problems, investigate complexity gaps, verify findings, and preserve knowledge for further discovery.**
+
+[Citation](#citation) · [Quickstart](#quickstart) · [API keys](#authentication-and-api-keys) · [Configuration](#configuration) · [Atlas](#explore-the-complexity-atlas)
+
+Colombo is a self-organizing AI research system for **oracle-based optimization**. It studies how efficiently a problem class can be solved through a prescribed information interface, and which costs every admissible algorithm must incur. Algorithms establish achievable **upper bounds**; hard-instance constructions establish unavoidable **lower bounds**. The gap between them defines a concrete research frontier.
+
+Two mechanisms drive the system: **Self-Organization** adapts research programmes as evidence accumulates, while **Adversarial Co-Ascent** develops algorithms and hard families through reciprocal challenge. Independent review, Lean-based formal certification, and scientific memory support the transition from individual investigations to subsequent research programmes.
+
+The [accompanying paper](https://arxiv.org/abs/2611.23080) reports optimal or near-optimal rates for more than fifty settings and describes 56 research works. This repository provides the system source, scientific memory, Sensorium tools, and Complexity Atlas data. Local research runs and model transcripts are excluded from the source distribution.
+
+![Frontier-to-frontier research: Colombo perceives the frontier, formulates problems, consolidates knowledge, and regenerates the frontier](assets/colombo-nautical-frontier-light-ivory-soft-sea.png)
+
+*Frontier-to-frontier renewal: supported discoveries reshape the research frontier and create the basis for further inquiry.*
+
 > [!NOTE]
 > ## Citation
 >
@@ -27,20 +41,6 @@
 > ```
 >
 > For authors of papers that use the Colombo system: **Although optional, it is highly appreciated if you could send an email to [colombo.2026@outlook.com](mailto:colombo.2026@outlook.com) telling us your identity (name, position and affiliation) or the results obtained via Colombo (best with the link to the paper).**
-
-**Formulate problems, investigate complexity gaps, verify findings, and preserve knowledge for further discovery.**
-
-[Citation](#citation) · [Quickstart](#quickstart) · [API keys](#authentication-and-api-keys) · [Configuration](#configuration) · [Atlas](#explore-the-complexity-atlas)
-
-Colombo is a self-organizing AI research system for **oracle-based optimization**. It studies how efficiently a problem class can be solved through a prescribed information interface, and which costs every admissible algorithm must incur. Algorithms establish achievable **upper bounds**; hard-instance constructions establish unavoidable **lower bounds**. The gap between them defines a concrete research frontier.
-
-Two mechanisms drive the system: **Self-Organization** adapts research programmes as evidence accumulates, while **Adversarial Co-Ascent** develops algorithms and hard families through reciprocal challenge. Independent review, Lean-based formal certification, and scientific memory support the transition from individual investigations to subsequent research programmes.
-
-The [accompanying paper](https://arxiv.org/abs/2611.23080) reports optimal or near-optimal rates for more than fifty settings and describes 56 research works. This repository provides the system source, scientific memory, Sensorium tools, and Complexity Atlas data. Local research runs and model transcripts are excluded from the source distribution.
-
-![Frontier-to-frontier research: Colombo perceives the frontier, formulates problems, consolidates knowledge, and regenerates the frontier](assets/colombo-nautical-frontier-light-ivory-soft-sea.png)
-
-*Frontier-to-frontier renewal: supported discoveries reshape the research frontier and create the basis for further inquiry.*
 
 ## Contents
 
