@@ -21,7 +21,6 @@ SRC = pathlib.Path(__file__).resolve().parent
 TOPICS = {
     "single_objective": "Single-objective optimization",
     "bilevel": "Bilevel optimization", "minimax": "Minimax optimization",
-    "saddle_point": "Saddle-point problems",
     "variational_inequality": "Variational inequalities",
     "matrix_computation": "Matrix computation", "online_bandit": "Online learning and bandits",
 }

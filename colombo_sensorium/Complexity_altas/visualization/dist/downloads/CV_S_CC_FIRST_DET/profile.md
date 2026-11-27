@@ -8,7 +8,7 @@ Solve $\min_{x\in X}\max_{y\in Y}f(x,y)$.
 
 **Status.** Fully optimal
 
-**TASK tags.** formulation: Convex concave saddle; task family: Minimax; task family: Saddle point
+**TASK tags.** formulation: Convex concave saddle; task family: Minimax
 
 **MODEL tags.** convexity: Convex concave; geometry: Diameter bound; geometry: Known compact; smoothness: Lipschitz gradient
 
@@ -267,6 +267,14 @@ $$
 **Source location.** [2](https://arxiv.org/pdf/1808.02901) theorem: Theorem9; section: Section4; pdf pages: 29
 
 Use the unrestricted deterministic first-order algorithm model in source equation (8), retaining conditions $L_f\ge L_A$ and $t<m/4-2$. The constants $L_f$ and $L_A$ control the smooth and coupling terms; $m$ is the hard-instance dimension and $t$ the query count. Scale with comparable smoothness constants and balanced block radii.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 

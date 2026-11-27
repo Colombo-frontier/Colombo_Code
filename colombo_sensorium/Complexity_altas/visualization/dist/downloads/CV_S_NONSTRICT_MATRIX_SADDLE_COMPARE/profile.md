@@ -2,13 +2,13 @@
 
 **Setting ID.** `CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE`
 
-Saddle-point problems
+Matrix computation
 
 Find any pure saddlepoint of a hidden square matrix, or determine that it does not exist.
 
 **Status.** Fully optimal
 
-**TASK tags.** task family: Saddle point
+**TASK tags.** task family: Matrix computation
 
 **MODEL tags.** spectral structure: Arbitrary real matrix
 
@@ -176,7 +176,7 @@ $$
 O(n^2)
 $$
 
-**Local argument.** A1
+**Local argument.** CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__proof_lower
 
 ### B2 - Randomized entry-query lower bound
 
@@ -226,7 +226,7 @@ $$
 
 **oracle calls.** 0
 
-**Local argument.** A2
+**Local argument.** CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__proof_trivial
 
 ### B4 - One-cell regime
 
@@ -246,19 +246,63 @@ $$
 
 **oracle calls.** 0
 
-**Local argument.** A2
+**Local argument.** CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__proof_trivial
 
-## 5. Local arguments
+## Maintenance appendix: Native proof extensions
 
-### A1 - Row and column scan
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
 
-**Scope.** Every square matrix, including ties
+Native pointer: /proofs; canonical SHA-256: 68b55b77b1381b0ad7463cd01eb24320e2d56f426b657a3ed0d3ca67e5cfaeaf
 
-**Algorithm scope.** Deterministic witness
+### Native proof: CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__proof_lower
+
+Native pointer: /proofs/0; canonical SHA-256: 26a00dd85e5ce3a6ee296925c82ce07b9b4f3bde0e3f1bac6c4a2eaa0ae2211b
+
+#### Native field: title
+
+Native pointer: /proofs/0/title; canonical SHA-256: 71460a316a859b67e7f3401eb031b6684123771b599a1a1a6c8064abf942fb56
+
+Row and column scan
+
+#### Native field: body
+
+Native pointer: /proofs/0/body; canonical SHA-256: b3ba1584f9570198058a582b320263c860a09e63528aa2ed9bc02412c301f049
+
+#### Native item 1
+
+Native pointer: /proofs/0/body/0; canonical SHA-256: b4d7f0e815c9cedbae5246d41ced4ae924feb43352e0f4c23e9fe88ca1e6534a
 
 Find one maximum index in each row and one minimum index in each column using linear scans. For every cell, use comparisons in both directions to test equality with its row maximum and column minimum. Return the first cell satisfying both tests, or report absence if no cell does.
 
-### A2 - One-cell regime
+#### Native field: scope
+
+Native pointer: /proofs/0/scope; canonical SHA-256: 7f83c3fcaa9c1f8e6432511eefdec9f8ddf6ce22c6e673a6678043dd6f386ed1
+
+Every square matrix, including ties
+
+#### Native field: algorithm_scope
+
+Native pointer: /proofs/0/algorithm_scope; canonical SHA-256: 808c15dc7cffa4531c874c27b9a4e0e45083b19352286b52766061bf5b740519
+
+Deterministic witness
+
+### Native proof: CV_S_NONSTRICT_MATRIX_SADDLE_COMPARE__proof_trivial
+
+Native pointer: /proofs/1; canonical SHA-256: 7c944168e4da2bdbe3c14714e3baa6637d9f2be7454a1b1027a4456bd9bb1b60
+
+#### Native field: title
+
+Native pointer: /proofs/1/title; canonical SHA-256: 4ff6d589d6c03c013858562f2186fd7040d3112b2bb7b030c84c53b29f095419
+
+One-cell regime
+
+#### Native field: body
+
+Native pointer: /proofs/1/body; canonical SHA-256: 4f415f659510758932c2a32660b8d020ee9179d9088444d171e655f98a537add
+
+#### Native item 1
+
+Native pointer: /proofs/1/body/0; canonical SHA-256: 6aa0ce5cba2f1c538cd3bf107126862ba491d5478953de8288a0612ecc3aaa28
 
 The only entry is both a row maximum and a column minimum. Output (1,1) immediately.
 

@@ -2,13 +2,13 @@
 
 **Setting ID.** `CV_S_STRICT_MATRIX_SADDLE_COMPARE`
 
-Saddle-point problems
+Matrix computation
 
 Find the unique strict pure saddlepoint of a hidden matrix, or determine that it does not exist.
 
 **Status.** Fully optimal
 
-**TASK tags.** task family: Saddle point
+**TASK tags.** task family: Matrix computation
 
 **MODEL tags.** spectral structure: Arbitrary real matrix
 
@@ -200,7 +200,7 @@ $$
 \Omega(m+n)
 $$
 
-**Local argument.** A1
+**Local argument.** CV_S_STRICT_MATRIX_SADDLE_COMPARE__proof_lower
 
 **Source location.** [1](https://arxiv.org/abs/2607.22312v1) theorem: Discussion following Theorem 1.1; pdf pages: 2
 
@@ -224,7 +224,7 @@ $$
 
 **oracle calls.** 0
 
-**Local argument.** A2
+**Local argument.** CV_S_STRICT_MATRIX_SADDLE_COMPARE__proof_trivial
 
 ### B4 - One-cell regime
 
@@ -244,19 +244,63 @@ $$
 
 **oracle calls.** 0
 
-**Local argument.** A2
+**Local argument.** CV_S_STRICT_MATRIX_SADDLE_COMPARE__proof_trivial
 
-## 5. Local arguments
+## Maintenance appendix: Native proof extensions
 
-### A1 - Unqueried cell adversary
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
 
-**Scope.** At least two cells
+Native pointer: /proofs; canonical SHA-256: c46a1b2b3f198b8a2a2a5a765652d59b60ebf9ef53828d2b1c75fe8856d711b1
 
-**Algorithm scope.** All deterministic adaptive comparison algorithms
+### Native proof: CV_S_STRICT_MATRIX_SADDLE_COMPARE__proof_lower
+
+Native pointer: /proofs/0; canonical SHA-256: 7c9602524374a69719d593102396328d7f90b4e685d1a9bb6ff9b06815667a04
+
+#### Native field: title
+
+Native pointer: /proofs/0/title; canonical SHA-256: 335b8097e25deec08815853715a20fd654b53629139965675431c4e5a4cbe1de
+
+Unqueried cell adversary
+
+#### Native field: body
+
+Native pointer: /proofs/0/body; canonical SHA-256: 9e59c6af1c9dac85eb648655dc49413034a57a6ad942be077cdef69ea29fe409
+
+#### Native item 1
+
+Native pointer: /proofs/0/body/0; canonical SHA-256: a758f7640209464dee33f60048650faf9252dbbb902e73301342a08a597fd4d9
 
 Fix a matrix with strict saddlepoint (1,1). A comparison transcript that never uses one of the other entries in row 1 or column 1 is identical after changing that entry to equal A[1,1]. The alteration invalidates the output (1,1). Every one of the m+n-2 other row and column cells must therefore occur in the transcript. A comparison touches at most two of them.
 
-### A2 - One-cell regime
+#### Native field: scope
+
+Native pointer: /proofs/0/scope; canonical SHA-256: a053becd94cef93c341e71a960e4d4c083510126f16ad34701731a9d095d7a86
+
+At least two cells
+
+#### Native field: algorithm_scope
+
+Native pointer: /proofs/0/algorithm_scope; canonical SHA-256: 7eb20316807a3d4ca053e5a372c3090909fc6fefcee306256d66ad01d39f78e1
+
+All deterministic adaptive comparison algorithms
+
+### Native proof: CV_S_STRICT_MATRIX_SADDLE_COMPARE__proof_trivial
+
+Native pointer: /proofs/1; canonical SHA-256: f70c64549bed558a21093fc06b372e329e3f0e242a73a2eb5ea7be9d2e81241c
+
+#### Native field: title
+
+Native pointer: /proofs/1/title; canonical SHA-256: 4ff6d589d6c03c013858562f2186fd7040d3112b2bb7b030c84c53b29f095419
+
+One-cell regime
+
+#### Native field: body
+
+Native pointer: /proofs/1/body; canonical SHA-256: f44394792b2d4a172eefc35596ab7c47569a373d08478d65b72ba2dba0ccd629
+
+#### Native item 1
+
+Native pointer: /proofs/1/body/0; canonical SHA-256: b9c1406c048e26d2d42813e4aa808699a41376d274266462ee43a1f3f260b635
 
 In a one-entry matrix both strict inequality systems are vacuous. Output (1,1) immediately.
 

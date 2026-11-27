@@ -10,7 +10,7 @@ $$
 
 **Status.** Logarithmic gap present
 
-**TASK tags.** formulation: Bilinearly coupled saddle; solution concept: Weighted squared distance; task family: Matrix computation; task family: Minimax; task family: Saddle point
+**TASK tags.** formulation: Bilinearly coupled saddle; solution concept: Weighted squared distance; task family: Matrix computation; task family: Minimax
 
 **MODEL tags.** convexity: Smooth strongly convex; initialization: Initial distance; spectral structure: Spectral norm bound; structure: Separable bilinear
 
@@ -339,6 +339,14 @@ $$
 **Source location.** [1](https://raw.githubusercontent.com/mlresearch/v267/main/assets/borodich25a/borodich25a.pdf) theorem: Theorem3.3, Corollary4.8, Assumptions2.6--2.7; section: Sections2--4; pdf pages: 5; 6; 8
 
 This profile sets both minimum-singular-value promises for the source coupling matrix to zero, retaining only its spectral-norm bound. The richer spectral family is recorded as additional applicability. Both initialization logarithms and all three operation costs remain explicit.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 

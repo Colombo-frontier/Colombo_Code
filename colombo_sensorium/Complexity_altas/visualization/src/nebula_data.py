@@ -6,7 +6,7 @@ import json
 import math
 from pathlib import Path
 
-# Keep the seven task families legible from the initial view. Anchor distances
+# Keep the six task families legible from the initial view. Anchor distances
 # are layout choices. The local offsets use only recorded navigation labels.
 ANCHORS = {
     'single_objective': ((-.27, .06, .02), 1.03, '#255d51'),
@@ -15,7 +15,6 @@ ANCHORS = {
     'minimax': ((1.29, .89, .45), .48, '#5c4275'),
     'matrix_computation': ((2.00, -.41, -.43), .47, '#305771'),
     'variational_inequality': ((.86, -1.08, .61), .38, '#427360'),
-    'saddle_point': ((.28, 1.36, -.83), .22, '#6b526f'),
 }
 
 

@@ -26,7 +26,7 @@ AXES = {
 TASKS = {
     'single_objective': 'Single objective', 'online_bandit': 'Online learning / bandits',
     'minimax': 'Minimax', 'bilevel': 'Bilevel', 'matrix_computation': 'Matrix computation',
-    'variational_inequality': 'Variational inequality', 'saddle_point': 'Saddle point',
+    'variational_inequality': 'Variational inequality',
 }
 COMPARISON_LABELS = {
     'optimal': 'Optimal', 'logarithmic_gap': 'Logarithmic gap', 'polynomial_gap': 'Polynomial gap',

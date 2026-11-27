@@ -8,7 +8,7 @@ Solve $\min_{x\in X}\max_{y\in Y}f(x,y)$.
 
 **Status.** Fully optimal
 
-**TASK tags.** formulation: Convex concave saddle; task family: Minimax; task family: Saddle point
+**TASK tags.** formulation: Convex concave saddle; task family: Minimax
 
 **MODEL tags.** convexity: Convex concave; geometry: Diameter bound; geometry: Known compact
 
@@ -282,15 +282,35 @@ $$
 
 **Derivation.** Use the primal interval $[-D_K/2,D_K/2]$, a singleton dual domain, and linear payoffs $f_\pm(x,y)=\pm ax$ with $a=8\varepsilon/D_K$. Fresh primal-gradient samples are Gaussian with mean $\pm a$ and variance $\sigma^2$. A wrong-half-axis output has saddle gap at least $4\varepsilon$, so the expected-gap guarantee implies a sign test with error at most $1/4$. The per-sample KL divergence $2a^2/\sigma^2$ yields the query lower bound $\Omega(\sigma^2D_K^2/\varepsilon^2)$.
 
-**Local argument.** A1
+**Local argument.** SIX_PROOF_02349a853ced
 
-## 5. Local arguments
+## Maintenance appendix: Native proof extensions
 
-### A1 - two Gaussian mean hypotheses on an interval
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
 
-**Scope.** All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force.
+Native pointer: /proofs; canonical SHA-256: 31ca0480309050e6b404c732ebc829d7a90278a936b4915170d17ba0b36123f8
+
+### Native proof: SIX_PROOF_02349a853ced
+
+Native pointer: /proofs/0; canonical SHA-256: dfdb6c63ff2e1353858acbad32a5d753a26dfafd78c3e22e5984a5d0a05dfb53
+
+#### Native field: title
+
+Native pointer: /proofs/0/title; canonical SHA-256: b1c0b2fd2b167defdb5312da42df9fa6ecf09aff97f1945820693b5d6da48a59
+
+two Gaussian mean hypotheses on an interval
+
+#### Native field: body
+
+Native pointer: /proofs/0/body; canonical SHA-256: 27c0383e314700790d706698d4658be84d6f8ead98ae92e1089d88d6172985e2
 
 Use the primal interval $[-D_K/2,D_K/2]$, a singleton dual domain, and linear payoffs $f_\pm(x,y)=\pm ax$ with $a=8\varepsilon/D_K$. Fresh primal-gradient samples are Gaussian with mean $\pm a$ and variance $\sigma^2$. A wrong-half-axis output has saddle gap at least $4\varepsilon$, so the expected-gap guarantee implies a sign test with error at most $1/4$. The per-sample KL divergence $2a^2/\sigma^2$ yields the query lower bound $\Omega(\sigma^2D_K^2/\varepsilon^2)$.
+
+#### Native field: scope
+
+Native pointer: /proofs/0/scope; canonical SHA-256: 8e7cd37b3ccc4354c1e06fa177d57119b0f24cc6b076f3eb19796ced52b490e5
+
+All model, oracle, algorithm, guarantee, quantity, resource-projection, and region conditions attached to the mapped bounds remain in force.
 
 ## References
 

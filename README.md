@@ -134,9 +134,9 @@ These are reported research outcomes, rather than a guarantee that a new run wil
 
 Explore **445 problem settings** through an interactive 3D map, a 2D overview, and a searchable setting library.
 
-[![Animated Complexity Atlas: 445 settings in seven Task constellations, with green optimal or near-optimal points, orange gap or other regimes, and red rings for Colombo output](assets/complexity-atlas.gif)](#browse-without-running-agents)
+[![Animated Complexity Atlas: 445 settings in six Task constellations, with green optimal or near-optimal points, orange gap or other regimes, and red rings for Colombo output](assets/complexity-atlas.gif)](#browse-without-running-agents)
 
-*Each point represents a problem setting, grouped into seven Task constellations. Green marks optimal or near-optimal settings; orange marks gap or other regimes. Red rings mark settings with Colombo output.*
+*Each point represents a problem setting, grouped into six Task constellations. Green marks optimal or near-optimal settings; orange marks gap or other regimes. Red rings mark settings with Colombo output.*
 
 Select a setting in the interactive Atlas to inspect its bounds, assumptions, and sources. Distances are illustrative, and connections indicate shared classifications rather than mathematical equivalence or reductions.
 

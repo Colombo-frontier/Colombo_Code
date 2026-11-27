@@ -10,7 +10,7 @@ $$
 
 **Status.** Other quantified gap present
 
-**TASK tags.** formulation: Bilinear affine saddle; task family: Minimax; task family: Saddle point
+**TASK tags.** formulation: Bilinear affine saddle; task family: Minimax
 
 **MODEL tags.** geometry: Two balls; structure: Bilinear affine
 
@@ -347,6 +347,14 @@ $$
 **Source location.** [1](https://arxiv.org/pdf/2610.00345v1) theorem: Theorem5.1; TheoremG.1; PropositionG.2; section: Sections5,G; pdf pages: 8; 42; 43
 
 The polarization reduction uses two source scalar-value queries per target payoff. The compact-domain gap expression and the total coefficient-recovery count $d_y(d_x+1)$ are retained explicitly.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 

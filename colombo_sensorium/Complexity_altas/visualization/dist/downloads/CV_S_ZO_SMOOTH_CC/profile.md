@@ -10,7 +10,7 @@ $$
 
 **Status.** Bounds missing
 
-**TASK tags.** task family: Minimax; task family: Saddle point
+**TASK tags.** task family: Minimax
 
 **MODEL tags.** convexity: Convex concave; geometry: Compact geometry; geometry: Two balls
 
@@ -165,3 +165,11 @@ Here v is the selected algorithm view, G_v its complete success guarantee, I an 
 **Upper bound.** No admitted bound for this comparison
 
 ## 4. Bounds and supporting evidence
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []

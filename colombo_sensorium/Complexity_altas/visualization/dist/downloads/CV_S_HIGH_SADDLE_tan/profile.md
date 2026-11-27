@@ -8,7 +8,7 @@ Solve $\min_{x\in X}\max_{y\in Y}f(x,y)$, with $K=X\times Y$ and $z=(x,y)$. The 
 
 **Status.** Fully optimal
 
-**TASK tags.** formulation: Convex concave saddle; task family: Minimax; task family: Saddle point
+**TASK tags.** formulation: Convex concave saddle; task family: Minimax
 
 **MODEL tags.** convexity: Concavity in the declared block; convexity: Convex concave; convexity: Convexity in the declared block; geometry: Diameter bound; smoothness: Highest derivative lipschitz
 
@@ -319,6 +319,14 @@ $$
 **Source location.** [2](https://arxiv.org/pdf/2609.28246v2) theorem: Theorem3.5; Lemma3.4; Proposition3.6; pdf pages: 6; 7; 8
 
 The source scalar-payoff hard family directly covers arbitrary randomized algorithms. A general vector-VI lower bound is not converted backward to a saddle lower bound without a construction.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 

@@ -2,13 +2,13 @@
 
 **Setting ID.** `CV_S_FS_SADDLE_GAP`
 
-Saddle-point problems
+Minimax optimization
 
 Solve $\min_{x\in X}\max_{y\in Y}f(x,y)$.
 
 **Status.** Bounds missing
 
-**TASK tags.** task family: Saddle point
+**TASK tags.** task family: Minimax
 
 **MODEL tags.** smoothness: Mean square average; structure: Finite sum
 
@@ -219,6 +219,14 @@ $$
 Expected total component calls O(n+sqrt(n)L D_K^2/epsilon) for expected Minty weak gap.
 
 Source writes sum F, ours average: source components F_i/n, uniform estimator returns our F_i. Same index evaluated at two points, two charged calls. No individual component monotonicity. Full pass n. Native loopless count is expected work. Saddle-gap transfer uses source Eq12–14 and convex-concave inequality, not equivalence of output Minty gap and full saddle gap.
+
+## Maintenance appendix: Native proof extensions
+
+Read-only presentation of the stored native record. Integrity hashes identify source values; this appendix grants no new theorem, source-read credit, review or approval.
+
+Native pointer: /proofs; canonical SHA-256: 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+
+Native value (empty_array): []
 
 ## References
 

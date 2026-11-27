@@ -10,7 +10,7 @@ Usage: python render_atlas.py atlas.json --output . --pdf --workers 4
 from __future__ import annotations
 import argparse, hashlib, collections, concurrent.futures, copy, html, json, pathlib, re, subprocess, unicodedata, textwrap
 
-TOPICS={'single_objective':'Single-objective optimization','bilevel':'Bilevel optimization','minimax':'Minimax optimization','saddle_point':'Saddle-point problems','variational_inequality':'Variational inequalities','matrix_computation':'Matrix computation','online_bandit':'Online learning and bandits'}
+TOPICS={'single_objective':'Single-objective optimization','bilevel':'Bilevel optimization','minimax':'Minimax optimization','variational_inequality':'Variational inequalities','matrix_computation':'Matrix computation','online_bandit':'Online learning and bandits'}
 AXES={'task':'Task','model':'Admissible model','oracle':'Oracle interface','output':'Output','metric':'Loss or accuracy criterion','resource':'Resource accounting'}
 STATUS={'optimal':'Optimal','logarithmic_gap':'Logarithmic gap','polynomial_gap':'Polynomial gap','other_quantified_gap':'Other quantified gap','missing_upper':'Upper bound missing','missing_lower':'Lower bound missing','missing_both':'Both bounds missing','joint_budget_unclosed':'Joint budget unresolved','infinite_complexity':'Infinite complexity','infeasible_task':'Infeasible task'}
 PREAMBLE=r'''\documentclass[10pt,a4paper]{article}

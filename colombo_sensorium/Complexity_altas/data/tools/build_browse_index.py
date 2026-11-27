@@ -59,7 +59,6 @@ for value, name, aliases in [
     ('single_objective', 'Single objective', ['single objective', 'single-objective']),
     ('bilevel', 'Bilevel', ['bilevel', 'bi-level']),
     ('minimax', 'Minimax', ['minimax', 'min-max']),
-    ('saddle_point', 'Saddle point', ['saddle point', 'saddle-point']),
     ('variational_inequality', 'Variational inequality', ['variational inequality', 'vi']),
     ('matrix_computation', 'Matrix computation', ['matrix computation']),
     ('online_bandit', 'Online learning / bandits', ['online learning', 'bandit', 'bandits']),

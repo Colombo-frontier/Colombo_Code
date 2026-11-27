@@ -2,7 +2,7 @@
 
 **Setting ID.** `CV_S_SIMPLEX_MATRIX_GAME`
 
-Saddle-point problems
+Minimax optimization
 
 Normalized simplex-simplex matrix games with separate deterministic-risk and randomized-accuracy views. The randomized view has proved singleton-side 0/1 thresholds and explicit remaining gaps; the source adaptive-core claim is not promoted to an accepted lower bound. A full-domain KOS v3 upper is combined with exact reconstruction under the randomized target quantity.
 
@@ -10,7 +10,7 @@ Normalized simplex-simplex matrix games with separate deterministic-risk and ran
 
 **Gap classes present.** Polynomial gap; Other quantified gap; Logarithmic gap
 
-**TASK tags.** formulation: Simplex matrix zero sum game; solution concept: Fixed budget saddle gap; task family: Matrix computation; task family: Minimax; task family: Saddle point
+**TASK tags.** formulation: Simplex matrix zero sum game; solution concept: Fixed budget saddle gap; task family: Matrix computation; task family: Minimax
 
 **MODEL tags.** geometry: Compact geometry; geometry: Simplex simplex
 
