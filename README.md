@@ -27,16 +27,11 @@ The [accompanying paper](https://arxiv.org/abs/2611.23080) reports optimal or ne
 > If Colombo informs your research, please cite the [paper](https://arxiv.org/abs/2611.23080):
 >
 > ```bibtex
-> @misc{zhang2026colombo,
->   title         = {Colombo: A Frontier-to-Frontier Autoresearch System for Oracle-Based Optimization},
->   author        = {Haihan Zhang and Wendao Wu and Chenheng Zhang and
->                    Chunyuan Zheng and Yanyi Li and Cong Fang and
->                    Haoxuan Li and Zhouchen Lin},
->   year          = {2026},
->   eprint        = {2611.23080},
->   archivePrefix = {arXiv},
->   primaryClass  = {cs.AI},
->   url           = {https://arxiv.org/abs/2611.23080}
+> @article{zhang2026colombo,
+>   title   = {Colombo: A Frontier-to-Frontier Autoresearch System for Oracle-Based Optimization},
+>   author  = {Haihan Zhang and Wendao Wu and Chenheng Zhang and Chunyuan Zheng and Yanyi Li and Cong Fang and Haoxuan Li and Zhouchen Lin},
+>   year    = {2026},
+>   journal = {arXiv preprint arXiv:2611.23080}
 > }
 > ```
 >
