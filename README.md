@@ -3,6 +3,7 @@
 <p align="center">
   <a href="https://arxiv.org/abs/2611.23080"><img src="https://img.shields.io/badge/arXiv-2611.23080-b31b1b" alt="Colombo paper on arXiv"></a>
   <a href="https://colombo-frontier.github.io/"><img src="https://img.shields.io/badge/Website-Colombo-0078D4" alt="Colombo project website"></a>
+  <a href="https://github.com/Colombo-frontier/Colombo_Lean"><img src="https://img.shields.io/badge/Lean-Colombo-6F42C1" alt="Colombo Lean repository"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-4c1" alt="Apache 2.0 license"></a>
 </p>
 
